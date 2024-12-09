@@ -1,4 +1,4 @@
-## [1.0.1](https://github.com/blinko-space/blinko/compare/v1.0.0...v1.0.1) (2024-12-09)
+## [0.21.2](https://github.com/blinko-space/blinko/compare/v0.21.1...v0.21.2) (2024-12-09)
 
 
 ### Bug Fixes

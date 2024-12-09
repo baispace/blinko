@@ -1,3 +1,10 @@
+## [0.21.3](https://github.com/blinko-space/blinko/compare/v0.21.2...v0.21.3) (2024-12-09)
+
+
+### Bug Fixes
+
+* ru language [#274](https://github.com/blinko-space/blinko/issues/274) ([9e539e6](https://github.com/blinko-space/blinko/commit/9e539e68f4a03e3a24f40979eba87d86a37d2e10))
+
 ## [0.21.2](https://github.com/blinko-space/blinko/compare/v0.21.1...v0.21.2) (2024-12-09)
 
 

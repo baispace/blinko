@@ -4,6 +4,7 @@ import { prisma } from '../prisma';
 import { adminCaller } from '../routers/_app';
 import fs from 'fs/promises'
 import { FileService } from './utils';
+import { getGlobalConfig } from '../routers/config';
 type Memo = {
   id: string,
   created_ts: number,
@@ -89,6 +90,8 @@ export class Memos {
       filename: string,
       blob: string,
       size: number,
+      reference?: string,
+      internal_path?: string,
     }>>((resolve, reject) => {
       const results: any[] = [];
       this.db.each(
@@ -113,6 +116,8 @@ export class Memos {
     const total = resources.length;
     for (let i = 0; i < resources.length; i++) {
       const row = resources[i];
+      console.log(row)
+
       const memo: Memo = await new Promise<Memo>((resolve, reject) => {
         this.db.get(`SELECT * FROM memo WHERE id = ${row?.memo_id}`, (err, memo: Memo) => {
           if (err) reject(err);
@@ -132,29 +137,43 @@ export class Memos {
           continue;
         }
 
-        const fileName = row?.filename ?? '';
-        const filePath = UPLOAD_FILE_PATH + '/' + fileName;
-        let newFileName = fileName.split('/').pop() || '';
-        const hasSameFile = await fs.access(filePath).then(() => true).catch(() => false);
         if (row?.blob) {
-          if (hasSameFile) {
-            const extension = fileName.split('.').pop() || '';
-            const originalName = fileName.split('.').slice(0, -1).join('.');
-            newFileName = `${originalName}_${Date.now()}.${extension}`;
-            await fs.writeFile(UPLOAD_FILE_PATH + '/' + newFileName, row!.blob);
-          } else {
-            await fs.writeFile(filePath, row!.blob);
-          }
+          //@ts-ignore!!!!!!!
+          const { filePath } = await FileService.uploadFile(row!.blob, row?.filename);
+          await prisma.attachments.create({
+            data: {
+              name: row?.filename,
+              path: filePath,
+              size: row?.size,
+              noteId: node.id,
+            }
+          });
+        }
+        const config = await getGlobalConfig();
+        //v0.22
+        if (row?.reference && row?.reference != '') {
+          await prisma.attachments.create({
+            data: {
+              name: row?.filename,
+              path: config.objectStorage === 's3' ? '/api/s3file/' + row?.reference : '/api/file/' + row?.reference,
+              size: row?.size,
+              noteId: node.id,
+            }
+          });
         }
 
-        await prisma.attachments.create({
-          data: {
-            name: row?.filename,
-            path: '/api/file/' + newFileName,
-            size: row?.size,
-            noteId: node.id,
-          }
-        });
+        //v0.21
+        if (row?.internal_path && row?.internal_path != '') {
+          await prisma.attachments.create({
+            data: {
+              name: row?.filename,
+              path: config.objectStorage === 's3' ? '/api/s3file/' + row?.internal_path : '/api/file/' + row?.internal_path,
+              size: row?.size,
+              noteId: node.id,
+            }
+          });
+        }
+
         yield {
           type: 'success',
           content: row?.filename,

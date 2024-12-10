@@ -8,10 +8,9 @@ import { UPLOAD_FILE_PATH } from "@/lib/constant";
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
 
 export const GET = async (req: Request, { params }: any) => {
-  const { filename } = params;
-  const encodeFileName = encodeURIComponent(filename);
-  const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, encodeFileName);
-
+  const fullPath = decodeURIComponent(params.filename.join('/'));
+  const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
+  const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
   try {
     const stats = await stat(filePath);
     const contentType = mime.lookup(filePath) || "application/octet-stream";
@@ -41,7 +40,7 @@ export const GET = async (req: Request, { params }: any) => {
             "Content-Length": chunksize.toString(),
             "Content-Range": `bytes ${start}-${end}/${stats.size}`,
             "Accept-Ranges": "bytes",
-            "Content-Disposition": `attachment; filename="${encodeFileName}"`,
+            "Content-Disposition": `attachment; filename="${fullPath}"`,
           },
         });
       } else {
@@ -59,7 +58,7 @@ export const GET = async (req: Request, { params }: any) => {
             "Content-Type": contentType,
             "Content-Length": stats.size.toString(),
             "Accept-Ranges": "bytes",
-            "Content-Disposition": `attachment; filename="${encodeFileName}"`,
+            "Content-Disposition": `attachment; filename="${fullPath}"`,
           },
         });
       }
@@ -70,7 +69,7 @@ export const GET = async (req: Request, { params }: any) => {
           "Content-Type": contentType,
           "Content-Length": stats.size.toString(),
           "Accept-Ranges": "bytes",
-          "Content-Disposition": `attachment; filename="${encodeFileName}"`,
+          "Content-Disposition": `attachment; filename="${fullPath}"`,
         },
       });
     }

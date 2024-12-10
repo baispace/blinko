@@ -161,7 +161,7 @@
   "content-rest-of-the-text-if-the-text-is-longer-than-the-length": "内容（文本的其余部分，如果文本长度超过规定长度）",
   "ai-tag": "AI标签",
   "article": "文章",
-  "embedding-model": "嵌入模式",
+  "embedding-model": "嵌入式模型",
   "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "如果您有大量笔记，您可能会消耗一定数量的代币",
   "force-rebuild": "强制重建",
   "force-rebuild-embedding-index": "强制重建将完全重建已索引的所有数据",

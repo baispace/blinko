@@ -196,5 +196,11 @@
   "block-type-select-placeholder": "ブロックタイプ",
   "trash": "ゴミ",
   "custom-path": "カスタムパス",
-  "page-size": "ページサイズ"
+  "page-size": "ページサイズ",
+  "toolbar-visibility": "ツールバーの表示",
+  "always-hide-toolbar": "常に隠れる",
+  "always-show-toolbar": "常にショー",
+  "hide-toolbar-on-mobile": "モバイルで隠す",
+  "select-toolbar-visibility": "ツールバーの表示を選択",
+  "select-a-time-format": "時間フォーマットを選択する"
 }

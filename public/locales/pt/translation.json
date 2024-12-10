@@ -194,5 +194,11 @@
   "select-block-type": "Selecionar o tipo de bloco",
   "block-type-select-placeholder": "Tipo de bloco",
   "trash": "lixo",
-  "page-size": "Tamanho da página"
+  "page-size": "Tamanho da página",
+  "toolbar-visibility": "Visibilidade da barra de ferramentas",
+  "always-hide-toolbar": "Esconder-se sempre",
+  "always-show-toolbar": "Mostrar sempre",
+  "hide-toolbar-on-mobile": "Ocultar no telemóvel",
+  "select-toolbar-visibility": "Selecionar a visibilidade da barra de ferramentas",
+  "select-a-time-format": "Selecionar um formato de hora"
 }

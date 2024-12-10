@@ -55,8 +55,9 @@ export const SelectDropdown = ({
   placeholder,
   icon,
   options,
-  onChange
-}: SelectDropdownProps) => {
+    onChange
+  }: SelectDropdownProps) => {
+  const { t } = useTranslation()
   return (
     <Dropdown>
       <DropdownTrigger>
@@ -64,7 +65,7 @@ export const SelectDropdown = ({
           variant='flat'
           startContent={icon && <Icon icon={icon} width="20" height="20" />}
         >
-          {value ?? placeholder}
+          {t(value as string) || placeholder}
         </Button>
       </DropdownTrigger>
       <DropdownMenu

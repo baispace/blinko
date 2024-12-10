@@ -198,5 +198,11 @@
   "block-type-select-placeholder": "Tipo de bloque",
   "trash": "basura",
   "custom-path": "Ruta personalizada",
-  "page-size": "Tamaño de página"
+  "page-size": "Tamaño de página",
+  "toolbar-visibility": "Visibilidad de la barra de herramientas",
+  "always-hide-toolbar": "Esconderse siempre",
+  "always-show-toolbar": "Mostrar siempre",
+  "hide-toolbar-on-mobile": "Ocultar en el móvil",
+  "select-toolbar-visibility": "Seleccionar la visibilidad de la barra de herramientas",
+  "select-a-time-format": "Seleccione un formato de hora"
 }

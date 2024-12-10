@@ -199,5 +199,11 @@
   "block-type-select-placeholder": "区块类型",
   "trash": "回收站",
   "custom-path": "自定义路径",
-  "page-size": "每页加载数"
+  "page-size": "每页加载数",
+  "toolbar-visibility": "工具栏可见性",
+  "always-hide-toolbar": "始终隐藏",
+  "always-show-toolbar": "始终显示",
+  "hide-toolbar-on-mobile": "在移动设备上隐藏",
+  "select-toolbar-visibility": "选择工具栏可见性",
+  "select-a-time-format": "选择时间格式"
 }

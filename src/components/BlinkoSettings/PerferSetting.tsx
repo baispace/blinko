@@ -166,7 +166,7 @@ export const PerferSetting = observer(() => {
       rightContent={
         <SelectDropdown
           value={blinko.config.value?.timeFormat}
-          placeholder="Select a time format"
+          placeholder={t('select-a-time-format')}
           icon="mingcute:time-line"
           options={[
             { key: "relative", label: "1 seconds ago" },
@@ -197,6 +197,27 @@ export const PerferSetting = observer(() => {
           value={PageSize.value}
           onChange={e => {
             PageSize.save(Number(e.target.value))
+          }}
+        />
+      } />
+
+    <Item
+      leftContent={<>{t('toolbar-visibility')}</>}
+      rightContent={
+        <SelectDropdown
+          value={blinko.config.value?.toolbarVisibility}
+          placeholder={t('select-toolbar-visibility')}
+          icon="mdi:toolbar"
+          options={[
+            { key: "always-show-toolbar", label: t('always-show-toolbar') },
+            { key: "hide-toolbar-on-mobile", label: t('hide-toolbar-on-mobile') },
+            { key: "always-hide-toolbar", label: t('always-hide-toolbar') }
+          ]}
+          onChange={async (value) => {
+            await PromiseCall(api.config.update.mutate({
+              key: 'toolbarVisibility',
+              value: value
+            }))
           }}
         />
       } />

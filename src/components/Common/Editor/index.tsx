@@ -106,31 +106,41 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
           toolbarPlugin({
             toolbarContents: () => (
               <div className='flex flex-col w-full'>
-                <div className='flex w-full items-center'>
-                  {/******************** Insert List *****************/}
-                  <ListsToggle />
-                  {isPc && <BoldItalicUnderlineToggles />}
-                  <InsertTable />
-                  <InsertImage />
-                  {/* <CreateLink /> */}
-                  {/******************** Insert Code *****************/}
-                  <ConditionalContents
-                    options={[
-                      { when: (editor) => editor?.editorType === 'codeblock', contents: () => <ChangeCodeMirrorLanguage /> },
-                      { when: (editor) => editor?.editorType === 'sandpack', contents: () => <ShowSandpackInfo /> },
-                      {
-                        fallback: () => (<>
-                          <InsertCodeBlock />
-                          <InsertSandpack />
-                        </>)
-                      }
-                    ]}
-                  />
-                  {isPc && <BlockTypeSelect />}
-                  <div className={`${store.viewMode == 'source' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-5px]'} font-bold  ml-auto text-red-500 text-xs select-none transition-all duration-300 ease-in-out`}>
-                    {t('source-code-mode')}
-                  </div>
-                </div>
+                {
+                  (() => {
+                    const visibility = blinko.config.value?.toolbarVisibility;
+                    if (visibility === 'always-hide-toolbar') return null;
+                    if (visibility === 'hide-toolbar-on-mobile' && !isPc) return null;
+                    
+                    return (
+                      <div className='flex w-full items-center'>
+                        {/******************** Insert List *****************/}
+                        <ListsToggle />
+                        {isPc && <BoldItalicUnderlineToggles />}
+                        <InsertTable />
+                        <InsertImage />
+                        {/* <CreateLink /> */}
+                        {/******************** Insert Code *****************/}
+                        <ConditionalContents
+                          options={[
+                            { when: (editor) => editor?.editorType === 'codeblock', contents: () => <ChangeCodeMirrorLanguage /> },
+                            { when: (editor) => editor?.editorType === 'sandpack', contents: () => <ShowSandpackInfo /> },
+                            {
+                              fallback: () => (<>
+                                <InsertCodeBlock />
+                                <InsertSandpack />
+                              </>)
+                            }
+                          ]}
+                        />
+                        {isPc && <BlockTypeSelect />}
+                        <div className={`${store.viewMode == 'source' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-5px]'} font-bold  ml-auto text-red-500 text-xs select-none transition-all duration-300 ease-in-out`}>
+                          {t('source-code-mode')}
+                        </div>
+                      </div>
+                    )
+                  })()
+                }
               </div>
             )
           }),

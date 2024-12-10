@@ -197,5 +197,11 @@
   "select-block-type": "Blocktyp auswählen",
   "block-type-select-placeholder": "Block Typ",
   "trash": "Müll",
-  "page-size": "Größe der Seite"
+  "page-size": "Größe der Seite",
+  "toolbar-visibility": "Sichtbarkeit der Symbolleiste",
+  "always-hide-toolbar": "Immer verstecken",
+  "always-show-toolbar": "Immer anzeigen",
+  "hide-toolbar-on-mobile": "Auf dem Handy ausblenden",
+  "select-toolbar-visibility": "Sichtbarkeit der Symbolleiste auswählen",
+  "select-a-time-format": "Wählen Sie ein Zeitformat"
 }

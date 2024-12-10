@@ -204,5 +204,11 @@
   "block-type-select-placeholder": "نوع المربع",
   "trash": "قمامة",
   "custom-path": "المسار المخصص",
-  "page-size": "حجم الصفحة"
+  "page-size": "حجم الصفحة",
+  "toolbar-visibility": "رؤية شريط الأدوات",
+  "always-hide-toolbar": "اختبئ دائماً",
+  "always-show-toolbar": "اعرض دائماً",
+  "hide-toolbar-on-mobile": "إخفاء على الجوال",
+  "select-toolbar-visibility": "تحديد رؤية شريط الأدوات",
+  "select-a-time-format": "حدد تنسيق الوقت"
 }

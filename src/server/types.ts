@@ -22,6 +22,7 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('language'),
   z.literal('theme'),
   z.literal('webhookEndpoint'),
+  z.literal('toolbarVisibility'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -58,6 +59,7 @@ export const ZConfigSchema = z.object({
   aiApiEndpoint: z.any().optional(),
   aiModel: z.any().optional(),
   isHiddenMobileBar: z.boolean().optional(),
+  toolbarVisibility: z.any().optional(),
   isAllowRegister: z.any().optional(),
   isOrderByCreateTime: z.any().optional(),
   timeFormat: z.any().optional(),

@@ -206,5 +206,11 @@
   "dark-mode": "Dark Mode",
   "follow-system": "Follow System",
   "custom-path": "Custom Path",
-  "page-size": "Page Size"
+  "page-size": "Page Size",
+  "toolbar-visibility": "Toolbar Visibility",
+  "select-toolbar-visibility": "Select toolbar visibility",
+  "always-show-toolbar": "Always Show",
+  "hide-toolbar-on-mobile": "Hide on Mobile",
+  "always-hide-toolbar": "Always Hide",
+  "select-a-time-format": "Select a time format"
 }

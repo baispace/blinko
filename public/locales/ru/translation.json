@@ -199,5 +199,11 @@
   "select-block-type": "Выберите тип блока",
   "block-type-select-placeholder": "Тип блока",
   "trash": "Корзина",
-  "page-size": "Размер страницы"
+  "page-size": "Размер страницы",
+  "toolbar-visibility": "Видимость панели инструментов",
+  "always-hide-toolbar": "Всегда прячьтесь",
+  "always-show-toolbar": "Всегда показывать",
+  "hide-toolbar-on-mobile": "Скрыть на мобильном",
+  "select-toolbar-visibility": "Выбор видимости панели инструментов",
+  "select-a-time-format": "Выберите формат времени"
 }

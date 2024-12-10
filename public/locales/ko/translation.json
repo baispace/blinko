@@ -198,5 +198,11 @@
   "block-type-select-placeholder": "블록 유형",
   "trash": "쓰레기",
   "custom-path": "사용자 지정 경로",
-  "page-size": "페이지 크기"
+  "page-size": "페이지 크기",
+  "toolbar-visibility": "툴바 가시성",
+  "always-hide-toolbar": "항상 숨기기",
+  "always-show-toolbar": "항상 표시",
+  "hide-toolbar-on-mobile": "모바일에서 숨기기",
+  "select-toolbar-visibility": "도구 모음 표시 여부 선택",
+  "select-a-time-format": "시간 형식 선택"
 }

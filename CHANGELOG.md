@@ -1,3 +1,10 @@
+## [0.21.14](https://github.com/blinko-space/blinko/compare/v0.21.13...v0.21.14) (2024-12-10)
+
+
+### Bug Fixes
+
+* user register issue ([c2cd522](https://github.com/blinko-space/blinko/commit/c2cd522ce605102dd1d041321f44e0bfc8274063))
+
 ## [0.21.13](https://github.com/blinko-space/blinko/compare/v0.21.12...v0.21.13) (2024-12-10)
 
 

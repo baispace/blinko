@@ -19,17 +19,17 @@ const renderListItems = (children: any, onChange: (newContent: string) => void, 
       const isChecked = child.props?.checked ?? false;
       const iconType = isChecked ? "lets-icons:check-fill" : "ci:radio-unchecked";
       return (
-        <div key={index} className='!ml-[-30px] flex items-center gap-1 cursor-pointer hover:opacity-80'
+        <div key={index} className='!ml-[-30px] flex items-start gap-1 cursor-pointer hover:opacity-80'
           onClick={() => {
             const newContent = isChecked
               ? content.replace(`* [x]${text}`, `* [ ]${text}`).replace(`- [x]${text}`, `- [ ]${text}`)
               : content.replace(`* [ ]${text}`, `* [x]${text}`).replace(`- [ ]${text}`, `- [x]${text}`);
             onChange(newContent)
           }}>
-          <div className='w-[20px] h-[20px]'>
+          <div className='w-[20px] h-[20px] flex-shrink-0 mt-1'>
             <Icon className='text-[#EAB308]' icon={iconType} width="20" height="20" />
           </div>
-          <div className={isChecked ? 'line-through text-desc' : ''}>{renderItem}</div>
+          <div className={`${isChecked ? 'line-through text-desc' : ''} break-all`}>{renderItem}</div>
         </div>
       );
     }
@@ -56,9 +56,8 @@ const renderListItems = (children: any, onChange: (newContent: string) => void, 
 export const ListItem = ({ children, content, onChange }: ListItemProps) => {
   try {
     //@ts-ignore
-    return <ul>{renderListItems(children, onChange, content)}</ul>;
+    return <ul className="break-all">{renderListItems(children, onChange, content)}</ul>;
   } catch (error) {
-    // console.log(error)
-    return <li>{children}</li>;
+    return <li className="break-all">{children}</li>;
   }
 }; 

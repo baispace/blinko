@@ -31,7 +31,7 @@ export const AiEmoji: React.FC<AiEmojiProps> = ({
             isIconOnly
             className='text-2xl'
             variant={selected === emoji ? "solid" : "bordered"}
-            onClick={() => setSelected(emoji)}
+            onPress={() => setSelected(emoji)}
           >
             {emoji}
           </Button>
@@ -40,7 +40,7 @@ export const AiEmoji: React.FC<AiEmojiProps> = ({
       <div className='flex mt-2 gap-2 items-center'>
         <Button
           color="primary"
-          onClick={handleConfirm}
+          onPress={handleConfirm}
           className="w-fit ml-auto"
         >
           {t('confirm')}

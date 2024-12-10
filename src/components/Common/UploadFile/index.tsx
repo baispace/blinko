@@ -32,6 +32,6 @@ export const UploadFileWrapper = ({ onUpload }: IProps) => {
 
   return <div {...getRootProps()}>
     <input {...getInputProps()} />
-    <Button onClick={open} isLoading={isLoading} color='primary' startContent={<Icon icon="tabler:upload" width="24" height="24" />}>Upload</Button>
+    <Button onPress={open} isLoading={isLoading} color='primary' startContent={<Icon icon="tabler:upload" width="24" height="24" />}>Upload</Button>
   </div>
 }

@@ -56,10 +56,10 @@ export const AiTag: React.FC<AiTagProps> = ({
           <Radio value="insert-before">{t('insert-before')}</Radio>
           <Radio value="insert-after">{t('insert-after')}</Radio>
         </RadioGroup>
-        <Button onClick={handleSelectAll}>{t('select-all')}</Button>
+        <Button onPress={handleSelectAll}>{t('select-all')}</Button>
         <Button
           color="primary"
-          onClick={handleConfirm}
+          onPress={handleConfirm}
           className="w-fit ml-auto"
         >
           {t('confirm')}

@@ -142,7 +142,7 @@ export default function Component() {
           <Button
             color="primary"
             isLoading={SignIn.loading.value}
-            onClick={async e => {
+            onPress={async e => {
               login()
             }}>
             {t('sign-in')}

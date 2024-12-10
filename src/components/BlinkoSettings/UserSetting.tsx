@@ -41,7 +41,7 @@ const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: st
     />
     <PasswordInput placeholder={t('password')} label={t('password')} value={store.password} onChange={e => { store.password = e.target.value }} />
     <div className="flex w-full mt-2">
-      <Button isLoading={store.upsertUser.loading.value} className="ml-auto" color='primary' onClick={async e => {
+      <Button isLoading={store.upsertUser.loading.value} className="ml-auto" color='primary' onPress={async e => {
         await store.upsertUser.call()
       }}>{t('save')}</Button>
     </div>
@@ -61,13 +61,14 @@ export const UserSetting = observer(() => {
     <Item
       leftContent={<>{t('user-list')}</>}
       rightContent={
-        <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width="18" height="18" />} onClick={e => {
-          RootStore.Get(DialogStore).setData({
-            isOpen: true,
-            title: t('create-user'),
-            content: <UpdateUserInfo name="" password="" />
-          })
-        }}>{t('create-user')}</Button>
+        <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width="18" height="18" />}
+          onPress={e => {
+            RootStore.Get(DialogStore).setData({
+              isOpen: true,
+              title: t('create-user'),
+              content: <UpdateUserInfo name="" password="" />
+            })
+          }}>{t('create-user')}</Button>
       } />
 
     <Item
@@ -86,7 +87,7 @@ export const UserSetting = observer(() => {
                   <Chip size="sm" color="warning" variant="bordered">{i.role}</Chip>
                 </TableCell>
                 <TableCell>
-                  <Button isIconOnly color="primary" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onClick={e => {
+                  <Button isIconOnly color="primary" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
                     RootStore.Get(DialogStore).setData({
                       isOpen: true,
                       title: t('edit-user'),

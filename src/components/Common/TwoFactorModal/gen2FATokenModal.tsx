@@ -86,7 +86,7 @@ export function Gen2FATokenModal({ onConfirm, isLoading, qrCodeUrl, totpSecret }
       <Button
         className="mt-2"
         color="primary"
-        onClick={async () => {
+        onPress={async () => {
           await store.verify()
         }}
       >

@@ -23,11 +23,7 @@ export const SendButton = ({ store, isSendLoading }: Props) => {
         className={`ml-2 w-[60px] group`}
         isIconOnly
         color='primary'
-        onClick={(e) => {
-          store.handleSend()
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault()
+        onPress={(e) => {
           store.handleSend()
         }}
       >

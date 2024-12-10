@@ -111,7 +111,7 @@ const Dialog = observer(() => {
               <div className="flex flex-col justify-between items-center p-4 gap-2">
                 <div className="flex gap-2 w-full items-center">
                   <div className="text-lg font-semibold">{title ?? ''}</div>
-                  <Button isIconOnly variant="light" onClick={() => modal.close()} className="ml-auto">
+                  <Button isIconOnly variant="light" onPress={() => modal.close()} className="ml-auto">
                     <Icon icon="tabler:x" width="16" height="16" />
                   </Button>
                 </div>

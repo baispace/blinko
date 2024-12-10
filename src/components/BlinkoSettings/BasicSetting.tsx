@@ -69,7 +69,7 @@ export const BasicSetting = observer(() => {
         <div className="flex gap-2 items-center">
           <div className="text-desc">{user.name}</div>
           <Button variant="flat" isIconOnly startContent={<Icon icon="tabler:edit" width="20" height="20" />} size='sm'
-            onClick={e => {
+            onPress={e => {
               RootStore.Get(DialogStore).setData({
                 isOpen: true,
                 title: t('change-user-info'),
@@ -77,7 +77,7 @@ export const BasicSetting = observer(() => {
               })
             }} />
           <Button variant="flat" isIconOnly startContent={<Icon icon="material-symbols:password" width="20" height="20" />} size='sm'
-            onClick={e => {
+            onPress={e => {
               RootStore.Get(DialogStore).setData({
                 title: t('rest-user-info'),
                 isOpen: true,
@@ -95,7 +95,9 @@ export const BasicSetting = observer(() => {
           isIconOnly
           variant="flat"
           size="sm"
-          onClick={() => store.setShowToken(!store.showToken)}
+          onPress={() => {
+            store.setShowToken(!store.showToken)
+          }}
         >
           <Icon
             icon={store.showToken ? "mdi:eye-off" : "mdi:eye"}
@@ -228,7 +230,7 @@ export const BasicSetting = observer(() => {
     <Item
       leftContent={<></>}
       rightContent={
-        <Button startContent={<Icon icon="humbleicons:logout" width="20" height="20" />} size='sm' color='danger' onClick={async () => {
+        <Button startContent={<Icon icon="humbleicons:logout" width="20" height="20" />} size='sm' color='danger' onPress={async () => {
           await signOut({ redirect: false })
           router.push('/signin')
           localStorage.removeItem('username')

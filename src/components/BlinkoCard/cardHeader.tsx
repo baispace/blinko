@@ -33,7 +33,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
             variant='flat'
             size='sm'
             className='mr-2'
-            onClick={() => {
+            onPress={() => {
               window.history.back();
             }}
           >

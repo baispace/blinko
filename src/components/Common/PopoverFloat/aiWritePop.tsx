@@ -105,33 +105,33 @@ const AiWritePop = observer(() => {
         }
         {ai.isWriting && (
           <div id='ai-write-suggestions' className='flex gap-2 items-center'>
-            <Button onClick={() => {
+            <Button onPress={() => {
               ai.isWriting = false;
               eventBus.emit('editor:insert', ai.writingResponseText)
               ai.writingResponseText = ''
               store.hidden()
             }} startContent={<Icon icon="ic:sharp-check" className='green' />} size='sm' variant='light' color='success'>{t('accept')}</Button>
-            <Button onClick={() => {
+            <Button onPress={() => {
               ai.isWriting = false;
               ai.writingResponseText = ''
               store.hidden()
             }} startContent={<Icon icon="ic:sharp-close" className='red' />} size='sm' variant='light' color='danger'>{t('reject')}</Button>
-            <Button onClick={() => {
+            <Button onPress={() => {
               ai.abort();
             }} startContent={<Icon icon="mynaui:stop" className='blinko' />} size='sm' variant='light' color='warning'>{t('stop')} </Button>
           </div>
         )}
 
         <div className='flex items-center gap-2'>
-          <Button startContent={<Icon icon="proicons:text-expand" width="16" height="16" />} variant='flat' color='warning' size='sm' onClick={e => {
+          <Button startContent={<Icon icon="proicons:text-expand" width="16" height="16" />} variant='flat' color='warning' size='sm' onPress={e => {
             ai.writeStream('expand', blinko.isCreateMode ? blinko.noteContent : blinko.curSelectedNote!.content)
             // store.hidden()
           }}>{t('ai-expand')}</Button>
-          <Button startContent={<Icon icon="lucide:scan-text" width="16" height="16" />} variant='flat' color='warning' size='sm' onClick={e => {
+          <Button startContent={<Icon icon="lucide:scan-text" width="16" height="16" />} variant='flat' color='warning' size='sm' onPress={e => {
             ai.writeStream('polish', blinko.isCreateMode ? blinko.noteContent : blinko.curSelectedNote!.content)
             // store.hidden()
           }}>{t('ai-polish')}</Button>
-          <Button className='ml-auto' isLoading={ai.isLoading} isIconOnly size='sm' onClick={e => {
+          <Button className='ml-auto' isLoading={ai.isLoading} isIconOnly size='sm' onPress={e => {
             store.hidden()
             eventBus.emit('editor:deleteLastChar')
           }}>

@@ -92,7 +92,7 @@ export default function Component() {
             value={password2}
             onChange={e => setPassword2(e.target.value)}
           />
-          <Button color="primary" type="submit" onClick={async e => {
+          <Button color="primary" type="submit" onPress={async e => {
             if (!user || !password || !password2) {
               return RootStore.Get(ToastPlugin).error(t('required-items-cannot-be-empty'))
             }

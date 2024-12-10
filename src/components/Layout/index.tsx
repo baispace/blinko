@@ -109,7 +109,7 @@ export const CommonLayout = observer(({
               className="flex"
               size="sm"
               variant="light"
-              onClick={() => setisOpen(!isOpen)}
+              onPress={() => setisOpen(!isOpen)}
             >
               <Icon
                 className="text-default-500"

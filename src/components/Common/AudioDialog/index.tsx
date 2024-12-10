@@ -82,13 +82,13 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         <Button
           isIconOnly
           className="absolute left-10 backdrop-blur-sm rounded-full"
-          onClick={() => RootStore.Get(DialogStandaloneStore).close()}
+          onPress={() => RootStore.Get(DialogStandaloneStore).close()}
         >
           <Icon icon="iconamoon:close-thin" width="24" height="24" />
         </Button>
 
         {recordingBlob && !isRecording && (
-          <Button isIconOnly onClick={handleComplete} radius='lg' className={`absolute right-10 group w-fit`} color='primary' >
+          <Button isIconOnly onPress={handleComplete} radius='lg' className={`absolute right-10 group w-fit`} color='primary' >
             <Icon icon="mynaui:upload" width="24" height="24" />
           </Button>
         )}

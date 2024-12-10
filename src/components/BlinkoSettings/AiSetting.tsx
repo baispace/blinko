@@ -328,7 +328,7 @@ export const AiSetting = observer(() => {
       </div>}
       rightContent={
         <div className="flex w-full ml-auto justify-end gap-2">
-          <Button color='danger' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onClick={() => {
+          <Button color='danger' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onPress={() => {
             showTipsDialog({
               title: t('force-rebuild-embedding-index'),
               content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
@@ -337,7 +337,7 @@ export const AiSetting = observer(() => {
               }
             })
           }}>{t('force-rebuild')}</Button>
-          <Button color='primary' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onClick={() => {
+          <Button color='primary' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onPress={() => {
             showTipsDialog({
               title: t('rebuild-embedding-index'),
               content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),

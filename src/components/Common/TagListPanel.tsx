@@ -62,7 +62,7 @@ const CustomIcon = observer(({ onSubmit }: { onSubmit: (icon: string) => void })
       </>}
     />
     <div className="flex justify-end">
-      <Button color="primary" onClick={() => { onSubmit(icon) }}>Submit</Button>
+      <Button color="primary" onPress={() => { onSubmit(icon) }}>Submit</Button>
     </div>
   </div>
 })
@@ -150,7 +150,7 @@ export const TagListPanel = observer(() => {
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Static Actions">
                   {
-                    blinko.showAi ? <DropdownItem key="aiEmoji" onClick={async () => {
+                    blinko.showAi ? <DropdownItem key="aiEmoji" onPress={async () => {
                       if (!isPc) {
                         eventBus.emit('close-sidebar')
                       }
@@ -162,7 +162,7 @@ export const TagListPanel = observer(() => {
                       </div>
                     </DropdownItem> : <></>
                   }
-                  <DropdownItem key="aiEmoji" onClick={async () => {
+                  <DropdownItem key="aiEmoji" onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -173,7 +173,7 @@ export const TagListPanel = observer(() => {
                       {t('custom-icon')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="updateIcon" onClick={async () => {
+                  <DropdownItem key="updateIcon" onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -184,7 +184,7 @@ export const TagListPanel = observer(() => {
                       {t('update-tag-icon')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="Update" onClick={async () => {
+                  <DropdownItem key="Update" onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -205,7 +205,7 @@ export const TagListPanel = observer(() => {
                       {t('update-name')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="deletetag" className="text-danger" color="danger" onClick={async () => {
+                  <DropdownItem key="deletetag" className="text-danger" color="danger" onPress={async () => {
                     PromiseCall(api.tags.deleteOnlyTag.mutate(({ id: element.id as number })))
                   }}>
                     <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export const TagListPanel = observer(() => {
                       {t('delete-only-tag')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="delete" className="text-danger" color="danger" onClick={async () => {
+                  <DropdownItem key="delete" className="text-danger" color="danger" onPress={async () => {
                     PromiseCall(api.tags.deleteTagWithAllNote.mutate(({ id: element.id as number })))
                   }}>
                     <div className="flex items-center gap-2">

@@ -12,10 +12,11 @@ const TipsDialog = observer(({ content, onConfirm }: any) => {
       <div className="ml-4">{content}</div>
     </div>
     <div className='flex my-4 gap-4'>
-      <Button className="ml-auto" color='default' onClick={e => {
-        RootStore.Get(DialogStore).close()
-      }}>{t('cancel')}</Button>
-      <Button color='danger' onClick={async e => {
+      <Button className="ml-auto" color='default'
+        onPress={e => {
+          RootStore.Get(DialogStore).close()
+        }}>{t('cancel')}</Button>
+      <Button color='danger' onPress={async e => {
         onConfirm?.()
       }}>{t('confrim')}</Button>
     </div>
@@ -45,10 +46,10 @@ export const TipsPopover = observer((props: { children: React.ReactNode, content
           <div className="font-bold">{props.content}</div>
         </div>
         <div className='flex my-1 gap-2'>
-          <Button size="sm" className="ml-auto" color='default' onClick={e => {
+          <Button size="sm" className="ml-auto" color='default' onPress={e => {
             RootStore.Get(DialogStore).close()
           }}>{t('cancel')}</Button>
-          <Button isLoading={isLoading} size="sm" color='danger' onClick={async e => {
+          <Button isLoading={isLoading} size="sm" color='danger' onPress={async e => {
             props.onConfirm?.()
           }}>{t('confirm')}</Button>
         </div>

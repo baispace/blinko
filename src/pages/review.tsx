@@ -111,14 +111,14 @@ const App = observer(() => {
 
           <div className="mt-8 flex items-center justify-center px-6 gap-4">
             <Tooltip content={t('reviewed')}>
-              <Button onClick={async e => {
+              <Button onPress={async e => {
                 if (!store.currentNote) return
                 PromiseCall(api.notes.reviewNote.mutate({ id: store.currentNote!.id! }))
               }} isIconOnly color='primary' startContent={<Icon icon="ci:check-all" width="24" height="24" />} />
             </Tooltip>
 
             <Tooltip content={store.isBlinko ? t('convert-to-note') : t('convert-to-blinko')}>
-              <Button isIconOnly onClick={async e => {
+              <Button isIconOnly onPress={async e => {
                 if (!store.currentNote) return
                 await blinko.upsertNote.call({ id: store.currentNote.id, type: store.isBlinko ? NoteType.NOTE : NoteType.BLINKO })
                 await api.notes.reviewNote.mutate({ id: store.currentNote!.id! })
@@ -130,15 +130,15 @@ const App = observer(() => {
             </Tooltip>
 
             <Tooltip content={t('archive')} >
-              <Button onClick={async e => {
-              if (!store.currentNote) return
-              await blinko.upsertNote.call({ id: store.currentNote.id, isArchived: true })
-              await blinko.dailyReviewNoteList.call()
-            }} isIconOnly color='primary' startContent={<Icon icon="eva:archive-outline" width="20" height="20" />}></Button>
+              <Button onPress={async e => {
+                if (!store.currentNote) return
+                await blinko.upsertNote.call({ id: store.currentNote.id, isArchived: true })
+                await blinko.dailyReviewNoteList.call()
+              }} isIconOnly color='primary' startContent={<Icon icon="eva:archive-outline" width="20" height="20" />}></Button>
             </Tooltip>
 
             <Button
-              onClick={async e => {
+              onPress={async e => {
                 if (!store.currentNote) return
                 showTipsDialog({
                   title: t('confirm-to-delete'),

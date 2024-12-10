@@ -40,7 +40,7 @@ export const UpdateTag = observer(({ onSave, defaultValue = '', type = 'input' }
         </Select>
     }
 
-    <Button style={{ width: '30px' }} color="primary" onClick={async () => {
+    <Button style={{ width: '30px' }} color="primary" onPress={async () => {
       await onSave?.(store.tagName)
       RootStore.Get(DialogStore).close()
     }}>Save</Button>

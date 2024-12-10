@@ -1,0 +1,38 @@
+name: Mark Stable Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'stable tag version (such as: 1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  tag-stable:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Tag and Push Stable
+        run: |
+          # Docker Hub
+          docker pull blinkospace/blinko:${{ inputs.version }}
+          docker tag blinkospace/blinko:${{ inputs.version }} blinkospace/blinko:stable
+          docker push blinkospace/blinko:stable
+          
+          # GitHub Container Registry
+          docker pull ghcr.io/blinko-space/blinko:${{ inputs.version }}
+          docker tag ghcr.io/blinko-space/blinko:${{ inputs.version }} ghcr.io/blinko-space/blinko:stable
+          docker push ghcr.io/blinko-space/blinko:stable 

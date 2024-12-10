@@ -1,5 +1,6 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine3.21 AS builder
 
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 WORKDIR /app
 
 ENV NEXT_PRIVATE_STANDALONE true
@@ -21,8 +22,11 @@ RUN pnpm build-seed
 
 
 
-FROM node:18-alpine AS runner
+FROM node:20-alpine3.21 AS runner
 
+# Fix alpine3.21 openssl issue
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
+  
 # RUN apk add --no-cache postgresql14-client
 RUN npm install -g prisma
 RUN apk add --no-cache curl tzdata

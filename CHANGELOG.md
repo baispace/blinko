@@ -1,3 +1,10 @@
+## [0.21.12](https://github.com/blinko-space/blinko/compare/v0.21.11...v0.21.12) (2024-12-10)
+
+
+### Bug Fixes
+
+* add user preferences setup for theme and language management ([b920093](https://github.com/blinko-space/blinko/commit/b92009367a22643d44ddc552567795fa1b4da9fb))
+
 ## [0.21.11](https://github.com/blinko-space/blinko/compare/v0.21.10...v0.21.11) (2024-12-10)
 
 

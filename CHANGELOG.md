@@ -1,3 +1,10 @@
+## [0.21.11](https://github.com/blinko-space/blinko/compare/v0.21.10...v0.21.11) (2024-12-10)
+
+
+### Bug Fixes
+
+* enhance OpenAPI metadata for user and tag routers ([17c18df](https://github.com/blinko-space/blinko/commit/17c18df4b7aecb4d9847f7e810d7d0e24468f3da))
+
 ## [0.21.10](https://github.com/blinko-space/blinko/compare/v0.21.9...v0.21.10) (2024-12-10)
 
 

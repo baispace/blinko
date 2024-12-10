@@ -229,7 +229,7 @@ export const userRouter = router({
       const qrCode = generateTOTPQRCode(input.name, secret);
       return { secret, qrCode };
     }),
-  verify2FAToken: authProcedure
+  verify2FAToken: authProcedure.use(demoAuthMiddleware)
     .input(z.object({
       token: z.string(),
       secret: z.string()

@@ -1,3 +1,10 @@
+# [0.22.0](https://github.com/blinko-space/blinko/compare/v0.21.17...v0.22.0) (2024-12-10)
+
+
+### Features
+
+* implement two-factor authentication (2FA) support with TOTP ([317dabb](https://github.com/blinko-space/blinko/commit/317dabbca053fec4504f575e248632d6f037774d))
+
 ## [0.21.17](https://github.com/blinko-space/blinko/compare/v0.21.16...v0.21.17) (2024-12-10)
 
 

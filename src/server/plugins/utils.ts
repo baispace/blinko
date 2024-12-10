@@ -140,6 +140,7 @@ export class FileService {
       for await (const chunk of response.Body as any) {
         chunks.push(chunk);
       }
+      //@ts-ignore
       await fs.writeFile(tempPath, Buffer.concat(chunks));
       return tempPath;
     } else {

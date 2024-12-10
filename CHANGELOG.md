@@ -1,3 +1,10 @@
+## [0.21.6](https://github.com/blinko-space/blinko/compare/v0.21.5...v0.21.6) (2024-12-10)
+
+
+### Bug Fixes
+
+* Blinko settings to support page size configuration [#278](https://github.com/blinko-space/blinko/issues/278) ([3e1c61f](https://github.com/blinko-space/blinko/commit/3e1c61f3a2481175358cf081b976c4a613c53421))
+
 ## [0.21.5](https://github.com/blinko-space/blinko/compare/v0.21.4...v0.21.5) (2024-12-10)
 
 

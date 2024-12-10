@@ -20,14 +20,24 @@ const genToken = async ({ id, name, role }: { id: number, name: string, role: st
 
 export const userRouter = router({
   list: authProcedure.use(superAdminAuthMiddleware)
-    .meta({ openapi: { method: 'GET', path: '/v1/user/list', summary: 'Find user list', tags: ['User'] } })
+    .meta({
+      openapi: {
+        method: 'GET', path: '/v1/user/list', summary: 'Find user list',
+        description: 'Find user list, need super admin permission', tags: ['User']
+      }
+    })
     .input(z.void())
     .output(z.array(accountsSchema))
     .query(async () => {
       return await prisma.accounts.findMany()
     }),
-  detail: publicProcedure
-    .meta({ openapi: { method: 'GET', path: '/v1/user/detail', summary: 'Find user detail from user id', tags: ['User'] } })
+  detail: authProcedure
+    .meta({
+      openapi: {
+        method: 'GET', path: '/v1/user/detail', summary: 'Find user detail from user id',
+        description: 'Find user detail from user id, need login', tags: ['User']
+      }
+    })
     .input(z.object({ id: z.number() }))
     .output(z.object({
       id: z.number(),
@@ -59,7 +69,12 @@ export const userRouter = router({
       }
     }),
   createAdmin: publicProcedure
-    .meta({ openapi: { method: 'POST', path: '/v1/user/create-admin', summary: 'Create admin user', tags: ['User'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/user/create-admin', summary: 'Create admin user',
+        description: 'Create admin user in first time', tags: ['User']
+      }
+    })
     .input(z.object({
       name: z.string(),
       password: z.string()
@@ -111,7 +126,12 @@ export const userRouter = router({
       }
     }),
   upsertUser: authProcedure.use(demoAuthMiddleware)
-    .meta({ openapi: { method: 'POST', path: '/v1/user/upsert', summary: 'Update or create user', tags: ['User'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/user/upsert', summary: 'Update or create user',
+        description: 'Update or create user, need login', tags: ['User']
+      }
+    })
     .input(z.object({
       id: z.number().optional(),
       name: z.string().optional(),
@@ -152,7 +172,12 @@ export const userRouter = router({
       })
     }),
   upsertUserByAdmin: authProcedure.use(superAdminAuthMiddleware).use(demoAuthMiddleware)
-    .meta({ openapi: { method: 'POST', path: '/v1/user/upsert-by-admin', summary: 'Update or create user by admin', tags: ['User'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/user/upsert-by-admin', summary: 'Update or create user by admin'
+        , description: 'Update or create user by admin, need super admin permission', tags: ['User']
+      }
+    })
     .input(z.object({
       id: z.number().optional(),
       name: z.string().optional(),

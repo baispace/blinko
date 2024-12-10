@@ -28,7 +28,12 @@ export const tagRouter = router({
       return tags;
     }),
   updateTagMany: authProcedure
-    .meta({ openapi: { method: 'POST', path: '/v1/tags/batch-update', summary: 'Batch update tags', protect: true, tags: ['Tag'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/tags/batch-update', summary: 'Batch update tags',
+        description: 'Batch update tags and add tag to notes', protect: true, tags: ['Tag']
+      }
+    })
     .input(z.object({
       ids: z.array(z.number()),
       tag: z.string()
@@ -44,7 +49,12 @@ export const tagRouter = router({
       return true
     }),
   updateTagName: authProcedure
-    .meta({ openapi: { method: 'POST', path: '/v1/tags/update-name', summary: 'Update tag name', protect: true, tags: ['Tag'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/tags/update-name', summary: 'Update tag name',
+        description: 'Update tag name and update tag to notes', protect: true, tags: ['Tag']
+      }
+    })
     .input(z.object({
       oldName: z.string(),
       newName: z.string(),
@@ -76,7 +86,12 @@ export const tagRouter = router({
       return await prisma.tag.update({ where: { id }, data: { icon } })
     }),
   deleteOnlyTag: authProcedure.use(demoAuthMiddleware)
-    .meta({ openapi: { method: 'POST', path: '/v1/tags/delete-only-tag', summary: 'Only delete tag ,not delete notes', protect: true, tags: ['Tag'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/tags/delete-only-tag', summary: 'Only delete tag name'
+        , description: 'Only delete tag name and remove tag from notes, but not delete notes', protect: true, tags: ['Tag']
+      }
+    })
     .input(z.object({
       id: z.number()
     }))
@@ -94,7 +109,12 @@ export const tagRouter = router({
       return true
     }),
   deleteTagWithAllNote: authProcedure.use(demoAuthMiddleware)
-    .meta({ openapi: { method: 'POST', path: '/v1/tags/delete-tag-with-notes', summary: 'Delete tagnot and delete notes', protect: true, tags: ['Tag'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/tags/delete-tag-with-notes', summary: 'Delete tag and delete notes',
+        description: 'Delete tag and delete notes', protect: true, tags: ['Tag']
+      }
+    })
     .input(z.object({
       id: z.number()
     }))

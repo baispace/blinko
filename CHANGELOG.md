@@ -1,3 +1,10 @@
+## [0.21.13](https://github.com/blinko-space/blinko/compare/v0.21.12...v0.21.13) (2024-12-10)
+
+
+### Bug Fixes
+
+* attachment search fix ([ee182b3](https://github.com/blinko-space/blinko/commit/ee182b3c60fead72f55ba1a298d55c5bca322e58))
+
 ## [0.21.12](https://github.com/blinko-space/blinko/compare/v0.21.11...v0.21.12) (2024-12-10)
 
 

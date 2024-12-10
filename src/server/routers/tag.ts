@@ -6,9 +6,9 @@ import { tagSchema } from '@/lib/prismaZodType';
 
 export const tagRouter = router({
   list: authProcedure
-    // .meta({ openapi: { method: 'GET', path: '/v1/tags/list', summary: 'Get user tags', protect: true } })
+    .meta({ openapi: { method: 'GET', path: '/v1/tags/list', summary: 'Get user tags', protect: true, tags: ['Tag'] } })
     .input(z.void())
-    // .output(z.array(tagSchema))
+    .output(z.array(tagSchema))
     .query(async function ({ ctx }) {
       const tags = await prisma.tag.findMany({
         where: {

@@ -1,3 +1,10 @@
+## [0.21.4](https://github.com/blinko-space/blinko/compare/v0.21.3...v0.21.4) (2024-12-10)
+
+
+### Bug Fixes
+
+* enhance AI prompt instructions for tag and emoji suggestions [#277](https://github.com/blinko-space/blinko/issues/277) ([fdcc34c](https://github.com/blinko-space/blinko/commit/fdcc34c8c0abc954f85fee78d482475953ee5df0))
+
 ## [0.21.3](https://github.com/blinko-space/blinko/compare/v0.21.2...v0.21.3) (2024-12-09)
 
 

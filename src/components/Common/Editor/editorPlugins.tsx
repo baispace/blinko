@@ -4,15 +4,17 @@ import { eventBus } from '@/lib/event';
 const { codeBlockPlugin, tablePlugin, listsPlugin, quotePlugin, markdownShortcutPlugin } = await import('@mdxeditor/editor')
 export const codeBlockLanguages = {
   plain: "plain",
-  js: "JavaScript",
-  javascript: "JavaScript",
   typescript: "TypeScript",
+  go: "Go",
+  html: "HTML",
+  python: "Python",
+  yaml: "YAML",
   mermaid: "Mermaid",
   mindmap: "MindMap",
   echarts:"Echarts",
-  html: "HTML",
-  python: "Python",
   java: "Java",
+  js: "JavaScript",
+  javascript: "JavaScript",
   c: "C",
   csharp: "C#",
   php: "PHP",
@@ -22,7 +24,7 @@ export const codeBlockLanguages = {
   shell: "Shell Script",
   json: "JSON",
   xml: "XML",
-  yaml: "YAML",
+
   ini: "INI",
 }
 

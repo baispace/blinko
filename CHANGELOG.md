@@ -1,3 +1,10 @@
+## [0.21.16](https://github.com/blinko-space/blinko/compare/v0.21.15...v0.21.16) (2024-12-10)
+
+
+### Bug Fixes
+
+* add toolbar visibility options and translations across multiple languages ([2a92284](https://github.com/blinko-space/blinko/commit/2a92284b63c4771cfb0e8fd0913303b84bb60272))
+
 ## [0.21.15](https://github.com/blinko-space/blinko/compare/v0.21.14...v0.21.15) (2024-12-10)
 
 

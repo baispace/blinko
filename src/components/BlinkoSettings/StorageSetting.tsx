@@ -22,6 +22,7 @@ export const StorageSetting = observer(() => {
     s3Endpoint: "",
     s3Region: "",
     s3Bucket: "",
+    s3CustomPath: "",
   }))
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export const StorageSetting = observer(() => {
     store.s3Endpoint = blinko.config.value?.s3Endpoint!
     store.s3Region = blinko.config.value?.s3Region!
     store.s3Bucket = blinko.config.value?.s3Bucket!
+    store.s3CustomPath = blinko.config.value?.s3CustomPath!
   }, [blinko.config.value])
 
 
@@ -108,6 +110,21 @@ export const StorageSetting = observer(() => {
               value: e.target.value
             }))
           }} />} />
+        <Item
+          leftContent={<>
+            <div>{t('custom-path')}</div>
+            <div className="text-xs text-default-400">{t('custom-path-desc')}</div>
+          </>}
+          rightContent={<Input 
+            value={store.s3CustomPath} 
+            onChange={e => store.s3CustomPath = e.target.value} 
+            placeholder="/custom/path/" 
+            onBlur={async (e) => {
+              await PromiseCall(api.config.update.mutate({
+                key: 's3CustomPath',
+                value: e.target.value
+              }))
+            }} />} />
       </>
     }
   </Card>

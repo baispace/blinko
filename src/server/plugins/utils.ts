@@ -60,17 +60,30 @@ export class FileService {
   static async uploadFile(buffer: Buffer, originalName: string) {
     const extension = path.extname(originalName);
     const baseName = path.basename(originalName, extension);
+    const timestamp = Date.now();
     const config = await getGlobalConfig();
+    
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
+      
+      let customPath = config.s3CustomPath || '';
+      if (customPath) {
+        customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+        customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+      }
+      
+      const timestampedFileName = `${baseName}_${timestamp}${extension}`;
+      const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+      
       const command = new PutObjectCommand({
         Bucket: config.s3Bucket,
-        Key: baseName + extension,
+        Key: s3Key,
         Body: buffer,
       });
+      
       await s3ClientInstance.send(command);
-      const s3Url = `/api/s3file/${baseName}${extension}`;
-      return { filePath: s3Url, fileName: baseName + extension };
+      const s3Url = `/api/s3file/${s3Key}`;
+      return { filePath: s3Url, fileName: timestampedFileName };
     } else {
       const filename = await this.writeFileSafe(baseName, extension, buffer);
       return { filePath: `/api/file/${filename}`, fileName: filename };
@@ -79,7 +92,7 @@ export class FileService {
 
   static async deleteFile(api_attachment_path: string) {
     const config = await getGlobalConfig();
-    if (config.objectStorage === 's3') {
+    if (api_attachment_path.includes('/api/s3file/')) {
       const { s3ClientInstance } = await this.getS3Client();
       const fileName = api_attachment_path.replace('/api/s3file/', "");
       const command = new DeleteObjectCommand({
@@ -87,6 +100,10 @@ export class FileService {
         Key: fileName,
       });
       await s3ClientInstance.send(command);
+      const attachmentPath = await prisma.attachments.findFirst({ where: { path: api_attachment_path } })
+      if (attachmentPath) {
+        await prisma.attachments.delete({ where: { id: attachmentPath.id } })
+      }
     } else {
       const filepath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + api_attachment_path.replace('/api/file/', ""));
       const attachmentPath = await prisma.attachments.findFirst({ where: { path: api_attachment_path } })
@@ -105,12 +122,14 @@ export class FileService {
 
   static async getFile(filePath: string) {
     const config = await getGlobalConfig();
-    const tempPath = path.join(UPLOAD_FILE_PATH, path.basename(filePath.replace('/api/file/', '').replace('/api/s3file/', '')));
+    const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
+    const tempPath = path.join(UPLOAD_FILE_PATH, path.basename(fileName));
+    
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
       const command = new GetObjectCommand({
         Bucket: config.s3Bucket,
-        Key: filePath.replace('/api/file/', '').replace('/api/s3file/', ''),
+        Key: fileName,
       });
 
       const response = await s3ClientInstance.send(command);
@@ -118,13 +137,10 @@ export class FileService {
       for await (const chunk of response.Body as any) {
         chunks.push(chunk);
       }
-      //@ts-ignore
       await fs.writeFile(tempPath, Buffer.concat(chunks));
       return tempPath;
-    }
-    else {
-      //like /blinko/files/xxxx.db
-      return path.join(UPLOAD_FILE_PATH, filePath.replace('/api/file/', '').replace('/api/s3file/', ''));
+    } else {
+      return path.join(UPLOAD_FILE_PATH, fileName);
     }
   }
 }

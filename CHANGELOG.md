@@ -1,3 +1,10 @@
+## [0.21.5](https://github.com/blinko-space/blinko/compare/v0.21.4...v0.21.5) (2024-12-10)
+
+
+### Bug Fixes
+
+* s3 file delete issue  and support custom s3 path [#276](https://github.com/blinko-space/blinko/issues/276) ([bc953a8](https://github.com/blinko-space/blinko/commit/bc953a82f91ba3199e0a773b02dccd131e973608))
+
 ## [0.21.4](https://github.com/blinko-space/blinko/compare/v0.21.3...v0.21.4) (2024-12-10)
 
 

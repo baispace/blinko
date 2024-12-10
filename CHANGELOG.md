@@ -1,3 +1,10 @@
+## [0.21.9](https://github.com/blinko-space/blinko/compare/v0.21.8...v0.21.9) (2024-12-10)
+
+
+### Bug Fixes
+
+* update Dockerfile to use Node 20 and fix OpenSSL issue ([d305285](https://github.com/blinko-space/blinko/commit/d305285653a22cf5c737d6ad4d56fc0c8d40a49a))
+
 ## [0.21.8](https://github.com/blinko-space/blinko/compare/v0.21.7...v0.21.8) (2024-12-10)
 
 

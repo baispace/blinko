@@ -6,6 +6,7 @@ import { encode } from 'next-auth/jwt';
 import { Prisma } from '@prisma/client';
 import { accountsSchema } from '@/lib/prismaZodType';
 import { hashPassword, verifyPassword } from 'prisma/seed';
+import { generateTOTP, generateTOTPQRCode, verifyTOTP } from "./helper";
 
 const genToken = async ({ id, name, role }: { id: number, name: string, role: string }) => {
   return await encode({
@@ -218,5 +219,26 @@ export const userRouter = router({
           return true
         }
       })
+    }),
+  generate2FASecret: authProcedure
+    .input(z.object({
+      name: z.string()
+    }))
+    .mutation(async ({ input }) => {
+      const secret = generateTOTP();
+      const qrCode = generateTOTPQRCode(input.name, secret);
+      return { secret, qrCode };
+    }),
+  verify2FAToken: authProcedure
+    .input(z.object({
+      token: z.string(),
+      secret: z.string()
+    }))
+    .mutation(async ({ input }) => {
+      const isValid = verifyTOTP(input.token, input.secret);
+      if (!isValid) {
+        throw new Error('Invalid verification code');
+      }
+      return true;
     }),
 })

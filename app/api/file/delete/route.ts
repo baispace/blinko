@@ -1,10 +1,4 @@
-import { UPLOAD_FILE_PATH } from "@/lib/constant";
-import { prisma } from "@/server/prisma";
-import { unlink } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getGlobalConfig } from "@/server/routers/config";
 import { FileService } from "@/server/plugins/utils";
 
 

@@ -204,5 +204,11 @@
   "always-show-toolbar": "항상 표시",
   "hide-toolbar-on-mobile": "모바일에서 숨기기",
   "select-toolbar-visibility": "도구 모음 표시 여부 선택",
-  "select-a-time-format": "시간 형식 선택"
+  "select-a-time-format": "시간 형식 선택",
+  "enter-code-shown-on-authenticator-app": "인증 앱에 표시된 코드를 입력합니다.",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "타사 인증 앱을 열고 화면에 표시된 코드를 입력합니다.",
+  "two-factor-authentication": "2단계 인증",
+  "scan-this-qr-code-with-your-authenticator-app": "인증 앱으로 이 QR 코드를 스캔하세요.",
+  "or-enter-this-code-manually": "또는 이 코드를 수동으로 입력하세요:",
+  "verify": "확인"
 }

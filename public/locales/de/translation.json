@@ -203,5 +203,11 @@
   "always-show-toolbar": "Immer anzeigen",
   "hide-toolbar-on-mobile": "Auf dem Handy ausblenden",
   "select-toolbar-visibility": "Sichtbarkeit der Symbolleiste auswählen",
-  "select-a-time-format": "Wählen Sie ein Zeitformat"
+  "select-a-time-format": "Wählen Sie ein Zeitformat",
+  "enter-code-shown-on-authenticator-app": "Code eingeben, der in der Authenticator-App angezeigt wird",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "Öffnen Sie die Authentifizierungs-App eines Drittanbieters und geben Sie die auf dem Bildschirm angezeigten Codes ein.",
+  "two-factor-authentication": "Zwei-Faktoren-Authentifizierung",
+  "scan-this-qr-code-with-your-authenticator-app": "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App",
+  "or-enter-this-code-manually": "Oder geben Sie diesen Code manuell ein:",
+  "verify": "Überprüfen Sie"
 }

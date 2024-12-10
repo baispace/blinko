@@ -208,5 +208,11 @@
   "always-show-toolbar": "始终显示",
   "hide-toolbar-on-mobile": "在移动设备上隐藏",
   "select-toolbar-visibility": "选择工具栏可见性",
-  "select-a-time-format": "选择时间格式"
+  "select-a-time-format": "选择时间格式",
+  "enter-code-shown-on-authenticator-app": "输入验证器应用程序上显示的代码",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "打开第三方身份验证应用程序，输入屏幕上显示的密码",
+  "two-factor-authentication": "双因素验证",
+  "scan-this-qr-code-with-your-authenticator-app": "使用身份验证程序扫描此 QR 码",
+  "or-enter-this-code-manually": "或手动输入此代码：",
+  "verify": "验证"
 }

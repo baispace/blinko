@@ -18,9 +18,9 @@ export interface Events {
   wait: () => void;
 }
 
-export const PromiseCall = async (f: Promise<any>) => {
+export const PromiseCall = async (f: Promise<any>, { autoAlert = true }: { autoAlert?: boolean, successMsg?: string } = {}) => {
   const r = await (new PromiseState({
-    autoAlert: true,
+    autoAlert,
     successMsg: i18n.t('update-successfully'),
     function: async () => {
       return await f;

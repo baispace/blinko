@@ -210,5 +210,11 @@
   "always-show-toolbar": "اعرض دائماً",
   "hide-toolbar-on-mobile": "إخفاء على الجوال",
   "select-toolbar-visibility": "تحديد رؤية شريط الأدوات",
-  "select-a-time-format": "حدد تنسيق الوقت"
+  "select-a-time-format": "حدد تنسيق الوقت",
+  "enter-code-shown-on-authenticator-app": "أدخل الرمز الظاهر في تطبيق المصادقة",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "افتح تطبيق المصادقة التابع لجهة خارجية، وأدخل الرموزالتي تظهر على الشاشة",
+  "two-factor-authentication": "المصادقة الثنائية",
+  "scan-this-qr-code-with-your-authenticator-app": "امسح رمز الاستجابة السريعة هذا باستخدام تطبيق المصادقة الخاص بك",
+  "or-enter-this-code-manually": "أو أدخل هذا الرمز يدوياً:",
+  "verify": "تحقق"
 }

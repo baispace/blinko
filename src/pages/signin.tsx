@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Button, Input, Checkbox, Link, Image } from "@nextui-org/react";
+import { Button, Input, Checkbox, Link, Image, InputOtp } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { signIn } from "next-auth/react";
 import { RootStore } from "@/store";
@@ -9,6 +9,9 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/lib/trpc";
 import { StorageState } from "@/store/standard/StorageState";
 import { UserStore } from "@/store/user";
+import { ShowTwoFactorModal } from "@/components/Common/TwoFactorModal";
+import { DialogStore } from "@/store/module/Dialog";
+import { PromiseState } from "@/store/standard/PromiseState";
 
 export default function Component() {
   const router = useRouter()
@@ -17,10 +20,33 @@ export default function Component() {
   const [password, setPassword] = React.useState("");
   const [canRegister, setCanRegister] = useState(false)
   const { t } = useTranslation()
+  const SignIn = new PromiseState({
+    function: async () => {
+      const res = await signIn('credentials', {
+        username: user ?? userStorage.value,
+        password: password ?? passwordStorage.value,
+        callbackUrl: '/',
+        redirect: false,
+      })
+      return res
+    }
+  })
+  const SignInTwoFactor = new PromiseState({
+    function: async (code: string) => {
+      const res = await signIn('credentials', {
+        username: user ?? userStorage.value,
+        password: password ?? passwordStorage.value,
+        callbackUrl: '/',
+        redirect: false,
+        twoFactorCode: code,
+        isSecondStep: 'true',
+      })
+      return res
+    }
+  })
 
   const userStorage = new StorageState({ key: 'username' })
   const passwordStorage = new StorageState({ key: 'password' })
-
 
   useEffect(() => {
     try {
@@ -39,16 +65,23 @@ export default function Component() {
 
   const login = async () => {
     try {
-      const res = await signIn('credentials', {
-        username: user ?? userStorage.value,
-        password: password ?? passwordStorage.value,
-        callbackUrl: '/',
-        redirect: false,
-      })
+      const res = await SignIn.call()
+
       if (res?.ok) {
-        userStorage.setValue(user)
-        passwordStorage.setValue(password)
-        router.push('/')
+        const session = await fetch('/api/auth/session').then(res => res.json())
+        if (session?.requiresTwoFactor) {
+          ShowTwoFactorModal(async (code) => {
+            const twoFactorRes = await SignInTwoFactor.call(code)
+            if (twoFactorRes?.ok) {
+              RootStore.Get(DialogStore).close()
+              router.push('/')
+            } else {
+              RootStore.Get(ToastPlugin).error(twoFactorRes?.error ?? t('user-or-password-error'))
+            }
+          }, SignInTwoFactor.loading.value)
+        } else {
+          router.push('/')
+        }
       } else {
         RootStore.Get(ToastPlugin).error(res?.error ?? t('user-or-password-error'))
       }
@@ -106,9 +139,12 @@ export default function Component() {
               {t('keep-sign-in')}
             </Checkbox>
           </div>
-          <Button color="primary" onClick={async e => {
-            login()
-          }}>
+          <Button
+            color="primary"
+            isLoading={SignIn.loading.value}
+            onClick={async e => {
+              login()
+            }}>
             {t('sign-in')}
           </Button>
         </form>
@@ -121,6 +157,9 @@ export default function Component() {
           </p>
         }
       </div>
+
+
+
     </div >
   );
 }

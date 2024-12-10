@@ -200,5 +200,11 @@
   "always-show-toolbar": "Mostrar sempre",
   "hide-toolbar-on-mobile": "Ocultar no telemóvel",
   "select-toolbar-visibility": "Selecionar a visibilidade da barra de ferramentas",
-  "select-a-time-format": "Selecionar um formato de hora"
+  "select-a-time-format": "Selecionar um formato de hora",
+  "enter-code-shown-on-authenticator-app": "Introduzir o código apresentado na aplicação de autenticação",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "Abra a sua aplicação de autenticação de terceiros e introduza os códigosmostrados no ecrã",
+  "two-factor-authentication": "Autenticação de dois factores",
+  "scan-this-qr-code-with-your-authenticator-app": "Digitalize este código QR com a sua aplicação de autenticação",
+  "or-enter-this-code-manually": "Ou introduza este código manualmente:",
+  "verify": "Verificar"
 }

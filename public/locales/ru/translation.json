@@ -205,5 +205,11 @@
   "always-show-toolbar": "Всегда показывать",
   "hide-toolbar-on-mobile": "Скрыть на мобильном",
   "select-toolbar-visibility": "Выбор видимости панели инструментов",
-  "select-a-time-format": "Выберите формат времени"
+  "select-a-time-format": "Выберите формат времени",
+  "enter-code-shown-on-authenticator-app": "Введите код, показанный в приложении аутентификатора",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "Откройте стороннее приложение для аутентификации и введите код, показанный на экране.",
+  "two-factor-authentication": "Двухфакторная аутентификация",
+  "scan-this-qr-code-with-your-authenticator-app": "Отсканируйте этот QR-код с помощью приложения-аутентификатора.",
+  "or-enter-this-code-manually": "Или введите этот код вручную:",
+  "verify": "Проверьте"
 }

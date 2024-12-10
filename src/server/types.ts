@@ -23,6 +23,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('theme'),
   z.literal('webhookEndpoint'),
   z.literal('toolbarVisibility'),
+  z.literal('twoFactorEnabled'),
+  z.literal('twoFactorSecret'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -81,6 +83,8 @@ export const ZConfigSchema = z.object({
   language: z.any().optional(),
   theme: z.any().optional(),
   webhookEndpoint: z.any().optional(),
+  twoFactorEnabled: z.boolean().optional(),
+  twoFactorSecret: z.string().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

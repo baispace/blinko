@@ -16,6 +16,9 @@ import { api } from "@/lib/trpc";
 import { BlinkoStore } from "@/store/blinkoStore";
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { QRCodeSVG } from 'qrcode.react';
+import { generateTOTP, generateTOTPQRCode, verifyTOTP } from "@/server/routers/helper";
+import { ShowGen2FATokenModal } from "../Common/TwoFactorModal/gen2FATokenModal";
 
 export const BasicSetting = observer(() => {
   const user = RootStore.Get(UserStore)
@@ -24,8 +27,26 @@ export const BasicSetting = observer(() => {
   const { t } = useTranslation()
   const router = useRouter()
   const blinko = RootStore.Get(BlinkoStore)
+
   const store = RootStore.Local(() => ({
     webhookEndpoint: '',
+    totpToken: '',
+    showToken: false,
+    showQRCode: false,
+    totpSecret: '',
+    qrCodeUrl: '',
+    setShowToken(value: boolean) {
+      this.showToken = value;
+    },
+    setShowQRCode(value: boolean) {
+      this.showQRCode = value;
+    },
+    setTotpSecret(value: string) {
+      this.totpSecret = value;
+    },
+    setQrCodeUrl(value: string) {
+      this.qrCodeUrl = value;
+    },
     setRigster: new PromiseState({
       function: async (value: boolean) => {
         return await PromiseCall(api.config.update.mutate({
@@ -35,11 +56,10 @@ export const BasicSetting = observer(() => {
       }
     }),
   }))
+
   useEffect(() => {
     store.webhookEndpoint = blinko.config.value?.webhookEndpoint ?? ''
   }, [blinko.config.value])
-
-  const [showToken, setShowToken] = React.useState(false);
 
   return <Card shadow="none" className="flex flex-col p-4 bg-background">
     <div className='text-desc text-sm'>{t('basic-information')}</div>
@@ -59,7 +79,7 @@ export const BasicSetting = observer(() => {
           <Button variant="flat" isIconOnly startContent={<Icon icon="material-symbols:password" width="20" height="20" />} size='sm'
             onClick={e => {
               RootStore.Get(DialogStore).setData({
-                title: t('rest-user-password'),
+                title: t('rest-user-info'),
                 isOpen: true,
                 content: <UpdateUserPassword />
               })
@@ -75,10 +95,10 @@ export const BasicSetting = observer(() => {
           isIconOnly
           variant="flat"
           size="sm"
-          onClick={() => setShowToken(!showToken)}
+          onClick={() => store.setShowToken(!store.showToken)}
         >
           <Icon
-            icon={showToken ? "mdi:eye-off" : "mdi:eye"}
+            icon={store.showToken ? "mdi:eye-off" : "mdi:eye"}
             width="20"
             height="20"
           />
@@ -89,8 +109,8 @@ export const BasicSetting = observer(() => {
           <Input
             disabled
             className="w-[150px] md:w-[300px]"
-            value={showToken ? user.userInfo.value?.token : '••••••••••••••••'}
-            type={showToken ? "text" : "password"}
+            value={store.showToken ? user.userInfo.value?.token : '••••••••••••••••'}
+            type={store.showToken ? "text" : "password"}
             endContent={<Copy size={20} content={user.userInfo.value?.token ?? ''} />}
           />
 
@@ -109,7 +129,7 @@ export const BasicSetting = observer(() => {
 
     {
       <AnimatePresence>
-        {showToken && (
+        {store.showToken && (
           <motion.div
             initial={{ height: 0, opacity: 0, scale: 0.95 }}
             animate={{
@@ -173,6 +193,36 @@ export const BasicSetting = observer(() => {
           className="w-[150px] md:w-[300px]"
         />
       </>} />
+
+    <Item
+      leftContent={<>{t('two-factor-authentication')}</>}
+      rightContent={
+        <div className="flex gap-2 items-center">
+          <Switch
+            isSelected={blinko.config.value?.twoFactorEnabled ?? false}
+            onChange={async (e) => {
+              if (!e.target.checked) {
+                await PromiseCall(api.config.update.mutate({
+                  key: 'twoFactorEnabled',
+                  value: false
+                }));
+                blinko.config.call();
+              } else {
+                const response = await PromiseCall(api.users.generate2FASecret.mutate({
+                  name: user.name!
+                }), { autoAlert: false });
+                if (response) {
+                  ShowGen2FATokenModal({
+                    qrCodeUrl: response.qrCode,
+                    totpSecret: response.secret
+                  })
+                }
+              }
+            }}
+          />
+        </div>
+      }
+    />
 
 
     <Item

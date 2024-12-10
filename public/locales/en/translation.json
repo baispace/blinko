@@ -212,5 +212,12 @@
   "always-show-toolbar": "Always Show",
   "hide-toolbar-on-mobile": "Hide on Mobile",
   "always-hide-toolbar": "Always Hide",
-  "select-a-time-format": "Select a time format"
+  "select-a-time-format": "Select a time format",
+  "enter-code-shown-on-authenticator-app": "Enter code shown on authenticator app",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "Open your third-party authentication app, and enter the codeshown on screen",
+  "two-factor-authentication": "Two-Factor Authentication",
+  "scan-this-qr-code-with-your-authenticator-app": "Scan this QR code with your authenticator app",
+  "or-enter-this-code-manually": "Or enter this code manually:",
+  "verify": "Verify",
+  "2fa-setup-successful": "2FA setup successful"
 }

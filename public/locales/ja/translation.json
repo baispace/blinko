@@ -202,5 +202,11 @@
   "always-show-toolbar": "常にショー",
   "hide-toolbar-on-mobile": "モバイルで隠す",
   "select-toolbar-visibility": "ツールバーの表示を選択",
-  "select-a-time-format": "時間フォーマットを選択する"
+  "select-a-time-format": "時間フォーマットを選択する",
+  "enter-code-shown-on-authenticator-app": "認証アプリに表示されたコードを入力",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "サードパーティ認証アプリを開き、画面に表示されたコードを入力する。",
+  "two-factor-authentication": "二要素認証",
+  "scan-this-qr-code-with-your-authenticator-app": "認証アプリでこのQRコードをスキャンしてください。",
+  "or-enter-this-code-manually": "または、このコードを手動で入力する：",
+  "verify": "ベリファイ"
 }

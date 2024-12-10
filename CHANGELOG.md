@@ -1,3 +1,11 @@
+## [0.21.15](https://github.com/blinko-space/blinko/compare/v0.21.14...v0.21.15) (2024-12-10)
+
+
+### Bug Fixes
+
+* update Chinese translation for page size ([955cfdb](https://github.com/blinko-space/blinko/commit/955cfdb91e6cda5001db492a7c0a441824b6fa47))
+* update Chinese translation for page size to improve clarity ([fc3f2cb](https://github.com/blinko-space/blinko/commit/fc3f2cb751953cb0bb7f25e168ee1af588acbbeb))
+
 ## [0.21.14](https://github.com/blinko-space/blinko/compare/v0.21.13...v0.21.14) (2024-12-10)
 
 

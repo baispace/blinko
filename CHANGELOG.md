@@ -1,3 +1,10 @@
+## [0.21.8](https://github.com/blinko-space/blinko/compare/v0.21.7...v0.21.8) (2024-12-10)
+
+
+### Bug Fixes
+
+* build error ([c60aba7](https://github.com/blinko-space/blinko/commit/c60aba7265133e0ad72ce0247e810132624c582e))
+
 ## [0.21.7](https://github.com/blinko-space/blinko/compare/v0.21.6...v0.21.7) (2024-12-10)
 
 

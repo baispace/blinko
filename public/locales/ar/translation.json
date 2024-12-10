@@ -202,5 +202,7 @@
   "remove-underline": "إزالة التسطير",
   "select-block-type": "حدد نوع الكتلة",
   "block-type-select-placeholder": "نوع المربع",
-  "trash": "قمامة"
+  "trash": "قمامة",
+  "custom-path": "المسار المخصص",
+  "page-size": "حجم الصفحة"
 }

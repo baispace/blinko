@@ -196,5 +196,6 @@
   "remove-underline": "Unterstrich entfernen",
   "select-block-type": "Blocktyp auswählen",
   "block-type-select-placeholder": "Block Typ",
-  "trash": "Müll"
+  "trash": "Müll",
+  "page-size": "Größe der Seite"
 }

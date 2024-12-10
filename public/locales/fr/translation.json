@@ -197,5 +197,7 @@
   "remove-underline": "Supprimer le soulignement",
   "select-block-type": "Sélectionner le type de bloc",
   "block-type-select-placeholder": "Type de bloc",
-  "trash": "poubelle"
+  "trash": "poubelle",
+  "custom-path": "Chemin d'accès personnalisé",
+  "page-size": "Taille de la page"
 }

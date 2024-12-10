@@ -200,5 +200,7 @@
   "remove-underline": "删除下划线",
   "select-block-type": "选择区块类型",
   "block-type-select-placeholder": "区块类型",
-  "trash": "回收站"
+  "trash": "回收站",
+  "custom-path": "自定义路径",
+  "page-size": "页面大小"
 }

@@ -113,7 +113,6 @@ export const StorageSetting = observer(() => {
         <Item
           leftContent={<>
             <div>{t('custom-path')}</div>
-            <div className="text-xs text-default-400">{t('custom-path-desc')}</div>
           </>}
           rightContent={<Input 
             value={store.s3CustomPath} 

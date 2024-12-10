@@ -196,5 +196,7 @@
   "remove-underline": "Eliminar subrayado",
   "select-block-type": "Seleccione el tipo de bloque",
   "block-type-select-placeholder": "Tipo de bloque",
-  "trash": "basura"
+  "trash": "basura",
+  "custom-path": "Ruta personalizada",
+  "page-size": "Tamaño de página"
 }

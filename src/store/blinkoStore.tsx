@@ -105,7 +105,6 @@ export class BlinkoStore implements Store {
   })
 
   resourceList = new PromisePageState({
-    size: 30,
     function: async ({ page, size }) => {
       return await api.attachments.list.query({ page, size })
     }

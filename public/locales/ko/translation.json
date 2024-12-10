@@ -196,5 +196,7 @@
   "remove-underline": "밑줄 제거",
   "select-block-type": "블록 유형 선택",
   "block-type-select-placeholder": "블록 유형",
-  "trash": "쓰레기"
+  "trash": "쓰레기",
+  "custom-path": "사용자 지정 경로",
+  "page-size": "페이지 크기"
 }

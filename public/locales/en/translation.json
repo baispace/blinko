@@ -204,5 +204,7 @@
   "trash": "Recycle Bin",
   "light-mode": "Light Mode",
   "dark-mode": "Dark Mode",
-  "follow-system": "Follow System"
+  "follow-system": "Follow System",
+  "custom-path": "Custom Path",
+  "page-size": "Page Size"
 }

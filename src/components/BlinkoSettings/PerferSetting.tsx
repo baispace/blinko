@@ -6,7 +6,7 @@ import ThemeSwitcher from "../Common/ThemeSwitcher";
 import LanguageSwitcher from "../Common/LanguageSwitcher";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { PromiseCall } from "@/store/standard/PromiseState";
+import { PageSize, PromiseCall } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
@@ -20,6 +20,7 @@ export const PerferSetting = observer(() => {
   useEffect(() => {
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
   }, [blinko.config.value?.textFoldLength]);
+
 
   return <Card shadow="none" className="flex flex-col p-4 bg-background">
     <div className='text-desc text-sm'>{t('preference')}</div>
@@ -182,6 +183,20 @@ export const PerferSetting = observer(() => {
               key: 'timeFormat',
               value: value
             }))
+          }}
+        />
+      } />
+
+    <Item
+      leftContent={<>{t('page-size')}</>}
+      rightContent={
+        <Input
+          type="number"
+          min="30"
+          max="100"
+          value={PageSize.value}
+          onChange={e => {
+            PageSize.save(Number(e.target.value))
           }}
         />
       } />

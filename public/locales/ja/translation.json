@@ -194,5 +194,7 @@
   "remove-underline": "アンダーラインの削除",
   "select-block-type": "ブロックタイプを選択",
   "block-type-select-placeholder": "ブロックタイプ",
-  "trash": "ゴミ"
+  "trash": "ゴミ",
+  "custom-path": "カスタムパス",
+  "page-size": "ページサイズ"
 }

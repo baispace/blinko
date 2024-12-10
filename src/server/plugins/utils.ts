@@ -48,8 +48,11 @@ export class FileService {
       const imagePath = `${UPLOAD_FILE_PATH}/` + filename;
       if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(extension.replace('.', '')?.toLowerCase() ?? '')) {
         await sharp(imagePath)
-          .rotate()  // Automatically read and rotate based on the EXIF Orientation tag
-          .resize(500, 500)  // Scale to 500x500
+          .rotate() 
+          .resize(500, 500, {
+            fit: 'inside',  
+            withoutEnlargement: true 
+          })
           .toFile(UPLOAD_FILE_PATH + '/thumbnail_' + filename);
       }
     } catch (error) {

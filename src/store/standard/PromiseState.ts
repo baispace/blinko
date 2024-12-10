@@ -7,6 +7,7 @@ import { ToastPlugin } from "../module/Toast/Toast";
 import { eventBus } from "@/lib/event";
 import { BlinkoStore } from "../blinkoStore";
 import i18n from "@/lib/i18n";
+import { StorageState } from "./StorageState";
 
 export interface Events {
   data: (data: any) => void;
@@ -134,9 +135,11 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   }
 }
 
+
+export const PageSize = new StorageState<number>({ key: "pageSize", value: 30, default: 30 })
 export class PromisePageState<T extends (...args: any) => Promise<any>, U = ReturnType<T>> {
   page: number = 1;
-  size: number = 30;
+  size = PageSize
   sid = "PromisePageState";
   key?: string;
   loading = new BooleanState();
@@ -195,9 +198,9 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
       if (this.loadingLock && this.loading.value == true) return;
       this.loading.setValue(true);
       if (args?.[0]) {
-        Object.assign(args?.[0], { page: this.page, size: this.size })
+        Object.assign(args?.[0], { page: this.page, size: Number(this.size.value) })
       } else {
-        args[0] = { page: this.page, size: this.size }
+        args[0] = { page: this.page, size: Number(this.size.value) }
       }
       if (this.isLoadAll) return this.value
       const res = await this.function.apply(this.context, args);
@@ -210,7 +213,7 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
         //@ts-ignore
         return this.value
       }
-      if (res.length == this.size) {
+      if (res.length == Number(this.size.value)) {
         if (this.page == 1) {
           this.setValue(res);
         } else {

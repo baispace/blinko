@@ -61,44 +61,71 @@ export class AiPrompt {
   }
 
   static AutoTagPrompt(tags: string[]) {
-    const systemPrompt = `You are a professional text classification assistant. Your task is to:
-     1. Analyze the given text content
-     2. Select appropriate tags from existing tags
-     3. Suggest 2-3 new tags if existing ones are not sufficient
-     4. Return all tags directly, separated by commas
-     
-     Text content:
-     {context}
-     
-     Existing tags:
-     ${tags.join(', ')}
-     
-     Important notes:
-     - New tags should follow the existing hierarchical format (e.g., #category/subcategory)
-     - Tags should be concise and descriptive
-     - Each tag should start with #
-     - Only return the list of tags, no additional explanatory text needed`
+    const systemPrompt = `You are a precise tag classification expert. Your mission is to analyze content and assign the most relevant tags with high accuracy.
+      Instructions:
+      1. Carefully analyze the provided content's main topics, themes, and key concepts
+      2. Select ONLY the most relevant tags from the existing tag list
+      3. If critical topics are not covered by existing tags, suggest up to 2 new tags
+      4. Focus on specificity and accuracy over quantity
+
+      Content for analysis:
+      {context}
+
+      Available tags:
+      ${tags.join(', ')}
+
+      Requirements:
+      - Select tags that DIRECTLY relate to the main content only
+      - Avoid tangential or loosely related tags
+      - New tags must follow format: #category/subcategory
+      - Each tag must start with #
+      - Return only comma-separated tags without explanation
+      - Prioritize existing tags over creating new ones
+      - If content is technical, prefer technical/specific tags
+      - If content is general, use broader category tags
+
+      Example good tags: #technology/ai, #development/backend
+      Example bad tags: #interesting, #misc, #other
+
+      Output format:
+      #tag1, #tag2, #tag3`
+
     const autoTagPrompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],
-      ["human", "Please select and suggest appropriate tags for the above content"]
+      ["human", "Based on the strict requirements above, provide only the most relevant tags for this content."]
     ]);
     return autoTagPrompt;
   }
 
   static AutoEmojiPrompt() {
-    const systemPrompt = `You are a professional emoji suggestion assistant. Your task is to:
-     1. Analyze the given text content
-     2. Suggest 4-10 new emojis if existing ones are not sufficient
-     3. Return all emojis directly, separated by commas
-     
-     Text content:
-     {context}
-     
-     Important notes:
-     - New emojis should be relevant to the content`
+    const systemPrompt = `You are an expert emoji suggestion AI. Your task is to analyze content and suggest the most relevant emojis.
+      Instructions:
+      1. Carefully analyze the content's main topics, emotions, and key elements
+      2. Select 4-10 highly relevant emojis that best represent the content
+      3. Focus on accuracy and relevance over quantity
+      4. Return ONLY emojis separated by commas, no text or explanations
+
+      Example good output: 
+      🚀,💻,🔧,📱
+
+      Example bad output:
+      - Here are some emojis: 🎉 🌟 ✨
+      - I suggest: 🤔
+
+      Rules:
+      - Must return emojis separated by commas
+      - Each emoji must directly relate to the content
+      - Avoid decorative or generic emojis (✨,🌟,etc) unless specifically relevant
+      - For technical content, prefer technical emojis (💻,🔧,⚙️,etc)
+      - For emotional content, use appropriate emotional emojis
+      - For business content, use business-related emojis (📊,💼,etc)
+
+      Content to analyze:
+      {context}`
+
     const autoEmojiPrompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],
-      ["human", "Please select and suggest appropriate emojis for the above content"]
+      ["human", "Based on the strict requirements above, provide only relevant emojis separated by commas."]
     ]);
     return autoEmojiPrompt;
   }

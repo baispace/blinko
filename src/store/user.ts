@@ -80,6 +80,16 @@ export class UserStore implements User, Store {
     document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute('content', themeColor);
   }
 
+  async setupUserPreferences(setTheme: (theme: string) => void, i18n: any) {
+    const config = this.blinko.config.value || await this.blinko.config.getOrCall();
+    const newTheme = config?.theme == 'system'
+      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : (config?.theme ?? 'light');
+
+    setTheme(newTheme);
+    RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');
+  }
+
   use() {
     const { data: session } = useSession();
     const { t, i18n } = useTranslation()
@@ -87,29 +97,22 @@ export class UserStore implements User, Store {
     const router = useRouter()
 
     useEffect(() => {
-      if (theme) {
-        this.updatePWAColor(theme);
-      }
+      this.updatePWAColor(theme ?? 'light');
     }, [theme]);
 
     useEffect(() => {
       const userStore = RootStore.Get(UserStore);
-      if (!userStore.isLogin && session) {
+      if (!userStore.isLogin && session && session.user) {
         console.log(session.user)
         //@ts-ignore
         userStore.ready({ ...session.user, token: session.token });
-        userStore.userInfo.call(Number(this.id)).then(async () => {
-          const config = userStore.blinko.config.value || await userStore.blinko.config.getOrCall();
-          const newTheme = config?.theme == 'system' 
-            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') 
-            : (config?.theme ?? 'light');
-          
-          setTheme(newTheme);
-          this.updatePWAColor(newTheme);
-          RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');
-        });
       }
     }, [session]);
+
+    useEffect(() => {
+      if(!this.isLogin) return
+      this.setupUserPreferences(setTheme, i18n);
+    }, [this.isLogin]);
 
     useEffect(() => {
       eventBus.on('user:signout', () => {

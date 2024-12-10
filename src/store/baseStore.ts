@@ -115,6 +115,9 @@ export class BaseStore implements Store {
       } else {
         this.currentTitle = this.currentRouter?.title ?? ''
       }
+      if (this.currentRouter?.href != router.pathname) {
+        this.currentRouter = this.routerList.find(item => item.href == router.pathname)
+      }
     }, [this.currentRouter, router.pathname])
   }
 

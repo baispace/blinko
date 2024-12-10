@@ -45,6 +45,9 @@ export const CommonLayout = observer(({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const throttleSearchRef = useRef(_.throttle(() => {
+    if (base.currentRouter?.href == '/resources') {
+      return blinkoStore.resourceList.resetAndCall({ searchText: searchInputRef.current?.value })
+    }
     blinkoStore.noteList.resetAndCall({})
   }, 1000, { trailing: true, leading: false }));
 
@@ -77,21 +80,21 @@ export const CommonLayout = observer(({
       {blinkoStore.showAi && createPortal(<BlinkoAi />, document.body)}
       <TagSelectPop />
       <AiWritePop />
-      
-      <Menu 
-        disableAutoFocus 
-        onClose={() => setisOpen(false)} 
-        onOpen={setisOpen} 
-        isOpen={isOpen} 
-        pageWrapId={'page-wrap'} 
+
+      <Menu
+        disableAutoFocus
+        onClose={() => setisOpen(false)}
+        onOpen={setisOpen}
+        isOpen={isOpen}
+        pageWrapId={'page-wrap'}
         outerContainerId={'outer-container'}
       >
         <Sidebar onItemClick={() => setisOpen(false)} />
       </Menu>
-      
+
       {isPc && <Sidebar />}
-      
-      <main id="page-wrap" 
+
+      <main id="page-wrap"
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
         className={`flex transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-sencondbackground`}>
         {/* nav bar  */}
@@ -133,7 +136,6 @@ export const CommonLayout = observer(({
                     }`,
                   input: "placeholder:text-default-600 group-data-[has-value=true]:text-foreground",
                 }}
-                disabled={router.pathname == '/resources'}
                 labelPlacement="outside"
                 placeholder={t('search')}
                 value={blinkoStore.noteListFilterConfig.searchText}
@@ -144,9 +146,8 @@ export const CommonLayout = observer(({
                 startContent={
                   <Icon className="text-default-600 [&>g]:stroke-[2px]" icon="lets-icons:search" width="24" height="24" />
                 }
-                endContent={
-                 <Tooltip content={t('ai-enhanced-search')}>
-                   <Icon
+                endContent={router.pathname != '/resources' && <Tooltip content={t('ai-enhanced-search')}>
+                  <Icon
                     className="text-default-600 [&>g]:stroke-[2px] cursor-pointer hover:text-primary transition-colors"
                     icon="mingcute:ai-line"
                     width="24"
@@ -159,8 +160,7 @@ export const CommonLayout = observer(({
                       }
                     }}
                   />
-                 </Tooltip>
-                }
+                </Tooltip>}
               />
               <Popover placement="bottom-start">
                 <PopoverTrigger>

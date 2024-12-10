@@ -70,7 +70,10 @@ export const noteRouter = router({
       if (searchText != '') {
         where = {
           ...where,
-          content: { contains: searchText, mode: 'insensitive' }
+          OR: [
+            { content: { contains: searchText, mode: 'insensitive' } },
+            { attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } } }
+          ]
         }
       } else {
         where.isRecycle = isRecycle

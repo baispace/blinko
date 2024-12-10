@@ -106,6 +106,7 @@ export class UserStore implements User, Store {
         console.log(session.user)
         //@ts-ignore
         userStore.ready({ ...session.user, token: session.token });
+        userStore.userInfo.call(Number(this.id))
       }
     }, [session]);
 

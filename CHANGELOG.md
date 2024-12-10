@@ -1,3 +1,10 @@
+## [0.21.17](https://github.com/blinko-space/blinko/compare/v0.21.16...v0.21.17) (2024-12-10)
+
+
+### Bug Fixes
+
+* call userInfo method on user store during session initialization ([ea0047b](https://github.com/blinko-space/blinko/commit/ea0047bd08d5afa5d0fb726a9a4953f70fccf918))
+
 ## [0.21.16](https://github.com/blinko-space/blinko/compare/v0.21.15...v0.21.16) (2024-12-10)
 
 

@@ -1,3 +1,10 @@
+## [0.21.7](https://github.com/blinko-space/blinko/compare/v0.21.6...v0.21.7) (2024-12-10)
+
+
+### Bug Fixes
+
+* improve list item rendering in Markdown component [#272](https://github.com/blinko-space/blinko/issues/272) ([a603387](https://github.com/blinko-space/blinko/commit/a60338705af8409e0aadad74eb998f3baa19eaa0))
+
 ## [0.21.6](https://github.com/blinko-space/blinko/compare/v0.21.5...v0.21.6) (2024-12-10)
 
 

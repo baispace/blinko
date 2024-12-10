@@ -1,3 +1,10 @@
+## [0.22.1](https://github.com/blinko-space/blinko/compare/v0.22.0...v0.22.1) (2024-12-10)
+
+
+### Bug Fixes
+
+* replace onClick with onPress for button components across multiple files ([b5b8334](https://github.com/blinko-space/blinko/commit/b5b8334bc886b99e616af30dd7a2cd2437ad4f7e))
+
 # [0.22.0](https://github.com/blinko-space/blinko/compare/v0.21.17...v0.22.0) (2024-12-10)
 
 

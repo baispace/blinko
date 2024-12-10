@@ -1,3 +1,10 @@
+## [0.21.10](https://github.com/blinko-space/blinko/compare/v0.21.9...v0.21.10) (2024-12-10)
+
+
+### Bug Fixes
+
+* enhance metadata and output for tag listing endpoint ([6ddc7ab](https://github.com/blinko-space/blinko/commit/6ddc7abe7be3d2be1b303dcdc2eefc663c3a67a3))
+
 ## [0.21.9](https://github.com/blinko-space/blinko/compare/v0.21.8...v0.21.9) (2024-12-10)
 
 

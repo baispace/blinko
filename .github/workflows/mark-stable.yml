@@ -25,14 +25,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Tag and Push Stable
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create and Push Multi-arch Manifests
         run: |
           # Docker Hub
-          docker pull blinkospace/blinko:${{ inputs.version }}
-          docker tag blinkospace/blinko:${{ inputs.version }} blinkospace/blinko:stable
-          docker push blinkospace/blinko:stable
+          docker buildx imagetools create -t blinkospace/blinko:stable \
+            blinkospace/blinko:${{ inputs.version }}
           
           # GitHub Container Registry
-          docker pull ghcr.io/blinko-space/blinko:${{ inputs.version }}
-          docker tag ghcr.io/blinko-space/blinko:${{ inputs.version }} ghcr.io/blinko-space/blinko:stable
-          docker push ghcr.io/blinko-space/blinko:stable 
+          docker buildx imagetools create -t ghcr.io/blinko-space/blinko:stable \
+            ghcr.io/blinko-space/blinko:${{ inputs.version }} 

@@ -26,7 +26,7 @@ export const GET = async (req: Request, { params }: any) => {
 
     const fileHash = generateFileHash(filePath);
     const etag = `"${fileHash}"`;
-    
+
     const ifNoneMatch = req.headers.get("if-none-match");
     if (ifNoneMatch === etag) {
       return new Response(null, { status: 304 });
@@ -113,6 +113,7 @@ export const GET = async (req: Request, { params }: any) => {
 function generateFileHash(filePath: string): string {
   const fileBuffer = readFileSync(filePath);
   const hashSum = crypto.createHash('sha256');
+  //@ts-ignore
   hashSum.update(fileBuffer);
   return hashSum.digest('hex');
 }

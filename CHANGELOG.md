@@ -1,3 +1,10 @@
+## [0.22.4](https://github.com/blinko-space/blinko/compare/v0.22.3...v0.22.4) (2024-12-11)
+
+
+### Bug Fixes
+
+* update thumbnail folder support check thumbnail gen  thumbnail ([c7b9778](https://github.com/blinko-space/blinko/commit/c7b9778e5e9d8414bd78a240a33beffe9b18b2cf))
+
 ## [0.22.3](https://github.com/blinko-space/blinko/compare/v0.22.2...v0.22.3) (2024-12-11)
 
 

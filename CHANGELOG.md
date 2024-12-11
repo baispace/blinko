@@ -1,3 +1,10 @@
+## [0.22.6](https://github.com/blinko-space/blinko/compare/v0.22.5...v0.22.6) (2024-12-11)
+
+
+### Bug Fixes
+
+* build issue ([52bb073](https://github.com/blinko-space/blinko/commit/52bb0737aba56f6492e5b6624c918ca80cd04687))
+
 ## [0.22.5](https://github.com/blinko-space/blinko/compare/v0.22.4...v0.22.5) (2024-12-11)
 
 

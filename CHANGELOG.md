@@ -1,3 +1,10 @@
+## [0.22.2](https://github.com/blinko-space/blinko/compare/v0.22.1...v0.22.2) (2024-12-11)
+
+
+### Bug Fixes
+
+* enhance translations and UI components for improved user experience [#284](https://github.com/blinko-space/blinko/issues/284) ([48d9722](https://github.com/blinko-space/blinko/commit/48d9722a7089dd8dda20858fc1f8ef14fff8cc09))
+
 ## [0.22.1](https://github.com/blinko-space/blinko/compare/v0.22.0...v0.22.1) (2024-12-10)
 
 

@@ -1,3 +1,10 @@
+# [0.23.0](https://github.com/blinko-space/blinko/compare/v0.22.6...v0.23.0) (2024-12-11)
+
+
+### Features
+
+* add export functionality and localization updates ([8150f00](https://github.com/blinko-space/blinko/commit/8150f00ac3690cd39e800cf33f5dd4ff3b27da59))
+
 ## [0.22.6](https://github.com/blinko-space/blinko/compare/v0.22.5...v0.22.6) (2024-12-11)
 
 

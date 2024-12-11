@@ -7,7 +7,7 @@ import AdmZip from 'adm-zip'
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
 import { prisma } from "../prisma";
 import { unlink } from "fs/promises";
-import {  createCaller } from "../routers/_app";
+import { createCaller } from "../routers/_app";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -15,6 +15,8 @@ export type RestoreResult = {
   error?: unknown;
   progress?: { current: number; total: number };
 }
+export type ExportTimeRange = 'day' | 'week' | 'month' | 'quarter';
+
 
 export class DBJob {
   static Job = new CronJob('* * * * *', async () => {
@@ -40,8 +42,9 @@ export class DBJob {
           updatedAt: true,
           type: true,
           attachments: true,
+          tags: true,
           references: true,
-          referencedBy: true,
+          referencedBy: true
         }
       });
       const exportData = {
@@ -137,16 +140,6 @@ export class DBJob {
                 const existingAttachment = await prisma.attachments.findFirst({
                   where: { name: attachment.name }
                 });
-
-                // if (existingAttachment) {
-                //   yield {
-                //     type: 'skip',
-                //     content: attachment.name,
-                //     progress: { current, total }
-                //   };
-                //   continue;
-                // }
-
                 await prisma.attachments.create({
                   data: {
                     ...attachment,
@@ -215,5 +208,51 @@ export class DBJob {
     DBJob.Job.setTime(new CronTime(cronTime))
     await this.Start(cronTime, true)
     // return await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { schedule: cronTime, lastRun: new Date() } })
+  }
+
+  static async ExporMDFiles(startDate: Date, endDate: Date) {
+    const notes = await prisma.notes.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      select: {
+        id: true,
+        account: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        attachments: true,
+        tags: true
+      }
+    });
+
+    const exportDir = path.join(ROOT_PATH, 'exports');
+    if (!fs.existsSync(exportDir)) {
+      fs.mkdirSync(exportDir, { recursive: true });
+    }
+
+    for (const note of notes) {
+      let mdContent = note.content
+
+      if (note.attachments?.length) {
+        mdContent += '### Attachments\n';
+        note.attachments.forEach(attachment => {
+          mdContent += `- ${attachment.name}\n`;
+        });
+        mdContent += '\n';
+      }
+      mdContent += '---\n\n';
+      const fileName = `note-${note.id}.md`;
+      fs.writeFileSync(path.join(exportDir, fileName), mdContent);
+    }
+
+    return {
+      success: true,
+      exportPath: exportDir,
+      fileCount: notes.length
+    };
   }
 }

@@ -1,3 +1,10 @@
+## [0.22.3](https://github.com/blinko-space/blinko/compare/v0.22.2...v0.22.3) (2024-12-11)
+
+
+### Bug Fixes
+
+* convert SendButton to observer and remove unused media query in UploadButtons ([bfac4a9](https://github.com/blinko-space/blinko/commit/bfac4a9e0e5151cbdb5e67ecef36967b1ec6430a))
+
 ## [0.22.2](https://github.com/blinko-space/blinko/compare/v0.22.1...v0.22.2) (2024-12-11)
 
 

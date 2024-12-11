@@ -118,7 +118,7 @@
   "has-file": "有文件",
   "created-at": "在",
   "create-user": "创建用户",
-  "action": "行动",
+  "action": "操作",
   "edit-user": "编辑用户",
   "import-from-memos-memos_prod-db": "从备忘录导入（memos_prod.db）",
   "when-exporting-memos_prod-db-please-close-the-memos-container-to-avoid-partial-loss-of-data": "导出 memos_prod.db 时，请关闭备忘录容器，以免丢失部分数据。",
@@ -219,11 +219,16 @@
   "select-model-provider": "选择模型提供商",
   "allow-register": "允许注册",
   "access-token": "访问令牌",
-  "bucket": "水桶",
+  "bucket": "桶",
   "region": "地区",
   "access-key-secret": "访问密钥",
   "access-key-id": "访问密钥ID",
   "share-and-copy-link": "共享和复制链接",
   "copy-share-link": "复制共享链接",
-  "endpoint": "端点"
+  "endpoint": "端点",
+  "export-format": "导出格式",
+  "export": "导出",
+  "time-range": "时间范围",
+  "all": "全部",
+  "exporting": "正在导出..."
 }

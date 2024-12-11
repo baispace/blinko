@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import path from "path";
-import { createReadStream, readFileSync } from "fs";
+import { createReadStream, statSync } from "fs";
 import { stat, readFile } from "fs/promises";
 import mime from "mime-types";
 import { UPLOAD_FILE_PATH } from "@/lib/constant";
@@ -26,7 +26,7 @@ export const GET = async (req: Request, { params }: any) => {
 
     const fileHash = generateFileHash(filePath);
     const etag = `"${fileHash}"`;
-
+    console.log({ etag })
     const ifNoneMatch = req.headers.get("if-none-match");
     if (ifNoneMatch === etag) {
       return new Response(null, { status: 304 });
@@ -36,7 +36,7 @@ export const GET = async (req: Request, { params }: any) => {
     const commonHeaders = {
       "Content-Type": contentType,
       "ETag": etag,
-      "Cache-Control": `public, max-age=${ONE_YEAR_IN_SECONDS}, immutable`,
+      "Cache-Control": "public, max-age=3600",
       "Content-Disposition": `attachment; filename="${fullPath}"`,
     };
 
@@ -111,9 +111,9 @@ export const GET = async (req: Request, { params }: any) => {
 };
 
 function generateFileHash(filePath: string): string {
-  const fileBuffer = readFileSync(filePath);
+  const stats = statSync(filePath);
+  const hashContent = `${stats.mtime.getTime()}-${stats.size}`;
   const hashSum = crypto.createHash('sha256');
-  //@ts-ignore
-  hashSum.update(fileBuffer);
+  hashSum.update(hashContent);
   return hashSum.digest('hex');
 }

@@ -36,6 +36,7 @@
     "@babel/plugin-proposal-decorators": "^7.24.7",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@iconify/react": "^5.0.2",
+    "@internationalized/date": "^3.6.0",
     "@langchain/community": "^0.3.6",
     "@langchain/core": "^0.3.13",
     "@langchain/ollama": "^0.1.2",

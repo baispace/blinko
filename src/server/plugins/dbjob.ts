@@ -1,13 +1,15 @@
 import { CronJob, CronTime } from "cron";
 import path from 'path';
 import fs from 'fs';
+import { writeFile } from 'fs/promises'
 import Package from '../../../package.json';
 import { $ } from 'execa';
 import AdmZip from 'adm-zip'
-import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
+import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, TEMP_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
 import { prisma } from "../prisma";
 import { unlink } from "fs/promises";
 import { createCaller } from "../routers/_app";
+import { Context } from "../context";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -210,49 +212,105 @@ export class DBJob {
     // return await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { schedule: cronTime, lastRun: new Date() } })
   }
 
-  static async ExporMDFiles(startDate: Date, endDate: Date) {
+  static async ExporMDFiles(params: {
+    baseURL: string;
+    startDate?: Date;
+    endDate?: Date;
+    ctx: Context;
+    format: 'markdown' | 'csv' | 'json';
+  }) {
+    const { baseURL, startDate, endDate, ctx, format } = params;
     const notes = await prisma.notes.findMany({
       where: {
         createdAt: {
-          gte: startDate,
-          lte: endDate
-        }
+          ...(startDate && { gte: startDate }),
+          ...(endDate && { lte: endDate })
+        },
+        accountId: Number(ctx.id)
       },
       select: {
         id: true,
-        account: true,
         content: true,
-        createdAt: true,
-        updatedAt: true,
         attachments: true,
-        tags: true
+        createdAt: true,
       }
     });
-
-    const exportDir = path.join(ROOT_PATH, 'exports');
-    if (!fs.existsSync(exportDir)) {
-      fs.mkdirSync(exportDir, { recursive: true });
+    if (notes.length === 0) {
+      throw new Error('No notes found');
     }
+    const exportDir = path.join(TEMP_PATH, 'exports');
+    const attachmentsDir = path.join(exportDir, 'files');
+    const zipFilePath = TEMP_PATH + `/notes_export_${Date.now()}.zip`;
 
-    for (const note of notes) {
-      let mdContent = note.content
-
-      if (note.attachments?.length) {
-        mdContent += '### Attachments\n';
-        note.attachments.forEach(attachment => {
-          mdContent += `- ${attachment.name}\n`;
-        });
-        mdContent += '\n';
+    try {
+      if (!fs.existsSync(exportDir)) {
+        fs.mkdirSync(exportDir, { recursive: true });
       }
-      mdContent += '---\n\n';
-      const fileName = `note-${note.id}.md`;
-      fs.writeFileSync(path.join(exportDir, fileName), mdContent);
-    }
+      if (!fs.existsSync(attachmentsDir)) {
+        fs.mkdirSync(attachmentsDir, { recursive: true });
+      }
 
-    return {
-      success: true,
-      exportPath: exportDir,
-      fileCount: notes.length
-    };
+      if (format === 'csv') {
+        const csvContent = ['ID,Content,Created At'].concat(
+          notes.map(note => `${note.id},"${note.content.replace(/"/g, '""')}",${note.createdAt.toISOString()}`)
+        ).join('\n');
+        await writeFile(path.join(exportDir, 'notes.csv'), csvContent);
+      } else if (format === 'json') {
+        await writeFile(
+          path.join(exportDir, 'notes.json'),
+          JSON.stringify(notes, null, 2)
+        );
+      } else {
+        await Promise.all(notes.map(async (note) => {
+          let mdContent = note.content;
+
+          if (note.attachments?.length) {
+            await Promise.all(note.attachments.map(async (attachment) => {
+              try {
+                const response = await fetch(`${baseURL}/api/file/${attachment.path}`);
+                const buffer = await response.arrayBuffer();
+                const attachmentPath = path.join(attachmentsDir, attachment.name);
+                await writeFile(attachmentPath, Buffer.from(buffer));
+
+                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment.name);
+
+                if (isImage) {
+                  mdContent += `\n![${attachment.name}](./files/${attachment.name})`;
+                } else {
+                  mdContent += `\n[${attachment.name}](./files/${attachment.name})`;
+                }
+              } catch (error) {
+                console.error(`Failed to download attachment: ${attachment.name}`, error);
+              }
+            }));
+          }
+
+          const fileName = `note-${note.id}-${note.createdAt.getTime()}.md`;
+          await writeFile(path.join(exportDir, fileName), mdContent);
+        }));
+      }
+
+      const zip = new AdmZip();
+      zip.addLocalFolder(exportDir);
+      zip.writeZip(zipFilePath);
+
+      fs.rmSync(exportDir, { recursive: true, force: true });
+      console.log({ zipFilePath })
+      return {
+        success: true,
+        path: zipFilePath.replace(UPLOAD_FILE_PATH, ''),
+        fileCount: notes.length
+      };
+    } catch (error) {
+      try {
+        if (fs.existsSync(exportDir)) {
+          fs.rmSync(exportDir, { recursive: true, force: true });
+        }
+        if (fs.existsSync(zipFilePath)) {
+          fs.unlinkSync(zipFilePath);
+        }
+      } catch { }
+      throw error;
+    }
   }
 }

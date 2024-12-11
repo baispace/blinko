@@ -226,5 +226,10 @@
   "access-key-id": "معرّف مفتاح الوصول",
   "share-and-copy-link": "مشاركة ونسخ الرابط",
   "copy-share-link": "نسخ رابط المشاركة",
-  "endpoint": "نقطة النهاية"
+  "endpoint": "نقطة النهاية",
+  "export-format": "تنسيق التصدير",
+  "export": "التصدير",
+  "time-range": "النطاق الزمني",
+  "all": "الكل",
+  "exporting": "التصدير..."
 }

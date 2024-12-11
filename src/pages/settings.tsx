@@ -10,11 +10,12 @@ import { RootStore } from "@/store";
 import { UserSetting } from "@/components/BlinkoSettings/UserSetting";
 import { AboutSetting } from "@/components/BlinkoSettings/AboutSetting";
 import { StorageSetting } from "@/components/BlinkoSettings/StorageSetting";
+import { ExportSetting } from "@/components/BlinkoSettings/ExportSetting";
 
 const Page = observer(() => {
   const user = RootStore.Get(UserStore)
-  return <div className="h-mobile-full ">
-    <ScrollArea onBottom={() => { }} className="px-2 md:px-6 pt-2 pb-6 flex flex-col gap-8 ">
+  return <div className="h-mobile-full">
+    <ScrollArea onBottom={() => { }} className="px-2 md:px-6 pt-2 pb-6 flex flex-col gap-8">
       <BasicSetting />
       <PerferSetting />
       {user.isSuperAdmin && <UserSetting />}
@@ -22,6 +23,7 @@ const Page = observer(() => {
       {user.isSuperAdmin && <TaskSetting />}
       {user.isSuperAdmin && <StorageSetting />}
       {user.isSuperAdmin && <ImportSetting />}
+      {<ExportSetting />}
       <AboutSetting />
     </ScrollArea >
   </div>

@@ -224,5 +224,10 @@
   "access-key-id": "Clé d'accès",
   "share-and-copy-link": "Partager et copier le lien",
   "copy-share-link": "Copier le lien de partage",
-  "endpoint": "Point final"
+  "endpoint": "Point final",
+  "export-format": "Format d'exportation",
+  "export": "Exportation",
+  "time-range": "Plage de temps",
+  "all": "Tous",
+  "exporting": "Exporter..."
 }

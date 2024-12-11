@@ -222,5 +222,10 @@
   "access-key-id": "Zugangsschlüssel id",
   "share-and-copy-link": "Link teilen und kopieren",
   "copy-share-link": "Link zur Freigabe kopieren",
-  "endpoint": "Endpunkt"
+  "endpoint": "Endpunkt",
+  "export-format": "Format exportieren",
+  "export": "Exportieren",
+  "time-range": "Zeitspanne",
+  "all": "Alle",
+  "exporting": "Exportieren..."
 }

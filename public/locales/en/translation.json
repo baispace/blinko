@@ -233,5 +233,10 @@
   "access-key-id": "Access key id",
   "copy-share-link": "Copy share link",
   "share-and-copy-link": "Share and copy link",
-  "endpoint": "Endpoint"
+  "endpoint": "Endpoint",
+  "export": "Export",
+  "export-format": "Export Format",
+  "time-range": "Time Range",
+  "all": "All",
+  "exporting": "Exporting..."
 }

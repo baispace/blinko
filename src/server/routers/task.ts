@@ -3,11 +3,13 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { DBJob } from '../plugins/dbjob';
 import { ArchiveJob } from '../plugins/archivejob';
-import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, UPLOAD_FILE_PATH } from '@/lib/constant';
+import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, TEMP_PATH, UPLOAD_FILE_PATH } from '@/lib/constant';
 import { scheduledTaskSchema } from '@/lib/prismaZodType';
 import { Memos } from '../plugins/memos';
 import { unlink } from 'fs/promises';
 import { FileService } from '../plugins/files';
+import path from 'path';
+import fs from 'fs';
 
 
 export const taskRouter = router({
@@ -84,5 +86,36 @@ export const taskRouter = router({
       } catch (error) {
         throw new Error(error)
       }
+    }),
+
+  exportMarkdown: authProcedure
+    .input(z.object({
+      format: z.enum(['markdown', 'csv', 'json']),
+      baseURL: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    })).output(z.object({
+      success: z.boolean(),
+      downloadUrl: z.string().optional(),
+      fileCount: z.number().optional(),
+      error: z.string().optional()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const result = await DBJob.ExporMDFiles({ ...input, ctx });
+      setTimeout(async () => {
+        try {
+          const zipPath = path.join(UPLOAD_FILE_PATH, result.path);
+          if (fs.existsSync(zipPath)) {
+            await unlink(zipPath);
+          }
+        } catch (error) {
+          console.warn('Failed to cleanup export zip file:', error);
+        }
+      }, 5 * 60 * 1000);
+      return {
+        success: true,
+        downloadUrl: `/api/file${result.path}`,
+        fileCount: result.fileCount
+      };
     }),
 })

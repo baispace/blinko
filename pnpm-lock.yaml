@@ -29,6 +29,9 @@ importers:
       '@iconify/react':
         specifier: ^5.0.2
         version: 5.0.2(react@18.3.1)
+      '@internationalized/date':
+        specifier: ^3.6.0
+        version: 3.6.0
       '@langchain/community':
         specifier: ^0.3.6
         version: 0.3.6(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.693.0)(@aws-sdk/credential-provider-node@3.693.0(@aws-sdk/client-sso-oidc@3.693.0(@aws-sdk/client-sts@3.693.0))(@aws-sdk/client-sts@3.693.0))(@langchain/core@0.3.13(openai@4.68.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/ollama@0.1.2(@langchain/core@0.3.13(openai@4.68.0(encoding@0.1.13)(zod@3.23.8))))(@pinecone-database/pinecone@3.0.3)(@smithy/util-utf8@2.3.0)(axios@1.7.7)(cheerio@1.0.0)(encoding@0.1.13)(faiss-node@0.5.1)(handlebars@4.7.8)(ignore@5.3.2)(jsdom@21.1.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.8.0)(openai@4.68.0(encoding@0.1.13)(zod@3.23.8))(pdf-parse@1.1.1)(pg@8.13.0)(typeorm@0.3.20(pg@8.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@types/node@20.2.5)(typescript@5.6.3)))(ws@8.18.0)
@@ -1605,9 +1608,6 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
-
-  '@internationalized/date@3.5.6':
-    resolution: {integrity: sha512-jLxQjefH9VI5P9UQuqB6qNKnvFt1Ky1TPIzHGsIlCi7sZZoMR8SdYbBGRvM0y+Jtb+ez4ieBzmiAUcpmPYpyOw==}
 
   '@internationalized/date@3.6.0':
     resolution: {integrity: sha512-+z6ti+CcJnRlLHok/emGEsWQhe7kfSmEW+/6qCzvKY67YPh7YOBfvc7+/+NXq+zJlbArg30tYpqLjNgcAYv2YQ==}
@@ -12651,10 +12651,6 @@ snapshots:
   '@img/sharp-win32-x64@0.33.5':
     optional: true
 
-  '@internationalized/date@3.5.6':
-    dependencies:
-      '@swc/helpers': 0.5.13
-
   '@internationalized/date@3.6.0':
     dependencies:
       '@swc/helpers': 0.5.13
@@ -14128,7 +14124,7 @@ snapshots:
 
   '@nextui-org/system@2.2.6(@nextui-org/theme@2.4.1(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.2.5)(typescript@5.6.3))))(framer-motion@11.11.9(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@internationalized/date': 3.5.6
+      '@internationalized/date': 3.6.0
       '@nextui-org/react-utils': 2.0.17(react@18.3.1)
       '@nextui-org/system-rsc': 2.1.6(@nextui-org/theme@2.4.1(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.2.5)(typescript@5.6.3))))(react@18.3.1)
       '@react-aria/i18n': 3.11.1(react@18.3.1)
@@ -15145,7 +15141,7 @@ snapshots:
 
   '@react-aria/i18n@3.11.1(react@18.3.1)':
     dependencies:
-      '@internationalized/date': 3.5.6
+      '@internationalized/date': 3.6.0
       '@internationalized/message': 3.1.5
       '@internationalized/number': 3.5.4
       '@internationalized/string': 3.2.4
@@ -15157,7 +15153,7 @@ snapshots:
 
   '@react-aria/i18n@3.12.3(react@18.3.1)':
     dependencies:
-      '@internationalized/date': 3.5.6
+      '@internationalized/date': 3.6.0
       '@internationalized/message': 3.1.5
       '@internationalized/number': 3.5.4
       '@internationalized/string': 3.2.4

@@ -221,5 +221,10 @@
   "access-key-id": "アクセスキーID",
   "share-and-copy-link": "リンクの共有とコピー",
   "copy-share-link": "共有リンクをコピーする",
-  "endpoint": "エンドポイント"
+  "endpoint": "エンドポイント",
+  "export-format": "エクスポート形式",
+  "export": "輸出",
+  "time-range": "時間範囲",
+  "all": "すべて",
+  "exporting": "輸出..."
 }

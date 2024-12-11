@@ -220,5 +220,10 @@
   "access-key-id": "ID da chave de acesso",
   "share-and-copy-link": "Partilhar e copiar a ligação",
   "copy-share-link": "Copiar a ligação de partilha",
-  "endpoint": "Ponto final"
+  "endpoint": "Ponto final",
+  "export-format": "Formato de exportação",
+  "export": "Exportação",
+  "time-range": "Intervalo de tempo",
+  "all": "Todos",
+  "exporting": "Exportar..."
 }

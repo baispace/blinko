@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Switch } from "@nextui-org/react";
+import { Button, Card, Input, Switch, Tooltip } from "@nextui-org/react";
 import { RootStore } from "@/store";
 import { Icon } from "@iconify/react";
 import { UserStore } from "@/store/user";
@@ -16,8 +16,6 @@ import { api } from "@/lib/trpc";
 import { BlinkoStore } from "@/store/blinkoStore";
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { QRCodeSVG } from 'qrcode.react';
-import { generateTOTP, generateTOTPQRCode, verifyTOTP } from "@/server/routers/helper";
 import { ShowGen2FATokenModal } from "../Common/TwoFactorModal/gen2FATokenModal";
 
 export const BasicSetting = observer(() => {
@@ -230,12 +228,14 @@ export const BasicSetting = observer(() => {
     <Item
       leftContent={<></>}
       rightContent={
-        <Button startContent={<Icon icon="humbleicons:logout" width="20" height="20" />} size='sm' color='danger' onPress={async () => {
-          await signOut({ redirect: false })
-          router.push('/signin')
-          localStorage.removeItem('username')
-          localStorage.removeItem('password')
-        }}> {t('logout')}</Button>
+        <Tooltip placement="bottom" content={t('logout')}>
+          <Button isIconOnly startContent={<Icon icon="hugeicons:logout-05" width="20" height="20" />} color='danger' onPress={async () => {
+            await signOut({ redirect: false })
+            router.push('/signin')
+            localStorage.removeItem('username')
+            localStorage.removeItem('password')
+          }}></Button>
+        </Tooltip>
       } />
 
   </Card >

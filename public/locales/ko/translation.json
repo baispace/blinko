@@ -223,5 +223,10 @@
   "access-key-id": "액세스 키 ID",
   "share-and-copy-link": "링크 공유 및 복사",
   "copy-share-link": "공유 링크 복사",
-  "endpoint": "엔드포인트"
+  "endpoint": "엔드포인트",
+  "export-format": "내보내기 형식",
+  "export": "내보내기",
+  "time-range": "시간 범위",
+  "all": "모두",
+  "exporting": "내보내기..."
 }

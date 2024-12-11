@@ -267,7 +267,7 @@ export class DBJob {
           if (note.attachments?.length) {
             await Promise.all(note.attachments.map(async (attachment) => {
               try {
-                const response = await fetch(`${baseURL}/api/file/${attachment.path}`);
+                const response = await fetch(`${baseURL}${attachment.path}`);
                 const buffer = await response.arrayBuffer();
                 const attachmentPath = path.join(attachmentsDir, attachment.name);
                 //@ts-ignore
@@ -296,7 +296,6 @@ export class DBJob {
       zip.writeZip(zipFilePath);
 
       fs.rmSync(exportDir, { recursive: true, force: true });
-      console.log({ zipFilePath })
       return {
         success: true,
         path: zipFilePath.replace(UPLOAD_FILE_PATH, ''),

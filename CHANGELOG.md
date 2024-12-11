@@ -1,3 +1,10 @@
+## [0.23.2](https://github.com/blinko-space/blinko/compare/v0.23.1...v0.23.2) (2024-12-11)
+
+
+### Bug Fixes
+
+* log attachment URL before fetching in DBJob class ([bda6b29](https://github.com/blinko-space/blinko/commit/bda6b291958f9aff9cbf7940d05e7c1c9fba0da3))
+
 ## [0.23.1](https://github.com/blinko-space/blinko/compare/v0.23.0...v0.23.1) (2024-12-11)
 
 

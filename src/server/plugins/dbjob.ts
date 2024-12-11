@@ -270,6 +270,7 @@ export class DBJob {
                 const response = await fetch(`${baseURL}/api/file/${attachment.path}`);
                 const buffer = await response.arrayBuffer();
                 const attachmentPath = path.join(attachmentsDir, attachment.name);
+                //@ts-ignore
                 await writeFile(attachmentPath, Buffer.from(buffer));
 
                 const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment.name);

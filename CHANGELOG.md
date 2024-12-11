@@ -1,3 +1,10 @@
+## [0.23.1](https://github.com/blinko-space/blinko/compare/v0.23.0...v0.23.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* add missing type annotation for attachment file writing in DBJob class ([a25f228](https://github.com/blinko-space/blinko/commit/a25f2289288c71138ddfa76fdbbc6c70590e7cac))
+
 # [0.23.0](https://github.com/blinko-space/blinko/compare/v0.22.6...v0.23.0) (2024-12-11)
 
 

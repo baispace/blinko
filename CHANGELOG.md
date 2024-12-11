@@ -1,3 +1,10 @@
+## [0.22.5](https://github.com/blinko-space/blinko/compare/v0.22.4...v0.22.5) (2024-12-11)
+
+
+### Bug Fixes
+
+* enhance file handling and caching in API routes ([c9d0864](https://github.com/blinko-space/blinko/commit/c9d0864574a928cda1a317b0f575583fab1d17af))
+
 ## [0.22.4](https://github.com/blinko-space/blinko/compare/v0.22.3...v0.22.4) (2024-12-11)
 
 

@@ -5,14 +5,14 @@ import { EditorStore } from '../../editorStore';
 import { FocusEditor } from '../../editorUtils';
 import { useMediaQuery } from 'usehooks-ts';
 import { Div } from '@/components/Common/Div';
+import { observer } from 'mobx-react-lite';
 
 interface Props {
   store: EditorStore;
   isSendLoading?: boolean;
 }
 
-export const SendButton = ({ store, isSendLoading }: Props) => {
-  const isPc = useMediaQuery('(min-width: 768px)')
+export const SendButton = observer(({ store, isSendLoading }: Props) => {
   return (
     <div>
       <Button
@@ -35,4 +35,4 @@ export const SendButton = ({ store, isSendLoading }: Props) => {
       </Button>
     </div>
   );
-}; 
+})

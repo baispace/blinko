@@ -25,7 +25,6 @@ interface Props {
 
 export const UploadButtons = ({ getInputProps, open, onFileUpload }: Props) => {
   const { t } = useTranslation();
-  const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
 
   const uploadActions: UploadAction[] = [

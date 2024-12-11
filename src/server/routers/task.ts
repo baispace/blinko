@@ -7,7 +7,7 @@ import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, UPLOAD_FILE_PATH } from '@/l
 import { scheduledTaskSchema } from '@/lib/prismaZodType';
 import { Memos } from '../plugins/memos';
 import { unlink } from 'fs/promises';
-import { FileService } from '../plugins/utils';
+import { FileService } from '../plugins/files';
 
 
 export const taskRouter = router({
@@ -42,11 +42,11 @@ export const taskRouter = router({
     .input(z.object({
       filePath: z.string()
     }))
-    .mutation(async function* ({ input }) {
+    .mutation(async function* ({ input, ctx }) {
       const { filePath } = input
       try {
         const localFilePath = await FileService.getFile(filePath)
-        const res = DBJob.RestoreDB(localFilePath)
+        const res = DBJob.RestoreDB(localFilePath, ctx)
         for await (const result of res) {
           yield result;
         }
@@ -64,11 +64,11 @@ export const taskRouter = router({
     .input(z.object({
       filePath: z.string() //xxxx.db
     }))
-    .mutation(async function* ({ input }) {
+    .mutation(async function* ({ input, ctx }) {
       try {
         const memos = new Memos();
         const dbPath = await memos.initDB(input.filePath);
-        for await (const result of memos.importMemosDB()) {
+        for await (const result of memos.importMemosDB(ctx)) {
           yield result;
         }
         for await (const result of memos.importFiles()) {

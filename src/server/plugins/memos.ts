@@ -1,10 +1,9 @@
-import { UPLOAD_FILE_PATH } from '@/lib/constant';
 import sqlite3 from 'sqlite3';
 import { prisma } from '../prisma';
-import { adminCaller } from '../routers/_app';
-import fs from 'fs/promises'
-import { FileService } from './utils';
+import { adminCaller, userCaller } from '../routers/_app';
+import { FileService } from './files';
 import { getGlobalConfig } from '../routers/config';
+import { Context } from '../context';
 type Memo = {
   id: string,
   created_ts: number,
@@ -33,7 +32,7 @@ export class Memos {
     this.db.close()
   }
 
-  async *importMemosDB(): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
+  async *importMemosDB(ctx: Context): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
     const rows: Memo[] = await new Promise((resolve, reject) => {
       this.db.all(`SELECT * FROM memo`, (err, rows: Memo[]) => {
         if (err) {
@@ -54,7 +53,7 @@ export class Memos {
           continue;
         }
 
-        const note = await adminCaller.notes.upsert({
+        const note = await userCaller(ctx).notes.upsert({
           content: row?.content,
         });
 

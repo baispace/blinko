@@ -6,6 +6,7 @@ import { cache } from '@/lib/cache';
 import { unfurl } from 'unfurl.js'
 import { Metadata } from 'unfurl.js/dist/types';
 import pLimit from 'p-limit';
+import { FileService } from '../plugins/files';
 const limit = pLimit(5);
 
 export const publicRouter = router({
@@ -88,6 +89,29 @@ export const publicRouter = router({
       return {
         success: true,
         data: input.data
+      }
+    }),
+  generateThumbnail: publicProcedure
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/public/generate-thumbnail',
+        summary: 'Generate image thumbnail',
+        description: 'Path like : /api/file/1234567890.jpg',
+        tags: ['Public']
+      }
+    })
+    .input(z.object({ path: z.string() }))
+    .output(z.object({
+      success: z.boolean(),
+      thumbnail: z.string().optional()
+    }))
+    .mutation(async function ({ input }) {
+      console.log('generate thumbnail', input.path)
+      const thumbnail = await FileService.createThumbnail(input.path.replace('/api/file/', ''), input.path.split('.').pop() ?? '')
+      return {
+        success: true,
+        thumbnail: thumbnail
       }
     })
 })

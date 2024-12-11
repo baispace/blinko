@@ -11,8 +11,17 @@ export const GET = async (req: Request, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
   const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
+  
   try {
     const stats = await stat(filePath);
+    
+    if (!stats.isFile()) {
+      return NextResponse.json(
+        { message: "Not a valid file" }, 
+        { status: 404 }
+      );
+    }
+    
     const contentType = mime.lookup(filePath) || "application/octet-stream";
     
     const range = req.headers.get("range");
@@ -73,7 +82,17 @@ export const GET = async (req: Request, { params }: any) => {
         },
       });
     }
-  } catch (error) {
-    return NextResponse.json({ Message: "File not found", status: 404 });
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      return NextResponse.json(
+        { message: "File not found" }, 
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { message: "Internal server error" }, 
+      { status: 500 }
+    );
   }
 };

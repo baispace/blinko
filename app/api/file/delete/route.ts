@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FileService } from "@/server/plugins/utils";
+import { FileService } from "@/server/plugins/files";
 
 
 //attachment_path like /api/file/123.png

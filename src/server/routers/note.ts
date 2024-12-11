@@ -5,14 +5,10 @@ import { Prisma } from '@prisma/client';
 import { helper, TagTreeNode } from '@/lib/helper';
 import { _ } from '@/lib/lodash';
 import { NoteType } from '../types';
-import path from 'path';
-import { UPLOAD_FILE_PATH } from '@/lib/constant';
-import { unlink } from 'fs/promises';
-import { attachmentsSchema, noteReferenceSchema, notesSchema, tagSchema, tagsToNoteSchema } from '@/lib/prismaZodType';
+import { attachmentsSchema,  notesSchema, tagSchema, tagsToNoteSchema } from '@/lib/prismaZodType';
 import { getGlobalConfig } from './config';
-import { FileService } from '../plugins/utils';
+import { FileService } from '../plugins/files';
 import { AiService } from '../plugins/ai';
-import axios from 'axios';
 import { SendWebhook } from './helper';
 
 const extractHashtags = (input: string): string[] => {

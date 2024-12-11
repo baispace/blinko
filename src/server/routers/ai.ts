@@ -2,7 +2,7 @@ import { router, authProcedure } from '../trpc';
 import { z } from 'zod';
 import { AiService } from '../plugins/ai';
 import { prisma } from '../prisma';
-import { FileService } from '../plugins/utils';
+import { FileService } from '../plugins/files';
 import { TRPCError } from '@trpc/server';
 
 export const aiRouter = router({

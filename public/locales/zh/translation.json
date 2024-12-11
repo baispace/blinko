@@ -217,7 +217,7 @@
   "verify": "验证",
   "about": "关于",
   "upload": "上传",
-  "days": "天数",
+  "days": "天",
   "select-model": "选择型号",
   "select-model-provider": "选择模型提供商",
   "allow-register": "允许注册",
@@ -228,5 +228,6 @@
   "access-key-id": "访问密钥ID",
   "share-and-copy-link": "共享和复制链接",
   "copy-share-link": "复制共享链接",
-  "endpoint": "端点"
+  "endpoint": "端点",
+  "create-user": "创建用户"
 }

@@ -11,6 +11,7 @@ import { userRouter } from './user';
 import { configRouter } from './config';
 import { publicRouter } from './public';
 import { taskRouter } from './task';
+import { Context } from '../context';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -24,7 +25,13 @@ export const appRouter = router({
 });
 
 export const createCaller = t.createCallerFactory(appRouter);
+
+//not recommend to use this
 export const adminCaller = createCaller({ id: '1', name: 'admin', sub: '1', role: 'superadmin', exp: 0, iat: 0 });
+
+export const userCaller = (ctx: Context) => {
+  return createCaller(ctx);
+};
 
 export type AppRouter = typeof appRouter;
 export type RouterOutput = inferRouterOutputs<AppRouter>;

@@ -19,7 +19,7 @@ import { TextLoader } from "langchain/document_loaders/fs/text";
 import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
 import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
-import { FileService } from './utils';
+import { FileService } from './files';
 import { AiPrompt } from './ai/aiPrompt';
 
 //https://js.langchain.com/docs/introduction/

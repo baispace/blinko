@@ -7,7 +7,7 @@ import AdmZip from 'adm-zip'
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
 import { prisma } from "../prisma";
 import { unlink } from "fs/promises";
-import { adminCaller } from "../routers/_app";
+import {  createCaller } from "../routers/_app";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -71,7 +71,7 @@ export class DBJob {
     }
   }
 
-  static async *RestoreDB(filePath: string): AsyncGenerator<RestoreResult & { progress: { current: number; total: number } }, void, unknown> {
+  static async *RestoreDB(filePath: string, ctx: any): AsyncGenerator<RestoreResult & { progress: { current: number; total: number } }, void, unknown> {
     try {
       const zip = new AdmZip(filePath);
       zip.extractAllTo(ROOT_PATH, true);
@@ -88,20 +88,9 @@ export class DBJob {
       for (const note of backupData.notes) {
         current++;
         try {
-          // const existingNote = await prisma.notes.findFirst({
-          //   where: { content: note.content }
-          // });
+          const userCaller = createCaller(ctx)
 
-          // if (existingNote) {
-          //   yield {
-          //     type: 'skip',
-          //     content: note.content.slice(0, 30),
-          //     progress: { current, total }
-          //   };
-          //   continue;
-          // }
-
-          const createdNote = await adminCaller.notes.upsert({
+          const createdNote = await userCaller.notes.upsert({
             content: note.content,
             isArchived: note.isArchived,
             type: note.type,
@@ -114,8 +103,8 @@ export class DBJob {
               where: { name: note.account.name }
             })
             let updateData: any = {
-              createdAt: note.createAt,
-              updatedAt: note.updateAt,
+              createdAt: note.createdAt,
+              updatedAt: note.updatedAt,
             }
             if (!account) {
               const _newAccount = await prisma.accounts.create({

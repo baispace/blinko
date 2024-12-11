@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { FileService } from "@/server/plugins/utils";
+import { FileService } from "@/server/plugins/files";
 
 
 export const POST = async (req: Request, res: NextResponse) => {
@@ -17,7 +17,6 @@ export const POST = async (req: Request, res: NextResponse) => {
   //@ts-ignore
   const originalName = file.name.replaceAll(" ", "_");
   const extension = path.extname(originalName);
-  const baseName = path.basename(originalName, extension);
   const filePath = await FileService.uploadFile(buffer, originalName)
   //@ts-ignore
   return NextResponse.json({ Message: "Success", status: 200, ...filePath, type: file?.type ?? '' });

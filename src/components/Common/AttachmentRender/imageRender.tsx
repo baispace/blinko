@@ -7,6 +7,7 @@ import { DeleteIcon, DownloadIcon } from './icons';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { useMediaQuery } from 'usehooks-ts';
+import { api } from '@/lib/trpc';
 
 type IProps = {
   files: FileType[]
@@ -16,13 +17,34 @@ type IProps = {
 const ImageThumbnailRender = ({ file, className }: { file: FileType, className?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(
-    file.preview.replace('/api/file/', '/api/file/thumbnail_')
+    file.preview.replace('/api/file/', '/api/file/thumbnail/')
   );
+
+  useEffect(() => {
+    const checkAndGenerateThumbnail = async () => {
+      try {
+        console.log(checkAndGenerateThumbnail)
+        const thumbnailResponse = await fetch(currentSrc);
+        if (!thumbnailResponse.ok) {
+          setCurrentSrc(file.preview);
+          await api.public.generateThumbnail.mutate({ path: file.preview })
+        }
+      } catch (error) {
+        setCurrentSrc(file.preview);
+      }
+    };
+
+    if (currentSrc.includes('/api/file/thumbnail/')) {
+      checkAndGenerateThumbnail();
+    }
+  }, [currentSrc]);
+
   useEffect(() => {
     if (isOriginalError) {
       setCurrentSrc('/image-fallback.svg')
     }
   }, [isOriginalError])
+
   return <Image
     src={currentSrc}
     classNames={{
@@ -34,7 +56,7 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
       }
       setCurrentSrc(file.preview)
     }}
-    className={`object-cover w-full ${className} `}  // 修改这里
+    className={`object-cover w-full ${className} `}
   />
 }
 

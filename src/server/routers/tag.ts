@@ -1,7 +1,7 @@
 import { router, authProcedure, demoAuthMiddleware } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
-import { adminCaller } from './_app';
+import { userCaller } from './_app';
 import { tagSchema } from '@/lib/prismaZodType';
 
 export const tagRouter = router({
@@ -39,12 +39,12 @@ export const tagRouter = router({
       tag: z.string()
     }))
     .output(z.boolean())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { ids, tag } = input
       const notes = await prisma.notes.findMany({ where: { id: { in: ids } } })
       for (const note of notes) {
         const newContent = note.content += ' #' + tag
-        await adminCaller.notes.upsert({ content: newContent, id: note.id })
+        await userCaller(ctx).notes.upsert({ content: newContent, id: note.id })
       }
       return true
     }),
@@ -61,7 +61,7 @@ export const tagRouter = router({
       id: z.number()
     }))
     .output(z.boolean())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id, oldName, newName } = input
       const tagToNote = await prisma.tagsToNote.findMany({ where: { tagId: id } })
       const noteIds = tagToNote.map(i => i.noteId)
@@ -70,7 +70,7 @@ export const tagRouter = router({
         i.content = i.content.replace(new RegExp(`#${oldName}`, 'g'), "#" + newName)
       })
       for (const note of hasTagNote) {
-        await adminCaller.notes.upsert({ content: note.content, id: note.id, type: note.type })
+        await userCaller(ctx).notes.upsert({ content: note.content, id: note.id, type: note.type })
       }
       return true
     }),
@@ -119,11 +119,11 @@ export const tagRouter = router({
       id: z.number()
     }))
     .output(z.boolean())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id } = input
       const tag = await prisma.tag.findFirst({ where: { id }, include: { tagsToNote: true } })
       const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
-      await adminCaller.notes.deleteMany({ ids: allNotesId })
+      await userCaller(ctx).notes.deleteMany({ ids: allNotesId })
       return true
     }),
 })

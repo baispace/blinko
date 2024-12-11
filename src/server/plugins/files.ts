@@ -1,11 +1,12 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routers/config";
-import { UPLOAD_FILE_PATH } from "@/lib/constant";
+import { THUMBNAIL_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
 import fs, { unlink, stat, writeFile } from 'fs/promises';
 import path from 'path';
 import { cache } from "@/lib/cache";
 import sharp from "sharp";
 import { prisma } from "../prisma";
+import { existsSync } from "fs";
 
 export class FileService {
   public static async getS3Client() {
@@ -43,17 +44,22 @@ export class FileService {
     }
   }
 
-  private static async createThumbnail(filename: string, extension: string) {
+  //file name like : 1234567890.jpg extension like : .jpg
+  static async createThumbnail(filename: string, extension: string) {
     try {
       const imagePath = `${UPLOAD_FILE_PATH}/` + filename;
+      if (!existsSync(THUMBNAIL_PATH)) {
+        await fs.mkdir(THUMBNAIL_PATH, { recursive: true });
+      }
       if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(extension.replace('.', '')?.toLowerCase() ?? '')) {
         await sharp(imagePath)
-          .rotate() 
+          .rotate()
           .resize(500, 500, {
-            fit: 'inside',  
-            withoutEnlargement: true 
+            fit: 'inside',
+            withoutEnlargement: true
           })
-          .toFile(UPLOAD_FILE_PATH + '/thumbnail_' + filename);
+          .toFile(THUMBNAIL_PATH + '/' + filename);
+        return `/api/file/thumbnail/${filename}`;
       }
     } catch (error) {
       console.error("Error thumbnail occurred ", error);
@@ -65,25 +71,25 @@ export class FileService {
     const baseName = path.basename(originalName, extension);
     const timestamp = Date.now();
     const config = await getGlobalConfig();
-    
+
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
-      
+
       let customPath = config.s3CustomPath || '';
       if (customPath) {
         customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
         customPath = customPath.endsWith('/') ? customPath : customPath + '/';
       }
-      
+
       const timestampedFileName = `${baseName}_${timestamp}${extension}`;
       const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
-      
+
       const command = new PutObjectCommand({
         Bucket: config.s3Bucket,
         Key: s3Key,
         Body: buffer,
       });
-      
+
       await s3ClientInstance.send(command);
       const s3Url = `/api/s3file/${s3Key}`;
       return { filePath: s3Url, fileName: timestampedFileName };
@@ -115,7 +121,7 @@ export class FileService {
       }
       if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(api_attachment_path.split('.')[1]?.replace('.', '')?.toLowerCase() ?? '')) {
         try {
-          await unlink(path.join(process.cwd(), `${UPLOAD_FILE_PATH}/thumbnail_` + api_attachment_path.replace('/api/file/', "")));
+          await unlink(path.join(process.cwd(), THUMBNAIL_PATH + '/' + api_attachment_path.replace('/api/file/', "")));
         } catch (error) {
         }
       }
@@ -127,7 +133,7 @@ export class FileService {
     const config = await getGlobalConfig();
     const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
     const tempPath = path.join(UPLOAD_FILE_PATH, path.basename(fileName));
-    
+
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
       const command = new GetObjectCommand({

@@ -208,5 +208,18 @@
   "two-factor-authentication": "二要素認証",
   "scan-this-qr-code-with-your-authenticator-app": "認証アプリでこのQRコードをスキャンしてください。",
   "or-enter-this-code-manually": "または、このコードを手動で入力する：",
-  "verify": "ベリファイ"
+  "verify": "ベリファイ",
+  "about": "について",
+  "upload": "アップロード",
+  "days": "日数",
+  "select-model-provider": "モデルプロバイダーを選択",
+  "allow-register": "登録許可",
+  "access-token": "アクセス・トークン",
+  "bucket": "バケット",
+  "region": "地域",
+  "access-key-secret": "アクセスキーの秘密",
+  "access-key-id": "アクセスキーID",
+  "share-and-copy-link": "リンクの共有とコピー",
+  "copy-share-link": "共有リンクをコピーする",
+  "endpoint": "エンドポイント"
 }

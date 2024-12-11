@@ -25,7 +25,6 @@ export const TaskSetting = observer(() => {
     }
   }, [blinko.config.value?.autoArchivedDays])
 
-
   const { t } = useTranslation()
   return <Card shadow="none" className="flex flex-col p-4 bg-background">
     <div className='text-desc text-sm'>{t('schedule-task')}</div>
@@ -52,7 +51,7 @@ export const TaskSetting = observer(() => {
             }}
             className="w-[120px]"
             labelPlacement="outside"
-            endContent={'Days'}
+            endContent={t('days')}
             type="number"
             min={1}
           />

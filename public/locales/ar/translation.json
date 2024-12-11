@@ -216,5 +216,15 @@
   "two-factor-authentication": "المصادقة الثنائية",
   "scan-this-qr-code-with-your-authenticator-app": "امسح رمز الاستجابة السريعة هذا باستخدام تطبيق المصادقة الخاص بك",
   "or-enter-this-code-manually": "أو أدخل هذا الرمز يدوياً:",
-  "verify": "تحقق"
+  "verify": "تحقق",
+  "about": "نبذة عن",
+  "upload": "التحميل",
+  "days": "الأيام",
+  "bucket": "دلو",
+  "region": "المنطقة",
+  "access-key-secret": "مفتاح الوصول السري",
+  "access-key-id": "معرّف مفتاح الوصول",
+  "share-and-copy-link": "مشاركة ونسخ الرابط",
+  "copy-share-link": "نسخ رابط المشاركة",
+  "endpoint": "نقطة النهاية"
 }

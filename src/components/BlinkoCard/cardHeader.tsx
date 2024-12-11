@@ -23,7 +23,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
-  
+
   return (
     <div className={`flex items-center select-none ${isExpanded ? 'mb-4' : 'mb-2'}`}>
       <div className={`flex items-center w-full gap-1 ${isExpanded ? 'text-base' : 'text-xs'}`}>
@@ -65,11 +65,10 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
 
         <Copy
           size={16}
-          className={`ml-auto ${
-            isIOSDevice 
-              ? 'opacity-100' 
-              : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
-          }`}
+          className={`ml-auto ${isIOSDevice
+            ? 'opacity-100'
+            : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
+            }`}
           content={blinkoItem.content + `\n${blinkoItem.attachments?.map(i => window.location.origin + i.path).join('\n')}`}
         />
 
@@ -96,17 +95,17 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
 };
 
 const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, blinko: BlinkoStore, isIOSDevice: boolean }) => {
+  const { t } = useTranslation()
   return (
-    <Tooltip content={blinkoItem.isShare ? 'Copy share link' : 'Share and copy link'}>
+    <Tooltip content={blinkoItem.isShare ? t('copy-share-link') : t('share-and-copy-link')}>
       <Icon
         icon="tabler:share-2"
         width="16"
         height="16"
-        className={`cursor-pointer text-desc ml-2 ${
-          isIOSDevice 
-            ? 'opacity-100' 
-            : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
-        }`}
+        className={`cursor-pointer text-desc ml-2 ${isIOSDevice
+          ? 'opacity-100'
+          : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
+          }`}
         onClick={async (e) => {
           e.stopPropagation();
           if (!blinkoItem.isShare) {

@@ -211,5 +211,19 @@
   "two-factor-authentication": "Двухфакторная аутентификация",
   "scan-this-qr-code-with-your-authenticator-app": "Отсканируйте этот QR-код с помощью приложения-аутентификатора.",
   "or-enter-this-code-manually": "Или введите этот код вручную:",
-  "verify": "Проверьте"
+  "verify": "Проверьте",
+  "about": "О сайте",
+  "upload": "Загрузить",
+  "days": "Дни",
+  "select-model": "Выберите модель",
+  "select-model-provider": "Выберите поставщика модели",
+  "allow-register": "Разрешить регистрацию",
+  "access-token": "Токен доступа",
+  "bucket": "Ведро",
+  "region": "Регион",
+  "access-key-secret": "Секрет ключа доступа",
+  "access-key-id": "Идентификатор ключа доступа",
+  "share-and-copy-link": "Поделиться и скопировать ссылку",
+  "copy-share-link": "Скопируйте ссылку на общий доступ",
+  "endpoint": "Конечная точка"
 }

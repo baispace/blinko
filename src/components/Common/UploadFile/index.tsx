@@ -3,10 +3,12 @@ import { FileUploadIcon } from "../Icons";
 import { Button } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 type IProps = {
   onUpload?: ({ filePath, fileName }) => void
 }
 export const UploadFileWrapper = ({ onUpload }: IProps) => {
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const {
     getRootProps,
@@ -32,6 +34,6 @@ export const UploadFileWrapper = ({ onUpload }: IProps) => {
 
   return <div {...getRootProps()}>
     <input {...getInputProps()} />
-    <Button onPress={open} isLoading={isLoading} color='primary' startContent={<Icon icon="tabler:upload" width="24" height="24" />}>Upload</Button>
+    <Button onPress={open} isLoading={isLoading} color='primary' startContent={<Icon icon="tabler:upload" width="24" height="24" />}>{t('upload')}</Button>
   </div>
 }

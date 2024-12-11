@@ -210,5 +210,17 @@
   "two-factor-authentication": "Autenticación de dos factores",
   "scan-this-qr-code-with-your-authenticator-app": "Escanea este código QR con tu aplicación de autenticación",
   "or-enter-this-code-manually": "O introduzca este código manualmente:",
-  "verify": "Verifique"
+  "verify": "Verifique",
+  "upload": "Cargar",
+  "days": "Días",
+  "select-model-provider": "Seleccionar proveedor de modelos",
+  "allow-register": "Permitir Registro",
+  "access-token": "Ficha de acceso",
+  "bucket": "Cubo",
+  "region": "Región",
+  "access-key-secret": "Clave de acceso secreta",
+  "access-key-id": "Identificador de la clave de acceso",
+  "share-and-copy-link": "Compartir y copiar enlace",
+  "copy-share-link": "Copiar enlace compartido",
+  "endpoint": "Punto final"
 }

@@ -35,7 +35,7 @@ export const AboutSetting = observer(() => {
     store.latestVersion.call()
   }, [])
   return <Card shadow="none" className="flex flex-col p-4 bg-background pb-6">
-    <div className='text-desc text-sm'>About</div>
+    <div className='text-desc text-sm'>{t('about')}</div>
     <Item
       leftContent={<>{t('version')}</>}
       rightContent={

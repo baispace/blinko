@@ -214,5 +214,19 @@
   "two-factor-authentication": "双因素验证",
   "scan-this-qr-code-with-your-authenticator-app": "使用身份验证程序扫描此 QR 码",
   "or-enter-this-code-manually": "或手动输入此代码：",
-  "verify": "验证"
+  "verify": "验证",
+  "about": "关于",
+  "upload": "上传",
+  "days": "天数",
+  "select-model": "选择型号",
+  "select-model-provider": "选择模型提供商",
+  "allow-register": "允许注册",
+  "access-token": "访问令牌",
+  "bucket": "水桶",
+  "region": "地区",
+  "access-key-secret": "访问密钥",
+  "access-key-id": "访问密钥ID",
+  "share-and-copy-link": "共享和复制链接",
+  "copy-share-link": "复制共享链接",
+  "endpoint": "端点"
 }

@@ -210,5 +210,18 @@
   "two-factor-authentication": "2단계 인증",
   "scan-this-qr-code-with-your-authenticator-app": "인증 앱으로 이 QR 코드를 스캔하세요.",
   "or-enter-this-code-manually": "또는 이 코드를 수동으로 입력하세요:",
-  "verify": "확인"
+  "verify": "확인",
+  "about": "정보",
+  "upload": "업로드",
+  "days": "일수",
+  "select-model-provider": "모델 공급자 선택",
+  "allow-register": "등록 허용",
+  "access-token": "액세스 토큰",
+  "bucket": "버킷",
+  "region": "지역",
+  "access-key-secret": "액세스 키 비밀",
+  "access-key-id": "액세스 키 ID",
+  "share-and-copy-link": "링크 공유 및 복사",
+  "copy-share-link": "공유 링크 복사",
+  "endpoint": "엔드포인트"
 }

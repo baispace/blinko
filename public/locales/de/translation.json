@@ -209,5 +209,18 @@
   "two-factor-authentication": "Zwei-Faktoren-Authentifizierung",
   "scan-this-qr-code-with-your-authenticator-app": "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App",
   "or-enter-this-code-manually": "Oder geben Sie diesen Code manuell ein:",
-  "verify": "Überprüfen Sie"
+  "verify": "Überprüfen Sie",
+  "about": "Über",
+  "upload": "Hochladen",
+  "days": "Tage",
+  "select-model-provider": "Modellanbieter auswählen",
+  "allow-register": "Register zulassen",
+  "access-token": "Zugangs-Token",
+  "bucket": "Eimer",
+  "region": "Region",
+  "access-key-secret": "Zugangsschlüssel geheim",
+  "access-key-id": "Zugangsschlüssel id",
+  "share-and-copy-link": "Link teilen und kopieren",
+  "copy-share-link": "Link zur Freigabe kopieren",
+  "endpoint": "Endpunkt"
 }

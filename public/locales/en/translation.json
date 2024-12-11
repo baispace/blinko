@@ -219,5 +219,19 @@
   "scan-this-qr-code-with-your-authenticator-app": "Scan this QR code with your authenticator app",
   "or-enter-this-code-manually": "Or enter this code manually:",
   "verify": "Verify",
-  "2fa-setup-successful": "2FA setup successful"
+  "2fa-setup-successful": "2FA setup successful",
+  "about": "About",
+  "upload": "Upload",
+  "days": "Days",
+  "select-model-provider": "Select Model Provider",
+  "select-model": "Select Model",
+  "allow-register": "Allow Register",
+  "access-token": "Access Token",
+  "bucket": "Bucket",
+  "region": "Region",
+  "access-key-secret": "Access key secret",
+  "access-key-id": "Access key id",
+  "copy-share-link": "Copy share link",
+  "share-and-copy-link": "Share and copy link",
+  "endpoint": "Endpoint"
 }

@@ -90,7 +90,7 @@ export const BasicSetting = observer(() => {
     <Item
       hidden={!user.isSuperAdmin}
       leftContent={<div className="flex items-center gap-2">
-        <div>Access Token</div>
+        <div>{t('access-token')}</div>
         <Button
           isIconOnly
           variant="flat"
@@ -168,7 +168,7 @@ export const BasicSetting = observer(() => {
     }
 
     <Item
-      leftContent={<>Allow Register</>}
+      leftContent={<>{t('allow-register')}</>}
       rightContent={<Switch
         thumbIcon={store.setRigster.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
         isDisabled={store.setRigster.loading.value}

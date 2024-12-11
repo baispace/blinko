@@ -75,7 +75,7 @@ export const AiSetting = observer(() => {
           }}
           size="sm"
           className="w-[200px]"
-          label="Select Model Provider"
+          label={t('select-model-provider')}
         >
           {ai.modelProviderSelect.map((item) => (
             <SelectItem key={item.value ?? ''} value={item.value} startContent={item.icon}>
@@ -107,7 +107,7 @@ export const AiSetting = observer(() => {
             }}
             size="sm"
             className="w-[200px]"
-            label="Select Model"
+            label={t('select-model')}
           >
             {ai.modelSelect[blinko.config.value?.aiModelProvider!]!.map((item) => (
               <AutocompleteItem key={item.value} value={item.value}>
@@ -146,7 +146,7 @@ export const AiSetting = observer(() => {
               }}
               size="sm"
               className={`${isPc ? 'w-[250px]' : 'w-full'}`}
-              label="Embedding Model"
+              label={t('embedding-model')}
             >
               {ai.embeddingSelect[blinko.config.value?.aiModelProvider!]!.map((item) => (
                 <AutocompleteItem key={item.value} value={item.value}>

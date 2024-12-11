@@ -63,11 +63,11 @@ export const StorageSetting = observer(() => {
     {
       blinko.config.value?.objectStorage === 's3' && <>
         <Item
-          leftContent={<>Access key id</>}
+          leftContent={<>{t('access-key-id')}</>}
           rightContent={<PasswordInput 
             value={store.s3AccessKeyId} 
             onChange={e => store.s3AccessKeyId = e.target.value} 
-            placeholder="Access key id" 
+            placeholder={t('access-key-id')}
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3AccessKeyId',
@@ -75,11 +75,11 @@ export const StorageSetting = observer(() => {
               }))
             }} />} />
         <Item
-          leftContent={<>Access key secret</>}
+          leftContent={<>{t('access-key-secret')}</>}
           rightContent={<PasswordInput 
             value={store.s3AccessKeySecret} 
             onChange={e => store.s3AccessKeySecret = e.target.value} 
-            placeholder="Access key secret" 
+            placeholder={t('access-key-secret')}
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3AccessKeySecret',
@@ -87,7 +87,7 @@ export const StorageSetting = observer(() => {
               }))
             }} />} />
         <Item
-          leftContent={<>Endpoint</>}
+          leftContent={<>{t('endpoint')}</>}
           rightContent={<Input value={store.s3Endpoint} onChange={e => store.s3Endpoint = e.target.value} placeholder="Endpoint" onBlur={async (e) => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Endpoint',
@@ -95,7 +95,7 @@ export const StorageSetting = observer(() => {
             }))
           }} />} />
         <Item
-          leftContent={<>Region</>}
+          leftContent={<>{t('region')}</>}
           rightContent={<Input value={store.s3Region} onChange={e => store.s3Region = e.target.value} placeholder="Region" onBlur={async (e) => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Region',
@@ -103,7 +103,7 @@ export const StorageSetting = observer(() => {
             }))
           }} />} />
         <Item
-          leftContent={<>Bucket</>}
+          leftContent={<>{t('bucket')}</>}
           rightContent={<Input value={store.s3Bucket} onChange={e => store.s3Bucket = e.target.value} placeholder="Bucket" onBlur={async (e) => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Bucket',

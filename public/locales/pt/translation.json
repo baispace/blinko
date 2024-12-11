@@ -206,5 +206,19 @@
   "two-factor-authentication": "Autenticação de dois factores",
   "scan-this-qr-code-with-your-authenticator-app": "Digitalize este código QR com a sua aplicação de autenticação",
   "or-enter-this-code-manually": "Ou introduza este código manualmente:",
-  "verify": "Verificar"
+  "verify": "Verificar",
+  "about": "Sobre",
+  "upload": "Carregar",
+  "days": "Dias",
+  "select-model": "Selecionar modelo",
+  "select-model-provider": "Selecionar fornecedor de modelos",
+  "allow-register": "Permitir registo",
+  "access-token": "Token de acesso",
+  "bucket": "Balde",
+  "region": "Região",
+  "access-key-secret": "Chave de acesso secreta",
+  "access-key-id": "ID da chave de acesso",
+  "share-and-copy-link": "Partilhar e copiar a ligação",
+  "copy-share-link": "Copiar a ligação de partilha",
+  "endpoint": "Ponto final"
 }

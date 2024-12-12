@@ -1,3 +1,10 @@
+## [0.23.4](https://github.com/blinko-space/blinko/compare/v0.23.3...v0.23.4) (2024-12-12)
+
+
+### Bug Fixes
+
+* update getGlobalConfig to use admin privileges in Memos class ([4d2e612](https://github.com/blinko-space/blinko/commit/4d2e612fb5883aa03b848fc3ed63786f5079910f))
+
 ## [0.23.3](https://github.com/blinko-space/blinko/compare/v0.23.2...v0.23.3) (2024-12-12)
 
 

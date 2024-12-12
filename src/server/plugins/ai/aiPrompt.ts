@@ -16,8 +16,6 @@ export class AiPrompt {
        Important:
        - Respond in the SAME LANGUAGE as the input content
        - Use Markdown format
-       - Replace all spaces with &#x20;
-       - Use two line breaks between paragraphs
        - Ensure line breaks between list items`,
 
       polish: `You are a professional text editor. Your task is to polish and optimize the given text:
@@ -33,7 +31,6 @@ export class AiPrompt {
        Important:
        - Respond in the SAME LANGUAGE as the input content
        - Use Markdown format
-       - Replace all spaces with &#x20;
        - Use two line breaks between paragraphs
        - Ensure line breaks between list items`,
 
@@ -43,11 +40,12 @@ export class AiPrompt {
        3. Maintain professional writing standards
        4. Follow technical documentation best practices when needed
        
+      Original content:
+       {content}
+
        Important:
        - Respond in the SAME LANGUAGE as the input content
        - Use Markdown format
-       - Replace all spaces with &#x20;
-       - Use two line breaks between paragraphs
        - Ensure line breaks between list items
        - Use appropriate Markdown elements (code blocks, tables, lists, etc.)`
     };

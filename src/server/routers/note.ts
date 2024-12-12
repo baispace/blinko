@@ -27,7 +27,7 @@ export const noteRouter = router({
       size: z.number().default(30),
       orderBy: z.enum(["asc", 'desc']).default('desc'),
       type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
-      isArchived: z.boolean().default(false).optional(),
+      isArchived: z.union([z.boolean(), z.null()]).default(false).optional(),
       isRecycle: z.boolean().default(false).optional(),
       searchText: z.string().default('').optional(),
       withoutTag: z.boolean().default(false).optional(),
@@ -72,7 +72,7 @@ export const noteRouter = router({
         }
       } else {
         where.isRecycle = isRecycle
-        if (!isRecycle) {
+        if (!isRecycle && isArchived != null) {
           where.isArchived = isArchived
         }
         if (type != -1) {

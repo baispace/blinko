@@ -38,6 +38,7 @@ export default function FilterPop() {
       withoutTag: tagStatus === 'without',
       withFile: selectedCondition === 'hasFile',
       withLink: selectedCondition === 'hasLink',
+      isArchived: null
     };
     blinkoStore.noteList.resetAndCall({});
   };
@@ -56,6 +57,7 @@ export default function FilterPop() {
       withoutTag: false,
       withFile: false,
       withLink: false,
+      isArchived: false
     };
     blinkoStore.noteList.resetAndCall({});
   };

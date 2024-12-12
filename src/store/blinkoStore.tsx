@@ -34,7 +34,7 @@ export class BlinkoStore implements Store {
     icon: ''
   }
   noteListFilterConfig = {
-    isArchived: false,
+    isArchived: false as boolean | null,
     isRecycle: false,
     type: 0,
     tagId: null as number | null,

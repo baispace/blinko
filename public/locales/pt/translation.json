@@ -225,5 +225,20 @@
   "export": "Exportação",
   "time-range": "Intervalo de tempo",
   "all": "Todos",
-  "exporting": "Exportar..."
+  "exporting": "Exportar...",
+  "has-image": "Tem imagem",
+  "has-link": "Tem ligação",
+  "filter-settings": "Definições do filtro",
+  "tag-status": "Estado da etiqueta",
+  "all-notes": "Todas as notas",
+  "with-tags": "Com etiquetas",
+  "without-tags": "Sem etiquetas",
+  "select-tags": "Selecionar etiquetas",
+  "additional-conditions": "Condições adicionais",
+  "apply-filter": "Aplicar filtro",
+  "to": "Para",
+  "start-date": "Data de início",
+  "end-date": "Data final",
+  "reset": "Reiniciar",
+  "no-condition": "Sem condição"
 }

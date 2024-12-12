@@ -231,5 +231,20 @@
   "export": "التصدير",
   "time-range": "النطاق الزمني",
   "all": "الكل",
-  "exporting": "التصدير..."
+  "exporting": "التصدير...",
+  "has-image": "لديه صورة",
+  "has-link": "لديه رابط",
+  "filter-settings": "إعدادات التصفية",
+  "tag-status": "حالة العلامة",
+  "all-notes": "جميع الملاحظات",
+  "with-tags": "مع العلامات",
+  "without-tags": "بدون علامات",
+  "select-tags": "حدد العلامات",
+  "additional-conditions": "الشروط الإضافية",
+  "apply-filter": "تطبيق الفلتر",
+  "to": "إلى",
+  "start-date": "تاريخ البدء",
+  "end-date": "تاريخ الانتهاء",
+  "reset": "إعادة تعيين",
+  "no-condition": "لا توجد حالة"
 }

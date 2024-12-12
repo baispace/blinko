@@ -230,5 +230,20 @@
   "export": "Экспорт",
   "time-range": "Диапазон времени",
   "all": "Все",
-  "exporting": "Экспорт..."
+  "exporting": "Экспорт...",
+  "has-image": "Имеет изображение",
+  "has-link": "Имеет ссылку",
+  "filter-settings": "Настройки фильтра",
+  "tag-status": "Статус тега",
+  "all-notes": "Все заметки",
+  "with-tags": "С тегами",
+  "without-tags": "Без тегов",
+  "select-tags": "Выберите теги",
+  "additional-conditions": "Дополнительные условия",
+  "apply-filter": "Применить фильтр",
+  "to": "На",
+  "start-date": "Дата начала",
+  "end-date": "Дата окончания",
+  "reset": "Сброс",
+  "no-condition": "Нет условий"
 }

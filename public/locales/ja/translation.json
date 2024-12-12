@@ -226,5 +226,20 @@
   "export": "輸出",
   "time-range": "時間範囲",
   "all": "すべて",
-  "exporting": "輸出..."
+  "exporting": "輸出...",
+  "has-image": "イメージ",
+  "has-link": "リンクあり",
+  "filter-settings": "フィルター設定",
+  "tag-status": "タグステータス",
+  "all-notes": "すべての注意事項",
+  "with-tags": "タグ付き",
+  "without-tags": "タグなし",
+  "select-tags": "タグを選択",
+  "additional-conditions": "追加条件",
+  "apply-filter": "フィルタを適用する",
+  "to": "へ",
+  "start-date": "開始日",
+  "end-date": "終了日",
+  "reset": "リセット",
+  "no-condition": "コンディションなし"
 }

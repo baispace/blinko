@@ -34,6 +34,8 @@ export const noteRouter = router({
       withFile: z.boolean().default(false).optional(),
       withLink: z.boolean().default(false).optional(),
       isUseAiQuery: z.boolean().default(false).optional(),
+      startDate: z.union([z.date(), z.null()]).default(null).optional(),
+      endDate: z.union([z.date(), z.null()]).default(null).optional(),
     }))
     .output(z.array(notesSchema.merge(
       z.object({
@@ -48,7 +50,7 @@ export const noteRouter = router({
       }))
     ))
     .mutation(async function ({ input, ctx }) {
-      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery } = input
+      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate } = input
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
           return await AiService.enhanceQuery({ query: searchText!, ctx })
@@ -87,6 +89,12 @@ export const noteRouter = router({
       }
       if (withoutTag) {
         where.tags = { none: {} }
+      }
+      if (startDate) {
+        where.createdAt = { gte: startDate }
+      }
+      if (endDate) {
+        where.createdAt = { lte: endDate }
       }
       if (withLink) {
         where.OR = [

@@ -45,7 +45,19 @@
     ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    "@semantic-release/github",
+    [
+      "@semantic-release/github",
+      {
+        "successComment": ":tada: This issue has been resolved in version ${nextRelease.version} :tada:",
+        "failComment": "This release from branch ${branch} failed.",
+        "failTitle": "Release Failed",
+        "labels": ["released"],
+        "releasedLabels": ["released"],
+        "issues": {
+          "prefix": "#"
+        }
+      }
+    ],
     "@semantic-release/git"
   ]
 }

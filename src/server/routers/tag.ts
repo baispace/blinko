@@ -106,9 +106,6 @@ export const tagRouter = router({
         const note = await prisma.notes.findFirst({ where: { id: noteId } })
         if (!note) continue
 
-        console.log('Original content！！！！！！！！！！！:', note.content);
-        console.log('Tag to remove:', tag.name);
-
         const getAllTagIdsInChain = async (tagId: number): Promise<number[]> => {
           const result: number[] = [tagId];
           

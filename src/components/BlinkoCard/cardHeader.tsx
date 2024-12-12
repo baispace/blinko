@@ -72,7 +72,9 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
           content={blinkoItem.content + `\n${blinkoItem.attachments?.map(i => window.location.origin + i.path).join('\n')}`}
         />
 
-        <ShareButton blinkoItem={blinkoItem} blinko={blinko} isIOSDevice={isIOSDevice} />
+        {!isShareMode && (
+          <ShareButton blinkoItem={blinkoItem} blinko={blinko} isIOSDevice={isIOSDevice} />
+        )}
 
         {blinkoItem.isTop && (
           <Icon

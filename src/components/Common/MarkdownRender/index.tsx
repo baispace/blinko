@@ -19,6 +19,7 @@ import { ListItem } from './ListItem';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@nextui-org/react';
 import { TableWrapper } from './TableWrapper';
+import { useRouter } from 'next/router';
 
 const MermaidWrapper = dynamic(() => import('./MermaidWrapper').then(mod => mod.MermaidWrapper), {
   loading: () => <Skeleton className='w-full h-[40px]' />,
@@ -35,7 +36,8 @@ const EchartsWrapper = dynamic(() => import('./EchartsWrapper'), {
   ssr: false
 });
 
-const highlightTags = (text) => {
+const HighlightTags = observer(({ text, }: { text: any}) => {
+  const { pathname } = useRouter()
   if (!text) return text
   try {
     const lines = text?.split("\n");
@@ -43,10 +45,15 @@ const highlightTags = (text) => {
       const parts = line.split(" ");
       const processedParts = parts.map((part, index) => {
         if (part.startsWith('#') && part.length > 1 && part.match(helper.regex.isContainHashTag)) {
+          const isShareMode = pathname.includes('share')
+          if (isShareMode) return <span key={`${lineIndex}-${index}`} className={`w-fit select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 transition-all`}>{part + " "}</span>
           return (
-            <Link key={`${lineIndex}-${index}`} className='select-none blinko-tag px-11 font-bold cursor-pointer hover:opacity-80 transition-all' onClick={() => {
-              RootStore.Get(BlinkoStore).forceQuery++
-            }} href={`/all?searchText=${part}`}>
+            <Link key={`${lineIndex}-${index}`}
+              className={`select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 transition-all ${isShareMode ? 'pointer-events-none' : ''}`}
+              onClick={() => {
+                if (isShareMode) return;
+                RootStore.Get(BlinkoStore).forceQuery++
+              }} href={`/all?searchText=${part}`}>
               {part + " "}
             </Link>
           );
@@ -59,13 +66,13 @@ const highlightTags = (text) => {
   } catch (e) {
     return text
   }
-};
+});
 
 const Table = ({ children }: { children: React.ReactNode }) => {
   return <div className="table-container">{children}</div>;
 };
 
-export const MarkdownRender = observer(({ content = '', onChange, }: { content?: string, onChange?: (newContent: string) => void }) => {
+export const MarkdownRender = observer(({ content = '', onChange, isShareMode }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean }) => {
   const { theme } = useTheme()
   const contentRef = useRef(null);
 
@@ -91,7 +98,7 @@ export const MarkdownRender = observer(({ content = '', onChange, }: { content?:
             }]
           ]}
           components={{
-            p: ({ node, children }) => <p>{highlightTags(children)}</p>,
+            p: ({ node, children }) => <p><HighlightTags text={children} /></p>,
             code: ({ node, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const language = match ? match[1] : '';

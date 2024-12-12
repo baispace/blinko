@@ -1,3 +1,10 @@
+## [0.23.5](https://github.com/blinko-space/blinko/compare/v0.23.4...v0.23.5) (2024-12-12)
+
+
+### Bug Fixes
+
+* assign tags to superadmin if no account is assigned ([1f01dbd](https://github.com/blinko-space/blinko/commit/1f01dbdfcebe7695987ea85e8b136f3ca2c52805))
+
 ## [0.23.4](https://github.com/blinko-space/blinko/compare/v0.23.3...v0.23.4) (2024-12-12)
 
 

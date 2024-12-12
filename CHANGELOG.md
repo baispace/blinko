@@ -1,3 +1,22 @@
+# [0.24.0](https://github.com/blinko-space/blinko/compare/v0.23.5...v0.24.0) (2024-12-12)
+
+
+### Bug Fixes
+
+* enhance ListItem component to improve rendering of list items and handle checked state correctly [#282](https://github.com/blinko-space/blinko/issues/282) ([bb6bdd2](https://github.com/blinko-space/blinko/commit/bb6bdd2ac5087941cc7ef266c8728f4602fc0ff0))
+* enhance markdown tag replacement logic and improve range handling in EditorStore [#257](https://github.com/blinko-space/blinko/issues/257) ([dba9469](https://github.com/blinko-space/blinko/commit/dba94692f5ffc225a32b3bffdcc984bbe80e6ee4))
+* enhance user session management and clean up TypeScript ignore comment in Memos class ([1cfde16](https://github.com/blinko-space/blinko/commit/1cfde16b9fa5dfc8450162b07db1e22c065303ff))
+* improve syntax highlighting logic in MarkdownRender component [#279](https://github.com/blinko-space/blinko/issues/279) ([278c341](https://github.com/blinko-space/blinko/commit/278c341a8c7065cbba16fe582a330cdcc3ee841e))
+* refactor tag and note handling logic to improve tag deletion and relation management ([5974d22](https://github.com/blinko-space/blinko/commit/5974d222a6f8a45c52c8a52c9363c8bb503e02d1)), closes [#266](https://github.com/blinko-space/blinko/issues/266)
+* remove commented console logs from replaceMarkdownTag method in EditorStore for cleaner code [#212](https://github.com/blinko-space/blinko/issues/212) ([0e3e600](https://github.com/blinko-space/blinko/commit/0e3e600a67c857f82aace6e2c4661aa5a2def4fd))
+* remove console logs from replaceMarkdownTag method in EditorStore to clean up code [#290](https://github.com/blinko-space/blinko/issues/290) ([f63667a](https://github.com/blinko-space/blinko/commit/f63667a882a1964954ecc8fb592e0d0b65fb85a2))
+* update BlinkoCard components to handle share mode correctly [#287](https://github.com/blinko-space/blinko/issues/287) ([d3daf06](https://github.com/blinko-space/blinko/commit/d3daf06dbc311ce0e8208eb65aaa9b0ea2d0dd54))
+
+
+### Features
+
+* add filter options and date range support in note management; update translations for multiple languages ([bbd9bc0](https://github.com/blinko-space/blinko/commit/bbd9bc06abdd251b47e0c2ddfcf2be19b3569f3d))
+
 ## [0.23.5](https://github.com/blinko-space/blinko/compare/v0.23.4...v0.23.5) (2024-12-12)
 
 

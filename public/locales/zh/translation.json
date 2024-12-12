@@ -165,7 +165,7 @@
   "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "如果您有大量笔记，您可能会消耗一定数量的代币",
   "force-rebuild": "强制重建",
   "force-rebuild-embedding-index": "强制重建将完全重建已索引的所有数据",
-  "embedding-model-description": "切换��入式模型后必须重建索引",
+  "embedding-model-description": "切��入式模型后必须重建索引",
   "top-k-description": "最终返回文件的最大数量",
   "embedding-score-description": "查询的相似性阈值通常是欧氏总和距离",
   "embedding-lambda-description": "查询结果多样性加权参数",
@@ -251,5 +251,8 @@
   "to": "至",
   "reset": "重置",
   "no-condition": "无条件",
-  "public": "公开的"
+  "public": "公开的",
+  "exclude-tag-from-embedding": "排除标签内容",
+  "exclude-tag-from-embedding-tip": "带有此标签的笔记内容将不会被用于AI嵌入式处理",
+  "exclude-tag-from-embedding-desc": "选择一个标签来排除其关联笔记的内容，这些内容将不会被用于生成AI嵌入向量"
 }

@@ -11,7 +11,7 @@ import { api } from '@/lib/trpc';
 import { type RouterOutput } from '@/server/routers/_app';
 import { Attachment, NoteType, type Note } from '@/server/types';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@/lib/constant';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, observable, action } from 'mobx';
 import { UserStore } from './user';
 
 type filterType = {
@@ -271,6 +271,15 @@ export class BlinkoStore implements Store {
       }
       this.noteList.resetAndCall({})
     }, [router.isReady, this.forceQuery])
+  }
+
+  @observable
+  excludeEmbeddingTagId: number | null = null;
+
+  @action
+  setExcludeEmbeddingTagId(tagId: number | null) {
+    this.excludeEmbeddingTagId = tagId;
+    // 可能需要保存到本地存储或发送到服务器
   }
 
   constructor() {

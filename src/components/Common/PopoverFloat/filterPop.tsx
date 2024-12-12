@@ -7,6 +7,7 @@ import { useState } from "react";
 import { RangeCalendar } from "@nextui-org/react";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import dayjs from "@/lib/dayjs";
+import TagSelector from "@/components/Common/TagSelector";
 
 export default function FilterPop() {
   const { t } = useTranslation();
@@ -169,43 +170,11 @@ export default function FilterPop() {
                 <Icon icon="solar:tags-bold" width="20" height="20" />
                 {t('select-tags')}
               </div>
-
-              <Autocomplete
-                variant="bordered"
-                placeholder={t('select-tags')}
-                defaultItems={blinkoStore.tagList.value?.falttenTags || []}
-                labelPlacement="outside"
-                className="max-w-full"
-                selectedKey={selectedTag}
-                startContent={
-                  selectedTag ? (
-                    (() => {
-                      const tag = blinkoStore.tagList.value?.falttenTags.find(t => t.id === Number(selectedTag));
-                      return tag?.icon ? (
-                        <div>{tag.icon}</div>
-                      ) : (
-                        <Icon icon="mdi:hashtag" width="20" height="20" />
-                      );
-                    })()
-                  ) : (
-                    <Icon icon="mdi:hashtag" width="20" height="20" />
-                  )
-                }
-                onSelectionChange={(key) => setSelectedTag(key as string)}
-              >
-                {(tag) => (
-                  <AutocompleteItem key={tag.id} textValue={tag.name}>
-                    <div className="flex gap-2 items-center">
-                      {tag.icon ? (
-                        <div>{tag.icon}</div>
-                      ) : (
-                        <Icon icon="mdi:hashtag" width="20" height="20" />
-                      )}
-                      <span className="text-small">{tag.name}</span>
-                    </div>
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
+              
+              <TagSelector
+                selectedTag={selectedTag}
+                onSelectionChange={(key) => setSelectedTag(key)}
+              />
             </div>
           )}
 

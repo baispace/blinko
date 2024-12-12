@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { ShowRebuildEmbeddingProgressDialog } from "../Common/RebuildEmbeddingProgress";
 import { showTipsDialog } from "../Common/TipsDialog";
+import TagSelector from "@/components/Common/TagSelector";
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -27,7 +28,8 @@ export const AiSetting = observer(() => {
     embeddingTopK: 2,
     embeddingScore: 1.5,
     embeddingLambda: 0.5,
-    showEmeddingAdvancedSetting: false
+    showEmeddingAdvancedSetting: false,
+    excludeEmbeddingTagId: null as number | null
   }))
   useEffect(() => {
     store.apiEndPoint = blinko.config.value?.aiApiEndpoint!
@@ -37,6 +39,7 @@ export const AiSetting = observer(() => {
     store.embeddingTopK = blinko.config.value?.embeddingTopK!
     store.embeddingScore = blinko.config.value?.embeddingScore!
     store.embeddingLambda = blinko.config.value?.embeddingLambda!
+    store.excludeEmbeddingTagId = blinko.config.value?.excludeEmbeddingTagId!
   }, [blinko.config.value])
   return <Card shadow="none" className="flex flex-col p-4 bg-background pb-6">
     <div className='text-desc text-sm'>AI</div>
@@ -259,6 +262,28 @@ export const AiSetting = observer(() => {
             />
           </div>
         } />
+    }
+
+    {
+      store.showEmeddingAdvancedSetting && (
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={<div className="flex flex-col gap-1">
+            <ItemWithTooltip content={<>{t('exclude-tag-from-embedding')}</>} toolTipContent={t('exclude-tag-from-embedding-tip')} />
+            <div className="text-desc text-xs">{t('exclude-tag-from-embedding-desc')}</div>
+          </div>}
+          rightContent={
+            <TagSelector
+              selectedTag={store.excludeEmbeddingTagId?.toString() || null}
+              onSelectionChange={(key) => {
+                store.excludeEmbeddingTagId = key ? Number(key) : null
+                PromiseCall(api.config.update.mutate({
+                  key: 'excludeEmbeddingTagId',
+                  value: key ? Number(key) : null
+                }))
+              }}
+            />} />
+      )
     }
 
     {

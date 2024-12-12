@@ -254,5 +254,8 @@
   "start-date": "Start Date",
   "end-date": "End Date",
   "no-condition": "No Condition",
-  "public": "Public"
+  "public": "Public",
+  "exclude-tag-from-embedding": "Exclude Tagged Content",
+  "exclude-tag-from-embedding-tip": "Notes with this tag will be excluded from AI embedding processing",
+  "exclude-tag-from-embedding-desc": "Select a tag to exclude its associated notes from AI embedding vector generation"
 }

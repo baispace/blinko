@@ -47,6 +47,7 @@ export const ZConfigKey = z.union([
   z.literal('embeddingTopK'),
   z.literal('embeddingLambda'),
   z.literal('embeddingScore'),
+  z.literal('excludeEmbeddingTagId'),
   ZUserPerferConfigKey
 ]);
 
@@ -80,11 +81,13 @@ export const ZConfigSchema = z.object({
   embeddingTopK: z.number().optional(),
   embeddingLambda: z.number().optional(),
   embeddingScore: z.number().optional(),
+  excludeEmbeddingTagId: z.number().optional(),
   language: z.any().optional(),
   theme: z.any().optional(),
   webhookEndpoint: z.any().optional(),
   twoFactorEnabled: z.boolean().optional(),
   twoFactorSecret: z.string().optional(),
+
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

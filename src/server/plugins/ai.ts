@@ -87,6 +87,15 @@ export class AiService {
   static async embeddingUpsert({ id, content, type, createTime }: { id: number, content: string, type: 'update' | 'insert', createTime: Date }) {
     try {
       const { VectorStore, MarkdownSplitter } = await AiModelFactory.GetProvider()
+      const config = await AiModelFactory.globalConfig()
+      if (config.excludeEmbeddingTagId) {
+        const tag = await prisma.tag.findUnique({ where: { id: config.excludeEmbeddingTagId } })
+        if (tag && content.includes(tag.name)) {
+          console.warn('this note is not allowed to be embedded:', tag.name)
+          return { ok: true, msg: 'tag is not allowed to be embedded' }
+        }
+      }
+
       const chunks = await MarkdownSplitter.splitText(content);
       if (type == 'update') {
         await AiService.embeddingDeleteAll(id, VectorStore)

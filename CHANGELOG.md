@@ -1,3 +1,10 @@
+## [0.24.3](https://github.com/blinko-space/blinko/compare/v0.24.2...v0.24.3) (2024-12-12)
+
+
+### Bug Fixes
+
+* add functionality to exclude tagged content from AI embedding processing and update translations for English and Chinese [#172](https://github.com/blinko-space/blinko/issues/172) ([0369556](https://github.com/blinko-space/blinko/commit/03695560a0203494b6ffd1f20aedc1e66d555a3d))
+
 ## [0.24.2](https://github.com/blinko-space/blinko/compare/v0.24.1...v0.24.2) (2024-12-12)
 
 

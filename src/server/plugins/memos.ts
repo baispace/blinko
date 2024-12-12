@@ -148,7 +148,7 @@ export class Memos {
             }
           });
         }
-        const config = await getGlobalConfig();
+        const config = await getGlobalConfig({ useAdmin: true });
         //v0.22
         if (row?.reference && row?.reference != '') {
           await prisma.attachments.create({

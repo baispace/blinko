@@ -22,8 +22,9 @@ export const AiSetting = observer(() => {
   const store = RootStore.Local(() => ({
     isVisible: false,
     apiKey: '',
+    apiVersion: '',
     apiEndPoint: '',
-    aiModel: '',
+    aiModel: '',    
     embeddingModel: '',
     embeddingTopK: 2,
     embeddingScore: 1.5,
@@ -33,6 +34,7 @@ export const AiSetting = observer(() => {
   }))
   useEffect(() => {
     store.apiEndPoint = blinko.config.value?.aiApiEndpoint!
+    store.apiVersion = blinko.config.value?.aiApiVersion!
     store.apiKey = blinko.config.value?.aiApiKey!
     store.aiModel = blinko.config.value?.aiModel!
     store.embeddingModel = blinko.config.value?.embeddingModel!
@@ -287,6 +289,58 @@ export const AiSetting = observer(() => {
     }
 
     {
+      blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+      <Item
+        type={isPc ? 'row' : 'col'}
+        leftContent={<div className="flex flex-col ga-1">
+          <>{t('user-custom-azureopenai-api-instance')}</>
+        </div>}
+        rightContent={
+          <Input
+            size='sm'
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="Enter instance name"
+            value={store.apiEndPoint}
+            onChange={e => { store.apiEndPoint = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiApiEndpoint',
+                value: store.apiEndPoint
+              }))
+            }}            
+            type="text"
+          />
+        } />
+    }
+
+    {
+      blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+      <Item
+        type={isPc ? 'row' : 'col'}
+        leftContent={<div className="flex flex-col ga-1">
+          <>{t('user-custom-azureopenai-api-deployment')}</>
+        </div>}
+        rightContent={
+          <Input
+            size='sm'
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="Enter deployment name"
+            value={store.aiModel}
+            onChange={e => { store.aiModel = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiModel',
+                value: store.aiModel
+              }))
+            }}            
+            type="text"
+          />
+        } />
+    }
+
+    {
       blinko.config.value?.aiModelProvider != 'Ollama' &&
       <Item
         type={isPc ? 'row' : 'col'}
@@ -323,7 +377,62 @@ export const AiSetting = observer(() => {
         } />
     }
 
-    < Item
+    {
+      blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+      <Item
+        type={isPc ? 'row' : 'col'}
+        leftContent={<div className="flex flex-col ga-1">
+          <>{t('user-custom-azureopenai-api-version')}</>
+        </div>}
+        rightContent={
+          <Input
+            size='sm'
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="Enter API version"
+            value={store.apiVersion}
+            onChange={e => { store.apiVersion = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiApiVersion',
+                value: store.apiVersion
+              }))
+            }}            
+            type="text"
+          />
+        } />
+    }
+
+    {
+      blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+      <Item
+        type={isPc ? 'row' : 'col'}
+        leftContent={<div className="flex flex-col ga-1">
+          <>{t('embedding-model')}</>
+          <div className="text-desc text-xs">{t('embedding-model-description')}</div>
+        </div>}
+        rightContent={
+          <Input
+            size='sm'
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="Enter deployment name"
+            value={store.embeddingModel}
+            onChange={e => { store.embeddingModel = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'embeddingModel',
+                value: store.embeddingModel
+              }))
+            }}            
+            type="text"
+          />
+        } />
+    }
+
+    {
+      blinko.config.value?.aiModelProvider != 'AzureOpenAI' &&
+      <Item
       type={isPc ? 'row' : 'col'}
       leftContent={< div className="flex flex-col gap-1" >
         <>{t('api-endpoint')}</>
@@ -344,6 +453,7 @@ export const AiSetting = observer(() => {
           }))
         }}
       />} />
+    }
 
     <Item
       type={isPc ? 'row' : 'col'}

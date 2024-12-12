@@ -44,6 +44,11 @@ export class AiStore implements Store {
       icon: <Icon icon="ri:openai-fill" width="20" height="20" />
     },
     {
+      label: "AzureOpenAI",
+      value: "AzureOpenAI",
+      icon: <Icon icon="ri:openai-fill" width="20" height="20" />
+    },
+    {
       label: "Ollama",
       value: "Ollama",
       icon: <Icon icon="simple-icons:ollama" width="20" height="20" />

@@ -47,9 +47,11 @@
   "keep-sign-in": "Oturum açmaya devam et",
   "language": "Dil",
   "last-run": "SON KOŞU",
-  "logout": "Oturumu Kapat"
-}
- "delete-success": "Başarıyla silindi",
+  "logout": "Oturumu Kapat",
+  "delete-success": "Başarıyla silindi",
   "enter-your-username": "Kullanıcı adınızı girin",
-  "every-day": "Her gün"
+  "every-day": "Her gün",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI örnek adı",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI dağıtım adı",
+  "user-custom-azureopenai-api-version": "API sürümü"
 }

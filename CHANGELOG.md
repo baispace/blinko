@@ -1,3 +1,10 @@
+## [0.23.3](https://github.com/blinko-space/blinko/compare/v0.23.2...v0.23.3) (2024-12-12)
+
+
+### Bug Fixes
+
+* improve mutli user logic  [#289](https://github.com/blinko-space/blinko/issues/289) ([0aec69e](https://github.com/blinko-space/blinko/commit/0aec69e1753497d0c543d9bb5b0364c4e1a99ade))
+
 ## [0.23.2](https://github.com/blinko-space/blinko/compare/v0.23.1...v0.23.2) (2024-12-11)
 
 

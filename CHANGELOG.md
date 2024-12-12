@@ -1,3 +1,10 @@
+## [0.24.2](https://github.com/blinko-space/blinko/compare/v0.24.1...v0.24.2) (2024-12-12)
+
+
+### Bug Fixes
+
+* add 'public' filter option and update translations for multiple languages ([a85c57d](https://github.com/blinko-space/blinko/commit/a85c57d0dd13dcea09706ffbfefe02a69e74d27a))
+
 ## [0.24.1](https://github.com/blinko-space/blinko/compare/v0.24.0...v0.24.1) (2024-12-12)
 
 

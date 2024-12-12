@@ -176,24 +176,26 @@ export const BasicSetting = observer(() => {
           user.canRegister.call()
         }}
       />} />
+    {
+      user.role == 'superadmin' &&
+      <Item
+        leftContent={<>Webhook</>}
+        rightContent={<>
+          <Input
+            placeholder="Enter webhook URL"
+            value={store.webhookEndpoint}
+            onChange={(e) => store.webhookEndpoint = e.target.value}
+            onBlur={async () => {
+              await PromiseCall(api.config.update.mutate({
+                key: 'webhookEndpoint',
+                value: store.webhookEndpoint
+              }))
+            }}
+            className="w-[150px] md:w-[300px]"
+          />
+        </>} />
 
-    <Item
-      leftContent={<>Webhook</>}
-      rightContent={<>
-        <Input
-          placeholder="Enter webhook URL"
-          value={store.webhookEndpoint}
-          onChange={(e) => store.webhookEndpoint = e.target.value}
-          onBlur={async () => {
-            await PromiseCall(api.config.update.mutate({
-              key: 'webhookEndpoint',
-              value: store.webhookEndpoint
-            }))
-          }}
-          className="w-[150px] md:w-[300px]"
-        />
-      </>} />
-
+    }
     <Item
       leftContent={<>{t('two-factor-authentication')}</>}
       rightContent={

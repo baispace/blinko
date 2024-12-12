@@ -5,7 +5,7 @@ import { getGlobalConfig } from "../config"
 
 export const SendWebhook = async (data: any, webhookType: string, ctx: { id: string }) => {
   try {
-    const globalConfig = await getGlobalConfig(ctx)
+    const globalConfig = await getGlobalConfig({ useAdmin: true })
     if (globalConfig.webhookEndpoint) {
       await axios.post(globalConfig.webhookEndpoint, { data, webhookType, activityType: `blinko.note.${webhookType}` })
     }

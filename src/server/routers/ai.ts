@@ -56,10 +56,10 @@ export const aiRouter = router({
       question: z.string(),
       conversations: z.array(z.object({ role: z.string(), content: z.string() }))
     }))
-    .mutation(async function* ({ input }) {
+    .mutation(async function* ({ input, ctx }) {
       try {
         const { question, conversations } = input
-        const { result: responseStream, notes } = await AiService.completions({ question, conversations })
+        const { result: responseStream, notes } = await AiService.completions({ question, conversations, ctx })
         yield { notes }
         for await (const chunk of responseStream) {
           yield { context: chunk }

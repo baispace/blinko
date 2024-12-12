@@ -10,7 +10,7 @@ import { existsSync } from "fs";
 
 export class FileService {
   public static async getS3Client() {
-    const config = await getGlobalConfig();
+    const config = await getGlobalConfig({ useAdmin: true });
     return cache.wrap(`${config.s3Endpoint}-${config.s3Region}-${config.s3Bucket}-${config.s3AccessKeyId}-${config.s3AccessKeySecret}`, async () => {
       const s3ClientInstance = new S3Client({
         endpoint: config.s3Endpoint,
@@ -70,8 +70,8 @@ export class FileService {
     const extension = path.extname(originalName);
     const baseName = path.basename(originalName, extension);
     const timestamp = Date.now();
-    const config = await getGlobalConfig();
-
+    const config = await getGlobalConfig({ useAdmin: true });
+    
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
 
@@ -100,7 +100,7 @@ export class FileService {
   }
 
   static async deleteFile(api_attachment_path: string) {
-    const config = await getGlobalConfig();
+    const config = await getGlobalConfig({ useAdmin: true });
     if (api_attachment_path.includes('/api/s3file/')) {
       const { s3ClientInstance } = await this.getS3Client();
       const fileName = api_attachment_path.replace('/api/s3file/', "");
@@ -130,7 +130,7 @@ export class FileService {
   }
 
   static async getFile(filePath: string) {
-    const config = await getGlobalConfig();
+    const config = await getGlobalConfig({ useAdmin: true });
     const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
     const tempPath = path.join(UPLOAD_FILE_PATH, path.basename(fileName));
 

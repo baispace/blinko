@@ -43,8 +43,16 @@ export default NextAuth({
           }
           const user = correctUsers![0]!;
 
-          const config = await getGlobalConfig({ id: user.id.toString() })
-
+          const config = await getGlobalConfig({
+            ctx: {
+              id: user.id.toString(),
+              role: user.role as 'superadmin' | 'user',
+              name: user.name,
+              sub: user.id.toString(),
+              exp: 0,
+              iat: 0
+            }
+          })
           // 2fa verification
           if (credentials?.isSecondStep === 'true') {
 

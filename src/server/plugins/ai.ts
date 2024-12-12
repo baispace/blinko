@@ -21,6 +21,7 @@ import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
 import { AiPrompt } from './ai/aiPrompt';
+import { Context } from '../context';
 
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
@@ -303,7 +304,7 @@ export class AiService {
     return conversationMessage
   }
 
-  static async enhanceQuery({ query }: { query: string }) {
+  static async enhanceQuery({ query, ctx }: { query: string, ctx: Context }) {
     const { VectorStore } = await AiModelFactory.GetProvider()
     const config = await AiModelFactory.globalConfig()
     const results = await VectorStore.similaritySearchWithScore(query, 20);
@@ -319,6 +320,7 @@ export class AiService {
     const notes = await prisma.notes.findMany({
       where: {
         id: { in: filteredResultsWithScore.map(i => i.doc.metadata?.noteId).filter(i => !!i) },
+        accountId: Number(ctx.id)
       },
       include: { tags: { include: { tag: true } }, attachments: true }
     })
@@ -331,7 +333,7 @@ export class AiService {
     return sortedNotes;
   }
 
-  static async completions({ question, conversations }: { question: string, conversations: { role: string, content: string }[] }) {
+  static async completions({ question, conversations, ctx }: { question: string, conversations: { role: string, content: string }[], ctx: Context }) {
     try {
       const { LLM } = await AiModelFactory.GetProvider()
       let searchRes = await AiService.similaritySearch({ question })
@@ -340,6 +342,7 @@ export class AiService {
       if (searchRes && searchRes.length != 0) {
         notes = await prisma.notes.findMany({
           where: {
+            accountId: Number(ctx.id),
             id: {
               in: _.uniqWith(searchRes.map(i => i.metadata?.noteId)).filter(i => !!i) as number[]
             }

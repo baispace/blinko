@@ -1,4 +1,4 @@
-import { router, authProcedure, demoAuthMiddleware } from '../trpc';
+import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { DBJob } from '../plugins/dbjob';
@@ -13,14 +13,14 @@ import fs from 'fs';
 
 
 export const taskRouter = router({
-  list: authProcedure
+  list: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/tasks/list', summary: 'Query user task list', protect: true, tags: ['Task'] } })
     .input(z.void())
     .output(z.array(scheduledTaskSchema))
     .query(async () => {
       return await prisma.scheduledTask.findMany()
     }),
-  upsertTask: authProcedure
+  upsertTask: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/tasks/upsert', summary: 'Upsert Task', protect: true, tags: ['Task'] } })
     .input(z.object({
       time: z.string().optional(),
@@ -40,7 +40,7 @@ export const taskRouter = router({
         return task == DBBAK_TASK_NAME ? await DBJob.SetCornTime(time) : await ArchiveJob.SetCornTime(time)
       }
     }),
-  importFromBlinko: authProcedure.use(demoAuthMiddleware)
+  importFromBlinko: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)
     .input(z.object({
       filePath: z.string()
     }))
@@ -62,7 +62,7 @@ export const taskRouter = router({
       }
     }),
 
-  importFromMemos: authProcedure.use(demoAuthMiddleware)
+  importFromMemos: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)
     .input(z.object({
       filePath: z.string() //xxxx.db
     }))

@@ -3,20 +3,25 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { GlobalConfig, ZConfigKey, ZConfigSchema, ZUserPerferConfigKey } from '../types';
 import { configSchema } from '@/lib/prismaZodType';
+import { Context } from '../context';
 
-export const getGlobalConfig = async (ctx?: { id?: string }) => {
+export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context, useAdmin?: boolean }) => {
   const userId = Number(ctx?.id ?? 1);
   const configs = await prisma.config.findMany();
-  
+  const isSuperAdmin = useAdmin ? true : ctx?.role === 'superadmin';
+
   const globalConfig = configs.reduce((acc, item) => {
     const config = item.config as { type: string, value: any };
+    if (!isSuperAdmin && !item.userId) {
+      return acc;
+    }
     const isUserPreferConfig = ZUserPerferConfigKey.safeParse(item.key).success;
     if ((isUserPreferConfig && item.userId === userId) || (!isUserPreferConfig)) {
       acc[item.key] = config.value;
     }
     return acc;
   }, {} as Record<string, any>);
-  
+
   return globalConfig as GlobalConfig;
 };
 
@@ -26,7 +31,7 @@ export const configRouter = router({
     .input(z.void())
     .output(ZConfigSchema)
     .query(async function ({ ctx }) {
-      return await getGlobalConfig(ctx)
+      return await getGlobalConfig({ ctx })
     }),
   update: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/config/update', summary: 'Update user config', protect: true, tags: ['Config'] } })
@@ -46,6 +51,9 @@ export const configRouter = router({
         }
         return await prisma.config.create({ data: { userId, key, config: { type: typeof value, value } } })
       } else {
+        if (ctx.role !== 'superadmin') {
+          throw new Error('You are not allowed to update global config')
+        }
         // global config
         const hasKey = await prisma.config.findFirst({ where: { key } })
         if (hasKey) {

@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 import { helper, TagTreeNode } from '@/lib/helper';
 import { _ } from '@/lib/lodash';
 import { NoteType } from '../types';
-import { attachmentsSchema,  notesSchema, tagSchema, tagsToNoteSchema } from '@/lib/prismaZodType';
+import { attachmentsSchema, notesSchema, tagSchema, tagsToNoteSchema } from '@/lib/prismaZodType';
 import { getGlobalConfig } from './config';
 import { FileService } from '../plugins/files';
 import { AiService } from '../plugins/ai';
@@ -51,16 +51,13 @@ export const noteRouter = router({
       const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery } = input
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
-          return await AiService.enhanceQuery({ query: searchText! })
+          return await AiService.enhanceQuery({ query: searchText!, ctx })
         } else {
           return []
         }
       }
       let where: Prisma.notesWhereInput = {
-        OR: [
-          { accountId: Number(ctx.id) },
-          { accountId: null }
-        ]
+        accountId: Number(ctx.id)
       }
 
       if (searchText != '') {
@@ -97,7 +94,7 @@ export const noteRouter = router({
           { content: { contains: 'https://', mode: 'insensitive' } }
         ];
       }
-      const config = await getGlobalConfig()
+      const config = await getGlobalConfig({ ctx })
       let timeOrderBy = config?.isOrderByCreateTime ? { createdAt: orderBy } : { updatedAt: orderBy }
       return await prisma.notes.findMany({
         where,
@@ -156,10 +153,10 @@ export const noteRouter = router({
         referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional()
       }))
     ))
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { ids } = input
       return await prisma.notes.findMany({
-        where: { id: { in: ids } },
+        where: { id: { in: ids }, accountId: Number(ctx.id) },
         include: {
           tags: { include: { tag: true } },
           attachments: true,
@@ -198,9 +195,9 @@ export const noteRouter = router({
       z.object({
         attachments: z.array(attachmentsSchema)
       }))]))
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id } = input
-      return await prisma.notes.findFirst({ where: { id }, include: { tags: true, attachments: true }, })
+      return await prisma.notes.findFirst({ where: { id, accountId: Number(ctx.id) }, include: { tags: true, attachments: true }, })
     }),
   dailyReviewNoteList: authProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/note/daily-review-list', summary: 'Query daily review note list', protect: true, tags: ['Note'] } })
@@ -221,8 +218,8 @@ export const noteRouter = router({
     .meta({ openapi: { method: 'POST', path: '/v1/note/review', summary: 'Review a note', protect: true, tags: ['Note'] } })
     .input(z.object({ id: z.number() }))
     .output(z.union([z.null(), notesSchema]))
-    .mutation(async function ({ input }) {
-      return await prisma.notes.update({ where: { id: input.id }, data: { isReviewed: true } })
+    .mutation(async function ({ input, ctx }) {
+      return await prisma.notes.update({ where: { id: input.id, accountId: Number(ctx.id) }, data: { isReviewed: true } })
     }),
   upsert: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/upsert', summary: 'Update or create note', protect: true, tags: ['Note'] } })
@@ -239,7 +236,6 @@ export const noteRouter = router({
     }))
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
-      const globalConfig = await getGlobalConfig(ctx)
       let { id, isArchived, isRecycle, type, attachments, content, isTop, isShare, references } = input
       if (content != null) {
         content = content?.replace(/&#x20;/g, ' ')?.replace(/&#x20;\\/g, '')?.replace(/\\([#<>{}[\]|`*-_.])/g, '$1');
@@ -248,9 +244,9 @@ export const noteRouter = router({
       let newTags: Prisma.tagCreateManyInput[] = []
       const handleAddTags = async (tagTree: TagTreeNode[], parentTag: Prisma.tagCreateManyInput | undefined, noteId?: number) => {
         for (const i of tagTree) {
-          let hasTag = await prisma.tag.findFirst({ where: { name: i.name, parent: parentTag?.id ?? 0 } })
+          let hasTag = await prisma.tag.findFirst({ where: { name: i.name, parent: parentTag?.id ?? 0, accountId: Number(ctx.id) } })
           if (!hasTag) {
-            hasTag = await prisma.tag.create({ data: { name: i.name, parent: parentTag?.id ?? 0 } })
+            hasTag = await prisma.tag.create({ data: { name: i.name, parent: parentTag?.id ?? 0, accountId: Number(ctx.id) } })
           }
           if (noteId) {
             const hasRelation = await prisma.tagsToNote.findFirst({ where: { tag: hasTag, noteId } })
@@ -273,10 +269,10 @@ export const noteRouter = router({
       }
 
       if (id) {
-        const note = await prisma.notes.update({ where: { id }, data: update })
+        const note = await prisma.notes.update({ where: { id, accountId: Number(ctx.id) }, data: update })
         if (content == null) return
         const oldTagsInThisNote = await prisma.tagsToNote.findMany({ where: { noteId: note.id }, include: { tag: true } })
-        await handleAddTags(tagTree, undefined)
+        await handleAddTags(tagTree, undefined, note.id)
         const oldTags = oldTagsInThisNote.map(i => i.tag).filter(i => !!i)
         const oldTagsString = oldTags.map(i => `${i?.name}<key>${i?.parent}`)
         const newTagsString = newTags.map(i => `${i?.name}<key>${i?.parent}`)
@@ -338,7 +334,7 @@ export const noteRouter = router({
         const usingTags = (await prisma.tagsToNote.findMany({ where: { tagId: { in: allTagsIds } } })).map(i => i.tagId).filter(i => !!i)
         const needTobeDeledTags = _.difference(allTagsIds, usingTags);
         if (needTobeDeledTags) {
-          await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags } } })
+          await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags }, accountId: Number(ctx.id) } })
         }
 
         // insert not repeat attachments
@@ -388,22 +384,22 @@ export const noteRouter = router({
       ids: z.array(z.number())
     }))
     .output(z.any())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { type, isArchived, isRecycle, ids } = input
       const update: Prisma.notesUpdateInput = {
         ...(type !== -1 && { type }),
         ...(isArchived !== null && { isArchived }),
         ...(isRecycle !== null && { isRecycle }),
       }
-      return await prisma.notes.updateMany({ where: { id: { in: ids } }, data: update })
+      return await prisma.notes.updateMany({ where: { id: { in: ids }, accountId: Number(ctx.id) }, data: update })
     }),
   trashMany: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/batch-trash', summary: 'Batch trash note', protect: true, tags: ['Note'] } })
     .input(z.object({ ids: z.array(z.number()) }))
     .output(z.any())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { ids } = input
-      return await prisma.notes.updateMany({ where: { id: { in: ids } }, data: { isRecycle: true } })
+      return await prisma.notes.updateMany({ where: { id: { in: ids }, accountId: Number(ctx.id) }, data: { isRecycle: true } })
     }),
   deleteMany: authProcedure.use(demoAuthMiddleware)
     .meta({ openapi: { method: 'POST', path: '/v1/note/batch-delete', summary: 'Batch delete note', protect: true, tags: ['Note'] } })
@@ -415,7 +411,7 @@ export const noteRouter = router({
     .mutation(async function ({ input, ctx }) {
       const { ids } = input
       const notes = await prisma.notes.findMany({
-        where: { id: { in: ids } },
+        where: { id: { in: ids }, accountId: Number(ctx.id) },
         include: {
           tags: { include: { tag: true } },
           attachments: true,
@@ -446,7 +442,7 @@ export const noteRouter = router({
           })).map(i => i.tag?.id).filter(i => !!i)
           const needTobeDeledTags = _.difference(allTagsIds, usingTags);
           if (needTobeDeledTags?.length) {
-            await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags } } })
+            await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags }, accountId: Number(ctx.id) } })
           }
 
           if (note.attachments?.length) {
@@ -465,7 +461,7 @@ export const noteRouter = router({
       }
 
       await handleDeleteRelation()
-      await prisma.notes.deleteMany({ where: { id: { in: ids } } })
+      await prisma.notes.deleteMany({ where: { id: { in: ids }, accountId: Number(ctx.id) } })
       return { ok: true }
     }),
   addReference: authProcedure
@@ -475,8 +471,8 @@ export const noteRouter = router({
       toNoteId: z.number(),
     }))
     .output(z.any())
-    .mutation(async function ({ input }) {
-      return await insertNoteReference(input)
+    .mutation(async function ({ input, ctx }) {
+      return await insertNoteReference({ ...input, accountId: Number(ctx.id) })
     }),
   noteReferenceList: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/reference-list', summary: 'Query note references', protect: true, tags: ['Note'] } })
@@ -490,7 +486,7 @@ export const noteRouter = router({
         referenceCreatedAt: z.date()
       })
     )))
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { noteId, type } = input;
 
       if (type === 'references') {
@@ -545,10 +541,10 @@ export const noteRouter = router({
     }),
 })
 
-let insertNoteReference = async ({ fromNoteId, toNoteId }) => {
+let insertNoteReference = async ({ fromNoteId, toNoteId, accountId }) => {
   const [fromNote, toNote] = await Promise.all([
-    prisma.notes.findUnique({ where: { id: fromNoteId } }),
-    prisma.notes.findUnique({ where: { id: toNoteId } })
+    prisma.notes.findUnique({ where: { id: fromNoteId, accountId } }),
+    prisma.notes.findUnique({ where: { id: toNoteId, accountId } })
   ]);
 
   if (!fromNote || !toNote) {
@@ -563,6 +559,6 @@ let insertNoteReference = async ({ fromNoteId, toNoteId }) => {
   });
 }
 
-let deleteNoteReference = async ({ fromNoteId, toNoteId }) => {
-  return await prisma.noteReference.deleteMany({ where: { fromNoteId, toNoteId } })
-}
+// let deleteNoteReference = async ({ fromNoteId, toNoteId, accountId }) => {
+//   return await prisma.noteReference.deleteMany({ where: { fromNoteId, toNoteId, accountId } })
+// }

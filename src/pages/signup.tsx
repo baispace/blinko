@@ -100,7 +100,7 @@ export default function Component() {
               return RootStore.Get(ToastPlugin).error(t('the-two-passwords-are-inconsistent'))
             }
             try {
-              await api.users.createAdmin.mutate({ name: user, password })
+              await api.users.register.mutate({ name: user, password })
               RootStore.Get(ToastPlugin).success(t('create-successfully-is-about-to-jump-to-the-login'))
               setTimeout(() => {
                 router.push('/signin')

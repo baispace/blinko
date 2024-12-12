@@ -46,8 +46,11 @@ export const userRouter = router({
       nickName: z.string(),
       token: z.string()
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await prisma.accounts.findFirst({ where: { id: input.id } })
+      if (user?.id !== Number(ctx.id) && user?.role !== 'superadmin') {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
+      }
       return {
         id: input.id,
         name: user?.name ?? '',
@@ -69,11 +72,11 @@ export const userRouter = router({
         return res?.config.value === true
       }
     }),
-  createAdmin: publicProcedure
+  register: publicProcedure
     .meta({
       openapi: {
-        method: 'POST', path: '/v1/user/create-admin', summary: 'Create admin user',
-        description: 'Create admin user in first time', tags: ['User']
+        method: 'POST', path: '/v1/user/register', summary: 'Register user or admin',
+        description: 'Register user or admin', tags: ['User']
       }
     })
     .input(z.object({

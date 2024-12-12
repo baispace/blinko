@@ -134,7 +134,14 @@ export class BlinkoStore implements Store {
 
   task = new PromiseState({
     function: async () => {
-      return await api.task.list.query() ?? []
+      try {
+        if (RootStore.Get(UserStore).role == 'superadmin') {
+          return await api.task.list.query() ?? []
+        }
+        return []
+      } catch (error) {
+        return []
+      }
     }
   })
 

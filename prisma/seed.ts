@@ -277,19 +277,11 @@ async function main() {
     }
   })
 
-  //v0.12.11 config add user columns
-  // const configs = await prisma.config.findMany();
-  // const admin = await prisma.accounts.findFirst({ where: { role: 'superadmin' } })
-  // if (admin) {
-  //   for (const config of configs) {
-  //     if (!config.userId) {
-  //       await prisma.config.update({
-  //         where: { id: config.id },
-  //         data: { userId: admin.id }
-  //       });
-  //     }
-  //   }
-  // }
+  //v0.23.3
+  const tagsWithoutAccount = await prisma.tag.findMany({ where: { accountId: null } })
+  for (const tag of tagsWithoutAccount) {
+    await prisma.tag.update({ where: { id: tag.id }, data: { accountId: accounts[0]?.id } })
+  }
 }
 
 main()

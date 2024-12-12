@@ -24,6 +24,7 @@ model accounts {
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
   notes     notes[]
   configs   config[]
+  tags      tag[]
 }
 
 model attachments {
@@ -75,9 +76,11 @@ model tag {
   name       String       @default("") @db.VarChar
   icon       String       @default("") @db.VarChar
   parent     Int          @default(0)
+  accountId  Int?        
   createdAt  DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime     @updatedAt @db.Timestamptz(6)
   tagsToNote tagsToNote[]
+  account    accounts?    @relation(fields: [accountId], references: [id])
 }
 
 model tagsToNote {

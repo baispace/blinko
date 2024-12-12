@@ -12,16 +12,7 @@ export const tagRouter = router({
     .query(async function ({ ctx }) {
       const tags = await prisma.tag.findMany({
         where: {
-          tagsToNote: {
-            some: {
-              note: {
-                OR: [
-                  { accountId: Number(ctx.id) },
-                  { accountId: null }
-                ]
-              }
-            }
-          }
+          accountId: Number(ctx.id)
         },
         distinct: ['id']
       });
@@ -96,16 +87,32 @@ export const tagRouter = router({
       id: z.number()
     }))
     .output(z.boolean())
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id } = input
-      const tag = await prisma.tag.findFirst({ where: { id }, include: { tagsToNote: true } })
-      const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
+      const tag = await prisma.tag.findFirst({
+        where: {
+          id,
+          accountId: Number(ctx.id)
+        },
+        include: { tagsToNote: true }
+      })
+
+      if (!tag) return true
+
+      const allNotesId = tag.tagsToNote.map(i => i.noteId)
+
       for (const noteId of allNotesId) {
         const note = await prisma.notes.findFirst({ where: { id: noteId } })
-        await prisma.notes.update({ where: { id: note!.id }, data: { content: note!.content.replace(new RegExp(`#${tag!.name}`, 'g'), '') } })
-        await prisma.tagsToNote.deleteMany({ where: { tagId: tag!.id } })
+        if (!note) continue
+        await prisma.notes.update({
+          where: { id: note.id },
+          data: { content: note.content.replace(new RegExp(`#${tag.name}`, 'g'), '') }
+        })
+        await prisma.tagsToNote.deleteMany({ where: { tagId: tag.id } })
       }
+
       await prisma.tag.delete({ where: { id } })
+
       return true
     }),
   deleteTagWithAllNote: authProcedure.use(demoAuthMiddleware)
@@ -121,8 +128,10 @@ export const tagRouter = router({
     .output(z.boolean())
     .mutation(async function ({ input, ctx }) {
       const { id } = input
-      const tag = await prisma.tag.findFirst({ where: { id }, include: { tagsToNote: true } })
+      const tag = await prisma.tag.findFirst({ where: { id, accountId: Number(ctx.id) }, include: { tagsToNote: true } })
+      console.log({ tag })
       const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
+      console.log(allNotesId)
       await userCaller(ctx).notes.deleteMany({ ids: allNotesId })
       return true
     }),

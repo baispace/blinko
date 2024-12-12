@@ -10,7 +10,7 @@ import { OllamaModelProvider } from "./ollamaModelProvider"
 export class AiModelFactory {
   static async globalConfig() {
     return cache.wrap('globalConfig', async () => {
-      return await getGlobalConfig()
+      return await getGlobalConfig({ useAdmin: true })
     }, { ttl: 1000 })
   }
 
@@ -34,7 +34,7 @@ export class AiModelFactory {
         TokenTextSplitter: provider.TokenTextSplitter()
       }
     }
-    
+
     if (globalConfig.aiModelProvider == 'Ollama') {
       const provider = new OllamaModelProvider({ globalConfig })
       return {

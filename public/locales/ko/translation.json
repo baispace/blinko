@@ -243,5 +243,6 @@
   "start-date": "시작 날짜",
   "end-date": "종료 날짜",
   "reset": "초기화",
-  "no-condition": "조건 없음"
+  "no-condition": "조건 없음",
+  "public": "공개"
 }

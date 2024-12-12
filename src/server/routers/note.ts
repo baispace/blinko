@@ -28,6 +28,7 @@ export const noteRouter = router({
       orderBy: z.enum(["asc", 'desc']).default('desc'),
       type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
       isArchived: z.union([z.boolean(), z.null()]).default(false).optional(),
+      isShare: z.union([z.boolean(), z.null()]).default(null).optional(),
       isRecycle: z.boolean().default(false).optional(),
       searchText: z.string().default('').optional(),
       withoutTag: z.boolean().default(false).optional(),
@@ -50,7 +51,7 @@ export const noteRouter = router({
       }))
     ))
     .mutation(async function ({ input, ctx }) {
-      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate } = input
+      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate, isShare } = input
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
           return await AiService.enhanceQuery({ query: searchText!, ctx })
@@ -77,6 +78,9 @@ export const noteRouter = router({
         }
         if (type != -1) {
           where.type = type
+        }
+        if (isShare != null) {
+          where.isShare = isShare
         }
       }
 

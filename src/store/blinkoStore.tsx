@@ -36,6 +36,7 @@ export class BlinkoStore implements Store {
   noteListFilterConfig = {
     isArchived: false as boolean | null,
     isRecycle: false,
+    isShare: null as boolean | null,
     type: 0,
     tagId: null as number | null,
     searchText: "",
@@ -238,6 +239,7 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.isRecycle = false
       this.noteListFilterConfig.startDate = null
       this.noteListFilterConfig.endDate = null
+      this.noteListFilterConfig.isShare = null
 
       if (router.pathname == '/notes') {
         this.noteListFilterConfig.type = NoteType.NOTE

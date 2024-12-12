@@ -245,5 +245,6 @@
   "start-date": "开始日期",
   "end-date": "结束日期",
   "reset": "重置",
-  "no-condition": "无条件"
+  "no-condition": "无条件",
+  "public": "公开的"
 }

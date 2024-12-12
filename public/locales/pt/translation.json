@@ -240,5 +240,6 @@
   "start-date": "Data de início",
   "end-date": "Data final",
   "reset": "Reiniciar",
-  "no-condition": "Sem condição"
+  "no-condition": "Sem condição",
+  "public": "Público"
 }

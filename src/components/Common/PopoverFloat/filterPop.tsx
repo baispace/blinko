@@ -27,6 +27,7 @@ export default function FilterPop() {
   const conditions = [
     { label: t('has-link'), value: 'hasLink' },
     { label: t('has-file'), value: 'hasFile' },
+    { label: t('public'), value: 'isShare' },
   ];
 
   const handleApplyFilter = () => {
@@ -38,6 +39,7 @@ export default function FilterPop() {
       withoutTag: tagStatus === 'without',
       withFile: selectedCondition === 'hasFile',
       withLink: selectedCondition === 'hasLink',
+      isShare: selectedCondition === 'isShare' ? true : false,
       isArchived: null
     };
     blinkoStore.noteList.resetAndCall({});
@@ -57,7 +59,8 @@ export default function FilterPop() {
       withoutTag: false,
       withFile: false,
       withLink: false,
-      isArchived: false
+      isArchived: false,
+      isShare: null
     };
     blinkoStore.noteList.resetAndCall({});
   };

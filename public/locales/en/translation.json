@@ -253,5 +253,6 @@
   "reset": "Reset",
   "start-date": "Start Date",
   "end-date": "End Date",
-  "no-condition": "No Condition"
+  "no-condition": "No Condition",
+  "public": "Public"
 }

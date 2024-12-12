@@ -250,5 +250,6 @@
   "apply-filter": "应用筛选",
   "to": "至",
   "reset": "重置",
-  "no-condition": "无条件"
+  "no-condition": "无条件",
+  "public": "公开的"
 }

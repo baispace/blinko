@@ -241,5 +241,6 @@
   "start-date": "開始日",
   "end-date": "終了日",
   "reset": "リセット",
-  "no-condition": "コンディションなし"
+  "no-condition": "コンディションなし",
+  "public": "パブリック"
 }

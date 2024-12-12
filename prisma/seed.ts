@@ -277,10 +277,13 @@ async function main() {
     }
   })
 
-  //v0.23.3
+  //v0.23.3 if no tags assigned to account, assign to superadmin
   const tagsWithoutAccount = await prisma.tag.findMany({ where: { accountId: null } })
-  for (const tag of tagsWithoutAccount) {
-    await prisma.tag.update({ where: { id: tag.id }, data: { accountId: accounts[0]?.id } })
+  for (const account of accounts) {
+    if (account.role == 'superadmin') {
+      await prisma.tag.updateMany({ where: { id: { in: tagsWithoutAccount.map(tag => tag.id) } }, data: { accountId: account.id } })
+      break
+    }
   }
 }
 

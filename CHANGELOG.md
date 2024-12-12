@@ -1,3 +1,10 @@
+## [0.24.1](https://github.com/blinko-space/blinko/compare/v0.24.0...v0.24.1) (2024-12-12)
+
+
+### Bug Fixes
+
+* update isArchived handling in note management and filter components ([1dcf176](https://github.com/blinko-space/blinko/commit/1dcf176fc971ea48069ae54de0c22552827a3888))
+
 # [0.24.0](https://github.com/blinko-space/blinko/compare/v0.23.5...v0.24.0) (2024-12-12)
 
 

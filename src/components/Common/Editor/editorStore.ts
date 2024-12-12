@@ -44,14 +44,14 @@ export class EditorStore {
   }
 
   replaceMarkdownTag = (text: string, forceFocus = false) => {
-    console.log('replaceMarkdownTag', this.mdxEditorRef)
+    // console.log('replaceMarkdownTag', this.mdxEditorRef)
     if (this.mdxEditorRef?.current) {
       if (this.lastRange) {
-        console.log('replaceMarkdownTag', JSON.parse(JSON.stringify(this.lastRange)))
+        // console.log('replaceMarkdownTag', JSON.parse(JSON.stringify(this.lastRange)))
         const currentTextBeforeRange = this.lastRangeText.replace(/&#x20;/g, " ") ?? ''
-        console.log('currentTextBeforeRange', currentTextBeforeRange)
+        // console.log('currentTextBeforeRange', currentTextBeforeRange)
         const currentText = this.mdxEditorRef?.current!.getMarkdown().replace(/\\/g, '').replace(/&#x20;/g, " ")
-        console.log('currentText', currentText)
+        // console.log('currentText', currentText)
         const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '&#x20;')
         const MyContent = currentText.replace(currentTextBeforeRange, tag)
         this.mdxEditorRef?.current.setMarkdown(MyContent)

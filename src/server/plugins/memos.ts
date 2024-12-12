@@ -137,7 +137,7 @@ export class Memos {
         }
 
         if (row?.blob) {
-          //@ts-ignore!!!!!!!
+          //@ts-ignore
           const { filePath } = await FileService.uploadFile(row!.blob, row?.filename);
           await prisma.attachments.create({
             data: {

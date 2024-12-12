@@ -238,5 +238,20 @@
   "export-format": "Export Format",
   "time-range": "Time Range",
   "all": "All",
-  "exporting": "Exporting..."
+  "exporting": "Exporting...",
+  "tag-status": "Tag Status",
+  "all-notes": "All Notes",
+  "with-tags": "With Tags",
+  "without-tags": "Without Tags",
+  "select-tags": "Select Tags",
+  "additional-conditions": "Additional Conditions",
+  "apply-filter": "Apply Filter",
+  "has-image": "Has Image",
+  "has-link": "Has Link",
+  "filter-settings": "Filter Settings",
+  "to": "To",
+  "reset": "Reset",
+  "start-date": "Start Date",
+  "end-date": "End Date",
+  "no-condition": "No Condition"
 }

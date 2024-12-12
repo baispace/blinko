@@ -79,8 +79,8 @@ export const tagRouter = router({
   deleteOnlyTag: authProcedure.use(demoAuthMiddleware)
     .meta({
       openapi: {
-        method: 'POST', path: '/v1/tags/delete-only-tag', summary: 'Only delete tag name'
-        , description: 'Only delete tag name and remove tag from notes, but not delete notes', protect: true, tags: ['Tag']
+        method: 'POST', path: '/v1/tags/delete-only-tag', summary: 'Only delete tag name',
+        description: 'Only delete tag name and remove tag from notes, but not delete notes', protect: true, tags: ['Tag']
       }
     })
     .input(z.object({
@@ -97,6 +97,7 @@ export const tagRouter = router({
         include: { tagsToNote: true }
       })
 
+      console.log({ tag }, '+++++++++++++++++++++++')
       if (!tag) return true
 
       const allNotesId = tag.tagsToNote.map(i => i.noteId)
@@ -104,15 +105,62 @@ export const tagRouter = router({
       for (const noteId of allNotesId) {
         const note = await prisma.notes.findFirst({ where: { id: noteId } })
         if (!note) continue
+
+        const getAllTagIdsInChain = async (tagId: number): Promise<number[]> => {
+          const result: number[] = [tagId];
+          
+          let currentTag = await prisma.tag.findFirst({ where: { id: tagId } });
+          while (currentTag && currentTag.parent !== 0) {
+            result.push(currentTag.parent);
+            currentTag = await prisma.tag.findFirst({ where: { id: currentTag.parent } });
+          }
+          
+          const childTags = await prisma.tag.findMany({ where: { parent: tagId } });
+          for (const childTag of childTags) {
+            const childChain = await getAllTagIdsInChain(childTag.id);
+            result.push(...childChain);
+          }
+          
+          return [...new Set(result)];
+        };
+
+        const tagIdsInChain = await getAllTagIdsInChain(tag.id);
+        
         await prisma.notes.update({
           where: { id: note.id },
-          data: { content: note.content.replace(new RegExp(`#${tag.name}`, 'g'), '') }
+          data: { 
+            content: note.content.replace(
+              new RegExp(`#[^\\s]*${tag.name}(/[^\\s]*)?(?=\\s|$)`, 'g'),
+              ''
+            ).replace(/\s+/g, ' ').trim()
+          }
         })
-        await prisma.tagsToNote.deleteMany({ where: { tagId: tag.id } })
+
+        await prisma.tagsToNote.deleteMany({ 
+          where: { 
+            noteId: note.id,
+            tagId: {
+              in: tagIdsInChain
+            }
+          } 
+        })
+
+        for (const tagId of tagIdsInChain) {
+          const tagExists = await prisma.tag.findFirst({
+            where: { id: tagId }
+          });
+          
+          if (tagExists) {
+            const tagUsageCount = await prisma.tagsToNote.count({
+              where: { tagId }
+            });
+
+            if (tagUsageCount === 0) {
+              await prisma.tag.delete({ where: { id: tagId } });
+            }
+          }
+        }
       }
-
-      await prisma.tag.delete({ where: { id } })
-
       return true
     }),
   deleteTagWithAllNote: authProcedure.use(demoAuthMiddleware)

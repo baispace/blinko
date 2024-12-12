@@ -44,10 +44,8 @@ export class EditorStore {
   }
 
   replaceMarkdownTag = (text: string, forceFocus = false) => {
-    console.log('replaceMarkdownTag', this.mdxEditorRef)
     if (this.mdxEditorRef?.current) {
       if (this.lastRange) {
-        console.log('replaceMarkdownTag', this.lastRangeText)
         const currentTextBeforeRange = this.lastRangeText.replace(/&#x20;/g, " ") ?? ''
         const currentText = this.mdxEditorRef?.current!.getMarkdown().replace(/\\/g, '').replace(/&#x20;/g, " ")
         const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '&#x20;')
@@ -170,12 +168,13 @@ export class EditorStore {
   handlePopTag = () => {
     const selection = window.getSelection();
     if (selection!.rangeCount > 0) {
-      if (!IsTagSelectVisible()) {
-        let lastRange = selection!.getRangeAt(0);
-        this.lastRange = lastRange
-        this.lastRangeText = lastRange.endContainer.textContent?.slice(0, lastRange.endOffset) ?? ''
-        this.lastSelection = selection
-      }
+      // if (!IsTagSelectVisible()) {
+      let lastRange = selection!.getRangeAt(0);
+      this.lastRange = lastRange
+      this.lastRangeText = lastRange.endContainer.textContent?.slice(0, lastRange.endOffset) ?? ''
+      // console.log('this.lastRangeText', this.lastRangeText)
+      this.lastSelection = selection
+      // }
       const hasHashTagRegex = /#[^\s#]+/g
       const endsWithBankRegex = /\s$/g
       const currentText = this.lastRange?.startContainer.textContent?.slice(0, this.lastRange?.endOffset) ?? ''

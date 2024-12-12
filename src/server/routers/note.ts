@@ -34,6 +34,8 @@ export const noteRouter = router({
       withFile: z.boolean().default(false).optional(),
       withLink: z.boolean().default(false).optional(),
       isUseAiQuery: z.boolean().default(false).optional(),
+      startDate: z.union([z.date(), z.null()]).default(null).optional(),
+      endDate: z.union([z.date(), z.null()]).default(null).optional(),
     }))
     .output(z.array(notesSchema.merge(
       z.object({
@@ -48,7 +50,7 @@ export const noteRouter = router({
       }))
     ))
     .mutation(async function ({ input, ctx }) {
-      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery } = input
+      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate } = input
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
           return await AiService.enhanceQuery({ query: searchText!, ctx })
@@ -87,6 +89,12 @@ export const noteRouter = router({
       }
       if (withoutTag) {
         where.tags = { none: {} }
+      }
+      if (startDate) {
+        where.createdAt = { gte: startDate }
+      }
+      if (endDate) {
+        where.createdAt = { lte: endDate }
       }
       if (withLink) {
         where.OR = [
@@ -304,12 +312,21 @@ export const noteRouter = router({
         }
 
         if (needTobeAddedRelationTags.length != 0) {
-          await prisma.tagsToNote.createMany({
-            data: needTobeAddedRelationTags.map(i => {
-              const [name, parent] = i.split('<key>')
-              return { noteId: note.id, tagId: newTags.find(t => (t.name == name) && (t.parent == Number(parent)))!.id }
-            })
-          })
+          for (const relationTag of needTobeAddedRelationTags) {
+            const [name, parent] = relationTag.split('<key>');
+            const tagId = newTags.find(t => (t.name == name) && (t.parent == Number(parent)))?.id;
+            if (tagId) {
+              try {
+                await prisma.tagsToNote.create({
+                  data: { noteId: note.id, tagId }
+                });
+              } catch (error) {
+                if (error.code !== 'P2002') {
+                  throw error;
+                }
+              }
+            }
+          }
         }
 
         // add new references

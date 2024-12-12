@@ -12,15 +12,17 @@ interface CodeProps {
 export const Code = ({ className, children, ...props }: CodeProps) => {
   const { theme } = useTheme()
   const match = /language-(\w+)/.exec(className || '');
-
-  return match ? (
+  
+  const shouldHighlight = !className || className?.includes('language-') || className?.includes('hljs');
+  
+  return shouldHighlight ? (
     <div className="relative group">
       <Copy content={String(children).replace(/\n$/, '')} size={16} className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity" />
       <SyntaxHighlighter
         {...props}
         PreTag="div"
         children={String(children).replace(/\n$/, '')}
-        language={match[1]}
+        language={match ? match[1] : 'text'}
         customStyle={{
           borderRadius: '16px',
         }}

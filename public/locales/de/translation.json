@@ -227,5 +227,20 @@
   "export": "Exportieren",
   "time-range": "Zeitspanne",
   "all": "Alle",
-  "exporting": "Exportieren..."
+  "exporting": "Exportieren...",
+  "has-image": "Hat Image",
+  "has-link": "Hat Link",
+  "filter-settings": "Filter-Einstellungen",
+  "tag-status": "Tag Status",
+  "all-notes": "Alle Anmerkungen",
+  "with-tags": "Mit Tags",
+  "without-tags": "Ohne Tags",
+  "select-tags": "Tags auswählen",
+  "additional-conditions": "Zusätzliche Bedingungen",
+  "apply-filter": "Filter anwenden",
+  "to": "An",
+  "start-date": "Datum des Beginns",
+  "end-date": "Enddatum",
+  "reset": "Zurücksetzen",
+  "no-condition": "Keine Bedingung"
 }

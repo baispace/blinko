@@ -74,12 +74,16 @@ export default function Component() {
             const twoFactorRes = await SignInTwoFactor.call(code)
             if (twoFactorRes?.ok) {
               RootStore.Get(DialogStore).close()
+              userStorage.setValue(user)
+              passwordStorage.setValue(password)
               router.push('/')
             } else {
               RootStore.Get(ToastPlugin).error(twoFactorRes?.error ?? t('user-or-password-error'))
             }
           }, SignInTwoFactor.loading.value)
         } else {
+          userStorage.setValue(user)
+          passwordStorage.setValue(password)
           router.push('/')
         }
       } else {

@@ -1,4 +1,3 @@
-
 import { _ } from '@/lib/lodash';
 import { useEffect } from 'react';
 import { PromisePageState, PromiseState } from './standard/PromiseState';
@@ -43,7 +42,9 @@ export class BlinkoStore implements Store {
     withoutTag: false,
     withFile: false,
     withLink: false,
-    isUseAiQuery: false
+    isUseAiQuery: false,
+    startDate: null as Date | null,
+    endDate: null as Date | null,
   }
   noteTypeDefault: NoteType = NoteType.BLINKO
   currentCommonFilter: filterType | null = null
@@ -235,6 +236,8 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.withFile = false
       this.noteListFilterConfig.searchText = searchText ?? ''
       this.noteListFilterConfig.isRecycle = false
+      this.noteListFilterConfig.startDate = null
+      this.noteListFilterConfig.endDate = null
 
       if (router.pathname == '/notes') {
         this.noteListFilterConfig.type = NoteType.NOTE

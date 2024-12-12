@@ -32,7 +32,7 @@ export const BlinkoCard = observer(({ blinkoItem, isShareMode = false }: BlinkoC
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const [isExpanded, setIsExpanded] = useState(false);
-  const { query, pathname } = useRouter();
+  const { pathname } = useRouter();
 
   useHistoryBack({
     state: isExpanded,
@@ -65,10 +65,12 @@ export const BlinkoCard = observer(({ blinkoItem, isShareMode = false }: BlinkoC
   };
 
   const handleContextMenu = () => {
+    if (isShareMode) return;
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
+    if (isShareMode) return;
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
     ShowEditBlinkoModel();
     FocusEditor(true)

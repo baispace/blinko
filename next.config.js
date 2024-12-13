@@ -17,7 +17,7 @@ module.exports = withPWA({
     }
     return config;
   },
-  outputFileTracing: isVercel? false : true,
+  outputFileTracing: false,
   reactStrictMode: isProduction? true : false,
   swcMinify: true,
   eslint: {

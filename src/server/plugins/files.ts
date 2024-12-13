@@ -25,22 +25,26 @@ export class FileService {
     }, { ttl: 60 * 60 * 86400 * 1000 })
   }
 
-  private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer) {
-    let filename = `${baseName}${extension}`;
+  private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer, attempt: number = 0) {
+    const MAX_ATTEMPTS = 20;
+
+    if (attempt >= MAX_ATTEMPTS) {
+      throw new Error('MAX_ATTEMPTS_REACHED');
+    }
+
+    let filename = attempt === 0 ?
+      `${baseName}${extension}` :
+      `${baseName}_${attempt}${extension}`;
+
     try {
-      const exists = await stat(path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename));
-      if (exists) {
-        baseName = baseName + '_copy';
-        return await this.writeFileSafe(baseName, extension, buffer);
-      }
+      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
+      await fs.access(filePath);
+      //@ts-ignore
+      return this.writeFileSafe(baseName, extension, buffer, attempt + 1);
     } catch (error) {
       const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
-      console.log('保存文件路径:', filePath);
-      await writeFile(
-        filePath,
-        //@ts-ignore
-        buffer
-      );
+      //@ts-ignore
+      await writeFile(filePath, buffer);
       await this.createThumbnail(filename, extension);
       return filename;
     }
@@ -73,7 +77,7 @@ export class FileService {
     const baseName = path.basename(originalName, extension);
     const timestamp = Date.now();
     const config = await getGlobalConfig({ useAdmin: true });
-    
+
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
 

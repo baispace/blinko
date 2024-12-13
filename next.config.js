@@ -1,4 +1,5 @@
 const isProduction = process.env.NODE_ENV === 'production';
+const isVercel = process.env.VERCEL === '1';
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
@@ -11,17 +12,14 @@ module.exports = withPWA({
     if (!isServer) {
       config.resolve.fallback = {
         dns: false,
-        net:false
+        net: false,
+        fs: false,
+        path: false,
       };
     }
     return config;
   },
-  //hack mode
-  // outputFileTracingRoot: process.cwd(),
-  // outputFileTracingExcludes: {
-  //   '*': ['**/*'] 
-  // },
-  outputFileTracing: false,
+  outputFileTracing: isVercel? false : true,
   reactStrictMode: isProduction? true : false,
   swcMinify: true,
   eslint: {

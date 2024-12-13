@@ -260,5 +260,10 @@
   "public": "Public",
   "exclude-tag-from-embedding": "Exclude Tagged Content",
   "exclude-tag-from-embedding-tip": "Notes with this tag will be excluded from AI embedding processing",
-  "exclude-tag-from-embedding-desc": "Select a tag to exclude its associated notes from AI embedding vector generation"
+  "exclude-tag-from-embedding-desc": "Select a tag to exclude its associated notes from AI embedding vector generation",
+  "ai-model-tooltip": "Enter the model name to use, such as gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " Enter the deployment name to use, such as gpt-4o",
+  "ollama-ai-model-tooltip": "Enter the model name to use, such as llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama default endpoint is http://localhost:11434",
+  "your-azure-openai-instance-name": "Your Azure OpenAI instance name"
 }

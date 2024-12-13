@@ -53,8 +53,8 @@
   "api-endpoint": "接口地址",
   "must-start-with-http-s-or-use-api-openai-as-default": "必须以 http(s):// 开头，或默认使用 /api/openai",
   "user-custom-openai-api-key": "用户自定义 OpenAI Api 密钥",
-  "user-custom-azureopenai-api-instance": "Azure OpenAI 虛擬實例名稱",
-  "user-custom-azureopenai-api-deployment": "Azure OpenAI 部署名稱",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI 虚拟实例名称",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI 部署名称",
   "user-custom-azureopenai-api-version": "API 版本",
   "ai-model": "人工智能模型",
   "logout": "注销",
@@ -168,7 +168,7 @@
   "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "如果您有大量笔记，您可能会消耗一定数量的代币",
   "force-rebuild": "强制重建",
   "force-rebuild-embedding-index": "强制重建将完全重建已索引的所有数据",
-  "embedding-model-description": "切��入式模型后必须重建索引",
+  "embedding-model-description": "切换嵌入式模型后必须重建索引",
   "top-k-description": "最终返回文件的最大数量",
   "embedding-score-description": "查询的相似性阈值通常是欧氏总和距离",
   "embedding-lambda-description": "查询结果多样性加权参数",
@@ -257,5 +257,10 @@
   "public": "公开的",
   "exclude-tag-from-embedding": "排除标签内容",
   "exclude-tag-from-embedding-tip": "带有此标签的笔记内容将不会被用于AI嵌入式处理",
-  "exclude-tag-from-embedding-desc": "选择一个标签来排除其关联笔记的内容，这些内容将不会被用于生成AI嵌入向量"
+  "exclude-tag-from-embedding-desc": "选择一个标签来排除其关联笔记的内容，这些内容将不会被用于生成AI嵌入向量",
+  "ai-model-tooltip": "输入要使用的型号名称，例如 gpt-3.5-turbo、gpt-4、gpt-4o、gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": "输入要使用的部署名称，如 gpt-4o",
+  "ollama-ai-model-tooltip": "输入要使用的模型名称，如 llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama 默认端点为 http://localhost:11434",
+  "your-azure-openai-instance-name": "您的 Azure OpenAI 实例名称"
 }

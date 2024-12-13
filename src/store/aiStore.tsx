@@ -46,7 +46,7 @@ export class AiStore implements Store {
     {
       label: "AzureOpenAI",
       value: "AzureOpenAI",
-      icon: <Icon icon="ri:openai-fill" width="20" height="20" />
+      icon: <Icon icon="teenyicons:azure-outline" width="20" height="20" />
     },
     {
       label: "Ollama",
@@ -74,12 +74,13 @@ export class AiStore implements Store {
         value: "gpt-4o-mini"
       }
     ],
+    AzureOpenAI: [],
     Ollama: [
       {
         label: "llama3.2",
         value: "llama3.2"
       }
-    ]
+    ],
   }
 
   embeddingSelect: Record<string, Array<{ label: string, value: string }>> = {
@@ -97,6 +98,7 @@ export class AiStore implements Store {
         value: "text-embedding-ada-002"
       }
     ],
+    AzureOpenAI: [],
     Ollama: [
       {
         label: "mxbai-embed-large",
@@ -111,6 +113,27 @@ export class AiStore implements Store {
         value: "bge-large-en"
       }
     ]
+  }
+
+  modelSelectUILabel = {
+    OpenAI: {
+      modelTitle: i18n.t('ai-model'),
+      modelTooltip: i18n.t('ai-model-tooltip'),
+      endpointTitle: i18n.t('api-endpoint'),
+      endpointTooltip: i18n.t('must-start-with-http-s-or-use-api-openai-as-default')
+    },
+    AzureOpenAI: {
+      modelTitle: i18n.t('user-custom-azureopenai-api-deployment'),
+      modelTooltip: i18n.t('user-custom-azureopenai-api-deployment-tooltip'),
+      endpointTitle: i18n.t('user-custom-azureopenai-api-instance'),
+      endpointTooltip: i18n.t('your-azure-openai-instance-name') //Your Azure OpenAI instance name
+    },
+    Ollama: {
+      modelTitle: i18n.t('ai-model'),
+      modelTooltip: i18n.t('ollama-ai-model-tooltip'),
+      endpointTitle: i18n.t('api-endpoint'),
+      endpointTooltip: i18n.t('ollama-default-endpoint-is-http-localhost-11434')//Ollama default endpoint is http://localhost:11434
+    }
   }
 
   scrollTicker = 0

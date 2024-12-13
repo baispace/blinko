@@ -246,5 +246,10 @@
   "end-date": "Enddatum",
   "reset": "Zurücksetzen",
   "no-condition": "Keine Bedingung",
-  "public": "Öffentlich"
+  "public": "Öffentlich",
+  "ai-model-tooltip": "Geben Sie den zu verwendenden Modellnamen ein, z. B. gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " Geben Sie den zu verwendenden Einsatznamen ein, z. B. gpt-4o",
+  "ollama-ai-model-tooltip": "Geben Sie den zu verwendenden Modellnamen ein, z. B. llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Der Standard-Endpunkt von Ollama ist http://localhost:11434.",
+  "your-azure-openai-instance-name": "Der Name Ihrer Azure OpenAI-Instanz"
 }

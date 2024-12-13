@@ -41,7 +41,6 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
         if (node?.props?.className?.includes('task-list-item')) {
           const childCheckbox = node.props.children.find((child: any) => child?.type === 'input');
           const text = getTaskText([node]);
-          console.log('Found child task:', { text, checked: childCheckbox?.props?.checked });
           return { text, checked: childCheckbox?.props?.checked ?? false };
         }
         if (node?.props?.children) {
@@ -60,28 +59,12 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
   const allChildrenChecked = hasChildren && childTasks.every(task => task.checked);
   const someChildrenChecked = hasChildren && childTasks.some(task => task.checked);
 
-  // console.log('Task info:', {
-  //   text: taskText,
-  //   hasChildren,
-  //   childTasks,
-  //   allChildrenChecked,
-  //   someChildrenChecked
-  // });
-
   const handleToggle = (e: React.MouseEvent) => {
-    // console.log('Toggle clicked');
     if (!onChange) return;
     e.stopPropagation();
     
     let newContent = content;
     const targetState = hasChildren ? !allChildrenChecked : !isChecked;
-
-    // console.log('Updating states:', {
-    //   current: isChecked,
-    //   target: targetState,
-    //   hasChildren,
-    //   allChildrenChecked
-    // });
 
     const oldMark = `* [${isChecked ? 'x' : ' '}]${taskText}`;
     const newMark = `* [${targetState ? 'x' : ' '}]${taskText}`;
@@ -91,18 +74,9 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
       childTasks.forEach(task => {
         const oldChildMark = `* [${task.checked ? 'x' : ' '}]${task.text}`;
         const newChildMark = `* [${targetState ? 'x' : ' '}]${task.text}`;
-        // console.log('Updating child task:', {
-        //   from: oldChildMark,
-        //   to: newChildMark
-        // });
         newContent = newContent.replace(oldChildMark, newChildMark);
       });
     }
-
-    // console.log('Content update:', {
-    //   old: content,
-    //   new: newContent
-    // });
 
     onChange(newContent);
   };
@@ -120,6 +94,13 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
     return "ci:radio-unchecked";
   };
 
+  const getTextStyle = () => {
+    if (!hasChildren) {
+      return isChecked ? 'line-through text-desc' : '';
+    }
+    return allChildrenChecked ? 'line-through text-desc' : '';
+  };
+
   return (
     <li className={`${className} !list-none`}>
       <div 
@@ -135,7 +116,7 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
           />
         </div>
         <div 
-          className={`${isChecked ? 'line-through text-desc' : ''} break-all flex-1 min-w-0`}
+          className={`${getTextStyle()} break-all flex-1 min-w-0`}
           onClick={e => e.stopPropagation()}
         >
           {textContent}

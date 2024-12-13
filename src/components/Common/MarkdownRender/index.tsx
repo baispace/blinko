@@ -20,6 +20,7 @@ import dynamic from 'next/dynamic';
 import { Skeleton } from '@nextui-org/react';
 import { TableWrapper } from './TableWrapper';
 import { useRouter } from 'next/router';
+import remarkTaskList from 'remark-task-list';
 
 const MermaidWrapper = dynamic(() => import('./MermaidWrapper').then(mod => mod.MermaidWrapper), {
   loading: () => <Skeleton className='w-full h-[40px]' />,
@@ -82,6 +83,7 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode }:
         <ReactMarkdown
           remarkPlugins={[
             [remarkGfm, { table: false }],
+            remarkTaskList,
             [remarkMath, {
               singleDollarTextMath: true,
               inlineMath: [['$', '$']],
@@ -120,7 +122,21 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode }:
             a: ({ node, children }) => {
               return <LinkPreview href={node?.properties?.href} text={children} />
             },
-            li: ({ node, children }) => <ListItem content={content} onChange={onChange}>{children}</ListItem>,
+            li: ({ node, children, className }) => {
+              const isTaskListItem = className?.includes('task-list-item');
+              if (isTaskListItem && onChange && !isShareMode) {
+                return (
+                  <ListItem 
+                    content={content} 
+                    onChange={onChange}
+                    className={className}
+                  >
+                    {children}
+                  </ListItem>
+                );
+              }
+              return <li className={className}>{children}</li>;
+            },
             img: ImageWrapper,
             table: TableWrapper
           }}

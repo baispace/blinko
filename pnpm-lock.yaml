@@ -332,6 +332,9 @@ importers:
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0
+      remark-task-list:
+        specifier: ^0.0.3
+        version: 0.0.3
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
@@ -9381,6 +9384,9 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
+  remark-task-list@0.0.3:
+    resolution: {integrity: sha512-OemcKZbAJuaqNucwWGaEpe9q8FxoMf7JzahcTIyOByLIs+NQQ5Uo3T1JN95ML9e9Fma4pqbbwxAfyVLzm04GoA==}
+
   remarkable@2.0.1:
     resolution: {integrity: sha512-YJyMcOH5lrR+kZdmB0aJJ4+93bEojRZ1HGDn9Eagu6ibg7aVZhc3OWbbShRid+Q5eAfsEqWxpe+g5W5nYNfNiA==}
     engines: {node: '>= 6.0.0'}
@@ -10320,6 +10326,9 @@ packages:
 
   unist-util-is@6.0.0:
     resolution: {integrity: sha512-2qCTHimwdxLfz+YzdGfkqNlH0tLi9xjTnHddPmJwtIG9MGsdbutfTc4P+haPD7l7Cjxf/WZj+we5qfVPvvxfYw==}
+
+  unist-util-map@1.0.5:
+    resolution: {integrity: sha512-dFil/AN6vqhnQWNCZk0GF/G3+Q5YwsB+PqjnzvpO2wzdRtUJ1E8PN+XRE/PRr/G3FzKjRTJU0haqE0Ekl+O3Ag==}
 
   unist-util-position-from-estree@2.0.0:
     resolution: {integrity: sha512-KaFVRjoqLyF6YXCbVLNad/eS4+OfPQQn2yOd7zF/h5T/CSL2v8NpN6a5TPvtbXthAGw5nG+PuTtq+DdIZr+cRQ==}
@@ -22527,6 +22536,11 @@ snapshots:
       mdast-util-to-markdown: 2.1.0
       unified: 11.0.5
 
+  remark-task-list@0.0.3:
+    dependencies:
+      '@babel/runtime': 7.25.7
+      unist-util-map: 1.0.5
+
   remarkable@2.0.1:
     dependencies:
       argparse: 1.0.10
@@ -23612,6 +23626,10 @@ snapshots:
   unist-util-is@6.0.0:
     dependencies:
       '@types/unist': 3.0.3
+
+  unist-util-map@1.0.5:
+    dependencies:
+      object-assign: 4.1.1
 
   unist-util-position-from-estree@2.0.0:
     dependencies:

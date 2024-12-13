@@ -15,7 +15,9 @@ export const Code = ({ className, children, ...props }: CodeProps) => {
   
   const shouldHighlight = !className || className?.includes('language-') || className?.includes('hljs');
   
-  return shouldHighlight ? (
+  const isCodeBlock = shouldHighlight && String(children).includes('\n');
+  
+  return isCodeBlock ? (
     <div className="relative group">
       <Copy content={String(children).replace(/\n$/, '')} size={16} className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity" />
       <SyntaxHighlighter
@@ -30,7 +32,7 @@ export const Code = ({ className, children, ...props }: CodeProps) => {
       />
     </div>
   ) : (
-    <code className={className} {...props}>
+    <code className={`${className || ''} px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800`} {...props}>
       {children}
     </code>
   );

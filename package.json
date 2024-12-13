@@ -35,7 +35,6 @@
     "@aws-sdk/lib-storage": "^3.709.0",
     "@aws-sdk/s3-request-presigner": "^3.703.0",
     "@babel/plugin-proposal-decorators": "^7.24.7",
-    "@ducanh2912/next-pwa": "^10.2.9",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@iconify/react": "^5.0.2",
     "@internationalized/date": "^3.6.0",

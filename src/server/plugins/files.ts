@@ -26,7 +26,7 @@ export class FileService {
   }
 
   private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer) {
-    let filename = encodeURIComponent(`${baseName}${extension}`);
+    let filename = `${baseName}${extension}`;
     try {
       const exists = await stat(path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename));
       if (exists) {
@@ -34,8 +34,10 @@ export class FileService {
         return await this.writeFileSafe(baseName, extension, buffer);
       }
     } catch (error) {
+      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
+      console.log('保存文件路径:', filePath);
       await writeFile(
-        path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename),
+        filePath,
         //@ts-ignore
         buffer
       );

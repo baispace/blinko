@@ -11,8 +11,12 @@ const ONE_YEAR_IN_SECONDS = 31536000;
 
 export const GET = async (req: Request, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
+  console.log('请求的文件路径:', fullPath);
+  
+  // 确保路径安全
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
   const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
+  console.log('最终文件路径:', filePath);
 
   try {
     const stats = await stat(filePath);
@@ -33,11 +37,13 @@ export const GET = async (req: Request, { params }: any) => {
     }
 
     const contentType = mime.lookup(filePath) || "application/octet-stream";
+    const encodedFilename = encodeURIComponent(fullPath).replace(/['()]/g, (char) => '%' + char.charCodeAt(0).toString(16));
+    const fallbackFilename = `file${path.extname(fullPath)}`;
     const commonHeaders = {
       "Content-Type": contentType,
       "ETag": etag,
       "Cache-Control": "public, max-age=3600",
-      "Content-Disposition": `attachment; filename="${fullPath}"`,
+      "Content-Disposition": `attachment; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`,
     };
 
     const range = req.headers.get("range");
@@ -96,6 +102,7 @@ export const GET = async (req: Request, { params }: any) => {
       });
     }
   } catch (error: any) {
+    console.error('error:', error);
     if (error.code === 'ENOENT') {
       return NextResponse.json(
         { message: "File not found" },

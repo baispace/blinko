@@ -15,7 +15,7 @@ export const POST = async (req: Request, res: NextResponse) => {
   //@ts-ignore
   const buffer = Buffer.from(await file.arrayBuffer());
   //@ts-ignore
-  const originalName = file.name.replaceAll(" ", "_");
+  const originalName = decodeURIComponent(file.name).replaceAll(" ", "_");
   const extension = path.extname(originalName);
   const filePath = await FileService.uploadFile(buffer, originalName)
   //@ts-ignore

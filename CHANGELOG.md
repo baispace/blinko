@@ -1,3 +1,10 @@
+## [0.25.4](https://github.com/blinko-space/blinko/compare/v0.25.3...v0.25.4) (2024-12-13)
+
+
+### Bug Fixes
+
+* disable output file tracing in Next.js configuration ([52e7bc4](https://github.com/blinko-space/blinko/commit/52e7bc4e65864250411302804a7ed2d75fed4e06))
+
 ## [0.25.3](https://github.com/blinko-space/blinko/compare/v0.25.2...v0.25.3) (2024-12-13)
 
 

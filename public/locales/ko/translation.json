@@ -84,6 +84,9 @@
   "update-successfully": "업데이트 성공",
   "use-ai": "AI 사용",
   "user-custom-openai-api-key": "사용자 지정 OpenAI API 키",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI 인스턴스 이름",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI 배포 이름",
+  "user-custom-azureopenai-api-version": "API 버전",
   "user-or-password-error": "사용자 또는 비밀번호 오류",
   "username": "사용자 이름",
   "api-endpoint": "API 엔드포인트",
@@ -244,5 +247,10 @@
   "end-date": "종료 날짜",
   "reset": "초기화",
   "no-condition": "조건 없음",
-  "public": "공개"
+  "public": "공개",
+  "ai-model-tooltip": "사용할 모델명(예: gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini)을 입력합니다.",
+  "user-custom-azureopenai-api-deployment-tooltip": " 사용할 배포 이름(예: gpt-4o)을 입력합니다.",
+  "ollama-ai-model-tooltip": "사용할 모델 이름(예: llama3.2)을 입력합니다.",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama 기본 엔드포인트는 http://localhost:11434",
+  "your-azure-openai-instance-name": "Azure OpenAI 인스턴스 이름"
 }

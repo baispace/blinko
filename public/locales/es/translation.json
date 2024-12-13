@@ -80,6 +80,9 @@
   "upload-file": "Cargar archivo",
   "use-ai": "Utilizar ai",
   "user-custom-openai-api-key": "Clave Api OpenAI personalizada por el usuario",
+  "user-custom-azureopenai-api-instance": "Nombre de la instancia de Azure OpenAI",
+  "user-custom-azureopenai-api-deployment": "Nombre de implementación de Azure OpenAI",
+  "user-custom-azureopenai-api-version": "Versión API",
   "username": "nombre de usuario",
   "your-changes-have-been-saved": "Tus cambios se han guardado.",
   "all-notes-have-been-loaded": "Todas las notas {{items}} han sido cargadas",
@@ -243,5 +246,10 @@
   "end-date": "Fecha final",
   "reset": "Restablecer",
   "no-condition": "Ninguna condición",
-  "public": "Público"
+  "public": "Público",
+  "ai-model-tooltip": "Introduzca el nombre del modelo a utilizar, como gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " Introduzca el nombre de despliegue que desea utilizar, por ejemplo gpt-4o",
+  "ollama-ai-model-tooltip": "Introduce el nombre del modelo a utilizar, por ejemplo llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "El punto final por defecto de Ollama es http://localhost:11434",
+  "your-azure-openai-instance-name": "Nombre de su instancia de Azure OpenAI"
 }

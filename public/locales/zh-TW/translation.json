@@ -53,6 +53,9 @@
   "api-endpoint": "接口地址",
   "must-start-with-http-s-or-use-api-openai-as-default": "必須以 http(s):// 開頭，或默認使用 /api/openai",
   "user-custom-openai-api-key": "用戶自定義 OpenAI Api 密鑰",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI 虛擬實例名稱",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI 部署名稱",
+  "user-custom-azureopenai-api-version": "API 版本",
   "ai-model": "人工智能模型",
   "logout": "註銷",
   "user-or-password-error": "用戶或密碼錯誤",
@@ -246,5 +249,10 @@
   "end-date": "结束日期",
   "reset": "重置",
   "no-condition": "无条件",
-  "public": "公开的"
+  "public": "公开的",
+  "ai-model-tooltip": "输入要使用的型号名称，例如 gpt-3.5-turbo、gpt-4、gpt-4o、gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": "输入要使用的部署名称，如 gpt-4o",
+  "ollama-ai-model-tooltip": "输入要使用的模型名称，如 llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama 默认端点为 http://localhost:11434",
+  "your-azure-openai-instance-name": "您的 Azure OpenAI 实例名称"
 }

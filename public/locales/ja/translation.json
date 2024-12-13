@@ -83,6 +83,9 @@
   "upload-file": "ファイルのアップロード",
   "use-ai": "aiを使う",
   "user-custom-openai-api-key": "ユーザー独自のOpenAI APIキー",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI インスタンス名",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI デプロイ名",
+  "user-custom-azureopenai-api-version": "APIバージョン",
   "edit": "編集",
   "enter-your-password": "パスワードを入力してください",
   "import-from-bko": ".bkoからのインポート",
@@ -242,5 +245,10 @@
   "end-date": "終了日",
   "reset": "リセット",
   "no-condition": "コンディションなし",
-  "public": "パブリック"
+  "public": "パブリック",
+  "ai-model-tooltip": "gpt-3.5-turbo、gpt-4、gpt-4o、gpt-4o-miniなど、使用するモデル名を入力してください。",
+  "user-custom-azureopenai-api-deployment-tooltip": "使用するデプロイメント名（gpt-4o など）を入力します。",
+  "ollama-ai-model-tooltip": "llama3.2のように、使用するモデル名を入力してください。",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama デフォルトのエンドポイントは http://localhost:11434",
+  "your-azure-openai-instance-name": "Azure OpenAIインスタンス名"
 }

@@ -53,6 +53,9 @@
   "api-endpoint": "نقطة نهاية API",
   "must-start-with-http-s-or-use-api-openai-as-default": "يجب أن يبدأ بـ ://http(s) أو استخدام /api/openai كإعداد افتراضي",
   "user-custom-openai-api-key": "مفتاح واجهة برمجة التطبيقات المخصص للمستخدم  من OpenAI",
+  "user-custom-azureopenai-api-instance": "اسم مثيل Azure OpenAI",
+  "user-custom-azureopenai-api-deployment": "اسم نشر Azure OpenAI",
+  "user-custom-azureopenai-api-version": "نسخة API",
   "ai-model": "نموذج الذكاء الاصطناعي",
   "logout": "تسجيل الخروج",
   "user-or-password-error": "خطأ في اسم المستخدم أو كلمة المرور",
@@ -247,5 +250,10 @@
   "end-date": "تاريخ الانتهاء",
   "reset": "إعادة تعيين",
   "no-condition": "لا توجد حالة",
-  "public": "عام"
+  "public": "عام",
+  "ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل gpt-3.5-turbo، gpt-4، gpt-4o، gpt-4o، gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " أدخل اسم النشر المراد استخدامه، مثل gpt-4o",
+  "ollama-ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "نقطة نهاية أولاما الافتراضية هي http://localhost:11434",
+  "your-azure-openai-instance-name": "اسم مثيل Azure OpenAI الخاص بك"
 }

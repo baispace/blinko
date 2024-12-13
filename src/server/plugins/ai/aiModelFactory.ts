@@ -3,6 +3,7 @@ import { MarkdownTextSplitter, TokenTextSplitter } from "@langchain/textsplitter
 import { FaissStore } from "@langchain/community/vectorstores/faiss"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { Embeddings } from "@langchain/core/embeddings"
+import { AzureOpenAIModelProvider } from "./azureOpenAIModelProvider"
 import { OpenAIModelProvider } from "./openAIModelProvider"
 import { getGlobalConfig } from "@/server/routers/config"
 import { OllamaModelProvider } from "./ollamaModelProvider"
@@ -35,6 +36,17 @@ export class AiModelFactory {
       }
     }
 
+    if (globalConfig.aiModelProvider == 'AzureOpenAI') {
+      const provider = new AzureOpenAIModelProvider({ globalConfig });
+      return {
+        LLM: provider.LLM(),
+        VectorStore: await provider.VectorStore(),
+        Embeddings: provider.Embeddings(),
+        MarkdownSplitter: provider.MarkdownSplitter(),
+        TokenTextSplitter: provider.TokenTextSplitter(),
+      };
+    }
+    
     if (globalConfig.aiModelProvider == 'Ollama') {
       const provider = new OllamaModelProvider({ globalConfig })
       return {

@@ -86,6 +86,9 @@
   "upload-file": "Datei hochladen",
   "use-ai": "Ai verwenden",
   "user-custom-openai-api-key": "Benutzerdefinierter OpenAI Api-Schlüssel",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI Instanzname",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI Bereitstellungsname",
+  "user-custom-azureopenai-api-version": "API version",
   "user-or-password-error": "Benutzer- oder Passwortfehler",
   "username": "Nutzername",
   "your-changes-have-been-saved": "Ihre Änderungen wurden gespeichert!",
@@ -243,5 +246,10 @@
   "end-date": "Enddatum",
   "reset": "Zurücksetzen",
   "no-condition": "Keine Bedingung",
-  "public": "Öffentlich"
+  "public": "Öffentlich",
+  "ai-model-tooltip": "Geben Sie den zu verwendenden Modellnamen ein, z. B. gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " Geben Sie den zu verwendenden Einsatznamen ein, z. B. gpt-4o",
+  "ollama-ai-model-tooltip": "Geben Sie den zu verwendenden Modellnamen ein, z. B. llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Der Standard-Endpunkt von Ollama ist http://localhost:11434.",
+  "your-azure-openai-instance-name": "Der Name Ihrer Azure OpenAI-Instanz"
 }

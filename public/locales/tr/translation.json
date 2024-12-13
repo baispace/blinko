@@ -47,9 +47,16 @@
   "keep-sign-in": "Oturum açmaya devam et",
   "language": "Dil",
   "last-run": "SON KOŞU",
-  "logout": "Oturumu Kapat"
-}
- "delete-success": "Başarıyla silindi",
+  "logout": "Oturumu Kapat",
+  "delete-success": "Başarıyla silindi",
   "enter-your-username": "Kullanıcı adınızı girin",
-  "every-day": "Her gün"
+  "every-day": "Her gün",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI örnek adı",
+  "user-custom-azureopenai-api-deployment": "Azure OpenAI dağıtım adı",
+  "user-custom-azureopenai-api-version": "API sürümü",
+  "ai-model-tooltip": "Kullanılacak model adını girin, örneğin gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini",
+  "user-custom-azureopenai-api-deployment-tooltip": " Kullanılacak dağıtım adını girin, örneğin gpt-4o",
+  "ollama-ai-model-tooltip": "Kullanılacak model adını girin, örneğin llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "Ollama varsayılan uç noktası http://localhost:11434",
+  "your-azure-openai-instance-name": "Azure OpenAI örnek adınız"
 }

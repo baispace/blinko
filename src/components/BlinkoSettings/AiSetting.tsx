@@ -19,9 +19,11 @@ export const AiSetting = observer(() => {
   const ai = RootStore.Get(AiStore)
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
+
   const store = RootStore.Local(() => ({
     isVisible: false,
     apiKey: '',
+    apiVersion: '',
     apiEndPoint: '',
     aiModel: '',
     embeddingModel: '',
@@ -31,8 +33,10 @@ export const AiSetting = observer(() => {
     showEmeddingAdvancedSetting: false,
     excludeEmbeddingTagId: null as number | null
   }))
+
   useEffect(() => {
     store.apiEndPoint = blinko.config.value?.aiApiEndpoint!
+    store.apiVersion = blinko.config.value?.aiApiVersion!
     store.apiKey = blinko.config.value?.aiApiKey!
     store.aiModel = blinko.config.value?.aiModel!
     store.embeddingModel = blinko.config.value?.embeddingModel!
@@ -41,6 +45,7 @@ export const AiSetting = observer(() => {
     store.embeddingLambda = blinko.config.value?.embeddingLambda!
     store.excludeEmbeddingTagId = blinko.config.value?.excludeEmbeddingTagId!
   }, [blinko.config.value])
+
   return <Card shadow="none" className="flex flex-col p-4 bg-background pb-6">
     <div className='text-desc text-sm'>AI</div>
     <Item
@@ -89,7 +94,9 @@ export const AiSetting = observer(() => {
 
     {
       ai.modelSelect[blinko.config.value?.aiModelProvider!] && <Item
-        leftContent={<>{t('ai-model')}</>}
+        leftContent={<ItemWithTooltip
+          content={ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.modelTitle}
+          toolTipContent={ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.modelTooltip} />}
         rightContent={
           <Autocomplete
             radius="lg"
@@ -323,11 +330,36 @@ export const AiSetting = observer(() => {
         } />
     }
 
-    < Item
+    {
+      blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+      <Item
+        type={isPc ? 'row' : 'col'}
+        leftContent={<div className="flex flex-col ga-1">
+          <>{t('user-custom-azureopenai-api-version')}</>
+        </div>}
+        rightContent={
+          <Input
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="Enter API version"
+            value={store.apiVersion}
+            onChange={e => { store.apiVersion = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiApiVersion',
+                value: store.apiVersion
+              }))
+            }}
+            type="text"
+          />
+        } />
+    }
+
+    <Item
       type={isPc ? 'row' : 'col'}
       leftContent={< div className="flex flex-col gap-1" >
-        <>{t('api-endpoint')}</>
-        <div className="text-desc text-xs">{t('must-start-with-http-s-or-use-api-openai-as-default')}</div>
+        <>{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTitle}</>
+        <div className="text-desc text-xs">{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTooltip}</div>
       </div >}
       rightContent={< Input
         size='sm'
@@ -344,6 +376,7 @@ export const AiSetting = observer(() => {
           }))
         }}
       />} />
+
 
     <Item
       type={isPc ? 'row' : 'col'}

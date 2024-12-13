@@ -11,12 +11,8 @@ const ONE_YEAR_IN_SECONDS = 31536000;
 
 export const GET = async (req: Request, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
-  console.log('请求的文件路径:', fullPath);
-  
-  // 确保路径安全
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
   const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
-  console.log('最终文件路径:', filePath);
 
   try {
     const stats = await stat(filePath);

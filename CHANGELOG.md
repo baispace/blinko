@@ -1,3 +1,11 @@
+## [0.25.2](https://github.com/blinko-space/blinko/compare/v0.25.1...v0.25.2) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove console logs and improve file path handling in API routes ([49b4d50](https://github.com/blinko-space/blinko/commit/49b4d506b1e4ab4e008c4ed16a3894703491459f))
+* upload file chinese name issue [#292](https://github.com/blinko-space/blinko/issues/292) ([d32a23a](https://github.com/blinko-space/blinko/commit/d32a23aa8f7fdabcc82a9d09a5c6b6f642deb58b))
+
 ## [0.25.1](https://github.com/blinko-space/blinko/compare/v0.25.0...v0.25.1) (2024-12-13)
 
 

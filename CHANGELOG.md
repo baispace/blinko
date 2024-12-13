@@ -1,3 +1,10 @@
+## [0.25.5](https://github.com/blinko-space/blinko/compare/v0.25.4...v0.25.5) (2024-12-13)
+
+
+### Bug Fixes
+
+* code component to enhance syntax highlighting and styling [#302](https://github.com/blinko-space/blinko/issues/302) ([16062f5](https://github.com/blinko-space/blinko/commit/16062f5f21317986fd78475aecaf68976cbbe813))
+
 ## [0.25.4](https://github.com/blinko-space/blinko/compare/v0.25.3...v0.25.4) (2024-12-13)
 
 

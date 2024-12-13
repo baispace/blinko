@@ -1,3 +1,11 @@
+## [0.25.1](https://github.com/blinko-space/blinko/compare/v0.25.0...v0.25.1) (2024-12-13)
+
+
+### Bug Fixes
+
+* add support for task lists in Markdown rendering add check or and cancel all check ([d2e3271](https://github.com/blinko-space/blinko/commit/d2e3271d672a26fef737f2df85b72a0fc1e279e5))
+* clean up ListItem component by removing console logs and adding getTextStyle function ([1985024](https://github.com/blinko-space/blinko/commit/198502466327ab7d173078278f148733a73a75ad))
+
 # [0.25.0](https://github.com/blinko-space/blinko/compare/v0.24.3...v0.25.0) (2024-12-13)
 
 

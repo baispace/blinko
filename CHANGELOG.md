@@ -1,3 +1,15 @@
+# [0.25.0](https://github.com/blinko-space/blinko/compare/v0.24.3...v0.25.0) (2024-12-13)
+
+
+### Bug Fixes
+
+* update translations and enhance AI model settings ([a2f43fc](https://github.com/blinko-space/blinko/commit/a2f43fc73bf2d84a041012868b8620e3859a089c))
+
+
+### Features
+
+* added Azure OpenAI support ([6ac1c20](https://github.com/blinko-space/blinko/commit/6ac1c20a8fb08752b0070c5e724d59dda93a39af))
+
 ## [0.24.3](https://github.com/blinko-space/blinko/compare/v0.24.2...v0.24.3) (2024-12-12)
 
 

@@ -1,3 +1,10 @@
+## [0.25.6](https://github.com/blinko-space/blinko/compare/v0.25.5...v0.25.6) (2024-12-14)
+
+
+### Bug Fixes
+
+* Enhanced the context handling in the AI service by concatenating page content from search results, improving the input for the QA chain [#304](https://github.com/blinko-space/blinko/issues/304) [#303](https://github.com/blinko-space/blinko/issues/303) ([f9f7871](https://github.com/blinko-space/blinko/commit/f9f7871658fc6f4992f33dab47470f3ecd89a3bb))
+
 ## [0.25.5](https://github.com/blinko-space/blinko/compare/v0.25.4...v0.25.5) (2024-12-13)
 
 

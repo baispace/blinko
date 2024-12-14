@@ -3,8 +3,8 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FileService } from "@/server/plugins/files";
 
-const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
-const CACHE_DURATION = ONE_WEEK_IN_SECONDS;
+const MAX_PRESIGNED_URL_EXPIRY = 604800 - (60 * 60 * 24); 
+const CACHE_DURATION = MAX_PRESIGNED_URL_EXPIRY;
 
 export const GET = async (req: Request, { params }: any) => {
   const { s3ClientInstance, config } = await FileService.getS3Client();
@@ -18,7 +18,7 @@ export const GET = async (req: Request, { params }: any) => {
     });
     
     const signedUrl = await getSignedUrl(s3ClientInstance, command, { 
-      expiresIn: ONE_WEEK_IN_SECONDS,
+      expiresIn: MAX_PRESIGNED_URL_EXPIRY,
     });
     
     return NextResponse.redirect(signedUrl, {

@@ -367,10 +367,11 @@ export class AiService {
       const chat_history = AiService.getChatHistory({ conversations })
       const qaPrompt = AiPrompt.QAPrompt()
       const qaChain = qaPrompt.pipe(LLM).pipe(new StringOutputParser())
+      const context = searchRes.map(doc => doc.pageContent).join('\n\n');
       const result = await qaChain.stream({
         chat_history,
         input: question,
-        context: searchRes[0]?.pageContent
+        context: context
       })
       return { result, notes }
     } catch (error) {

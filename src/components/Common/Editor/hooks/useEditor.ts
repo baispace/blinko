@@ -6,30 +6,109 @@ import { HandleFileType } from '../editorUtils';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { usePasteFile } from '@/lib/hooks';
 import { OnSendContentType } from '../type';
+import Vditor from 'vditor';
+import { ToolbarPC } from '../EditorToolbar';
+import { useTheme } from 'next-themes';
+import { RootStore } from '@/store';
+import { BaseStore } from '@/store/baseStore';
+import { UserStore } from '@/store/user';
 
 export const useEditorInit = (
   store: EditorStore,
-  mdxEditorRef: any,
   onChange: ((content: string) => void) | undefined,
   onSend: (args: OnSendContentType) => Promise<any>,
   mode: 'create' | 'edit',
-  originReference: number[] = []
+  originReference: number[] = [],
+  content: string,
 ) => {
+  // useEffect(() => {
+  //   store.init({
+  //     onChange,
+  //     onSend,
+  //     mode,
+  //   });
+  // }, [onChange, mode, mdxEditorRef.current]);
+
   useEffect(() => {
-    if (mdxEditorRef.current) {
-      store.init({
-        onChange,
-        onSend,
-        mode,
-        mdxEditorRef
-      });
-    }
-  }, [onChange, mode, mdxEditorRef.current]);
+    if (store.vditor) return
+    const theme = RootStore.Get(UserStore).theme
+    const vditor = new Vditor("vditor" + "-" + mode, {
+      width: '100%',
+      "toolbar": ToolbarPC,
+      mode: 'wysiwyg',
+      hint: {
+        extend: [
+          {
+            key: '#',
+            hint: (key) => {
+              console.log(key)
+              if ('vditor'.indexOf(key.toLocaleLowerCase()) > -1) {
+                return [
+                  {
+                    value: '#Vditor ',
+                    html: '<span style="color: #999;">#Vditor</span> ♏ 一款浏览器端的 Markdown 编辑器，支持所见即所得（富文本）、即时渲染（类似 Typora）和分屏预览模式。',
+                  }]
+              }
+              return []
+            },
+          }
+        ]
+      },
+      theme,
+      counter: {
+        enable: true,
+        type: 'markdown',
+      },
+      lang: 'zh_CN',
+      // i18n: {
+
+      // },
+      input: (value) => {
+        console.log(value)
+        onChange?.(value)
+      },
+      value: content,
+      toolbarConfig: {
+        // hide: true,
+      },
+      preview: {
+        hljs: {
+          style: theme === 'dark' ? 'github-dark' : 'github',
+          lineNumber: true,
+        },
+        theme,
+      },
+      after: () => {
+        vditor.setValue(`
+  \`\`\`javascript
+  const a = 1;
+          const b = 2
+          function test() {
+  
+          }
+  \`\`\`
+            `);
+        console.log(vditor);
+        store.init({
+          onChange,
+          onSend,
+          mode,
+          vditor
+        });
+      },
+    });
+    // Clear the effect
+    return () => {
+      store.vditor?.destroy();
+      store.vditor = null;
+    };
+
+  }, [mode]);
 
   useEffect(() => {
     store.references = originReference
-    if(store.references.length > 0) {
-      store.noteListByIds.call({ids: store.references})
+    if (store.references.length > 0) {
+      store.noteListByIds.call({ ids: store.references })
     }
   }, []);
 

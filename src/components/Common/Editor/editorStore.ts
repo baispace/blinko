@@ -12,6 +12,7 @@ import { showAiWriteSuggestions } from '../PopoverFloat/aiWritePop';
 import { AiStore } from '@/store/aiStore';
 import { getEditorElements, ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
+import Vditor from 'vditor';
 
 
 export class EditorStore {
@@ -20,15 +21,16 @@ export class EditorStore {
   lastRangeText: string = ''
   viewMode: ViewMode = "rich-text"
   lastSelection: Selection | null = null
-  mdxEditorRef: any | null = null
+  vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null
   mode: 'edit' | 'create' = 'edit'
   references: number[] = []
   isShowSearch: boolean = false
-  onSend: ((args: OnSendContentType) => Promise<any>) | null = null
+  onSend: (args: OnSendContentType) => Promise<any>
 
   get canSend() {
-    return this.files?.every(i => !i?.uploadPromise?.loading?.value) && (this.files?.length != 0 || this.mdxEditorRef?.current?.getMarkdown() != '')
+    // return this.files?.every(i => !i?.uploadPromise?.loading?.value) && (this.files?.length != 0 || this.mdxEditorRef?.current?.getMarkdown() != '')
+    return false
   }
 
   get blinko() {
@@ -44,81 +46,81 @@ export class EditorStore {
   }
 
   replaceMarkdownTag = (text: string, forceFocus = false) => {
-    if (this.mdxEditorRef?.current) {
-      if (this.lastRange) {
-        const currentTextBeforeRange = this.lastRangeText.replace(/&#x20;/g, " ") ?? ''
-        const currentText = this.mdxEditorRef?.current!.getMarkdown().replace(/\\/g, '').replace(/&#x20;/g, " ")
-        const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '&#x20;')
-        const MyContent = currentText.replace(currentTextBeforeRange, tag)
-        this.mdxEditorRef?.current.setMarkdown(MyContent)
-        this.focus(forceFocus)
-      }
-    }
+    // if (this.mdxEditorRef?.current) {
+    //   if (this.lastRange) {
+    //     const currentTextBeforeRange = this.lastRangeText.replace(/&#x20;/g, " ") ?? ''
+    //     const currentText = this.mdxEditorRef?.current!.getMarkdown().replace(/\\/g, '').replace(/&#x20;/g, " ")
+    //     const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '&#x20;')
+    //     const MyContent = currentText.replace(currentTextBeforeRange, tag)
+    //     this.mdxEditorRef?.current.setMarkdown(MyContent)
+    //     this.focus(forceFocus)
+    //   }
+    // }
   }
 
   insertMarkdown = (text) => {
-    const Mycontent = this.mdxEditorRef?.current!.getMarkdown()
-    this.mdxEditorRef?.current!.setMarkdown(Mycontent + text)
-    this.mdxEditorRef?.current!.focus(() => {
-      this.onChange?.(Mycontent + text)
-    }, {
-      defaultSelection: 'rootEnd'
-    })
+    // const Mycontent = this.mdxEditorRef?.current!.getMarkdown()
+    // this.mdxEditorRef?.current!.setMarkdown(Mycontent + text)
+    // this.mdxEditorRef?.current!.focus(() => {
+    //   this.onChange?.(Mycontent + text)
+    // }, {
+    //   defaultSelection: 'rootEnd'
+    // })
   }
 
   insertMarkdownByEvent = (text) => {
-    this.mdxEditorRef?.current!.insertMarkdown(text)
-    this.focus()
+    // this.mdxEditorRef?.current!.insertMarkdown(text)
+    // this.focus()
   }
 
   focus = (force = false) => {
-    if (force && this.lastRange) {
-      const editorElements = getEditorElements()
-      if (editorElements.length > 0) {
-        editorElements.forEach(editorElement => {
-          requestAnimationFrame(() => {
-            const range = document.createRange()
-            const selection = window.getSelection()
-            const walker = document.createTreeWalker(
-              editorElement,
-              NodeFilter.SHOW_TEXT,
-              null
-            )
-            let lastNode: any = null
-            while (walker.nextNode()) {
-              lastNode = walker.currentNode
-            }
-            if (lastNode) {
-              range.setStart(lastNode, lastNode?.length)
-              range.setEnd(lastNode, lastNode?.length)
-              selection?.removeAllRanges()
-              selection?.addRange(range)
-              editorElement.focus()
-            }
-          })
-        })
-      }
-      this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
-    } else {
-      this.mdxEditorRef?.current!.focus(() => {
-        this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
-      }, {
-        defaultSelection: 'rootEnd'
-      })
-    }
+    // if (force && this.lastRange) {
+    //   const editorElements = getEditorElements()
+    //   if (editorElements.length > 0) {
+    //     editorElements.forEach(editorElement => {
+    //       requestAnimationFrame(() => {
+    //         const range = document.createRange()
+    //         const selection = window.getSelection()
+    //         const walker = document.createTreeWalker(
+    //           editorElement,
+    //           NodeFilter.SHOW_TEXT,
+    //           null
+    //         )
+    //         let lastNode: any = null
+    //         while (walker.nextNode()) {
+    //           lastNode = walker.currentNode
+    //         }
+    //         if (lastNode) {
+    //           range.setStart(lastNode, lastNode?.length)
+    //           range.setEnd(lastNode, lastNode?.length)
+    //           selection?.removeAllRanges()
+    //           selection?.addRange(range)
+    //           editorElement.focus()
+    //         }
+    //       })
+    //     })
+    //   }
+    //   this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
+    // } else {
+    //   this.mdxEditorRef?.current!.focus(() => {
+    //     this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
+    //   }, {
+    //     defaultSelection: 'rootEnd'
+    //   })
+    // }
   }
 
   clearMarkdown = () => {
-    if (this.mdxEditorRef?.current) {
-      this.mdxEditorRef?.current.setMarkdown("")
-      this.focus()
-    }
+    // if (this.mdxEditorRef?.current) {
+    //   this.mdxEditorRef?.current.setMarkdown("")
+    //   this.focus()
+    // }
   }
 
   inertHash = () => {
-    this.mdxEditorRef?.current!.insertMarkdown("&#x20;#")
-    this.mdxEditorRef?.current!.focus()
-    this.handlePopTag()
+    // this.mdxEditorRef?.current!.insertMarkdown("&#x20;#")
+    // this.mdxEditorRef?.current!.focus()
+    // this.handlePopTag()
   }
 
   speechToText = async (filePath) => {
@@ -215,20 +217,20 @@ export class EditorStore {
   }
 
   deleteLastChar = () => {
-    const content = this.mdxEditorRef?.current!.getMarkdown()
-    this.mdxEditorRef?.current!.setMarkdown(content.slice(0, -1))
+    // const content = this.mdxEditorRef?.current!.getMarkdown()
+    // this.mdxEditorRef?.current!.setMarkdown(content.slice(0, -1))
   }
 
   setMarkdownLoading = (loading: boolean) => {
-    if (loading) {
-      this.mdxEditorRef?.current!.insertMarkdown("Thinking...")
-      this.focus()
-    } else {
-      const content = this.mdxEditorRef?.current!.getMarkdown()
-      const newContent = content.replace(/Thinking.../g, '')
-      this.mdxEditorRef?.current!.setMarkdown(newContent)
-      this.focus()
-    }
+    // if (loading) {
+    //   this.mdxEditorRef?.current!.insertMarkdown("Thinking...")
+    //   this.focus()
+    // } else {
+    //   const content = this.mdxEditorRef?.current!.getMarkdown()
+    //   const newContent = content.replace(/Thinking.../g, '')
+    //   this.mdxEditorRef?.current!.setMarkdown(newContent)
+    //   this.focus()
+    // }
   }
   // ************************************* reference logic  start ************************************************************************************
   get currentReferences() {
@@ -270,28 +272,28 @@ export class EditorStore {
   // ************************************* reference logic  end ************************************************************************************
 
   handleSend = async () => {
-    console.log('handleSend', this.references)
-    if (!this.canSend) return;
-    try {
-      await this.onSend?.({
-        content: this.mdxEditorRef?.current?.getMarkdown() ?? '',
-        files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
-        references: this.references
-      });
-      this.clearEditor();
-      RootStore.Get(AiStore).isWriting = false;
-    } catch (error) {
-      console.error('Failed to send content:', error);
-    }
+    // console.log('handleSend', this.references)
+    // if (!this.canSend) return;
+    // try {
+    //   await this.onSend?.({
+    //     content: this.mdxEditorRef?.current?.getMarkdown() ?? '',
+    //     files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
+    //     references: this.references
+    //   });
+    //   this.clearEditor();
+    //   RootStore.Get(AiStore).isWriting = false;
+    // } catch (error) {
+    //   console.error('Failed to send content:', error);
+    // }
   }
 
   clearEditor = () => {
-    this.mdxEditorRef?.current?.setMarkdown('')
+    // this.mdxEditorRef?.current?.setMarkdown('')
     this.onChange?.('');
     this.files = [];
     this.references = []
     this.noteListByIds.value = []
-    eventBus.emit('editor:setViewMode', 'rich-text');
+    // eventBus.emit('editor:setViewMode', 'rich-text');
   }
 
   constructor() {
@@ -301,5 +303,4 @@ export class EditorStore {
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
   }
-
 }

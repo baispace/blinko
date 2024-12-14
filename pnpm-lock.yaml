@@ -371,6 +371,9 @@ importers:
       vanilla-tilt:
         specifier: ^1.8.1
         version: 1.8.1
+      vditor:
+        specifier: ^3.10.8
+        version: 3.10.8
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -10441,6 +10444,9 @@ packages:
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
+
+  vditor@3.10.8:
+    resolution: {integrity: sha512-u9npjvMuGJVk0QGbpqiGAmvgiR4QvMVpNQYrvFYZ/yWDtTFLZrHmLxuUbtswotR6KY10u5kVuaoSEoBGGWQGjQ==}
 
   vfile-location@5.0.3:
     resolution: {integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg==}
@@ -23692,6 +23698,10 @@ snapshots:
   vanilla-tilt@1.8.1: {}
 
   vary@1.1.2: {}
+
+  vditor@3.10.8:
+    dependencies:
+      diff-match-patch: 1.0.5
 
   vfile-location@5.0.3:
     dependencies:

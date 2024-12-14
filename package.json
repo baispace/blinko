@@ -151,6 +151,7 @@
     "unfurl.js": "^6.4.0",
     "usehooks-ts": "^3.1.0",
     "vanilla-tilt": "^1.8.1",
+    "vditor": "^3.10.8",
     "zod": "^3.23.8",
     "zod-prisma-types": "^3.1.8"
   },

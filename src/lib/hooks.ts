@@ -1,28 +1,30 @@
 import { useEffect, useState } from "react";
 import { helper } from "./helper";
+export const handlePaste = (event) => {
+  //@ts-ignore
+  const clipboardData = event.clipboardData || window.clipboardData;
+  const items = clipboardData.items;
+  let files = [];
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].kind === "file") {
+      const file = items[i].getAsFile();
+      //@ts-ignore
+      files.push(file);
+    }
+  }
+
+  if (files.length > 0) {
+    return files
+  }
+};
+
 
 const usePasteFile = (targetRef) => {
   const [pastedFiles, setPastedFiles] = useState([]);
 
   useEffect(() => {
-    const handlePaste = (event) => {
-      //@ts-ignore
-      const clipboardData = event.clipboardData || window.clipboardData;
-      const items = clipboardData.items;
-      let files = [];
 
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].kind === "file") {
-          const file = items[i].getAsFile();
-          //@ts-ignore
-          files.push(file);
-        }
-      }
-
-      if (files.length > 0) {
-        setPastedFiles(files);
-      }
-    };
 
     const targetElement = targetRef.current;
 
@@ -42,21 +44,21 @@ const usePasteFile = (targetRef) => {
 
 
 interface HistoryBackProps<T extends string> {
-  state: boolean;  
-  onStateChange: () => void; 
+  state: boolean;
+  onStateChange: () => void;
   historyState: T;
 }
 
-export const useHistoryBack = <T extends string>({ 
-  state, 
-  onStateChange, 
-  historyState 
+export const useHistoryBack = <T extends string>({
+  state,
+  onStateChange,
+  historyState
 }: HistoryBackProps<T>) => {
   useEffect(() => {
     if (state) {
       history.pushState({ [historyState]: true }, '');
     }
-    
+
     const handlePopState = () => {
       if (state) {
         onStateChange();
@@ -78,6 +80,6 @@ export const useIsIOS = () => {
   return isIOS;
 };
 
-export  {usePasteFile};
+export { usePasteFile };
 
 

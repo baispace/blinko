@@ -5,7 +5,7 @@ import { Icon } from '@iconify/react';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';
-import { FocusEditor, getEditorElements } from '../Common/Editor/editorUtils';
+import { FocusEditorFixMobile } from '../Common/Editor/editorUtils';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoAiChat } from '../BlinkoAi';
@@ -99,7 +99,7 @@ export const BlinkoAddButton = observer(() => {
   // Handle write action
   const handleWriteAction = () => {
     ShowEditBlinkoModel('2xl', 'create')
-    FocusEditor()
+    FocusEditorFixMobile()
     setShowActions(false);
   };
 
@@ -109,9 +109,9 @@ export const BlinkoAddButton = observer(() => {
     setIsDragging(false);
 
     if (activeButton === 'top') {
-      handleWriteAction();  
+      handleWriteAction();
     } else if (activeButton === 'bottom') {
-      handleAiAction();    
+      handleAiAction();
     } else if (activeButton !== 'none') {
       setShowActions(false);
     }

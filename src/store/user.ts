@@ -24,6 +24,7 @@ export class UserStore implements User, Store {
   image?: string = '';
   token: string = '';
   role: string = '';
+  theme: any = 'light';
 
   wait() {
     return new Promise<UserStore>((res, rej) => {
@@ -98,6 +99,7 @@ export class UserStore implements User, Store {
 
     useEffect(() => {
       this.updatePWAColor(theme ?? 'light');
+      this.theme = theme
     }, [theme]);
 
     useEffect(() => {
@@ -111,7 +113,7 @@ export class UserStore implements User, Store {
     }, [session]);
 
     useEffect(() => {
-      if(!this.isLogin) return
+      if (!this.isLogin) return
       this.setupUserPreferences(setTheme, i18n);
     }, [this.isLogin]);
 

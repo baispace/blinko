@@ -16,7 +16,7 @@ import { CardHeader } from "./cardHeader";
 import { CardFooter } from "./cardFooter";
 import { useHistoryBack } from "@/lib/hooks";
 import { useRouter } from "next/router";
-import { FocusEditor } from "../Common/Editor/editorUtils";
+import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 
 interface BlinkoCardProps {
   blinkoItem: Note & {
@@ -73,7 +73,7 @@ export const BlinkoCard = observer(({ blinkoItem, isShareMode = false }: BlinkoC
     if (isShareMode) return;
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
     ShowEditBlinkoModel();
-    FocusEditor(true)
+    FocusEditorFixMobile()
   };
 
   return (

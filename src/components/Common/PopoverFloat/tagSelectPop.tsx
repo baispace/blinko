@@ -14,12 +14,11 @@ export const IsTagSelectVisible = () => {
   return isTagSelectVisible
 }
 
-export const showTagSelectPop = (text: string = '') => {
+export const showTagSelectPop = (text: string = '', _rect: DOMRect | null = null) => {
   setTimeout(() => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+      const rect = _rect ?? selection.getRangeAt(0).getBoundingClientRect();
       eventBus.emit('tagselect:update', { rect, text })
     }
   })

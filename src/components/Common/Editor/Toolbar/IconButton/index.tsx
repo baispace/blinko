@@ -13,7 +13,7 @@ export const IconButton = observer(({ tooltip, icon, onClick, classNames, childr
   },
   children?: any
 }) => {
-  return <Tooltip content={tooltip} placement="bottom">
+  return <Tooltip content={tooltip} placement="bottom" delay={1000}>
     <motion.div whileTap={{ y: 1 }} className={`p-[2px] hover:bg-hover cursor-pointer rounded-md flex items-center justify-center ${classNames?.base}`} onClick={e => {
       onClick?.(e)
     }}>

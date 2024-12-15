@@ -7,6 +7,7 @@ import { ScrollArea } from '../../../ScrollArea'
 import { BlinkoStore } from '@/store/blinkoStore'
 import { RootStore } from '@/store'
 import { EditorStore } from '../../editorStore'
+import { useEffect } from 'react'
 
 interface Props {
   store: EditorStore
@@ -14,11 +15,12 @@ interface Props {
 
 export const ReferenceButton = observer(({ store }: Props) => {
   const blinko = RootStore.Get(BlinkoStore)
-
+  useEffect(() => {
+    blinko.referenceSearchList.resetAndCall({ searchText: ' ' })
+  }, [])
   return (
     <Popover
       placement="bottom"
-      backdrop='blur'
       isOpen={store.isShowSearch}
       onOpenChange={store.setIsShowSearch}
     >
@@ -41,17 +43,16 @@ export const ReferenceButton = observer(({ store }: Props) => {
           className='w-full my-2 focus:outline-none focus:ring-0'
           placeholder='Search'
           size='sm'
-          endContent={<Icon className='cursor-pointer' icon="tabler:search" width="24" height="24" />}
         />
         <ScrollArea
-          className='max-h-[400px] max-w-[290px] flex flex-col gap-1'
+          className='max-h-[400px] max-w-[290px] flex flex-col gap-1 p-2'
           onBottom={() => { blinko.referenceSearchList.callNextPage({}) }}
         >
           {blinko.referenceSearchList && blinko.referenceSearchList?.value?.map(i => {
             return (
               <div
                 key={i.id}
-                className={`flex flex-col w-full bg-background hover:bg-hover rounded-md cursor-pointer 
+                className={`flex flex-col w-full bg-background hover:bg-hover rounded-md cursor-pointer  p-1
                 ${(store.references?.includes(i.id!) || i.id == blinko.curSelectedNote?.id) ? 'opacity-50 not-allowed' : ''}`}
                 onClick={e => {
                   if (store.references?.includes(i.id!)) return

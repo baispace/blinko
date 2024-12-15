@@ -3,9 +3,9 @@ import { Attachment } from "@/server/types"
 import { FileType } from "./type"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { IsTagSelectVisible } from "../PopoverFloat/tagSelectPop"
-import { MDXEditorMethods } from "@mdxeditor/editor"
+import Vditor from "vditor"
 
-export type ViewMode = 'source' | 'rich-text';
+export type ViewMode = "wysiwyg" | "sv" | "ir"
 
 export type ToolbarProps = {
   store: any;
@@ -16,7 +16,6 @@ export type ToolbarProps = {
   isPc: boolean;
   canSend: boolean;
   isSendLoading?: boolean;
-  mdxEditorRef: React.RefObject<MDXEditorMethods>;
   onSend?: (args: any) => Promise<any>;
   onChange?: (content: string) => void;
 }
@@ -28,6 +27,7 @@ export type UploadAction = {
   onClick: () => void;
   showCondition?: boolean;
 }
+
 export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   if (originFiles?.length == 0) return []
   const res = originFiles?.map(file => {
@@ -47,40 +47,40 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   return res
 }
 
-export const getEditorElements = () => {
-  const editorElements = document.querySelectorAll('._contentEditable_uazmk_379') as NodeListOf<HTMLElement>
-  return editorElements
+export const getEditorElements = (mode: ViewMode, editor: Vditor) => {
+  if (!editor) return
+  switch (mode) {
+    case 'sv':
+      return editor.vditor.sv?.element
+    case 'ir':
+      return editor.vditor.ir?.element
+    case 'wysiwyg':
+      return editor.vditor.wysiwyg?.element
+    default:
+      return editor.vditor.wysiwyg?.element
+  }
 }
 
+export const FocusEditorFixMobile = () => {
+  try {
+    requestAnimationFrame(() => {
+      const editorElements = document.querySelectorAll('.vditor-ir .vditor-reset') as NodeListOf<HTMLElement>
+      console.log('editorElements', editorElements)
+      if (editorElements.length === 0) return
 
-export const handleEditorKeyEvents = () => {
-  const editorElements = getEditorElements()
-  editorElements.forEach(element => {
-    element.addEventListener('keydown', (e) => {
-      const isTagSelectVisible = IsTagSelectVisible()
-      if (e.key === 'Enter' && isTagSelectVisible) {
-        e.preventDefault()
-        return false
+      if (editorElements.length > 0) {
+        editorElements.forEach(editorElement => {
+          editorElement.focus()
+          const range = document.createRange()
+          range.selectNodeContents(editorElement)
+          range.collapse(false)
+          const selection = window.getSelection()
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+        })
       }
-    }, true)
-  })
-}
+    })
+  } catch (error) {
 
-
-export const FocusEditor = (focusToEnd: boolean = false) => {
-  requestAnimationFrame(() => {
-    const editorElements = getEditorElements()
-    if (editorElements.length > 0) {
-      editorElements.forEach(editorElement => {
-        editorElement.focus()
-        if(!focusToEnd) return
-        const range = document.createRange()
-        range.selectNodeContents(editorElement)
-        range.collapse(false) 
-        const selection = window.getSelection()
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      })
-    }
-  })
+  }
 }

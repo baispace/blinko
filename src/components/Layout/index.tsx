@@ -24,6 +24,7 @@ import { createPortal } from "react-dom";
 import { Sidebar } from "./Sidebar";
 import { MobileNavBar } from "./MobileNavBar";
 import FilterPop from "../Common/PopoverFloat/filterPop";
+import { AppProvider } from "@/store/module/AppProvider";
 
 export const SideBarItem = "p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all"
 
@@ -79,6 +80,7 @@ export const CommonLayout = observer(({
   return (
     <div className="flex w-full h-mobile-full overflow-x-hidden" id="outer-container">
       {blinkoStore.showAi && createPortal(<BlinkoAi />, document.body)}
+      <AppProvider />
       <TagSelectPop />
       <AiWritePop />
 
@@ -174,9 +176,9 @@ export const CommonLayout = observer(({
           </div>
           {header}
         </header>
-        {/* backdrop  */}
-
-        <ScrollArea onBottom={() => { }} className="flex h-[calc(100%_-_70px)] overflow-y-scroll scroll-container">
+        {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
+            
+        <ScrollArea onBottom={() => { }} className="flex h-[calc(100%_-_70px)] overflow-y-scroll pt-6 -mt-6">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
             {children}
           </div>

@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { NoteType } from "@/server/types";
 import { useRouter } from "next/router";
 import { AiStore } from "@/store/aiStore";
-import { FocusEditor } from "../Common/Editor/editorUtils";
+import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 
 export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit') => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -32,7 +32,8 @@ export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit
 }
 
 const handleEdit = (isDetailPage: boolean) => {
-  ShowEditBlinkoModel(isDetailPage ? '5xl' : '3xl')
+  ShowEditBlinkoModel(isDetailPage ? '5xl' : '5xl')
+  FocusEditorFixMobile()
 }
 
 const handleMultiSelect = () => {

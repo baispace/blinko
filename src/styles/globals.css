@@ -114,7 +114,7 @@ body {
   background-color: var(--sencondbackground) !important;
 }
 
-.PhotoView-Portal{
+.PhotoView-Portal {
   z-index: 3000;
 }
 
@@ -188,7 +188,7 @@ body {
     --md-editor-text: hsl(222.2 47.4% 11.2%);
     --md-editor-separator: #bcbcbe;
     --md-editor-border: #e5e7eb;
-    --shadow: 0 0 20px rgb(195 195 195 / 36%)
+    --shadow: 1px 1px 7px 3px #b1b1b142;
   }
 
   .dark {
@@ -241,7 +241,7 @@ body {
     --md-editor-text: hsl(210 40% 98%);
     --md-editor-separator: #4b4b4d;
     --md-editor-border: #27272a;
-    --shadow: 0
+    --shadow: 0 0 1px 1px #303030;
   }
 }
 
@@ -289,7 +289,7 @@ body {
   border-radius: 0.5rem;
 }
 
-.markmap-foreign{
+.markmap-foreign {
   color: var(--foreground);
 }
 
@@ -302,3 +302,6 @@ body {
   background: var(--sencondbackground);
 }
 
+.group[data-focus-visible="true"] .group-data-\[focus-visible\=true\]\:ring-2 {
+  --tw-ring-shadow: 0!important;
+}

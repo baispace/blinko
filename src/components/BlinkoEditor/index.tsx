@@ -6,8 +6,6 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@/server/types"
 import { useRouter } from "next/router"
-import { FocusEditor } from "../Common/Editor/editorUtils"
-
 type IProps = {
   mode: 'create' | 'edit',
   onSended?: () => void,

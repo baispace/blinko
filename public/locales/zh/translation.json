@@ -351,5 +351,8 @@
   "updated-at": "更新于",
   "upload-error": "上传错误",
   "uploading": "上传中...",
-  "wysiwyg": "所见即所得"
+  "wysiwyg": "所见即所得",
+  "search-tags": "搜索标签",
+  "insert-attachment-or-note": "插入附件还是笔记中？",
+  "paste-to-note-or-attachment": "您是否要粘贴到笔记中？选择否将会作为附件上传。"
 }

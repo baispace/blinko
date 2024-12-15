@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { eventBus } from '@/lib/event';
 import { EditorStore } from '../editorStore';
-// import { handleEditorKeyEvents } from '../editorUtils';
-import { getEditorElements, HandleFileType } from '../editorUtils';
+import { FocusEditorFixMobile, HandleFileType } from '../editorUtils';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { usePasteFile } from '@/lib/hooks';
+import { handlePaste, usePasteFile } from '@/lib/hooks';
 import { OnSendContentType } from '../type';
 import Vditor from 'vditor';
 import { ToolbarMobile, ToolbarPC } from '../EditorToolbar';
@@ -13,6 +12,7 @@ import { UserStore } from '@/store/user';
 import { i18nEditor } from '../EditorToolbar/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
+import { Extend } from '../EditorToolbar/extends';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -42,6 +42,9 @@ export const useEditorInit = (
         enable: true,
         type: 'markdown',
       },
+      hint: {
+        extend: Extend
+      },
       async ctrlEnter(md) {
         await store.handleSend()
       },
@@ -50,10 +53,7 @@ export const useEditorInit = (
         ...i18nEditor(t)
       },
       input: (value) => {
-        console.log('value', value)
         onChange?.(value)
-        store.saveLastRange()
-        store.handlePopTag()
         store.handlePopAiWrite()
       },
       undoDelay: 20,
@@ -61,6 +61,7 @@ export const useEditorInit = (
       toolbarConfig: {
         hide: !showToolbar,
       },
+
       preview: {
         hljs: {
           style: theme === 'dark' ? 'github-dark' : 'github',
@@ -77,20 +78,11 @@ export const useEditorInit = (
           mode,
           vditor
         });
-        store.focus('end')
-        store.saveLastRange()
-        const element = getEditorElements(store.viewMode, store.vditor!)
-        element?.addEventListener('click', () => {
-          store.saveLastRange()
-        })
+        isPc ? store.focus() : FocusEditorFixMobile()
       },
     });
     // Clear the effect
     return () => {
-      const element = getEditorElements(store.viewMode, store.vditor!)
-      element?.removeEventListener('click', () => {
-        store.saveLastRange()
-      })
       store.vditor?.destroy();
       store.vditor = null;
     };
@@ -107,10 +99,8 @@ export const useEditorInit = (
 };
 
 
-
 export const useEditorEvents = (store: EditorStore) => {
   useEffect(() => {
-    eventBus.on('editor:replace', store.replaceMarkdownTag);
     eventBus.on('editor:clear', store.clearMarkdown);
     eventBus.on('editor:insert', store.insertMarkdown);
     eventBus.on('editor:deleteLastChar', store.deleteLastChar);
@@ -123,7 +113,6 @@ export const useEditorEvents = (store: EditorStore) => {
     store.handleIOSFocus();
 
     return () => {
-      eventBus.off('editor:replace', store.replaceMarkdownTag);
       eventBus.off('editor:clear', store.clearMarkdown);
       eventBus.off('editor:insert', store.insertMarkdown);
       eventBus.off('editor:deleteLastChar', store.deleteLastChar);
@@ -149,17 +138,14 @@ export const useEditorFiles = (
   }, [originFiles]);
 };
 
-
-
-export const useEditorPaste = (store: EditorStore, cardRef: React.RefObject<any>) => {
-  const pastedFiles = usePasteFile(cardRef);
-
-  useEffect(() => {
-    if (pastedFiles) {
-      store.uploadFiles(pastedFiles);
-    }
-  }, [pastedFiles]);
-};
+// export const useEditorPaste = (store: EditorStore, cardRef: React.RefObject<any>) => {
+//   const pastedFiles = usePasteFile(cardRef);
+//   useEffect(() => {
+//     if (pastedFiles) {
+//       store.uploadFiles(pastedFiles);
+//     }
+//   }, [pastedFiles]);
+// };
 
 
 

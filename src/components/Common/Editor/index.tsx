@@ -24,7 +24,6 @@ import {
   useEditorInit,
   useEditorEvents,
   useEditorFiles,
-  useEditorPaste,
   useEditorHeight
 } from './hooks/useEditor';
 
@@ -50,7 +49,6 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   useEditorInit(store, onChange, onSend, mode, originReference, content);
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
-  useEditorPaste(store, cardRef);
   useEditorHeight(onHeightChange, blinko, content, store);
 
   const {
@@ -58,7 +56,21 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     isDragAccept,
     getInputProps,
     open
-  } = useDropzone({ multiple: true, noClick: true, onDrop: acceptedFiles => { store.uploadFiles(acceptedFiles) } });
+  } = useDropzone({
+    multiple: true,
+    noClick: true,
+    onDrop: acceptedFiles => {
+      store.uploadFiles(acceptedFiles)
+    },
+    onDragOver: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    onDragEnter: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
 
   return <Card
     shadow='none' {...getRootProps()}
@@ -86,7 +98,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       {/******************** Toolbar Render *****************/}
       <div className='flex w-full items-center gap-1'>
         <NoteTypeButton />
-        <HashtagButton store={store} />
+        <HashtagButton store={store} content={content} />
         <ReferenceButton store={store} />
         <UploadButtons
           getInputProps={getInputProps}

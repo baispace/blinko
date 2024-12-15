@@ -122,7 +122,9 @@
   height: 20px;
   stroke: var(--foreground);
 }
-
+.vditor-reset img{
+  max-height: 150px;
+}
 /* .vditor-menu--current {
   color: #C35AF7 !important;
 } */
@@ -135,12 +137,11 @@
 }
 
 .vditor-hint {
-  background-color: var(--background);
-  z-index: 1000;
+  z-index: 2002;
   box-shadow: var(--shadow);
   transition: all 0.3s ease-in-out;
-  border-radius: 8px;
-  background-color: var(--hover) !important;
+  border-radius: 12px;
+  background-color: var(--background)!important;
   padding: 3px;
   gap: 2px;
 }
@@ -170,12 +171,11 @@
 
 .vditor-hint button {
   color: var(--foreground);
+  border-radius: 8px;
 }
 
-
-
 .vditor-tooltipped::after {
-  z-index: 10000000;
+  z-index: 10000;
 }
 
 /* tooltip toolbar  */
@@ -183,6 +183,7 @@
   box-shadow: var(--shadow);
   border-radius: 7px;
   background-color: var(--background);
+  z-index: 100;
 }
 
 .vditor-panel--arrow:before {

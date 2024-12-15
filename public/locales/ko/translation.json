@@ -321,5 +321,7 @@
   "outdent": "내어쓰다",
   "outline": "개요",
   "over": "넘어서다",
-  "performance-tip": "실시간 미리보기에는 ${x}ms가 필요합니다. 닫을 수 있습니다."
+  "performance-tip": "실시간 미리보기에는 ${x}ms가 필요합니다. 닫을 수 있습니다.",
+  "search-tags": "검색 태그",
+  "insert-attachment-or-note": "첨부 파일이나 메모로 삽입하시겠습니까?"
 }

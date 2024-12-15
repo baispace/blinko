@@ -314,5 +314,7 @@
   "more": "Plus",
   "name-empty": "Le nom est vide",
   "preview": "Aperçu",
-  "select-model": "Sélectionner un modèle"
+  "select-model": "Sélectionner un modèle",
+  "search-tags": "Balises de recherche",
+  "insert-attachment-or-note": "Insérer dans la pièce jointe ou la note ?"
 }

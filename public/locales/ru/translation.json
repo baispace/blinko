@@ -254,5 +254,7 @@
   "user-custom-azureopenai-api-deployment-tooltip": " Введите имя развертывания, которое необходимо использовать, например gpt-4o",
   "ollama-ai-model-tooltip": "Введите имя модели, которое необходимо использовать, например llama3.2",
   "ollama-default-endpoint-is-http-localhost-11434": "Конечная точка Ollama по умолчанию - http://localhost:11434.",
-  "your-azure-openai-instance-name": "Имя вашего экземпляра Azure OpenAI"
+  "your-azure-openai-instance-name": "Имя вашего экземпляра Azure OpenAI",
+  "search-tags": "Поиск тегов",
+  "insert-attachment-or-note": "Вставить во вложение или заметку?"
 }

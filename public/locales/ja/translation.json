@@ -299,5 +299,7 @@
   "info": "情報",
   "inline-code": "インラインコード",
   "insert-column-left": "1 を挿入左",
-  "insert-column-right": "1を右に挿入"
+  "insert-column-right": "1を右に挿入",
+  "search-tags": "検索タグ",
+  "insert-attachment-or-note": "添付ファイルに挿入しますか、それともメモに書き込みますか？"
 }

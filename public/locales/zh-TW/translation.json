@@ -351,5 +351,7 @@
   "upload-error": "上传错误",
   "uploading": "上传...",
   "user-list": "用户列表",
-  "wysiwyg": "所见即所得"
+  "wysiwyg": "所见即所得",
+  "search-tags": "搜尋標籤",
+  "insert-attachment-or-note": "插入至附件或備註？"
 }

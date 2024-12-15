@@ -48,7 +48,7 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
 }
 
 export const getEditorElements = (mode: ViewMode, editor: Vditor) => {
-  if(!editor) return
+  if (!editor) return
   switch (mode) {
     case 'sv':
       return editor.vditor.sv?.element
@@ -61,35 +61,26 @@ export const getEditorElements = (mode: ViewMode, editor: Vditor) => {
   }
 }
 
+export const FocusEditorFixMobile = () => {
+  try {
+    requestAnimationFrame(() => {
+      const editorElements = document.querySelectorAll('.vditor-ir .vditor-reset') as NodeListOf<HTMLElement>
+      console.log('editorElements', editorElements)
+      if (editorElements.length === 0) return
 
-// export const handleEditorKeyEvents = () => {
-//   const editorElements = getEditorElements()
-//   editorElements.forEach(element => {
-//     element.addEventListener('keydown', (e) => {
-//       const isTagSelectVisible = IsTagSelectVisible()
-//       if (e.key === 'Enter' && isTagSelectVisible) {
-//         e.preventDefault()
-//         return false
-//       }
-//     }, true)
-//   })
-// }
+      if (editorElements.length > 0) {
+        editorElements.forEach(editorElement => {
+          editorElement.focus()
+          const range = document.createRange()
+          range.selectNodeContents(editorElement)
+          range.collapse(false)
+          const selection = window.getSelection()
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+        })
+      }
+    })
+  } catch (error) {
 
-
-export const FocusEditor = (focusToEnd: boolean = false) => {
-  requestAnimationFrame(() => {
-    // const editorElements = getEditorElements()
-    // if (editorElements.length > 0) {
-    //   editorElements.forEach(editorElement => {
-    //     editorElement.focus()
-    //     if (!focusToEnd) return
-    //     const range = document.createRange()
-    //     range.selectNodeContents(editorElement)
-    //     range.collapse(false)
-    //     const selection = window.getSelection()
-    //     selection?.removeAllRanges()
-    //     selection?.addRange(range)
-    //   })
-    // }
-  })
+  }
 }

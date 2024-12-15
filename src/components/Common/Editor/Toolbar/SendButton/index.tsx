@@ -2,7 +2,6 @@ import { Button } from '@nextui-org/react';
 import { Icon } from '@iconify/react';
 import { SendIcon } from '../../../Icons';
 import { EditorStore } from '../../editorStore';
-import { FocusEditor } from '../../editorUtils';
 import { useMediaQuery } from 'usehooks-ts';
 import { Div } from '@/components/Common/Div';
 import { observer } from 'mobx-react-lite';

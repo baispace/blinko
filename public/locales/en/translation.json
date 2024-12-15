@@ -337,5 +337,8 @@
   "upload": "Upload image or file",
   "upload-error": "upload error",
   "uploading": "uploading...",
-  "wysiwyg": "WYSIWYG"
+  "wysiwyg": "WYSIWYG",
+  "search-tags": "Search Tags",
+  "insert-attachment-or-note": "Insert to attachment or note?",
+  "paste-to-note-or-attachment": "Are you sure to paste to note or attachment? Choose cancel to upload to attachement."
 }

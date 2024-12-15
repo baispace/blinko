@@ -317,5 +317,7 @@
   "outline": "Esquema",
   "over": "sobre",
   "performance-tip": "La vista previa en tiempo real requiere ${x} ms, puedes cerrarla",
-  "preview": "Vista previa"
+  "preview": "Vista previa",
+  "search-tags": "Buscar etiquetas",
+  "insert-attachment-or-note": "¿Insertar en el archivo adjunto o en la nota?"
 }

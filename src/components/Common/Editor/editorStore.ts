@@ -12,6 +12,10 @@ import { AiStore } from '@/store/aiStore';
 import { getEditorElements, type ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
 import Vditor from 'vditor';
+import { showTipsDialog } from '../TipsDialog';
+import i18n from '@/lib/i18n';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
+import { handlePaste } from '@/lib/hooks';
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
@@ -44,75 +48,61 @@ export class EditorStore {
     } catch (error) { }
   }
 
-  replaceMarkdownTag = (text: string, forceFocus = false) => {
-    if (this.vditor) {
-      if (this.lastRange) {
-        const currentTextBeforeRange = this.lastRangeText ?? ''
-        const currentText = this.vditor?.getValue().replace(/\\/g, '')
-        const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '  ')
-        const MyContent = currentText?.replace(currentTextBeforeRange, tag)
-        this.vditor?.setValue(MyContent ?? '')
-        this.focus('end')
-      }
-    }
-  }
-
   insertMarkdown = (text) => {
     this.vditor?.insertValue(text)
     this.focus()
   }
 
-  focus = (position: 'last' | 'end' = 'end') => {
-    const editorElement = getEditorElements(this.viewMode, this.vditor!)
-    requestAnimationFrame(() => {
-      try {
-        const range = document.createRange()
-        const selection = window.getSelection()
-
-        if (position === 'last' && this.lastRange) {
-          console.log('lastRange', this.lastRange)
-          range.collapse(false)
-          selection?.removeAllRanges()
-          selection?.addRange(this.lastRange)
-          editorElement?.focus()
-          return
-        }
-
-        const walker = document?.createTreeWalker(
-          editorElement!,
-          NodeFilter.SHOW_TEXT,
-          null
-        )
-        let lastNode: any = null
-        while (walker.nextNode()) {
-          lastNode = walker.currentNode
-        }
-        if (lastNode) {
-          range.setStart(lastNode, lastNode?.length)
-          range.setEnd(lastNode, lastNode?.length)
-          selection?.removeAllRanges()
-          selection?.addRange(range)
-          editorElement!.focus()
-        }
-      } catch (error) {
-        this.vditor?.focus()
+  getEditorRange = (vditor: IVditor) => {
+    let range: Range;
+    const element = vditor[vditor.currentMode]!.element;
+    if (getSelection()!.rangeCount > 0) {
+      range = getSelection()!.getRangeAt(0);
+      if (element.isEqualNode(range.startContainer) || element.contains(range.startContainer)) {
+        return range;
       }
-    })
+    }
+    if (vditor[vditor.currentMode]!.range) {
+      return vditor[vditor.currentMode]!.range;
+    }
+    element.focus();
+    range = element.ownerDocument.createRange();
+    range.setStart(element, 0);
+    range.collapse(true);
+    return range;
+  };
+
+
+  focus = () => {
+    this.vditor?.focus();
+    const editorElement = getEditorElements(this.viewMode, this.vditor!)
+    try {
+      const range = document.createRange()
+      const selection = window.getSelection()
+      const walker = document.createTreeWalker(
+        editorElement!,
+        NodeFilter.SHOW_TEXT,
+        null
+      )
+      let lastNode: any = null
+      while (walker.nextNode()) {
+        lastNode = walker.currentNode
+      }
+      if (lastNode) {
+        range.setStart(lastNode, lastNode?.length)
+        range.setEnd(lastNode, lastNode?.length)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+        editorElement!.focus()
+      }
+    } catch (error) {
+    }
   }
 
   clearMarkdown = () => {
     this.vditor?.setValue('')
     this.onChange?.('')
     this.focus()
-  }
-
-  inertHash = () => {
-    if (!this.vditor) return
-    this.vditor.insertValue('#', false)
-    this.lastRange?.collapse(false)
-    this.lastRangeText = this.lastRange?.startContainer.textContent?.slice(0, this.lastStartOffset + 1) ?? ''
-    // console.log('lastRange', this.lastRangeText)
-    this.handlePopTag()
   }
 
   speechToText = async (filePath) => {
@@ -127,7 +117,7 @@ export class EditorStore {
     }
   }
 
-  uploadFiles = (acceptedFiles) => {
+  uploadFiles = (acceptedFiles, isShowConfirm = false) => {
     const _acceptedFiles = acceptedFiles.map(file => {
       const extension = helper.getFileExtension(file.name)
       const previewType = helper.getFileType(file.type, file.name)
@@ -146,6 +136,13 @@ export class EditorStore {
               body: formData,
             });
             const data = await response.json();
+            if (isShowConfirm) {
+              if (data.type.includes('image')) {
+                this.vditor?.insertValue(`![${data.fileName}](${data.filePath})`)
+              } else {
+                this.vditor?.insertValue(`[${data.fileName}](${data.filePath})`)
+              }
+            }
             this.speechToText(data.filePath)
             if (data.filePath) {
               return data.filePath
@@ -155,29 +152,23 @@ export class EditorStore {
         type: file.type
       }
     })
-    this.files.push(..._acceptedFiles)
-    Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
-  }
-
-  handlePopTag = () => {
-    // console.log('lastRange', this.lastRange)
-    const hasHashTagRegex = /#[^\s#]+/g
-    const endsWithBankRegex = /\s$/g
-    const currentText = this.lastRangeText
-    const isEndsWithBank = endsWithBankRegex.test(currentText)
-    // console.log('currentText', currentText)
-    const isEndsWithHashTag = helper.regex.isEndsWithHashTag.test(currentText)
-    if (currentText == '' || !isEndsWithHashTag) {
-      setTimeout(() => eventBus.emit('tagselect:hidden'))
-      return
-    }
-    if (isEndsWithHashTag && currentText != '' && !isEndsWithBank) {
-      const match = currentText.match(hasHashTagRegex)
-      let searchText = match?.[match?.length - 1] ?? ''
-      if (currentText.endsWith("#")) {
-        searchText = ''
-      }
-      showTagSelectPop(searchText.toLowerCase(), this.lastRect)
+    if (isShowConfirm) {
+      showTipsDialog({
+        title: i18n.t('insert-attachment-or-note'),
+        content: i18n.t('paste-to-note-or-attachment'),
+        onConfirm: async () => {
+          await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+          RootStore.Get(DialogStandaloneStore).close()
+        },
+        onCancel: () => {
+          this.files.push(..._acceptedFiles)
+          Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+          RootStore.Get(DialogStandaloneStore).close()
+        }
+      })
+    } else {
+      this.files.push(..._acceptedFiles)
+      Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
     }
   }
 
@@ -266,7 +257,6 @@ export class EditorStore {
     this.files = [];
     this.references = []
     this.noteListByIds.value = []
-    // eventBus.emit('editor:setViewMode', 'rich-text');
   }
 
   constructor() {
@@ -275,6 +265,24 @@ export class EditorStore {
 
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
+    //remove listener on pc
+    const wysiwyg = document.querySelector('.vditor-wysiwyg .vditor-reset')
+    if (wysiwyg) {
+      wysiwyg.addEventListener('paste', (e) => {
+        if (wysiwyg.contains(e.target as Node)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          const files = handlePaste(e)
+          this.uploadFiles(files, true)
+        }
+      }, true);
+      wysiwyg.addEventListener('ondragstart', (e) => {
+        if (wysiwyg.contains(e.target as Node)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    }
   }
 
   isShowEditorToolbar(isPc: boolean) {
@@ -288,27 +296,5 @@ export class EditorStore {
       )
     }
     return showToolbar
-  }
-
-  saveLastRange = () => {
-    const selection = window.getSelection();
-    if (selection!.rangeCount > 0) {
-      this.lastRange = selection!.getRangeAt(0);
-      this.lastRangeText = this.lastRange.endContainer.textContent?.slice(0, this.lastRange.endOffset) ?? ''
-      this.lastSelection = selection
-      this.lastStartOffset = this.lastRange.startOffset
-      this.lastEndOffset = this.lastRange.endOffset
-      this.lastRect = this.lastRange.getBoundingClientRect();
-      
-      if (this.lastRect.top === 0 && this.lastRect.left === 0) {
-        const editorElement = getEditorElements(this.viewMode, this.vditor!)
-        if (editorElement) {
-          requestAnimationFrame(() => {
-            const editorRect = editorElement.getBoundingClientRect();
-            this.lastRect = editorRect;
-          })
-        }
-      }
-    }
   }
 }

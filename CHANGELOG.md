@@ -1,3 +1,15 @@
+# [0.26.0](https://github.com/blinko-space/blinko/compare/v0.25.6...v0.26.0) (2024-12-15)
+
+
+### Bug Fixes
+
+* update Vditor initialization HTML in useEditor hook ([be68e2f](https://github.com/blinko-space/blinko/commit/be68e2f8cbe9a0cd3b87068189fbd896ff60f6ba))
+
+
+### Features
+
+* integrate Vditor as the Markdown editor ([4d0fc10](https://github.com/blinko-space/blinko/commit/4d0fc103b0860598e70d7dea04707a89044371c0))
+
 ## [0.25.6](https://github.com/blinko-space/blinko/compare/v0.25.5...v0.25.6) (2024-12-14)
 
 

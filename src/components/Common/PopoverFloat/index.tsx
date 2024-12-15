@@ -75,7 +75,7 @@ const PopoverFloat = observer(({
         enter: {
           opacity: 1,
           transition: { type: 'spring', bounce: 0.5, duration: 0.4 },
-          zIndex: 2002,
+          zIndex: 3000,
           y: 5,
           x: 0
         },

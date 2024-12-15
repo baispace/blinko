@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { eventBus } from '@/lib/event';
 import { EditorStore } from '../editorStore';
-import { handleEditorKeyEvents } from '../editorUtils';
-import { HandleFileType } from '../editorUtils';
+// import { handleEditorKeyEvents } from '../editorUtils';
+import { getEditorElements, HandleFileType } from '../editorUtils';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { usePasteFile } from '@/lib/hooks';
 import { OnSendContentType } from '../type';
@@ -36,7 +36,7 @@ export const useEditorInit = (
     const vditor = new Vditor("vditor" + "-" + mode, {
       width: '100%',
       "toolbar": isPc ? ToolbarPC : ToolbarMobile,
-      mode: store.viewMode,
+      mode: isPc ? store.viewMode : (store.viewMode == 'wysiwyg' ? 'ir' : store.viewMode),
       theme,
       counter: {
         enable: true,
@@ -52,6 +52,7 @@ export const useEditorInit = (
       input: (value) => {
         console.log('value', value)
         onChange?.(value)
+        store.saveLastRange()
         store.handlePopTag()
         store.handlePopAiWrite()
       },
@@ -70,17 +71,26 @@ export const useEditorInit = (
       },
       after: () => {
         vditor.setValue(content);
-        // window.VditorI18n = i18nEditor(t)
         store.init({
           onChange,
           onSend,
           mode,
           vditor
         });
+        store.focus('end')
+        store.saveLastRange()
+        const element = getEditorElements(store.viewMode, store.vditor!)
+        element?.addEventListener('click', () => {
+          store.saveLastRange()
+        })
       },
     });
     // Clear the effect
     return () => {
+      const element = getEditorElements(store.viewMode, store.vditor!)
+      element?.removeEventListener('click', () => {
+        store.saveLastRange()
+      })
       store.vditor?.destroy();
       store.vditor = null;
     };
@@ -109,7 +119,7 @@ export const useEditorEvents = (store: EditorStore) => {
       store.viewMode = mode
     });
 
-    handleEditorKeyEvents();
+    // handleEditorKeyEvents();
     store.handleIOSFocus();
 
     return () => {

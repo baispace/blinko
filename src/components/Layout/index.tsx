@@ -24,6 +24,7 @@ import { createPortal } from "react-dom";
 import { Sidebar } from "./Sidebar";
 import { MobileNavBar } from "./MobileNavBar";
 import FilterPop from "../Common/PopoverFloat/filterPop";
+import { AppProvider } from "@/store/module/AppProvider";
 
 export const SideBarItem = "p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all"
 
@@ -79,6 +80,7 @@ export const CommonLayout = observer(({
   return (
     <div className="flex w-full h-mobile-full overflow-x-hidden" id="outer-container">
       {blinkoStore.showAi && createPortal(<BlinkoAi />, document.body)}
+      <AppProvider />
       <TagSelectPop />
       <AiWritePop />
 

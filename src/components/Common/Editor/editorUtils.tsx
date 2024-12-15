@@ -3,8 +3,9 @@ import { Attachment } from "@/server/types"
 import { FileType } from "./type"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { IsTagSelectVisible } from "../PopoverFloat/tagSelectPop"
+import Vditor from "vditor"
 
-export type ViewMode = 'source' | 'rich-text';
+export type ViewMode = "wysiwyg" | "sv" | "ir"
 
 export type ToolbarProps = {
   store: any;
@@ -46,40 +47,49 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   return res
 }
 
-export const getEditorElements = () => {
-  const editorElements = document.querySelectorAll('.vditor-reset') as NodeListOf<HTMLElement>
-  return editorElements
+export const getEditorElements = (mode: ViewMode, editor: Vditor) => {
+  if(!editor) return
+  switch (mode) {
+    case 'sv':
+      return editor.vditor.sv?.element
+    case 'ir':
+      return editor.vditor.ir?.element
+    case 'wysiwyg':
+      return editor.vditor.wysiwyg?.element
+    default:
+      return editor.vditor.wysiwyg?.element
+  }
 }
 
 
-export const handleEditorKeyEvents = () => {
-  const editorElements = getEditorElements()
-  editorElements.forEach(element => {
-    element.addEventListener('keydown', (e) => {
-      const isTagSelectVisible = IsTagSelectVisible()
-      if (e.key === 'Enter' && isTagSelectVisible) {
-        e.preventDefault()
-        return false
-      }
-    }, true)
-  })
-}
+// export const handleEditorKeyEvents = () => {
+//   const editorElements = getEditorElements()
+//   editorElements.forEach(element => {
+//     element.addEventListener('keydown', (e) => {
+//       const isTagSelectVisible = IsTagSelectVisible()
+//       if (e.key === 'Enter' && isTagSelectVisible) {
+//         e.preventDefault()
+//         return false
+//       }
+//     }, true)
+//   })
+// }
 
 
 export const FocusEditor = (focusToEnd: boolean = false) => {
   requestAnimationFrame(() => {
-    const editorElements = getEditorElements()
-    if (editorElements.length > 0) {
-      editorElements.forEach(editorElement => {
-        editorElement.focus()
-        if(!focusToEnd) return
-        const range = document.createRange()
-        range.selectNodeContents(editorElement)
-        range.collapse(false) 
-        const selection = window.getSelection()
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      })
-    }
+    // const editorElements = getEditorElements()
+    // if (editorElements.length > 0) {
+    //   editorElements.forEach(editorElement => {
+    //     editorElement.focus()
+    //     if (!focusToEnd) return
+    //     const range = document.createRange()
+    //     range.selectNodeContents(editorElement)
+    //     range.collapse(false)
+    //     const selection = window.getSelection()
+    //     selection?.removeAllRanges()
+    //     selection?.addRange(range)
+    //   })
+    // }
   })
 }

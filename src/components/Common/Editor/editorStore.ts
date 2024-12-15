@@ -9,15 +9,17 @@ import { api } from '@/lib/trpc';
 import { IsTagSelectVisible, showTagSelectPop } from '../PopoverFloat/tagSelectPop';
 import { showAiWriteSuggestions } from '../PopoverFloat/aiWritePop';
 import { AiStore } from '@/store/aiStore';
-import { getEditorElements, ViewMode } from './editorUtils';
+import { getEditorElements, type ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
 import Vditor from 'vditor';
-
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
+  lastStartOffset: number = 0
+  lastEndOffset: number = 0
   lastRangeText: string = ''
-  viewMode: "wysiwyg" | "sv" | "ir" = "wysiwyg"
+  lastRect: DOMRect | null = null
+  viewMode: ViewMode = "wysiwyg"
   lastSelection: Selection | null = null
   vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null
@@ -42,13 +44,12 @@ export class EditorStore {
     } catch (error) { }
   }
 
-
   replaceMarkdownTag = (text: string, forceFocus = false) => {
     if (this.vditor) {
       if (this.lastRange) {
         const currentTextBeforeRange = this.lastRangeText ?? ''
         const currentText = this.vditor?.getValue().replace(/\\/g, '')
-        const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + ' ')
+        const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '  ')
         const MyContent = currentText?.replace(currentTextBeforeRange, tag)
         this.vditor?.setValue(MyContent ?? '')
         this.focus('end')
@@ -62,39 +63,41 @@ export class EditorStore {
   }
 
   focus = (position: 'last' | 'end' = 'end') => {
-    const editorElements = getEditorElements()
-    if (editorElements.length > 0) {
-      editorElements.forEach(editorElement => {
-        requestAnimationFrame(() => {
-          const range = document.createRange()
-          const selection = window.getSelection()
+    const editorElement = getEditorElements(this.viewMode, this.vditor!)
+    requestAnimationFrame(() => {
+      try {
+        const range = document.createRange()
+        const selection = window.getSelection()
 
-          if (position === 'last' && this.lastRange) {
-            selection?.removeAllRanges()
-            selection?.addRange(this.lastRange)
-            editorElement.focus()
-            return
-          }
+        if (position === 'last' && this.lastRange) {
+          console.log('lastRange', this.lastRange)
+          range.collapse(false)
+          selection?.removeAllRanges()
+          selection?.addRange(this.lastRange)
+          editorElement?.focus()
+          return
+        }
 
-          const walker = document.createTreeWalker(
-            editorElement,
-            NodeFilter.SHOW_TEXT,
-            null
-          )
-          let lastNode: any = null
-          while (walker.nextNode()) {
-            lastNode = walker.currentNode
-          }
-          if (lastNode) {
-            range.setStart(lastNode, lastNode?.length)
-            range.setEnd(lastNode, lastNode?.length)
-            selection?.removeAllRanges()
-            selection?.addRange(range)
-            editorElement.focus()
-          }
-        })
-      })
-    }
+        const walker = document?.createTreeWalker(
+          editorElement!,
+          NodeFilter.SHOW_TEXT,
+          null
+        )
+        let lastNode: any = null
+        while (walker.nextNode()) {
+          lastNode = walker.currentNode
+        }
+        if (lastNode) {
+          range.setStart(lastNode, lastNode?.length)
+          range.setEnd(lastNode, lastNode?.length)
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+          editorElement!.focus()
+        }
+      } catch (error) {
+        this.vditor?.focus()
+      }
+    })
   }
 
   clearMarkdown = () => {
@@ -105,8 +108,10 @@ export class EditorStore {
 
   inertHash = () => {
     if (!this.vditor) return
-    this.vditor?.insertValue("#")
-    this.focus()
+    this.vditor.insertValue('#', false)
+    this.lastRange?.collapse(false)
+    this.lastRangeText = this.lastRange?.startContainer.textContent?.slice(0, this.lastStartOffset + 1) ?? ''
+    // console.log('lastRange', this.lastRangeText)
     this.handlePopTag()
   }
 
@@ -155,29 +160,24 @@ export class EditorStore {
   }
 
   handlePopTag = () => {
-    const selection = window.getSelection();
-    if (selection!.rangeCount > 0) {
-      let lastRange = selection!.getRangeAt(0);
-      this.lastRange = lastRange
-      this.lastRangeText = lastRange.endContainer.textContent?.slice(0, lastRange.endOffset) ?? ''
-      this.lastSelection = selection
-      const hasHashTagRegex = /#[^\s#]+/g
-      const endsWithBankRegex = /\s$/g
-      const currentText = this.lastRange?.startContainer.textContent?.slice(0, this.lastRange?.endOffset) ?? ''
-      const isEndsWithBank = endsWithBankRegex.test(currentText)
-      const isEndsWithHashTag = helper.regex.isEndsWithHashTag.test(currentText)
-      if (currentText == '' || !isEndsWithHashTag) {
-        setTimeout(() => eventBus.emit('tagselect:hidden'))
-        return
+    // console.log('lastRange', this.lastRange)
+    const hasHashTagRegex = /#[^\s#]+/g
+    const endsWithBankRegex = /\s$/g
+    const currentText = this.lastRangeText
+    const isEndsWithBank = endsWithBankRegex.test(currentText)
+    // console.log('currentText', currentText)
+    const isEndsWithHashTag = helper.regex.isEndsWithHashTag.test(currentText)
+    if (currentText == '' || !isEndsWithHashTag) {
+      setTimeout(() => eventBus.emit('tagselect:hidden'))
+      return
+    }
+    if (isEndsWithHashTag && currentText != '' && !isEndsWithBank) {
+      const match = currentText.match(hasHashTagRegex)
+      let searchText = match?.[match?.length - 1] ?? ''
+      if (currentText.endsWith("#")) {
+        searchText = ''
       }
-      if (isEndsWithHashTag && currentText != '' && !isEndsWithBank) {
-        const match = currentText.match(hasHashTagRegex)
-        let searchText = match?.[match?.length - 1] ?? ''
-        if (currentText.endsWith("#")) {
-          searchText = ''
-        }
-        showTagSelectPop(searchText.toLowerCase())
-      }
+      showTagSelectPop(searchText.toLowerCase(), this.lastRect)
     }
   }
 
@@ -188,7 +188,7 @@ export class EditorStore {
     const selection = window.getSelection();
     if (selection!.rangeCount > 0) {
       const lastRange = selection!.getRangeAt(0);
-      const currentText = lastRange.startContainer.textContent?.slice(0, lastRange.endOffset) ?? '';
+      const currentText = lastRange.startContainer?.textContent?.slice(0, lastRange.endOffset) ?? '';
       const isEndsWithSlash = /[^\s]?\/$/.test(currentText);
       if (currentText === '' || !isEndsWithSlash) {
         setTimeout(() => eventBus.emit('aiwrite:hidden'));
@@ -223,10 +223,10 @@ export class EditorStore {
 
   addReference = (id: number) => {
     if (!this.references.includes(id)) {
-      console.log('addReference', id)
+      // console.log('addReference', id)
       this.references.push(id)
       this.noteListByIds.call({ ids: this.references })
-      console.log('addReference', this.references)
+      // console.log('addReference', this.references)
     }
   }
 
@@ -290,4 +290,25 @@ export class EditorStore {
     return showToolbar
   }
 
+  saveLastRange = () => {
+    const selection = window.getSelection();
+    if (selection!.rangeCount > 0) {
+      this.lastRange = selection!.getRangeAt(0);
+      this.lastRangeText = this.lastRange.endContainer.textContent?.slice(0, this.lastRange.endOffset) ?? ''
+      this.lastSelection = selection
+      this.lastStartOffset = this.lastRange.startOffset
+      this.lastEndOffset = this.lastRange.endOffset
+      this.lastRect = this.lastRange.getBoundingClientRect();
+      
+      if (this.lastRect.top === 0 && this.lastRect.left === 0) {
+        const editorElement = getEditorElements(this.viewMode, this.vditor!)
+        if (editorElement) {
+          requestAnimationFrame(() => {
+            const editorRect = editorElement.getBoundingClientRect();
+            this.lastRect = editorRect;
+          })
+        }
+      }
+    }
+  }
 }

@@ -6,7 +6,7 @@ const withPWA = require('next-pwa')({
 })
 module.exports = withPWA({
   output: 'standalone',
-  transpilePackages: ['@mdxeditor/editor', 'react-diff-view','highlight.js','remark-gfm','rehype-raw'],
+  transpilePackages: ['react-diff-view','highlight.js','remark-gfm','rehype-raw'],
   webpack: (config, { isServer }) => {
     config.experiments = { ...config.experiments, topLevelAwait: true };
     if (!isServer) {

@@ -1,11 +1,9 @@
 .vditor {
   border: none;
-  padding-left: 10px;
-  padding-right: 10px;
 }
 
-.vditor-content{
-  min-height: 10px;
+.vditor-content {
+  min-height: 20px;
 }
 
 @media screen and (max-width: 520px) {
@@ -19,9 +17,7 @@
   font-weight: 700;
 }
 
-.vditor-wysiwyg pre.vditor-reset{
-
-}
+.vditor-wysiwyg pre.vditor-reset {}
 
 .vditor-toolbar {
   padding: 0;
@@ -30,6 +26,23 @@
   border: none;
   overflow: visible;
   height: 25px;
+}
+.vditor-toolbar--hide{
+  display: none;
+}
+.vditor-counter{
+  background-color: var(--background);
+  color: var(--foreground);
+}
+.vditor-reset {
+  padding: 0;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  background-color: transparent;
+  color: var(--foreground);
+  max-height: 80vh;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .vditor-reset p {
@@ -40,6 +53,14 @@
   background-color: var(--background);
   padding-left: 4px !important;
   padding-right: 4px !important;
+}
+
+.vditor-reset pre>code {
+  border-radius: 8px;
+}
+
+.vditor-reset:focus {
+  background-color: transparent !important;
 }
 
 .vditor-wysiwyg pre.vditor-reset {
@@ -151,21 +172,7 @@
   color: var(--foreground);
 }
 
-.vditor-reset pre>code {
-  border-radius: 8px;
-}
 
-.vditor-reset {
-  padding: 0;
-  padding-left: 4px !important;
-  padding-right: 4px !important;
-  background-color: transparent;
-  color: var(--foreground);
-}
-
-.vditor-reset:focus {
-  background-color: transparent !important;
-}
 
 .vditor-tooltipped::after {
   z-index: 10000000;
@@ -216,7 +223,7 @@
   background-color: var(--background);
 }
 
-.vditor-reset blockquote{
+.vditor-reset blockquote {
   border-left: 0.25em solid #EAB308;
   color: var(--desc);
 }

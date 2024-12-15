@@ -7,11 +7,12 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { usePasteFile } from '@/lib/hooks';
 import { OnSendContentType } from '../type';
 import Vditor from 'vditor';
-import { ToolbarPC } from '../EditorToolbar';
-import { useTheme } from 'next-themes';
+import { ToolbarMobile, ToolbarPC } from '../EditorToolbar';
 import { RootStore } from '@/store';
-import { BaseStore } from '@/store/baseStore';
 import { UserStore } from '@/store/user';
+import { i18nEditor } from '../EditorToolbar/i18n';
+import { useTranslation } from 'react-i18next';
+import { useMediaQuery } from 'usehooks-ts';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -21,55 +22,43 @@ export const useEditorInit = (
   originReference: number[] = [],
   content: string,
 ) => {
-  // useEffect(() => {
-  //   store.init({
-  //     onChange,
-  //     onSend,
-  //     mode,
-  //   });
-  // }, [onChange, mode, mdxEditorRef.current]);
-
+  const { t } = useTranslation()
+  const isPc = useMediaQuery('(min-width: 768px)')
+  const blinko = RootStore.Get(BlinkoStore)
   useEffect(() => {
-    if (store.vditor) return
+    const showToolbar = store.isShowEditorToolbar(isPc)
+    if (store.vditor) {
+      store.vditor?.destroy();
+      store.vditor = null
+    }
+
     const theme = RootStore.Get(UserStore).theme
     const vditor = new Vditor("vditor" + "-" + mode, {
       width: '100%',
-      "toolbar": ToolbarPC,
-      mode: 'wysiwyg',
-      hint: {
-        extend: [
-          {
-            key: '#',
-            hint: (key) => {
-              console.log(key)
-              if ('vditor'.indexOf(key.toLocaleLowerCase()) > -1) {
-                return [
-                  {
-                    value: '#Vditor ',
-                    html: '<span style="color: #999;">#Vditor</span> ♏ ',
-                  }]
-              }
-              return []
-            },
-          }
-        ]
-      },
+      "toolbar": isPc ? ToolbarPC : ToolbarMobile,
+      mode: store.viewMode,
       theme,
       counter: {
         enable: true,
         type: 'markdown',
       },
-      lang: 'zh_CN',
-      // i18n: {
-
-      // },
-      input: (value) => {
-        console.log(value)
-        onChange?.(value)
+      async ctrlEnter(md) {
+        await store.handleSend()
       },
+      placeholder: t('i-have-a-new-idea'),
+      i18n: {
+        ...i18nEditor(t)
+      },
+      input: (value) => {
+        console.log('value', value)
+        onChange?.(value)
+        store.handlePopTag()
+        store.handlePopAiWrite()
+      },
+      undoDelay: 20,
       value: content,
       toolbarConfig: {
-        // hide: true,
+        hide: !showToolbar,
       },
       preview: {
         hljs: {
@@ -77,18 +66,11 @@ export const useEditorInit = (
           lineNumber: true,
         },
         theme,
+        delay: 20
       },
       after: () => {
-        vditor.setValue(`
-  \`\`\`javascript
-  const a = 1;
-          const b = 2
-          function test() {
-  
-          }
-  \`\`\`
-            `);
-        console.log(vditor);
+        vditor.setValue(content);
+        // window.VditorI18n = i18nEditor(t)
         store.init({
           onChange,
           onSend,
@@ -103,7 +85,7 @@ export const useEditorInit = (
       store.vditor = null;
     };
 
-  }, [mode]);
+  }, [mode, blinko.config.value?.toolbarVisibility, store.viewMode, isPc]);
 
   useEffect(() => {
     store.references = originReference
@@ -114,15 +96,18 @@ export const useEditorInit = (
 
 };
 
+
+
 export const useEditorEvents = (store: EditorStore) => {
   useEffect(() => {
     eventBus.on('editor:replace', store.replaceMarkdownTag);
     eventBus.on('editor:clear', store.clearMarkdown);
-    eventBus.on('editor:insert', store.insertMarkdownByEvent);
+    eventBus.on('editor:insert', store.insertMarkdown);
     eventBus.on('editor:deleteLastChar', store.deleteLastChar);
     eventBus.on('editor:focus', store.focus);
-    eventBus.on('editor:setMarkdownLoading', store.setMarkdownLoading);
-    eventBus.on('editor:setViewMode', (mode) => store.viewMode = mode);
+    eventBus.on('editor:setViewMode', (mode) => {
+      store.viewMode = mode
+    });
 
     handleEditorKeyEvents();
     store.handleIOSFocus();
@@ -130,14 +115,17 @@ export const useEditorEvents = (store: EditorStore) => {
     return () => {
       eventBus.off('editor:replace', store.replaceMarkdownTag);
       eventBus.off('editor:clear', store.clearMarkdown);
-      eventBus.off('editor:insert', store.insertMarkdownByEvent);
+      eventBus.off('editor:insert', store.insertMarkdown);
       eventBus.off('editor:deleteLastChar', store.deleteLastChar);
       eventBus.off('editor:focus', store.focus);
-      eventBus.off('editor:setMarkdownLoading', store.setMarkdownLoading);
-      eventBus.off('editor:setViewMode', (mode) => store.viewMode = mode);
+      eventBus.off('editor:setViewMode', (mode) => {
+        store.viewMode = mode
+      });
     };
   }, []);
 };
+
+
 
 export const useEditorFiles = (
   store: EditorStore,
@@ -151,6 +139,8 @@ export const useEditorFiles = (
   }, [originFiles]);
 };
 
+
+
 export const useEditorPaste = (store: EditorStore, cardRef: React.RefObject<any>) => {
   const pastedFiles = usePasteFile(cardRef);
 
@@ -161,13 +151,15 @@ export const useEditorPaste = (store: EditorStore, cardRef: React.RefObject<any>
   }, [pastedFiles]);
 };
 
+
+
 export const useEditorHeight = (
   onHeightChange: (() => void) | undefined,
   blinko: BlinkoStore,
   content: string,
-  files: any[]
+  store: EditorStore
 ) => {
   useEffect(() => {
     onHeightChange?.();
-  }, [blinko.noteTypeDefault, content, files?.length]);
+  }, [blinko.noteTypeDefault, content, store.files?.length, store.viewMode]);
 }; 

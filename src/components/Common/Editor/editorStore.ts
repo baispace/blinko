@@ -1,4 +1,3 @@
-import '@/styles/editor.css';
 import { RootStore } from '@/store';
 import { PromiseState } from '@/store/standard/PromiseState';
 import { helper } from '@/lib/helper';
@@ -14,12 +13,11 @@ import { getEditorElements, ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
 import Vditor from 'vditor';
 
-
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
   lastRangeText: string = ''
-  viewMode: ViewMode = "rich-text"
+  viewMode: "wysiwyg" | "sv" | "ir" = "wysiwyg"
   lastSelection: Selection | null = null
   vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null
@@ -29,8 +27,7 @@ export class EditorStore {
   onSend: (args: OnSendContentType) => Promise<any>
 
   get canSend() {
-    // return this.files?.every(i => !i?.uploadPromise?.loading?.value) && (this.files?.length != 0 || this.mdxEditorRef?.current?.getMarkdown() != '')
-    return false
+    return this.files?.every(i => !i?.uploadPromise?.loading?.value) && (this.files?.length != 0 || this.vditor?.getValue() != '')
   }
 
   get blinko() {
@@ -40,87 +37,77 @@ export class EditorStore {
   handleIOSFocus() {
     try {
       if (helper.env.isIOS() && this.mode == 'edit') {
-        this.focus(true)
+        this.focus()
       }
     } catch (error) { }
   }
 
+
   replaceMarkdownTag = (text: string, forceFocus = false) => {
-    // if (this.mdxEditorRef?.current) {
-    //   if (this.lastRange) {
-    //     const currentTextBeforeRange = this.lastRangeText.replace(/&#x20;/g, " ") ?? ''
-    //     const currentText = this.mdxEditorRef?.current!.getMarkdown().replace(/\\/g, '').replace(/&#x20;/g, " ")
-    //     const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + '&#x20;')
-    //     const MyContent = currentText.replace(currentTextBeforeRange, tag)
-    //     this.mdxEditorRef?.current.setMarkdown(MyContent)
-    //     this.focus(forceFocus)
-    //   }
-    // }
+    if (this.vditor) {
+      if (this.lastRange) {
+        const currentTextBeforeRange = this.lastRangeText ?? ''
+        const currentText = this.vditor?.getValue().replace(/\\/g, '')
+        const tag = currentTextBeforeRange.replace(helper.regex.isEndsWithHashTag, "#" + text + ' ')
+        const MyContent = currentText?.replace(currentTextBeforeRange, tag)
+        this.vditor?.setValue(MyContent ?? '')
+        this.focus('end')
+      }
+    }
   }
 
   insertMarkdown = (text) => {
-    // const Mycontent = this.mdxEditorRef?.current!.getMarkdown()
-    // this.mdxEditorRef?.current!.setMarkdown(Mycontent + text)
-    // this.mdxEditorRef?.current!.focus(() => {
-    //   this.onChange?.(Mycontent + text)
-    // }, {
-    //   defaultSelection: 'rootEnd'
-    // })
+    this.vditor?.insertValue(text)
+    this.focus()
   }
 
-  insertMarkdownByEvent = (text) => {
-    // this.mdxEditorRef?.current!.insertMarkdown(text)
-    // this.focus()
-  }
+  focus = (position: 'last' | 'end' = 'end') => {
+    const editorElements = getEditorElements()
+    if (editorElements.length > 0) {
+      editorElements.forEach(editorElement => {
+        requestAnimationFrame(() => {
+          const range = document.createRange()
+          const selection = window.getSelection()
 
-  focus = (force = false) => {
-    // if (force && this.lastRange) {
-    //   const editorElements = getEditorElements()
-    //   if (editorElements.length > 0) {
-    //     editorElements.forEach(editorElement => {
-    //       requestAnimationFrame(() => {
-    //         const range = document.createRange()
-    //         const selection = window.getSelection()
-    //         const walker = document.createTreeWalker(
-    //           editorElement,
-    //           NodeFilter.SHOW_TEXT,
-    //           null
-    //         )
-    //         let lastNode: any = null
-    //         while (walker.nextNode()) {
-    //           lastNode = walker.currentNode
-    //         }
-    //         if (lastNode) {
-    //           range.setStart(lastNode, lastNode?.length)
-    //           range.setEnd(lastNode, lastNode?.length)
-    //           selection?.removeAllRanges()
-    //           selection?.addRange(range)
-    //           editorElement.focus()
-    //         }
-    //       })
-    //     })
-    //   }
-    //   this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
-    // } else {
-    //   this.mdxEditorRef?.current!.focus(() => {
-    //     this.onChange?.(this.mdxEditorRef?.current!.getMarkdown())
-    //   }, {
-    //     defaultSelection: 'rootEnd'
-    //   })
-    // }
+          if (position === 'last' && this.lastRange) {
+            selection?.removeAllRanges()
+            selection?.addRange(this.lastRange)
+            editorElement.focus()
+            return
+          }
+
+          const walker = document.createTreeWalker(
+            editorElement,
+            NodeFilter.SHOW_TEXT,
+            null
+          )
+          let lastNode: any = null
+          while (walker.nextNode()) {
+            lastNode = walker.currentNode
+          }
+          if (lastNode) {
+            range.setStart(lastNode, lastNode?.length)
+            range.setEnd(lastNode, lastNode?.length)
+            selection?.removeAllRanges()
+            selection?.addRange(range)
+            editorElement.focus()
+          }
+        })
+      })
+    }
   }
 
   clearMarkdown = () => {
-    // if (this.mdxEditorRef?.current) {
-    //   this.mdxEditorRef?.current.setMarkdown("")
-    //   this.focus()
-    // }
+    this.vditor?.setValue('')
+    this.onChange?.('')
+    this.focus()
   }
 
   inertHash = () => {
-    // this.mdxEditorRef?.current!.insertMarkdown("&#x20;#")
-    // this.mdxEditorRef?.current!.focus()
-    // this.handlePopTag()
+    if (!this.vditor) return
+    this.vditor?.insertValue("#")
+    this.focus()
+    this.handlePopTag()
   }
 
   speechToText = async (filePath) => {
@@ -170,13 +157,10 @@ export class EditorStore {
   handlePopTag = () => {
     const selection = window.getSelection();
     if (selection!.rangeCount > 0) {
-      // if (!IsTagSelectVisible()) {
       let lastRange = selection!.getRangeAt(0);
       this.lastRange = lastRange
       this.lastRangeText = lastRange.endContainer.textContent?.slice(0, lastRange.endOffset) ?? ''
-      // console.log('this.lastRangeText', this.lastRangeText)
       this.lastSelection = selection
-      // }
       const hasHashTagRegex = /#[^\s#]+/g
       const endsWithBankRegex = /\s$/g
       const currentText = this.lastRange?.startContainer.textContent?.slice(0, this.lastRange?.endOffset) ?? ''
@@ -217,21 +201,11 @@ export class EditorStore {
   }
 
   deleteLastChar = () => {
-    // const content = this.mdxEditorRef?.current!.getMarkdown()
-    // this.mdxEditorRef?.current!.setMarkdown(content.slice(0, -1))
+    const v = this.vditor?.getValue()
+    this.vditor?.setValue(v?.slice(0, -1) ?? '')
+    this.focus()
   }
 
-  setMarkdownLoading = (loading: boolean) => {
-    // if (loading) {
-    //   this.mdxEditorRef?.current!.insertMarkdown("Thinking...")
-    //   this.focus()
-    // } else {
-    //   const content = this.mdxEditorRef?.current!.getMarkdown()
-    //   const newContent = content.replace(/Thinking.../g, '')
-    //   this.mdxEditorRef?.current!.setMarkdown(newContent)
-    //   this.focus()
-    // }
-  }
   // ************************************* reference logic  start ************************************************************************************
   get currentReferences() {
     return this.noteListByIds.value?.slice()?.sort((a, b) => this.references.indexOf(a.id) - this.references.indexOf(b.id))
@@ -272,24 +246,23 @@ export class EditorStore {
   // ************************************* reference logic  end ************************************************************************************
 
   handleSend = async () => {
-    // console.log('handleSend', this.references)
-    // if (!this.canSend) return;
-    // try {
-    //   await this.onSend?.({
-    //     content: this.mdxEditorRef?.current?.getMarkdown() ?? '',
-    //     files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
-    //     references: this.references
-    //   });
-    //   this.clearEditor();
-    //   RootStore.Get(AiStore).isWriting = false;
-    // } catch (error) {
-    //   console.error('Failed to send content:', error);
-    // }
+    if (!this.canSend) return;
+    console.log('handleSend', this.vditor?.getValue())
+    try {
+      await this.onSend?.({
+        content: this.vditor?.getValue() ?? '',
+        files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
+        references: this.references
+      });
+      this.clearEditor();
+      RootStore.Get(AiStore).isWriting = false;
+    } catch (error) {
+      console.error('Failed to send content:', error);
+    }
   }
 
   clearEditor = () => {
-    // this.mdxEditorRef?.current?.setMarkdown('')
-    this.onChange?.('');
+    this.vditor?.setValue('')
     this.files = [];
     this.references = []
     this.noteListByIds.value = []
@@ -303,4 +276,18 @@ export class EditorStore {
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
   }
+
+  isShowEditorToolbar(isPc: boolean) {
+    const blinko = RootStore.Get(BlinkoStore)
+    let showToolbar = true
+    if (blinko.config.value?.toolbarVisibility) {
+      showToolbar = blinko.config.value?.toolbarVisibility == 'always-show-toolbar' ? true : (
+        blinko.config.value?.toolbarVisibility == 'hide-toolbar-on-mobile' ?
+          (isPc ? true : false)
+          : false
+      )
+    }
+    return showToolbar
+  }
+
 }

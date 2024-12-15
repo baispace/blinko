@@ -3,7 +3,6 @@ import { Attachment } from "@/server/types"
 import { FileType } from "./type"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { IsTagSelectVisible } from "../PopoverFloat/tagSelectPop"
-import { MDXEditorMethods } from "@mdxeditor/editor"
 
 export type ViewMode = 'source' | 'rich-text';
 
@@ -16,7 +15,6 @@ export type ToolbarProps = {
   isPc: boolean;
   canSend: boolean;
   isSendLoading?: boolean;
-  mdxEditorRef: React.RefObject<MDXEditorMethods>;
   onSend?: (args: any) => Promise<any>;
   onChange?: (content: string) => void;
 }
@@ -28,6 +26,7 @@ export type UploadAction = {
   onClick: () => void;
   showCondition?: boolean;
 }
+
 export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   if (originFiles?.length == 0) return []
   const res = originFiles?.map(file => {
@@ -48,7 +47,7 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
 }
 
 export const getEditorElements = () => {
-  const editorElements = document.querySelectorAll('._contentEditable_uazmk_379') as NodeListOf<HTMLElement>
+  const editorElements = document.querySelectorAll('.vditor-reset') as NodeListOf<HTMLElement>
   return editorElements
 }
 

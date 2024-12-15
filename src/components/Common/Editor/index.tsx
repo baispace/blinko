@@ -5,8 +5,7 @@ import { useTheme } from 'next-themes';
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { OnSendContentType, TranslationEditor } from './type';
-import { MyPlugins, ProcessCodeBlocks } from './editorPlugins';
+import { OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { _ } from '@/lib/lodash';
 import { useTranslation } from 'react-i18next';
@@ -28,10 +27,6 @@ import {
   useEditorPaste,
   useEditorHeight
 } from './hooks/useEditor';
-import Vditor from "vditor";
-
-
-const { MDXEditor } = await import('@mdxeditor/editor')
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -47,11 +42,6 @@ type IProps = {
 }
 
 const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange }: IProps) => {
-  content = ProcessCodeBlocks(content)
-  const { t } = useTranslation()
-  const isPc = useMediaQuery('(min-width: 768px)')
-  const { theme } = useTheme();
-
   const cardRef = React.useRef(null)
 
   const store = useLocalObservable(() => new EditorStore())
@@ -61,7 +51,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
   useEditorPaste(store, cardRef);
-  useEditorHeight(onHeightChange, blinko, content, store.files);
+  useEditorHeight(onHeightChange, blinko, content, store);
 
   const {
     getRootProps,
@@ -73,16 +63,9 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   return <Card
     shadow='none' {...getRootProps()}
     className={`p-2 relative border-2 border-border transition-all  overflow-visible 
-    ${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} 
-    ${store.viewMode == 'source' ? 'border-red-500' : ''}`}>
+    ${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} `}>
 
     <div ref={cardRef}
-      onKeyUp={async event => {
-        event.preventDefault();
-        if (event.key === 'Enter' && event.ctrlKey) {
-          await store.handleSend()
-        }
-      }}
       className="overflow-visible relative"
       onKeyDown={e => {
         onHeightChange?.()

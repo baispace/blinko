@@ -197,13 +197,11 @@ export class AiStore implements Store {
         eventBus.emit('editor:clear')
       }
       this.writingResponseText = ''
-      // eventBus.emit('editor:setMarkdownLoading', true)
       const res = await streamApi.ai.writing.mutate({
         question: this.writeQuestion,
         type: writeType,
         content
       }, { signal: this.abortController.signal })
-      // eventBus.emit('editor:setMarkdownLoading', false)
       for await (const item of res) {
         // eventBus.emit('editor:insert', item.content)
         this.writingResponseText += item.content

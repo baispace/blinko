@@ -32,7 +32,7 @@ export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit
 }
 
 const handleEdit = (isDetailPage: boolean) => {
-  ShowEditBlinkoModel(isDetailPage ? '5xl' : '3xl')
+  ShowEditBlinkoModel(isDetailPage ? '5xl' : '5xl')
 }
 
 const handleMultiSelect = () => {

@@ -279,7 +279,6 @@ export class BlinkoStore implements Store {
   @action
   setExcludeEmbeddingTagId(tagId: number | null) {
     this.excludeEmbeddingTagId = tagId;
-    // 可能需要保存到本地存储或发送到服务器
   }
 
   constructor() {

@@ -22,6 +22,7 @@ import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
 import { AiPrompt } from './ai/aiPrompt';
 import { Context } from '../context';
+import dayjs from 'dayjs';
 
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
@@ -102,8 +103,8 @@ export class AiService {
       }
       const documents: Document[] = chunks.map((chunk, index) => {
         return {
-          pageContent: chunk + `\n\nCreated at: ${createTime.toISOString()}`,
-          metadata: { noteId: id, uniqDocId: `${id}-${index}` },
+          pageContent: chunk + `\n\nCreated At: ${dayjs(createTime).format('YYYY-MM-DD HH:mm:ss')}`,
+          metadata: { noteId: id, uniqDocId: `${id}-${index}`, id: `${id}-${index}` },
         }
       })
       try {
@@ -220,6 +221,9 @@ export class AiService {
     const notes = await prisma.notes.findMany({
       include: {
         attachments: true
+      },
+      where: {
+        isRecycle: false
       }
     });
     const total = notes.length;

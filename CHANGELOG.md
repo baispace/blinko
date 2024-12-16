@@ -1,3 +1,10 @@
+## [0.26.10](https://github.com/blinko-space/blinko/compare/v0.26.9...v0.26.10) (2024-12-16)
+
+
+### Bug Fixes
+
+* adjust editor height calculation in Home component ([7d1dbd4](https://github.com/blinko-space/blinko/commit/7d1dbd4fd9b37a73f7458e40caa2d01212382d59))
+
 ## [0.26.9](https://github.com/blinko-space/blinko/compare/v0.26.8...v0.26.9) (2024-12-16)
 
 

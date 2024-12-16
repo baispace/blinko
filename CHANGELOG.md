@@ -1,3 +1,10 @@
+## [0.26.9](https://github.com/blinko-space/blinko/compare/v0.26.8...v0.26.9) (2024-12-16)
+
+
+### Bug Fixes
+
+* enhance database job restoration process and UI components ([121755a](https://github.com/blinko-space/blinko/commit/121755ae1cd3087f4ce84ecbbbe97dd030f7ec4c))
+
 ## [0.26.8](https://github.com/blinko-space/blinko/compare/v0.26.7...v0.26.8) (2024-12-16)
 
 

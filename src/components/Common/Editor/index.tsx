@@ -42,7 +42,7 @@ type IProps = {
 
 const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange }: IProps) => {
   const cardRef = React.useRef(null)
-
+  const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
   const blinko = RootStore.Get(BlinkoStore)
 
@@ -80,7 +80,10 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     <div ref={cardRef}
       className="overflow-visible relative"
       onKeyDown={e => {
+        console.log('onKeyDown')
         onHeightChange?.()
+        if (isPc) return
+        store.adjustMobileEditorHeight()
       }}>
 
       <div id={`vditor-${mode}`} className="vditor" />

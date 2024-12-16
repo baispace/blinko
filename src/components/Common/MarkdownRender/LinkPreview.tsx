@@ -16,15 +16,6 @@ export const LinkPreview = ({ href, text }: LinkPreviewProps) => {
     previewData: new StorageState<LinkInfo | null>({ key: href, default: null })
   }))
   
-  // try {
-  //   if (typeof href == 'object') {
-  //     return <ImageWrapper src={href?.props?.src} width={href?.props?.width} height={href?.props?.height} />
-  //   }
-  // } catch (error) {
-  //   console.log(error)
-  //   return href
-  // }
-
   useEffect(() => {
     const fetchData = async () => {
       try {

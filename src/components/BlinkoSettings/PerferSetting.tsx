@@ -10,6 +10,8 @@ import { PageSize, PromiseCall } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
+import { Icon } from "@iconify/react";
+import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
@@ -22,8 +24,10 @@ export const PerferSetting = observer(() => {
   }, [blinko.config.value?.textFoldLength]);
 
 
-  return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc text-sm'>{t('preference')}</div>
+  return <CollapsibleCard
+    icon="tabler:brush"
+    title={t('preference')}
+  >
     <Item
       leftContent={<>{t('theme')}</>}
       rightContent={<ThemeSwitcher onChange={async value => {
@@ -221,5 +225,5 @@ export const PerferSetting = observer(() => {
           }}
         />
       } />
-  </Card>
+  </CollapsibleCard>
 })

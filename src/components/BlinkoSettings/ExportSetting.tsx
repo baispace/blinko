@@ -13,6 +13,7 @@ import { today, getLocalTimeZone, startOfWeek, startOfMonth, endOfWeek, endOfMon
 import { helper } from "@/lib/helper";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { Icon } from "@iconify/react";
+import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 
 export const ExportSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -60,66 +61,69 @@ export const ExportSetting = observer(() => {
   };
 
   return (
-    <Card shadow="none" className="flex flex-col p-4 bg-background">
-      <div className='text-desc text-sm'>{t('export')}</div>
+    <CollapsibleCard
+      icon="tabler:file-export"
+      title={t('export')}
+    >
+      <Card shadow="none" className="flex flex-col p-4 bg-background">
+        <Item
+          leftContent={<>{t('export-format')}</>}
+          rightContent={
+            <Select
+              selectedKeys={[exportFormat]}
+              onChange={e => setExportFormat(e.target.value)}
+              className="w-[200px]"
+            >
+              {formatOptions.map((item) => (
+                <SelectItem key={item.value}>{t(item.label)}</SelectItem>
+              ))}
+            </Select>
+          }
+        />
 
-      <Item
-        leftContent={<>{t('export-format')}</>}
-        rightContent={
-          <Select
-            selectedKeys={[exportFormat]}
-            onChange={e => setExportFormat(e.target.value)}
-            className="w-[200px]"
+        <Item
+          leftContent={<>{t('time-range')}</>}
+          rightContent={
+            <Popover placement="bottom" classNames={{
+              content: [
+                "p-0 bg-transparent border-none shadow-none",
+              ],
+            }}>
+              <PopoverTrigger>
+                <Button variant="flat" >
+                  {dateRange.start && dateRange.end ? (
+                    `${dayjs(new Date(dateRange.start.toString())).format('YYYY-MM-DD')} ~ ${dayjs(new Date(dateRange.end.toString())).format('YYYY-MM-DD')}`
+                  ) : t('all')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="flex flex-col gap-2">
+                  <RangeCalendar
+                    className="bg-background"
+                    value={dateRange.start && dateRange.end ? dateRange : undefined}
+                    onChange={setDateRange}
+                    focusedValue={focusedValue}
+                    onFocusChange={setFocusedValue}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+          }
+        />
+
+
+        <div className="flex justify-end">
+          <Button
+            className="mt-4"
+            color="primary"
+            onPress={handleExport}
+            startContent={<Icon icon="system-uicons:arrow-top-right" width="24" height="24" />}
           >
-            {formatOptions.map((item) => (
-              <SelectItem key={item.value}>{t(item.label)}</SelectItem>
-            ))}
-          </Select>
-        }
-      />
+            {t('export')}
+          </Button>
+        </div>
 
-      <Item
-        leftContent={<>{t('time-range')}</>}
-        rightContent={
-          <Popover placement="bottom" classNames={{
-            content: [
-              "p-0 bg-transparent border-none shadow-none",
-            ],
-          }}>
-            <PopoverTrigger>
-              <Button variant="flat" >
-                {dateRange.start && dateRange.end ? (
-                  `${dayjs(new Date(dateRange.start.toString())).format('YYYY-MM-DD')} ~ ${dayjs(new Date(dateRange.end.toString())).format('YYYY-MM-DD')}`
-                ) : t('all')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <div className="flex flex-col gap-2">
-                <RangeCalendar
-                  className="bg-background"
-                  value={dateRange.start && dateRange.end ? dateRange : undefined}
-                  onChange={setDateRange}
-                  focusedValue={focusedValue}
-                  onFocusChange={setFocusedValue}
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
-        }
-      />
-
-
-      <div className="flex justify-end">
-        <Button
-          className="mt-4"
-          color="primary"
-          onPress={handleExport}
-          startContent={<Icon icon="system-uicons:arrow-top-right" width="24" height="24" />}
-        >
-          {t('export')}
-        </Button>
-      </div>
-
-    </Card>
+      </Card>
+    </CollapsibleCard>
   );
 });

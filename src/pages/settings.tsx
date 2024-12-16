@@ -15,16 +15,18 @@ import { ExportSetting } from "@/components/BlinkoSettings/ExportSetting";
 const Page = observer(() => {
   const user = RootStore.Get(UserStore)
   return <div className="h-mobile-full">
-    <ScrollArea onBottom={() => { }} className="px-2 md:px-6 pt-2 pb-6 flex flex-col gap-8">
-      <BasicSetting />
-      <PerferSetting />
-      {user.isSuperAdmin && <UserSetting />}
-      {user.isSuperAdmin && <AiSetting />}
-      {user.isSuperAdmin && <TaskSetting />}
-      {user.isSuperAdmin && <StorageSetting />}
-      {user.isSuperAdmin && <ImportSetting />}
-      {<ExportSetting />}
-      <AboutSetting />
+    <ScrollArea onBottom={() => { }} className="px-2 md:px-6 pt-2 pb-6">
+      <div className="max-w-screen-lg mx-auto flex flex-col gap-8">
+        <BasicSetting />
+        <PerferSetting />
+        {user.isSuperAdmin && <UserSetting />}
+        {user.isSuperAdmin && <AiSetting />}
+        {user.isSuperAdmin && <TaskSetting />}
+        {user.isSuperAdmin && <StorageSetting />}
+        {user.isSuperAdmin && <ImportSetting />}
+        {<ExportSetting />}
+        <AboutSetting />
+      </div>
     </ScrollArea >
   </div>
 });

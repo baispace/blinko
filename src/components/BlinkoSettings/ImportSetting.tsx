@@ -14,14 +14,17 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { useMediaQuery } from "usehooks-ts";
 import { ShowMemosProgressDialog } from "../Common/ImportMemosProgress";
 import { ShowBlinkoProgressDialog } from "../Common/ImportBlinkoProgress";
+import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 
 export const ImportSetting = observer(() => {
   const isPc = useMediaQuery('(min-width: 768px)')
   const { t } = useTranslation()
 
-  return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc text-sm'>{t('import')}</div>
+  return <CollapsibleCard
+    icon="tabler:file-import"
+    title={t('import')}
+  >
     <Item
       leftContent={<>{t('import-from-bko')}</>}
       rightContent={<>
@@ -50,5 +53,5 @@ export const ImportSetting = observer(() => {
         }}>
         </UploadFileWrapper>
       </div>} />
-  </Card>
+  </CollapsibleCard>
 })

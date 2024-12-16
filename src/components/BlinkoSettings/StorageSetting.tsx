@@ -36,7 +36,10 @@ export const StorageSetting = observer(() => {
 
 
   return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc text-sm'>{t('storage')}</div>
+    <div className='text-desc flex items-center gap-2'>
+      <Icon icon="tabler:brush" width="20" height="20" />
+      <div className="text-sm">{t('storage')}</div>
+    </div>
     <Item
       leftContent={<div className="flex flex-col  gap-2">
         <div>{t('object-storage')}</div>
@@ -64,9 +67,9 @@ export const StorageSetting = observer(() => {
       blinko.config.value?.objectStorage === 's3' && <>
         <Item
           leftContent={<>{t('access-key-id')}</>}
-          rightContent={<PasswordInput 
-            value={store.s3AccessKeyId} 
-            onChange={e => store.s3AccessKeyId = e.target.value} 
+          rightContent={<PasswordInput
+            value={store.s3AccessKeyId}
+            onChange={e => store.s3AccessKeyId = e.target.value}
             placeholder={t('access-key-id')}
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
@@ -76,9 +79,9 @@ export const StorageSetting = observer(() => {
             }} />} />
         <Item
           leftContent={<>{t('access-key-secret')}</>}
-          rightContent={<PasswordInput 
-            value={store.s3AccessKeySecret} 
-            onChange={e => store.s3AccessKeySecret = e.target.value} 
+          rightContent={<PasswordInput
+            value={store.s3AccessKeySecret}
+            onChange={e => store.s3AccessKeySecret = e.target.value}
             placeholder={t('access-key-secret')}
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
@@ -114,10 +117,10 @@ export const StorageSetting = observer(() => {
           leftContent={<>
             <div>{t('custom-path')}</div>
           </>}
-          rightContent={<Input 
-            value={store.s3CustomPath} 
-            onChange={e => store.s3CustomPath = e.target.value} 
-            placeholder="/custom/path/" 
+          rightContent={<Input
+            value={store.s3CustomPath}
+            onChange={e => store.s3CustomPath = e.target.value}
+            placeholder="/custom/path/"
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3CustomPath',

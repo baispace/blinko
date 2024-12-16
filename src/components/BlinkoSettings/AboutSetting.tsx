@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Item } from "./Item";
 import { useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
+import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 
 export const AboutSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -34,8 +35,10 @@ export const AboutSetting = observer(() => {
     store.version.call()
     store.latestVersion.call()
   }, [])
-  return <Card shadow="none" className="flex flex-col p-4 bg-background pb-6">
-    <div className='text-desc text-sm'>{t('about')}</div>
+  return <CollapsibleCard
+    icon="tabler:info-circle"
+    title={t('about')}
+  >
     <Item
       leftContent={<>{t('version')}</>}
       rightContent={
@@ -52,5 +55,5 @@ export const AboutSetting = observer(() => {
     <Item
       leftContent={<>Github</>}
       rightContent={<a href="https://github.com/blinko-space/blinko">https://github.com/blinko-space/blinko</a>} />
-  </Card>
+  </CollapsibleCard>
 })

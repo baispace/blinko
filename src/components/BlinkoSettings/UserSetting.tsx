@@ -12,6 +12,7 @@ import { Icon } from "@iconify/react";
 import { DialogStore } from "@/store/module/Dialog";
 import { signOut } from "next-auth/react";
 import { PasswordInput } from "../Common/PasswordInput";
+import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: string, password: string }) => {
   const { t } = useTranslation()
@@ -48,60 +49,63 @@ const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: st
   </>
 })
 
-
-
 export const UserSetting = observer(() => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore)
   useEffect(() => {
     blinko.userList.call()
   }, [])
-  return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc text-sm'>{t('user-list')}</div>
-    <Item
-      leftContent={<>{t('user-list')}</>}
-      rightContent={
-        <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width="18" height="18" />}
-          onPress={e => {
-            RootStore.Get(DialogStore).setData({
-              isOpen: true,
-              title: t('create-user'),
-              content: <UpdateUserInfo name="" password="" />
-            })
-          }}>{t('create-user')}</Button>
-      } />
+  
+  return (
+    <CollapsibleCard
+      icon="tabler:user-cog"
+      title={t('user-list')}
+    >
+      <Item
+        leftContent={<>{t('user-list')}</>}
+        rightContent={
+          <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width="18" height="18" />}
+            onPress={e => {
+              RootStore.Get(DialogStore).setData({
+                isOpen: true,
+                title: t('create-user'),
+                content: <UpdateUserInfo name="" password="" />
+              })
+            }}>{t('create-user')}</Button>
+        } 
+      />
 
-    <Item
-      leftContent={blinko.userList.value ? <Table shadow="none" className="mb-2 max-h-[300px] overflow-y-auto">
-        <TableHeader>
-          <TableColumn>{t('name-db')}</TableColumn>
-          <TableColumn>{t('role')}</TableColumn>
-          <TableColumn>{t('action')}</TableColumn>
-        </TableHeader>
-        <TableBody>
-          {
-            blinko.userList.value!.map(i => {
-              return <TableRow>
-                <TableCell>{i.name}</TableCell>
-                <TableCell>
-                  <Chip size="sm" color="warning" variant="bordered">{i.role}</Chip>
-                </TableCell>
-                <TableCell>
-                  <Button isIconOnly color="primary" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
-                    RootStore.Get(DialogStore).setData({
-                      isOpen: true,
-                      title: t('edit-user'),
-                      content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} />
-                    })
-                  }}>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            })
-          }
-        </TableBody>
-      </Table> : null}
-    />
-  </Card>
-
-})
+      <Item
+        leftContent={blinko.userList.value ? <Table shadow="none" className="mb-2 max-h-[300px] overflow-y-auto">
+          <TableHeader>
+            <TableColumn>{t('name-db')}</TableColumn>
+            <TableColumn>{t('role')}</TableColumn>
+            <TableColumn>{t('action')}</TableColumn>
+          </TableHeader>
+          <TableBody>
+            {
+              blinko.userList.value!.map(i => {
+                return <TableRow>
+                  <TableCell>{i.name}</TableCell>
+                  <TableCell>
+                    <Chip size="sm" color="warning" variant="bordered">{i.role}</Chip>
+                  </TableCell>
+                  <TableCell>
+                    <Button isIconOnly color="primary" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
+                      RootStore.Get(DialogStore).setData({
+                        isOpen: true,
+                        title: t('edit-user'),
+                        content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} />
+                      })
+                    }}>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              })
+            }
+          </TableBody>
+        </Table> : null}
+      />
+    </CollapsibleCard>
+  );
+});

@@ -11,6 +11,7 @@ import { Item } from "./Item";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { _ } from "@/lib/lodash";
+import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 const UpdateDebounceCall = _.debounce((v) => {
   return PromiseCall(api.config.update.mutate({ key: 'autoArchivedDays', value: Number(v) }))
@@ -26,48 +27,50 @@ export const TaskSetting = observer(() => {
   }, [blinko.config.value?.autoArchivedDays])
 
   const { t } = useTranslation()
-  return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc text-sm'>{t('schedule-task')}</div>
-
-    <Item
-      leftContent={<>{t('schedule-back-up')}</>}
-      rightContent={
-        <Switch
-          thumbIcon={blinko.updateDBTask.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
-          isDisabled={blinko.updateDBTask.loading.value}
-          isSelected={blinko.DBTask?.isRunning}
-          onChange={async e => {
-            await blinko.updateDBTask.call(e.target.checked)
-          }}
-        />} />
-    <Item
-      leftContent={<>{t('schedule-archive-blinko')}</>}
-      rightContent={
-        <div className="flex gap-4">
-          <Input
-            value={autoArchivedDays}
-            onChange={e => {
-              setAutoArchivedDays(e.target.value)
-              UpdateDebounceCall(e.target.value)
-            }}
-            className="w-[120px]"
-            labelPlacement="outside"
-            endContent={t('days')}
-            type="number"
-            min={1}
-          />
+  return (
+    <CollapsibleCard
+      icon="tabler:clock"
+      title={t('schedule-task')}
+    >
+      <Item
+        leftContent={<>{t('schedule-back-up')}</>}
+        rightContent={
           <Switch
-            thumbIcon={blinko.updateArchiveTask.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
-            isDisabled={blinko.updateArchiveTask.loading.value}
-            isSelected={blinko.ArchiveTask?.isRunning}
+            thumbIcon={blinko.updateDBTask.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
+            isDisabled={blinko.updateDBTask.loading.value}
+            isSelected={blinko.DBTask?.isRunning}
             onChange={async e => {
-              await blinko.updateArchiveTask.call(e.target.checked)
+              await blinko.updateDBTask.call(e.target.checked)
             }}
-          />
-        </div>} />
-    <TasksPanel />
-  </Card>
-
+          />} />
+      <Item
+        leftContent={<>{t('schedule-archive-blinko')}</>}
+        rightContent={
+          <div className="flex gap-4">
+            <Input
+              value={autoArchivedDays}
+              onChange={e => {
+                setAutoArchivedDays(e.target.value)
+                UpdateDebounceCall(e.target.value)
+              }}
+              className="w-[120px]"
+              labelPlacement="outside"
+              endContent={t('days')}
+              type="number"
+              min={1}
+            />
+            <Switch
+              thumbIcon={blinko.updateArchiveTask.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
+              isDisabled={blinko.updateArchiveTask.loading.value}
+              isSelected={blinko.ArchiveTask?.isRunning}
+              onChange={async e => {
+                await blinko.updateArchiveTask.call(e.target.checked)
+              }}
+            />
+          </div>} />
+      <TasksPanel />
+    </CollapsibleCard>
+  );
 })
 
 const TasksPanel = observer(() => {

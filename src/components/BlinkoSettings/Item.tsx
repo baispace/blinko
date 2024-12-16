@@ -16,12 +16,12 @@ export const Item = observer(({ leftContent, rightContent, type = 'row', hidden 
   if (hidden) return null
   if (type == 'col') {
     return <div className="flex flex-col py-2">
-      <div className="font-bold">{leftContent}</div>
+      <div className="font-semibold">{leftContent}</div>
       <div className="mt-2 w-full">{rightContent}</div>
     </div>
   } else {
     return <div className="flex flex-row items-center py-2">
-      {!!leftContent && <div className={rightContent ? "font-bold" : 'w-full'}>{leftContent}</div>}
+      {!!leftContent && <div className={rightContent ? "font-semibold" : 'w-full'}>{leftContent}</div>}
       {!!rightContent && <div className="ml-auto">{rightContent}</div>}
     </div>
   }

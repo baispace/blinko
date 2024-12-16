@@ -77,7 +77,6 @@ export const useEditorInit = (
       toolbarConfig: {
         hide: !showToolbar,
       },
-
       preview: {
         hljs: {
           style: theme === 'dark' ? 'github-dark' : 'github',

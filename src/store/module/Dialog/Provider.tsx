@@ -137,65 +137,68 @@ const Dialog = observer(() => {
     )
   }
   return (
-    <Modal
-      style={{ zIndex: 2000 }}
-      onClose={() => {
-        modal.close();
-      }}
-      backdrop='blur'
-      isOpen={isOpen}
-      size={size}
-      placement={placement}
-      onOpenChange={(open: boolean) => {
-        if (open) {
-          modal.preventClose = false
-        }
-        if (!open) {
-          if (!modal.preventClose) {
-            modal.close();
+    <>
+      <Modal
+        style={{ zIndex: 2000 }}
+        onClose={() => {
+          modal.close();
+        }}
+        backdrop='blur'
+        isOpen={isOpen}
+        size={size}
+        placement={placement}
+        onOpenChange={(open: boolean) => {
+          if (open) {
+            modal.preventClose = false
           }
-        }
-      }}
-      hideCloseButton={(size === 'full' || onlyContent) ? true : false}
-      className={`${className} ${transparent ? 'bg-transparent' : ''}`}
-      classNames={classNames}
-      isDismissable={isDismissable}
-      motionProps={{
-        variants: {
-          enter: {
-            y: 0,
-            opacity: 1,
-            transition: { type: 'spring', bounce: 0.5, duration: 0.6, },
-          },
-          exit: {
-            y: -20,
-            opacity: 0,
-            transition: { type: 'spring', bounce: 0.5, duration: 0.3, },
-          },
-        }
-      }}
-    >
-      {
-        onlyContent ?
-          <ModalContent className="max-h-screen overflow-visible relative" >
-            {
-              showOnlyContentCloseButton &&
-              <CloseButton onClose={() => modal.close()} />
+          if (!open) {
+            if (!modal.preventClose) {
+              modal.close();
             }
-            <Content />
-          </ModalContent> :
-          <ModalContent className="max-h-screen overflow-auto">
-            {() => (
-              <>
-                {title && <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>}
-                <ModalBody className={`${noPadding ? '' : 'p-2 md:p-4 '}`}>
-                  <Content />
-                </ModalBody>
-              </>
-            )}
-          </ModalContent>
-      }
-    </Modal>
+          }
+        }}
+        hideCloseButton={(size === 'full' || onlyContent) ? true : false}
+        className={`${className} ${transparent ? 'bg-transparent' : ''}`}
+        classNames={classNames}
+        isDismissable={isDismissable}
+        motionProps={{
+          variants: {
+            enter: {
+              y: 0,
+              opacity: 1,
+              transition: { type: 'spring', bounce: 0.5, duration: 0.6, },
+            },
+            exit: {
+              y: -20,
+              opacity: 0,
+              transition: { type: 'spring', bounce: 0.5, duration: 0.3, },
+            },
+          }
+        }}
+      >
+        {
+          onlyContent ?
+            <ModalContent className="max-h-screen overflow-visible relative modal-content" >
+
+              {
+                showOnlyContentCloseButton &&
+                <CloseButton onClose={() => modal.close()} />
+              }
+              <Content />
+            </ModalContent> :
+            <ModalContent className="max-h-screen overflow-auto">
+              {() => (
+                <>
+                  {title && <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>}
+                  <ModalBody className={`${noPadding ? '' : 'p-2 md:p-4 '}`}>
+                    <Content />
+                  </ModalBody>
+                </>
+              )}
+            </ModalContent>
+        }
+      </Modal>
+    </>
   );
 });
 

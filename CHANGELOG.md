@@ -1,3 +1,10 @@
+## [0.26.5](https://github.com/blinko-space/blinko/compare/v0.26.4...v0.26.5) (2024-12-16)
+
+
+### Bug Fixes
+
+* update translations and enhance editor functionality ([06a3b27](https://github.com/blinko-space/blinko/commit/06a3b2777abd6da1044f9f05bf53a177e1f35b15))
+
 ## [0.26.4](https://github.com/blinko-space/blinko/compare/v0.26.3...v0.26.4) (2024-12-16)
 
 

@@ -1,3 +1,10 @@
+## [0.26.7](https://github.com/blinko-space/blinko/compare/v0.26.6...v0.26.7) (2024-12-16)
+
+
+### Bug Fixes
+
+* enhance file handling and thumbnail generation ([c5531cb](https://github.com/blinko-space/blinko/commit/c5531cb9141f74cd2997a54d0175ce4088c924e5))
+
 ## [0.26.6](https://github.com/blinko-space/blinko/compare/v0.26.5...v0.26.6) (2024-12-16)
 
 

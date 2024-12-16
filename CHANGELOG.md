@@ -1,3 +1,10 @@
+## [0.26.1](https://github.com/blinko-space/blinko/compare/v0.26.0...v0.26.1) (2024-12-16)
+
+
+### Bug Fixes
+
+* enhance file upload handling and editor integration ([bfe6410](https://github.com/blinko-space/blinko/commit/bfe6410f6910afbad83cac865b5e4ef99245db72))
+
 # [0.26.0](https://github.com/blinko-space/blinko/compare/v0.25.6...v0.26.0) (2024-12-15)
 
 

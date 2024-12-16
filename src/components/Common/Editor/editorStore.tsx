@@ -157,7 +157,7 @@ export class EditorStore {
       title: i18n.t('insert-attachment-or-note'),
       content: i18n.t('paste-to-note-or-attachment'),
       buttonSlot: <>
-        <Button className="ml-auto" color='default'
+        <Button variant='flat' className="ml-auto" color='default'
           onPress={e => {
             if (type.includes('image')) {
               this.vditor?.insertValue(`![${fileName}](${filePath})`)
@@ -183,7 +183,7 @@ export class EditorStore {
           await _file.uploadPromise.call()
           this.files.push(_file)
           RootStore.Get(DialogStandaloneStore).close()
-        }}>{i18n.t('confrim')}</Button>
+        }}>{i18n.t('attachment')}</Button>
       </>
     })
   }

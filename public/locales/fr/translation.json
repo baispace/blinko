@@ -318,5 +318,6 @@
   "search-tags": "Balises de recherche",
   "insert-attachment-or-note": "Insérer dans la pièce jointe ou la note ?",
   "context": "Contexte",
-  "paste-to-note-or-attachment": "Êtes-vous sûr de coller dans le contexte ou en pièce jointe ? Choisissez Confirmer pour télécharger en pièce jointe ou télécharger dans le contexte"
+  "paste-to-note-or-attachment": "Êtes-vous sûr de coller dans le contexte ou en pièce jointe ?",
+  "attachment": "Pièce jointe"
 }

@@ -253,5 +253,6 @@
   "search-tags": "Tags de pesquisa",
   "insert-attachment-or-note": "Inserir em anexo ou nota?",
   "context": "Contexto",
-  "paste-to-note-or-attachment": "Você tem certeza de colar no contexto ou anexo? Escolha Confirmar para fazer upload como anexo ou fazer upload como contexto."
+  "paste-to-note-or-attachment": "Tem certeza de que deseja colar no contexto ou no anexo?",
+  "attachment": "Anexo"
 }

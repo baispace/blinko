@@ -321,5 +321,6 @@
   "search-tags": "Buscar etiquetas",
   "insert-attachment-or-note": "¿Insertar en el archivo adjunto o en la nota?",
   "context": "Contexto",
-  "paste-to-note-or-attachment": "¿Estás seguro de pegar en el contexto o en el archivo adjunto? Elige Confirmar para subir al archivo adjunto o subir al contexto."
+  "paste-to-note-or-attachment": "¿Estás seguro de pegar en el contexto o adjuntar?",
+  "attachment": "Adjunto"
 }

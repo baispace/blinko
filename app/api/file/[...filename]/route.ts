@@ -54,7 +54,7 @@ export const GET = async (req: NextRequest, { params }: any) => {
       const imageBuffer = await readFile(filePath);
       const thumbnail = await sharp(imageBuffer)
         .rotate()
-        .resize(200, 200, {
+        .resize(500, 500, {
           fit: 'inside',
           withoutEnlargement: true
         })

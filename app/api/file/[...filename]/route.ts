@@ -1,16 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import path from "path";
 import { createReadStream, statSync } from "fs";
 import { stat, readFile } from "fs/promises";
 import mime from "mime-types";
 import { UPLOAD_FILE_PATH } from "@/lib/constant";
 import crypto from "crypto";
+import { getToken } from "next-auth/jwt";
 
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
 const ONE_YEAR_IN_SECONDS = 31536000;
 
-export const GET = async (req: Request, { params }: any) => {
+export const GET = async (req: NextRequest, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
+  const token = await getToken({ req });
+  if (fullPath.endsWith('.bko') && token?.role !== 'superadmin') {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
   const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
 

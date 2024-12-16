@@ -80,8 +80,7 @@ export const CommonLayout = observer(({
   return (
     <div className="flex w-full h-mobile-full overflow-x-hidden" id="outer-container">
       {blinkoStore.showAi && createPortal(<BlinkoAi />, document.body)}
-      <AppProvider />
-      <TagSelectPop />
+
       <AiWritePop />
 
       <Menu

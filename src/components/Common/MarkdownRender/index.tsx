@@ -19,7 +19,7 @@ import { ListItem } from './ListItem';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@nextui-org/react';
 import { TableWrapper } from './TableWrapper';
-import { useRouter } from 'next/router';
+import router, { useRouter } from 'next/router';
 import remarkTaskList from 'remark-task-list';
 
 const MermaidWrapper = dynamic(() => import('./MermaidWrapper').then(mod => mod.MermaidWrapper), {
@@ -37,7 +37,7 @@ const EchartsWrapper = dynamic(() => import('./EchartsWrapper'), {
   ssr: false
 });
 
-const HighlightTags = observer(({ text, }: { text: any}) => {
+const HighlightTags = observer(({ text, }: { text: any }) => {
   const { pathname } = useRouter()
   if (!text) return text
   try {
@@ -49,14 +49,15 @@ const HighlightTags = observer(({ text, }: { text: any}) => {
           const isShareMode = pathname.includes('share')
           if (isShareMode) return <span key={`${lineIndex}-${index}`} className={`w-fit select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 transition-all`}>{part + " "}</span>
           return (
-            <Link key={`${lineIndex}-${index}`}
+            <span key={`${lineIndex}-${index}`}
               className={`select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 transition-all ${isShareMode ? 'pointer-events-none' : ''}`}
-              onClick={() => {
+              onClick={async () => {
                 if (isShareMode) return;
+                await router.replace(`/all?searchText=${encodeURIComponent(part)}`)
                 RootStore.Get(BlinkoStore).forceQuery++
-              }} href={`/all?searchText=${part}`}>
+              }}>
               {part + " "}
-            </Link>
+            </span>
           );
         } else {
           return part + " ";
@@ -126,8 +127,8 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode }:
               const isTaskListItem = className?.includes('task-list-item');
               if (isTaskListItem && onChange && !isShareMode) {
                 return (
-                  <ListItem 
-                    content={content} 
+                  <ListItem
+                    content={content}
                     onChange={onChange}
                     className={className}
                   >

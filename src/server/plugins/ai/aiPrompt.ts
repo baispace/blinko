@@ -1,4 +1,5 @@
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import dayjs from "dayjs";
 
 export class AiPrompt {
   static WritingPrompt(type: 'expand' | 'polish' | 'custom', content?: string) {
@@ -130,6 +131,7 @@ export class AiPrompt {
 
   static QAPrompt() {
     const systemPrompt =
+      `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
       "You are a versatile AI assistant who can: \n" +
       "1. Answer questions and explain concepts\n" +
       "2. Provide suggestions and analysis\n" +

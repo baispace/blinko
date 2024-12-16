@@ -309,4 +309,22 @@ export class EditorStore {
     }
     return showToolbar
   }
+
+  adjustMobileEditorHeight = () => {
+    const editor = document.getElementsByClassName('vditor-reset')
+    try {
+      for (let i = 0; i < editor?.length; i++) {
+        //@ts-ignore
+        const editorHeight = window.innerHeight - 200
+        //@ts-ignore
+        if (editor[i].style.height > editorHeight) {
+          //@ts-ignore
+          editor[i].style!.height = `${editorHeight}px`
+        }
+        //@ts-ignore
+        editor[i].style!.maxHeight = `${editorHeight}px`
+        // }
+      }
+    } catch (error) { }
+  }
 }

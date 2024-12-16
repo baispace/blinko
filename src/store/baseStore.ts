@@ -81,24 +81,9 @@ export class BaseStore implements Store {
       const doc = document.documentElement
       this.documentHeight = window.innerHeight
       doc.style.setProperty('--doc-height', `${window.innerHeight}px`)
-      if (isPc) return
-      const editor = document.getElementsByClassName('_contentEditable_uazmk_379')
-      try {
-        for (let i = 0; i < editor?.length; i++) {
-          //@ts-ignore
-          if (editor[i].ariaLabel == "editable markdown") {
-            const editorHeight = window.innerHeight - 200
-            //@ts-ignore
-            if (editor[i].style.height > editorHeight) {
-              //@ts-ignore
-              editor[i].style!.height = `${editorHeight}px`
-            }
-            //@ts-ignore
-            editor[i].style!.maxHeight = `${editorHeight}px`
-          }
-        }
-      } catch (error) { }
     }
+
+
     const { t, i18n } = useTranslation()
     useEffect(() => {
       documentHeight()

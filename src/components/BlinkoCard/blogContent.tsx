@@ -1,6 +1,9 @@
 import { Image } from '@nextui-org/react';
 import { Note } from '@/server/types';
 import { helper } from '@/lib/helper';
+import { RootStore } from '@/store/root';
+import router from 'next/router';
+import { BlinkoStore } from '@/store/blinkoStore';
 
 interface BlogContentProps {
   blinkoItem: Note & {
@@ -35,12 +38,16 @@ export const BlogContent = ({ blinkoItem, isExpanded }: BlogContentProps) => {
                 const tagTree = helper.buildHashTagTreeFromDb(blinkoItem.tags.map(t => t.tag));
                 const tagPaths = tagTree.flatMap(node => helper.generateTagPaths(node));
                 const uniquePaths = tagPaths.filter(path => {
-                  return !tagPaths.some(otherPath => 
+                  return !tagPaths.some(otherPath =>
                     otherPath !== path && otherPath.startsWith(path + '/')
                   );
                 });
                 return uniquePaths.map((path) => (
-                  <div key={path} className='text-desc text-xs blinko-tag whitespace-nowrap'>
+                  <div key={path} className='text-desc text-xs blinko-tag whitespace-nowrap font-bold hover:opacity-80 transition-all cursor-pointer' onClick={(e) => {
+                    e.stopPropagation()
+                    router.replace(`/all?searchText=${encodeURIComponent("#" + path)}`)
+                    RootStore.Get(BlinkoStore).forceQuery++
+                  }}>
                     #{path}
                   </div>
                 ));

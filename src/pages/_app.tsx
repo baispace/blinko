@@ -36,6 +36,7 @@ const MyApp = ({ Component, pageProps }) => {
       <SessionProvider session={pageProps.session}>
         <NextUIProvider>
           <ThemeProvider attribute="class" enableSystem={false} >
+            <AppProvider />
             <CommonLayout>
               <motion.div
                 initial={{ opacity: 0 }}

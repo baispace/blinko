@@ -35,7 +35,7 @@ const AttachmentsRender = observer((props: IProps) => {
     <div className={`columns-1 md:columns-1`}>
       {files?.filter(i => i.previewType == 'video').map((file, index) => (
         <div className='group relative flex p-2 items-center gap-2 cursor-pointer tansition-all rounded-2xl'>
-          <video onDoubleClick={(e) => e.stopPropagation()} src={file.preview} id="player" playsInline controls className='rounded-2xl w-full z-0' />
+          <video onDoubleClick={(e) => e.stopPropagation()} src={file.preview} id="player" playsInline controls className='rounded-2xl w-full z-0 max-h-[150px]' />
           {!file.uploadPromise?.loading?.value && !preview &&
             <DeleteIcon className='absolute z-10 right-[5px] top-[5px]' files={files} file={file} />
           }

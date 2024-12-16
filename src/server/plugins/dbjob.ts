@@ -76,7 +76,7 @@ export class DBJob {
     }
   }
 
-  static async *RestoreDB(filePath: string, ctx: any): AsyncGenerator<RestoreResult & { progress: { current: number; total: number } }, void, unknown> {
+  static async *RestoreDB(filePath: string, ctx: Context): AsyncGenerator<RestoreResult & { progress: { current: number; total: number } }, void, unknown> {
     try {
       const zip = new AdmZip(filePath);
       zip.extractAllTo(ROOT_PATH, true);
@@ -87,83 +87,82 @@ export class DBJob {
 
       const attachmentsCount = backupData.notes.reduce((acc, note) =>
         acc + (note.attachments?.length || 0), 0);
-      const total = backupData.notes.length + attachmentsCount - 1;
+      const total = backupData.notes.length + attachmentsCount;
       let current = 0;
+
+      const accountMap = new Map();
+      for (const note of backupData.notes) {
+        if (!accountMap.has(note.account.name)) {
+          const account = await prisma.accounts.findFirst({
+            where: { name: note.account.name }
+          });
+
+          if (!account) {
+            const newAccount = await prisma.accounts.create({
+              data: {
+                name: note.account.name,
+                password: note.account.password,
+                role: note.account.role
+              }
+            });
+            accountMap.set(note.account.name, newAccount);
+          } else {
+            accountMap.set(note.account.name, account);
+          }
+        }
+      }
 
       for (const note of backupData.notes) {
         current++;
         try {
-          const userCaller = createCaller(ctx)
-
-          const createdNote = await userCaller.notes.upsert({
-            content: note.content,
-            isArchived: note.isArchived,
-            type: note.type,
-            isTop: note.isTop,
-            isShare: note.isShare,
-          })
-
-          if (createdNote.id) {
-            const account = await prisma.accounts.findFirst({
-              where: { name: note.account.name }
-            })
-            let updateData: any = {
-              createdAt: note.createdAt,
-              updatedAt: note.updatedAt,
+          await prisma.$transaction(async (tx) => {
+            let ctx = {
+              name: accountMap.get(note.account.name).name,
+              sub: accountMap.get(note.account.name).id,
+              role: accountMap.get(note.account.name).role,
+              id: accountMap.get(note.account.name).id,
+              exp: 0,
+              iat: 0,
             }
-            if (!account) {
-              const _newAccount = await prisma.accounts.create({
-                data: {
-                  name: note.account.name,
-                  password: note.account.password,
-                  role: 'user'
-                }
-              })
-              updateData.accountId = _newAccount.id
-            } else {
-              updateData.accountId = account.id
-            }
-            await prisma.notes.update({
-              where: { id: createdNote.id },
-              data: updateData
+            const userCaller = createCaller(ctx);
+            const createdNote = await userCaller.notes.upsert({
+              content: note.content,
+              isArchived: note.isArchived,
+              type: note.type,
+              isTop: note.isTop,
+              isShare: note.isShare,
             });
-          }
+
+            if (createdNote.id) {
+              const account = accountMap.get(note.account.name);
+              await tx.notes.update({
+                where: { id: createdNote.id },
+                data: {
+                  accountId: account.id,
+                  createdAt: note.createdAt,
+                  updatedAt: note.updatedAt,
+                }
+              });
+              if (note.attachments?.length) {
+                const attachmentData = note.attachments.map(attachment => ({
+                  ...attachment,
+                  noteId: createdNote.id
+                }));
+                await tx.attachments.createMany({
+                  data: attachmentData,
+                  skipDuplicates: true
+                });
+                current += note.attachments.length;
+              }
+            }
+          });
 
           yield {
             type: 'success',
-            content: note.content.slice(0, 30),
+            content: note.account.name + ' - ' + note.content.slice(0, 30),
             progress: { current, total }
           };
 
-          if (note.attachments?.length) {
-            for (const attachment of note.attachments) {
-              current++;
-              try {
-                const existingAttachment = await prisma.attachments.findFirst({
-                  where: { name: attachment.name }
-                });
-                await prisma.attachments.create({
-                  data: {
-                    ...attachment,
-                    noteId: createdNote.id
-                  }
-                });
-
-                yield {
-                  type: 'success',
-                  content: attachment.name,
-                  progress: { current, total }
-                };
-              } catch (error) {
-                yield {
-                  type: 'error',
-                  content: attachment.name,
-                  error,
-                  progress: { current, total }
-                };
-              }
-            }
-          }
         } catch (error) {
           yield {
             type: 'error',
@@ -171,6 +170,7 @@ export class DBJob {
             error,
             progress: { current, total }
           };
+          continue;
         }
       }
     } catch (error) {

@@ -13,7 +13,6 @@ import { useMediaQuery } from 'usehooks-ts';
 import { type Attachment } from '@/server/types';
 import { Card } from '@nextui-org/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
-import { EditorStore } from './editorStore';
 import { UploadButtons } from './Toolbar/UploadButtons';
 import { ReferenceButton } from './Toolbar/ReferenceButton';
 import { NoteTypeButton } from './Toolbar/NoteTypeButton';
@@ -26,6 +25,7 @@ import {
   useEditorFiles,
   useEditorHeight
 } from './hooks/useEditor';
+import { EditorStore } from "./editorStore";
 
 //https://ld246.com/guide/markdown
 type IProps = {

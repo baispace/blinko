@@ -269,5 +269,7 @@
   "years-ago": "",
   "your-changes-have-been-saved": "Değişiklikleriniz kaydedildi!",
   "search-tags": "Arama Etiketleri",
-  "insert-attachment-or-note": "Eklentiye mi yoksa notlara mı ekleyeceksiniz?"
+  "insert-attachment-or-note": "Eklentiye mi yoksa notlara mı ekleyeceksiniz?",
+  "context": "Bağlam",
+  "paste-to-note-or-attachment": "Metni veya ekine yapıştırmak istediğinizden emin misiniz? Eklemeye yüklemek için Onayla'yı seçin ya da metne yükleyin"
 }

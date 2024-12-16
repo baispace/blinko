@@ -16,6 +16,7 @@ import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { handlePaste } from '@/lib/hooks';
+import { Button } from '@nextui-org/react';
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
@@ -155,32 +156,35 @@ export class EditorStore {
     showTipsDialog({
       title: i18n.t('insert-attachment-or-note'),
       content: i18n.t('paste-to-note-or-attachment'),
-      onConfirm: async () => {
-        if (type.includes('image')) {
-          this.vditor?.insertValue(`![${fileName}](${filePath})`)
-        } else {
-          this.vditor?.insertValue(`[${fileName}](${filePath})`)
-        }
-        RootStore.Get(DialogStandaloneStore).close()
-      },
-      onCancel: async () => {
-        const _file = {
-          name: fileName,
-          size,
-          previewType: previewType,
-          extension: extension ?? '',
-          preview: filePath,
-          uploadPromise: new PromiseState({
-            function: async () => {
-              return filePath
+      buttonSlot: <>
+        <Button className="ml-auto" color='default'
+          onPress={e => {
+            if (type.includes('image')) {
+              this.vditor?.insertValue(`![${fileName}](${filePath})`)
+            } else {
+              this.vditor?.insertValue(`[${fileName}](${filePath})`)
             }
-          }),
-          type: type
-        }
-        await _file.uploadPromise.call()
-        this.files.push(_file)
-        RootStore.Get(DialogStandaloneStore).close()
-      }
+            RootStore.Get(DialogStandaloneStore).close()
+          }}>{i18n.t('context')}</Button>
+        <Button color='primary' onPress={async e => {
+          const _file = {
+            name: fileName,
+            size,
+            previewType: previewType,
+            extension: extension ?? '',
+            preview: filePath,
+            uploadPromise: new PromiseState({
+              function: async () => {
+                return filePath
+              }
+            }),
+            type: type
+          }
+          await _file.uploadPromise.call()
+          this.files.push(_file)
+          RootStore.Get(DialogStandaloneStore).close()
+        }}>{i18n.t('confrim')}</Button>
+      </>
     })
   }
 

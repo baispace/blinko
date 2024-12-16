@@ -340,5 +340,6 @@
   "wysiwyg": "WYSIWYG",
   "search-tags": "Search Tags",
   "insert-attachment-or-note": "Insert to attachment or note?",
-  "paste-to-note-or-attachment": "Are you sure to paste to note or attachment? Choose cancel to upload to attachement."
+  "paste-to-note-or-attachment": "Are you sure to paste to context or attachment? Choose Confirm to upload to attachement or upload to context",
+  "context": "Context"
 }

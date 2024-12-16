@@ -328,5 +328,7 @@
   "strike": "Schlag",
   "table": "Tisch",
   "search-tags": "Suchbegriffe",
-  "insert-attachment-or-note": "In Anhang oder Notiz einfügen?"
+  "insert-attachment-or-note": "In Anhang oder Notiz einfügen?",
+  "context": "Kontext",
+  "paste-to-note-or-attachment": "Bist du sicher, dass du den Text in den Kontext oder als Anhang einfügen willst? Wähle \"Bestätigen\", um als Anhang hochzuladen, oder \"Hochladen\", um in den Kontext einzufügen."
 }

@@ -353,5 +353,7 @@
   "user-list": "用户列表",
   "wysiwyg": "所见即所得",
   "search-tags": "搜尋標籤",
-  "insert-attachment-or-note": "插入至附件或備註？"
+  "insert-attachment-or-note": "插入至附件或備註？",
+  "context": "正文",
+  "paste-to-note-or-attachment": "你確定要貼到內文或附件嗎？請選擇「確認」以上傳至附件，或是上傳至內文。"
 }

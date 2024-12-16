@@ -251,5 +251,7 @@
   "ollama-default-endpoint-is-http-localhost-11434": "O ponto de extremidade predefinido da Ollama é http://localhost:11434",
   "your-azure-openai-instance-name": "O nome da sua instância do Azure OpenAI",
   "search-tags": "Tags de pesquisa",
-  "insert-attachment-or-note": "Inserir em anexo ou nota?"
+  "insert-attachment-or-note": "Inserir em anexo ou nota?",
+  "context": "Contexto",
+  "paste-to-note-or-attachment": "Você tem certeza de colar no contexto ou anexo? Escolha Confirmar para fazer upload como anexo ou fazer upload como contexto."
 }

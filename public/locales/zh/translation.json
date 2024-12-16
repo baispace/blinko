@@ -354,5 +354,6 @@
   "wysiwyg": "所见即所得",
   "search-tags": "搜索标签",
   "insert-attachment-or-note": "插入附件还是笔记中？",
-  "paste-to-note-or-attachment": "您是否要粘贴到笔记中？选择否将会作为附件上传。"
+  "paste-to-note-or-attachment": "您确定要粘贴到上下文或附件吗？选择确认以上传至附件或上传至上下文。",
+  "context": "正文"
 }

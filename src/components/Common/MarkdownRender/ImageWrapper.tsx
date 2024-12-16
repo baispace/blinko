@@ -10,10 +10,15 @@ interface ImageWrapperProps {
 export const ImageWrapper = ({ src, width, height }: ImageWrapperProps) => {
   const props = { width, height }
   return (
-    <PhotoProvider>
-      <PhotoView src={src}>
-        <Image src={src} {...props} />
-      </PhotoView>
-    </PhotoProvider>
+    <div className='markdown-image-wrapper w-full'>
+      <PhotoProvider>
+        <PhotoView src={src} width={1000}>
+          <Image src={src} {...props}
+            classNames={{
+              wrapper: '!max-w-full',
+            }} className='w-full max-h-[200px] object-cover' />
+        </PhotoView>
+      </PhotoProvider>
+    </div>
   );
 }; 

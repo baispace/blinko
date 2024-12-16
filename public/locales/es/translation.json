@@ -319,5 +319,7 @@
   "performance-tip": "La vista previa en tiempo real requiere ${x} ms, puedes cerrarla",
   "preview": "Vista previa",
   "search-tags": "Buscar etiquetas",
-  "insert-attachment-or-note": "¿Insertar en el archivo adjunto o en la nota?"
+  "insert-attachment-or-note": "¿Insertar en el archivo adjunto o en la nota?",
+  "context": "Contexto",
+  "paste-to-note-or-attachment": "¿Estás seguro de pegar en el contexto o en el archivo adjunto? Elige Confirmar para subir al archivo adjunto o subir al contexto."
 }

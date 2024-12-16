@@ -301,5 +301,7 @@
   "insert-column-left": "1 を挿入左",
   "insert-column-right": "1を右に挿入",
   "search-tags": "検索タグ",
-  "insert-attachment-or-note": "添付ファイルに挿入しますか、それともメモに書き込みますか？"
+  "insert-attachment-or-note": "添付ファイルに挿入しますか、それともメモに書き込みますか？",
+  "context": "コンテクスト",
+  "paste-to-note-or-attachment": "コンテキストまたは添付ファイルに貼り付けることを確認しますか？アップロードして添付ファイルに保存する場合は「確認」を選択し、コンテキストにアップロードする場合は「アップロード」を選択してください。"
 }

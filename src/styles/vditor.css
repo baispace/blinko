@@ -122,8 +122,11 @@
   height: 20px;
   stroke: var(--foreground);
 }
+
 .vditor-reset img{
   max-height: 150px;
+  width: 100%;
+  object-fit: cover;
 }
 /* .vditor-menu--current {
   color: #C35AF7 !important;

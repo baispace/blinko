@@ -1,3 +1,11 @@
+## [0.26.8](https://github.com/blinko-space/blinko/compare/v0.26.7...v0.26.8) (2024-12-16)
+
+
+### Bug Fixes
+
+* replace Card components with CollapsibleCard in settings ([c5897a8](https://github.com/blinko-space/blinko/commit/c5897a8b7153b7c40a9baa508ad97e886cd6e3f2))
+* update thumbnail size for image processing ([bfa5463](https://github.com/blinko-space/blinko/commit/bfa54633d1575ebbaee7fc6e4790a0480ab9fa7c))
+
 ## [0.26.7](https://github.com/blinko-space/blinko/compare/v0.26.6...v0.26.7) (2024-12-16)
 
 

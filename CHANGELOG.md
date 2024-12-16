@@ -1,3 +1,10 @@
+## [0.26.6](https://github.com/blinko-space/blinko/compare/v0.26.5...v0.26.6) (2024-12-16)
+
+
+### Bug Fixes
+
+* seed file ([a52c223](https://github.com/blinko-space/blinko/commit/a52c223f1446837079b570aedde5653050a8c9bb))
+
 ## [0.26.5](https://github.com/blinko-space/blinko/compare/v0.26.4...v0.26.5) (2024-12-16)
 
 

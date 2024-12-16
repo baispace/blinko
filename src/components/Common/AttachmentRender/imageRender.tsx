@@ -56,6 +56,7 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
       }
       setCurrentSrc(file.preview)
     }}
+    crossOrigin="use-credentials"
     className={`object-cover w-full ${className} `}
   />
 }

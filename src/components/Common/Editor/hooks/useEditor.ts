@@ -56,6 +56,22 @@ export const useEditorInit = (
         onChange?.(value)
         store.handlePopAiWrite()
       },
+      upload: {
+        url: '/api/file/upload',
+        success: (editor, res) => {
+          console.log(res)
+          const { fileName, filePath, type, size } = JSON.parse(res)
+          store.handlePasteFile({
+            fileName,
+            filePath,
+            type,
+            size
+          })
+        },
+        max: 1024 * 1024 * 1000,
+        fieldName: 'file',
+        multiple: false
+      },
       undoDelay: 20,
       value: content,
       toolbarConfig: {

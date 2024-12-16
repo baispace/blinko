@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { PromiseCall } from "@/store/standard/PromiseState";
 import { DialogStore } from "@/store/module/Dialog";
 import { FilesAttachmentRender } from "@/components/Common/AttachmentRender";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 const Page = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -44,7 +45,7 @@ const Page = observer(() => {
                         method: 'POST',
                         body: JSON.stringify({ attachment_path: i.path }),
                       }))
-                      RootStore.Get(DialogStore).close()
+                      RootStore.Get(DialogStandaloneStore).close()
                       blinko.resourceList.resetAndCall({})
                     }
                   })

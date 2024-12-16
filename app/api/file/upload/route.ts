@@ -19,5 +19,5 @@ export const POST = async (req: Request, res: NextResponse) => {
   const extension = path.extname(originalName);
   const filePath = await FileService.uploadFile(buffer, originalName)
   //@ts-ignore
-  return NextResponse.json({ Message: "Success", status: 200, ...filePath, type: file?.type ?? '' });
+  return NextResponse.json({ Message: "Success", status: 200, ...filePath, type: file?.type ?? '', size: file?.size ?? 0 });
 };

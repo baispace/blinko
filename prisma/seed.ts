@@ -231,6 +231,15 @@ const tagsToNote = [
 const prisma = new PrismaClient();
 
 async function main() {
+  try {
+    await fs.mkdir(".blinko")
+  } catch (error) { }
+
+  try {
+    await Promise.all([fs.mkdir(".blinko/files"), fs.mkdir(".blinko/faiss"), fs.mkdir(".blinko/pgdump")])
+  } catch (error) { }
+
+
   const hasNotes = await prisma.notes.findMany();
   if (hasNotes.length == 0) {
     await prisma.notes.createMany({ data: notes })
@@ -241,6 +250,11 @@ async function main() {
     await prisma.$executeRaw`SELECT setval('tag_id_seq', (SELECT MAX(id) FROM "tag") + 1);`
     await prisma.$executeRaw`SELECT setval('"tagsToNote_id_seq"', (SELECT MAX(id) FROM "tagsToNote") + 1);`
     await prisma.$executeRaw`SELECT setval('attachments_id_seq', (SELECT MAX(id) FROM "attachments") + 1);`
+    ncp('prisma/seedfiles', ".blinko/files", (err) => {
+      if (err) {
+        console.log(err)
+      }
+    })
   }
   //Compatible with users prior to v0.2.9
   const account = await prisma.accounts.findFirst({ orderBy: { id: 'asc' } })
@@ -263,21 +277,6 @@ async function main() {
     }
   }
 
-  try {
-    await fs.mkdir(".blinko")
-  } catch (error) { }
-
-  try {
-    await Promise.all([fs.mkdir(".blinko/files"), fs.mkdir(".blinko/faiss"), fs.mkdir(".blinko/pgdump")])
-  } catch (error) { }
-
-  ncp('prisma/seedfiles', ".blinko/files", (err) => {
-    if (err) {
-      console.log(err)
-    }
-  })
-
-  //v0.23.3 if no tags assigned to account, assign to superadmin
   const tagsWithoutAccount = await prisma.tag.findMany({ where: { accountId: null } })
   for (const account of accounts) {
     if (account.role == 'superadmin') {

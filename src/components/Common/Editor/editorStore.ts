@@ -117,7 +117,7 @@ export class EditorStore {
     }
   }
 
-  uploadFiles = (acceptedFiles, isShowConfirm = false) => {
+  uploadFiles = (acceptedFiles) => {
     const _acceptedFiles = acceptedFiles.map(file => {
       const extension = helper.getFileExtension(file.name)
       const previewType = helper.getFileType(file.type, file.name)
@@ -136,13 +136,6 @@ export class EditorStore {
               body: formData,
             });
             const data = await response.json();
-            if (isShowConfirm) {
-              if (data.type.includes('image')) {
-                this.vditor?.insertValue(`![${data.fileName}](${data.filePath})`)
-              } else {
-                this.vditor?.insertValue(`[${data.fileName}](${data.filePath})`)
-              }
-            }
             this.speechToText(data.filePath)
             if (data.filePath) {
               return data.filePath
@@ -152,24 +145,43 @@ export class EditorStore {
         type: file.type
       }
     })
-    if (isShowConfirm) {
-      showTipsDialog({
-        title: i18n.t('insert-attachment-or-note'),
-        content: i18n.t('paste-to-note-or-attachment'),
-        onConfirm: async () => {
-          await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
-          RootStore.Get(DialogStandaloneStore).close()
-        },
-        onCancel: () => {
-          this.files.push(..._acceptedFiles)
-          Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
-          RootStore.Get(DialogStandaloneStore).close()
+    this.files.push(..._acceptedFiles)
+    Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+  }
+
+  handlePasteFile = ({ fileName, filePath, type, size }: { fileName: string, filePath: string, type: string, size: number }) => {
+    const extension = helper.getFileExtension(fileName)
+    const previewType = helper.getFileType(type, fileName)
+    showTipsDialog({
+      title: i18n.t('insert-attachment-or-note'),
+      content: i18n.t('paste-to-note-or-attachment'),
+      onConfirm: async () => {
+        if (type.includes('image')) {
+          this.vditor?.insertValue(`![${fileName}](${filePath})`)
+        } else {
+          this.vditor?.insertValue(`[${fileName}](${filePath})`)
         }
-      })
-    } else {
-      this.files.push(..._acceptedFiles)
-      Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
-    }
+        RootStore.Get(DialogStandaloneStore).close()
+      },
+      onCancel: async () => {
+        const _file = {
+          name: fileName,
+          size,
+          previewType: previewType,
+          extension: extension ?? '',
+          preview: filePath,
+          uploadPromise: new PromiseState({
+            function: async () => {
+              return filePath
+            }
+          }),
+          type: type
+        }
+        await _file.uploadPromise.call()
+        this.files.push(_file)
+        RootStore.Get(DialogStandaloneStore).close()
+      }
+    })
   }
 
   handlePopAiWrite = () => {
@@ -268,14 +280,14 @@ export class EditorStore {
     //remove listener on pc
     const wysiwyg = document.querySelector('.vditor-wysiwyg .vditor-reset')
     if (wysiwyg) {
-      wysiwyg.addEventListener('paste', (e) => {
-        if (wysiwyg.contains(e.target as Node)) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-          const files = handlePaste(e)
-          this.uploadFiles(files, true)
-        }
-      }, true);
+      // wysiwyg.addEventListener('paste', (e) => {
+      //   if (wysiwyg.contains(e.target as Node)) {
+      //     e.stopImmediatePropagation();
+      //     e.preventDefault();
+      //     const files = handlePaste(e)
+      // this.uploadFiles(files, true)
+      //   }
+      // }, true);
       wysiwyg.addEventListener('ondragstart', (e) => {
         if (wysiwyg.contains(e.target as Node)) {
           e.stopImmediatePropagation();

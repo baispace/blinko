@@ -136,6 +136,20 @@
   color: var(--desc) !important;
 }
 
+.vditor-upload{
+  top:4px;
+  border-radius: 5px;
+  left: 8px;
+  background-color: #C35AF7;
+}
+
+.vditor-tip__content{
+  background-color: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+}
+
 .vditor-hint {
   z-index: 2002;
   box-shadow: var(--shadow);

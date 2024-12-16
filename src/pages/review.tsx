@@ -22,6 +22,7 @@ import { DialogStore } from '@/store/module/Dialog';
 import confetti from 'canvas-confetti'
 import { useMediaQuery } from 'usehooks-ts';
 import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 const App = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   const swiperRef = useRef(null);
@@ -146,7 +147,7 @@ const App = observer(() => {
                   onConfirm: async () => {
                     await api.notes.deleteMany.mutate({ ids: [store.currentNote!.id!] })
                     await blinko.dailyReviewNoteList.call()
-                    RootStore.Get(DialogStore).close()
+                    RootStore.Get(DialogStandaloneStore).close()
                   }
                 })
               }} isIconOnly color='danger' startContent={<Icon icon="mingcute:delete-2-line" width="20" height="20" />}></Button>

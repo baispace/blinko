@@ -12,6 +12,7 @@ import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { api } from '@/lib/trpc';
 import { DeleteItem } from '../BlinkoRightClickMenu';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 
 
 const SelectBox = `select-none multi-select-toolbar flex fixed w-[80%] md:w-fit h-[50px] 
@@ -100,7 +101,7 @@ export const BlinkoMultiSelectPop = observer(() => {
               })
             blinko.curMultiSelectIds.map(i => api.ai.embeddingDelete.mutate({ id: i }))
             blinko.onMultiSelectRest()
-            RootStore.Get(DialogStore).close()
+            RootStore.Get(DialogStandaloneStore).close()
           }
         })
 

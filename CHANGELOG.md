@@ -1,3 +1,10 @@
+## [0.26.2](https://github.com/blinko-space/blinko/compare/v0.26.1...v0.26.2) (2024-12-16)
+
+
+### Bug Fixes
+
+* style ([7238d83](https://github.com/blinko-space/blinko/commit/7238d83ea400aec428b10153981aece96929ce9c))
+
 ## [0.26.1](https://github.com/blinko-space/blinko/compare/v0.26.0...v0.26.1) (2024-12-16)
 
 

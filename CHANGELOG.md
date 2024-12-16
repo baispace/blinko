@@ -1,3 +1,12 @@
+## [0.26.3](https://github.com/blinko-space/blinko/compare/v0.26.2...v0.26.3) (2024-12-16)
+
+
+### Bug Fixes
+
+* enhance AI service and prompt functionality ([467e441](https://github.com/blinko-space/blinko/commit/467e44108d74a4b215bb287643cce9602328b2bd))
+* enhance blog content and editor functionality [#315](https://github.com/blinko-space/blinko/issues/315) ([ea77bed](https://github.com/blinko-space/blinko/commit/ea77bed5d1426d5433e7a0c161d650c1369cc0ae))
+* enhance file access control and upload handling [#313](https://github.com/blinko-space/blinko/issues/313) ([45b7eb7](https://github.com/blinko-space/blinko/commit/45b7eb72a7be50f4e0718a903d34bf0e60e3eae0))
+
 ## [0.26.2](https://github.com/blinko-space/blinko/compare/v0.26.1...v0.26.2) (2024-12-16)
 
 

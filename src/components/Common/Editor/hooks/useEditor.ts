@@ -70,7 +70,21 @@ export const useEditorInit = (
         },
         max: 1024 * 1024 * 1000,
         fieldName: 'file',
-        multiple: false
+        multiple: false,
+        linkToImgUrl: '/api/file/upload-by-url',
+        linkToImgFormat(res) {
+          const data = JSON.parse(res)
+          const result = {
+            msg: '',
+            code: 0,
+            data: {
+              originalURL: data.originalURL,
+              url: data.filePath,
+            }
+          }
+          console.log(result)
+          return JSON.stringify(result)
+        }
       },
       undoDelay: 20,
       value: content,

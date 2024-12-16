@@ -17,27 +17,8 @@ type IProps = {
 const ImageThumbnailRender = ({ file, className }: { file: FileType, className?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(
-    file.preview.replace('/api/file/', '/api/file/thumbnail/')
+    `${file.preview}?thumbnail=true`
   );
-
-  useEffect(() => {
-    const checkAndGenerateThumbnail = async () => {
-      try {
-        console.log(checkAndGenerateThumbnail)
-        const thumbnailResponse = await fetch(currentSrc);
-        if (!thumbnailResponse.ok) {
-          setCurrentSrc(file.preview);
-          await api.public.generateThumbnail.mutate({ path: file.preview })
-        }
-      } catch (error) {
-        setCurrentSrc(file.preview);
-      }
-    };
-
-    if (currentSrc.includes('/api/file/thumbnail/')) {
-      checkAndGenerateThumbnail();
-    }
-  }, [currentSrc]);
 
   useEffect(() => {
     if (isOriginalError) {
@@ -51,13 +32,13 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
       wrapper: '!max-w-full',
     }}
     onError={() => {
-      if (file.preview == currentSrc) {
+      if (file.preview === currentSrc) {
         return setIsOriginalError(true)
       }
       setCurrentSrc(file.preview)
     }}
     crossOrigin="use-credentials"
-    className={`object-cover w-full ${className} `}
+    className={`object-cover w-full ${className}`}
   />
 }
 

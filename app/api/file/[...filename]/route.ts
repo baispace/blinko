@@ -6,6 +6,8 @@ import mime from "mime-types";
 import { UPLOAD_FILE_PATH } from "@/lib/constant";
 import crypto from "crypto";
 import { getToken } from "next-auth/jwt";
+import sharp from "sharp";
+import { prisma } from "@/server/prisma";
 
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
 const ONE_YEAR_IN_SECONDS = 31536000;
@@ -13,13 +15,60 @@ const ONE_YEAR_IN_SECONDS = 31536000;
 export const GET = async (req: NextRequest, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
   const token = await getToken({ req });
-  if (fullPath.endsWith('.bko') && token?.role !== 'superadmin') {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const searchParams = req.nextUrl.searchParams;
+  const needThumbnail = searchParams.get('thumbnail') === 'true';
+  const isDownload = searchParams.get('download') === 'true';
+ 
+  if (!fullPath.includes('temp/') && !fullPath.endsWith('.bko')) {
+    const myFile = await prisma.attachments.findFirst({
+      where: {
+        path: '/api/file/' + fullPath
+      },
+      include: {
+        note: {
+          select: {
+            isShare: true,
+            accountId: true
+          }
+        }
+      }
+    })
+    
+    if (myFile && !myFile?.note.isShare && Number(token?.id) != myFile?.note.accountId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
+
+
+  if (fullPath.endsWith('.bko') && token?.role !== 'superadmin') {
+    return NextResponse.json({ error: "Only superadmin can access" }, { status: 401 });
+  }
+
+
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
   const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
 
   try {
+    if (isImage(fullPath) && needThumbnail) {
+      const imageBuffer = await readFile(filePath);
+      const thumbnail = await sharp(imageBuffer)
+        .rotate()
+        .resize(200, 200, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .toBuffer();
+
+      return new Response(thumbnail, {
+        headers: {
+          "Content-Type": mime.lookup(filePath) || "image/jpeg",
+          "Cache-Control": "public, max-age=31536000",
+          "Content-Disposition": `inline; filename="thumb_${path.basename(fullPath)}"`,
+        }
+      });
+    }
+
     const stats = await stat(filePath);
 
     if (!stats.isFile()) {
@@ -44,8 +93,11 @@ export const GET = async (req: NextRequest, { params }: any) => {
       "Content-Type": contentType,
       "ETag": etag,
       "Cache-Control": "public, max-age=3600",
-      "Content-Disposition": `attachment; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`,
     };
+
+    if (isDownload) {
+      commonHeaders["Content-Disposition"] = `attachment; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`;
+    }
 
     const range = req.headers.get("range");
 
@@ -124,4 +176,9 @@ function generateFileHash(filePath: string): string {
   const hashSum = crypto.createHash('sha256');
   hashSum.update(hashContent);
   return hashSum.digest('hex');
+}
+
+function isImage(filename: string): boolean {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 }

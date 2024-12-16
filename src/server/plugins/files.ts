@@ -1,12 +1,10 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routers/config";
 import { THUMBNAIL_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
-import fs, { unlink, stat, writeFile } from 'fs/promises';
+import fs, { unlink,  writeFile } from 'fs/promises';
 import path from 'path';
 import { cache } from "@/lib/cache";
-import sharp from "sharp";
 import { prisma } from "../prisma";
-import { existsSync } from "fs";
 
 export class FileService {
   public static async getS3Client() {
@@ -45,30 +43,7 @@ export class FileService {
       const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
       //@ts-ignore
       await writeFile(filePath, buffer);
-      await this.createThumbnail(filename, extension);
       return filename;
-    }
-  }
-
-  //file name like : 1234567890.jpg extension like : .jpg
-  static async createThumbnail(filename: string, extension: string) {
-    try {
-      const imagePath = `${UPLOAD_FILE_PATH}/` + filename;
-      if (!existsSync(THUMBNAIL_PATH)) {
-        await fs.mkdir(THUMBNAIL_PATH, { recursive: true });
-      }
-      if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(extension.replace('.', '')?.toLowerCase() ?? '')) {
-        await sharp(imagePath)
-          .rotate()
-          .resize(500, 500, {
-            fit: 'inside',
-            withoutEnlargement: true
-          })
-          .toFile(THUMBNAIL_PATH + '/' + filename);
-        return `/api/file/thumbnail/${filename}`;
-      }
-    } catch (error) {
-      console.error("Error thumbnail occurred ", error);
     }
   }
 

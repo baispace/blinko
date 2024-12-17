@@ -18,6 +18,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShowGen2FATokenModal } from "../Common/TwoFactorModal/gen2FATokenModal";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { eventBus } from "@/lib/event";
 
 export const BasicSetting = observer(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -240,9 +241,7 @@ export const BasicSetting = observer(() => {
           <Tooltip placement="bottom" content={t('logout')}>
             <Button isIconOnly startContent={<Icon icon="hugeicons:logout-05" width="20" height="20" />} color='danger' onPress={async () => {
               await signOut({ redirect: false })
-              router.push('/signin')
-              localStorage.removeItem('username')
-              localStorage.removeItem('password')
+              eventBus.emit('user:signout')
             }}></Button>
           </Tooltip>
         } />

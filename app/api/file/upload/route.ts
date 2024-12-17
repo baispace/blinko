@@ -40,8 +40,3 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   }
 };
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

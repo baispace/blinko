@@ -1,3 +1,10 @@
+## [0.26.12](https://github.com/blinko-space/blinko/compare/v0.26.11...v0.26.12) (2024-12-17)
+
+
+### Bug Fixes
+
+* add error logging in FileService writeFileSafe method ([17604c2](https://github.com/blinko-space/blinko/commit/17604c28f08e0e3f4ab426e074bbd8c812d6375f))
+
 ## [0.26.11](https://github.com/blinko-space/blinko/compare/v0.26.10...v0.26.11) (2024-12-17)
 
 

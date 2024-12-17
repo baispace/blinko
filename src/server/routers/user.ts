@@ -267,6 +267,8 @@ export const userRouter = router({
           where: { id }
         })
 
+
+
         if (!userToDelete) {
           throw new TRPCError({
             code: 'NOT_FOUND',
@@ -278,6 +280,13 @@ export const userRouter = router({
           throw new TRPCError({
             code: 'FORBIDDEN',
             message: 'Cannot delete super admin account'
+          })
+        }
+
+        if (userToDelete.id === Number(ctx.id)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot delete yourself'
           })
         }
 

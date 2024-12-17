@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Button, Input, Checkbox, Link, Image, InputOtp } from "@nextui-org/react";
+import React, { useEffect, useState } from "react";
+import { Button, Input, Checkbox, Link, Image } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { signIn } from "next-auth/react";
 import { RootStore } from "@/store";
 import { useRouter } from "next/router";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { useTranslation } from "react-i18next";
-import { api } from "@/lib/trpc";
 import { StorageState } from "@/store/standard/StorageState";
 import { UserStore } from "@/store/user";
 import { ShowTwoFactorModal } from "@/components/Common/TwoFactorModal";
 import { DialogStore } from "@/store/module/Dialog";
 import { PromiseState } from "@/store/standard/PromiseState";
+import { useTheme } from "next-themes";
 
 export default function Component() {
   const router = useRouter()
@@ -19,6 +19,7 @@ export default function Component() {
   const [user, setUser] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [canRegister, setCanRegister] = useState(false)
+  const { theme } = useTheme()
   const { t } = useTranslation()
   const SignIn = new PromiseState({
     function: async () => {
@@ -98,7 +99,7 @@ export default function Component() {
     <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-rose-400 via-fuchsia-500 to-indigo-500 p-2 sm:p-4 lg:p-8">
       <div className="flex w-full max-w-sm flex-col gap-4 rounded-large bg-content1 px-8 pb-10 pt-6 shadow-large">
         <p className="pb-2 text-xl font-medium flex gap-2 items-center justiy-center">
-          Login With <Image src='/logo-light.png' width={100} radius="none"></Image></p>
+          Login With <Image src={theme === 'light' ? '/logo-light.png' : '/logo-dark.png'} width={100} radius="none"></Image></p>
         <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
           <Input
             label={t('username')}

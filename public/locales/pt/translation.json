@@ -255,5 +255,9 @@
   "context": "Contexto",
   "paste-to-note-or-attachment": "Tem certeza de que deseja colar no contexto ou no anexo?",
   "attachment": "Anexo",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Após a exclusão, todos os dados do usuário serão apagados e não poderão ser recuperados."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Após a exclusão, todos os dados do usuário serão apagados e não poderão ser recuperados.",
+  "upload-completed": "Carregamento concluído",
+  "upload-cancelled": "Envio cancelado",
+  "upload-failed": "Falha ao Carregar",
+  "import-from-bko-tip": "O envio para o s3 para recuperação não é suportado neste momento. Por favor, desative temporariamente a opção s3 quando desejar recuperar."
 }

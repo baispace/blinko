@@ -305,5 +305,9 @@
   "context": "コンテクスト",
   "paste-to-note-or-attachment": "コンテキストや添付ファイルに貼り付けることを確認しますか？",
   "attachment": "添付",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "削除後、すべてのユーザーデータは消去され、回復不能になります。"
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "削除後、すべてのユーザーデータは消去され、回復不能になります。",
+  "upload-completed": "アップロードが完了しました",
+  "upload-cancelled": "アップロードがキャンセルされました",
+  "upload-failed": "アップロードに失敗しました",
+  "import-from-bko-tip": "この時点では、S3 へのアップロードによるリカバリはサポートされていません。リカバリを行う際には一時的に S3 オプションを無効にしてください。"
 }

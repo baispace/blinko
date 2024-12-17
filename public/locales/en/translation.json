@@ -343,5 +343,9 @@
   "paste-to-note-or-attachment": "Are you sure to paste to context or attachment? ",
   "context": "Context",
   "attachment": "Attachment",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "After deletion, all user data will be cleared and unrecoverable."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "After deletion, all user data will be cleared and unrecoverable.",
+  "upload-completed": "Upload completed",
+  "upload-cancelled": "Upload cancelled",
+  "upload-failed": "Upload Failed",
+  "import-from-bko-tip": "Uploading to s3 for recovery is not supported at this time. Please disable the s3 option temporarily when you want to recover."
 }

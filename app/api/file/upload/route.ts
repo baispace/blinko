@@ -8,20 +8,40 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const formData = await req.formData();
-  const file = formData.getAll('file')[0]
-  if (!file) {
-    return NextResponse.json({ error: "No files received." }, { status: 400 });
-  }
+
   if (process.env.IS_DEMO) {
     return NextResponse.json({ error: "In Demo App" }, { status: 401 });
   }
-  //@ts-ignore
-  const buffer = Buffer.from(await file.arrayBuffer());
-  //@ts-ignore
-  const originalName = (file.name).replaceAll(" ", "_");
-  const extension = path.extname(originalName);
-  const filePath = await FileService.uploadFile(buffer, originalName)
-  //@ts-ignore
-  return NextResponse.json({ Message: "Success", status: 200, ...filePath, type: file?.type ?? '', size: file?.size ?? 0 });
+
+  try {
+    const formData = await req.formData();
+    const file = formData.getAll('file')[0] as File;
+    
+    if (!file) {
+      return NextResponse.json({ error: "No files received." }, { status: 400 });
+    }
+
+    const originalName = file.name.replaceAll(" ", "_");
+    const stream = file.stream();
+    
+    const filePath = await FileService.uploadFileStream(stream, originalName, file.size);
+
+    return NextResponse.json({ 
+      Message: "Success", 
+      status: 200, 
+      ...filePath,
+      type: file.type,
+      size: file.size
+    });
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+};
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
 };

@@ -17,6 +17,8 @@ import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { handlePaste } from '@/lib/hooks';
 import { Button } from '@nextui-org/react';
+import axios from 'axios';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
@@ -132,11 +134,14 @@ export class EditorStore {
           function: async () => {
             const formData = new FormData();
             formData.append('file', file)
-            const response = await fetch('/api/file/upload', {
-              method: 'POST',
-              body: formData,
+            const { onUploadProgress } = RootStore.Get(ToastPlugin)
+              .setSizeThreshold(40)
+              .uploadProgress(file);
+
+            const response = await axios.post('/api/file/upload', formData, {
+              onUploadProgress
             });
-            const data = await response.json();
+            const data = response.data;
             this.speechToText(data.filePath)
             if (data.filePath) {
               return data.filePath

@@ -4,12 +4,20 @@ import { Button } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
+import { RootStore } from "@/store";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { BlinkoStore } from "@/store/blinkoStore";
+import { observer } from "mobx-react-lite";
+
 type IProps = {
   onUpload?: ({ filePath, fileName }) => void
 }
-export const UploadFileWrapper = ({ onUpload }: IProps) => {
+
+export const UploadFileWrapper = observer(({ onUpload }: IProps) => {
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
+  const blinko = RootStore.Get(BlinkoStore)
   const {
     getRootProps,
     getInputProps,
@@ -19,21 +27,38 @@ export const UploadFileWrapper = ({ onUpload }: IProps) => {
     noClick: true,
     onDrop: async acceptedFiles => {
       setIsLoading(true)
-      const file = acceptedFiles[0]!
-      const formData = new FormData();
-      formData.append('file', file)
-      const response = await fetch('/api/file/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      onUpload?.(data)
-      setIsLoading(false)
+      try {
+        const file = acceptedFiles[0]!
+        const formData = new FormData();
+        formData.append('file', file)
+        
+        const { onUploadProgress } = RootStore.Get(ToastPlugin)
+          .setSizeThreshold(40)
+          .uploadProgress(file);
+
+        const response = await axios.post('/api/file/upload', formData, {
+          onUploadProgress
+        });
+        
+        onUpload?.(response.data)
+      } catch (error) {
+        console.error('Upload failed:', error);
+      } finally {
+        setIsLoading(false)
+      }
     }
   });
 
   return <div {...getRootProps()}>
     <input {...getInputProps()} />
-    <Button onPress={open} isLoading={isLoading} color='primary' startContent={<Icon icon="tabler:upload" width="24" height="24" />}>{t('upload')}</Button>
+    <Button 
+      isDisabled={blinko.config.value?.objectStorage === 's3'}
+      onPress={open} 
+      isLoading={isLoading} 
+      color='primary' 
+      startContent={<Icon icon="tabler:upload" width="24" height="24" />}
+    >
+      {t('upload')}
+    </Button>
   </div>
-}
+})

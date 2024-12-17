@@ -332,5 +332,9 @@
   "context": "Kontext",
   "paste-to-note-or-attachment": "Sind Sie sicher, dass Sie in den Kontext oder als Anhang einfügen möchten?",
   "attachment": "Anhang",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Nach dem Löschen werden alle Benutzerdaten gelöscht und können nicht wiederhergestellt werden."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Nach dem Löschen werden alle Benutzerdaten gelöscht und können nicht wiederhergestellt werden.",
+  "upload-completed": "Hochladen abgeschlossen",
+  "upload-cancelled": "Upload abgebrochen",
+  "upload-failed": "Upload fehlgeschlagen",
+  "import-from-bko-tip": "Das Hochladen zur Wiederherstellung auf S3 wird derzeit nicht unterstützt. Deaktivieren Sie die S3-Option vorübergehend, wenn Sie eine Wiederherstellung durchführen möchten."
 }

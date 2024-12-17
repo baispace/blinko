@@ -320,5 +320,9 @@
   "context": "Contexte",
   "paste-to-note-or-attachment": "Êtes-vous sûr de coller dans le contexte ou en pièce jointe ?",
   "attachment": "Pièce jointe",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Après la suppression, toutes les données utilisateur seront effacées et définitivement irrécupérables."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Après la suppression, toutes les données utilisateur seront effacées et définitivement irrécupérables.",
+  "upload-completed": "Téléchargement terminé",
+  "upload-cancelled": "Téléchargement annulé",
+  "upload-failed": "Téléchargement échoué",
+  "import-from-bko-tip": "Le téléversement vers s3 pour la récupération n'est pas pris en charge actuellement. Veuillez désactiver temporairement l'option s3 lorsque vous souhaitez récupérer."
 }

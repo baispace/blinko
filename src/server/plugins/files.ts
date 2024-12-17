@@ -5,6 +5,10 @@ import fs, { unlink,  writeFile } from 'fs/promises';
 import path from 'path';
 import { cache } from "@/lib/cache";
 import { prisma } from "../prisma";
+import { Readable } from 'stream';
+import { Upload } from "@aws-sdk/lib-storage";
+import { PassThrough } from 'stream';
+import { createWriteStream } from "fs";
 
 export class FileService {
   public static async getS3Client() {
@@ -133,6 +137,59 @@ export class FileService {
       return tempPath;
     } else {
       return path.join(UPLOAD_FILE_PATH, fileName);
+    }
+  }
+
+  static async uploadFileStream(stream: ReadableStream, originalName: string, fileSize: number) {
+    const config = await getGlobalConfig({ useAdmin: true });
+    const extension = path.extname(originalName);
+    const baseName = path.basename(originalName, extension);
+    const timestamp = Date.now();
+    const timestampedFileName = `${baseName}_${timestamp}${extension}`;
+
+    if (config.objectStorage === 's3') {
+      const { s3ClientInstance } = await this.getS3Client();
+      
+      let customPath = config.s3CustomPath || '';
+      if (customPath) {
+        customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+        customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+      }
+
+      const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+      
+      const passThrough = new PassThrough();
+      const nodeReadable = Readable.fromWeb(stream as any);
+      nodeReadable.pipe(passThrough);
+
+      const upload = new Upload({
+        client: s3ClientInstance,
+        params: {
+          Bucket: config.s3Bucket,
+          Key: s3Key,
+          Body: passThrough,
+        },
+      });
+
+      await upload.done();
+      const s3Url = `/api/s3file/${s3Key}`;
+      return { filePath: s3Url, fileName: timestampedFileName };
+      
+    } else {
+      const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, timestampedFileName);
+      const writeStream = createWriteStream(filePath);
+      const nodeReadable = Readable.fromWeb(stream as any);
+
+      await new Promise((resolve, reject) => {
+        nodeReadable.pipe(writeStream)
+          .on('finish', resolve)
+          .on('error', reject);
+      });
+
+      return { 
+        filePath: `/api/file/${timestampedFileName}`, 
+        fileName: timestampedFileName 
+      };
     }
   }
 }

@@ -1,3 +1,10 @@
+## [0.26.11](https://github.com/blinko-space/blinko/compare/v0.26.10...v0.26.11) (2024-12-17)
+
+
+### Bug Fixes
+
+* update logo assets and caching headers ([da931de](https://github.com/blinko-space/blinko/commit/da931debcc34f0bf50ed86934c6fa1c5ab0b5f7d))
+
 ## [0.26.10](https://github.com/blinko-space/blinko/compare/v0.26.9...v0.26.10) (2024-12-16)
 
 

@@ -356,5 +356,6 @@
   "insert-attachment-or-note": "插入附件还是笔记中？",
   "paste-to-note-or-attachment": "您确定要粘贴到上下文或附件吗？",
   "context": "正文",
-  "attachment": "附件"
+  "attachment": "附件",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "删除后，所有用户数据将被清除且无法恢复。"
 }

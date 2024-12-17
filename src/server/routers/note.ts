@@ -10,6 +10,7 @@ import { getGlobalConfig } from './config';
 import { FileService } from '../plugins/files';
 import { AiService } from '../plugins/ai';
 import { SendWebhook } from './helper';
+import { Context } from '../context';
 
 const extractHashtags = (input: string): string[] => {
   const withoutCodeBlocks = input.replace(/```[\s\S]*?```/g, '');
@@ -17,6 +18,7 @@ const extractHashtags = (input: string): string[] => {
   const matches = withoutCodeBlocks.match(hashtagRegex);
   return matches ? matches : [];
 }
+
 
 export const noteRouter = router({
   list: authProcedure
@@ -424,66 +426,12 @@ export const noteRouter = router({
     }),
   deleteMany: authProcedure.use(demoAuthMiddleware)
     .meta({ openapi: { method: 'POST', path: '/v1/note/batch-delete', summary: 'Batch delete note', protect: true, tags: ['Note'] } })
-    // .output(z.union([z.null(), notesSchema]))
     .input(z.object({
       ids: z.array(z.number())
     }))
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
-      const { ids } = input
-      const notes = await prisma.notes.findMany({
-        where: { id: { in: ids }, accountId: Number(ctx.id) },
-        include: {
-          tags: { include: { tag: true } },
-          attachments: true,
-          references: true,
-          referencedBy: true
-        }
-      })
-      const handleDeleteRelation = async () => {
-        for (const note of notes) {
-          SendWebhook({ ...note }, 'delete', ctx)
-          await prisma.tagsToNote.deleteMany({ where: { noteId: note.id } })
-
-          await prisma.noteReference.deleteMany({
-            where: {
-              OR: [
-                { fromNoteId: note.id },
-                { toNoteId: note.id }
-              ]
-            }
-          })
-
-          const allTagsInThisNote = note.tags || []
-          const oldTags = allTagsInThisNote.map(i => i.tag).filter(i => !!i)
-          const allTagsIds = oldTags?.map(i => i?.id)
-          const usingTags = (await prisma.tagsToNote.findMany({
-            where: { tagId: { in: allTagsIds } },
-            include: { tag: true }
-          })).map(i => i.tag?.id).filter(i => !!i)
-          const needTobeDeledTags = _.difference(allTagsIds, usingTags);
-          if (needTobeDeledTags?.length) {
-            await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags }, accountId: Number(ctx.id) } })
-          }
-
-          if (note.attachments?.length) {
-            for (const attachment of note.attachments) {
-              try {
-                await FileService.deleteFile(attachment.path)
-              } catch (error) {
-                console.log('delete attachment error:', error)
-              }
-            }
-            await prisma.attachments.deleteMany({
-              where: { id: { in: note.attachments.map(i => i.id) } }
-            })
-          }
-        }
-      }
-
-      await handleDeleteRelation()
-      await prisma.notes.deleteMany({ where: { id: { in: ids }, accountId: Number(ctx.id) } })
-      return { ok: true }
+      return await deleteNotes(input.ids, ctx);
     }),
   addReference: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/add-reference', summary: 'Add note reference', protect: true, tags: ['Note'] } })
@@ -560,6 +508,24 @@ export const noteRouter = router({
         }));
       }
     }),
+  clearRecycleBin: authProcedure.use(demoAuthMiddleware)
+    .meta({ openapi: { method: 'POST', path: '/v1/note/clear-recycle-bin', summary: 'Clear recycle bin', protect: true, tags: ['Note'] } })
+    .input(z.void())
+    .output(z.any())
+    .mutation(async function ({ ctx }) {
+      const recycleBinNotes = await prisma.notes.findMany({
+        where: { 
+          accountId: Number(ctx.id),
+          isRecycle: true 
+        },
+        select: { id: true }
+      });
+      
+      const noteIds = recycleBinNotes.map(note => note.id);
+      if(noteIds.length === 0) return { ok: true };
+      
+      return await deleteNotes(noteIds, ctx);
+    }),
 })
 
 let insertNoteReference = async ({ fromNoteId, toNoteId, accountId }) => {
@@ -580,6 +546,60 @@ let insertNoteReference = async ({ fromNoteId, toNoteId, accountId }) => {
   });
 }
 
-// let deleteNoteReference = async ({ fromNoteId, toNoteId, accountId }) => {
-//   return await prisma.noteReference.deleteMany({ where: { fromNoteId, toNoteId, accountId } })
-// }
+
+export async function deleteNotes(ids: number[], ctx: Context) {
+  const notes = await prisma.notes.findMany({
+    where: { id: { in: ids }, accountId: Number(ctx.id) },
+    include: {
+      tags: { include: { tag: true } },
+      attachments: true,
+      references: true,
+      referencedBy: true
+    }
+  });
+
+  const handleDeleteRelation = async () => {
+    for (const note of notes) {
+      SendWebhook({ ...note }, 'delete', ctx);
+      await prisma.tagsToNote.deleteMany({ where: { noteId: note.id } });
+
+      await prisma.noteReference.deleteMany({
+        where: {
+          OR: [
+            { fromNoteId: note.id },
+            { toNoteId: note.id }
+          ]
+        }
+      });
+
+      const allTagsInThisNote = note.tags || [];
+      const oldTags = allTagsInThisNote.map(i => i.tag).filter(i => !!i);
+      const allTagsIds = oldTags?.map(i => i?.id);
+      const usingTags = (await prisma.tagsToNote.findMany({
+        where: { tagId: { in: allTagsIds } },
+        include: { tag: true }
+      })).map(i => i.tag?.id).filter(i => !!i);
+      const needTobeDeledTags = _.difference(allTagsIds, usingTags);
+      if (needTobeDeledTags?.length) {
+        await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags }, accountId: Number(ctx.id) } });
+      }
+
+      if (note.attachments?.length) {
+        for (const attachment of note.attachments) {
+          try {
+            await FileService.deleteFile(attachment.path);
+          } catch (error) {
+            console.log('delete attachment error:', error);
+          }
+        }
+        await prisma.attachments.deleteMany({
+          where: { id: { in: note.attachments.map(i => i.id) } }
+        });
+      }
+    }
+  };
+
+  await handleDeleteRelation();
+  await prisma.notes.deleteMany({ where: { id: { in: ids }, accountId: Number(ctx.id) } });
+  return { ok: true };
+}

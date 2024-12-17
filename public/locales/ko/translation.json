@@ -326,5 +326,6 @@
   "insert-attachment-or-note": "첨부 파일이나 메모로 삽입하시겠습니까?",
   "context": "문맥",
   "paste-to-note-or-attachment": "컨텍스트나 첨부 파일에 붙여 넣을 확신이 있습니까?",
-  "attachment": "첨부 파일"
+  "attachment": "첨부 파일",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "삭제 후 모든 사용자 데이터가 지워지고 복구할 수 없게 됩니다."
 }

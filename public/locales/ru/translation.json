@@ -259,5 +259,6 @@
   "insert-attachment-or-note": "Вставить во вложение или заметку?",
   "context": "Контекст",
   "paste-to-note-or-attachment": "Вы уверены, что хотите вставить в контекст или прикрепление?",
-  "attachment": "Прикрепление"
+  "attachment": "Прикрепление",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "После удаления все данные пользователей будут очищены и не поддадутся восстановлению."
 }

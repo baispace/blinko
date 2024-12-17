@@ -254,5 +254,6 @@
   "insert-attachment-or-note": "Inserir em anexo ou nota?",
   "context": "Contexto",
   "paste-to-note-or-attachment": "Tem certeza de que deseja colar no contexto ou no anexo?",
-  "attachment": "Anexo"
+  "attachment": "Anexo",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Após a exclusão, todos os dados do usuário serão apagados e não poderão ser recuperados."
 }

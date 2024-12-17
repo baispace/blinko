@@ -39,9 +39,9 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       <div className="flex items-center  select-none w-full">
         {!base.isSidebarCollapsed && (
           theme == 'dark' ? (
-            <Image src="/logo-dark.svg" width={100} />
+            <Image src="/logo-dark.png" width={100} radius="none"/>
           ) : (
-            <Image src="/logo.svg" width={100} />
+            <Image src="/logo-light.png" width={100} radius="none"/>
           )
         )}
         {

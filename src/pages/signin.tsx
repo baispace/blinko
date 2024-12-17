@@ -12,6 +12,7 @@ import { ShowTwoFactorModal } from "@/components/Common/TwoFactorModal";
 import { DialogStore } from "@/store/module/Dialog";
 import { PromiseState } from "@/store/standard/PromiseState";
 import { useTheme } from "next-themes";
+import { eventBus } from "@/lib/event";
 
 export default function Component() {
   const router = useRouter()
@@ -162,9 +163,6 @@ export default function Component() {
           </p>
         }
       </div>
-
-
-
     </div >
   );
 }

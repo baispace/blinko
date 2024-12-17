@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input } from "@nextui-org/react";
+import { Button, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input } from "@nextui-org/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "usehooks-ts";
 import { useEffect } from "react";
 import { PasswordInput } from "@/components/Common/PasswordInput";
+import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 
 
 export const StorageSetting = observer(() => {
@@ -35,13 +36,12 @@ export const StorageSetting = observer(() => {
   }, [blinko.config.value])
 
 
-  return <Card shadow="none" className="flex flex-col p-4 bg-background">
-    <div className='text-desc flex items-center gap-2'>
-      <Icon icon="tabler:brush" width="20" height="20" />
-      <div className="text-sm">{t('storage')}</div>
-    </div>
+  return <CollapsibleCard
+    icon="tabler:brush"
+    title={t('storage')}
+  >
     <Item
-      leftContent={<div className="flex flex-col  gap-2">
+      leftContent={<div className="flex flex-col gap-2">
         <div>{t('object-storage')}</div>
       </div>}
       rightContent={<div>
@@ -129,5 +129,5 @@ export const StorageSetting = observer(() => {
             }} />} />
       </>
     }
-  </Card>
+  </CollapsibleCard>
 })

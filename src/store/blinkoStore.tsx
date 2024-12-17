@@ -228,7 +228,6 @@ export class BlinkoStore implements Store {
     const { tagId, withoutTag, withFile, withLink, searchText } = router.query;
     useEffect(() => {
       if (!router.isReady) return
-      console.log(searchText)
       this.noteListFilterConfig.type = NoteType.BLINKO
       this.noteTypeDefault = NoteType.BLINKO
       this.noteListFilterConfig.tagId = null

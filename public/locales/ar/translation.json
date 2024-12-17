@@ -345,5 +345,9 @@
   "context": "السياق",
   "paste-to-note-or-attachment": "هل أنت متأكد من لصق النص في السياق أو المرفق؟",
   "attachment": "المرفق",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "بعد الحذف، سيتم مسح جميع بيانات المستخدم ولن يمكن استرجاعها."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "بعد الحذف، سيتم مسح جميع بيانات المستخدم ولن يمكن استرجاعها.",
+  "upload-completed": "تم الرفع بنجاح",
+  "upload-cancelled": "تم إلغاء التحميل",
+  "upload-failed": "فشل التحميل",
+  "import-from-bko-tip": "تحميل إلى s3 للإسترداد غير مدعوم في الوقت الحالي. يُرجى تعطيل الخيار s3 مؤقتًا عند رغبتك في الاسترداد."
 }

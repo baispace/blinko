@@ -25,6 +25,7 @@ export class UserStore implements User, Store {
   token: string = '';
   role: string = '';
   theme: any = 'light';
+  isSetup: boolean = false;
 
   wait() {
     return new Promise<UserStore>((res, rej) => {
@@ -75,6 +76,17 @@ export class UserStore implements User, Store {
     this.setData(args);
   }
 
+  clear() {
+    console.log('clear')
+    this.token = ''
+    this.id = ''
+    this.name = ''
+    this.nickname = ''
+    this.image = ''
+    this.role = ''
+    this.isSetup = false
+  }
+
   updatePWAColor(theme: string) {
     const themeColor = theme === 'dark' ? '#1C1C1E' : '#F8F8F8';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
@@ -82,13 +94,14 @@ export class UserStore implements User, Store {
   }
 
   async setupUserPreferences(setTheme: (theme: string) => void, i18n: any) {
-    const config = this.blinko.config.value || await this.blinko.config.getOrCall();
-    const newTheme = config?.theme == 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : (config?.theme ?? 'light');
-
+    if (this.isSetup) return
+    await this.blinko.config.call();
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const config = this.blinko.config.value
+    const newTheme = config?.theme == 'system' ? systemTheme : (config?.theme ?? systemTheme);
     setTheme(newTheme);
     RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');
+    this.isSetup = true
   }
 
   use() {
@@ -108,20 +121,19 @@ export class UserStore implements User, Store {
         console.log(session)
         //@ts-ignore
         userStore.ready({ ...session.user, token: session.token });
+        this.setupUserPreferences(setTheme, i18n);
         userStore.userInfo.call(Number(this.id))
       }
     }, [session]);
-
-    useEffect(() => {
-      if (!this.isLogin) return
-      this.setupUserPreferences(setTheme, i18n);
-    }, [this.isLogin]);
 
     useEffect(() => {
       eventBus.on('user:signout', () => {
         if (router.pathname == '/signup' || router.pathname == '/api-doc' || router.pathname.includes('/share')) {
           return
         }
+        localStorage.removeItem('username')
+        localStorage.removeItem('password')
+        RootStore.Get(UserStore).clear()
         router.push('/signin')
       })
     }, []);

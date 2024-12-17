@@ -323,5 +323,9 @@
   "context": "Contexto",
   "paste-to-note-or-attachment": "¿Estás seguro de pegar en el contexto o adjuntar?",
   "attachment": "Adjunto",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Después de la eliminación, todos los datos de usuario serán borrados y no se podrán recuperar."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Después de la eliminación, todos los datos de usuario serán borrados y no se podrán recuperar.",
+  "upload-completed": "Carga completada",
+  "upload-cancelled": "Subida cancelada",
+  "upload-failed": "Error al subir",
+  "import-from-bko-tip": "La carga a s3 para recuperación no está soportada en este momento. Por favor, deshabilite temporalmente la opción s3 cuando desee recuperar."
 }

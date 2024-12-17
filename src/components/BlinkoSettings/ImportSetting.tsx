@@ -7,7 +7,7 @@ import { helper } from "@/lib/helper";
 import dayjs from "@/lib/dayjs";
 import { Icon } from "@iconify/react";
 import { api, streamApi } from "@/lib/trpc";
-import { Item } from "./Item";
+import { Item, ItemWithTooltip } from "./Item";
 import { useTranslation } from "react-i18next";
 import { UploadFileWrapper } from "../Common/UploadFile";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
@@ -26,13 +26,12 @@ export const ImportSetting = observer(() => {
     title={t('import')}
   >
     <Item
-      leftContent={<>{t('import-from-bko')}</>}
+      leftContent={<ItemWithTooltip content={t('import-from-bko')} toolTipContent={<div>{t('import-from-bko-tip')}</div>} />}
       rightContent={<>
         <UploadFileWrapper onUpload={async ({ filePath, fileName }) => {
           if (!fileName.endsWith('.bko')) {
             return RootStore.Get(ToastPlugin).error(t('not-a-bko-file'))
           }
-          // PromiseCall(api.task.restoreDB.query({ fileName }))
           ShowBlinkoProgressDialog(filePath)
         }}>
         </UploadFileWrapper>

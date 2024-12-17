@@ -327,5 +327,9 @@
   "context": "문맥",
   "paste-to-note-or-attachment": "컨텍스트나 첨부 파일에 붙여 넣을 확신이 있습니까?",
   "attachment": "첨부 파일",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "삭제 후 모든 사용자 데이터가 지워지고 복구할 수 없게 됩니다."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "삭제 후 모든 사용자 데이터가 지워지고 복구할 수 없게 됩니다.",
+  "upload-completed": "업로드가 완료되었습니다.",
+  "upload-cancelled": "업로드가 취소되었습니다.",
+  "upload-failed": "업로드 실패",
+  "import-from-bko-tip": "현재 s3로의 업로드는 복구되지 않습니다. 복구를 원할 경우 s3 옵션을 일시적으로 비활성화하십시오."
 }

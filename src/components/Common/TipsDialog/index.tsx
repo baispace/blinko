@@ -52,11 +52,11 @@ export const TipsPopover = observer((props: { children: React.ReactNode, content
           <div className="font-bold mb-2">{props.content}</div>
         </div>
         <div className='flex my-1 gap-2'>
-          <Button startContent={<Icon icon="iconoir:cancel" width="20" height="20" />} variant="flat" size="sm" className="w-1/2" color='default' onPress={e => {
+          <Button startContent={<Icon icon="iconoir:cancel" width="20" height="20" />} variant="flat" size="sm" className="ml-auto" color='default' onPress={e => {
             RootStore.Get(DialogStandaloneStore).close()
             props.onCancel?.()
           }}>{t('cancel')}</Button>
-          <Button startContent={<Icon icon="cil:check-alt" width="20" height="20" />} isLoading={isLoading} className="w-1/2" size="sm" color='danger' onPress={async e => {
+          <Button startContent={<Icon icon="cil:check-alt" width="20" height="20" />} isLoading={isLoading}  size="sm" color='danger' onPress={async e => {
             props.onConfirm?.()
           }}>{t('confirm')}</Button>
         </div>

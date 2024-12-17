@@ -273,5 +273,9 @@
   "context": "Bağlam",
   "paste-to-note-or-attachment": "Metin veya ek dosyaya yapıştırmak istediğinizden emin misiniz?",
   "attachment": "Eklenti",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Silme işleminden sonra, tüm kullanıcı verileri temizlenecek ve kurtarılamaz hale gelecektir."
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Silme işleminden sonra, tüm kullanıcı verileri temizlenecek ve kurtarılamaz hale gelecektir.",
+  "upload-completed": "Yükleme tamamlandı",
+  "upload-cancelled": "Yükleme iptal edildi",
+  "upload-failed": "Yükleme Başarısız oldu",
+  "import-from-bko-tip": "Bu zamanda s3'e yükleme yapılmamaktadır. Kurtarma işlemi gerçekleştirmek istediğinizde lütfen geçici olarak s3 seçeneğini devre dışı bırakın."
 }

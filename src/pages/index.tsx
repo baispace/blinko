@@ -63,7 +63,7 @@ const Home = observer(() => {
             columnClassName="my-masonry-grid_column">
             {
               blinko.noteList?.value?.map(i => {
-                return <BlinkoCard blinkoItem={i} />
+                return <BlinkoCard key={i.id} blinkoItem={i} />
               })
             }
           </Masonry>

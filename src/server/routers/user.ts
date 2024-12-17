@@ -91,8 +91,27 @@ export const userRouter = router({
         const passwordHash = await hashPassword(password)
         const count = await prisma.accounts.count()
         if (count == 0) {
-          const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'superadmin' } })
-          await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name, role: 'superadmin' }) } })
+          const res = await prisma.accounts.create({ 
+            data: { 
+              name, 
+              password: passwordHash, 
+              nickname: name, 
+              role: 'superadmin',
+            } 
+          })
+          await prisma.accounts.update({ 
+            where: { id: res.id }, 
+            data: { 
+              apiToken: await genToken({ id: res.id, name, role: 'superadmin' }) 
+            } 
+          })
+          await prisma.config.create({
+            data: {
+              key: 'theme',
+              config: { value: 'system' },
+              userId: res.id
+            }
+          })
           return true
         } else {
           const config = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } })

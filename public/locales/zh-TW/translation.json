@@ -357,5 +357,9 @@
   "context": "正文",
   "paste-to-note-or-attachment": "您確定要貼上到內容或附件嗎？",
   "attachment": "附件",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "刪除後，所有用戶資料將被清空且無法恢復。"
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "刪除後，所有用戶資料將被清空且無法恢復。",
+  "upload-completed": "上傳完成",
+  "upload-cancelled": "上傳已取消",
+  "upload-failed": "上傳失敗",
+  "import-from-bko-tip": "目前不支援上傳至 s3 進行還原。當您想要進行恢復操作時，請暫時停用 s3 選項。"
 }

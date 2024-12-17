@@ -357,5 +357,9 @@
   "paste-to-note-or-attachment": "您确定要粘贴到上下文或附件吗？",
   "context": "正文",
   "attachment": "附件",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "删除后，所有用户数据将被清除且无法恢复。"
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "删除后，所有用户数据将被清除且无法恢复。",
+  "upload-completed": "上传完成",
+  "upload-cancelled": "上传已取消",
+  "upload-failed": "上传失败",
+  "import-from-bko-tip": "目前不支持将上传到S3进行恢复。当您想要恢复时，请暂时禁用S3选项。"
 }

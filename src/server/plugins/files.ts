@@ -32,7 +32,7 @@ export class FileService {
 
     let filename = attempt === 0 ?
       `${baseName}${extension}` :
-      `${baseName}_${attempt}${extension}`;
+      `${baseName}_${Date.now()}${extension}`;
 
     try {
       const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
@@ -40,6 +40,7 @@ export class FileService {
       //@ts-ignore
       return this.writeFileSafe(baseName, extension, buffer, attempt + 1);
     } catch (error) {
+      console.error(error)
       const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
       //@ts-ignore
       await writeFile(filePath, buffer);

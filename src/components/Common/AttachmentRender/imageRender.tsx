@@ -17,12 +17,13 @@ type IProps = {
 const ImageThumbnailRender = ({ file, className }: { file: FileType, className?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(
+    file.preview.includes('/api/s3file/') ? file.preview :
     `${file.preview}?thumbnail=true`
   );
 
   useEffect(() => {
     if (isOriginalError) {
-      setCurrentSrc('/image-fallback.svg')
+      setCurrentSrc('/image-fallback.svg')  
     }
   }, [isOriginalError])
 
@@ -37,7 +38,6 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
       }
       setCurrentSrc(file.preview)
     }}
-    crossOrigin="use-credentials"
     className={`object-cover w-full ${className}`}
   />
 }
@@ -73,7 +73,7 @@ const ImageRender = observer((props: IProps) => {
       return `max-h-[100px] w-auto`
     }
     if (!preview && !isPc) {
-      return `h-[80px] w-[80px] min-w-[80px]`
+      return `h-[80px]  min-w-[80px]`
     }
     if (imageLength == 1) {
       return `h-[200px] max-h-[200px] md:max-w-[200px]`

@@ -13,6 +13,9 @@ import { DialogStore } from "@/store/module/Dialog";
 import { signOut } from "next-auth/react";
 import { PasswordInput } from "../Common/PasswordInput";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { showTipsDialog } from "../Common/TipsDialog";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: string, password: string }) => {
   const { t } = useTranslation()
@@ -55,7 +58,7 @@ export const UserSetting = observer(() => {
   useEffect(() => {
     blinko.userList.call()
   }, [])
-  
+
   return (
     <CollapsibleCard
       icon="tabler:user-cog"
@@ -72,7 +75,7 @@ export const UserSetting = observer(() => {
                 content: <UpdateUserInfo name="" password="" />
               })
             }}>{t('create-user')}</Button>
-        } 
+        }
       />
 
       <Item
@@ -91,7 +94,7 @@ export const UserSetting = observer(() => {
                     <Chip size="sm" color="warning" variant="bordered">{i.role}</Chip>
                   </TableCell>
                   <TableCell>
-                    <Button isIconOnly color="primary" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
+                    <Button isIconOnly variant="flat" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
                       RootStore.Get(DialogStore).setData({
                         isOpen: true,
                         title: t('edit-user'),
@@ -99,13 +102,42 @@ export const UserSetting = observer(() => {
                       })
                     }}>
                     </Button>
+                    <Button isIconOnly color="danger" size="sm" className="ml-2"
+                      startContent={<Icon icon="tabler:trash" width="18" height="18" />}
+                      onPress={e => {
+                        showTipsDialog({
+                          size: 'sm',
+                          title: t('confirm-to-delete'),
+                          content: t('after-deletion-all-user-data-will-be-cleared-and-unrecoverable'),
+                          onConfirm: async () => {
+                            try {
+                              await RootStore.Get(ToastPlugin).promise(
+                                api.users.deleteUser.mutate({ id: i.id }),
+                                {
+                                  loading: t('in-progress'),
+                                  success: <b>{t('your-changes-have-been-saved')}</b>,
+                                  error: (e) => {
+                                    return <b>{e.message}</b>
+                                  },
+                                })
+                              blinko.userList.call()
+                              RootStore.Get(DialogStandaloneStore).close()
+                            } catch (e) {
+                              // RootStore.Get(ToastPlugin).error(e.message)
+                              RootStore.Get(DialogStandaloneStore).close()
+                            }
+                          }
+                        })
+                      }}>
+                    </Button>
                   </TableCell>
                 </TableRow>
               })
             }
           </TableBody>
-        </Table> : null}
+        </Table > : null
+        }
       />
-    </CollapsibleCard>
+    </CollapsibleCard >
   );
 });

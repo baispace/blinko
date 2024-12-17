@@ -25,6 +25,10 @@ import { Sidebar } from "./Sidebar";
 import { MobileNavBar } from "./MobileNavBar";
 import FilterPop from "../Common/PopoverFloat/filterPop";
 import { AppProvider } from "@/store/module/AppProvider";
+import { api } from "@/lib/trpc";
+import { showTipsDialog } from "../Common/TipsDialog";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 
 export const SideBarItem = "p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all"
 
@@ -122,9 +126,33 @@ export const CommonLayout = observer(({
             </Button>}
             <div className="w-full truncate text-xl font-normal md:font-bold text-default-700 flex gap-2 items-center justify-center">
               <div className="w-[4px] h-[16px] bg-primary rounded-xl" />
-              {/* @ts-ignore */}
-              <div className="font-black select-none">{t(base.currentTitle)}</div>
-              <Icon className="cursor-pointer hover:rotate-180 transition-all" onClick={() => blinkoStore.refreshData()} icon="fluent:arrow-sync-12-filled" width="20" height="20" />
+              <div className="flex flex-row items-center justify-center gap-1">
+                <div className="font-black select-none">{t(base.currentTitle)}</div>
+                {
+                  router.pathname != '/trash'
+                    ? <Icon className="cursor-pointer hover:rotate-180 transition-all"
+                      onClick={() => blinkoStore.refreshData()} icon="fluent:arrow-sync-12-filled" width="20" height="20" />
+                    : <Icon className="cursor-pointer transition-all text-red-500 mt-1"
+                      onClick={() => {
+                        showTipsDialog({
+                          size: 'sm',
+                          title: t('confirm-to-delete'),
+                          content: t('this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm'),
+                          onConfirm: async () => {
+                            await RootStore.Get(ToastPlugin).promise(
+                              api.notes.clearRecycleBin.mutate(),
+                              {
+                                loading: t('in-progress'),
+                                success: <b>{t('your-changes-have-been-saved')}</b>,
+                                error: <b>{t('operation-failed')}</b>,
+                              })
+                            blinkoStore.refreshData()
+                            RootStore.Get(DialogStandaloneStore).close()
+                          }
+                        })
+                      }} icon="mingcute:delete-2-line" width="20" height="20" />
+                }
+              </div>
               <Input
                 ref={searchInputRef}
                 fullWidth
@@ -176,7 +204,7 @@ export const CommonLayout = observer(({
           {header}
         </header>
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
-            
+
         <ScrollArea onBottom={() => { }} className="flex h-[calc(100%_-_70px)] overflow-y-scroll">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
             {children}

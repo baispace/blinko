@@ -331,5 +331,6 @@
   "insert-attachment-or-note": "In Anhang oder Notiz einfügen?",
   "context": "Kontext",
   "paste-to-note-or-attachment": "Sind Sie sicher, dass Sie in den Kontext oder als Anhang einfügen möchten?",
-  "attachment": "Anhang"
+  "attachment": "Anhang",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Nach dem Löschen werden alle Benutzerdaten gelöscht und können nicht wiederhergestellt werden."
 }

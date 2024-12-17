@@ -319,5 +319,6 @@
   "insert-attachment-or-note": "Insérer dans la pièce jointe ou la note ?",
   "context": "Contexte",
   "paste-to-note-or-attachment": "Êtes-vous sûr de coller dans le contexte ou en pièce jointe ?",
-  "attachment": "Pièce jointe"
+  "attachment": "Pièce jointe",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Après la suppression, toutes les données utilisateur seront effacées et définitivement irrécupérables."
 }

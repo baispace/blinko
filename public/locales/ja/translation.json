@@ -304,5 +304,6 @@
   "insert-attachment-or-note": "添付ファイルに挿入しますか、それともメモに書き込みますか？",
   "context": "コンテクスト",
   "paste-to-note-or-attachment": "コンテキストや添付ファイルに貼り付けることを確認しますか？",
-  "attachment": "添付"
+  "attachment": "添付",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "削除後、すべてのユーザーデータは消去され、回復不能になります。"
 }

@@ -29,11 +29,11 @@ const TipsDialog = observer(({ content, onConfirm, onCancel, buttonSlot }: any) 
   </div>
 })
 
-export const showTipsDialog = async (props: { title: string, content: string, onConfirm?, onCancel?: any, buttonSlot?: React.ReactNode }) => {
+export const showTipsDialog = async (props: { size?: 'sm' | 'md' | 'lg' | 'xl', title: string, content: string, onConfirm?, onCancel?: any, buttonSlot?: React.ReactNode }) => {
   RootStore.Get(DialogStandaloneStore).setData({
     isOpen: true,
     onlyContent: false,
-    size: 'xl',
+    size: props.size || 'md',
     title: props.title,
     content: <TipsDialog {...props} />
   })

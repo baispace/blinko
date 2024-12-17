@@ -344,5 +344,6 @@
   "insert-attachment-or-note": "الإرفاق بملف أو المذكرة؟",
   "context": "السياق",
   "paste-to-note-or-attachment": "هل أنت متأكد من لصق النص في السياق أو المرفق؟",
-  "attachment": "المرفق"
+  "attachment": "المرفق",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "بعد الحذف، سيتم مسح جميع بيانات المستخدم ولن يمكن استرجاعها."
 }

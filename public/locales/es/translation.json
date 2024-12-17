@@ -322,5 +322,6 @@
   "insert-attachment-or-note": "¿Insertar en el archivo adjunto o en la nota?",
   "context": "Contexto",
   "paste-to-note-or-attachment": "¿Estás seguro de pegar en el contexto o adjuntar?",
-  "attachment": "Adjunto"
+  "attachment": "Adjunto",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "Después de la eliminación, todos los datos de usuario serán borrados y no se podrán recuperar."
 }

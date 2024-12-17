@@ -1,5 +1,5 @@
 
-<img align='right' height='40px' src="./public/single-logo.svg" alt="Blinko" />
+<img align='right' height='40px' src="./public/logo.svg" alt="Blinko" />
 
 # Blinko - Open Source, Self-hosted
 

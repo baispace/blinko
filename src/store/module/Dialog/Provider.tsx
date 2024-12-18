@@ -8,6 +8,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { motion } from "motion/react";
 import { Icon } from "@iconify/react";
 import { CancelIcon } from "@/components/Common/Icons";
+import { ScrollArea } from "@/components/Common/ScrollArea";
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
   <div
@@ -107,14 +108,16 @@ const Dialog = observer(() => {
               className="w-full bg-background border-sencondbackground p-1 rounded-t-lg shadow-lg pointer-events-auto"
               {...motionConfig}
             >
-              <div className="flex flex-col justify-between items-center p-4 gap-2">
+              <div className="flex flex-col justify-between items-center p-2 gap-2 w-full">
                 <div className="flex gap-2 w-full items-center">
                   <div className="text-lg font-semibold">{title ?? ''}</div>
-                  <Button isIconOnly variant="light" onClick={() => modal.close()} className="ml-auto">
+                  <Button isIconOnly variant="light" onPress={() => modal.close()} className="ml-auto">
                     <Icon icon="tabler:x" width="16" height="16" />
                   </Button>
                 </div>
-                <Content />
+                <div className="w-full" >
+                  <Content />
+                </div>
               </div>
             </motion.div>
           )}
@@ -123,12 +126,14 @@ const Dialog = observer(() => {
               className="w-full pointer-events-auto "
               {...motionConfig}
             >
-              <div className="relative">
+              <div className="relative w-full">
                 {
                   showOnlyContentCloseButton &&
                   <CloseButton onClose={() => modal.close()} />
                 }
-                <Content />
+                <div className="w-full">
+                  <Content />
+                </div>
               </div>
             </motion.div>
           }

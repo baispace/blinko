@@ -51,6 +51,10 @@ export class EditorStore {
     } catch (error) { }
   }
 
+  updateFileOrder = (newFiles: FileType[]) => {
+    this.files = newFiles;
+  }
+
   insertMarkdown = (text) => {
     this.vditor?.insertValue(text)
     this.focus()
@@ -142,6 +146,12 @@ export class EditorStore {
               onUploadProgress
             });
             const data = response.data;
+            if (data.fileName) {
+              const fileIndex = this.files.findIndex(f => f.name === file.name);
+              if (fileIndex !== -1) {
+                this.files[fileIndex]!.name = data.fileName;
+              }
+            }
             this.speechToText(data.filePath)
             if (data.filePath) {
               return data.filePath

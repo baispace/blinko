@@ -106,15 +106,70 @@ export class BaseStore implements Store {
     }, [this.currentRouter, router.pathname])
   }
 
-  isSidebarCollapsed: boolean = false;
-  sideBarWidth = 288
+  sidebarWidth = new StorageState<number>({ 
+    key: 'sidebar-width',
+    default: 288,
+    validate: (value: number) => {
+      if (value < 220) return 220;
+      if (value > 400) return 400;
+      return value;
+    }
+  });
+
+  sidebarCollapsed = new StorageState<boolean>({ 
+    key: 'sidebar-collapsed',
+    default: false 
+  });
+
+  isResizing = false;
+  isDragging = false;
+
+  get isSidebarCollapsed() {
+    return this.sidebarCollapsed.value;
+  }
+
+  get sideBarWidth() {
+    return this.isSidebarCollapsed ? 80 : this.sidebarWidth.value;
+  }
+
+  set sideBarWidth(value: number) {
+    if (!this.isSidebarCollapsed) {
+      this.sidebarWidth.save(value);
+    }
+  }
+
+  startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isResizing = true;
+    this.isDragging = true;
+    document.addEventListener('mousemove', this.handleMouseMove);
+    document.addEventListener('mouseup', this.stopResizing);
+  };
+
+  handleMouseMove = (e: MouseEvent) => {
+    if (!this.isResizing || this.isSidebarCollapsed) return;
+    
+    e.preventDefault();
+    const newWidth = Math.max(80, Math.min(400, e.clientX));
+    this.sidebarWidth.save(newWidth);
+  };
+
+  stopResizing = () => {
+    this.isResizing = false;
+    setTimeout(() => {
+      this.isDragging = false;
+    }, 50);
+    document.removeEventListener('mousemove', this.handleMouseMove);
+    document.removeEventListener('mouseup', this.stopResizing);
+  };
 
   toggleSidebar = () => {
-    this.isSidebarCollapsed = !this.isSidebarCollapsed;
-    this.sideBarWidth = this.isSidebarCollapsed ? 80 : 288
+    const newCollapsed = !this.isSidebarCollapsed;
+    this.sidebarCollapsed.save(newCollapsed);
   }
+
   collapseSidebar = () => {
-    this.isSidebarCollapsed = false;
-    this.sideBarWidth = 288
+    this.sidebarCollapsed.save(false);
   }
 }

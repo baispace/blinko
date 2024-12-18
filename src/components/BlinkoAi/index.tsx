@@ -8,17 +8,16 @@ import { motion } from "motion/react"
 import { AiStore } from "@/store/aiStore";
 import { useEffect, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
-import { DialogStore } from "@/store/module/Dialog";
 import { UserStore } from "@/store/user";
 import { useTranslation } from "react-i18next";
 import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";
 import Link from "next/link";
-import DraggableDiv from "../Common/DragContainer";
 import dayjs from "@/lib/dayjs";
 import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { ResizableWrapper } from "../Common/ResizableWrapper";
 import { useRouter } from "next/router";
 import { MarkdownRender } from "../Common/MarkdownRender";
+import { useIsIOS } from "@/lib/hooks";
 
 export const BlinkoAiChat = observer(() => {
   const ai = RootStore.Get(AiStore)
@@ -26,6 +25,7 @@ export const BlinkoAiChat = observer(() => {
   const router = useRouter()
   const scrollAreaRef = useRef<ScrollAreaHandles>(null);
   const { t } = useTranslation()
+  const isIOS = useIsIOS()
   useEffect(() => {
     scrollAreaRef.current?.scrollToBottom()
   }, [ai.scrollTicker])
@@ -35,7 +35,7 @@ export const BlinkoAiChat = observer(() => {
       onBottom={() => { }}
       ref={scrollAreaRef}
       key='BlinkoAiChat'
-      className={`mx-1 w-full flex-1`}>
+      className={`mx-1 w-full flex-1 ${isIOS ? 'max-h-[70vh]' : ''}`}>
       {
         ai.chatHistory.list.length == 0 && <div className="font-bold mt-5 select-none text-desc">
           <Icon icon="fxemoji:smallsmile" width="24" height="24" />

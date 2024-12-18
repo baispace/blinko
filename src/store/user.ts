@@ -94,10 +94,10 @@ export class UserStore implements User, Store {
   }
 
   async setupUserPreferences(setTheme: (theme: string) => void, i18n: any) {
-    if (this.isSetup) return
-    await this.blinko.config.call();
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    await this.blinko.config.getOrCall();
     const config = this.blinko.config.value
+    if (this.isSetup && RootStore.Get(BaseStore).locale.value == config?.language) return
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const newTheme = config?.theme == 'system' ? systemTheme : (config?.theme ?? systemTheme);
     setTheme(newTheme);
     RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');

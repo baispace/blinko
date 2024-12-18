@@ -69,7 +69,9 @@ export default function FilterPop() {
   return (
     <Popover placement="bottom-start" backdrop="blur">
       <PopoverTrigger>
-        <Icon className="cursor-pointer" icon="tabler:filter-bolt" width="24" height="24" />
+        <Button isIconOnly size="sm" variant="light">
+          <Icon className="cursor-pointer" icon="tabler:filter-bolt" width="24" height="24" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent>
         <div className="p-4 flex flex-col gap-4 min-w-[300px]">

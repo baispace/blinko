@@ -27,15 +27,27 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
 
   useEffect(() => {
     if (!isPc) {
-      base.collapseSidebar()
+      base.collapseSidebar();
     }
-  }, [isPc])
+  }, [isPc]);
 
   return (
     <div
       style={{ width: `${base.sideBarWidth}px` }}
-      className={`flex h-full flex-1 flex-col p-4 relative bg-background transition-all duration-300 group/sidebar`}
+      className={`flex h-full flex-1 flex-col p-4 relative bg-background 
+        ${!base.isDragging ? 'transition-all duration-300' : 'transition-none'} 
+        group/sidebar`}
     >
+      {!base.isSidebarCollapsed && (
+        <div
+          className={`absolute right-0 top-0 h-full w-2 cursor-col-resize 
+            hover:bg-primary/20 active:bg-primary/40 z-50
+            ${base.isResizing ? 'bg-primary/40' : ''}`}
+          onMouseDown={base.startResizing}
+          onClick={(e) => e.stopPropagation()}
+          style={{ touchAction: 'none' }}
+        />
+      )}
       <div className="flex items-center  select-none w-full">
         {!base.isSidebarCollapsed && (
           theme == 'dark' ? (

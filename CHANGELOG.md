@@ -1,3 +1,14 @@
+## [0.27.1](https://github.com/blinko-space/blinko/compare/v0.27.0...v0.27.1) (2024-12-17)
+
+
+### Bug Fixes
+
+* adjust button alignment in TipsDialog component ([cf7b057](https://github.com/blinko-space/blinko/commit/cf7b05752a9221291d4f96bf37afffcd02b38015))
+* enhance file upload functionality and improve user feedback ([c86cd4e](https://github.com/blinko-space/blinko/commit/c86cd4e61c66cc5e419510c92ba7fac3ec40df5e))
+* enhance user sign-out process and improve component structure 326 ([e38501a](https://github.com/blinko-space/blinko/commit/e38501a071ea9c5b952e6cfe6354cf7e170effea))
+* remove bodyParser configuration from file upload route ([4047c64](https://github.com/blinko-space/blinko/commit/4047c64f68c41bb95b057e7a5a0ff1d8072c7808))
+* update icon paths in manifest.json for consistency ([66f1cbe](https://github.com/blinko-space/blinko/commit/66f1cbe38146e2d21de7d828841f3e310cc20dec))
+
 # [0.27.0](https://github.com/blinko-space/blinko/compare/v0.26.12...v0.27.0) (2024-12-17)
 
 

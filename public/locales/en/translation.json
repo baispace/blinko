@@ -347,5 +347,12 @@
   "upload-completed": "Upload completed",
   "upload-cancelled": "Upload cancelled",
   "upload-failed": "Upload Failed",
-  "import-from-bko-tip": "Uploading to s3 for recovery is not supported at this time. Please disable the s3 option temporarily when you want to recover."
+  "import-from-bko-tip": "Uploading to s3 for recovery is not supported at this time. Please disable the s3 option temporarily when you want to recover.",
+  "music-settings": "Music Settings",
+  "spotify-consumer-key": "Spotify API Key",
+  "spotify-consumer-secret": "Spotify API Secret",
+  "enter-spotify-consumer-key": "Enter Spotify API Key",
+  "enter-spotify-consumer-secret": "Enter Spotify Consumer Secret",
+  "spotify-consumer-key-tip": "Used to get mp3 music cover",
+  "spotify-consumer-key-tip-2": "Get API Key from https://developer.spotify.com/"
 }

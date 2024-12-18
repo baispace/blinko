@@ -6,8 +6,21 @@ import { cache } from '@/lib/cache';
 import { unfurl } from 'unfurl.js'
 import { Metadata } from 'unfurl.js/dist/types';
 import pLimit from 'p-limit';
-import { FileService } from '../plugins/files';
+import * as mm from 'music-metadata';
+import { TEMP_PATH, UPLOAD_FILE_PATH, TOKEN_PATH } from '@/lib/constant';
+import path from 'path';
+import { unlinkSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { SpotifyClient } from './helper/spotify';
+import { PrismaClient } from '@prisma/client';
+import { getGlobalConfig } from './config';
+
 const limit = pLimit(5);
+let spotifyClient: SpotifyClient | null = null;
+const prisma = new PrismaClient();
+
+if (!existsSync(path.dirname(TOKEN_PATH))) {
+  mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
+}
 
 export const publicRouter = router({
   version: publicProcedure
@@ -89,6 +102,111 @@ export const publicRouter = router({
       return {
         success: true,
         data: input.data
+      }
+    }),
+  musicMetadata: publicProcedure
+    .meta({
+      openapi: { method: 'GET', path: '/v1/public/music-metadata', summary: 'Get music metadata', tags: ['Public'] },
+      headers: {
+        'Cache-Control': 'public, max-age=86400, immutable',
+        'ETag': true,
+      }
+    })
+    .input(z.object({ filePath: z.string() }))
+    .output(z.object({
+      coverUrl: z.string().optional(),
+      trackName: z.string().optional(),
+      albumName: z.string().optional(),
+      artists: z.array(z.string()).optional()
+    }))
+    .query(async function ({ input }) {
+      let realFilePath = "";
+      if (input.filePath.includes('/api/file/')) {
+        realFilePath = input.filePath.replace('/api/file', UPLOAD_FILE_PATH);
+      } else if (input.filePath.includes('s3file')) {
+        const tempFilePath = path.join(TEMP_PATH, `${Date.now()}.mp3`);
+        try {
+          const response = await fetch(input.filePath);
+          if (!response.ok) {
+            throw new Error(`get file from s3 error: ${response.statusText}`);
+          }
+
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          writeFileSync(tempFilePath, buffer);
+
+          realFilePath = tempFilePath;
+
+          setTimeout(() => {
+            try {
+              unlinkSync(tempFilePath);
+            } catch (error) {
+              console.error('Failed to clear temp file:', error);
+            }
+          }, 5000);
+
+        } catch (error) {
+          console.error('Failed to download s3 file:', error);
+          throw error;
+        }
+      }
+
+      const metadata = await mm.parseFile(realFilePath);
+      const artistName = metadata.common.artist?.trim();
+      const trackName = metadata.common.title?.trim();
+
+      // console.log('Parsed music metadata:', {
+      //   artistName,
+      //   trackName,
+      //   allMetadata: metadata.common
+      // });
+
+      if (!artistName || !trackName) {
+        // console.log('Missing artist or track name');
+        return {
+          coverUrl: '',
+          trackName: '',
+          albumName: '',
+          artists: [],
+        }
+      }
+
+      if (!spotifyClient) {
+        const config = await getGlobalConfig({ useAdmin: true })
+        if(!config.spotifyConsumerKey && !config.spotifyConsumerSecret){
+            return {
+              coverUrl: '',
+              trackName: trackName,
+              albumName: metadata.common.album || '',
+              artists: [artistName],
+            }
+        }
+        spotifyClient = new SpotifyClient({
+          consumer: {
+            key: config.spotifyConsumerKey!,
+            secret: config.spotifyConsumerSecret!
+          }
+        });
+      }
+
+      try {
+        const coverUrl = await spotifyClient.getCoverArt(artistName, trackName);
+        // console.log('Retrieved cover URL:', coverUrl);
+
+        return {
+          coverUrl,
+          trackName: trackName,
+          albumName: metadata.common.album || '',
+          artists: [artistName],
+        };
+      } catch (err) {
+        console.error('Failed to get music metadata:', err);
+        return {
+          coverUrl: '',
+          trackName: trackName,
+          albumName: metadata.common.album || '',
+          artists: [artistName],
+        };
       }
     })
 })

@@ -116,7 +116,8 @@ export class EditorStore {
     if (!this.blinko.showAi) {
       return
     }
-    if (filePath.endsWith('.webm') || filePath.endsWith('.mp3') || filePath.endsWith('.wav')) {
+    //|| filePath.endsWith('.mp3') || filePath.endsWith('.wav')
+    if (filePath.endsWith('.webm') ) {
       try {
         const doc = await api.ai.speechToText.mutate({ filePath })
         this.insertMarkdown(doc[0]?.pageContent)

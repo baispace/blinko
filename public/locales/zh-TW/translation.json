@@ -361,5 +361,11 @@
   "upload-completed": "上傳完成",
   "upload-cancelled": "上傳已取消",
   "upload-failed": "上傳失敗",
-  "import-from-bko-tip": "目前不支援上傳至 s3 進行還原。當您想要進行恢復操作時，請暫時停用 s3 選項。"
+  "import-from-bko-tip": "目前不支援上傳至 s3 進行還原。當您想要進行恢復操作時，請暫時停用 s3 選項。",
+  "music-settings": "音樂設定",
+  "enter-spotify-consumer-secret": "輸入 Spotify 用戶秘密",
+  "spotify-consumer-secret": "Spotify 用戶端秘鑰",
+  "enter-spotify-consumer-key": "輸入 Spotify 使用者金鑰",
+  "spotify-consumer-key-tip": "以前用來取得 MP3 音樂封面",
+  "spotify-consumer-key-tip-2": "從 https://developer.spotify.com/ 取得 API 金鑰"
 }

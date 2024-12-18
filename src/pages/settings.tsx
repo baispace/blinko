@@ -11,6 +11,7 @@ import { UserSetting } from "@/components/BlinkoSettings/UserSetting";
 import { AboutSetting } from "@/components/BlinkoSettings/AboutSetting";
 import { StorageSetting } from "@/components/BlinkoSettings/StorageSetting";
 import { ExportSetting } from "@/components/BlinkoSettings/ExportSetting";
+import { MusicSetting } from "@/components/BlinkoSettings/MusicSetting";
 
 const Page = observer(() => {
   const user = RootStore.Get(UserStore)
@@ -23,6 +24,7 @@ const Page = observer(() => {
         {user.isSuperAdmin && <AiSetting />}
         {user.isSuperAdmin && <TaskSetting />}
         {user.isSuperAdmin && <StorageSetting />}
+        {user.isSuperAdmin && <MusicSetting />}
         {user.isSuperAdmin && <ImportSetting />}
         {<ExportSetting />}
         <AboutSetting />

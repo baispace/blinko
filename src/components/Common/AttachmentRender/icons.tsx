@@ -10,6 +10,7 @@ import { PromiseState } from '@/store/standard/PromiseState';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { helper } from '@/lib/helper';
 import { FileType } from '../Editor/type';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 
 export const DeleteIcon = observer(({ className, file, files, size = 20 }: { className: string, file: FileType, files: FileType[], size?: number }) => {
   const store = RootStore.Local(() => ({
@@ -21,7 +22,7 @@ export const DeleteIcon = observer(({ className, file, files, size = 20 }: { cla
         });
         const index = files.findIndex(i => i.name == file.name)
         files.splice(index, 1)
-        RootStore.Get(DialogStore).close()
+        RootStore.Get(DialogStandaloneStore).close()
         RootStore.Get(ToastPlugin).success(t('delete-success'))
         RootStore.Get(BlinkoStore).updateTicker++
       }

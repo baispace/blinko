@@ -32,6 +32,7 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
     classNames={{
       wrapper: '!max-w-full',
     }}
+    draggable={false}
     onError={() => {
       if (file.preview === currentSrc) {
         return setIsOriginalError(true)

@@ -4,6 +4,8 @@ export class StorageState<T> {
   key: string;
   value: T | any = null;
   default: T | any = null;
+  validate?: (value: T) => T;
+
   constructor(args: Partial<StorageState<T>>) {
     Object.assign(this, args);
     makeAutoObservable(this);
@@ -37,9 +39,9 @@ export class StorageState<T> {
     try {
       if (typeof window == 'undefined') return
       if (value !== null || value !== undefined) {
-        this.value = value;
+        this.value = this.validate ? this.validate(value!) : value;
       }
-      window?.localStorage.setItem(this.key, JSON.stringify(value));
+      window?.localStorage.setItem(this.key, JSON.stringify(this.value));
     } catch (error) {
       console.error(error);
       return null;

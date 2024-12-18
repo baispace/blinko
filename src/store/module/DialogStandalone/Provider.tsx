@@ -115,7 +115,9 @@ const Dialog = observer(() => {
                     <Icon icon="tabler:x" width="16" height="16" />
                   </Button>
                 </div>
-                <Content />
+                <div className="w-full" >
+                  <Content />
+                </div>
               </div>
             </motion.div>
           )}
@@ -129,7 +131,9 @@ const Dialog = observer(() => {
                   showOnlyContentCloseButton &&
                   <CloseButton onClose={() => modal.close()} />
                 }
-                <Content />
+                <div className="w-full" >
+                  <Content />
+                </div>
               </div>
             </motion.div>
           }

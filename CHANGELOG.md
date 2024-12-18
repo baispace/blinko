@@ -1,3 +1,23 @@
+# [0.27.0](https://github.com/blinko-space/blinko/compare/v0.26.12...v0.27.0) (2024-12-17)
+
+
+### Bug Fixes
+
+* enhance sign-in component with theme-based logo and clean up imports ([f9d500c](https://github.com/blinko-space/blinko/commit/f9d500ce40ebd8a6d2608945e3dbfe8d123c89b6))
+
+
+### Features
+
+* add self-deletion prevention in user deletion logic ([60c4a41](https://github.com/blinko-space/blinko/commit/60c4a418164f0cc8e2eae32edad6a667f740a6df))
+* add user data deletion confirmation dialog and enhance translation files ([ef09306](https://github.com/blinko-space/blinko/commit/ef0930618aefbefa461fd98f9d23095d39e3ae34))
+
+## [0.26.12](https://github.com/blinko-space/blinko/compare/v0.26.11...v0.26.12) (2024-12-17)
+
+
+### Bug Fixes
+
+* add error logging in FileService writeFileSafe method ([17604c2](https://github.com/blinko-space/blinko/commit/17604c28f08e0e3f4ab426e074bbd8c812d6375f))
+
 ## [0.26.11](https://github.com/blinko-space/blinko/compare/v0.26.10...v0.26.11) (2024-12-17)
 
 

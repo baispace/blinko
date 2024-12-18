@@ -117,7 +117,12 @@ export const noteRouter = router({
         take: size,
         include: {
           tags: { include: { tag: true } },
-          attachments: true,
+          attachments: {
+            orderBy: [
+              { sortOrder: 'asc' },
+              { id: 'asc' }
+            ]
+          },
           references: {
             select: {
               toNoteId: true
@@ -173,7 +178,12 @@ export const noteRouter = router({
         where: { id: { in: ids }, accountId: Number(ctx.id) },
         include: {
           tags: { include: { tag: true } },
-          attachments: true,
+          attachments: {
+            orderBy: [
+              { sortOrder: 'asc' },
+              { id: 'asc' }
+            ]
+          },
           references: {
             select: {
               toNoteId: true
@@ -525,6 +535,34 @@ export const noteRouter = router({
       if(noteIds.length === 0) return { ok: true };
       
       return await deleteNotes(noteIds, ctx);
+    }),
+  updateAttachmentsOrder: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/update-attachments-order', summary: 'Update attachments order', protect: true, tags: ['Note'] } })
+    .input(z.object({
+      attachments: z.array(z.object({
+        name: z.string(),
+        sortOrder: z.number()
+      }))
+    }))
+    .output(z.any())
+    .mutation(async function ({ input, ctx }) {
+      const { attachments } = input;
+      
+      await Promise.all(
+        attachments.map(({ name, sortOrder }) =>
+          prisma.attachments.updateMany({
+            where: { 
+              name,
+              note: {
+                accountId: Number(ctx.id)
+              }
+            },
+            data: { sortOrder }
+          })
+        )
+      );
+
+      return { success: true };
     }),
 })
 

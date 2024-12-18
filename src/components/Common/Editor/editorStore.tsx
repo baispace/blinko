@@ -51,6 +51,10 @@ export class EditorStore {
     } catch (error) { }
   }
 
+  updateFileOrder = (newFiles: FileType[]) => {
+    this.files = newFiles;
+  }
+
   insertMarkdown = (text) => {
     this.vditor?.insertValue(text)
     this.focus()

@@ -36,6 +36,7 @@ model attachments {
   size          Decimal  @default(0) @db.Decimal
   type          String   @default("") @db.VarChar
   noteId        Int      @default(0)
+  sortOrder     Int      @default(0)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @db.Timestamptz(6)
 
@@ -43,30 +44,30 @@ model attachments {
 }
 
 model config {
-  id     Int    @id @default(autoincrement())
-  key    String @default("") @db.VarChar
-  config Json?  @db.Json
-  userId Int?  
+  id     Int       @id @default(autoincrement())
+  key    String    @default("") @db.VarChar
+  config Json?     @db.Json
+  userId Int?
   user   accounts? @relation(fields: [userId], references: [id])
 }
 
 model notes {
-  id            Int           @id @default(autoincrement())
-  type          Int          @default(0)
-  content       String       @default("") @db.VarChar
-  isArchived    Boolean      @default(false)
-  isRecycle     Boolean      @default(false)
-  isShare       Boolean      @default(false)
-  isTop         Boolean      @default(false)
-  isReviewed    Boolean      @default(false)
-  sharePassword String       @default("") @db.VarChar
-  metadata      Json?        @db.Json
-  accountId     Int?         
-  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime     @updatedAt @db.Timestamptz(6)
+  id            Int             @id @default(autoincrement())
+  type          Int             @default(0)
+  content       String          @default("") @db.VarChar
+  isArchived    Boolean         @default(false)
+  isRecycle     Boolean         @default(false)
+  isShare       Boolean         @default(false)
+  isTop         Boolean         @default(false)
+  isReviewed    Boolean         @default(false)
+  sharePassword String          @default("") @db.VarChar
+  metadata      Json?           @db.Json
+  accountId     Int?
+  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @db.Timestamptz(6)
   attachments   attachments[]
   tags          tagsToNote[]
-  account       accounts?     @relation(fields: [accountId], references: [id])
+  account       accounts?       @relation(fields: [accountId], references: [id])
   referencedBy  noteReference[] @relation("ReferencedNote")
   references    noteReference[] @relation("ReferencingNote")
 }
@@ -76,10 +77,11 @@ model tag {
   name       String       @default("") @db.VarChar
   icon       String       @default("") @db.VarChar
   parent     Int          @default(0)
-  accountId  Int?        
+  accountId  Int?
   createdAt  DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime     @updatedAt @db.Timestamptz(6)
   tagsToNote tagsToNote[]
+  sortOrder  Int          @default(0)
   account    accounts?    @relation(fields: [accountId], references: [id])
 }
 
@@ -104,13 +106,13 @@ model scheduledTask {
 }
 
 model noteReference {
-  id              Int      @id @default(autoincrement())
-  fromNoteId      Int
-  toNoteId        Int
-  createdAt       DateTime @default(now()) @db.Timestamptz(6)
-  
-  fromNote        notes    @relation("ReferencingNote", fields: [fromNoteId], references: [id])
-  toNote          notes    @relation("ReferencedNote", fields: [toNoteId], references: [id])
+  id         Int      @id @default(autoincrement())
+  fromNoteId Int
+  toNoteId   Int
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  fromNote notes @relation("ReferencingNote", fields: [fromNoteId], references: [id])
+  toNote   notes @relation("ReferencedNote", fields: [toNoteId], references: [id])
 
   @@unique([fromNoteId, toNoteId])
 }

@@ -1,3 +1,16 @@
+## [0.27.2](https://github.com/blinko-space/blinko/compare/v0.27.1...v0.27.2) (2024-12-18)
+
+
+### Bug Fixes
+
+* disable dragging for image thumbnails in AttachmentRender component [#331](https://github.com/blinko-space/blinko/issues/331) ([b2edb76](https://github.com/blinko-space/blinko/commit/b2edb7620770c4a2315f272df16ed83a4ceba85a))
+* enhance attachment management and sorting functionality ([5b69f2b](https://github.com/blinko-space/blinko/commit/5b69f2b99f45c69165034c5d8132b9cea5656839))
+* enhance layout components and improve user interaction ([9de5e8e](https://github.com/blinko-space/blinko/commit/9de5e8e8786d1fec3e6781467af9bb4a565333e4))
+* improve BlinkoAiChat responsiveness and enhance file name handling ([91229c6](https://github.com/blinko-space/blinko/commit/91229c6addd1b4ca25547fe831a675f5b188642c))
+* pwa refresh language lose ([dc41a44](https://github.com/blinko-space/blinko/commit/dc41a44883e5f4a0913c7b956fc911baa7351415))
+* refactor sidebar state management and enhance resizing functionality ([6194067](https://github.com/blinko-space/blinko/commit/6194067d5de9f8ed95a2b850b747448d188ea539))
+* update dialog store reference in DeleteIcon component [#332](https://github.com/blinko-space/blinko/issues/332) ([4183c9f](https://github.com/blinko-space/blinko/commit/4183c9f964c6e851a0c2331c4e78d79eea4421e8))
+
 ## [0.27.1](https://github.com/blinko-space/blinko/compare/v0.27.0...v0.27.1) (2024-12-17)
 
 

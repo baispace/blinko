@@ -324,5 +324,6 @@
   "upload-completed": "Téléchargement terminé",
   "upload-cancelled": "Téléchargement annulé",
   "upload-failed": "Téléchargement échoué",
-  "import-from-bko-tip": "Le téléversement vers s3 pour la récupération n'est pas pris en charge actuellement. Veuillez désactiver temporairement l'option s3 lorsque vous souhaitez récupérer."
+  "import-from-bko-tip": "Le téléversement vers s3 pour la récupération n'est pas pris en charge actuellement. Veuillez désactiver temporairement l'option s3 lorsque vous souhaitez récupérer.",
+  "edit-time": "Modifier l'heure"
 }

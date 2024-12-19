@@ -20,6 +20,36 @@ type filterType = {
   direction: string;
 }
 
+// Interface for note upsert parameters
+interface UpsertNoteParams {
+  /** Note content */
+  content?: string | null;
+  /** Whether the note is archived */
+  isArchived?: boolean;
+  /** Whether the note is in recycle bin */
+  isRecycle?: boolean;
+  /** Note type */
+  type?: NoteType;
+  /** Note ID */
+  id?: number;
+  /** List of attachments */
+  attachments?: Attachment[];
+  /** Whether to refresh the list after operation */
+  refresh?: boolean;
+  /** Whether the note is pinned to top */
+  isTop?: boolean;
+  /** Whether the note is publicly shared */
+  isShare?: boolean;
+  /** Whether to show toast notification */
+  showToast?: boolean;
+  /** List of referenced note IDs */
+  references?: number[];
+  /** Creation time */
+  createdAt?: Date;
+  /** Last update time */
+  updatedAt?: Date;
+}
+
 export class BlinkoStore implements Store {
   sid = 'BlinkoStore';
   noteContent = '';
@@ -52,12 +82,37 @@ export class BlinkoStore implements Store {
   updateTicker = 0
   fullNoteList: Note[] = []
   upsertNote = new PromiseState({
-    function: async ({ content = null, isArchived, isRecycle, type, id, attachments = [], refresh = true, isTop, isShare, showToast = true, references = [] }:
-      { content?: string | null, isArchived?: boolean, isRecycle?: boolean, type?: NoteType, id?: number, attachments?: Attachment[], refresh?: boolean, isTop?: boolean, isShare?: boolean, showToast?: boolean, references?: number[] }) => {
-      if (type == undefined) {
-        type = this.noteTypeDefault
-      }
-      const res = await api.notes.upsert.mutate({ content, type, isArchived, isRecycle, id, attachments, isTop, isShare, references })
+    function: async (params: UpsertNoteParams) => {
+      const {
+        content = null,
+        isArchived,
+        isRecycle,
+        type = this.noteTypeDefault,
+        id,
+        attachments = [],
+        refresh = true,
+        isTop,
+        isShare,
+        showToast = true,
+        references = [],
+        createdAt,
+        updatedAt
+      } = params;
+
+      const res = await api.notes.upsert.mutate({ 
+        content, 
+        type, 
+        isArchived, 
+        isRecycle, 
+        id, 
+        attachments, 
+        isTop, 
+        isShare, 
+        references,
+        createdAt,
+        updatedAt 
+      })
+      
       if (this.config.value?.isUseAI) {
         if (res?.id) {
           api.ai.embeddingUpsert.mutate({ id: res!.id, content: res!.content, type: id ? 'update' : 'insert' }, { context: { skipBatch: true } })

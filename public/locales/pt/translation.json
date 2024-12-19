@@ -259,5 +259,6 @@
   "upload-completed": "Carregamento concluído",
   "upload-cancelled": "Envio cancelado",
   "upload-failed": "Falha ao Carregar",
-  "import-from-bko-tip": "O envio para o s3 para recuperação não é suportado neste momento. Por favor, desative temporariamente a opção s3 quando desejar recuperar."
+  "import-from-bko-tip": "O envio para o s3 para recuperação não é suportado neste momento. Por favor, desative temporariamente a opção s3 quando desejar recuperar.",
+  "edit-time": "Tempo de Edição"
 }

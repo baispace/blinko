@@ -53,7 +53,7 @@
   "api-endpoint": "接口地址",
   "must-start-with-http-s-or-use-api-openai-as-default": "必须以 http(s):// 开头，或默认使用 /api/openai",
   "user-custom-openai-api-key": "用户自定义 OpenAI Api 密钥",
-  "user-custom-azureopenai-api-instance": "Azure OpenAI 虚拟实例名称",
+  "user-custom-azureopenai-api-instance": "Azure OpenAI 虚拟实例名��",
   "user-custom-azureopenai-api-deployment": "Azure OpenAI 部署名称",
   "user-custom-azureopenai-api-version": "API 版本",
   "ai-model": "人工智能模型",
@@ -165,7 +165,7 @@
   "ai-tag": "AI标签",
   "article": "文章",
   "embedding-model": "嵌入式模型",
-  "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "如果您有大量笔记，您可能会消耗一定数量的代币",
+  "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "如果您有大量笔记，���可能会消耗一定数量的代币",
   "force-rebuild": "强制重建",
   "force-rebuild-embedding-index": "强制重建将完全重建已索引的所有数据",
   "embedding-model-description": "切换嵌入式模型后必须重建索引",
@@ -220,7 +220,7 @@
   "verify": "验证",
   "about": "关于",
   "upload": "上传",
-  "days": "天",
+  "days": "���",
   "select-model": "选择型号",
   "select-model-provider": "选择模型提供商",
   "allow-register": "允许注册",
@@ -361,5 +361,9 @@
   "upload-completed": "上传完成",
   "upload-cancelled": "上传已取消",
   "upload-failed": "上传失败",
-  "import-from-bko-tip": "目前不支持将上传到S3进行恢复。当您想要恢复时，请暂时禁用S3选项。"
+  "import-from-bko-tip": "目前不支持将上传到S3进行恢复。当您想要恢复时，请暂时禁用S3选项。",
+  "edit-time": "编辑时间",
+  "created-at": "创建时间",
+  "updated-at": "更新时间",
+  "save": "保存"
 }

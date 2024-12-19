@@ -246,7 +246,13 @@ export const noteRouter = router({
       return await prisma.notes.update({ where: { id: input.id, accountId: Number(ctx.id) }, data: { isReviewed: true } })
     }),
   upsert: authProcedure
-    .meta({ openapi: { method: 'POST', path: '/v1/note/upsert', summary: 'Update or create note', protect: true, tags: ['Note'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/note/upsert', summary: 'Update or create note',
+        description: "The attachments field is an array of objects with the following properties: name, path, and size which get from /api/file/upload",
+        protect: true, tags: ['Note']
+      }
+    })
     .input(z.object({
       content: z.union([z.string(), z.null()]).default(null),
       type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(0),
@@ -256,7 +262,9 @@ export const noteRouter = router({
       isTop: z.union([z.boolean(), z.null()]).default(null),
       isShare: z.union([z.boolean(), z.null()]).default(null),
       isRecycle: z.union([z.boolean(), z.null()]).default(null),
-      references: z.array(z.number()).optional()
+      references: z.array(z.number()).optional(),
+      createdAt: z.date().optional(),
+      updatedAt: z.date().optional()
     }))
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
@@ -289,7 +297,9 @@ export const noteRouter = router({
         ...(isTop !== null && { isTop }),
         ...(isShare !== null && { isShare }),
         ...(isRecycle !== null && { isRecycle }),
-        ...(content != null && { content })
+        ...(content != null && { content }),
+        ...(input.createdAt && { createdAt: input.createdAt }),
+        ...(input.updatedAt && { updatedAt: input.updatedAt })
       }
 
       if (id) {
@@ -388,7 +398,17 @@ export const noteRouter = router({
         return note
       } else {
         try {
-          const note = await prisma.notes.create({ data: { content: content ?? '', type, accountId: Number(ctx.id), isShare: isShare ? true : false, isTop: isTop ? true : false } })
+          const note = await prisma.notes.create({ 
+            data: { 
+              content: content ?? '', 
+              type, 
+              accountId: Number(ctx.id), 
+              isShare: isShare ? true : false, 
+              isTop: isTop ? true : false,
+              ...(input.createdAt && { createdAt: input.createdAt }),
+              ...(input.updatedAt && { updatedAt: input.updatedAt })
+            } 
+          })
           await handleAddTags(tagTree, undefined, note.id)
           await prisma.attachments.createMany({
             data: attachments.map(i => { return { noteId: note.id, ...i } })
@@ -524,16 +544,16 @@ export const noteRouter = router({
     .output(z.any())
     .mutation(async function ({ ctx }) {
       const recycleBinNotes = await prisma.notes.findMany({
-        where: { 
+        where: {
           accountId: Number(ctx.id),
-          isRecycle: true 
+          isRecycle: true
         },
         select: { id: true }
       });
-      
+
       const noteIds = recycleBinNotes.map(note => note.id);
-      if(noteIds.length === 0) return { ok: true };
-      
+      if (noteIds.length === 0) return { ok: true };
+
       return await deleteNotes(noteIds, ctx);
     }),
   updateAttachmentsOrder: authProcedure
@@ -547,11 +567,11 @@ export const noteRouter = router({
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
       const { attachments } = input;
-      
+
       await Promise.all(
         attachments.map(({ name, sortOrder }) =>
           prisma.attachments.updateMany({
-            where: { 
+            where: {
               name,
               note: {
                 accountId: Number(ctx.id)

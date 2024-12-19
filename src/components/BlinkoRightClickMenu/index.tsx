@@ -45,7 +45,7 @@ export const ShowEditTimeModel = () => {
         RootStore.Get(DialogStore).close();
       }
       return <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-4 p-4">
           <DatePicker
             label={i18n.t('created-at')}
             value={createdAt}
@@ -60,7 +60,7 @@ export const ShowEditTimeModel = () => {
           />
           <Button
             color="primary"
-            className="mt-4"
+            className="mt-2"
             onClick={handleSave}
           >
             {i18n.t('save')}
@@ -332,6 +332,7 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       <DropdownItem key="MutiSelectItem" onPress={() => {
         handleMultiSelect()
       }}><MutiSelectItem /></DropdownItem>
+        <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>
       <DropdownItem key="ShareItem" onPress={handlePublic}> <PublicItem />  </DropdownItem>

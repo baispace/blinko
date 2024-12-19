@@ -203,24 +203,24 @@ export class EditorStore {
     })
   }
 
-  handlePopAiWrite = () => {
-    if (!this.blinko.showAi) {
-      return
-    }
-    const selection = window.getSelection();
-    if (selection!.rangeCount > 0) {
-      const lastRange = selection!.getRangeAt(0);
-      const currentText = lastRange.startContainer?.textContent?.slice(0, lastRange.endOffset) ?? '';
-      const isEndsWithSlash = /[^\s]?\/$/.test(currentText);
-      if (currentText === '' || !isEndsWithSlash) {
-        setTimeout(() => eventBus.emit('aiwrite:hidden'));
-        return;
-      }
-      if (isEndsWithSlash) {
-        showAiWriteSuggestions();
-      }
-    }
-  }
+  // handlePopAiWrite = () => {
+  //   if (!this.blinko.showAi) {
+  //     return
+  //   }
+  //   const selection = window.getSelection();
+  //   if (selection!.rangeCount > 0) {
+  //     const lastRange = selection!.getRangeAt(0);
+  //     const currentText = lastRange.startContainer?.textContent?.slice(0, lastRange.endOffset) ?? '';
+  //     const isEndsWithSlash = /[^\s]?\/$/.test(currentText);
+  //     if (currentText === '' || !isEndsWithSlash) {
+  //       setTimeout(() => eventBus.emit('aiwrite:hidden'));
+  //       return;
+  //     }
+  //     if (isEndsWithSlash) {
+  //       showAiWriteSuggestions();
+  //     }
+  //   }
+  // }
 
   deleteLastChar = () => {
     const v = this.vditor?.getValue()

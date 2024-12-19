@@ -362,5 +362,6 @@
   "upload-cancelled": "上傳已取消",
   "upload-failed": "上傳失敗",
   "import-from-bko-tip": "目前不支援上傳至 s3 進行還原。當您想要進行恢復操作時，請暫時停用 s3 選項。",
-  "edit-time": "編輯時間"
+  "edit-time": "編輯時間",
+  "ai-write": "AI 寫"
 }

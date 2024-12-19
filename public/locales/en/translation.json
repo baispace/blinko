@@ -348,5 +348,6 @@
   "upload-cancelled": "Upload cancelled",
   "upload-failed": "Upload Failed",
   "import-from-bko-tip": "Uploading to s3 for recovery is not supported at this time. Please disable the s3 option temporarily when you want to recover.",
-  "edit-time": "Edit Time"
+  "edit-time": "Edit Time",
+  "ai-write": "AI Write"
 }

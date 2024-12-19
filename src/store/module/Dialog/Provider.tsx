@@ -8,7 +8,6 @@ import { useMediaQuery } from "usehooks-ts";
 import { motion } from "motion/react";
 import { Icon } from "@iconify/react";
 import { CancelIcon } from "@/components/Common/Icons";
-import { ScrollArea } from "@/components/Common/ScrollArea";
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
   <div
@@ -20,8 +19,6 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
     <CancelIcon className='primary-foreground group-hover:rotate-[180deg] transition-all' />
   </div>
 );
-
-
 
 const Dialog = observer(() => {
   const modal = RootStore.Get(DialogStore);

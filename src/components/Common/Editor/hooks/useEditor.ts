@@ -54,7 +54,6 @@ export const useEditorInit = (
       },
       input: (value) => {
         onChange?.(value)
-        store.handlePopAiWrite()
       },
       upload: {
         url: '/api/file/upload',

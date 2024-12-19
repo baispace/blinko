@@ -278,5 +278,6 @@
   "upload-cancelled": "Yükleme iptal edildi",
   "upload-failed": "Yükleme Başarısız oldu",
   "import-from-bko-tip": "Bu zamanda s3'e yükleme yapılmamaktadır. Kurtarma işlemi gerçekleştirmek istediğinizde lütfen geçici olarak s3 seçeneğini devre dışı bırakın.",
-  "edit-time": "Zamanı Düzenle"
+  "edit-time": "Zamanı Düzenle",
+  "ai-write": "Yapay Zeka Yazısı"
 }

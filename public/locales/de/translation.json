@@ -337,5 +337,6 @@
   "upload-cancelled": "Upload abgebrochen",
   "upload-failed": "Upload fehlgeschlagen",
   "import-from-bko-tip": "Das Hochladen zur Wiederherstellung auf S3 wird derzeit nicht unterstützt. Deaktivieren Sie die S3-Option vorübergehend, wenn Sie eine Wiederherstellung durchführen möchten.",
-  "edit-time": "Bearbeitungszeit"
+  "edit-time": "Bearbeitungszeit",
+  "ai-write": "AI Write\n\nAI schreiben"
 }

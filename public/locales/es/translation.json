@@ -328,5 +328,6 @@
   "upload-cancelled": "Subida cancelada",
   "upload-failed": "Error al subir",
   "import-from-bko-tip": "La carga a s3 para recuperación no está soportada en este momento. Por favor, deshabilite temporalmente la opción s3 cuando desee recuperar.",
-  "edit-time": "Tiempo de edición"
+  "edit-time": "Tiempo de edición",
+  "ai-write": "IA Escribir"
 }

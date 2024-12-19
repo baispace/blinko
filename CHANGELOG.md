@@ -1,3 +1,10 @@
+## [0.27.5](https://github.com/blinko-space/blinko/compare/v0.27.4...v0.27.5) (2024-12-19)
+
+
+### Bug Fixes
+
+* add AI writing feature and enhance localization ([dbaa73e](https://github.com/blinko-space/blinko/commit/dbaa73ef615f8f387db573417cf9c04465eeaeb6))
+
 ## [0.27.4](https://github.com/blinko-space/blinko/compare/v0.27.3...v0.27.4) (2024-12-19)
 
 

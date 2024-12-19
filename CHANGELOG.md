@@ -1,3 +1,10 @@
+## [0.27.3](https://github.com/blinko-space/blinko/compare/v0.27.2...v0.27.3) (2024-12-19)
+
+
+### Bug Fixes
+
+* enhance user settings initialization and layout interaction ([251f2ff](https://github.com/blinko-space/blinko/commit/251f2ffd2a9e4b6c13235539932f1a77281374b9))
+
 ## [0.27.2](https://github.com/blinko-space/blinko/compare/v0.27.1...v0.27.2) (2024-12-18)
 
 

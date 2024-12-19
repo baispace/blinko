@@ -1,3 +1,11 @@
+## [0.27.4](https://github.com/blinko-space/blinko/compare/v0.27.3...v0.27.4) (2024-12-19)
+
+
+### Bug Fixes
+
+* add edit time functionality and enhance note management [#242](https://github.com/blinko-space/blinko/issues/242) ([c112df6](https://github.com/blinko-space/blinko/commit/c112df6a149a2b31f3e9ff8273136585db763981))
+* add edit time option to BlinkoRightClickMenu ([57620e2](https://github.com/blinko-space/blinko/commit/57620e2b1fa5a21e4245ea4c2636822752351089))
+
 ## [0.27.3](https://github.com/blinko-space/blinko/compare/v0.27.2...v0.27.3) (2024-12-19)
 
 

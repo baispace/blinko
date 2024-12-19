@@ -22,14 +22,15 @@ export class UserStore implements User, Store {
   name?: string = '';
   nickname?: string = '';
   image?: string = '';
-  token: string = '';
   role: string = '';
   theme: any = 'light';
   isSetup: boolean = false;
+  languageInitialized: boolean = false;
+  themeInitialized: boolean = false;
 
   wait() {
     return new Promise<UserStore>((res, rej) => {
-      if (this.id && this.token) {
+      if (this.id) {
         res(this);
       }
 
@@ -49,7 +50,7 @@ export class UserStore implements User, Store {
   }
 
   get isLogin() {
-    return !!this.token;
+    return !!this.name;
   }
 
   get blinko() {
@@ -77,8 +78,6 @@ export class UserStore implements User, Store {
   }
 
   clear() {
-    console.log('clear')
-    this.token = ''
     this.id = ''
     this.name = ''
     this.nickname = ''
@@ -93,15 +92,46 @@ export class UserStore implements User, Store {
     document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute('content', themeColor);
   }
 
-  async setupUserPreferences(setTheme: (theme: string) => void, i18n: any) {
-    await this.blinko.config.getOrCall();
-    const config = this.blinko.config.value
-    if (this.isSetup && RootStore.Get(BaseStore).locale.value == config?.language) return
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const newTheme = config?.theme == 'system' ? systemTheme : (config?.theme ?? systemTheme);
-    setTheme(newTheme);
-    RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');
-    this.isSetup = true
+  async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
+    const savedLanguage = localStorage.getItem('userLanguage');
+    const savedTheme = localStorage.getItem('userTheme');
+    
+    if (savedLanguage && !this.languageInitialized) {
+      RootStore.Get(BaseStore).changeLanugage(i18n, savedLanguage);
+      this.languageInitialized = true;
+    }
+
+    if (savedTheme && !this.themeInitialized) {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const themeToSet = savedTheme === 'system' ? systemTheme : savedTheme;
+      setTheme(themeToSet);
+      this.updatePWAColor(themeToSet);
+      this.themeInitialized = true;
+    }
+    console.log(this.isLogin,'isLogin')
+    if (this.isLogin) {
+      try {
+        const config = await this.blinko.config.call();
+        console.log('initializeSettings in login loaded')
+        
+        if (config) {
+          if (config.language && config.language !== savedLanguage) {
+            localStorage.setItem('userLanguage', config.language);
+            RootStore.Get(BaseStore).changeLanugage(i18n, config.language);
+          }
+
+          if (config.theme && config.theme !== savedTheme) {
+            localStorage.setItem('userTheme', config.theme);
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const newTheme = config.theme === 'system' ? systemTheme : config.theme;
+            setTheme(newTheme);
+            this.updatePWAColor(newTheme);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user config:', error);
+      }
+    }
   }
 
   use() {
@@ -111,17 +141,15 @@ export class UserStore implements User, Store {
     const router = useRouter()
 
     useEffect(() => {
-      this.updatePWAColor(theme ?? 'light');
-      this.theme = theme
-    }, [theme]);
+      this.initializeSettings(setTheme, i18n);
+    }, []);
 
     useEffect(() => {
       const userStore = RootStore.Get(UserStore);
       if (!userStore.isLogin && session && session.user) {
-        console.log(session)
         //@ts-ignore
-        userStore.ready({ ...session.user, token: session.token });
-        this.setupUserPreferences(setTheme, i18n);
+        userStore.ready({ ...session.user});
+        this.initializeSettings(setTheme, i18n);
         userStore.userInfo.call(Number(this.id))
       }
     }, [session]);

@@ -160,9 +160,18 @@ export const CommonLayout = observer(({
                 <FilterPop />
                 {blinkoStore.dailyReviewNoteList.value?.length != 0 &&
                   <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
-                    <Link href={'/review'}>
-                      <Button className="mt-[2px]" isIconOnly size="sm" variant="light">
-                        {/* <Icon className="text-[#8600EF] cursor-pointer" icon="bxs:message-square-detail" width="24" height="24" /> */}
+                    <Link href="/review" passHref legacyBehavior>
+                      <Button 
+                        as="a"
+                        className="mt-[2px]" 
+                        isIconOnly 
+                        size="sm" 
+                        variant="light"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          router.push('/review');
+                        }}
+                      >
                         <Icon className='cursor-pointer' icon="mingcute:message-1-line" width="24" height="24" />
                       </Button>
                     </Link>

@@ -1,3 +1,10 @@
+## [0.27.6](https://github.com/blinko-space/blinko/compare/v0.27.5...v0.27.6) (2024-12-19)
+
+
+### Bug Fixes
+
+* remove unused components and utility functions ([69b475b](https://github.com/blinko-space/blinko/commit/69b475b4c9d2754b5d4e1bc409dc85b761f5c307))
+
 ## [0.27.5](https://github.com/blinko-space/blinko/compare/v0.27.4...v0.27.5) (2024-12-19)
 
 

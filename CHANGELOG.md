@@ -1,3 +1,10 @@
+## [0.27.7](https://github.com/blinko-space/blinko/compare/v0.27.6...v0.27.7) (2024-12-20)
+
+
+### Bug Fixes
+
+* german translations ([d498892](https://github.com/blinko-space/blinko/commit/d4988929592998df4bd79d9e60eacd0e21093cde))
+
 ## [0.27.6](https://github.com/blinko-space/blinko/compare/v0.27.5...v0.27.6) (2024-12-19)
 
 

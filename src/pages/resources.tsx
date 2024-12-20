@@ -47,7 +47,7 @@ const Page = observer(() => {
     <DragDropContext onDragEnd={resourceStore.handleDragEnd}>
       <ScrollArea
         onBottom={resourceStore.loadNextPage}
-        className="px-2 md:px-6 h-[calc(100vh_-_100px)] max-w-[1000px] mx-auto"
+        className="md:px-6 h-[calc(100%_-_5px)] md:h-[calc(100vh_-_100px)] px-2 md:max-w-[1000px] w-full overflow-x-hidden mx-auto"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ const Page = observer(() => {
                     {folderBreadcrumbs.map((folder, index) => (
                       <BreadcrumbItem 
                         key={folder}
-                        onClick={() => {
+                        onPress={() => {
                           if (index === 0) {
                             resourceStore.navigateBack(router);
                           } else {

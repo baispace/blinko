@@ -6,6 +6,7 @@ export type Attachment = NonNullable<Note['attachments']>[0] & { size: any }
 export type Tag = NonNullable<RouterOutput['tags']['list']>[0]
 export type Config = NonNullable<RouterOutput['config']['list']>
 export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
+export type ResourceType = NonNullable<RouterOutput['attachments']['list']>[0]
 export enum NoteType {
   'BLINKO',
   'NOTE'
@@ -44,6 +45,7 @@ export const ZConfigKey = z.union([
   z.literal('s3Bucket'),
   z.literal('s3Region'),
   z.literal('s3CustomPath'),
+  z.literal('localCustomPath'),
   z.literal('embeddingModel'),
   z.literal('embeddingTopK'),
   z.literal('embeddingLambda'),
@@ -79,6 +81,7 @@ export const ZConfigSchema = z.object({
   s3Bucket: z.any().optional(),
   s3CustomPath: z.any().optional(),
   s3Region: z.any().optional(),
+  localCustomPath: z.any().optional(),
   embeddingModel: z.any().optional(),
   embeddingTopK: z.number().optional(),
   embeddingLambda: z.number().optional(),

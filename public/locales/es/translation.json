@@ -329,5 +329,19 @@
   "upload-failed": "Error al subir",
   "import-from-bko-tip": "La carga a s3 para recuperación no está soportada en este momento. Por favor, deshabilite temporalmente la opción s3 cuando desee recuperar.",
   "edit-time": "Tiempo de edición",
-  "ai-write": "IA Escribir"
+  "ai-write": "IA Escribir",
+  "download": "Descargar",
+  "rename": "Rebautizar",
+  "move-up": "Subir",
+  "cut": "Cortar",
+  "paste": "Pegar",
+  "confirm-delete": "Confirmar Eliminar",
+  "confirm-delete-content": "¿Estás seguro de que deseas eliminar {{name}}? Esta acción no se puede deshacer.",
+  "folder-name": "Nombre de la carpeta",
+  "file-name": "Nombre del archivo",
+  "operation-success": "Operación exitosa",
+  "cloud-file": "Archivo en la nube",
+  "move-to-parent": "Mover al padre",
+  "no-resources-found": "No se encontraron recursos.",
+  "operation-in-progress": "Operación en progreso"
 }

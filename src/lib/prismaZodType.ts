@@ -36,6 +36,8 @@ export const attachmentsSchema = z.object({
   sortOrder: z.number().int(),
   updatedAt: z.coerce.date(),
   type: z.string(),
+  depth: z.any(),
+  perfixPath: z.any(),
 })
 
 export type attachments = z.infer<typeof attachmentsSchema>

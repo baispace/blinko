@@ -279,5 +279,19 @@
   "upload-failed": "Yükleme Başarısız oldu",
   "import-from-bko-tip": "Bu zamanda s3'e yükleme yapılmamaktadır. Kurtarma işlemi gerçekleştirmek istediğinizde lütfen geçici olarak s3 seçeneğini devre dışı bırakın.",
   "edit-time": "Zamanı Düzenle",
-  "ai-write": "Yapay Zeka Yazısı"
+  "ai-write": "Yapay Zeka Yazısı",
+  "download": "İndir",
+  "rename": "Yeniden adlandırma",
+  "move-up": "Yukarı taşı.",
+  "cut": "kesmek",
+  "paste": "Yapıştır",
+  "confirm-delete": "Silme işlemini onayla",
+  "confirm-delete-content": "{{name}}'i silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+  "folder-name": "Klasör Adı",
+  "file-name": "Dosya Adı",
+  "operation-success": "Operasyon Başarılı",
+  "cloud-file": "Bulut Dosyası",
+  "move-to-parent": "Ebeveyn Düzeyine Taşı",
+  "no-resources-found": "Kaynak Bulunamadı",
+  "operation-in-progress": "Devam eden işlem"
 }

@@ -47,7 +47,13 @@ module.exports = withPWA({
       },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dev,isServer }) => {
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000,    
+        aggregateTimeout: 300,
+      }
+    }
     config.experiments = { ...config.experiments, topLevelAwait: true };
     if (!isServer) {
       config.resolve.fallback = {
@@ -58,6 +64,12 @@ module.exports = withPWA({
       };
     }
     return config;
+  },
+  experimental: {
+    turbotrace: {
+      memoryLimit: process.env.CI ? 4096 : 8192,
+      logLevel: 'bug',
+    }
   },
   outputFileTracing: isVercel? false : true,
   reactStrictMode: isProduction? true : false,

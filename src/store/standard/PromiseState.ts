@@ -19,15 +19,19 @@ export interface Events {
 }
 
 export const PromiseCall = async (f: Promise<any>, { autoAlert = true }: { autoAlert?: boolean, successMsg?: string } = {}) => {
-  const r = await (new PromiseState({
-    autoAlert,
-    successMsg: i18n.t('update-successfully'),
-    function: async () => {
-      return await f;
-    }
-  })).call()
-  RootStore.Get(BlinkoStore).updateTicker++
-  return r
+  try {
+    const r = await (new PromiseState({
+      autoAlert,
+      successMsg: i18n.t('operation-success'),
+      function: async () => {
+        return await f;
+      }
+    })).call()
+    RootStore.Get(BlinkoStore).updateTicker++
+    return r
+  } catch (error) {
+    RootStore.Get(ToastPlugin).error(error.message);
+  }
 }
 
 export class PromiseState<T extends (...args: any[]) => Promise<any>, U = ReturnType<T>> {

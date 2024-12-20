@@ -311,5 +311,19 @@
   "upload-failed": "アップロードに失敗しました",
   "import-from-bko-tip": "この時点では、S3 へのアップロードによるリカバリはサポートされていません。リカバリを行う際には一時的に S3 オプションを無効にしてください。",
   "edit-time": "編集時間",
-  "ai-write": "AIライト"
+  "ai-write": "AIライト",
+  "download": "ダウンロードします。",
+  "rename": "名前を変更",
+  "move-up": "上に移動する",
+  "cut": "切る",
+  "paste": "ペースト",
+  "confirm-delete": "削除を確認します。",
+  "confirm-delete-content": "「{{name}}」を削除しますか？この操作は取り消すことができません。",
+  "folder-name": "フォルダー名",
+  "file-name": "ファイル名",
+  "operation-success": "手術が成功しました",
+  "cloud-file": "クラウドファイル",
+  "move-to-parent": "親に移動",
+  "no-resources-found": "リソースが見つかりません",
+  "operation-in-progress": "進行中の操作"
 }

@@ -349,5 +349,19 @@
   "upload-failed": "Upload Failed",
   "import-from-bko-tip": "Uploading to s3 for recovery is not supported at this time. Please disable the s3 option temporarily when you want to recover.",
   "edit-time": "Edit Time",
-  "ai-write": "AI Write"
+  "ai-write": "AI Write",
+  "download": "Download",
+  "rename": "Rename",
+  "move-up": "Move Up",
+  "cut": "Cut",
+  "paste": "Paste",
+  "confirm-delete-content": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+  "confirm-delete": "Confirm Delete",
+  "folder-name": "Folder Name",
+  "file-name": "File Name",
+  "operation-success": "Operation Successful",
+  "cloud-file": "Cloud File",
+  "move-to-parent": "Move To Parent",
+  "no-resources-found": "No Resources Found",
+  "operation-in-progress": "Opearation in progress"
 }

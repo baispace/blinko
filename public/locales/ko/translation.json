@@ -333,5 +333,19 @@
   "upload-failed": "업로드 실패",
   "import-from-bko-tip": "현재 s3로의 업로드는 복구되지 않습니다. 복구를 원할 경우 s3 옵션을 일시적으로 비활성화하십시오.",
   "edit-time": "편집 시간",
-  "ai-write": "인공지능 작성"
+  "ai-write": "인공지능 작성",
+  "download": "다운로드",
+  "rename": "이름 바꾸기",
+  "move-up": "위로 이동",
+  "cut": "잘라 내다",
+  "paste": "붙여 넣다",
+  "confirm-delete": "삭제 확인",
+  "confirm-delete-content": "{{name}}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+  "folder-name": "폴더 이름",
+  "file-name": "파일 이름",
+  "operation-success": "작업 성공적입니다.",
+  "cloud-file": "클라우드 파일",
+  "move-to-parent": "부모로 이동",
+  "no-resources-found": "자원을 찾을 수 없습니다",
+  "operation-in-progress": "진행 중인 작업"
 }

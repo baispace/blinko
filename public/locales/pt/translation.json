@@ -261,5 +261,19 @@
   "upload-failed": "Falha ao Carregar",
   "import-from-bko-tip": "O envio para o s3 para recuperação não é suportado neste momento. Por favor, desative temporariamente a opção s3 quando desejar recuperar.",
   "edit-time": "Tempo de Edição",
-  "ai-write": "IA Escreva"
+  "ai-write": "IA Escreva",
+  "download": "Baixar",
+  "rename": "Renomear",
+  "move-up": "Subir",
+  "cut": "Corte",
+  "paste": "Colar",
+  "confirm-delete": "Confirmar Excluir",
+  "confirm-delete-content": "Tem certeza de que deseja excluir {{name}}? Essa ação não pode ser desfeita.",
+  "folder-name": "Nome da Pasta",
+  "file-name": "Nome do arquivo",
+  "operation-success": "Operação bem-sucedida",
+  "cloud-file": "Arquivo na Nuvem",
+  "move-to-parent": "Mover Para o Pai",
+  "no-resources-found": "Recursos não encontrados",
+  "operation-in-progress": "Operação em andamento"
 }

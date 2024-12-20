@@ -388,7 +388,18 @@ export const noteRouter = router({
             if (needTobeAddedAttachmentsPath.length != 0) {
               await prisma.attachments.createMany({
                 data: attachments?.filter(t => needTobeAddedAttachmentsPath.includes(t.path))
-                  .map(i => { return { noteId: note.id, ...i } })
+                  .map(i => { 
+                    const pathParts = (i.path as string)
+                      .replace('/api/file/', '')
+                      .replace('/api/s3file/', '')
+                      .split('/');
+                    return { 
+                      noteId: note.id, 
+                      ...i,
+                      depth: pathParts.length - 1,
+                      perfixPath: pathParts.slice(0, -1).join(',')
+                    } 
+                  })
               })
             }
           }
@@ -411,7 +422,18 @@ export const noteRouter = router({
           })
           await handleAddTags(tagTree, undefined, note.id)
           await prisma.attachments.createMany({
-            data: attachments.map(i => { return { noteId: note.id, ...i } })
+            data: attachments.map(i => { 
+              const pathParts = (i.path as string)
+                .replace('/api/file/', '')
+                .replace('/api/s3file/', '')
+                .split('/');
+              return { 
+                noteId: note.id, 
+                ...i,
+                depth: pathParts.length - 1,
+                perfixPath: pathParts.slice(0, -1).join(',')
+              } 
+            })
           })
 
           //add references

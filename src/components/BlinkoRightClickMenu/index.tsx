@@ -61,7 +61,7 @@ export const ShowEditTimeModel = () => {
           <Button
             color="primary"
             className="mt-2"
-            onClick={handleSave}
+            onPress={handleSave}
           >
             {i18n.t('save')}
           </Button>

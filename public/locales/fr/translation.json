@@ -326,5 +326,19 @@
   "upload-failed": "Téléchargement échoué",
   "import-from-bko-tip": "Le téléversement vers s3 pour la récupération n'est pas pris en charge actuellement. Veuillez désactiver temporairement l'option s3 lorsque vous souhaitez récupérer.",
   "edit-time": "Modifier l'heure",
-  "ai-write": "Écrire en IA"
+  "ai-write": "Écrire en IA",
+  "download": "Télécharger",
+  "rename": "Renommer",
+  "move-up": "Monter",
+  "cut": "Couper",
+  "paste": "Coller",
+  "confirm-delete": "Confirmer la suppression",
+  "confirm-delete-content": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+  "folder-name": "Nom du dossier",
+  "file-name": "Nom du fichier",
+  "operation-success": "Opération réussie",
+  "cloud-file": "Fichier en nuage",
+  "move-to-parent": "Déplacer vers le parent",
+  "no-resources-found": "Aucune ressource trouvée",
+  "operation-in-progress": "Opération en cours"
 }

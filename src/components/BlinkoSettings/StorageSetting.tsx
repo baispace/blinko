@@ -24,6 +24,7 @@ export const StorageSetting = observer(() => {
     s3Region: "",
     s3Bucket: "",
     s3CustomPath: "",
+    localCustomPath: "",
   }))
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const StorageSetting = observer(() => {
     store.s3Region = blinko.config.value?.s3Region!
     store.s3Bucket = blinko.config.value?.s3Bucket!
     store.s3CustomPath = blinko.config.value?.s3CustomPath!
+    store.localCustomPath = blinko.config.value?.localCustomPath!
   }, [blinko.config.value])
 
 
@@ -60,8 +62,28 @@ export const StorageSetting = observer(() => {
             <DropdownItem key="local">  {t('local-file-system')}</DropdownItem>
             <DropdownItem key="s3">S3</DropdownItem>
           </DropdownMenu>
+
+
         </Dropdown>
       </div>} />
+
+    {blinko.config.value?.objectStorage != 's3' &&
+      <Item
+        leftContent={<>
+          <div>{t('custom-path')}</div>
+        </>}
+        rightContent={<Input
+          value={store.localCustomPath}
+          onChange={e => store.localCustomPath = e.target.value}
+          placeholder="/custom/path/"
+          onBlur={async (e) => {
+            await PromiseCall(api.config.update.mutate({
+              key: 'localCustomPath',
+              value: e.target.value
+            }))
+          }} />}
+      />
+    }
 
     {
       blinko.config.value?.objectStorage === 's3' && <>
@@ -129,5 +151,7 @@ export const StorageSetting = observer(() => {
             }} />} />
       </>
     }
+
+
   </CollapsibleCard>
 })

@@ -351,5 +351,19 @@
   "upload-failed": "فشل التحميل",
   "import-from-bko-tip": "تحميل إلى s3 للإسترداد غير مدعوم في الوقت الحالي. يُرجى تعطيل الخيار s3 مؤقتًا عند رغبتك في الاسترداد.",
   "edit-time": "وقت التحرير",
-  "ai-write": "الذكاء الاصطناعي"
+  "ai-write": "الذكاء الاصطناعي",
+  "download": "تحميل",
+  "rename": "إعادة تسمية",
+  "move-up": "تحرك لأعلى",
+  "cut": "قطع",
+  "paste": "لصق",
+  "confirm-delete": "تأكيد الحذف",
+  "confirm-delete-content": "هل أنت متأكد أنك تريد حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
+  "folder-name": "اسم المجلد",
+  "file-name": "اسم الملف",
+  "operation-success": "نجاح العملية",
+  "cloud-file": "ملف سحابي",
+  "move-to-parent": "الانتقال إلى الوالد",
+  "no-resources-found": "لم يتم العثور على موارد",
+  "operation-in-progress": "العملية قيد التقدم"
 }

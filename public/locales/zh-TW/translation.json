@@ -363,5 +363,19 @@
   "upload-failed": "上傳失敗",
   "import-from-bko-tip": "目前不支援上傳至 s3 進行還原。當您想要進行恢復操作時，請暫時停用 s3 選項。",
   "edit-time": "編輯時間",
-  "ai-write": "AI 寫"
+  "ai-write": "AI 寫",
+  "download": "下載",
+  "rename": "重新命名",
+  "move-up": "提升",
+  "cut": "剪辑",
+  "paste": "貼上",
+  "confirm-delete": "確認刪除",
+  "confirm-delete-content": "您確定要刪除{{name}}嗎？此操作無法撤銷。",
+  "folder-name": "資料夾名稱",
+  "file-name": "檔案名稱",
+  "operation-success": "操作成功",
+  "cloud-file": "雲端檔案",
+  "move-to-parent": "移至上層目錄",
+  "no-resources-found": "找不到資源",
+  "operation-in-progress": "正在進行操作"
 }

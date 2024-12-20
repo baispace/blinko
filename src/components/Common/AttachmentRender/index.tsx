@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileIcons } from '../FileIcon';
+import { FileIcons } from './FileIcon';
 import { observer } from 'mobx-react-lite';
 import { helper } from '@/lib/helper';
 import { type Attachment } from '@/server/types';

@@ -338,5 +338,18 @@
   "upload-failed": "Upload fehlgeschlagen",
   "import-from-bko-tip": "Das Hochladen zur Wiederherstellung auf S3 wird derzeit nicht unterstützt. Deaktivieren Sie die S3-Option vorübergehend, wenn Sie eine Wiederherstellung durchführen möchten.",
   "edit-time": "Bearbeitungszeit",
-  "ai-write": "AI Write\n\nAI schreiben"
+  "ai-write": "AI Write\n\nAI schreiben",
+  "download": "Herunterladen",
+  "rename": "Umbenennen",
+  "move-up": "Nach oben verschieben",
+  "cut": "Schneiden",
+  "paste": "Einfügen",
+  "confirm-delete": "Bestätigen Löschen",
+  "confirm-delete-content": "Sind Sie sicher, dass Sie {{name}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "folder-name": "Ordnername",
+  "file-name": "Dateiname",
+  "operation-success": "Operation erfolgreich",
+  "cloud-file": "Cloud-Datei",
+  "move-to-parent": "Zum übergeordneten Element wechseln",
+  "no-resources-found": "Keine Ressourcen gefunden"
 }

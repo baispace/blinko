@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import { observer } from 'mobx-react-lite';
 import { FileIcon, defaultStyles } from 'react-file-icon';
 
+//path xxx.png
 export const FileIcons = observer(({ path, size = 15, className, isLoading = false }: { path: string, size?: number, className?: string, isLoading?: boolean }) => {
   const extension = helper.getFileExtension(path)
   return <div style={{ width: size + 'px', minWidth: size + 'px' }} className={`${className ?? ''}`}>

@@ -99,20 +99,20 @@ export class BlinkoStore implements Store {
         updatedAt
       } = params;
 
-      const res = await api.notes.upsert.mutate({ 
-        content, 
-        type, 
-        isArchived, 
-        isRecycle, 
-        id, 
-        attachments, 
-        isTop, 
-        isShare, 
+      const res = await api.notes.upsert.mutate({
+        content,
+        type,
+        isArchived,
+        isRecycle,
+        id,
+        attachments,
+        isTop,
+        isShare,
         references,
         createdAt,
-        updatedAt 
+        updatedAt
       })
-      
+
       if (this.config.value?.isUseAI) {
         if (res?.id) {
           api.ai.embeddingUpsert.mutate({ id: res!.id, content: res!.content, type: id ? 'update' : 'insert' }, { context: { skipBatch: true } })
@@ -162,8 +162,8 @@ export class BlinkoStore implements Store {
   })
 
   resourceList = new PromisePageState({
-    function: async ({ page, size, searchText }) => {
-      return await api.attachments.list.query({ page, size, searchText })
+    function: async ({ page, size, searchText, folder }) => {
+      return await api.attachments.list.query({ page, size, searchText, folder })
     }
   })
 

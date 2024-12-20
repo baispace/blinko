@@ -284,6 +284,31 @@ async function main() {
       break
     }
   }
+
+  // 更新 attachments 的 perfixPath 和 depth
+  const attachmentsWithoutDepth = await prisma.attachments.findMany({
+    where: {
+      OR: [
+        { depth: null },
+        { perfixPath: null }
+      ]
+    }
+  });
+
+  for (const attachment of attachmentsWithoutDepth) {
+    const pathParts = attachment.path
+      .replace('/api/file/', '')
+      .replace('/api/s3file/', '')
+      .split('/');
+    
+    await prisma.attachments.update({
+      where: { id: attachment.id },
+      data: {
+        depth: pathParts.length - 1,
+        perfixPath: pathParts.slice(0, -1).join(',')
+      }
+    });
+  }
 }
 
 main()

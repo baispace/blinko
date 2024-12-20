@@ -339,5 +339,6 @@
   "operation-success": "Opération réussie",
   "cloud-file": "Fichier en nuage",
   "move-to-parent": "Déplacer vers le parent",
-  "no-resources-found": "Aucune ressource trouvée"
+  "no-resources-found": "Aucune ressource trouvée",
+  "operation-in-progress": "Opération en cours"
 }

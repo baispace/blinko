@@ -362,5 +362,6 @@
   "operation-success": "Operation Successful",
   "cloud-file": "Cloud File",
   "move-to-parent": "Move To Parent",
-  "no-resources-found": "No Resources Found"
+  "no-resources-found": "No Resources Found",
+  "operation-in-progress": "Opearation in progress"
 }

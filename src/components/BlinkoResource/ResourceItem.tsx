@@ -120,13 +120,13 @@ const ResourceCard = observer(({
           </div>
         )}
         <div className="flex-1">
-          <div className="font-medium text-sm flex items-center gap-1">
+          <div className="font-medium text-sm flex items-center gap-2">
             {fileNameAndExt.name}
             {isS3File && (
               <Tooltip content={t('cloud-file')}>
                 <Icon
-                  icon="material-symbols:cloud"
-                  className="w-4 h-4 text-primary/70"
+                  icon="fluent-color:cloud-16"
+                  className="w-4 h-4 "
                 />
               </Tooltip>
             )}

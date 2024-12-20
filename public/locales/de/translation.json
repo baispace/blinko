@@ -351,5 +351,6 @@
   "operation-success": "Operation erfolgreich",
   "cloud-file": "Cloud-Datei",
   "move-to-parent": "Zum übergeordneten Element wechseln",
-  "no-resources-found": "Keine Ressourcen gefunden"
+  "no-resources-found": "Keine Ressourcen gefunden",
+  "operation-in-progress": "Operation in Bearbeitung"
 }

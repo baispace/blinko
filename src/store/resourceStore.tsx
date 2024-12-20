@@ -7,6 +7,8 @@ import { ResourceType } from "@/server/types";
 import { useEffect } from "react";
 import { api } from "@/lib/trpc";
 import { PromiseCall } from "./standard/PromiseState";
+import { t } from "i18next";
+import { ToastPlugin } from "./module/Toast/Toast";
 
 export class ResourceStore implements Store {
   sid = 'resourceStore';
@@ -77,12 +79,19 @@ export class ResourceStore implements Store {
       ? `${this.currentFolder}/${destItem.folderName}`
       : destItem.folderName;
 
-    await PromiseCall(api.attachments.move.mutate({
-      sourceIds: itemsToMove.map(item => item.id!),
-      targetFolder: targetPath!.split('/').join(',')
-    }));
+    await RootStore.Get(ToastPlugin).promise(
+      PromiseCall(api.attachments.move.mutate({
+        sourceIds: itemsToMove.map(item => item.id!),
+        targetFolder: targetPath!.split('/').join(',')
+      }), { autoAlert: false }), 
+      {
+        loading: t("operation-in-progress"),
+        success: t("operation-success"),
+        error: t("operation-failed")
+      }
+    );
 
-    this.loadResources(this.currentFolder || undefined);
+    this.refreshTicker++;
     this.clearSelection();
   };
 
@@ -149,13 +158,18 @@ export class ResourceStore implements Store {
     folders.pop();
     const parentFolder = folders.length > 0 ? folders.join(',') : '';
 
-
-    await PromiseCall(api.attachments.move.mutate({
-      sourceIds: items.map(item => item.id!),
-      targetFolder: parentFolder
-    }));
-
-    this.loadResources(this.currentFolder);
+    await RootStore.Get(ToastPlugin).promise(
+      PromiseCall(api.attachments.move.mutate({
+        sourceIds: items.map(item => item.id!),
+        targetFolder: parentFolder
+      }), { autoAlert: false }), 
+      {
+        loading: t("operation-in-progress"),
+        success: t("operation-success"),
+        error: t("operation-failed")
+      }
+    );
+    this.refreshTicker++;
     this.clearSelection();
   };
 }

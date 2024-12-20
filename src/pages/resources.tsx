@@ -47,7 +47,7 @@ const Page = observer(() => {
     <DragDropContext onDragEnd={resourceStore.handleDragEnd}>
       <ScrollArea
         onBottom={resourceStore.loadNextPage}
-        className="px-2 md:px-6 h-[calc(100vh_-_100px)]"
+        className="px-2 md:px-6 h-[calc(100vh_-_100px)] max-w-[1000px] mx-auto"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

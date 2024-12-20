@@ -292,5 +292,6 @@
   "operation-success": "Operasyon Başarılı",
   "cloud-file": "Bulut Dosyası",
   "move-to-parent": "Ebeveyn Düzeyine Taşı",
-  "no-resources-found": "Kaynak Bulunamadı"
+  "no-resources-found": "Kaynak Bulunamadı",
+  "operation-in-progress": "Devam eden işlem"
 }

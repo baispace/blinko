@@ -279,5 +279,6 @@
   "operation-success": "Операция успешно выполнена",
   "cloud-file": "Облачный файл",
   "move-to-parent": "Переместиться к родительскому элементу",
-  "no-resources-found": "Ресурсы не найдены"
+  "no-resources-found": "Ресурсы не найдены",
+  "operation-in-progress": "Операция в процессе"
 }

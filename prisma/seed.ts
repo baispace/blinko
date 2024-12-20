@@ -285,7 +285,7 @@ async function main() {
     }
   }
 
-  // 更新 attachments 的 perfixPath 和 depth
+  // update attachments depth and perfixPath
   const attachmentsWithoutDepth = await prisma.attachments.findMany({
     where: {
       OR: [

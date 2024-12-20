@@ -10,6 +10,7 @@ import { useState, useCallback } from "react";
 import { helper } from "@/lib/helper";
 import { showTipsDialog } from "../Common/TipsDialog";
 import { PromiseCall } from "@/store/standard/PromiseState";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 
 const MenuItem = ({ icon, label, className = '' }: { icon: string; label: string; className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
@@ -42,7 +43,17 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
       isOpen: true,
       title: t('rename'),
       content: () => {
-        const [newName, setNewName] = useState<string>(currentName || '');
+        const getNameAndExt = (filename: string) => {
+          const lastDotIndex = filename.lastIndexOf('.');
+          if (lastDotIndex === -1 || resource.isFolder) return { name: filename, ext: '' };
+          return {
+            name: filename.substring(0, lastDotIndex),
+            ext: filename.substring(lastDotIndex)
+          };
+        };
+
+        const { name: initialName, ext } = getNameAndExt(currentName || '');
+        const [newName, setNewName] = useState<string>(initialName);
 
         const getFullFolderPath = (name: string) => {
           if (!resource.isFolder) return undefined;
@@ -53,24 +64,32 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
         };
 
         return (
-          <div className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-2 p-2">
             <Input
               label={resource.isFolder ? t('folder-name') : t('file-name')}
               value={newName}
+              endContent={<div className="pointer-events-none text-default-400">{ext}</div>}
               onChange={(e) => setNewName(e.target.value)}
             />
             <Button
               color="primary"
               className="mt-2"
               onPress={async () => {
+                const finalName = resource.isFolder ? newName : `${newName}${ext}`;
                 const oldPath = getFullFolderPath(resource.folderName!);
-                const newPath = getFullFolderPath(newName);
-                await PromiseCall(api.attachments.rename.mutate({
-                  id: resource?.id ?? undefined,
-                  newName: newPath?.split('/').join(',') || newName,
-                  isFolder: resource.isFolder,
-                  oldFolderPath: oldPath?.split('/').join(',')
-                }));
+                const newPath = getFullFolderPath(finalName);
+                await RootStore.Get(ToastPlugin).promise(
+                  PromiseCall(api.attachments.rename.mutate({
+                    id: resource?.id ?? undefined,
+                    newName: newPath?.split('/').join(',') || finalName,
+                    isFolder: resource.isFolder,
+                    oldFolderPath: oldPath?.split('/').join(',')
+                  }), { autoAlert: false }), {
+                    loading: t("operation-in-progress"),
+                    success: t("operation-success"),
+                    error: t("operation-failed")
+                  }
+                );
                 RootStore.Get(DialogStore).close();
                 resourceStore.refreshTicker++;
               }}
@@ -96,10 +115,17 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
             ? `${resourceStore.currentFolder}/${resource.folderName}`
             : resource.folderName;
 
-          await PromiseCall(api.attachments.delete.mutate({
-            isFolder: true,
-            folderPath: folderPath?.split('/').join(',')
-          }));
+         await RootStore.Get(ToastPlugin).promise(
+            PromiseCall(api.attachments.delete.mutate({
+              id: resource.id!,
+              isFolder: resource.isFolder,
+              folderPath: folderPath?.split('/').join(',')
+            }), { autoAlert: false }), {
+              loading: t("operation-in-progress"),
+              success: t("operation-success"),
+              error: t("operation-failed")
+            }
+          );
         } else {
           await PromiseCall(api.attachments.delete.mutate({
             id: resource.id!,
@@ -126,11 +152,14 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
       const targetPath = resourceStore.currentFolder
         ? `${resourceStore.currentFolder}/${resource.folderName}`
         : resource.folderName;
-
-      await PromiseCall(api.attachments.move.mutate({
+      await RootStore.Get(ToastPlugin).promise(PromiseCall(api.attachments.move.mutate({
         sourceIds: items.map(item => item.id!),
         targetFolder: targetPath!.split('/').join(',')
-      }));
+      }), { autoAlert: false }), {
+        loading: t("operation-in-progress"),
+        success: t("operation-success"),
+        error: t("operation-failed")
+      });
 
       resourceStore.clearClipboard();
       resourceStore.refreshTicker++;
@@ -146,7 +175,14 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
 
   const handleMoveToParent = async () => {
     if (!resource || !resourceStore.currentFolder) return;
-    await resourceStore.moveToParentFolder([resource]);
+    await RootStore.Get(ToastPlugin).promise(
+      resourceStore.moveToParentFolder([resource]), 
+      {
+        loading: t("operation-in-progress"),
+        success: t("operation-success"),
+        error: t("operation-failed")
+      }
+    );
   };
 
   return (

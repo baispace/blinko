@@ -376,5 +376,6 @@
   "operation-success": "操作成功",
   "cloud-file": "雲端檔案",
   "move-to-parent": "移至上層目錄",
-  "no-resources-found": "找不到資源"
+  "no-resources-found": "找不到資源",
+  "operation-in-progress": "正在進行操作"
 }

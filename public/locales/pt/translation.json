@@ -274,5 +274,6 @@
   "operation-success": "Operação bem-sucedida",
   "cloud-file": "Arquivo na Nuvem",
   "move-to-parent": "Mover Para o Pai",
-  "no-resources-found": "Recursos não encontrados"
+  "no-resources-found": "Recursos não encontrados",
+  "operation-in-progress": "Operação em andamento"
 }

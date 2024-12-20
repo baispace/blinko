@@ -364,5 +364,6 @@
   "operation-success": "نجاح العملية",
   "cloud-file": "ملف سحابي",
   "move-to-parent": "الانتقال إلى الوالد",
-  "no-resources-found": "لم يتم العثور على موارد"
+  "no-resources-found": "لم يتم العثور على موارد",
+  "operation-in-progress": "العملية قيد التقدم"
 }

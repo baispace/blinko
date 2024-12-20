@@ -324,5 +324,6 @@
   "operation-success": "手術が成功しました",
   "cloud-file": "クラウドファイル",
   "move-to-parent": "親に移動",
-  "no-resources-found": "リソースが見つかりません"
+  "no-resources-found": "リソースが見つかりません",
+  "operation-in-progress": "進行中の操作"
 }

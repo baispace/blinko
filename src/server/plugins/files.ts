@@ -52,6 +52,7 @@ export class FileService {
     } catch (error) {
       const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}${customPath}` + filename);
       await fs.mkdir(path.dirname(filePath), { recursive: true });
+      //@ts-ignore
       await writeFile(filePath, buffer);
       return `${customPath}${filename}`.replace(/^\//, '');
     }
@@ -292,15 +293,15 @@ export class FileService {
           let parentDir = path.dirname(oldDir);
           const uploadPath = path.join(process.cwd(), UPLOAD_FILE_PATH);
           
-          while (parentDir !== uploadPath) {
-            const parentFiles = await fs.readdir(parentDir);
-            if (parentFiles.length === 0) {
-              await fs.rmdir(parentDir);
-              parentDir = path.dirname(parentDir);
-            } else {
-              break;
-            }
-          }
+          // while (parentDir !== uploadPath) {
+          //   const parentFiles = await fs.readdir(parentDir);
+          //   if (parentFiles.length === 0) {
+          //     await fs.rmdir(parentDir);
+          //     parentDir = path.dirname(parentDir);
+          //   } else {
+          //     break;
+          //   }
+          // }
         }
       } catch (error) {
         console.error('Failed to cleanup old directories:', error);

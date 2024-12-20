@@ -1,3 +1,17 @@
+# [0.28.0](https://github.com/blinko-space/blinko/compare/v0.27.7...v0.28.0) (2024-12-20)
+
+
+### Bug Fixes
+
+* improve layout and accessibility in resources and layout components ([2bfb29c](https://github.com/blinko-space/blinko/commit/2bfb29c841c0c0b181f15c013b44dfb78c380c44))
+
+
+### Features
+
+* enhance configuration and improve attachment handling ([6572ebb](https://github.com/blinko-space/blinko/commit/6572ebb0e7c5255e51943eebc36bee96a16623d8))
+* enhance localization and improve resource context menu ([99003be](https://github.com/blinko-space/blinko/commit/99003be617eb533f4ac8d769018d329d6755e0e2))
+* refactor resource page ([cda450a](https://github.com/blinko-space/blinko/commit/cda450a89a96aca417ac2a98ebec69639189c233))
+
 ## [0.27.7](https://github.com/blinko-space/blinko/compare/v0.27.6...v0.27.7) (2024-12-20)
 
 

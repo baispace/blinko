@@ -92,6 +92,16 @@ export class DBJob {
 
       const accountMap = new Map();
       for (const note of backupData.notes) {
+        if (!note.account?.name) {
+          yield {
+            type: 'error',
+            content: 'Note missing account information',
+            error: new Error('Missing account information'),
+            progress: { current: 0, total }
+          };
+          continue;
+        }
+
         if (!accountMap.has(note.account.name)) {
           const account = await prisma.accounts.findFirst({
             where: { name: note.account.name }
@@ -114,13 +124,34 @@ export class DBJob {
 
       for (const note of backupData.notes) {
         current++;
+        if (!note.account?.name) {
+          yield {
+            type: 'error',
+            content: 'Note missing account information',
+            error: new Error('Missing account information'),
+            progress: { current, total }
+          };
+          continue;
+        }
+
+        const accountInfo = accountMap.get(note.account.name);
+        if (!accountInfo) {
+          yield {
+            type: 'error',
+            content: `Account not found: ${note.account.name}`,
+            error: new Error('Account not found'),
+            progress: { current, total }
+          };
+          continue;
+        }
+
         try {
           await prisma.$transaction(async (tx) => {
             let ctx = {
-              name: accountMap.get(note.account.name).name,
-              sub: accountMap.get(note.account.name).id,
-              role: accountMap.get(note.account.name).role,
-              id: accountMap.get(note.account.name).id,
+              name: accountInfo.name,
+              sub: accountInfo.id,
+              role: accountInfo.role,
+              id: accountInfo.id,
               exp: 0,
               iat: 0,
             }

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@nextui-org/react';
+import { Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@nextui-org/react';
 import { _ } from '@/lib/lodash';
 import { useTranslation } from 'react-i18next';
 import { ContextMenu, ContextMenuItem } from '@/components/Common/ContextMenu';
@@ -15,6 +15,61 @@ import { NoteType } from "@/server/types";
 import { useRouter } from "next/router";
 import { AiStore } from "@/store/aiStore";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
+import { parseAbsoluteToLocal } from "@internationalized/date";
+import i18n from "@/lib/i18n";
+
+export const ShowEditTimeModel = () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  RootStore.Get(DialogStore).setData({
+    size: 'sm' as any,
+    isOpen: true,
+    onlyContent: true,
+    isDismissable: false,
+    showOnlyContentCloseButton: true,
+    content: () => {
+      const [createdAt, setCreatedAt] = useState(blinko.curSelectedNote?.createdAt ?
+        parseAbsoluteToLocal(blinko.curSelectedNote.createdAt.toISOString()) : null);
+
+      const [updatedAt, setUpdatedAt] = useState(blinko.curSelectedNote?.updatedAt ?
+        parseAbsoluteToLocal(blinko.curSelectedNote.updatedAt.toISOString()) : null);
+
+      const handleSave = () => {
+        if (!createdAt || !updatedAt) return;
+
+        blinko.upsertNote.call({
+          id: blinko.curSelectedNote?.id,
+          createdAt: createdAt.toDate(),
+          updatedAt: updatedAt.toDate()
+        });
+
+        RootStore.Get(DialogStore).close();
+      }
+      return <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-4">
+          <DatePicker
+            label={i18n.t('created-at')}
+            value={createdAt}
+            onChange={setCreatedAt}
+            labelPlacement="outside"
+          />
+          <DatePicker
+            label={i18n.t('updated-at')}
+            value={updatedAt}
+            onChange={setUpdatedAt}
+            labelPlacement="outside"
+          />
+          <Button
+            color="primary"
+            className="mt-2"
+            onPress={handleSave}
+          >
+            {i18n.t('save')}
+          </Button>
+        </div>
+      </div>
+    }
+  })
+}
 
 export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit') => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -187,6 +242,14 @@ export const DeleteItem = observer(() => {
   </div>
 })
 
+export const EditTimeItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="mdi:clock-edit-outline" width="20" height="20" />
+    <div>{t('edit-time')}</div>
+  </div>
+})
+
 export const BlinkoRightClickMenu = observer(() => {
   const [isDetailPage, setIsDetailPage] = useState(false)
   const router = useRouter()
@@ -204,6 +267,10 @@ export const BlinkoRightClickMenu = observer(() => {
     {!isDetailPage ? <ContextMenuItem onClick={() => handleMultiSelect()}>
       <MutiSelectItem />
     </ContextMenuItem> : <></>}
+
+    <ContextMenuItem onClick={() => ShowEditTimeModel()}>
+      <EditTimeItem />
+    </ContextMenuItem>
 
     <ContextMenuItem onClick={ConvertItemFunction}>
       <ConvertItem />
@@ -265,6 +332,7 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       <DropdownItem key="MutiSelectItem" onPress={() => {
         handleMultiSelect()
       }}><MutiSelectItem /></DropdownItem>
+        <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>
       <DropdownItem key="ShareItem" onPress={handlePublic}> <PublicItem />  </DropdownItem>

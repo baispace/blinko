@@ -1,7 +1,7 @@
 import React from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd-next';
 import { FileType } from '../Editor/type';
-import { FileIcons } from '../FileIcon';
+import { FileIcons } from './FileIcon';
 import { DeleteIcon } from './icons';
 import { helper } from '@/lib/helper';
 import { api } from '@/lib/trpc';

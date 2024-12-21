@@ -270,5 +270,21 @@
   "spotify-consumer-secret": "Spotify Секрет потребителя",
   "enter-spotify-consumer-key": "Введите ключ потребителя Spotify",
   "spotify-consumer-key-tip": "Использовались для получения обложек музыкальных альбомов в формате mp3.",
-  "spotify-consumer-key-tip-2": "Получите ключ API на https://developer.spotify.com/"
+  "spotify-consumer-key-tip-2": "Получите ключ API на https://developer.spotify.com/",
+  "edit-time": "Время редактирования",
+  "ai-write": "Искусственный интеллект.",
+  "download": "Скачать",
+  "rename": "Переименовать",
+  "move-up": "Двигаться вверх",
+  "cut": "Порезать",
+  "paste": "Вставить",
+  "confirm-delete": "Подтвердить удаление",
+  "confirm-delete-content": "Вы уверены, что хотите удалить {{name}}? Это действие нельзя отменить.",
+  "folder-name": "Имя папки",
+  "file-name": "Имя файла",
+  "operation-success": "Операция успешно выполнена",
+  "cloud-file": "Облачный файл",
+  "move-to-parent": "Переместиться к родительскому элементу",
+  "no-resources-found": "Ресурсы не найдены",
+  "operation-in-progress": "Операция в процессе"
 }

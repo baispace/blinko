@@ -45,7 +45,7 @@ export const ReferenceButton = observer(({ store }: Props) => {
           size='sm'
         />
         <ScrollArea
-          className='max-h-[400px] max-w-[290px] flex flex-col gap-1 p-2'
+          className='max-h-[400px] max-w-[290px] flex flex-col gap-2'
           onBottom={() => { blinko.referenceSearchList.callNextPage({}) }}
         >
           {blinko.referenceSearchList && blinko.referenceSearchList?.value?.map(i => {

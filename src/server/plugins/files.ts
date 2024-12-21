@@ -1,6 +1,6 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routers/config";
-import { THUMBNAIL_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
+import { UPLOAD_FILE_PATH } from "@/lib/constant";
 import fs, { unlink,  writeFile } from 'fs/promises';
 import path from 'path';
 import { cache } from "@/lib/cache";
@@ -29,6 +29,7 @@ export class FileService {
 
   private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer, attempt: number = 0) {
     const MAX_ATTEMPTS = 20;
+    const config = await getGlobalConfig({ useAdmin: true });
 
     if (attempt >= MAX_ATTEMPTS) {
       throw new Error('MAX_ATTEMPTS_REACHED');
@@ -38,17 +39,22 @@ export class FileService {
       `${baseName}${extension}` :
       `${baseName}_${Date.now()}${extension}`;
 
+    let customPath = config.localCustomPath || '';
+    if (customPath) {
+      customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+      customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+    }
+
     try {
-      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
+      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
       await fs.access(filePath);
-      //@ts-ignore
       return this.writeFileSafe(baseName, extension, buffer, attempt + 1);
     } catch (error) {
-      console.error(error)
-      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + filename);
+      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
       //@ts-ignore
       await writeFile(filePath, buffer);
-      return filename;
+      return `${customPath}${filename}`.replace(/^\//, '');
     }
   }
 
@@ -100,16 +106,10 @@ export class FileService {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
       }
     } else {
-      const filepath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}/` + api_attachment_path.replace('/api/file/', ""));
+      const filepath = path.join(UPLOAD_FILE_PATH, api_attachment_path.replace('/api/file/', ""));
       const attachmentPath = await prisma.attachments.findFirst({ where: { path: api_attachment_path } })
       if (attachmentPath) {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
-      }
-      if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(api_attachment_path.split('.')[1]?.replace('.', '')?.toLowerCase() ?? '')) {
-        try {
-          await unlink(path.join(process.cwd(), THUMBNAIL_PATH + '/' + api_attachment_path.replace('/api/file/', "")));
-        } catch (error) {
-        }
       }
       await unlink(filepath);
     }
@@ -176,8 +176,16 @@ export class FileService {
       return { filePath: s3Url, fileName: timestampedFileName };
       
     } else {
-      const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, timestampedFileName);
-      const writeStream = createWriteStream(filePath);
+      let customPath = config.localCustomPath || '';
+      if (customPath) {
+        customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+        customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+      }
+
+      const fullPath = path.join(UPLOAD_FILE_PATH, customPath, timestampedFileName);
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      
+      const writeStream = createWriteStream(fullPath);
       const nodeReadable = Readable.fromWeb(stream as any);
 
       await new Promise((resolve, reject) => {
@@ -186,10 +194,117 @@ export class FileService {
           .on('error', reject);
       });
 
+      const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
       return { 
-        filePath: `/api/file/${timestampedFileName}`, 
+        filePath: `/api/file/${relativePath}`, 
         fileName: timestampedFileName 
       };
+    }
+  }
+
+  static async renameFile(oldPath: string, newName: string) {
+    const config = await getGlobalConfig({ useAdmin: true });
+    
+    await prisma.$transaction(async (prisma) => {
+      if (oldPath.includes('/api/s3file/')) {
+        const { s3ClientInstance } = await this.getS3Client();
+        const oldKey = oldPath.replace('/api/s3file/', '');
+        const dirPath = path.dirname(oldKey);
+        
+        const normalizedDirPath = dirPath === '.' ? '' : dirPath.replace(/\\/g, '/');
+        const normalizedNewName = newName.replace(/\\/g, '/');
+        const newKey = normalizedDirPath ? `${normalizedDirPath}/${normalizedNewName}` : normalizedNewName;
+
+        try {
+          await s3ClientInstance.send(new CopyObjectCommand({
+            Bucket: config.s3Bucket,
+            CopySource: encodeURIComponent(`${config.s3Bucket}/${decodeURIComponent(oldKey)}`),
+            Key: decodeURIComponent(newKey)
+          }));
+
+          await s3ClientInstance.send(new DeleteObjectCommand({
+            Bucket: config.s3Bucket,
+            Key: decodeURIComponent(oldKey)
+          }));
+        } catch (error) {
+          console.error('S3 rename operation failed:', error);
+          throw new Error(`Failed to rename file in S3: ${error.message}`);
+        }
+      } else {
+        const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
+        const newFilePath = path.join(path.dirname(oldFilePath), newName);
+        
+        await fs.rename(oldFilePath, newFilePath);
+      }
+    });
+  }
+
+  static async moveFile(oldPath: string, newPath: string) {
+    const config = await getGlobalConfig({ useAdmin: true });
+    
+    if (oldPath.includes('/api/s3file/')) {
+      const { s3ClientInstance } = await this.getS3Client();
+      const oldKey = oldPath.replace('/api/s3file/', '');
+      let newKey = newPath.replace('/api/s3file/', '');
+
+      if (newKey.startsWith('/')) {
+        newKey = newKey.substring(1);
+      }
+
+      try {
+        await s3ClientInstance.send(new GetObjectCommand({
+          Bucket: config.s3Bucket,
+          Key: decodeURIComponent(oldKey)
+        }));
+      } catch (error) {
+        console.error('Source file check failed:', error);
+        throw new Error(`Source file does not exist: ${decodeURIComponent(oldKey)}`);
+      }
+
+      try {
+        await s3ClientInstance.send(new CopyObjectCommand({
+          Bucket: config.s3Bucket,
+          CopySource: encodeURIComponent(`${config.s3Bucket}/${decodeURIComponent(oldKey)}`),
+          Key: decodeURIComponent(newKey)
+        }));
+
+        await s3ClientInstance.send(new DeleteObjectCommand({
+          Bucket: config.s3Bucket,
+          Key: decodeURIComponent(oldKey)
+        }));
+      } catch (error) {
+        console.error('S3 operation failed:', error);
+        throw new Error(`Failed to move file in S3: ${error.message}`);
+      }
+    } else {
+      const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
+      const newFilePath = path.join(UPLOAD_FILE_PATH, newPath.replace('/api/file/', ''));
+      
+      await fs.mkdir(path.dirname(newFilePath), { recursive: true });
+      await fs.rename(oldFilePath, newFilePath);
+
+      try {
+        const oldDir = path.dirname(oldFilePath);
+        const files = await fs.readdir(oldDir);
+        
+        if (files.length === 0) {
+          await fs.rmdir(oldDir);
+          
+          let parentDir = path.dirname(oldDir);
+          const uploadPath = path.join(UPLOAD_FILE_PATH);
+          while (parentDir !== uploadPath) {
+            const parentFiles = await fs.readdir(parentDir);
+            if (parentFiles.length === 0) {
+              await fs.rmdir(parentDir);
+              parentDir = path.dirname(parentDir);
+            } else {
+              break;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to cleanup old directories:', error);
+      }
     }
   }
 }

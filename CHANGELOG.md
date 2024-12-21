@@ -1,3 +1,60 @@
+## [0.28.1](https://github.com/blinko-space/blinko/compare/v0.28.0...v0.28.1) (2024-12-21)
+
+
+### Bug Fixes
+
+* build issue ([169e3b3](https://github.com/blinko-space/blinko/commit/169e3b301fec927b505ad8bb46d33c6f83ec906d))
+
+# [0.28.0](https://github.com/blinko-space/blinko/compare/v0.27.7...v0.28.0) (2024-12-20)
+
+
+### Bug Fixes
+
+* improve layout and accessibility in resources and layout components ([2bfb29c](https://github.com/blinko-space/blinko/commit/2bfb29c841c0c0b181f15c013b44dfb78c380c44))
+
+
+### Features
+
+* enhance configuration and improve attachment handling ([6572ebb](https://github.com/blinko-space/blinko/commit/6572ebb0e7c5255e51943eebc36bee96a16623d8))
+* enhance localization and improve resource context menu ([99003be](https://github.com/blinko-space/blinko/commit/99003be617eb533f4ac8d769018d329d6755e0e2))
+* refactor resource page ([cda450a](https://github.com/blinko-space/blinko/commit/cda450a89a96aca417ac2a98ebec69639189c233))
+
+## [0.27.7](https://github.com/blinko-space/blinko/compare/v0.27.6...v0.27.7) (2024-12-20)
+
+
+### Bug Fixes
+
+* german translations ([d498892](https://github.com/blinko-space/blinko/commit/d4988929592998df4bd79d9e60eacd0e21093cde))
+
+## [0.27.6](https://github.com/blinko-space/blinko/compare/v0.27.5...v0.27.6) (2024-12-19)
+
+
+### Bug Fixes
+
+* remove unused components and utility functions ([69b475b](https://github.com/blinko-space/blinko/commit/69b475b4c9d2754b5d4e1bc409dc85b761f5c307))
+
+## [0.27.5](https://github.com/blinko-space/blinko/compare/v0.27.4...v0.27.5) (2024-12-19)
+
+
+### Bug Fixes
+
+* add AI writing feature and enhance localization ([dbaa73e](https://github.com/blinko-space/blinko/commit/dbaa73ef615f8f387db573417cf9c04465eeaeb6))
+
+## [0.27.4](https://github.com/blinko-space/blinko/compare/v0.27.3...v0.27.4) (2024-12-19)
+
+
+### Bug Fixes
+
+* add edit time functionality and enhance note management [#242](https://github.com/blinko-space/blinko/issues/242) ([c112df6](https://github.com/blinko-space/blinko/commit/c112df6a149a2b31f3e9ff8273136585db763981))
+* add edit time option to BlinkoRightClickMenu ([57620e2](https://github.com/blinko-space/blinko/commit/57620e2b1fa5a21e4245ea4c2636822752351089))
+
+## [0.27.3](https://github.com/blinko-space/blinko/compare/v0.27.2...v0.27.3) (2024-12-19)
+
+
+### Bug Fixes
+
+* enhance user settings initialization and layout interaction ([251f2ff](https://github.com/blinko-space/blinko/commit/251f2ffd2a9e4b6c13235539932f1a77281374b9))
+
 ## [0.27.2](https://github.com/blinko-space/blinko/compare/v0.27.1...v0.27.2) (2024-12-18)
 
 

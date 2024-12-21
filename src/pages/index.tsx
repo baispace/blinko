@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
+import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
 
 const Home = observer(() => {
   const { t } = useTranslation();
@@ -38,16 +39,11 @@ const Home = observer(() => {
 
       {!isPc && <BlinkoAddButton />}
 
-      <div className='text-ignore flex items-center justify-center gap-1 w-full '>
-        <Icon className={`text-ignore mt-2 mb-[-5px] transition-all ${blinko.noteList.isLoading ? 'h-[30px]' : 'h-0'}`} icon="eos-icons:three-dots-loading" width="40" height="40" />
-        {
-          blinko.noteList.isEmpty &&
-          <div className='absolute top-[40%] select-none text-ignore flex items-center justify-center gap-2 w-full mt-2 md:mt-10'>
-            <Icon icon="line-md:coffee-half-empty-twotone-loop" width="24" height="24" />
-            <div className='text-md text-ignore font-bold'>{t('no-data-here-well-then-time-to-write-a-note')}</div>
-          </div>
-        }
-      </div>
+      <LoadingAndEmpty 
+        isLoading={blinko.noteList.isLoading}
+        isEmpty={blinko.noteList.isEmpty}
+      />
+      
       {
         !blinko.noteList.isEmpty && <ScrollArea
           onBottom={() => blinko.onBottom()}

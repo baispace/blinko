@@ -96,7 +96,7 @@ export const CommonLayout = observer(({
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
         className={`flex transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-sencondbackground`}>
         {/* nav bar  */}
-        <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2">
+        <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2 overflow-x-hidden">
           <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
             <div className="w-full h-[100%] bg-[#9936e6] opacity-20"
               style={{ "clipPath": "circle(50% at 50% 50%)" }} />
@@ -160,9 +160,18 @@ export const CommonLayout = observer(({
                 <FilterPop />
                 {blinkoStore.dailyReviewNoteList.value?.length != 0 &&
                   <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
-                    <Link href={'/review'}>
-                      <Button className="mt-[2px]" isIconOnly size="sm" variant="light">
-                        {/* <Icon className="text-[#8600EF] cursor-pointer" icon="bxs:message-square-detail" width="24" height="24" /> */}
+                    <Link href="/review" passHref legacyBehavior>
+                      <Button 
+                        as="a"
+                        className="mt-[2px]" 
+                        isIconOnly 
+                        size="sm" 
+                        variant="light"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          router.push('/review');
+                        }}
+                      >
                         <Icon className='cursor-pointer' icon="mingcute:message-1-line" width="24" height="24" />
                       </Button>
                     </Link>

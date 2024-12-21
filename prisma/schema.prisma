@@ -39,6 +39,8 @@ model attachments {
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+  perfixPath    String?  @default("") @db.VarChar // folder1,folder2,folder3
+  depth         Int?
 
   note notes @relation(fields: [noteId], references: [id])
 }

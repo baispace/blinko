@@ -26,6 +26,7 @@ import {
   useEditorHeight
 } from './hooks/useEditor';
 import { EditorStore } from "./editorStore";
+import { AIWriteButton } from "./Toolbar/AIWriteButton";
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -106,6 +107,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       <div className='flex w-full items-center gap-1'>
         <NoteTypeButton />
         <HashtagButton store={store} content={content} />
+        <AIWriteButton store={store} content={content} />
         <ReferenceButton store={store} />
         <UploadButtons
           getInputProps={getInputProps}

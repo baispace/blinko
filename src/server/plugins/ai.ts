@@ -27,7 +27,7 @@ import dayjs from 'dayjs';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
-const FaissStorePath = path.join(process.cwd(), FAISS_PATH);
+const FaissStorePath = path.join(FAISS_PATH);
 
 export class AiService {
   static async loadFileContent(filePath: string): Promise<string> {
@@ -215,7 +215,7 @@ export class AiService {
 
   static async *rebuildEmbeddingIndex({ force = false }: { force?: boolean }): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
     if (force) {
-      const faissPath = path.join(process.cwd(), FAISS_PATH)
+      const faissPath = path.join(FAISS_PATH)
       fs.rmSync(faissPath, { recursive: true, force: true })
     }
     const notes = await prisma.notes.findMany({

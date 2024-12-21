@@ -47,7 +47,7 @@ module.exports = withPWA({
       },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dev,isServer }) => {
     config.experiments = { ...config.experiments, topLevelAwait: true };
     if (!isServer) {
       config.resolve.fallback = {

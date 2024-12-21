@@ -17,12 +17,11 @@ const Page = observer(() => {
   const router = useRouter();
   const resourceStore = RootStore.Get(ResourceStore);
   const { t } = useTranslation();
-  
-  const resources = useMemo(() => 
-    toJS(resourceStore.blinko.resourceList.value) || [], 
+  const resources = useMemo(() =>
+    toJS(resourceStore.blinko.resourceList.value) || [],
     [resourceStore.blinko.resourceList.value]
   );
-  
+
   const selectedItems = resourceStore.selectedItems;
 
   const handleMoveSelectedToParent = useCallback(async () => {
@@ -30,7 +29,7 @@ const Page = observer(() => {
     const selectedResources = Array.from(selectedItems)
       .map(id => resources.find(r => r.id === id))
       .filter((item): item is NonNullable<typeof item> => item != null);
-    
+
     if (selectedResources.length > 0) {
       await resourceStore.moveToParentFolder(selectedResources);
     }
@@ -49,7 +48,7 @@ const Page = observer(() => {
         onBottom={resourceStore.loadNextPage}
         className="md:px-6 h-[calc(100%_-_5px)] md:h-[calc(100vh_-_100px)] px-2 md:max-w-[1000px] w-full overflow-x-hidden mx-auto"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <AnimatePresence mode="wait">
               {resourceStore.currentFolder && (
@@ -67,7 +66,7 @@ const Page = observer(() => {
                 >
                   <Breadcrumbs variant="solid" className="ml-[-8px]" size='lg'>
                     {folderBreadcrumbs.map((folder, index) => (
-                      <BreadcrumbItem 
+                      <BreadcrumbItem
                         key={folder}
                         onPress={() => {
                           if (index === 0) {
@@ -76,10 +75,10 @@ const Page = observer(() => {
                             const currentPathSegments = resourceStore.currentFolder?.split('/') || [];
                             const clickedPathLevel = index;
                             const stepsToGoBack = currentPathSegments.length - clickedPathLevel;
-                            
+
                             for (let i = 0; i < stepsToGoBack; i++) {
                               resourceStore.navigateBack(router);
-                            } 
+                            }
                           }
                         }}
                       >
@@ -91,8 +90,8 @@ const Page = observer(() => {
               )}
             </AnimatePresence>
           </div>
-          
-          {selectedItems.size > 0 && resourceStore.currentFolder && resourceStore.currentFolder !== 'Root' && (
+
+          <div className="flex items-center gap-2 mt-2 ">
             <motion.div
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -104,17 +103,39 @@ const Page = observer(() => {
               }}
             >
               <Button
-                variant="light"
-                onPress={handleMoveSelectedToParent}
-                startContent={<Icon icon="material-symbols:drive-file-move-outline" className="w-5 h-5" />}
+                size="sm"
+                color="primary"
+                onPress={resourceStore.handleNewFolder}
+                startContent={<Icon icon="material-symbols:create-new-folder-outline" className="w-5 h-5" />}
               >
-                {t('move-to-parent')}
+                {t('new-folder')}
               </Button>
             </motion.div>
-          )}
+
+            {selectedItems.size > 0 && resourceStore.currentFolder && resourceStore.currentFolder !== 'Root' && (
+              <motion.div
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 20, opacity: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25
+                }}
+              >
+                <Button
+                  variant="light"
+                  onPress={handleMoveSelectedToParent}
+                  startContent={<Icon icon="material-symbols:drive-file-move-outline" className="w-5 h-5" />}
+                >
+                  {t('move-to-parent')}
+                </Button>
+              </motion.div>
+            )}
+          </div>
         </div>
 
-        <LoadingAndEmpty 
+        <LoadingAndEmpty
           isLoading={resourceStore.blinko.resourceList.isLoading}
           isEmpty={!resources.length}
           emptyMessage={t('no-resources-found')}

@@ -327,5 +327,8 @@
   "cloud-file": "クラウドファイル",
   "move-to-parent": "親に移動",
   "no-resources-found": "リソースが見つかりません",
-  "operation-in-progress": "進行中の操作"
+  "operation-in-progress": "進行中の操作",
+  "new-folder": "新しいフォルダ",
+  "folder-name-exists": "フォルダ名が既に存在します",
+  "folder-name-required": "フォルダ名が必要です。"
 }

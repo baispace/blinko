@@ -286,5 +286,8 @@
   "cloud-file": "Облачный файл",
   "move-to-parent": "Переместиться к родительскому элементу",
   "no-resources-found": "Ресурсы не найдены",
-  "operation-in-progress": "Операция в процессе"
+  "operation-in-progress": "Операция в процессе",
+  "new-folder": "Новая папка",
+  "folder-name-exists": "Имя папки существует",
+  "folder-name-required": "Название папки обязательно"
 }

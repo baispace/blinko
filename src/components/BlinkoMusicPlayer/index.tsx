@@ -102,7 +102,7 @@ export const BlinkoMusicPlayer = observer(() => {
             }}
             className="relative overflow-hidden shadow-lg backdrop-blur-2xl"
           >
-            {metadata?.coverUrl && (
+            {metadata?.coverUrl ? (
               <>
                 <div
                   className="absolute inset-0 bg-cover bg-center"
@@ -114,6 +114,11 @@ export const BlinkoMusicPlayer = observer(() => {
                   }}
                 />
                 <div className="absolute inset-0 bg-black/30 backdrop-blur-xl" />
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-100 dark:from-blue-500/20 dark:to-purple-500/20" />
+                <div className="absolute inset-0 backdrop-blur-xl bg-black/5 dark:bg-black/10" />
               </>
             )}
 
@@ -144,8 +149,8 @@ export const BlinkoMusicPlayer = observer(() => {
                     className="w-full h-full object-cover rounded-md"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <Icon icon="ph:music-notes" className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} text-gray-400`} />
+                  <div className="w-full h-full bg-gray-100 dark:bg-gray-200 flex items-center justify-center">
+                    <Icon icon="ph:music-notes" className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} text-gray-500`} />
                   </div>
                 )}
               </motion.div>
@@ -161,7 +166,7 @@ export const BlinkoMusicPlayer = observer(() => {
                 >
                   <motion.div className="flex-1">
                     <motion.div
-                      className={`truncate text-white ${isPc ? 'max-w-[180px]' : 'max-w-[100px]'}`}
+                      className={`truncate ${isPc ? 'max-w-[180px]' : 'max-w-[100px]'} ${metadata?.coverUrl ? 'text-white' : 'text-gray-700 dark:text-white'}`}
                       animate={{
                         fontSize: isCompact ? 12 : 14,
                         lineHeight: isCompact ? "16px" : "20px",
@@ -174,7 +179,7 @@ export const BlinkoMusicPlayer = observer(() => {
                     </motion.div>
                     <motion.div
                       animate={{ height: isCompact ? 0 : "auto", opacity: isCompact ? 0 : 1 }}
-                      className={`text-sm truncate text-white/80 overflow-hidden`}
+                      className={`text-sm truncate overflow-hidden ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-600 dark:text-white/80'}`}
                     >
                       {metadata?.artists && metadata.artists.join(', ')}
                     </motion.div>

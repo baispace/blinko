@@ -342,5 +342,8 @@
   "cloud-file": "Fichier en nuage",
   "move-to-parent": "Déplacer vers le parent",
   "no-resources-found": "Aucune ressource trouvée",
-  "operation-in-progress": "Opération en cours"
+  "operation-in-progress": "Opération en cours",
+  "new-folder": "Nouveau Dossier",
+  "folder-name-exists": "Le nom du dossier existe",
+  "folder-name-required": "Nom du dossier requis"
 }

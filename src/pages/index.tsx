@@ -12,6 +12,7 @@ import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
+import { Image } from '@nextui-org/react';
 
 const Home = observer(() => {
   const { t } = useTranslation();
@@ -36,14 +37,13 @@ const Home = observer(() => {
           store.editorHeight = height
         }} />
       </div>}
-
       {!isPc && <BlinkoAddButton />}
 
-      <LoadingAndEmpty 
+      <LoadingAndEmpty
         isLoading={blinko.noteList.isLoading}
         isEmpty={blinko.noteList.isEmpty}
       />
-      
+
       {
         !blinko.noteList.isEmpty && <ScrollArea
           onBottom={() => blinko.onBottom()}
@@ -66,6 +66,8 @@ const Home = observer(() => {
           {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: blinko.noteList.value?.length })}</div>}
         </ScrollArea>
       }
+
+
     </div>
   );
 });

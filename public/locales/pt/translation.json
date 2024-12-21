@@ -278,5 +278,8 @@
   "cloud-file": "Arquivo na Nuvem",
   "move-to-parent": "Mover Para o Pai",
   "no-resources-found": "Recursos não encontrados",
-  "operation-in-progress": "Operação em andamento"
+  "operation-in-progress": "Operação em andamento",
+  "new-folder": "Nova Pasta",
+  "folder-name-exists": "Nome da Pasta Já Existe",
+  "folder-name-required": "Nome da pasta obrigatório"
 }

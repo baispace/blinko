@@ -296,5 +296,8 @@
   "cloud-file": "Bulut Dosyası",
   "move-to-parent": "Ebeveyn Düzeyine Taşı",
   "no-resources-found": "Kaynak Bulunamadı",
-  "operation-in-progress": "Devam eden işlem"
+  "operation-in-progress": "Devam eden işlem",
+  "new-folder": "Yeni Klasör",
+  "folder-name-exists": "Klasör Adı Mevcut",
+  "folder-name-required": "Klasör Adı Gerekli"
 }

@@ -219,8 +219,8 @@ body {
     --border: #0b0b0c;
     --input: hsl(216 34% 17%);
 
-    --primary: #7A1CAC;
-    --primary-foreground: hsl(0deg 0% 100%);
+    --primary: #f9f9f9;
+    --primary-foreground: hsl(0, 0%, 0%);
 
     --secondary: hsl(253, 53%, 59%);
     --secondary-foreground: hsl(210 40% 98%);

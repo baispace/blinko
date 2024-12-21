@@ -345,5 +345,8 @@
   "cloud-file": "Archivo en la nube",
   "move-to-parent": "Mover al padre",
   "no-resources-found": "No se encontraron recursos.",
-  "operation-in-progress": "Operación en progreso"
+  "operation-in-progress": "Operación en progreso",
+  "new-folder": "Nueva Carpeta",
+  "folder-name-exists": "Nombre de carpeta existente",
+  "folder-name-required": "Nombre de carpeta requerido"
 }

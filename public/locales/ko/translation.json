@@ -350,5 +350,8 @@
   "cloud-file": "클라우드 파일",
   "move-to-parent": "부모로 이동",
   "no-resources-found": "자원을 찾을 수 없습니다",
-  "operation-in-progress": "진행 중인 작업"
+  "operation-in-progress": "진행 중인 작업",
+  "new-folder": "새 폴더",
+  "folder-name-exists": "폴더 이름이 이미 있습니다.",
+  "folder-name-required": "폴더 이름 필요함"
 }

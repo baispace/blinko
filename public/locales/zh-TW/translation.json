@@ -317,7 +317,7 @@
   "insert-row-above": "插入上文 1",
   "insert-row-below": "下面插入 1",
   "instant-rendering": "即时渲染",
-  "light-mode": "灯光模式",
+  "light-mode": "浅色模式",
   "line": "线路",
   "link": "链接",
   "link-ref": "链接参考",
@@ -383,5 +383,8 @@
   "cloud-file": "雲端檔案",
   "move-to-parent": "移至上層目錄",
   "no-resources-found": "找不到資源",
-  "operation-in-progress": "正在進行操作"
+  "operation-in-progress": "正在進行操作",
+  "new-folder": "新資料夾",
+  "folder-name-required": "需要資料夾名稱",
+  "folder-name-exists": "資料夾名稱已存在"
 }

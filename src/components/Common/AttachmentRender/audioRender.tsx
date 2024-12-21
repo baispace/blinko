@@ -159,7 +159,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
   const getBackgroundStyle = (coverUrl?: string) => {
     if (!coverUrl) {
-      return 'bg-sencondbackground hover:bg-hover';
+      return 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-blue-500/10 dark:to-purple-500/10 backdrop-blur-sm hover:bg-opacity-90 border border-black/5 dark:border-white/5';
     }
     return 'bg-cover bg-center relative overflow-hidden hover:bg-opacity-90';
   };

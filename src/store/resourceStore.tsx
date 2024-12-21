@@ -4,11 +4,13 @@ import { useRouter } from "next/router";
 import { BlinkoStore } from "./blinkoStore";
 import { RootStore } from ".";
 import { ResourceType } from "@/server/types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/trpc";
 import { PromiseCall } from "./standard/PromiseState";
 import { t } from "i18next";
 import { ToastPlugin } from "./module/Toast/Toast";
+import { DialogStore } from "./module/Dialog";
+import { Button, Input } from "@nextui-org/react";
 
 export class ResourceStore implements Store {
   sid = 'resourceStore';
@@ -83,7 +85,7 @@ export class ResourceStore implements Store {
       PromiseCall(api.attachments.move.mutate({
         sourceIds: itemsToMove.map(item => item.id!),
         targetFolder: targetPath!.split('/').join(',')
-      }), { autoAlert: false }), 
+      }), { autoAlert: false }),
       {
         loading: t("operation-in-progress"),
         success: t("operation-success"),
@@ -151,6 +153,79 @@ export class ResourceStore implements Store {
     }, [this.refreshTicker]);
   }
 
+  handleNewFolder = () => {
+    const blinko = RootStore.Get(BlinkoStore);
+    const currentResources = blinko.resourceList.value || [];
+    
+    RootStore.Get(DialogStore).setData({
+      isOpen: true,
+      size: 'sm',
+      title: t('new-folder'),
+      content: () => {
+        const [newName, setNewName] = useState<string>('');
+        const [error, setError] = useState<string>('');
+
+        const validateAndCreateFolder = async () => {
+          if (!newName.trim()) {
+            setError(t('folder-name-required'));
+            return;
+          }
+
+          const isDuplicate = currentResources.some(
+            resource => resource.isFolder && resource.folderName?.toLowerCase() === newName.trim().toLowerCase()
+          );
+
+          if (isDuplicate) {
+            setError(t('folder-name-exists'));
+            return;
+          }
+
+          const newFolder = {
+            "id": null,
+            "path": `/api/file/${newName}`,
+            "name": newName,
+            "size": null,
+            "type": null,
+            "isShare": false,
+            "sharePassword": "",
+            "noteId": null,
+            "sortOrder": 0,
+            "createdAt": null,
+            "updatedAt": null,
+            "isFolder": true,
+            "folderName": newName
+          };
+
+          blinko.resourceList.value = [newFolder, ...currentResources];
+          RootStore.Get(DialogStore).close();
+        };
+
+        return (
+          <div className="flex flex-col gap-2 p-2">
+            <Input
+              label={t('folder-name')}
+              value={newName}
+              onChange={(e) => {
+                setNewName(e.target.value);
+                setError('');
+              }}
+              errorMessage={error}
+              isInvalid={!!error}
+            />
+            <Button
+              color="primary"
+              className="mt-2"
+              onPress={validateAndCreateFolder}
+              isDisabled={!newName.trim()}
+            >
+              {t('confirm')}
+            </Button>
+          </div>
+        );
+      }
+    });
+  };
+
   moveToParentFolder = async (items: ResourceType[]) => {
     if (!this.currentFolder) return;
 
@@ -162,7 +237,7 @@ export class ResourceStore implements Store {
       PromiseCall(api.attachments.move.mutate({
         sourceIds: items.map(item => item.id!),
         targetFolder: parentFolder
-      }), { autoAlert: false }), 
+      }), { autoAlert: false }),
       {
         loading: t("operation-in-progress"),
         success: t("operation-success"),

@@ -34,6 +34,15 @@ module.exports = withPWA({
             value: 'public, max-age=31536000, immutable',
           },
         ],
+        source: '/loading.mp4',
+      },
+      {
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
         source: '/logo-light.png',
       },
       {

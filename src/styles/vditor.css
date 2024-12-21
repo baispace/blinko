@@ -16,6 +16,10 @@
   color: #C35AF7;
   font-weight: 700;
 }
+.vditor-wysiwyg__block pre:first-child code{
+  background-color: var(--background);
+  color: var(--foreground);
+}
 
 .vditor-wysiwyg pre.vditor-reset {}
 

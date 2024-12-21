@@ -373,5 +373,8 @@
   "cloud-file": "云文件",
   "move-to-parent": "移至上级",
   "no-resources-found": "未找到资源",
-  "operation-in-progress": "操作进行中"
+  "operation-in-progress": "操作进行中",
+  "new-folder": "新建文件夹",
+  "folder-name-exists": "文件夹名称已存在",
+  "folder-name-required": "文件夹名称为必填项"
 }

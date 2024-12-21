@@ -1,3 +1,10 @@
+## [0.29.2](https://github.com/blinko-space/blinko/compare/v0.29.1...v0.29.2) (2024-12-21)
+
+
+### Bug Fixes
+
+* enhance resource management and UI updates ([5248a03](https://github.com/blinko-space/blinko/commit/5248a03efbd39ea9636a5327a1b16da8289d3c91))
+
 ## [0.29.1](https://github.com/blinko-space/blinko/compare/v0.29.0...v0.29.1) (2024-12-21)
 
 

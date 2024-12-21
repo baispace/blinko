@@ -15,7 +15,6 @@ import { Readable } from 'stream';
 
 const limit = pLimit(5);
 let spotifyClient: SpotifyClient | null = null;
-const prisma = new PrismaClient();
 
 export const publicRouter = router({
   version: publicProcedure

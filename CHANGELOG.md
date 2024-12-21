@@ -1,3 +1,10 @@
+## [0.29.1](https://github.com/blinko-space/blinko/compare/v0.29.0...v0.29.1) (2024-12-21)
+
+
+### Bug Fixes
+
+* add error handling for missing account information in DBJob plugin ([fd9bf88](https://github.com/blinko-space/blinko/commit/fd9bf8850574c5f998050d31a9956bda1ef713a1))
+
 # [0.29.0](https://github.com/blinko-space/blinko/compare/v0.28.1...v0.29.0) (2024-12-21)
 
 

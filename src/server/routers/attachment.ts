@@ -349,7 +349,7 @@ export const attachmentsRouter = router({
 
   delete: authProcedure
     .input(z.object({
-      id: z.number().optional(),
+      id: z.union([z.number(),z.null()]).optional(),
       isFolder: z.boolean().optional(),
       folderPath: z.string().optional(),
     }))
@@ -385,7 +385,7 @@ export const attachmentsRouter = router({
 
         const attachment = await tx.attachments.findFirst({
           where: {
-            id,
+            id: id!,
             note: {
               accountId: Number(ctx.id)
             }

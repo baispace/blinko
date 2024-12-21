@@ -2,6 +2,7 @@ import { _ } from "@/lib/lodash";
 import { observer } from "mobx-react-lite";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { motion, useAnimation } from "motion/react";
+import { useMediaQuery } from "usehooks-ts";
 
 type IProps = {
   style?: any;
@@ -19,6 +20,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ styl
   const [isAtTop, setIsAtTop] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const controls = useAnimation();
+  const isPc = useMediaQuery('(min-width: 768px)');
   let debounceBottom
   if (onBottom) {
     debounceBottom = _.debounce(onBottom!, 500, { leading: true, trailing: false });
@@ -67,10 +69,27 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ styl
     <motion.div
       ref={scrollRef}
       style={style}
-      className={`${className} overflow-y-scroll overflow-x-hidden`}
+      className={`${className} overflow-y-scroll overflow-x-hidden  ${isPc ? '' : 'scrollbar-hide'}`}
       animate={controls}
     >
       {children}
     </motion.div>
   );
 }))
+
+const styles = `
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+`;
+
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}

@@ -47,7 +47,7 @@ export const GET = async (req: NextRequest, { params }: any) => {
 
 
   const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
-  const filePath = path.join(process.cwd(), UPLOAD_FILE_PATH, sanitizedPath);
+  const filePath = path.join(UPLOAD_FILE_PATH, sanitizedPath);
 
   try {
     if (isImage(fullPath) && needThumbnail) {

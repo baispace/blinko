@@ -46,11 +46,11 @@ export class FileService {
     }
 
     try {
-      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}${customPath}` + filename);
+      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
       await fs.access(filePath);
       return this.writeFileSafe(baseName, extension, buffer, attempt + 1);
     } catch (error) {
-      const filePath = path.join(process.cwd(), `${UPLOAD_FILE_PATH}${customPath}` + filename);
+      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       //@ts-ignore
       await writeFile(filePath, buffer);
@@ -106,7 +106,7 @@ export class FileService {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
       }
     } else {
-      const filepath = path.join(process.cwd(), UPLOAD_FILE_PATH, api_attachment_path.replace('/api/file/', ""));
+      const filepath = path.join(UPLOAD_FILE_PATH, api_attachment_path.replace('/api/file/', ""));
       const attachmentPath = await prisma.attachments.findFirst({ where: { path: api_attachment_path } })
       if (attachmentPath) {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
@@ -182,7 +182,7 @@ export class FileService {
         customPath = customPath.endsWith('/') ? customPath : customPath + '/';
       }
 
-      const fullPath = path.join(process.cwd(), UPLOAD_FILE_PATH, customPath, timestampedFileName);
+      const fullPath = path.join(UPLOAD_FILE_PATH, customPath, timestampedFileName);
       await fs.mkdir(path.dirname(fullPath), { recursive: true });
       
       const writeStream = createWriteStream(fullPath);
@@ -231,7 +231,7 @@ export class FileService {
           throw new Error(`Failed to rename file in S3: ${error.message}`);
         }
       } else {
-        const oldFilePath = path.join(process.cwd(), UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
+        const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
         const newFilePath = path.join(path.dirname(oldFilePath), newName);
         
         await fs.rename(oldFilePath, newFilePath);
@@ -277,8 +277,8 @@ export class FileService {
         throw new Error(`Failed to move file in S3: ${error.message}`);
       }
     } else {
-      const oldFilePath = path.join(process.cwd(), UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
-      const newFilePath = path.join(process.cwd(), UPLOAD_FILE_PATH, newPath.replace('/api/file/', ''));
+      const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
+      const newFilePath = path.join(UPLOAD_FILE_PATH, newPath.replace('/api/file/', ''));
       
       await fs.mkdir(path.dirname(newFilePath), { recursive: true });
       await fs.rename(oldFilePath, newFilePath);
@@ -291,17 +291,16 @@ export class FileService {
           await fs.rmdir(oldDir);
           
           let parentDir = path.dirname(oldDir);
-          const uploadPath = path.join(process.cwd(), UPLOAD_FILE_PATH);
-          
-          // while (parentDir !== uploadPath) {
-          //   const parentFiles = await fs.readdir(parentDir);
-          //   if (parentFiles.length === 0) {
-          //     await fs.rmdir(parentDir);
-          //     parentDir = path.dirname(parentDir);
-          //   } else {
-          //     break;
-          //   }
-          // }
+          const uploadPath = path.join(UPLOAD_FILE_PATH);
+          while (parentDir !== uploadPath) {
+            const parentFiles = await fs.readdir(parentDir);
+            if (parentFiles.length === 0) {
+              await fs.rmdir(parentDir);
+              parentDir = path.dirname(parentDir);
+            } else {
+              break;
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to cleanup old directories:', error);

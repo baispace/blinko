@@ -25,7 +25,7 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('webhookEndpoint'),
   z.literal('toolbarVisibility'),
   z.literal('twoFactorEnabled'),
-  z.literal('twoFactorSecret'),
+  z.literal('twoFactorSecret')
 ]);
 
 export const ZConfigKey = z.union([
@@ -51,6 +51,8 @@ export const ZConfigKey = z.union([
   z.literal('embeddingLambda'),
   z.literal('embeddingScore'),
   z.literal('excludeEmbeddingTagId'),
+  z.literal('spotifyConsumerKey'),
+  z.literal('spotifyConsumerSecret'),
   ZUserPerferConfigKey
 ]);
 
@@ -92,7 +94,8 @@ export const ZConfigSchema = z.object({
   webhookEndpoint: z.any().optional(),
   twoFactorEnabled: z.boolean().optional(),
   twoFactorSecret: z.string().optional(),
-
+  spotifyConsumerKey: z.string().optional(),
+  spotifyConsumerSecret: z.string().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

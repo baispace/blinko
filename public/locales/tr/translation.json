@@ -1,4 +1,7 @@
 {
+  "enter-spotify-consumer-key": "Spotify Tüketici Anahtarı Giriniz",
+  "spotify-consumer-key-tip": "Mp3 müzik kapağı almak için kullanılan.",
+  "spotify-consumer-key-tip-2": "https://developer.spotify.com/ adresinden API Anahtarı alın.",
   "blinko": "Blinko",
   "notes": "Notlar",
   "resources": "Kaynaklar",

@@ -1,4 +1,7 @@
 {
+  "enter-spotify-consumer-key": "Insira a Chave do Consumidor do Spotify",
+  "spotify-consumer-key-tip": "Costumava obter a capa de músicas em mp3.",
+  "spotify-consumer-key-tip-2": "Obtenha a Chave da API em https://developer.spotify.com/",
   "blinko": "Blinko",
   "notes": "Notas",
   "resources": "Recursos",

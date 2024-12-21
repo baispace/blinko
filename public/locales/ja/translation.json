@@ -1,4 +1,6 @@
 {
+  "spotify-consumer-key-tip": "mp3音楽のカバーを取得するために使用されました",
+  "spotify-consumer-key-tip-2": "https://developer.spotify.com/ から API キーを取得します。",
   "blinko": "ブリンコ",
   "notes": "備考",
   "resources": "リソース",

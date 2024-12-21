@@ -1,4 +1,7 @@
 {
+  "enter-spotify-consumer-key": "Spotify 소비자 키를 입력하세요.",
+  "spotify-consumer-key-tip": "mp3 음악 커버를 얻었던 것",
+  "spotify-consumer-key-tip-2": "https://developer.spotify.com/에서 API 키를 받으세요.",
   "blinko": "Blinko",
   "notes": "참고",
   "resources": "리소스",

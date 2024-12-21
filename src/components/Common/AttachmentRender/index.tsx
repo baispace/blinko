@@ -14,6 +14,7 @@ import { api } from '@/lib/trpc';
 import { EditorStore } from '../Editor/editorStore';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd-next';
 import { DraggableFileGrid } from './DraggableFileGrid';
+import { AudioRender } from './audioRender';
 
 //https://www.npmjs.com/package/browser-thumbnail-generator
 
@@ -59,27 +60,8 @@ const AttachmentsRender = observer((props: IProps) => {
         ))}
       </div>
 
-      {/* audio render - */}
-      <div className="columns-1 md:columns-1">
-        {files?.filter(i => i.previewType == 'audio').map((file, index) => (
-          <div
-            key={`${file.name}-${index}`}
-            className='group relative flex p-2 items-center gap-2 cursor-pointer transition-all rounded-2xl'
-          >
-            <audio
-              src={file.preview}
-              id="player"
-              playsInline
-              controls
-              className='rounded-2xl w-full'
-            />
-            {!file.uploadPromise?.loading?.value && !preview &&
-              <DeleteIcon files={files} className='absolute z-10 right-[5px] top-[5px] group-hover:opacity-100 opacity-0' file={file} />
-            }
-            {preview && <DownloadIcon className='top-[8px] right-[8px]' file={file} />}
-          </div>
-        ))}
-      </div>
+      {/* audio render */}
+      <AudioRender files={files} preview={preview} />
 
       {/* other file render */}
       <DraggableFileGrid

@@ -1,4 +1,6 @@
 {
+  "spotify-consumer-key-tip": "كان يُستخدم للحصول على غلاف موسيقى mp3",
+  "spotify-consumer-key-tip-2": "احصل على مفتاح API من https://developer.spotify.com/",
   "hello": "مرحبًا",
   "blinko": "بلينكو",
   "notes": "ملاحظات",

@@ -31,7 +31,7 @@ export const Item = observer(({ leftContent, rightContent, type = 'row', hidden 
 export const ItemWithTooltip = observer(({ content, toolTipContent }: { content: any, toolTipContent: any }) => {
   return <div className="flex items-center gap-2">
     {content}
-    <Tooltip content={<div className="w-[300px] flex flex-col gap-2">
+    <Tooltip content={<div className="max-w-[300px] flex flex-col gap-2 p-2">
       {toolTipContent}
     </div>}>
       <Icon icon="proicons:info" width="18" height="18" />

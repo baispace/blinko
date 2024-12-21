@@ -17,6 +17,26 @@ export default trpcNext.createNextApiHandler({
       console.error('Something went wrong', error);
     }
   },
+  responseMeta({ ctx, paths, type, errors }) {
+    if (errors.length) {
+      return {};
+    }
+    
+    const allOps = appRouter._def.procedures;
+    const meta = paths?.reduce((acc, path) => {
+      const procedure = allOps[path];
+      if (procedure?._def?.meta?.headers) {
+        return { ...acc, ...procedure._def.meta.headers };
+      }
+      return acc;
+    }, {});
+
+    return {
+      headers: {
+        ...(meta || {})
+      },
+    };
+  },
   /**
    * Enable query batching
    */

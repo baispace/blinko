@@ -1,4 +1,6 @@
 {
+  "spotify-consumer-key-tip": "Verwendet, um MP3-Musikcover zu erhalten.",
+  "spotify-consumer-key-tip-2": "Holen Sie sich den API-Schlüssel von https://developer.spotify.com/",
   "blinko": "Blinko",
   "notes": "Anmerkungen",
   "resources": "Ressourcen",

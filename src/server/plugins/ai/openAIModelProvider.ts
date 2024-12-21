@@ -35,7 +35,7 @@ export abstract class AiBaseModelPrivider {
 
 
   public async VectorStore(): Promise<FaissStore> {
-    const FaissStorePath = path.join(process.cwd(), FAISS_PATH)
+    const FaissStorePath = path.join(FAISS_PATH)
     try {
       return await FaissStore.load(
         FaissStorePath,

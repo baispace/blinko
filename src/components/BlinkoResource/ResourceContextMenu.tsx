@@ -11,6 +11,7 @@ import { helper } from "@/lib/helper";
 import { showTipsDialog } from "../Common/TipsDialog";
 import { PromiseCall } from "@/store/standard/PromiseState";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 const MenuItem = ({ icon, label, className = '' }: { icon: string; label: string; className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
@@ -132,7 +133,7 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
             isFolder: false
           }));
         }
-        RootStore.Get(DialogStore).close();
+        RootStore.Get(DialogStandaloneStore).close();
         resourceStore.refreshTicker++;
       }
     });

@@ -9,9 +9,9 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (process.env.IS_DEMO) {
-    return NextResponse.json({ error: "In Demo App" }, { status: 401 });
-  }
+  // if (process.env.IS_DEMO) {
+  //   return NextResponse.json({ error: "In Demo App" }, { status: 401 });
+  // }
 
   try {
     const formData = await req.formData();

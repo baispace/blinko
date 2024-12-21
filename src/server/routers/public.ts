@@ -13,6 +13,7 @@ import { unlinkSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { SpotifyClient } from './helper/spotify';
 import { PrismaClient } from '@prisma/client';
 import { getGlobalConfig } from './config';
+import { Readable } from 'stream';
 
 const limit = pLimit(5);
 let spotifyClient: SpotifyClient | null = null;
@@ -62,6 +63,7 @@ export const publicRouter = router({
       description: z.string()
     }), z.null()]))
     .query(async function ({ input }) {
+
       return cache.wrap(input.url, async () => {
         try {
           const timeoutPromise = new Promise((_, reject) => {
@@ -120,46 +122,41 @@ export const publicRouter = router({
       artists: z.array(z.string()).optional()
     }))
     .query(async function ({ input }) {
-      let realFilePath = "";
+      const config = await getGlobalConfig({ useAdmin: true })
+      let metadata: mm.IAudioMetadata | null = null;
+
       if (input.filePath.includes('/api/file/')) {
-        realFilePath = input.filePath.replace('/api/file', UPLOAD_FILE_PATH);
+        const realFilePath = input.filePath.replace('/api/file', UPLOAD_FILE_PATH);
+        metadata = await mm.parseFile(realFilePath);
       } else if (input.filePath.includes('s3file')) {
-        const tempFilePath = path.join(TEMP_PATH, `${Date.now()}.mp3`);
         try {
           const response = await fetch(input.filePath);
           if (!response.ok) {
-            throw new Error(`get file from s3 error: ${response.statusText}`);
+            throw new Error(`Failed to get presigned URL: ${response.statusText}`);
           }
 
-          const arrayBuffer = await response.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          writeFileSync(tempFilePath, buffer);
+          const presignedUrl = response.url;
+          console.log('presignedUrl', { presignedUrl })
+          const fileResponse = await fetch(presignedUrl);
+          if (!fileResponse.ok) {
+            throw new Error(`Failed to fetch file content: ${fileResponse.statusText}`);
+          }
 
-          realFilePath = tempFilePath;
-
-          setTimeout(() => {
-            try {
-              unlinkSync(tempFilePath);
-            } catch (error) {
-              console.error('Failed to clear temp file:', error);
-            }
-          }, 5000);
+          const nodeStream = Readable.fromWeb(fileResponse.body as any);
+          
+          metadata = await mm.parseStream(
+            nodeStream,
+            { mimeType: 'audio/mpeg' }
+          );
 
         } catch (error) {
-          console.error('Failed to download s3 file:', error);
+          console.error('Failed to get s3 file metadata:', error);
           throw error;
         }
       }
 
-      const metadata = await mm.parseFile(realFilePath);
-      const artistName = metadata.common.artist?.trim();
-      const trackName = metadata.common.title?.trim();
-
-      // console.log('Parsed music metadata:', {
-      //   artistName,
-      //   trackName,
-      //   allMetadata: metadata.common
-      // });
+      const artistName = metadata?.common.artist?.trim();
+      const trackName = metadata?.common.title?.trim();
 
       if (!artistName || !trackName) {
         // console.log('Missing artist or track name');
@@ -172,14 +169,8 @@ export const publicRouter = router({
       }
 
       if (!spotifyClient) {
-        const config = await getGlobalConfig({ useAdmin: true })
-        if(!config.spotifyConsumerKey && !config.spotifyConsumerSecret){
-            return {
-              coverUrl: '',
-              trackName: trackName,
-              albumName: metadata.common.album || '',
-              artists: [artistName],
-            }
+        if (!config.spotifyConsumerKey && !config.spotifyConsumerSecret) {
+          throw new Error('Spotify client not initialized');
         }
         spotifyClient = new SpotifyClient({
           consumer: {
@@ -192,11 +183,10 @@ export const publicRouter = router({
       try {
         const coverUrl = await spotifyClient.getCoverArt(artistName, trackName);
         // console.log('Retrieved cover URL:', coverUrl);
-
         return {
           coverUrl,
           trackName: trackName,
-          albumName: metadata.common.album || '',
+          albumName: metadata?.common.album || '',
           artists: [artistName],
         };
       } catch (err) {
@@ -204,7 +194,7 @@ export const publicRouter = router({
         return {
           coverUrl: '',
           trackName: trackName,
-          albumName: metadata.common.album || '',
+          albumName: metadata?.common.album || '',
           artists: [artistName],
         };
       }

@@ -6,6 +6,8 @@ import { Icon } from '@iconify/react';
 import { RootStore, useStore } from '@/store';
 import { MusicManagerStore } from '@/store/musicManagerStore'
 import { observer } from 'mobx-react-lite';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@nextui-org/react';
 
 interface AudioMetadata {
   coverUrl?: string;
@@ -39,7 +41,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
   const getMetadata = async (file: FileType) => {
     try {
       const metadata = await api.public.musicMetadata.query({
-        filePath: file.preview
+        filePath: file.preview.includes('s3file') ? new URL(file.preview, window.location.href).href : file.preview
       });
       setAudioMetadata(prev => ({
         ...prev,
@@ -60,21 +62,19 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
     return musicManager.isPlaying && musicManager.currentTrack?.file.name === fileName;
   };
 
-  const togglePlay = (fileName: string) => {
+  const togglePlay = async (fileName: string) => {
     const audioFiles = files.filter(i => i.previewType === 'audio');
-    const index = audioFiles.findIndex(f => f.name === fileName);
-
-    if (index === -1) return;
-    console.log('togglePlay', fileName);
-    musicManager.setPlaylist(audioFiles, audioMetadata);
+    const file = audioFiles.find(f => f.name === fileName);
+    if (!file) {
+      return;
+    }
 
     if (musicManager.currentTrack?.file.name === fileName) {
-      console.log('togglePlay', 'pause');
-      musicManager.togglePlay();
-    } else {
-      console.log('togglePlay', 'play');
-      musicManager.playTrack(index);
+      await musicManager.togglePlay();
+      return;
     }
+
+    musicManager.addToPlaylist(file, audioMetadata[fileName], true);
   };
 
   const formatTime = (seconds: number): string => {
@@ -100,6 +100,13 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
         ...prev,
         [fileName]: formatTime(musicManager.currentTime)
       }));
+
+      if (musicManager.duration) {
+        setDuration(prev => ({
+          ...prev,
+          [fileName]: formatTime(musicManager.duration)
+        }));
+      }
     };
 
     const interval = setInterval(updateProgress, 100);
@@ -115,16 +122,6 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
     const percentage = x / rect.width;
 
     musicManager.seek(musicManager.duration * percentage);
-  };
-
-  const handleLoadedMetadata = (fileName: string) => {
-    const audio = audioRefs.current[fileName];
-    if (!audio) return;
-
-    setDuration(prev => ({
-      ...prev,
-      [fileName]: formatTime(audio.duration)
-    }));
   };
 
   const handleEnded = (fileName: string) => {
@@ -173,6 +170,9 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
       {files?.filter(i => i.previewType === 'audio').map((file, index) => {
         const metadata = audioMetadata[file.name];
+        const isCurrentTrack = musicManager.currentTrack?.file.name === file.name;
+        const currentDuration = isCurrentTrack ? duration[file.name] : '0:00';
+        const currentPlayTime = isCurrentTrack ? currentTime[file.name] : '0:00';
 
         return (
           <div
@@ -190,37 +190,51 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
             )}
 
             <div className="relative flex items-center gap-3 w-full z-10">
-              <div className="relative min-w-[50px] h-[50px]">
+              <div 
+                className="relative min-w-[50px] h-[50px] cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('[AudioRender:PlayButton] 点击播放按钮');
+                  togglePlay(file.name);
+                }}>
                 {metadata?.coverUrl ? (
                   <img
                     src={metadata.coverUrl}
                     alt="Album Cover"
-                    className="w-full h-full rounded-md object-cover"
+                    className="w-full h-full rounded-md object-cover pointer-events-none"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-md bg-gray-200 flex items-center justify-center">
+                  <div className="w-full h-full rounded-md bg-gray-200 flex items-center justify-center pointer-events-none">
                     <Icon icon="ph:music-notes" className="w-6 h-6 text-gray-400" />
                   </div>
                 )}
-                <button
-                  onClick={() => togglePlay(file.name)}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
+                <div className="absolute inset-0 flex items-center justify-center hover:bg-black/20 rounded-md transition-all pointer-events-none">
                   <Icon
                     icon={isCurrentPlaying(file.name) ? "ph:pause-fill" : "ph:play-fill"}
                     className="w-6 h-6 text-white drop-shadow-lg"
                   />
-                </button>
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <div className={`font-medium truncate ${metadata?.coverUrl ? 'text-white' : ''}`}>
+                  <div className={`font-medium truncate max-w-[200px] ${metadata?.coverUrl ? 'text-white' : ''}`}>
                     {metadata?.trackName || file.name}
                   </div>
-                  <div className={`text-xs ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-500'}`}>
-                    {currentTime[file.name] || '0:00'} / {duration[file.name] || '0:00'}
-                  </div>
+                  <AnimatePresence>
+                    {isCurrentTrack && (
+                      <motion.div
+                        className={`text-xs ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-500'}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      >
+                        {currentPlayTime} / {currentDuration}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 {metadata?.artists && metadata.artists.length > 0 && (
                   <div className={`text-sm truncate ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-500'}`}>
@@ -228,17 +242,28 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
                   </div>
                 )}
 
-                <div
-                  className="relative h-1 bg-black/20 rounded-full mt-2 cursor-pointer"
-                  onClick={(e) => handleProgressBarClick(e, file.name)}
-                  onMouseDown={(e) => handleProgressBarDrag(e, file.name)}
-                >
-                  <div
-                    ref={el => el && (progressRefs.current[file.name] = el)}
-                    className={`absolute h-full rounded-full transition-all duration-100 ${metadata?.coverUrl ? 'bg-white' : 'bg-primary'
-                      }`}
-                  />
-                </div>
+                <AnimatePresence>
+                  {isCurrentTrack && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    >
+                      <div
+                        className="relative h-1 bg-black/20 rounded-full mt-2 cursor-pointer"
+                        onClick={(e) => handleProgressBarClick(e, file.name)}
+                        onMouseDown={(e) => handleProgressBarDrag(e, file.name)}
+                      >
+                        <div
+                          ref={el => el && (progressRefs.current[file.name] = el)}
+                          className={`absolute h-full rounded-full transition-all duration-100 ${metadata?.coverUrl ? 'bg-white' : 'bg-primary'
+                            }`}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {!file.uploadPromise?.loading?.value && !preview && (

@@ -4,9 +4,11 @@ import { MusicManagerStore } from '@/store/musicManagerStore';
 import { Icon } from '@iconify/react';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from 'usehooks-ts';
 
 export const BlinkoMusicPlayer = observer(() => {
   const musicManager = RootStore.Get(MusicManagerStore);
+  const isPc = useMediaQuery('(min-width: 768px)');
   const progressRef = useRef<HTMLDivElement>(null);
   const currentTrack = musicManager.currentTrack;
   const metadata = currentTrack?.metadata;
@@ -53,7 +55,7 @@ export const BlinkoMusicPlayer = observer(() => {
     <AnimatePresence mode="wait">
       {musicManager.showMiniPlayer && currentTrack && (
         <motion.div
-          initial={{ y: -100, x: "-50%" }}
+          initial={{ y: -100, x: isPc ? "-50%" : 0 }}
           animate={{ y: 0, x: "-50%" }}
           exit={{ y: -100, x: "-50%" }}
           transition={{
@@ -68,7 +70,7 @@ export const BlinkoMusicPlayer = observer(() => {
               duration: 0.2
             }
           }}
-          className="fixed top-3 left-[50%] z-50 w-full md:w-[450px] shadow-lg rounded-2xl bg-none select-none"
+          className="fixed top-3 left-[50%] z-50 w-full md:w-[450px] rounded-2xl bg-none select-none"
           onMouseEnter={() => setIsCompact(false)}
           onMouseLeave={() => setIsCompact(true)}
         >
@@ -77,16 +79,18 @@ export const BlinkoMusicPlayer = observer(() => {
             variants={{
               full: {
                 height: "85px",
-                width: "450px",
+                width: isPc ? "450px" : "80%",
+                margin: isPc ? '0' : 'auto',
                 opacity: 1,
                 borderRadius: "16px"
               },
               compact: {
-                height: "42px",
-                width: "250px",
-                x: "50%",
+                height: isPc ? "42px" : '36px',
+                width: isPc ? "220px" : '100px',
+                x: isPc ? "50%" : '0',
                 opacity: 0.95,
-                borderRadius: "18px"
+                borderRadius: "18px",
+                margin: isPc ? '0' : 'auto',
               }
             }}
             transition={{
@@ -113,7 +117,7 @@ export const BlinkoMusicPlayer = observer(() => {
               </>
             )}
 
-            <div className={`relative flex items-center gap-4 ${isCompact ? 'p-2' : 'p-4'} transition-all duration-500 ease-in-out`}>
+            <div className={`relative flex items-center  ${isCompact ? 'p-2 gap-4' : 'p-4 gap-2'} transition-all duration-500 ease-in-out`}>
               <motion.div
                 animate={{
                   width: isCompact ? 26 : 50,
@@ -141,28 +145,29 @@ export const BlinkoMusicPlayer = observer(() => {
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <Icon icon="ph:music-notes" className="w-6 h-6 text-gray-400" />
+                    <Icon icon="ph:music-notes" className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} text-gray-400`} />
                   </div>
                 )}
               </motion.div>
 
               <div className="flex-1 min-w-0">
-                <motion.div 
+                <motion.div
                   className="flex items-center justify-between"
-                  animate={{ 
+                  animate={{
                     y: isCompact ? -1 : 0,
                     scale: isCompact ? 0.98 : 1,
                     marginBottom: isCompact ? 2 : 4
                   }}
                 >
                   <motion.div className="flex-1">
-                    <motion.div 
-                      className="truncate text-white"
-                      animate={{ 
+                    <motion.div
+                      className={`truncate text-white ${isPc ? 'max-w-[180px]' : 'max-w-[100px]'}`}
+                      animate={{
                         fontSize: isCompact ? 12 : 14,
                         lineHeight: isCompact ? "16px" : "20px",
                         marginLeft: isCompact ? -20 : 0,
-                        marginTop: isCompact ? -2 : 0
+                        marginTop: isCompact ? -2 : 0,
+                        opacity: isCompact ? (isPc ? 1 : 0) : 1
                       }}
                     >
                       {metadata?.trackName || currentTrack.file.name}
@@ -175,9 +180,9 @@ export const BlinkoMusicPlayer = observer(() => {
                     </motion.div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-4"
-                    animate={{ 
+                    animate={{
                       opacity: isCompact ? 0 : 1,
                       width: isCompact ? 0 : "auto",
                       scale: isCompact ? 0.8 : 1
@@ -192,39 +197,39 @@ export const BlinkoMusicPlayer = observer(() => {
                     <button onClick={() => musicManager.playPrevious()}>
                       <Icon
                         icon="ph:skip-back-fill"
-                        className="w-6 h-6 text-white hover:text-white/80 transition-colors"
+                        className={`w-${isPc ? 6 : 4} h-${isPc ? 6 : 4} text-white hover:text-white/80 transition-colors`}
                       />
                     </button>
                     <button onClick={() => musicManager.togglePlay()}>
                       <Icon
                         icon={musicManager.isPlaying ? "ph:pause-fill" : "ph:play-fill"}
-                        className="w-8 h-8 text-white hover:text-white/80 transition-colors"
+                        className={`w-${isPc ? 8 : 6} h-${isPc ? 8 : 6} text-white hover:text-white/80 transition-colors`}
                       />
                     </button>
                     <button onClick={() => musicManager.playNext()}>
                       <Icon
                         icon="ph:skip-forward-fill"
-                        className="w-6 h-6 text-white hover:text-white/80 transition-colors"
+                        className={`w-${isPc ? 6 : 4} h-${isPc ? 6 : 4} text-white hover:text-white/80 transition-colors`}
                       />
                     </button>
                     <button onClick={() => musicManager.closeMiniPlayer()}>
                       <Icon
                         icon="ph:x"
-                        className="w-6 h-6 text-white hover:text-white/80 transition-colors"
+                        className={`w-${isPc ? 6 : 4} h-${isPc ? 6 : 4} text-white hover:text-white/80 transition-colors`}
                       />
                     </button>
                   </motion.div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   className="flex items-center gap-2 overflow-hidden"
-                  animate={{ 
+                  animate={{
                     scale: isCompact ? 0.95 : 1,
                     y: isCompact ? -2 : 0,
                     marginTop: isCompact ? 2 : 4
                   }}
                 >
-                  <motion.span 
+                  <motion.span
                     className="text-xs text-white/80"
                     animate={{
                       opacity: isCompact ? 0 : 1,
@@ -252,7 +257,7 @@ export const BlinkoMusicPlayer = observer(() => {
                       }}
                     />
                   </div>
-                  <motion.span 
+                  <motion.span
                     className="text-xs text-white/80"
                     animate={{
                       opacity: isCompact ? 0 : 1,

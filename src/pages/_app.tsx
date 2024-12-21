@@ -17,7 +17,6 @@ import { CommonLayout } from '@/components/Layout';
 import { AppProvider } from '@/store/module/AppProvider';
 import { motion } from 'motion/react';
 import { BlinkoMultiSelectPop } from '@/components/BlinkoMultiSelectPop';
-import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { BlinkoMusicPlayer } from '@/components/BlinkoMusicPlayer';
 
 const MyApp = ({ Component, pageProps }) => {

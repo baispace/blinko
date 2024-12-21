@@ -7,9 +7,7 @@ import { unfurl } from 'unfurl.js'
 import { Metadata } from 'unfurl.js/dist/types';
 import pLimit from 'p-limit';
 import * as mm from 'music-metadata';
-import { TEMP_PATH, UPLOAD_FILE_PATH, TOKEN_PATH } from '@/lib/constant';
-import path from 'path';
-import { unlinkSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { UPLOAD_FILE_PATH } from '@/lib/constant';
 import { SpotifyClient } from './helper/spotify';
 import { PrismaClient } from '@prisma/client';
 import { getGlobalConfig } from './config';
@@ -18,10 +16,6 @@ import { Readable } from 'stream';
 const limit = pLimit(5);
 let spotifyClient: SpotifyClient | null = null;
 const prisma = new PrismaClient();
-
-if (!existsSync(path.dirname(TOKEN_PATH))) {
-  mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
-}
 
 export const publicRouter = router({
   version: publicProcedure
@@ -143,7 +137,7 @@ export const publicRouter = router({
           }
 
           const nodeStream = Readable.fromWeb(fileResponse.body as any);
-          
+
           metadata = await mm.parseStream(
             nodeStream,
             { mimeType: 'audio/mpeg' }

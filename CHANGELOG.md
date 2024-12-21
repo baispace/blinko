@@ -1,3 +1,15 @@
+# [0.29.0](https://github.com/blinko-space/blinko/compare/v0.28.1...v0.29.0) (2024-12-21)
+
+
+### Bug Fixes
+
+* update Chinese translations and enhance BlinkoMusicPlayer responsiveness ([838f26e](https://github.com/blinko-space/blinko/commit/838f26e6bba1b3c121ddc24093422d886b84c18c))
+
+
+### Features
+
+* add music metadata functionality and Spotify integration ([800cc73](https://github.com/blinko-space/blinko/commit/800cc73cee9f5c03b603975e2804964405409eef))
+
 ## [0.28.1](https://github.com/blinko-space/blinko/compare/v0.28.0...v0.28.1) (2024-12-21)
 
 

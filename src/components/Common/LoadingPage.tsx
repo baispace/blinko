@@ -36,7 +36,7 @@ export const LoadingPage = () => {
               loop
               muted
               playsInline
-              className="w-[100px] h-[100px] md:w-[120px] md:h-[120px] object-contain"
+              className="w-[70px] h-[70px] md:w-[100px] md:h-[100px] object-contain"
             />
           </div>
         </motion.div>

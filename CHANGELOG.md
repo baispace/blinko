@@ -1,3 +1,10 @@
+## [0.29.3](https://github.com/blinko-space/blinko/compare/v0.29.2...v0.29.3) (2024-12-21)
+
+
+### Bug Fixes
+
+* enhance ScrollArea component and update attachment router ([2b34bfa](https://github.com/blinko-space/blinko/commit/2b34bfaa9c5f9813198670b7355392e2c02f1f4e))
+
 ## [0.29.2](https://github.com/blinko-space/blinko/compare/v0.29.1...v0.29.2) (2024-12-21)
 
 

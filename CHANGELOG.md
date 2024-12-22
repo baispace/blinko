@@ -1,3 +1,10 @@
+## [0.29.5](https://github.com/blinko-space/blinko/compare/v0.29.4...v0.29.5) (2024-12-22)
+
+
+### Bug Fixes
+
+* add new translations and enhance audio rendering component ([ac0009a](https://github.com/blinko-space/blinko/commit/ac0009aecdfa7eb137551c8e15fbc092e93eaa57))
+
 ## [0.29.4](https://github.com/blinko-space/blinko/compare/v0.29.3...v0.29.4) (2024-12-21)
 
 

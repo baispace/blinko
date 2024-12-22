@@ -29,19 +29,11 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
   const [audioMetadata, setAudioMetadata] = useState<Record<string, AudioMetadata>>({});
   const musicManager = RootStore.Get(MusicManagerStore);
   const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
-  const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const progressRefs = useRef<Record<string, HTMLDivElement>>({});
   const [currentTime, setCurrentTime] = useState<Record<string, string>>({});
   const [duration, setDuration] = useState<Record<string, string>>({});
-  const audioRef = useRef<HTMLAudioElement>(null);
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation()
-
-  useEffect(() => {
-    if (audioRef.current) {
-      musicManager.initAudio(audioRef.current);
-    }
-  }, []);
 
   const getMetadata = async (file: FileType) => {
     try {
@@ -80,6 +72,11 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
     }
 
     musicManager.addToPlaylist(file, audioMetadata[fileName], true);
+    
+    const otherFiles = audioFiles.filter(f => f.name !== fileName);
+    otherFiles.forEach(f => {
+      musicManager.addToPlaylist(f, audioMetadata[f.name], false);
+    });
   };
 
   const formatTime = (seconds: number): string => {
@@ -173,8 +170,6 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <audio ref={audioRef} hidden />
-
       {audioFiles.map((file, index) => {
         const metadata = audioMetadata[file.name];
         return (

@@ -1,6 +1,5 @@
 import { makeAutoObservable } from 'mobx';
 import { Store } from './standard/base';
-import { StorageState } from './standard/StorageState';
 import { FileType } from '@/components/Common/Editor/type';
 
 export interface AudioMetadata {
@@ -28,20 +27,19 @@ export class MusicManagerStore implements Store {
       return MusicManagerStore.instance;
     }
     MusicManagerStore.instance = this;
+    
+    if (!MusicManagerStore.audioInstance) {
+      const audio = new Audio();
+      this.initAudio(audio);
+    }
   }
 
-  private storedPlaylist = new StorageState<PlaylistTrack[]>({
-    key: 'music-playlist',
-    default: []
-  });
-
-  private currentTrackName = new StorageState<string>({
-    key: 'current-track-name',
-    default: ''
-  });
+  private _playlist: PlaylistTrack[] = [];
+  private _currentTrackName: string = '';
+  private _playMode: number = 0;
 
   get playlist(): PlaylistTrack[] {
-    return this.storedPlaylist.value || [];
+    return this._playlist;
   }
 
   isPlaying = false;
@@ -49,21 +47,24 @@ export class MusicManagerStore implements Store {
   duration = 0;
   audioElement: HTMLAudioElement | null = null;
   showMiniPlayer = false;
-  playMode = new StorageState<number>({ 
-    key: 'play-mode',
-    default: 0 
-  });
+
+  get playMode(): number {
+    return this._playMode;
+  }
+
+  set playMode(value: number) {
+    this._playMode = value;
+  }
 
   get currentTrack(): PlaylistTrack | undefined {
-    const trackName = this.currentTrackName.value;
     return this.playlist.find(track => 
-      (track.metadata?.trackName || track.file.name) === trackName
+      (track.metadata?.trackName || track.file.name) === this._currentTrackName
     );
   }
 
   get currentIndex(): number {
     return this.playlist.findIndex(track => 
-      (track.metadata?.trackName || track.file.name) === this.currentTrackName.value
+      (track.metadata?.trackName || track.file.name) === this._currentTrackName
     );
   }
 
@@ -73,8 +74,9 @@ export class MusicManagerStore implements Store {
     }
 
     if (MusicManagerStore.audioInstance) {
-      audio.pause();
-      audio.src = '';
+      const currentSrc = MusicManagerStore.audioInstance.src;
+      const currentTime = MusicManagerStore.audioInstance.currentTime;
+      const wasPlaying = !MusicManagerStore.audioInstance.paused;
       
       this.audioElement = MusicManagerStore.audioInstance;
     } else {
@@ -133,7 +135,7 @@ export class MusicManagerStore implements Store {
         addedAt: Date.now()
       };
       
-      this.storedPlaylist.save([...this.playlist, newTrack]);
+      this._playlist = [...this.playlist, newTrack];
       this.showMiniPlayer = true;
     }
 
@@ -150,15 +152,15 @@ export class MusicManagerStore implements Store {
     }));
 
     const uniqueTracks = this.mergePlaylist(this.playlist, newTracks);
-    this.storedPlaylist.save(uniqueTracks);
+    this._playlist = uniqueTracks;
     
-    const currentTrackName = this.currentTrackName.value;
+    const currentTrackName = this._currentTrackName;
     const stillExists = uniqueTracks.some(track => 
       (track.metadata?.trackName || track.file.name) === currentTrackName
     );
     
     if (!stillExists) {
-      this.currentTrackName.save('');
+      this._currentTrackName = '';
     }
     
     this.showMiniPlayer = true;
@@ -186,9 +188,9 @@ export class MusicManagerStore implements Store {
     const newPlaylist = this.playlist.filter(track => 
       (track.metadata?.trackName || track.file.name) !== trackName
     );
-    this.storedPlaylist.save(newPlaylist);
+    this._playlist = newPlaylist;
 
-    if (this.currentTrackName.value === trackName) {
+    if (this._currentTrackName === trackName) {
       if (newPlaylist.length > 0) {
         this.playNext();
       } else {
@@ -207,7 +209,7 @@ export class MusicManagerStore implements Store {
     this.audioElement.pause();
     this.isPlaying = false;
     
-    this.currentTrackName.save(trackName);
+    this._currentTrackName = trackName;
     
     if (track.file.preview) {
       try {
@@ -254,7 +256,7 @@ export class MusicManagerStore implements Store {
     const currentIndex = this.currentIndex;
     let nextTrack: PlaylistTrack | undefined;
 
-    switch (this.playMode.value) {
+    switch (this.playMode) {
       case 1:
         nextTrack = this.currentTrack;
         break;
@@ -294,8 +296,7 @@ export class MusicManagerStore implements Store {
   }
 
   togglePlayMode() {
-    const nextMode = (this.playMode.value + 1) % 3;
-    this.playMode.save(nextMode);
+    this._playMode = (this._playMode + 1) % 3;
   }
 
   closeMiniPlayer() {
@@ -304,12 +305,12 @@ export class MusicManagerStore implements Store {
       this.audioElement.pause();
       this.isPlaying = false;
     }
-    this.currentTrackName.save('');
+    this._currentTrackName = '';
   }
 
   clearPlaylist() {
-    this.storedPlaylist.save([]);
-    this.currentTrackName.save('');
+    this._playlist = [];
+    this._currentTrackName = '';
     this.closeMiniPlayer();
   }
 }

@@ -17,8 +17,7 @@ type IProps = {
 const ImageThumbnailRender = ({ file, className }: { file: FileType, className?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(
-    file.preview.includes('/api/s3file/') ? file.preview :
-    `${file.preview}?thumbnail=true`
+       `${file.preview}?thumbnail=true`
   );
 
   useEffect(() => {

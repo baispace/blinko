@@ -1,3 +1,10 @@
+## [0.29.4](https://github.com/blinko-space/blinko/compare/v0.29.3...v0.29.4) (2024-12-21)
+
+
+### Bug Fixes
+
+* update LoadingPage and SendButton components for improved UI ([f6c3c54](https://github.com/blinko-space/blinko/commit/f6c3c54f4b9a4120cfc143f787a7cdc4b91beb7c))
+
 ## [0.29.3](https://github.com/blinko-space/blinko/compare/v0.29.2...v0.29.3) (2024-12-21)
 
 

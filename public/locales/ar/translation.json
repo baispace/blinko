@@ -370,5 +370,7 @@
   "operation-in-progress": "العملية قيد التقدم",
   "new-folder": "مجلد جديد",
   "folder-name-exists": "الاسم المجلد موجود",
-  "folder-name-required": "اسم المجلد مطلوب"
+  "folder-name-required": "اسم المجلد مطلوب",
+  "collapse": "انهيار",
+  "show-all": "اظهر الكل"
 }

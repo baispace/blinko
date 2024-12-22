@@ -386,5 +386,7 @@
   "operation-in-progress": "正在進行操作",
   "new-folder": "新資料夾",
   "folder-name-required": "需要資料夾名稱",
-  "folder-name-exists": "資料夾名稱已存在"
+  "folder-name-exists": "資料夾名稱已存在",
+  "collapse": "收起",
+  "show-all": "顯示全部"
 }

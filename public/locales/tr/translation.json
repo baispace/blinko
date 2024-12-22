@@ -299,5 +299,7 @@
   "operation-in-progress": "Devam eden işlem",
   "new-folder": "Yeni Klasör",
   "folder-name-exists": "Klasör Adı Mevcut",
-  "folder-name-required": "Klasör Adı Gerekli"
+  "folder-name-required": "Klasör Adı Gerekli",
+  "collapse": "Çöküş",
+  "show-all": "Hepsini göster"
 }

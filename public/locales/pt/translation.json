@@ -281,5 +281,7 @@
   "operation-in-progress": "Operação em andamento",
   "new-folder": "Nova Pasta",
   "folder-name-exists": "Nome da Pasta Já Existe",
-  "folder-name-required": "Nome da pasta obrigatório"
+  "folder-name-required": "Nome da pasta obrigatório",
+  "collapse": "Colapso",
+  "show-all": "Exibir tudo"
 }

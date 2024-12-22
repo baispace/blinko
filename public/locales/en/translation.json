@@ -373,5 +373,7 @@
   "operation-in-progress": "Opearation in progress",
   "new-folder": "New Folder",
   "folder-name-required": "Folder Name Required",
-  "folder-name-exists": "Folder Name Exists"
+  "folder-name-exists": "Folder Name Exists",
+  "show-all": "Show all",
+  "collapse": "Collapse"
 }

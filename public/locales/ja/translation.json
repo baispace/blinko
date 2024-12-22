@@ -330,5 +330,7 @@
   "operation-in-progress": "進行中の操作",
   "new-folder": "新しいフォルダ",
   "folder-name-exists": "フォルダ名が既に存在します",
-  "folder-name-required": "フォルダ名が必要です。"
+  "folder-name-required": "フォルダ名が必要です。",
+  "collapse": "崩壊",
+  "show-all": "すべて表示"
 }

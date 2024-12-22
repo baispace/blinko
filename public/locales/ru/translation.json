@@ -289,5 +289,7 @@
   "operation-in-progress": "Операция в процессе",
   "new-folder": "Новая папка",
   "folder-name-exists": "Имя папки существует",
-  "folder-name-required": "Название папки обязательно"
+  "folder-name-required": "Название папки обязательно",
+  "collapse": "Крах",
+  "show-all": "Показать все"
 }

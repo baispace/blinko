@@ -70,7 +70,7 @@ export const BlinkoMusicPlayer = observer(() => {
               duration: 0.2
             }
           }}
-          className="fixed top-3 left-[50%] z-50 w-full md:w-[450px] rounded-2xl bg-none select-none"
+          className="fixed top-3 left-[50%] z-50 w-fit md:w-[450px] rounded-2xl bg-none select-none"
           onMouseEnter={() => setIsCompact(false)}
           onMouseLeave={() => setIsCompact(true)}
         >

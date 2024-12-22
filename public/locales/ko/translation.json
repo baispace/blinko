@@ -353,5 +353,7 @@
   "operation-in-progress": "진행 중인 작업",
   "new-folder": "새 폴더",
   "folder-name-exists": "폴더 이름이 이미 있습니다.",
-  "folder-name-required": "폴더 이름 필요함"
+  "folder-name-required": "폴더 이름 필요함",
+  "collapse": "붕괴",
+  "show-all": "모두 보기"
 }

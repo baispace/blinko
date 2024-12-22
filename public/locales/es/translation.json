@@ -348,5 +348,7 @@
   "operation-in-progress": "Operación en progreso",
   "new-folder": "Nueva Carpeta",
   "folder-name-exists": "Nombre de carpeta existente",
-  "folder-name-required": "Nombre de carpeta requerido"
+  "folder-name-required": "Nombre de carpeta requerido",
+  "collapse": "Colapso",
+  "show-all": "Mostrar todo"
 }

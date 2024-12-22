@@ -356,5 +356,7 @@
   "no-resources-found": "Keine Ressourcen gefunden",
   "new-folder": "Neuer Ordner",
   "folder-name-exists": "Der Ordnername existiert.",
-  "folder-name-required": "Ordnername erforderlich"
+  "folder-name-required": "Ordnername erforderlich",
+  "collapse": "Zusammenbruch",
+  "show-all": "Alle anzeigen"
 }

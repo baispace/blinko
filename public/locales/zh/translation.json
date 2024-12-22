@@ -376,5 +376,7 @@
   "operation-in-progress": "操作进行中",
   "new-folder": "新建文件夹",
   "folder-name-exists": "文件夹名称已存在",
-  "folder-name-required": "文件夹名称为必填项"
+  "folder-name-required": "文件夹名称为必填项",
+  "collapse": "收起",
+  "show-all": "显示所有"
 }

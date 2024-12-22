@@ -40,7 +40,7 @@ const Page = observer(() => {
   return <div className='p-4 h-[100vh] w-full flex justify-center items-center bg-gradient-to-br from-rose-400 via-fuchsia-500 to-indigo-500' >
     {
       store.shareNote?.value &&
-      <div className="tilt-card bg-background max-h-[90vh] overflow-y-scroll max-w-[500px] md:max-w-[600px] rounded-lg shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
+      <div className="tilt-card bg-background max-h-[90vh] overflow-y-scroll w-[95%] md:min-w-[30%] md:max-w-[50%] rounded-lg shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
         <BlinkoCard blinkoItem={store.shareNote?.value} isShareMode />
       </div>
     }

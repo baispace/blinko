@@ -79,7 +79,7 @@ export const BlinkoMusicPlayer = observer(() => {
             variants={{
               full: {
                 height: "85px",
-                width: isPc ? "450px" : "80%",
+                width: isPc ? "450px" : "100%",
                 margin: isPc ? '0' : 'auto',
                 opacity: 1,
                 borderRadius: "16px"

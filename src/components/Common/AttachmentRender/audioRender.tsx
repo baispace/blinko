@@ -303,7 +303,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
           <Button
             variant="light"
             className="mt-2 w-fit mx-auto"
-            onClick={() => setShowAll(!showAll)}
+            onPress={() => setShowAll(!showAll)}
           >
             <Icon
               icon={showAll ? "ph:caret-up" : "ph:caret-down"}

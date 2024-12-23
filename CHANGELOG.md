@@ -1,3 +1,10 @@
+## [0.29.7](https://github.com/blinko-space/blinko/compare/v0.29.6...v0.29.7) (2024-12-23)
+
+
+### Bug Fixes
+
+* update layout of share note card for improved responsiveness ([e6b97d5](https://github.com/blinko-space/blinko/commit/e6b97d5c643d04c37a0da48300acdf606ae5e88d))
+
 ## [0.29.6](https://github.com/blinko-space/blinko/compare/v0.29.5...v0.29.6) (2024-12-22)
 
 

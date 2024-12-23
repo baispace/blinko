@@ -1,3 +1,10 @@
+## [0.29.8](https://github.com/blinko-space/blinko/compare/v0.29.7...v0.29.8) (2024-12-23)
+
+
+### Bug Fixes
+
+* update BlinkoMusicPlayer width for improved responsiveness ([f73827b](https://github.com/blinko-space/blinko/commit/f73827b2ad3e8c6f00cd75fcc6a62e5f365df23c))
+
 ## [0.29.7](https://github.com/blinko-space/blinko/compare/v0.29.6...v0.29.7) (2024-12-23)
 
 

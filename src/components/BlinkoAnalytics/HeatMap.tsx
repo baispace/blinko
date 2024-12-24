@@ -43,7 +43,7 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
         calendar: {
           cellSize: [cellSize, cellSize],
           top: 30,
-          left: !isPc ? 30 : 'center',
+          left: 0,
           right: !isPc ? 'auto' : 'auto'
         }
       })
@@ -86,7 +86,7 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
       },
       calendar: {
         top: 30,
-        left: 'center',
+        left: 'auto',
         right: 'auto',
         aspectScale: 1,
         gap: 3,
@@ -99,9 +99,9 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
         },
         yearLabel: { show: false },
         dayLabel: {
+          show: false,
           color: foregroundColor,
           nameMap: [t('sun'), t('mon'), t('tue'), t('wed'), t('thu'), t('fri'), t('sat')],
-          margin: 8
         },
         monthLabel: {
           color: foregroundColor,

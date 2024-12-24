@@ -378,5 +378,21 @@
   "folder-name-exists": "文件夹名称已存在",
   "folder-name-required": "文件夹名称为必填项",
   "collapse": "收起",
-  "show-all": "显示所有"
+  "show-all": "显示所有",
+  "sun": "日",
+  "mon": "一",
+  "thu": "四",
+  "wed": "三",
+  "fri": "五",
+  "sat": "六",
+  "heatMapTitle": "过去一年的笔记热力图",
+  "heatMapDescription": "显示每天创建的笔记数量",
+  "select-month": "选择月份",
+  "note-count": "笔记数",
+  "total-words": "总字数",
+  "max-daily-words": "单日最多字数",
+  "active-days": "坚持记录天数",
+  "analytics": "统计",
+  "tag-distribution": "标签分布",
+  "other-tags": "其他标签"
 }

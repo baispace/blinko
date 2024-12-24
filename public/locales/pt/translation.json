@@ -283,5 +283,21 @@
   "folder-name-exists": "Nome da Pasta Já Existe",
   "folder-name-required": "Nome da pasta obrigatório",
   "collapse": "Colapso",
-  "show-all": "Exibir tudo"
+  "show-all": "Exibir tudo",
+  "sun": "Sol",
+  "mon": "Segunda-feira",
+  "thu": "Qui",
+  "wed": "Qua",
+  "fri": "Sex",
+  "sat": "Sábado",
+  "heatMapTitle": "Mapa de calor das notas do último ano",
+  "heatMapDescription": "Mostra o número de notas criadas por dia",
+  "select-month": "Selecione o mês",
+  "note-count": "Contagem de notas",
+  "total-words": "Palavras Totais",
+  "active-days": "Dias Ativos",
+  "max-daily-words": "Palavras Diárias Máximas",
+  "analytics": "Análise",
+  "tag-distribution": "Distribuição de Tags",
+  "other-tags": "Outras etiquetas"
 }

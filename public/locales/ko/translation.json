@@ -355,5 +355,21 @@
   "folder-name-exists": "폴더 이름이 이미 있습니다.",
   "folder-name-required": "폴더 이름 필요함",
   "collapse": "붕괴",
-  "show-all": "모두 보기"
+  "show-all": "모두 보기",
+  "sun": "태양",
+  "mon": "월",
+  "thu": "목요일",
+  "wed": "수요일",
+  "fri": "금요일",
+  "sat": "토요일",
+  "heatMapTitle": "지난 일년간의 노트 히트 맵",
+  "heatMapDescription": "하루에 만들어진 노트 수를 보여줍니다.",
+  "select-month": "월 선택",
+  "note-count": "노트 수",
+  "total-words": "총 단어",
+  "active-days": "활발한 날들",
+  "max-daily-words": "최대 일일 단어",
+  "analytics": "분석 결과",
+  "tag-distribution": "태그 분배",
+  "other-tags": "기타 태그"
 }

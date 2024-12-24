@@ -12,6 +12,7 @@ import { configRouter } from './config';
 import { publicRouter } from './public';
 import { taskRouter } from './task';
 import { Context } from '../context';
+import { analyticsRouter } from './analytics';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -21,7 +22,8 @@ export const appRouter = router({
   attachments: attachmentsRouter,
   config: configRouter,
   public: publicRouter,
-  task: taskRouter
+  task: taskRouter,
+  analytics: analyticsRouter
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

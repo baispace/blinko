@@ -350,5 +350,21 @@
   "folder-name-exists": "Nombre de carpeta existente",
   "folder-name-required": "Nombre de carpeta requerido",
   "collapse": "Colapso",
-  "show-all": "Mostrar todo"
+  "show-all": "Mostrar todo",
+  "sun": "Sol",
+  "mon": "Lunes",
+  "wed": "Mié",
+  "thu": "Jue",
+  "fri": "Viernes",
+  "sat": "Sábado",
+  "heatMapTitle": "Mapa de calor de notas del último año",
+  "heatMapDescription": "Muestra la cantidad de notas creadas por día.",
+  "select-month": "Seleccionar mes",
+  "note-count": "Recuento de notas",
+  "max-daily-words": "Palabras diarias máximas",
+  "active-days": "Días Activos",
+  "total-words": "Palabras totales",
+  "analytics": "Analítica",
+  "tag-distribution": "Distribución de etiquetas",
+  "other-tags": "Otras etiquetas"
 }

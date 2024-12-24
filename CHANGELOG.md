@@ -1,3 +1,10 @@
+# [0.30.0](https://github.com/blinko-space/blinko/compare/v0.29.8...v0.30.0) (2024-12-24)
+
+
+### Features
+
+* support analytics page ([3743946](https://github.com/blinko-space/blinko/commit/37439467edc428b5551f1c991e11a50470493e5c))
+
 ## [0.29.8](https://github.com/blinko-space/blinko/compare/v0.29.7...v0.29.8) (2024-12-23)
 
 

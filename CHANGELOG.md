@@ -1,3 +1,10 @@
+## [0.30.2](https://github.com/blinko-space/blinko/compare/v0.30.1...v0.30.2) (2024-12-24)
+
+
+### Bug Fixes
+
+* update translations and enhance analytics page ([0933157](https://github.com/blinko-space/blinko/commit/0933157e8aae62bee07fa629a6f893d7da73222f))
+
 ## [0.30.1](https://github.com/blinko-space/blinko/compare/v0.30.0...v0.30.1) (2024-12-24)
 
 

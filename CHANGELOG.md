@@ -1,3 +1,10 @@
+## [0.30.3](https://github.com/blinko-space/blinko/compare/v0.30.2...v0.30.3) (2024-12-24)
+
+
+### Bug Fixes
+
+* enhance audio metadata retrieval and update base store ([f28b426](https://github.com/blinko-space/blinko/commit/f28b4267c172173965f10030458f1e761b17610f))
+
 ## [0.30.2](https://github.com/blinko-space/blinko/compare/v0.30.1...v0.30.2) (2024-12-24)
 
 

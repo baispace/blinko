@@ -29,6 +29,7 @@ export class BaseStore implements Store {
     {
       title: "analytics",
       href: '/analytics',
+      hiddenMobile: true,
       icon: 'lucide:bar-chart-2'
     },
     {

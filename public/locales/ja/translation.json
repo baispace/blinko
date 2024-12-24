@@ -332,5 +332,21 @@
   "folder-name-exists": "フォルダ名が既に存在します",
   "folder-name-required": "フォルダ名が必要です。",
   "collapse": "崩壊",
-  "show-all": "すべて表示"
+  "show-all": "すべて表示",
+  "sun": "太陽",
+  "mon": "月",
+  "wed": "水曜日",
+  "thu": "木曜日",
+  "fri": "金曜日",
+  "sat": "土曜日",
+  "heatMapTitle": "過去1年間のノートのヒートマップ",
+  "heatMapDescription": "1日あたりに作成されたメモの数を表示します",
+  "select-month": "月を選択",
+  "note-count": "ノートカウント",
+  "max-daily-words": "1日の最大単語数",
+  "active-days": "アクティブな日々",
+  "total-words": "総単語数",
+  "analytics": "アナリティクス",
+  "tag-distribution": "タグ配布",
+  "other-tags": "その他のタグ"
 }

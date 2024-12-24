@@ -388,5 +388,21 @@
   "folder-name-required": "需要資料夾名稱",
   "folder-name-exists": "資料夾名稱已存在",
   "collapse": "收起",
-  "show-all": "顯示全部"
+  "show-all": "顯示全部",
+  "sun": "日",
+  "mon": "一",
+  "thu": "四",
+  "wed": "三",
+  "fri": "五",
+  "sat": "六",
+  "heatMapTitle": "過去一年來的筆記熱點圖",
+  "heatMapDescription": "顯示每天創建的筆記數量",
+  "select-month": "選擇月份",
+  "note-count": "筆記計數",
+  "total-words": "總字數",
+  "active-days": "積極的日子",
+  "max-daily-words": "每日最大字數",
+  "analytics": "分析",
+  "tag-distribution": "標籤分佈",
+  "other-tags": "其他標籤"
 }

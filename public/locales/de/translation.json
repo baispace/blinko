@@ -358,5 +358,21 @@
   "folder-name-exists": "Der Ordnername existiert.",
   "folder-name-required": "Ordnername erforderlich",
   "collapse": "Zusammenbruch",
-  "show-all": "Alle anzeigen"
+  "show-all": "Alle anzeigen",
+  "sun": "Sonne",
+  "mon": "Mein",
+  "wed": "Mittwoch",
+  "thu": "Donnerstag",
+  "fri": "Freitag",
+  "sat": "Samstag",
+  "heatMapTitle": "Wärmekarte der Notizen aus dem letzten Jahr",
+  "heatMapDescription": "Zeigt die Anzahl der pro Tag erstellten Notizen.",
+  "select-month": "Auswählen Monat",
+  "note-count": "Notenzählen",
+  "max-daily-words": "Maximale tägliche Wörter",
+  "active-days": "Aktive Tage",
+  "total-words": "Gesamtwörter",
+  "analytics": "Analytik",
+  "tag-distribution": "Tagverteilung",
+  "other-tags": "Andere Schlagwörter"
 }

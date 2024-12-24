@@ -375,5 +375,22 @@
   "folder-name-required": "Folder Name Required",
   "folder-name-exists": "Folder Name Exists",
   "show-all": "Show all",
-  "collapse": "Collapse"
+  "collapse": "Collapse",
+  "sun": "Sun",
+  "mon": "Mon",
+  "tue": "Wen",
+  "thu": "Thu",
+  "fri": "Fri",
+  "sat": "Sat",
+  "wed": "Wed",
+  "heatMapTitle": "Heat map of notes from the past year",
+  "heatMapDescription": "Shows the number of notes created per day",
+  "select-month": "Select Month",
+  "note-count": "Note Count",
+  "total-words": "Total Words",
+  "max-daily-words": "Max Daily Words",
+  "active-days": "Active Days",
+  "analytics": "Analytics",
+  "tag-distribution": "Tag Distribution",
+  "other-tags": "Other Tags"
 }

@@ -372,5 +372,21 @@
   "folder-name-exists": "الاسم المجلد موجود",
   "folder-name-required": "اسم المجلد مطلوب",
   "collapse": "انهيار",
-  "show-all": "اظهر الكل"
+  "show-all": "اظهر الكل",
+  "sun": "الشمس",
+  "mon": "الإثنين",
+  "wed": "الأربعاء",
+  "thu": "الخميس",
+  "fri": "الجمعة",
+  "sat": "جلس",
+  "heatMapTitle": "خريطة الحرارة للملاحظات من العام الماضي",
+  "heatMapDescription": "تُظهر عدد الملاحظات التي تم إنشاؤها في اليوم الواحد",
+  "select-month": "اختر الشهر",
+  "note-count": "عد البنك",
+  "max-daily-words": "أقصى عدد من الكلمات يوميًا",
+  "active-days": "أيام نشطة",
+  "total-words": "إجمالي الكلمات",
+  "analytics": "تحليلات",
+  "tag-distribution": "توزيع العلامة",
+  "other-tags": "العلامات الأخرى"
 }

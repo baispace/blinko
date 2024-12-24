@@ -1,3 +1,10 @@
+## [0.30.1](https://github.com/blinko-space/blinko/compare/v0.30.0...v0.30.1) (2024-12-24)
+
+
+### Bug Fixes
+
+* add file upload and delete endpoints to OpenAPI specification ([4258fc8](https://github.com/blinko-space/blinko/commit/4258fc8d6f3a19c34ebc6caa7787acc6b95cdace))
+
 # [0.30.0](https://github.com/blinko-space/blinko/compare/v0.29.8...v0.30.0) (2024-12-24)
 
 

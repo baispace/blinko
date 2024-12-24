@@ -301,5 +301,21 @@
   "folder-name-exists": "Klasör Adı Mevcut",
   "folder-name-required": "Klasör Adı Gerekli",
   "collapse": "Çöküş",
-  "show-all": "Hepsini göster"
+  "show-all": "Hepsini göster",
+  "sun": "Güneş",
+  "mon": "Pazartesi",
+  "thu": "Perşembe",
+  "wed": "Çar.",
+  "fri": "Cuma",
+  "sat": "Cumartesi",
+  "heatMapTitle": "Geçen yılın notlarının ısı haritası",
+  "heatMapDescription": "Günde oluşturulan not sayısını gösterir",
+  "select-month": "Ay Seçiniz",
+  "note-count": "Not Sayımı",
+  "total-words": "Toplam Kelimeler",
+  "active-days": "Aktif Günler",
+  "max-daily-words": "Günlük Maksimum Kelimeler",
+  "analytics": "Analitikler",
+  "tag-distribution": "Etiket Dağıtımı",
+  "other-tags": "Diğer Etiketler"
 }

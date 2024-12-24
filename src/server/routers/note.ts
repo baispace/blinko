@@ -256,7 +256,12 @@ export const noteRouter = router({
     .input(z.object({
       content: z.union([z.string(), z.null()]).default(null),
       type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(0),
-      attachments: z.custom<Pick<Prisma.attachmentsCreateInput, 'name' | 'path' | 'size'>[]>().default([]),
+      attachments: z.array(z.object({
+        name: z.string(),
+        path: z.string(),
+        size: z.number(),
+        type: z.string()
+      })).default([]),
       id: z.number().optional(),
       isArchived: z.union([z.boolean(), z.null()]).default(null),
       isTop: z.union([z.boolean(), z.null()]).default(null),

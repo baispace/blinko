@@ -210,7 +210,7 @@ export class BlinkoStore implements Store {
   noteList = new PromisePageState({
     function: async ({ page, size }) => {
       let notes: Note[] = [];
-      
+
       if (this.isOnline) {
         notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, page, size });
         if (this.offlineNotes.length > 0) {
@@ -218,13 +218,8 @@ export class BlinkoStore implements Store {
         }
       }
 
-      const mergedNotes = [...notes, ...this.offlineNotes]
+      const mergedNotes = [...this.offlineNotes, ...notes]
         .map(i => ({ ...i, isExpand: false }))
-        .sort((a, b) => {
-          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt ?? '');
-          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt ?? '');
-          return dateB.getTime() - dateA.getTime();
-        });
 
       if (!this.isOnline) {
         const start = (page - 1) * size;

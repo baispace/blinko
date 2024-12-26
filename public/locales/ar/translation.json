@@ -395,5 +395,8 @@
   "offline-description": "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى",
   "retry": "إعادة المحاولة",
   "back-to-home": "العودة إلى الصفحة الرئيسية",
-  "offline": "غير متصل"
+  "offline": "غير متصل",
+  "close-background-animation": "إغلاق الخلفية المتحركة",
+  "custom-bg-tip": "انتقل إلى https://www.shadergradient.co/ لإنشاء خلفية التدرج الخاصة بك",
+  "custom-background-url": "الخلفية المخصصة"
 }

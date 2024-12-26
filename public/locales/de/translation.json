@@ -381,5 +381,8 @@
   "offline-description": "Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
   "retry": "Wiederholen",
   "back-to-home": "Zurück zur Startseite",
-  "offline": "Offline"
+  "offline": "Offline",
+  "close-background-animation": "Schließen der Hintergrundanimation",
+  "custom-bg-tip": "Gehe zu https://www.shadergradient.co/, um deinen eigenen Verlaufshintergrund zu erstellen.",
+  "custom-background-url": "Benutzerdefinierten Hintergrund"
 }

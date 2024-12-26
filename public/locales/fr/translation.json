@@ -370,5 +370,8 @@
   "offline-description": "Veuillez vérifier votre connexion internet et réessayer",
   "retry": "Réessayer",
   "back-to-home": "Retour à la page d'accueil",
-  "offline": "Hors ligne"
+  "offline": "Hors ligne",
+  "close-background-animation": "Animation d'arrière-plan proche",
+  "custom-bg-tip": "Allez sur https://www.shadergradient.co/ pour créer votre propre arrière-plan dégradé.",
+  "custom-background-url": "Arrière-plan personnalisé"
 }

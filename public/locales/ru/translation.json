@@ -314,5 +314,8 @@
   "offline-description": "Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова",
   "retry": "Повторить",
   "back-to-home": "Назад на главную",
-  "offline": "Офлайн"
+  "offline": "Офлайн",
+  "close-background-animation": "Закрыть фоновую анимацию",
+  "custom-bg-tip": "Перейдите на https://www.shadergradient.co/, чтобы создать свой собственный градиентный фон.",
+  "custom-background-url": "Пользовательский фон"
 }

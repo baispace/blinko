@@ -411,5 +411,8 @@
   "offline-description": "請檢查您的網際網路連接，然後再試一次。",
   "retry": "重試",
   "back-to-home": "返回首頁",
-  "offline": "離線"
+  "offline": "離線",
+  "close-background-animation": "關閉背景動畫",
+  "custom-bg-tip": "前往https://www.shadergradient.co/ 創建您自己的漸層背景。",
+  "custom-background-url": "自訂背景"
 }

@@ -355,5 +355,8 @@
   "offline-description": "インターネット接続をチェックし、もう一度試してください",
   "retry": "リトライ",
   "back-to-home": "ホームに戻る",
-  "offline": "オフライン"
+  "offline": "オフライン",
+  "close-background-animation": "背景アニメーションを閉じる",
+  "custom-bg-tip": "https://www.shadergradient.co/ にアクセスして、独自のグラデーション背景を作成してください。",
+  "custom-background-url": "カスタム背景"
 }

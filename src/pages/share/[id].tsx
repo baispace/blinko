@@ -8,7 +8,12 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import VanillaTilt from 'vanilla-tilt';
+import dynamic from "next/dynamic";
 
+const GradientBackground = dynamic(
+  () => import('@/components/Common/GradientBackground').then((mod) => mod.GradientBackground),
+  { ssr: false }
+);
 const Page = observer(() => {
   const isPc = useMediaQuery('(min-width: 768px)')
   const router = useRouter()
@@ -32,19 +37,21 @@ const Page = observer(() => {
     VanillaTilt.init(elements as any, {
       max: 2,
       speed: 400,
-      glare: true,
-      "max-glare": 0.5,
+      glare: false,
+      "max-glare": 0
     });
   }, [store.shareNote?.value]);
 
-  return <div className='p-4 h-[100vh] w-full flex justify-center items-center bg-gradient-to-br from-rose-400 via-fuchsia-500 to-indigo-500' >
-    {
-      store.shareNote?.value &&
-      <div className="tilt-card bg-background max-h-[90vh] overflow-y-scroll w-[95%] md:min-w-[30%] md:max-w-[50%] rounded-lg shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
-        <BlinkoCard blinkoItem={store.shareNote?.value} isShareMode />
-      </div>
-    }
-  </div>
+  return <GradientBackground>
+    <div className='p-4 h-[100vh] w-full flex justify-center items-center' >
+      {
+        store.shareNote?.value &&
+        <div className="tilt-card glass-effect max-h-[90vh] overflow-y-scroll w-[95%] md:min-w-[30%] md:max-w-[50%] rounded-xl shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
+          <BlinkoCard blinkoItem={store.shareNote?.value} isShareMode glassEffect />
+        </div>
+      }
+    </div>
+  </GradientBackground>
 });
 
 export default Page

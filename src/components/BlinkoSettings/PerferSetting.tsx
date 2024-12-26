@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input } from "@nextui-org/react";
+import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input, Tooltip } from "@nextui-org/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
 import ThemeSwitcher from "../Common/ThemeSwitcher";
@@ -12,15 +12,18 @@ import { useState, useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { Icon } from "@iconify/react";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { GradientBackground } from "../Common/GradientBackground";
 
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
   const [textLength, setTextLength] = useState(blinko.config.value?.textFoldLength?.toString() || '500');
+  const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
 
   useEffect(() => {
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
+    setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
   }, [blinko.config.value?.textFoldLength]);
 
 
@@ -225,5 +228,46 @@ export const PerferSetting = observer(() => {
           }}
         />
       } />
+
+
+    <Item
+      leftContent={<>{t('close-background-animation')}</>}
+      rightContent={
+        <Tooltip content={<GradientBackground className="rounded-lg w-[200px] h-[100px]">
+          <div ></div>
+        </GradientBackground>}>
+          <Switch
+            isSelected={blinko.config.value?.isCloseBackgroundAnimation}
+            onChange={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'isCloseBackgroundAnimation',
+                value: e.target.checked
+              }))
+            }}
+          />
+        </Tooltip>
+      } />
+
+    <Item
+      type={isPc ? 'row' : 'col'}
+      leftContent={<div className="flex flex-col">
+        <div>{t('custom-background-url')}</div>
+        <div className="text-xs text-default-400">{t('custom-bg-tip')}</div>
+      </div>}
+      rightContent={<Input
+        className="w-full md:w-[400px]"
+        placeholder="https://www.shadergradient.co/customize?"
+        type="text"
+        value={customBackgroundUrl}
+        onChange={e => {
+          setCustomBackgroundUrl(e.target.value)
+        }}
+        onBlur={e => {
+          PromiseCall(api.config.update.mutate({
+            key: 'customBackgroundUrl',
+            value: customBackgroundUrl
+          }))
+        }} />} />
+
   </CollapsibleCard>
 })

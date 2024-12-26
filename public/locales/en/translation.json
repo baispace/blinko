@@ -398,5 +398,8 @@
   "offline-description": "Please check your internet connection and try again",
   "retry": "Retry",
   "back-to-home": "Back to Home",
-  "offline": "Offline"
+  "offline": "Offline",
+  "close-background-animation": "Close Background Animation",
+  "custom-background-url": "Custom Background",
+  "custom-bg-tip": "Go to https://www.shadergradient.co/ to create your own gradient background"
 }

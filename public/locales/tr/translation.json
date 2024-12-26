@@ -324,5 +324,8 @@
   "offline-description": "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.",
   "retry": "Tekrar dene.",
   "back-to-home": "Anasayfaya geri dön",
-  "offline": "Çevrimdışı"
+  "offline": "Çevrimdışı",
+  "close-background-animation": "Arka Plan Animasyonunu Kapat",
+  "custom-bg-tip": "Kendi gradyan arka planınızı oluşturmak için https://www.shadergradient.co/ adresine gidin.",
+  "custom-background-url": "Özel Arka Plan"
 }

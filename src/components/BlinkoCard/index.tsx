@@ -26,9 +26,10 @@ interface BlinkoCardProps {
   };
   isShareMode?: boolean;
   defaultExpanded?: boolean;
+  glassEffect?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, isShareMode = false }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, isShareMode = false, glassEffect = false }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -88,7 +89,7 @@ export const BlinkoCard = observer(({ blinkoItem, isShareMode = false }: BlinkoC
             onContextMenu={e => !isPc && e.stopPropagation()}
             shadow='none'
             className={`
-              flex flex-col p-4 bg-background transition-all group/card 
+              flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} transition-all group/card 
               ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''} 
               ${isPc && !isExpanded && !blinkoItem.isShare ? 'hover:translate-y-1' : ''} 
               ${blinkoItem.isBlog ? 'cursor-pointer' : ''} 

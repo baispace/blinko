@@ -401,5 +401,8 @@
   "offline-description": "请检查您的互联网连接，然后重试。",
   "retry": "重试",
   "back-to-home": "返回主页",
-  "offline": "离线"
+  "offline": "离线",
+  "close-background-animation": "关闭背景动画",
+  "custom-bg-tip": "访问 https://www.shadergradient.co/ 创建您自己的渐变背景",
+  "custom-background-url": "自定义背景"
 }

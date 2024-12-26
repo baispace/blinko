@@ -373,5 +373,8 @@
   "offline-description": "Por favor, verifica tu conexión a internet e intenta de nuevo.",
   "retry": "Reintentar",
   "back-to-home": "Volver a casa",
-  "offline": "Sin conexión"
+  "offline": "Sin conexión",
+  "close-background-animation": "Cerrar Animación de Fondo",
+  "custom-bg-tip": "Ve a https://www.shadergradient.co/ para crear tu propio fondo degradado.",
+  "custom-background-url": "Fondo personalizado"
 }

@@ -4,7 +4,7 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // process.env.NODE_ENV === 'development',
+  disable: false, // process.env.NODE_ENV === 'development',
   fallbacks: {
     document: '/offline' 
   },
@@ -12,19 +12,16 @@ const withPWA = require('next-pwa')({
   reloadOnOnline: true,
   runtimeCaching: [
     {
-      urlPattern: ({ url, request }) => {
+      urlPattern: ({ url }) => {
         const isSameOrigin = self.origin === url.origin;
-        return isSameOrigin && (
-          request.destination === 'script' ||
-          url.pathname.includes('/_next/static/chunks/')
-        );
+        return isSameOrigin;
       },
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'js-cache',
+        cacheName: 'pages-cache',
         networkTimeoutSeconds: 10,
         expiration: {
-          maxEntries: 100,
+          maxEntries: 50,
           maxAgeSeconds: 24 * 60 * 60
         }
       }
@@ -122,6 +119,11 @@ module.exports = withPWA({
         path: false,
       };
     }
+    config.module.rules.push({
+      test: /\.(glsl|vs|fs|vert|frag)$/,
+      exclude: /node_modules/,
+      use: ['raw-loader', 'glslify-loader'],
+    })
     return config;
   },
   outputFileTracing: isVercel? false : true,

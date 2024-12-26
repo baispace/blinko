@@ -53,6 +53,8 @@ export const ZConfigKey = z.union([
   z.literal('excludeEmbeddingTagId'),
   z.literal('spotifyConsumerKey'),
   z.literal('spotifyConsumerSecret'),
+  z.literal('isCloseBackgroundAnimation'),
+  z.literal('customBackgroundUrl'),
   ZUserPerferConfigKey
 ]);
 
@@ -70,6 +72,8 @@ export const ZConfigSchema = z.object({
   isHiddenMobileBar: z.boolean().optional(),
   toolbarVisibility: z.any().optional(),
   isAllowRegister: z.any().optional(),
+  isCloseBackgroundAnimation: z.boolean().optional(),
+  customBackgroundUrl: z.any().optional(),
   isOrderByCreateTime: z.any().optional(),
   timeFormat: z.any().optional(),
   smallDeviceCardColumns: z.any().optional(),

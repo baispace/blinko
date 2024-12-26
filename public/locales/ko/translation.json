@@ -378,5 +378,8 @@
   "offline-description": "인터넷 연결을 확인하고 다시 시도해주세요.",
   "retry": "다시 시도하세요.",
   "back-to-home": "집으로 돌아가기",
-  "offline": "오프라인."
+  "offline": "오프라인.",
+  "close-background-animation": "배경 애니메이션 닫기",
+  "custom-bg-tip": "https://www.shadergradient.co/ 에 방문하여 자체 그라데이션 배경을 만드세요.",
+  "custom-background-url": "사용자 정의 배경"
 }

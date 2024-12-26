@@ -1,3 +1,10 @@
+## [0.30.5](https://github.com/blinko-space/blinko/compare/v0.30.4...v0.30.5) (2024-12-26)
+
+
+### Bug Fixes
+
+* improve note date filtering and clean up PWA configuration [#376](https://github.com/blinko-space/blinko/issues/376) ([5e2cf71](https://github.com/blinko-space/blinko/commit/5e2cf710ed20728c5469869925df28d597673103))
+
 ## [0.30.4](https://github.com/blinko-space/blinko/compare/v0.30.3...v0.30.4) (2024-12-26)
 
 

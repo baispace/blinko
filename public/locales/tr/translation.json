@@ -318,5 +318,11 @@
   "analytics": "Analitikler",
   "tag-distribution": "Etiket Dağıtımı",
   "other-tags": "Diğer Etiketler",
-  "tue": "Salı"
+  "tue": "Salı",
+  "offline-status": "Çevrimdışı Modu",
+  "offline-title": "Çevrimdışısınız",
+  "offline-description": "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.",
+  "retry": "Tekrar dene.",
+  "back-to-home": "Anasayfaya geri dön",
+  "offline": "Çevrimdışı"
 }

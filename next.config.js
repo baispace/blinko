@@ -4,19 +4,27 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: false,
+  disable: false, // process.env.NODE_ENV === 'development',
+  fallbacks: {
+    document: '/offline' 
+  },
+  cacheOnFrontEndNav: true,
+  reloadOnOnline: true,
   runtimeCaching: [
     {
-      urlPattern: ({ url }) => {
+      urlPattern: ({ url, request }) => {
         const isSameOrigin = self.origin === url.origin;
-        return isSameOrigin;
+        return isSameOrigin && (
+          request.destination === 'script' ||
+          url.pathname.includes('/_next/static/chunks/')
+        );
       },
-      handler: 'NetworkFirst',
+      handler: 'StaleWhileRevalidate',
       options: {
-        cacheName: 'pages-cache',
+        cacheName: 'js-cache',
         networkTimeoutSeconds: 10,
         expiration: {
-          maxEntries: 50,
+          maxEntries: 100,
           maxAgeSeconds: 24 * 60 * 60
         }
       }

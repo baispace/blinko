@@ -81,19 +81,35 @@ export class BaseStore implements Store {
     this.locale.save(locale)
   }
 
+  isOnline: boolean = typeof window !== 'undefined' ? window.navigator.onLine : true;
+
+  setOnlineStatus = (status: boolean) => {
+    this.isOnline = status;
+  }
+
   useInitApp(router) {
     const isPc = useMediaQuery('(min-width: 768px)')
+    const { t, i18n } = useTranslation()
+    
     const documentHeight = () => {
       const doc = document.documentElement
       this.documentHeight = window.innerHeight
       doc.style.setProperty('--doc-height', `${window.innerHeight}px`)
     }
-
-
-    const { t, i18n } = useTranslation()
+    
     useEffect(() => {
+      const handleOnline = () => this.setOnlineStatus(true);
+      const handleOffline = () => this.setOnlineStatus(false);
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
       documentHeight()
       window.addEventListener('resize', documentHeight)
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        window.removeEventListener('resize', documentHeight)
+      }
     }, [router.isReady])
 
     useEffect(() => {

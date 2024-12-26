@@ -349,5 +349,11 @@
   "analytics": "アナリティクス",
   "tag-distribution": "タグ配布",
   "other-tags": "その他のタグ",
-  "tue": "火曜日"
+  "tue": "火曜日",
+  "offline-status": "オフラインモード",
+  "offline-title": "オフラインです",
+  "offline-description": "インターネット接続をチェックし、もう一度試してください",
+  "retry": "リトライ",
+  "back-to-home": "ホームに戻る",
+  "offline": "オフライン"
 }

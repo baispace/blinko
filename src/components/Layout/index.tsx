@@ -154,6 +154,17 @@ export const CommonLayout = observer(({
                       />
                   }
                 </div>
+                {!base.isOnline && (
+                  <Badge
+                    color="warning"
+                    variant="flat"
+                    className="animate-pulse"
+                  >
+                    <div className="flex text-sm items-center gap-1 text-yellow-500">
+                      <span>{t('offline-status')}</span>
+                    </div>
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center justify-center gap-2 md:gap-4 w-auto ">
                 <BarSearchInput isPc={isPc} />
@@ -161,11 +172,11 @@ export const CommonLayout = observer(({
                 {blinkoStore.dailyReviewNoteList.value?.length != 0 &&
                   <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
                     <Link href="/review" passHref legacyBehavior>
-                      <Button 
+                      <Button
                         as="a"
-                        className="mt-[2px]" 
-                        isIconOnly 
-                        size="sm" 
+                        className="mt-[2px]"
+                        isIconOnly
+                        size="sm"
                         variant="light"
                         onClick={(e) => {
                           e.preventDefault();

@@ -462,7 +462,7 @@ menu {
 }
 
 .expand-container .markdown-body p {
-  color: var(--desc);
+  color: var(--foreground);
 }
 
 .expand-container .markdown-body ul,

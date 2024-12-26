@@ -8,6 +8,7 @@ import { accountsSchema } from '@/lib/prismaZodType';
 import { hashPassword, verifyPassword } from 'prisma/seed';
 import { generateTOTP, generateTOTPQRCode, verifyTOTP } from "./helper";
 import { deleteNotes } from './note';
+import { createSeed } from 'prisma/seedData';
 
 const genToken = async ({ id, name, role }: { id: number, name: string, role: string }) => {
   return await encode({
@@ -112,6 +113,7 @@ export const userRouter = router({
               userId: res.id
             }
           })
+          await createSeed(res.id)
           return true
         } else {
           const config = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } })

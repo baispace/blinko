@@ -19,7 +19,7 @@ const withPWA = require('next-pwa')({
           url.pathname.includes('/_next/static/chunks/')
         );
       },
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'js-cache',
         networkTimeoutSeconds: 10,

@@ -44,7 +44,7 @@ export const BlinkoMultiSelectPop = observer(() => {
     className={SelectBox}>
     <div className='items-center justify-center gap-2 hidden md:flex'>
       <Icon onClick={e => {
-        blinko.curMultiSelectIds = blinko.noteList.value?.map(i => i.id) || []
+        blinko.curMultiSelectIds = blinko.noteList.value?.map(i => i.id).filter(i => i !== undefined) || []
       }}
         className='cursor-pointer hover:opacity-80 transition-all' icon="fluent:select-all-on-16-filled" width="20" height="20" />
       {blinko.noteList.value?.length}/{blinko.curMultiSelectIds.length} {t('items')}</div>

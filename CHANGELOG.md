@@ -1,3 +1,10 @@
+## [0.30.7](https://github.com/blinko-space/blinko/compare/v0.30.6...v0.30.7) (2024-12-26)
+
+
+### Bug Fixes
+
+* adjust note merging order in BlinkoStore ([e208124](https://github.com/blinko-space/blinko/commit/e208124caaac6bba182fa6ba05a6e17010bc97c0))
+
 ## [0.30.6](https://github.com/blinko-space/blinko/compare/v0.30.5...v0.30.6) (2024-12-26)
 
 

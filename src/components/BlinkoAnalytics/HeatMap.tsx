@@ -81,7 +81,9 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
           color: foregroundColor
         },
         inRange: {
-          color: theme === 'dark' ? ['#161b22', '#3d3000', '#806600', '#cc9900', '#ffd700'] : ['#fff7e6', '#ffe699', '#ffd24d', '#ffbf00', '#b38600']
+          color: theme === 'dark' 
+          ? ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'] 
+          : ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'] 
         }
       },
       calendar: {

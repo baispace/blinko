@@ -12,7 +12,6 @@ import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
-import { Image } from '@nextui-org/react';
 
 const Home = observer(() => {
   const { t } = useTranslation();

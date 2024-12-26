@@ -364,5 +364,11 @@
   "analytics": "Analytique",
   "tag-distribution": "Distribution de tags",
   "other-tags": "Autres balises",
-  "tue": "Mardi"
+  "tue": "Mardi",
+  "offline-status": "Mode hors ligne",
+  "offline-title": "Vous êtes hors ligne",
+  "offline-description": "Veuillez vérifier votre connexion internet et réessayer",
+  "retry": "Réessayer",
+  "back-to-home": "Retour à la page d'accueil",
+  "offline": "Hors ligne"
 }

@@ -2,11 +2,67 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isVercel = process.env.VERCEL === '1';
 const withPWA = require('next-pwa')({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+  disable: false, // process.env.NODE_ENV === 'development',
+  fallbacks: {
+    document: '/offline' 
+  },
+  cacheOnFrontEndNav: true,
+  reloadOnOnline: true,
+  runtimeCaching: [
+    {
+      urlPattern: ({ url, request }) => {
+        const isSameOrigin = self.origin === url.origin;
+        return isSameOrigin && (
+          request.destination === 'script' ||
+          url.pathname.includes('/_next/static/chunks/')
+        );
+      },
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'js-cache',
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 24 * 60 * 60
+        }
+      }
+    },
+    {
+      urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 24 * 60 * 60
+        }
+      }
+    },
+    {
+      urlPattern: ({ request }) => 
+        request.destination === 'style' ||
+        request.destination === 'script' ||
+        request.destination === 'font' ||
+        request.destination === 'image',
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'static-assets',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 24 * 60 * 60 * 30
+        }
+      }
+    }
+  ]
 })
+
 module.exports = withPWA({
   output: 'standalone',
   transpilePackages: ['react-diff-view','highlight.js','remark-gfm','rehype-raw'],
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   async headers() {
     return [
       {

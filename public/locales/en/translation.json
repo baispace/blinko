@@ -392,5 +392,11 @@
   "active-days": "Active Days",
   "analytics": "Analytics",
   "tag-distribution": "Tag Distribution",
-  "other-tags": "Other Tags"
+  "other-tags": "Other Tags",
+  "offline-status": "Offline Mode",
+  "offline-title": "You are offline",
+  "offline-description": "Please check your internet connection and try again",
+  "retry": "Retry",
+  "back-to-home": "Back to Home",
+  "offline": "Offline"
 }

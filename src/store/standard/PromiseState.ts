@@ -8,6 +8,7 @@ import { eventBus } from "@/lib/event";
 import { BlinkoStore } from "../blinkoStore";
 import i18n from "@/lib/i18n";
 import { StorageState } from "./StorageState";
+import { BaseStore } from "../baseStore";
 
 export interface Events {
   data: (data: any) => void;
@@ -111,6 +112,10 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
 
   async call(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
     const toast = RootStore.Get(ToastPlugin);
+    const base = RootStore.Get(BaseStore);
+
+
+
     try {
       if (this.loadingLock && this.loading.value == true) return;
       this.loading.setValue(true);
@@ -121,7 +126,7 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
       }
       return res;
     } catch (error) {
-      if (this.autoAlert) {
+      if (this.autoAlert && base.isOnline) {
         const message = error.message;
         if (message.includes("Unauthorized")) {
           toast.dismiss();
@@ -198,6 +203,8 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
 
   private async call(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
     const toast = RootStore.Get(ToastPlugin);
+    const base = RootStore.Get(BaseStore);
+
     try {
       if (this.loadingLock && this.loading.value == true) return;
       this.loading.setValue(true);
@@ -240,7 +247,7 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
       }
       return this.value;
     } catch (error) {
-      if (this.autoAlert) {
+      if (this.autoAlert && base.isOnline) {
         const message = error.message;
         if (message.includes("Unauthorized")) {
           toast.dismiss();

@@ -308,7 +308,7 @@
   "insert-row-above": "插入上文 1",
   "insert-row-below": "下面插入 1",
   "instant-rendering": "即时渲染",
-  "light-mode": "灯光模式",
+  "light-mode": "浅色模式",
   "line": "线路",
   "link": "链接",
   "link-ref": "链接参考",
@@ -395,5 +395,11 @@
   "analytics": "统计",
   "tag-distribution": "标签分布",
   "other-tags": "其他标签",
-  "tue": "星期二"
+  "tue": "星期二",
+  "offline-status": "离线访问中",
+  "offline-title": "你处于离线状态",
+  "offline-description": "请检查您的互联网连接，然后重试。",
+  "retry": "重试",
+  "back-to-home": "返回主页",
+  "offline": "离线"
 }

@@ -372,5 +372,11 @@
   "analytics": "분석 결과",
   "tag-distribution": "태그 분배",
   "other-tags": "기타 태그",
-  "tue": "화요일"
+  "tue": "화요일",
+  "offline-status": "오프라인 모드",
+  "offline-title": "오프라인 상태입니다.",
+  "offline-description": "인터넷 연결을 확인하고 다시 시도해주세요.",
+  "retry": "다시 시도하세요.",
+  "back-to-home": "집으로 돌아가기",
+  "offline": "오프라인."
 }

@@ -56,18 +56,36 @@ export const useHistoryBack = <T extends string>({
 }: HistoryBackProps<T>) => {
   useEffect(() => {
     if (state) {
-      history.pushState({ [historyState]: true }, '');
+      try {
+        const currentPath = window.location.pathname + window.location.search;
+        history.pushState({ 
+          [historyState]: true,
+          timestamp: Date.now(),
+          path: currentPath
+        }, '', currentPath);
+      } catch (error) {
+        console.warn('History pushState failed:', error);
+      }
     }
 
-    const handlePopState = () => {
-      if (state) {
+    const handlePopState = (event: PopStateEvent) => {
+      if (state && event?.state) {
         onStateChange();
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
+    try {
+      window.addEventListener('popstate', handlePopState);
+    } catch (error) {
+      console.warn('Failed to add popstate listener:', error);
+    }
+
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      try {
+        window.removeEventListener('popstate', handlePopState);
+      } catch (error) {
+        console.warn('Failed to remove popstate listener:', error);
+      }
     };
   }, [state, onStateChange, historyState]);
 };

@@ -405,5 +405,11 @@
   "analytics": "分析",
   "tag-distribution": "標籤分佈",
   "other-tags": "其他標籤",
-  "tue": "週二"
+  "tue": "週二",
+  "offline-status": "離線模式",
+  "offline-title": "您已離線",
+  "offline-description": "請檢查您的網際網路連接，然後再試一次。",
+  "retry": "重試",
+  "back-to-home": "返回首頁",
+  "offline": "離線"
 }

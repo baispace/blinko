@@ -1,3 +1,11 @@
+## [0.30.6](https://github.com/blinko-space/blinko/compare/v0.30.5...v0.30.6) (2024-12-26)
+
+
+### Bug Fixes
+
+* support custom background ([de49166](https://github.com/blinko-space/blinko/commit/de491669c41cf4629719bcc97bf2720e37d24980))
+* update HeatMap color scheme for improved visibility [#373](https://github.com/blinko-space/blinko/issues/373) ([dad00c9](https://github.com/blinko-space/blinko/commit/dad00c9f9d745ab527b66c509ea845299aa4267a)), closes [#161b22](https://github.com/blinko-space/blinko/issues/161b22) [#0e4429](https://github.com/blinko-space/blinko/issues/0e4429) [#006d32](https://github.com/blinko-space/blinko/issues/006d32) [#26a641](https://github.com/blinko-space/blinko/issues/26a641) [#39d353](https://github.com/blinko-space/blinko/issues/39d353) [#ebedf0](https://github.com/blinko-space/blinko/issues/ebedf0) [#9be9a8](https://github.com/blinko-space/blinko/issues/9be9a8) [#40c463](https://github.com/blinko-space/blinko/issues/40c463) [#30a14](https://github.com/blinko-space/blinko/issues/30a14) [#216e39](https://github.com/blinko-space/blinko/issues/216e39)
+
 ## [0.30.5](https://github.com/blinko-space/blinko/compare/v0.30.4...v0.30.5) (2024-12-26)
 
 

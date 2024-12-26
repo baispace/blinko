@@ -96,11 +96,8 @@ export const noteRouter = router({
       if (withoutTag) {
         where.tags = { none: {} }
       }
-      if (startDate) {
-        where.createdAt = { gte: startDate }
-      }
-      if (endDate) {
-        where.createdAt = { lte: endDate }
+      if (startDate && endDate) {
+        where.createdAt = { gte: startDate, lte: endDate }
       }
       if (withLink) {
         where.OR = [
@@ -393,17 +390,17 @@ export const noteRouter = router({
             if (needTobeAddedAttachmentsPath.length != 0) {
               await prisma.attachments.createMany({
                 data: attachments?.filter(t => needTobeAddedAttachmentsPath.includes(t.path))
-                  .map(i => { 
+                  .map(i => {
                     const pathParts = (i.path as string)
                       .replace('/api/file/', '')
                       .replace('/api/s3file/', '')
                       .split('/');
-                    return { 
-                      noteId: note.id, 
+                    return {
+                      noteId: note.id,
                       ...i,
                       depth: pathParts.length - 1,
                       perfixPath: pathParts.slice(0, -1).join(',')
-                    } 
+                    }
                   })
               })
             }
@@ -414,30 +411,30 @@ export const noteRouter = router({
         return note
       } else {
         try {
-          const note = await prisma.notes.create({ 
-            data: { 
-              content: content ?? '', 
-              type, 
-              accountId: Number(ctx.id), 
-              isShare: isShare ? true : false, 
+          const note = await prisma.notes.create({
+            data: {
+              content: content ?? '',
+              type,
+              accountId: Number(ctx.id),
+              isShare: isShare ? true : false,
               isTop: isTop ? true : false,
               ...(input.createdAt && { createdAt: input.createdAt }),
               ...(input.updatedAt && { updatedAt: input.updatedAt })
-            } 
+            }
           })
           await handleAddTags(tagTree, undefined, note.id)
           await prisma.attachments.createMany({
-            data: attachments.map(i => { 
+            data: attachments.map(i => {
               const pathParts = (i.path as string)
                 .replace('/api/file/', '')
                 .replace('/api/s3file/', '')
                 .split('/');
-              return { 
-                noteId: note.id, 
+              return {
+                noteId: note.id,
                 ...i,
                 depth: pathParts.length - 1,
                 perfixPath: pathParts.slice(0, -1).join(',')
-              } 
+              }
             })
           })
 

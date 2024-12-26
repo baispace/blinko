@@ -1,3 +1,12 @@
+## [0.30.4](https://github.com/blinko-space/blinko/compare/v0.30.3...v0.30.4) (2024-12-26)
+
+
+### Bug Fixes
+
+* enhance offline capabilities and update translations ([efa0f82](https://github.com/blinko-space/blinko/commit/efa0f8220fd3368c592aec6a4b4b31a6eac2691f))
+* enhance PWA configuration and update dependencies ([c7c56f7](https://github.com/blinko-space/blinko/commit/c7c56f7c660301a9af29a68853ea7fb8f449730a))
+* update PWA caching strategy and clean up seed data ([80ccee7](https://github.com/blinko-space/blinko/commit/80ccee7fee53797f9ace7b56c1bd84d0aee0721c))
+
 ## [0.30.3](https://github.com/blinko-space/blinko/compare/v0.30.2...v0.30.3) (2024-12-24)
 
 

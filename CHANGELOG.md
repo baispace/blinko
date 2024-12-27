@@ -1,3 +1,10 @@
+## [0.31.3](https://github.com/blinko-space/blinko/compare/v0.31.2...v0.31.3) (2024-12-27)
+
+
+### Bug Fixes
+
+* enhance sharing functionality in CardHeader component ([b2d0ed6](https://github.com/blinko-space/blinko/commit/b2d0ed62ef1de3df951ed6f7267aba17d960302b))
+
 ## [0.31.2](https://github.com/blinko-space/blinko/compare/v0.31.1...v0.31.2) (2024-12-27)
 
 

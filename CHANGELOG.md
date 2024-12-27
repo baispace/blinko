@@ -1,3 +1,10 @@
+## [0.31.1](https://github.com/blinko-space/blinko/compare/v0.31.0...v0.31.1) (2024-12-27)
+
+
+### Bug Fixes
+
+* upsert api accachments size type issue ([84ec849](https://github.com/blinko-space/blinko/commit/84ec84971f41533716d0d099e1c842ecad1e1451))
+
 # [0.31.0](https://github.com/blinko-space/blinko/compare/v0.30.7...v0.31.0) (2024-12-27)
 
 

@@ -42,16 +42,12 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
         )}
 
         {blinkoItem.isShare && !isShareMode && (
-          <Tooltip content={t('go-to-share-page')}>
+          <Tooltip content={t('shared')}>
             <Icon
-              className="cursor-pointer text-[#8600EF]"
+              className="cursor-pointer "
               icon="prime:eye"
               width={iconSize}
               height={iconSize}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(`/share`);
-              }}
             />
           </Tooltip>
         )}

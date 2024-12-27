@@ -10,6 +10,7 @@ import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { useTranslation } from "react-i18next";
 import { DialogStore } from "@/store/module/Dialog";
+import { Copy } from "../Common/Copy";
 
 interface ShareDialogProps {
   defaultSettings: ShareSettings;
@@ -209,7 +210,7 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-default-700 font-medium">{t("share-link")}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Input
                   variant="bordered"
                   value={shareUrl}
@@ -219,13 +220,7 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
                     inputWrapper: "bg-default-50"
                   }}
                 />
-                <Button
-                  isIconOnly
-                  variant="flat"
-                  onPress={() => navigator.clipboard.writeText(shareUrl)}
-                >
-                  <Icon icon="solar:copy-bold" width="20" height="20" />
-                </Button>
+                <Copy content={shareUrl} size={24} />
               </div>
             </motion.div>
           )

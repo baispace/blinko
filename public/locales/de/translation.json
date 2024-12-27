@@ -402,5 +402,6 @@
   "custom-expiry": "Benutzerdefiniertes Ablaufdatum",
   "30days-expiry": "30 Tage Ablauf",
   "share-link-expired": "Freigabelink abgelaufen",
-  "share-link-expired-desc": "Dieser Link ist abgelaufen. Bitte wenden Sie sich an den Administrator, um ihn erneut freizugeben!"
+  "share-link-expired-desc": "Dieser Link ist abgelaufen. Bitte wenden Sie sich an den Administrator, um ihn erneut freizugeben!",
+  "shared": "Geteilt"
 }

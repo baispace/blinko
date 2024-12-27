@@ -406,7 +406,7 @@
   "custom-bg-tip": "访问 https://www.shadergradient.co/ 创建您自己的渐变背景",
   "custom-background-url": "自定义背景",
   "share": "分享",
-  "need-password-to-access": "密码访问已被要求",
+  "need-password-to-access": "需要访问密码",
   "password-error": "密码错误",
   "create-share": "创建分享",
   "cancel-share": "取消分享",
@@ -422,5 +422,6 @@
   "custom-expiry": "自定义到期",
   "30days-expiry": "30天有效期",
   "share-link-expired": "分享链接已过期",
-  "share-link-expired-desc": "这份共享已过期，请联系管理员重新共享！"
+  "share-link-expired-desc": "这份共享已过期，请联系管理员重新共享！",
+  "shared": "共享"
 }

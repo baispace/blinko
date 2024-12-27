@@ -345,5 +345,6 @@
   "custom-expiry": "Özel Son Kullanma Tarihi",
   "30days-expiry": "30 Gün Son Kullanma Tarihi",
   "share-link-expired": "Paylaşım Bağlantısı Süresi Doldu",
-  "share-link-expired-desc": "Bu paylaşımın süresi doldu, lütfen tekrar paylaşım yapabilmek için yöneticiyle iletişime geçin!"
+  "share-link-expired-desc": "Bu paylaşımın süresi doldu, lütfen tekrar paylaşım yapabilmek için yöneticiyle iletişime geçin!",
+  "shared": "Paylaşılan"
 }

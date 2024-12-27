@@ -1,3 +1,10 @@
+## [0.31.2](https://github.com/blinko-space/blinko/compare/v0.31.1...v0.31.2) (2024-12-27)
+
+
+### Bug Fixes
+
+* add 'shared' translation key across multiple languages and update share link expired messages ([176c820](https://github.com/blinko-space/blinko/commit/176c820068d2555966ef45526815c1c9ce00d4fa))
+
 ## [0.31.1](https://github.com/blinko-space/blinko/compare/v0.31.0...v0.31.1) (2024-12-27)
 
 

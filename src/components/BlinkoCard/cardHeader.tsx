@@ -11,6 +11,8 @@ import dayjs from '@/lib/dayjs';
 import { useTranslation } from 'react-i18next';
 import { _ } from '@/lib/lodash';
 import { useIsIOS } from '@/lib/hooks';
+import { DialogStore } from '@/store/module/Dialog';
+import { BlinkoShareDialog } from '../BlinkoShareDialog';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -95,7 +97,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
 const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, blinko: BlinkoStore, isIOSDevice: boolean }) => {
   const { t } = useTranslation()
   return (
-    <Tooltip content={blinkoItem.isShare ? t('copy-share-link') : t('share-and-copy-link')}>
+    <Tooltip content={t('share')}>
       <Icon
         icon="tabler:share-2"
         width="16"
@@ -105,12 +107,17 @@ const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, bl
           : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
           }`}
         onClick={async (e) => {
-          e.stopPropagation();
-          if (!blinkoItem.isShare) {
-            await blinko.upsertNote.call({ id: blinkoItem.id, isShare: true, showToast: false });
-          }
-          copy(`${window.location.origin}/share/${blinkoItem.id}`);
-          RootStore.Get(ToastPlugin).success('Copied successfully~ Go to share!');
+          RootStore.Get(DialogStore).setData({
+            isOpen: true,
+            size: 'md',
+            title: t('share'),
+            content: <BlinkoShareDialog defaultSettings={{
+              shareUrl: blinkoItem.shareEncryptedUrl ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl : undefined,
+              expiryDate: blinkoItem.shareExpiryDate ?? undefined,
+              password: blinkoItem.sharePassword ?? '',
+              isShare: blinkoItem.isShare
+            }} />
+          })
         }}
       />
     </Tooltip>

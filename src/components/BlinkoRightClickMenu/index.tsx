@@ -17,6 +17,7 @@ import { AiStore } from "@/store/aiStore";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import i18n from "@/lib/i18n";
+import { BlinkoShareDialog } from "../BlinkoShareDialog";
 
 export const ShowEditTimeModel = () => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -107,10 +108,23 @@ const handleTop = () => {
 
 const handlePublic = () => {
   const blinko = RootStore.Get(BlinkoStore)
-  blinko.upsertNote.call({
-    id: blinko.curSelectedNote?.id,
-    isShare: !blinko.curSelectedNote?.isShare
+  RootStore.Get(DialogStore).setData({
+    size: 'md' as any,
+    isOpen: true,
+    title: i18n.t('share'),
+    isDismissable: false,
+    content: <BlinkoShareDialog defaultSettings={{
+      shareUrl: blinko.curSelectedNote?.shareEncryptedUrl ? window.location.origin + '/share/' + blinko.curSelectedNote?.shareEncryptedUrl : undefined,
+      expiryDate: blinko.curSelectedNote?.shareExpiryDate ?? undefined,
+      password: blinko.curSelectedNote?.sharePassword ?? '',
+      isShare: blinko.curSelectedNote?.isShare
+    }} />
   })
+
+  // blinko.upsertNote.call({
+  //   id: blinko.curSelectedNote?.id,
+  //   isShare: !blinko.curSelectedNote?.isShare
+  // })
 }
 
 const handleArchived = () => {
@@ -203,7 +217,7 @@ export const PublicItem = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   return <div className="flex items-start gap-2">
     <Icon icon="ic:outline-share" width="20" height="20" />
-    <div>{blinko.curSelectedNote?.isShare ? t('unset-as-public') : t('set-as-public')}</div>
+    <div>{t('share')}</div>
   </div>
 })
 
@@ -332,7 +346,7 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       <DropdownItem key="MutiSelectItem" onPress={() => {
         handleMultiSelect()
       }}><MutiSelectItem /></DropdownItem>
-        <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
+      <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>
       <DropdownItem key="ShareItem" onPress={handlePublic}> <PublicItem />  </DropdownItem>

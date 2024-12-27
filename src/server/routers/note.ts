@@ -197,15 +197,63 @@ export const noteRouter = router({
   publicDetail: publicProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/public-detail', summary: 'Query share note detail', tags: ['Note'] } })
     .input(z.object({
-      id: z.number(),
+      shareEncryptedUrl: z.string(),
+      password: z.string().optional()
     }))
-    .output(z.union([z.null(), notesSchema.merge(
-      z.object({
-        attachments: z.array(attachmentsSchema)
-      }))]))
+    .output(z.object({
+      hasPassword: z.boolean(),
+      data: z.union([z.null(), notesSchema.merge(
+        z.object({
+          attachments: z.array(attachmentsSchema)
+        })
+      )]),
+      error: z.union([z.literal('expired'), z.null()]).default(null)
+    }))
     .mutation(async function ({ input }) {
-      const { id } = input
-      return await prisma.notes.findFirst({ where: { id, isShare: true }, include: { tags: true, attachments: true }, })
+      const { shareEncryptedUrl, password } = input
+      const note = await prisma.notes.findFirst({
+        where: {
+          shareEncryptedUrl,
+          isShare: true
+        },
+        include: {
+          tags: true,
+          attachments: true
+        }
+      })
+
+      if (!note) {
+        return {
+          hasPassword: false,
+          data: null
+        }
+      }
+
+      if (note.shareExpiryDate && new Date() > note.shareExpiryDate) {
+        // throw new Error('Note expired')
+        return {
+          hasPassword: false,
+          data: null,
+          error: 'expired'
+        }
+      }
+
+      if (note.sharePassword) {
+        if (!password) {
+          return {
+            hasPassword: true,
+            data: null
+          }
+        }
+
+        if (password !== note.sharePassword) {
+          throw new Error('Password error')
+        }
+      }
+      return {
+        hasPassword: !!note.sharePassword,
+        data: note
+      }
     }),
   detail: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/detail', summary: 'Query note detail', protect: true, tags: ['Note'] } })
@@ -450,6 +498,62 @@ export const noteRouter = router({
         } catch (error) {
           console.log(error)
         }
+      }
+    }),
+
+  shareNote: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/share', summary: 'Share note', protect: true, tags: ['Note'] } })
+    .input(z.object({
+      id: z.number(),
+      isCancel: z.boolean().default(false),
+      password: z.string().optional(),
+      expireAt: z.date().optional()
+    }))
+    .output(notesSchema)
+    .mutation(async function ({ input, ctx }) {
+      const { id, isCancel, password, expireAt } = input;
+
+      const generateShareId = () => {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      };
+
+      const note = await prisma.notes.findFirst({
+        where: {
+          id,
+          accountId: Number(ctx.id)
+        }
+      });
+
+      if (!note) {
+        throw new Error('Note not found');
+      }
+
+      if (isCancel) {
+        return await prisma.notes.update({
+          where: { id },
+          data: {
+            isShare: false,
+            sharePassword: "",
+            shareExpiryDate: null,
+            shareEncryptedUrl: null
+          }
+        });
+      } else {
+        const shareId = note.shareEncryptedUrl || generateShareId();
+        return await prisma.notes.update({
+          where: { id },
+          data: {
+            isShare: true,
+            shareEncryptedUrl: shareId,
+            sharePassword: password,
+            shareExpiryDate: expireAt
+          }
+        });
       }
     }),
   updateMany: authProcedure

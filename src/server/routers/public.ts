@@ -165,7 +165,6 @@ export const publicRouter = router({
         }
 
         if (!spotifyClient) {
-
           spotifyClient = new SpotifyClient({
             consumer: {
               key: config.spotifyConsumerKey!,

@@ -63,6 +63,10 @@ model notes {
   isTop         Boolean         @default(false)
   isReviewed    Boolean         @default(false)
   sharePassword String          @default("") @db.VarChar
+  shareEncryptedUrl String?     @db.VarChar
+  shareExpiryDate DateTime?     @db.Timestamptz(6)
+  shareMaxView Int?            @default(0)
+  shareViewCount Int?          @default(0)
   metadata      Json?           @db.Json
   accountId     Int?
   createdAt     DateTime        @default(now()) @db.Timestamptz(6)

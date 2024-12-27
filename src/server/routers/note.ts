@@ -304,7 +304,7 @@ export const noteRouter = router({
       attachments: z.array(z.object({
         name: z.string(),
         path: z.string(),
-        size: z.number(),
+        size: z.union([z.string(), z.number()]),
         type: z.string()
       })).default([]),
       id: z.number().optional(),

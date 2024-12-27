@@ -1,3 +1,10 @@
+# [0.31.0](https://github.com/blinko-space/blinko/compare/v0.30.7...v0.31.0) (2024-12-27)
+
+
+### Features
+
+* enhance note sharing functionality and update translations [#368](https://github.com/blinko-space/blinko/issues/368) [#356](https://github.com/blinko-space/blinko/issues/356) [#362](https://github.com/blinko-space/blinko/issues/362) ([9795776](https://github.com/blinko-space/blinko/commit/9795776edf0cd73b132a6297b621cf7fc3a481cb))
+
 ## [0.30.7](https://github.com/blinko-space/blinko/compare/v0.30.6...v0.30.7) (2024-12-26)
 
 

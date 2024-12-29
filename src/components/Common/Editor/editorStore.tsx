@@ -60,6 +60,11 @@ export class EditorStore {
     this.focus()
   }
 
+  replaceMarkdown = (text) => {
+    this.vditor?.setValue(text)
+    this.focus()
+  }
+
   getEditorRange = (vditor: IVditor) => {
     let range: Range;
     const element = vditor[vditor.currentMode]!.element;
@@ -223,12 +228,6 @@ export class EditorStore {
   //   }
   // }
 
-  deleteLastChar = () => {
-    const v = this.vditor?.getValue()
-    this.vditor?.setValue(v?.slice(0, -1) ?? '')
-    this.focus()
-  }
-
   // ************************************* reference logic  start ************************************************************************************
   get currentReferences() {
     return this.noteListByIds.value?.slice()?.sort((a, b) => this.references.indexOf(a.id) - this.references.indexOf(b.id))
@@ -300,14 +299,6 @@ export class EditorStore {
     //remove listener on pc
     const wysiwyg = document.querySelector('.vditor-wysiwyg .vditor-reset')
     if (wysiwyg) {
-      // wysiwyg.addEventListener('paste', (e) => {
-      //   if (wysiwyg.contains(e.target as Node)) {
-      //     e.stopImmediatePropagation();
-      //     e.preventDefault();
-      //     const files = handlePaste(e)
-      // this.uploadFiles(files, true)
-      //   }
-      // }, true);
       wysiwyg.addEventListener('ondragstart', (e) => {
         if (wysiwyg.contains(e.target as Node)) {
           e.stopImmediatePropagation();

@@ -104,7 +104,11 @@ export const AIWriteButton = observer(({ store, content }: Props) => {
             <div className='flex gap-2 items-center'>
               <Button onPress={() => {
                 ai.isWriting = false;
-                eventBus.emit('editor:insert', ai.writingResponseText);
+                if (ai.currentWriteType == 'polish') {
+                  eventBus.emit('editor:replace', ai.writingResponseText);
+                } else {
+                  eventBus.emit('editor:insert', ai.writingResponseText);
+                }
                 ai.writingResponseText = '';
                 localStore.setShow(false);
               }} startContent={<Icon icon="ic:sharp-check" className='green' />}

@@ -143,7 +143,7 @@ export class AiStore implements Store {
   isWriting = false
   isAnswering = false
   writeQuestion = ''
-  originalContent = ''
+  currentWriteType: WriteType | undefined = undefined
   isLoading = false
 
   async completionsStream() {
@@ -187,15 +187,10 @@ export class AiStore implements Store {
 
   async writeStream(writeType: "expand" | "polish" | "custom" | undefined, content: string | undefined) {
     try {
+      this.currentWriteType = writeType
       this.isLoading = true
-      // console.log('writeStream', writeType, content)
-      this.originalContent = content ?? ' '
       this.scrollTicker++
       this.isWriting = true
-      eventBus.emit('editor:deleteLastChar')
-      if (writeType == 'polish') {
-        eventBus.emit('editor:clear')
-      }
       this.writingResponseText = ''
       const res = await streamApi.ai.writing.mutate({
         question: this.writeQuestion,

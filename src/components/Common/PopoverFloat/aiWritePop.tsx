@@ -148,7 +148,6 @@ const AiWritePop = observer(() => {
             }}>{t('ai-polish')}</Button>
             <Button className='ml-auto' isLoading={ai.isLoading} isIconOnly size='sm' onPress={e => {
               store.hidden()
-              eventBus.emit('editor:deleteLastChar')
             }}>
               <Icon icon="ic:sharp-close" />
             </Button>

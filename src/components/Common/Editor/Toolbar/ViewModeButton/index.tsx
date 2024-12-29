@@ -37,7 +37,7 @@ export const ViewModeButton = ({ viewMode }: Props) => {
   };
 
   return (
-    <div className='!ml-auto'
+    <div className=''
       onClick={() => {
         const nextMode = getNextMode();
         eventBus.emit('editor:setViewMode', nextMode);

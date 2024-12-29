@@ -392,5 +392,6 @@
   "30days-expiry": "30 jours d'expiration",
   "share-link-expired": "Lien partagé expiré",
   "share-link-expired-desc": "Cette part a expiré, veuillez contacter l'administrateur pour la re-partager !",
-  "shared": "Partagé"
+  "shared": "Partagé",
+  "edited": "Modifié"
 }

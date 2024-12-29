@@ -46,6 +46,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
   const blinko = RootStore.Get(BlinkoStore)
+  const { t } = useTranslation()
 
   useEditorInit(store, onChange, onSend, mode, originReference, content);
   useEditorEvents(store);
@@ -114,8 +115,11 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
           open={open}
           onFileUpload={store.uploadFiles}
         />
-        <ViewModeButton viewMode={store.viewMode} />
-        <SendButton store={store} isSendLoading={isSendLoading} />
+        <div className='flex items-center gap-1 ml-auto'>
+          {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
+          <ViewModeButton viewMode={store.viewMode} />
+          <SendButton store={store} isSendLoading={isSendLoading} />
+        </div>
       </div>
     </div>
   </Card >

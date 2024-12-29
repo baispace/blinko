@@ -423,5 +423,6 @@
   "30days-expiry": "30天有效期",
   "share-link-expired": "分享链接已过期",
   "share-link-expired-desc": "这份共享已过期，请联系管理员重新共享！",
-  "shared": "共享"
+  "shared": "共享",
+  "edited": "已编辑"
 }

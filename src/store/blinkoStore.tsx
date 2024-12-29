@@ -15,6 +15,7 @@ import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@/lib/constant';
 import { makeAutoObservable, observable, action } from 'mobx';
 import { UserStore } from './user';
 import { BaseStore } from './baseStore';
+import { StorageState } from './standard/StorageState';
 
 type filterType = {
   label: string;
@@ -52,7 +53,6 @@ interface UpsertNoteParams {
   updatedAt?: Date;
 }
 
-// 修改Note接口以匹配服务器类型
 interface OfflineNote extends Omit<Note, 'id' | 'references'> {
   id: number;
   isOffline: boolean;
@@ -63,6 +63,20 @@ interface OfflineNote extends Omit<Note, 'id' | 'references'> {
 export class BlinkoStore implements Store {
   sid = 'BlinkoStore';
   noteContent = '';
+  createContentStorage = new StorageState<{ content: string }>({
+    key: 'createModeNote',
+    default: { content: '' }
+  });
+  createAttachmentsStorage = new StorageListState<{ name: string, path: string, type: string, size: number }>({
+    key: 'createModeAttachments',
+  });
+  editContentStorage = new StorageListState<{ content: string, id: number }>({
+    key: 'editModeNotes'
+  });
+  editAttachmentsStorage = new StorageListState<{ name: string, path: string, type: string, size: number, id: number }>({
+    key: 'editModeAttachments'
+  });
+
   isCreateMode: boolean = true
   curSelectedNote: Note | null = null;
   curMultiSelectIds: number[] = [];

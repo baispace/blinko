@@ -123,7 +123,6 @@ export const useEditorInit = (
       store.noteListByIds.call({ ids: store.references })
     }
   }, []);
-
 };
 
 
@@ -165,17 +164,6 @@ export const useEditorFiles = (
     }
   }, [originFiles]);
 };
-
-// export const useEditorPaste = (store: EditorStore, cardRef: React.RefObject<any>) => {
-//   const pastedFiles = usePasteFile(cardRef);
-//   useEffect(() => {
-//     if (pastedFiles) {
-//       store.uploadFiles(pastedFiles);
-//     }
-//   }, [pastedFiles]);
-// };
-
-
 
 export const useEditorHeight = (
   onHeightChange: (() => void) | undefined,

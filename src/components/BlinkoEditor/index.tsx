@@ -6,6 +6,7 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@/server/types"
 import { useRouter } from "next/router"
+import { HandleFileType } from "../Common/Editor/editorUtils"
 type IProps = {
   mode: 'create' | 'edit',
   onSended?: () => void,
@@ -17,9 +18,66 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
   const router = useRouter()
-  
+
+  const store = RootStore.Local(() => ({
+    get noteContent() {
+      if (isCreateMode) {
+        const local = blinko.createContentStorage.value
+        const blinkoContent = blinko.noteContent
+        return local?.content != '' ? local?.content : blinkoContent
+      } else {
+        const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        const blinkoContent = blinko.curSelectedNote?.content ?? ''
+        return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
+      }
+    },
+    set noteContent(v: string) {
+      if (isCreateMode) {
+        blinko.noteContent = v
+        blinko.createContentStorage.save({ content: v })
+      } else {
+        blinko.curSelectedNote!.content = v
+        const hasLocal = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        if (hasLocal) {
+          hasLocal.content = v
+          blinko.editContentStorage.save()
+        } else {
+          blinko.editContentStorage.push({ content: v, id: Number(blinko.curSelectedNote!.id) })
+        }
+      }
+    },
+    get files(): any {
+      if (mode == 'create') {
+        const attachments = blinko.createAttachmentsStorage.list
+        if (attachments.length) {
+          return (attachments)
+        } else {
+          return []
+        }
+      } else {
+        const attachments = blinko.editAttachmentsStorage.list.filter(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        if (attachments?.length) {
+          return attachments
+        } else {
+          return blinko.curSelectedNote?.attachments
+        }
+      }
+    }
+  }))
+
   useEffect(() => {
     blinko.isCreateMode = mode == 'create'
+    if (mode == 'create') {
+      const local = blinko.createContentStorage.value
+      if (local && local.content != '') {
+        blinko.noteContent = local.content
+      }
+    } else {
+      const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+      if (local && local?.content != '') {
+        blinko.curSelectedNote!.content = local!.content
+      }
+    }
   }, [mode])
 
   return <div className="max-h-[100vh]" ref={editorRef} id='global-editor' onClick={() => {
@@ -27,11 +85,11 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps
   }}>
     <Editor
       mode={mode}
-      originFiles={!isCreateMode ? blinko.curSelectedNote?.attachments : []}
+      originFiles={store.files}
       originReference={!isCreateMode ? blinko.curSelectedNote?.references?.map(i => i.toNoteId) : []}
-      content={isCreateMode ? blinko.noteContent! : blinko.curSelectedNote?.content!}
+      content={store.noteContent}
       onChange={v => {
-        isCreateMode ? (blinko.noteContent = v) : (blinko.curSelectedNote!.content = v)
+        store.noteContent = v
       }}
       onHeightChange={() => {
         onHeightChange?.(editorRef.current?.clientHeight ?? 75)
@@ -45,6 +103,8 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps
         if (isCreateMode) {
           //@ts-ignore
           await blinko.upsertNote.call({ references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }) })
+          blinko.createAttachmentsStorage.clear()
+          blinko.createContentStorage.clear()
           if (blinko.noteTypeDefault == NoteType.NOTE && router.pathname != '/notes') {
             await router.push('/notes')
             blinko.forceQuery++
@@ -64,10 +124,19 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps
             attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }),
             references
           })
-        } 
-        onSended?.() 
+          try {
+            const index = blinko.editAttachmentsStorage.list.findIndex(i => i.id == blinko.curSelectedNote!.id)
+            if (index != -1) {
+              blinko.editAttachmentsStorage.remove(index)
+              blinko.editContentStorage.remove(index)
+            }
+          } catch (error) {
+            console.error(error)
+          }
+        }
+        onSended?.()
       }} />
-  </div> 
+  </div>
 })
 
 

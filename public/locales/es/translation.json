@@ -395,5 +395,6 @@
   "30days-expiry": "Caducidad de 30 días.",
   "share-link-expired": "Enlace compartido caducado",
   "share-link-expired-desc": "¡Esta compartición ha caducado, por favor contacta al administrador para volver a compartir!",
-  "shared": "Compartido"
+  "shared": "Compartido",
+  "edited": "Editado"
 }

@@ -35,6 +35,27 @@ export class EditorStore {
   isShowSearch: boolean = false
   onSend: (args: OnSendContentType) => Promise<any>
 
+  get showIsEditText() {
+    if (this.mode == 'edit') {
+      const local = this.blinko.editContentStorage.list.find(i => Number(i.id) == Number(this.blinko.curSelectedNote?.id))
+      if (local && local?.content?.length > 0) {
+        return true
+      } else {
+        return false
+      }
+    }
+    return false
+  }
+
+  reuseServerContent = () => {
+    if (this.mode == 'edit') {
+      const local = this.blinko.editContentStorage.list.find(i => Number(i.id) == Number(this.blinko.curSelectedNote!.id))
+      if (local) {
+        this.vditor?.setValue(local.content)
+      }
+    }
+  }
+
   get canSend() {
     return this.files?.every(i => !i?.uploadPromise?.loading?.value) && (this.files?.length != 0 || this.vditor?.getValue() != '')
   }
@@ -122,7 +143,7 @@ export class EditorStore {
       return
     }
     //|| filePath.endsWith('.mp3') || filePath.endsWith('.wav')
-    if (filePath.endsWith('.webm') ) {
+    if (filePath.endsWith('.webm')) {
       try {
         const doc = await api.ai.speechToText.mutate({ filePath })
         this.insertMarkdown(doc[0]?.pageContent)
@@ -130,7 +151,9 @@ export class EditorStore {
     }
   }
 
-  uploadFiles = (acceptedFiles) => {
+  uploadFiles = async (acceptedFiles) => {
+    const uploadFileType = {}
+
     const _acceptedFiles = acceptedFiles.map(file => {
       const extension = helper.getFileExtension(file.name)
       const previewType = helper.getFileType(file.type, file.name)
@@ -160,6 +183,7 @@ export class EditorStore {
             }
             this.speechToText(data.filePath)
             if (data.filePath) {
+              uploadFileType[file.name] = data.type
               return data.filePath
             }
           }
@@ -168,7 +192,27 @@ export class EditorStore {
       }
     })
     this.files.push(..._acceptedFiles)
-    Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+    await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+    if (this.mode == 'create') {
+      _acceptedFiles.map(i => ({
+        name: i.name,
+        path: i.uploadPromise.value,
+        type: uploadFileType?.[i.name],
+        size: i.size
+      })).map(t => {
+        RootStore.Get(BlinkoStore).createAttachmentsStorage.push(t)
+      })
+    } else {
+      _acceptedFiles.map(i => ({
+        name: i.name,
+        path: i.uploadPromise.value,
+        type: uploadFileType?.[i.name],
+        size: i.size,
+        id: this.blinko.curSelectedNote!.id
+      })).map(t => {
+        RootStore.Get(BlinkoStore).editAttachmentsStorage.push(t)
+      })
+    }
   }
 
   handlePasteFile = ({ fileName, filePath, type, size }: { fileName: string, filePath: string, type: string, size: number }) => {

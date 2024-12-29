@@ -1,3 +1,10 @@
+## [0.31.5](https://github.com/blinko-space/blinko/compare/v0.31.4...v0.31.5) (2024-12-29)
+
+
+### Bug Fixes
+
+* support content local save ([5d6f42b](https://github.com/blinko-space/blinko/commit/5d6f42b9575d83fdcf9d7a2bce2d09cbcaf826d8))
+
 ## [0.31.4](https://github.com/blinko-space/blinko/compare/v0.31.3...v0.31.4) (2024-12-29)
 
 

@@ -1,3 +1,10 @@
+## [0.31.8](https://github.com/blinko-space/blinko/compare/v0.31.7...v0.31.8) (2024-12-30)
+
+
+### Bug Fixes
+
+* streamline image rendering and enhance thumbnail generation [#384](https://github.com/blinko-space/blinko/issues/384) ([4bafa56](https://github.com/blinko-space/blinko/commit/4bafa56a9ea8c00a5497da3c072053bfeec3a6e0))
+
 ## [0.31.7](https://github.com/blinko-space/blinko/compare/v0.31.6...v0.31.7) (2024-12-30)
 
 

@@ -1,3 +1,10 @@
+## [0.31.6](https://github.com/blinko-space/blinko/compare/v0.31.5...v0.31.6) (2024-12-30)
+
+
+### Bug Fixes
+
+* add 'move-down' functionality and update translations [#375](https://github.com/blinko-space/blinko/issues/375) ([996f045](https://github.com/blinko-space/blinko/commit/996f0452dcd3aee27ca2a33866af510f7d63e495))
+
 ## [0.31.5](https://github.com/blinko-space/blinko/compare/v0.31.4...v0.31.5) (2024-12-29)
 
 

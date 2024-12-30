@@ -18,6 +18,7 @@ import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import i18n from "@/lib/i18n";
 import { BlinkoShareDialog } from "../BlinkoShareDialog";
+import { BaseStore } from "@/store/baseStore";
 
 export const ShowEditTimeModel = () => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -74,13 +75,14 @@ export const ShowEditTimeModel = () => {
 
 export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit') => {
   const blinko = RootStore.Get(BlinkoStore)
+  const base = RootStore.Get(BaseStore)
   RootStore.Get(DialogStore).setData({
     size: size as any,
     isOpen: true,
     onlyContent: true,
     isDismissable: false,
     showOnlyContentCloseButton: true,
-    content: <BlinkoEditor mode={mode} key={`editor-key-${mode}`} onSended={() => {
+    content: <BlinkoEditor isInDialog mode={mode} key={`editor-key-${mode}`} onSended={() => {
       RootStore.Get(DialogStore).close()
       blinko.isCreateMode = false
     }} />

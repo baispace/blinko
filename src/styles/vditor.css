@@ -45,6 +45,7 @@
   background-color: transparent;
   color: var(--foreground);
   max-height: 80vh;
+  min-height: var(--min-editor-height);
   padding-top: 5px;
   padding-bottom: 5px;
 }

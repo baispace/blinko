@@ -11,9 +11,11 @@ type IProps = {
   mode: 'create' | 'edit',
   onSended?: () => void,
   onHeightChange?: (height: number) => void,
+  height?: number,
+  isInDialog?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -68,11 +70,15 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange }: IProps
   useEffect(() => {
     blinko.isCreateMode = mode == 'create'
     if (mode == 'create') {
+      if (isInDialog) {
+        document.documentElement.style.setProperty('--min-editor-height', `50vh`)
+      }
       const local = blinko.createContentStorage.value
       if (local && local.content != '') {
         blinko.noteContent = local.content
       }
     } else {
+      document.documentElement.style.setProperty('--min-editor-height', `unset`)
       const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
       if (local && local?.content != '') {
         blinko.curSelectedNote!.content = local!.content

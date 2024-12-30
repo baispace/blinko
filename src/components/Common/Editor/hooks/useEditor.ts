@@ -20,7 +20,7 @@ export const useEditorInit = (
   onSend: (args: OnSendContentType) => Promise<any>,
   mode: 'create' | 'edit',
   originReference: number[] = [],
-  content: string,
+  content: string
 ) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')

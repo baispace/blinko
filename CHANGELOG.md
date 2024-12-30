@@ -1,3 +1,10 @@
+## [0.31.9](https://github.com/blinko-space/blinko/compare/v0.31.8...v0.31.9) (2024-12-30)
+
+
+### Bug Fixes
+
+* restrict registration settings to superadmin only [#387](https://github.com/blinko-space/blinko/issues/387) ([75aac53](https://github.com/blinko-space/blinko/commit/75aac53a21e44b9ff0205cec992243b10176d289))
+
 ## [0.31.8](https://github.com/blinko-space/blinko/compare/v0.31.7...v0.31.8) (2024-12-30)
 
 

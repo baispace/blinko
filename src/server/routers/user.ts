@@ -118,10 +118,10 @@ export const userRouter = router({
         } else {
           const config = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } })
           //@ts-ignore
-          if (config?.value === false || !config) {
+          if (config?.config?.value === false || !config) {
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',
-              message: 'User set is not allow register',
+              message: 'not allow register',
             });
           } else {
             const hasSameUser = await prisma.accounts.findFirst({ where: { name } })

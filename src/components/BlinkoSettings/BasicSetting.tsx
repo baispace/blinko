@@ -173,17 +173,22 @@ export const BasicSetting = observer(() => {
         </AnimatePresence>
       }
 
-      <Item
-        leftContent={<>{t('allow-register')}</>}
-        rightContent={<Switch
-          thumbIcon={store.setRigster.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
-          isDisabled={store.setRigster.loading.value}
-          isSelected={user.canRegister.value}
-          onChange={async e => {
-            await store.setRigster.call(e.target.checked)
-            user.canRegister.call()
-          }}
-        />} />
+
+      {
+        user.role == 'superadmin' &&
+        <Item
+          leftContent={<>{t('allow-register')}</>}
+          rightContent={<Switch
+            thumbIcon={store.setRigster.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
+            isDisabled={store.setRigster.loading.value}
+            isSelected={user.canRegister.value}
+            onChange={async e => {
+              await store.setRigster.call(e.target.checked)
+              user.canRegister.call()
+            }}
+          />} />
+      }
+
       {
         user.role == 'superadmin' &&
         <Item
@@ -202,7 +207,6 @@ export const BasicSetting = observer(() => {
               className="w-[150px] md:w-[300px]"
             />
           </>} />
-
       }
       <Item
         leftContent={<>{t('two-factor-authentication')}</>}

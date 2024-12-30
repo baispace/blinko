@@ -12,6 +12,7 @@ import { MemoizedResourceItem } from "@/components/BlinkoResource/ResourceItem";
 import { Breadcrumbs, BreadcrumbItem, Button } from "@nextui-org/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
+import { PhotoProvider } from "react-photo-view";
 
 const Page = observer(() => {
   const router = useRouter();
@@ -140,30 +141,33 @@ const Page = observer(() => {
           isEmpty={!resources.length}
           emptyMessage={t('no-resources-found')}
         />
+        <PhotoProvider>
+          {resources.length > 0 && (
+            <Droppable droppableId="resources">
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="py-2 min-h-[200px]"
+                >
+                  {resources.map((item, index) => (
+                    <MemoizedResourceItem
+                      key={item.isFolder ? `folder-${item.folderName}` : `file-${item.id}`}
+                      item={item}
+                      index={index}
+                      isSelected={selectedItems.has(item.id!)}
+                      onSelect={resourceStore.toggleSelect}
+                      onFolderClick={(folder) => resourceStore.navigateToFolder(folder, router)}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          )}
 
-        {resources.length > 0 && (
-          <Droppable droppableId="resources">
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="py-2 min-h-[200px]"
-              >
-                {resources.map((item, index) => (
-                  <MemoizedResourceItem
-                    key={item.isFolder ? `folder-${item.folderName}` : `file-${item.id}`}
-                    item={item}
-                    index={index}
-                    isSelected={selectedItems.has(item.id!)}
-                    onSelect={resourceStore.toggleSelect}
-                    onFolderClick={(folder) => resourceStore.navigateToFolder(folder, router)}
-                  />
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        )}
+        </PhotoProvider>
+
       </ScrollArea>
     </DragDropContext>
   );

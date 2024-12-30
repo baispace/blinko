@@ -14,15 +14,15 @@ type IProps = {
   columns?: number
   onReorder?: (newFiles: FileType[]) => void
 }
-const ImageThumbnailRender = ({ file, className }: { file: FileType, className?: string }) => {
+export const ImageThumbnailRender = ({ src, className }: { src: string, className?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(
-       `${file.preview}?thumbnail=true`
+    `${src}?thumbnail=true`
   );
 
   useEffect(() => {
     if (isOriginalError) {
-      setCurrentSrc('/image-fallback.svg')  
+      setCurrentSrc('/image-fallback.svg')
     }
   }, [isOriginalError])
 
@@ -33,10 +33,10 @@ const ImageThumbnailRender = ({ file, className }: { file: FileType, className?:
     }}
     draggable={false}
     onError={() => {
-      if (file.preview === currentSrc) {
+      if (src === currentSrc) {
         return setIsOriginalError(true)
       }
-      setCurrentSrc(file.preview)
+      setCurrentSrc(src)
     }}
     className={`object-cover w-full ${className}`}
   />
@@ -51,7 +51,7 @@ const ImageRender = observer((props: IProps) => {
     if (!preview) {
       return 'flex flex-row gap-2 overflow-x-auto pb-2'
     }
-    
+
     const imageLength = images?.length
     if (columns) {
       return `grid grid-cols-${columns} gap-2`
@@ -72,7 +72,7 @@ const ImageRender = observer((props: IProps) => {
     if (!preview) {
       return 'h-[160px] w-[160px]'
     }
-    
+
     const imageLength = images?.length
     if (columns) {
       return `max-h-[100px] w-auto`
@@ -99,9 +99,9 @@ const ImageRender = observer((props: IProps) => {
       <div className='w-full'>
         <PhotoView src={file.preview}>
           <div>
-            <ImageThumbnailRender 
-              file={file} 
-              className={`mb-4 ${imageHeight} object-cover md:w-[1000px]`} 
+            <ImageThumbnailRender
+              src={file.preview}
+              className={`mb-4 ${imageHeight} object-cover md:w-[1000px]`}
             />
           </div>
         </PhotoView>

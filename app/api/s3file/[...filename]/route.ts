@@ -18,8 +18,7 @@ async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: s
   try {
     const command = new GetObjectCommand({
       Bucket: config.s3Bucket,
-      Key: decodeURIComponent(fullPath),
-      Range: `bytes=0-${MAX_THUMBNAIL_SIZE - 1}`
+      Key: decodeURIComponent(fullPath)
     });
 
     const response = await s3ClientInstance.send(command);

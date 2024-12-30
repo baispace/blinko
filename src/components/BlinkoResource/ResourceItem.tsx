@@ -16,6 +16,7 @@ import { _ } from "@/lib/lodash";
 import { observer } from "mobx-react-lite";
 import { toJS } from "mobx";
 import { motion } from "framer-motion";
+import { ImageThumbnailRender } from "../Common/AttachmentRender/imageRender";
 
 interface ResourceItemProps {
   item: ResourceType;
@@ -105,15 +106,14 @@ const ResourceCard = observer(({
           className="z-10"
         />
         {isImage ? (
-          <PhotoProvider>
             <PhotoView src={item.path}>
-              <Image
-                src={item.path}
-                alt={item.name}
-                className="!w-[28px] !h-[28px] object-cover rounded"
-              />
+              <div>
+                <ImageThumbnailRender
+                  src={item.path}
+                  className="!w-[28px] !h-[28px] object-cover rounded"
+                />
+              </div>
             </PhotoView>
-          </PhotoProvider>
         ) : (
           <div className="w-[28px] h-[28px] flex items-center justify-center">
             <FileIcons path={item.path} size={28} />

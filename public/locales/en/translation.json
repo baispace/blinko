@@ -421,5 +421,6 @@
   "share-link-expired": "Share Link Expired",
   "share-link-expired-desc": "This share has expired please contact the administrator to re-share!",
   "shared": "Shared",
-  "edited": "Edited"
+  "edited": "Edited",
+  "move-down": "Move Down"
 }

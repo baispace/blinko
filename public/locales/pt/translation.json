@@ -329,5 +329,6 @@
   "share-link-expired": "O link compartilhado expirou",
   "share-link-expired-desc": "Esta partilha expirou, por favor entre em contato com o administrador para recriar a partilha!",
   "shared": "Compartilhado",
-  "edited": "Editado"
+  "edited": "Editado",
+  "move-down": "Mover para baixo"
 }

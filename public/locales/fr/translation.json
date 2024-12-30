@@ -393,5 +393,6 @@
   "share-link-expired": "Lien partagé expiré",
   "share-link-expired-desc": "Cette part a expiré, veuillez contacter l'administrateur pour la re-partager !",
   "shared": "Partagé",
-  "edited": "Modifié"
+  "edited": "Modifié",
+  "move-down": "Descendre"
 }

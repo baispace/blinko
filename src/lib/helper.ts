@@ -93,6 +93,14 @@ export const helper = {
         }
       }
     });
+    roots.sort((a, b) => a.sortOrder - b.sortOrder);
+    const sortChildren = (node: TagTreeDBNode) => {
+      if (node.children && node.children.length > 0) {
+        node.children.sort((a, b) => a.sortOrder - b.sortOrder);
+        node.children.forEach(sortChildren);
+      }
+    };
+    roots.forEach(sortChildren);
     return roots;
   },
   generateTagPaths(node: TagTreeDBNode, parentPath: string = ''): string[] {

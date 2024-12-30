@@ -14,6 +14,9 @@ export const tagRouter = router({
         where: {
           accountId: Number(ctx.id)
         },
+        orderBy: {
+          sortOrder: 'asc'
+        },
         distinct: ['id']
       });
       return tags;
@@ -182,5 +185,17 @@ export const tagRouter = router({
       console.log(allNotesId)
       await userCaller(ctx).notes.deleteMany({ ids: allNotesId })
       return true
+    }),
+  updateTagOrder: authProcedure
+    .input(z.object({
+      id: z.number(),
+      sortOrder: z.number()
+    }))
+    .mutation(async function ({ input }) {
+      const { id, sortOrder } = input
+      return await prisma.tag.update({
+        where: { id },
+        data: { sortOrder }
+      })
     }),
 })

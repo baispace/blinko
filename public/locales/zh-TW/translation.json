@@ -434,5 +434,6 @@
   "share-link-expired": "分享連結已過期",
   "share-link-expired-desc": "此分享已過期，請聯繫管理員重新分享！",
   "shared": "共享",
-  "edited": "已編輯"
+  "edited": "已編輯",
+  "move-down": "向下移動"
 }

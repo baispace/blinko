@@ -205,6 +205,76 @@ export const TagListPanel = observer(() => {
                       {t('update-name')}
                     </div>
                   </DropdownItem>
+                  <DropdownItem key="moveUp" onPress={async () => {
+                    if (!isPc) {
+                      eventBus.emit('close-sidebar')
+                    }
+                    const findSiblings = (tags: any[], targetId: number) => {
+                      for (const tag of tags) {
+                        if (tag.id === targetId) {
+                          return tags;
+                        }
+                        if (tag.children) {
+                          const result = findSiblings(tag.children, targetId);
+                          if (result) return result;
+                        }
+                      }
+                      return null;
+                    };
+                    
+                    const siblings = findSiblings(blinko.tagList.value?.listTags || [], element.id as number);
+                    if (siblings) {
+                      const currentIndex = siblings.findIndex(t => t.id === element.id);
+                      if (currentIndex > 0 && siblings[currentIndex - 1]) {
+                        const prevTag = siblings[currentIndex - 1];
+                        await PromiseCall(api.tags.updateTagOrder.mutate({
+                          id: element.id as number,
+                          sortOrder: prevTag.sortOrder - 1
+                        }));
+                        await blinko.tagList.call();
+                      }
+                    }
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <Icon icon="icon-park-outline:up-one" width="20" height="20" />
+                      {t('move-up')}
+                    </div>
+                  </DropdownItem>
+                  <DropdownItem key="moveDown" onPress={async () => {
+                    if (!isPc) {
+                      eventBus.emit('close-sidebar')
+                    }
+                    const findSiblings = (tags: any[], targetId: number) => {
+                      for (const tag of tags) {
+                        if (tag.id === targetId) {
+                          return tags;
+                        }
+                        if (tag.children) {
+                          const result = findSiblings(tag.children, targetId);
+                          if (result) return result;
+                        }
+                      }
+                      return null;
+                    };
+                    
+                    const siblings = findSiblings(blinko.tagList.value?.listTags || [], element.id as number);
+                    if (siblings) {
+                      const currentIndex = siblings.findIndex(t => t.id === element.id);
+                      if (currentIndex >= 0 && currentIndex < siblings.length - 1 && siblings[currentIndex + 1]) {
+                        const nextTag = siblings[currentIndex + 1];
+                        await PromiseCall(api.tags.updateTagOrder.mutate({
+                          id: element.id as number,
+                          sortOrder: nextTag.sortOrder + 1
+                        }));
+                        await blinko.tagList.call();
+                      }
+                    }
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <Icon className="rotate-180" icon="icon-park-outline:up-one" width="20" height="20" />
+                      {t('move-down')}
+                    </div>
+                  </DropdownItem>
                   <DropdownItem key="deletetag" className="text-danger" color="danger" onPress={async () => {
                     PromiseCall(api.tags.deleteOnlyTag.mutate(({ id: element.id as number })))
                   }}>

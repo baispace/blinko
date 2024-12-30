@@ -25,7 +25,6 @@
     "build": "set NODE_ENV=production & next build",
     "build:debug": "set DEBUG=* & next build",
     "build:max": "set NODE_OPTIONS=--max-old-space-size=16384 & set DEBUG=* & next build",
-    "vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
     "start": "prisma migrate & prisma db seed & next start -p 1111",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",

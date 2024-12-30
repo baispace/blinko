@@ -1,3 +1,10 @@
+## [0.31.7](https://github.com/blinko-space/blinko/compare/v0.31.6...v0.31.7) (2024-12-30)
+
+
+### Bug Fixes
+
+* change mobile create dialog min height ([bca71fe](https://github.com/blinko-space/blinko/commit/bca71fec9ce15287691189e999c33f0bcbf11675))
+
 ## [0.31.6](https://github.com/blinko-space/blinko/compare/v0.31.5...v0.31.6) (2024-12-30)
 
 

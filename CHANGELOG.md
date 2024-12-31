@@ -1,3 +1,10 @@
+## [0.32.2](https://github.com/blinko-space/blinko/compare/v0.32.1...v0.32.2) (2024-12-31)
+
+
+### Bug Fixes
+
+* add theme color customization and update translations ([a8faff6](https://github.com/blinko-space/blinko/commit/a8faff649b029bfb28b57be10e30c74a1afaf73e))
+
 ## [0.32.1](https://github.com/blinko-space/blinko/compare/v0.32.0...v0.32.1) (2024-12-31)
 
 

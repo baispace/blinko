@@ -1,3 +1,10 @@
+## [0.32.3](https://github.com/blinko-space/blinko/compare/v0.32.2...v0.32.3) (2024-12-31)
+
+
+### Bug Fixes
+
+* mobile themecolor ([569287d](https://github.com/blinko-space/blinko/commit/569287df5ca9a34c5c55995efadce90fe24f3b2f))
+
 ## [0.32.2](https://github.com/blinko-space/blinko/compare/v0.32.1...v0.32.2) (2024-12-31)
 
 

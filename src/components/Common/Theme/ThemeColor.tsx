@@ -34,7 +34,7 @@ export const ThemeColor = observer(({ onChange, value = colors[0]?.background }:
             backgroundImage: color.background.includes('gradient') ? color.background : 'none',
             border: value === color.background ? '2px solid var(--foreground)' : 'none'
           }}
-          onClick={() => onChange?.(color.background, color.foreground)}
+          onPress={() => onChange?.(color.background, color.foreground)}
         />
       ))}
     </div>

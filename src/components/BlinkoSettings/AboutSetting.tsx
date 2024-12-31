@@ -59,20 +59,21 @@ export const AboutSetting = observer(() => {
             >
               v{store.version.value}
             </Chip>
-            {/* {store.latestVersion.value != '' && store.latestVersion.value != store.version.value && ( */}
-            <Chip
-              classNames={{
-                base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-                content: "drop-shadow shadow-black text-white",
-              }}
-              size="sm"
-              className="cursor-pointer"
-              onClick={() => {
-                window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
-              }}
-            >
-              {t('new-version-available')}: v{store.latestVersion.value}
-            </Chip>
+            {store.latestVersion.value != '' && store.latestVersion.value != store.version.value && (
+              <Chip
+                classNames={{
+                  base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
+                  content: "drop-shadow shadow-black text-white",
+                }}
+                size="sm"
+                className="cursor-pointer"
+                onClick={() => {
+                  window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
+                }}
+              >
+                {t('new-version-available')}: v{store.latestVersion.value}
+              </Chip>
+            )}
           </div>
         </div>
       </div>

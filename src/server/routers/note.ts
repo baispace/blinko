@@ -19,7 +19,6 @@ const extractHashtags = (input: string): string[] => {
   return matches ? matches : [];
 }
 
-
 export const noteRouter = router({
   list: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list', summary: 'Query notes list', protect: true, tags: ['Note'] } })
@@ -319,9 +318,6 @@ export const noteRouter = router({
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
       let { id, isArchived, isRecycle, type, attachments, content, isTop, isShare, references } = input
-      // if (content != null) {
-      //   content = content?.replace(/&#x20;/g, ' ')?.replace(/&#x20;\\/g, '')?.replace(/\\([#<>{}[\]|`*-_.])/g, '$1');
-      // }
       const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '))
       let newTags: Prisma.tagCreateManyInput[] = []
       const handleAddTags = async (tagTree: TagTreeNode[], parentTag: Prisma.tagCreateManyInput | undefined, noteId?: number) => {

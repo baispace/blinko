@@ -10,7 +10,7 @@ export const Extend: IHintExtend[] = [{
     ).map(i => {
       return {
         html: `<span class="blinko-tag-hint">#${i}</span>`,
-        value:`#${i} `
+        value:`#${i}&nbsp;`
       }
     }) ?? []
   }

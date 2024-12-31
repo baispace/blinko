@@ -221,7 +221,7 @@ export const helper = {
     },
     downloadByLink(href: string) {
       const a = document.createElement('a');
-      a.href = href+'?download=true';
+      a.href = href + '?download=true';
       a.click();
     },
   },

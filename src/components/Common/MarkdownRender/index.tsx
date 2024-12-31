@@ -41,9 +41,10 @@ const HighlightTags = observer(({ text, }: { text: any }) => {
   const { pathname } = useRouter()
   if (!text) return text
   try {
-    const lines = text?.split("\n");
+    const decodedText = text.replace(/&nbsp;/g, ' ');
+    const lines = decodedText?.split("\n");
     return lines.map((line, lineIndex) => {
-      const parts = line.split(" ");
+      const parts = line.split(/\s+/);
       const processedParts = parts.map((part, index) => {
         if (part.startsWith('#') && part.length > 1 && part.match(helper.regex.isContainHashTag)) {
           const isShareMode = pathname.includes('share')

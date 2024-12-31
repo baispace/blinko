@@ -42,19 +42,6 @@ export const HashtagButton = observer(({ store, content }: Props) => {
   }, [])
 
   return (
-    //   <div
-    //   onClick={() => store.inertHash()}
-    //   onTouchEnd={e => {
-    //     e.preventDefault()
-    //     store.inertHash()
-    //   }}
-    // >
-    //   <IconButton
-    //     tooltip={t('insert-hashtag')}
-    //     icon="mdi:hashtag"
-    //   />
-    // </div>
-
     <Popover
       placement="bottom"
       isOpen={localStore.show}
@@ -92,8 +79,10 @@ export const HashtagButton = observer(({ store, content }: Props) => {
             ${index === localStore.selectedIndex ? 'bg-hover' : ''}`}
               onClick={e => {
                 localStore.setShow(false)
-                store.vditor?.insertValue(`#${i} `, false)
-                store.focus()
+                store.vditor?.insertValue(`#${i}&nbsp;`, true)
+                setTimeout(() => {
+                  store.focus()
+                }, 300)
               }}
             >
               #{i}

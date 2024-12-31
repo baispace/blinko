@@ -1,3 +1,10 @@
+## [0.32.1](https://github.com/blinko-space/blinko/compare/v0.32.0...v0.32.1) (2024-12-31)
+
+
+### Bug Fixes
+
+* enhance AboutSetting component and clean up unused code [#367](https://github.com/blinko-space/blinko/issues/367) ([dda53a8](https://github.com/blinko-space/blinko/commit/dda53a80b7e47561d9a27c31c3c9cceade830d7a))
+
 # [0.32.0](https://github.com/blinko-space/blinko/compare/v0.31.9...v0.32.0) (2024-12-31)
 
 

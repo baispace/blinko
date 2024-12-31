@@ -114,7 +114,6 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       vditorInput.addEventListener('keydown', handleKeyDown as any);
     }
 
-    // 清理函数，组件卸载时移除事件处理器
     return () => {
       if (vditorInput) {
         vditorInput.removeEventListener('keydown', handleKeyDown as any);

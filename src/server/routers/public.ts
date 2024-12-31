@@ -26,6 +26,22 @@ export const publicRouter = router({
         return packageJson.version
       }, { ttl: 60 * 60 * 1000 })
     }),
+  oauthProviders: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/public/oauth-providers', summary: 'Get OAuth providers info', tags: ['Public'] } })
+    .input(z.void())
+    .output(z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      icon: z.string().optional(),
+    })))
+    .query(async function () {
+      const config = await getGlobalConfig({ useAdmin: true })
+      return (config.oauth2Providers || []).map(provider => ({
+        id: provider.id,
+        name: provider.name,
+        icon: provider.icon,
+      }))
+    }),
   latestVersion: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/public/latest-version', summary: 'Get a new version', tags: ['Public'] } })
     .input(z.void())

@@ -72,7 +72,7 @@ export const CommonLayout = observer(({
   if (!isClient) return <></>
 
   if (router.pathname == '/signin' || router.pathname == '/signup' || router.pathname == '/api-doc' ||
-    router.pathname.includes('/share') || router.pathname == '/editor') {
+    router.pathname.includes('/share') || router.pathname == '/editor' || router.pathname == '/oauth-callback') {
     return <>{children}</>
   }
 

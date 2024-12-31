@@ -420,5 +420,6 @@
   "provider-template": "Plantilla de proveedor",
   "please-add-this-url-to-your-oauth-provider-settings": "Por favor, agregue este URL a la configuración de su proveedor de OAuth.",
   "redirect-url": "Redireccionar URL",
-  "sign-in-with-provider": "Inicia sesión con {{proveedor}}"
+  "sign-in-with-provider": "Inicia sesión con {{proveedor}}",
+  "community": "Comunidad"
 }

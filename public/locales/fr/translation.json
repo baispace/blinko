@@ -416,5 +416,6 @@
   "provider-template": "Modèle de fournisseur",
   "please-add-this-url-to-your-oauth-provider-settings": "Veuillez ajouter cette URL à vos paramètres de fournisseur OAuth.",
   "redirect-url": "Rediriger l'URL",
-  "sign-in-with-provider": "Connectez-vous avec {{ provider }}"
+  "sign-in-with-provider": "Connectez-vous avec {{ provider }}",
+  "community": "Communauté"
 }

@@ -360,5 +360,6 @@
   "provider-template": "Шаблон поставщика",
   "please-add-this-url-to-your-oauth-provider-settings": "Пожалуйста, добавьте этот URL в настройки вашего поставщика службы OAuth.",
   "redirect-url": "Перенаправить URL",
-  "sign-in-with-provider": "Войти с помощью {{ provider }}"
+  "sign-in-with-provider": "Войти с помощью {{ provider }}",
+  "community": "Сообщество"
 }

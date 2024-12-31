@@ -401,5 +401,6 @@
   "provider-template": "プロバイダーテンプレート",
   "please-add-this-url-to-your-oauth-provider-settings": "このURLをOAuthプロバイダー設定に追加してください",
   "redirect-url": "リダイレクトURL",
-  "sign-in-with-provider": "{{ プロバイダ }} でサインイン"
+  "sign-in-with-provider": "{{ プロバイダ }} でサインイン",
+  "community": "コミュニティ"
 }

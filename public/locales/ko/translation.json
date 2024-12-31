@@ -424,5 +424,6 @@
   "provider-template": "제공업체 템플릿",
   "please-add-this-url-to-your-oauth-provider-settings": "이 URL을 OAuth 제공업체 설정에 추가해 주세요.",
   "redirect-url": "리디렉션 URL",
-  "sign-in-with-provider": "{{ provider }}를 사용하여 로그인하세요."
+  "sign-in-with-provider": "{{ provider }}를 사용하여 로그인하세요.",
+  "community": "공동체"
 }

@@ -441,5 +441,6 @@
   "provider-template": "قالب مزود الخدمة",
   "please-add-this-url-to-your-oauth-provider-settings": "يرجى إضافة عنوان الرابط هذا إلى إعدادات مزود خدمة OAuth الخاص بك",
   "redirect-url": "إعادة توجيه عنوان url",
-  "sign-in-with-provider": "قم بتسجيل الدخول باستخدام {{ مزود }}"
+  "sign-in-with-provider": "قم بتسجيل الدخول باستخدام {{ مزود }}",
+  "community": "المجتمع"
 }

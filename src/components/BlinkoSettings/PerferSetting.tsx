@@ -2,7 +2,8 @@ import { observer } from "mobx-react-lite";
 import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input, Tooltip } from "@nextui-org/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
-import ThemeSwitcher from "../Common/ThemeSwitcher";
+import ThemeSwitcher from "../Common/Theme/ThemeSwitcher";
+import { ThemeColor } from "../Common/Theme/ThemeColor";
 import LanguageSwitcher from "../Common/LanguageSwitcher";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
@@ -10,7 +11,6 @@ import { PageSize, PromiseCall } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
-import { Icon } from "@iconify/react";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { GradientBackground } from "../Common/GradientBackground";
 
@@ -39,6 +39,37 @@ export const PerferSetting = observer(() => {
           value: value
         }))
       }} />} />
+    <Item
+      leftContent={<>{t('theme-color')}</>}
+      rightContent={<ThemeColor
+        value={blinko.config.value?.themeColor}
+        onChange={async (background, foreground) => {
+          await PromiseCall(api.config.update.mutate({
+            key: 'themeColor',
+            value: background
+          }), { autoAlert: false })
+          await PromiseCall(api.config.update.mutate({
+            key: 'themeForegroundColor',
+            value: foreground
+          }))
+
+          const darkElement = document.querySelector('.dark')
+          if (darkElement) {
+            //@ts-ignore
+            darkElement.style.setProperty('--primary', background || "#f9f9f9")
+            //@ts-ignore
+            darkElement.style.setProperty('--primary-foreground', foreground || "#000000")
+          }
+
+          const lightElement = document.querySelector('.light')
+          if (lightElement) {
+            //@ts-ignore
+            lightElement.style.setProperty('--primary', background || "black")
+            //@ts-ignore
+            lightElement.style.setProperty('--primary-foreground', foreground || "hsl(210 40% 98%)")
+          }
+        }}
+      />} />
     <Item
       leftContent={<>{t('language')}</>}
       rightContent={<LanguageSwitcher value={blinko.config.value?.language} onChange={value => {

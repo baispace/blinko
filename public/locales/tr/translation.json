@@ -371,5 +371,6 @@
   "please-add-this-url-to-your-oauth-provider-settings": "Lütfen bu URL'yi oauth sağlayıcı ayarlarına ekleyin.",
   "redirect-url": "Yönlendirme url'si",
   "sign-in-with-provider": "{{ sağlayıcı }} ile giriş yap",
-  "community": "Topluluk"
+  "community": "Topluluk",
+  "theme-color": "Tema Rengi"
 }

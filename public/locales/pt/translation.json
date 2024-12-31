@@ -353,5 +353,6 @@
   "please-add-this-url-to-your-oauth-provider-settings": "Por favor, adicione este URL às configurações do seu provedor de OAuth.",
   "redirect-url": "Redirecionar url.",
   "sign-in-with-provider": "Entrar com {{provider}}",
-  "community": "Comunidade"
+  "community": "Comunidade",
+  "theme-color": "Cor do Tema"
 }

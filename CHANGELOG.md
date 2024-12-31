@@ -1,3 +1,16 @@
+# [0.32.0](https://github.com/blinko-space/blinko/compare/v0.31.9...v0.32.0) (2024-12-31)
+
+
+### Bug Fixes
+
+* add community translations and enhance AboutSetting component ([46150d6](https://github.com/blinko-space/blinko/commit/46150d6cf01af1599e61668177a4052df1bb7f29))
+
+
+### Features
+
+* enhance OAuth2 provider integration and update translations ([c1ad05c](https://github.com/blinko-space/blinko/commit/c1ad05cfd731c0578efb540e079bf519c2cbc6ba))
+* implement tabbed settings interface with dynamic visibility based on user roles ([559eb23](https://github.com/blinko-space/blinko/commit/559eb23858a161a4dc681c453ab1f14fe70f6f1d))
+
 ## [0.31.9](https://github.com/blinko-space/blinko/compare/v0.31.8...v0.31.9) (2024-12-30)
 
 

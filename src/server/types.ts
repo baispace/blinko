@@ -25,7 +25,9 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('webhookEndpoint'),
   z.literal('toolbarVisibility'),
   z.literal('twoFactorEnabled'),
-  z.literal('twoFactorSecret')
+  z.literal('twoFactorSecret'),
+  z.literal('themeColor'),
+  z.literal('themeForegroundColor')
 ]);
 
 export const ZConfigKey = z.union([
@@ -109,6 +111,8 @@ export const ZConfigSchema = z.object({
   excludeEmbeddingTagId: z.number().optional(),
   language: z.any().optional(),
   theme: z.any().optional(),
+  themeColor: z.any().optional(),
+  themeForegroundColor: z.any().optional(),
   webhookEndpoint: z.any().optional(),
   twoFactorEnabled: z.boolean().optional(),
   twoFactorSecret: z.string().optional(),

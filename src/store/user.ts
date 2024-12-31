@@ -108,10 +108,28 @@ export class UserStore implements User, Store {
       this.updatePWAColor(themeToSet);
       this.themeInitialized = true;
     }
-    console.log(this.isLogin, 'isLogin')
+
+    const darkElement = document.querySelector('.dark')
+    const lightElement = document.querySelector('.light')
+    const config = await this.blinko.config.call();
+    
+    if (config?.themeColor && config?.themeForegroundColor) {
+      if (darkElement) {
+        //@ts-ignore
+        darkElement.style.setProperty('--primary', config.themeColor)
+        //@ts-ignore
+        darkElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+      }
+      if (lightElement) {
+        //@ts-ignore
+        lightElement.style.setProperty('--primary', config.themeColor)
+        //@ts-ignore
+        lightElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+      }
+    }
+
     if (this.isLogin) {
       try {
-        const config = await this.blinko.config.call();
         console.log('initializeSettings in login loaded')
 
         if (config) {

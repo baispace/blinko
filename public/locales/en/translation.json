@@ -445,5 +445,6 @@
   "please-add-this-url-to-your-oauth-provider-settings": "Please add this url to your oauth provider settings",
   "redirect-url": "Redirect url",
   "sign-in-with-provider": "Sign in with {{ provider }}",
-  "community": "Community"
+  "community": "Community",
+  "theme-color": "Theme Color"
 }

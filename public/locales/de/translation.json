@@ -428,5 +428,6 @@
   "please-add-this-url-to-your-oauth-provider-settings": "Bitte fügen Sie diese URL zu Ihren OAuth-Anbieter-Einstellungen hinzu.",
   "redirect-url": "Weiterleitungs-URL",
   "sign-in-with-provider": "Melden Sie sich mit {{ Anbieter }} an.",
-  "community": "Gemeinschaft"
+  "community": "Gemeinschaft",
+  "theme-color": "Hauptfarbe"
 }

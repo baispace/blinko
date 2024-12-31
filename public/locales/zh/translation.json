@@ -448,5 +448,6 @@
   "please-add-this-url-to-your-oauth-provider-settings": "请将此网址添加到您的OAuth供应商设置中。",
   "redirect-url": "重定向URL",
   "sign-in-with-provider": "使用{{ provider }}登录",
-  "community": "社区"
+  "community": "社区",
+  "theme-color": "主题颜色"
 }

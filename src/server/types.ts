@@ -55,10 +55,24 @@ export const ZConfigKey = z.union([
   z.literal('spotifyConsumerSecret'),
   z.literal('isCloseBackgroundAnimation'),
   z.literal('customBackgroundUrl'),
+  z.literal('oauth2Providers'),
   ZUserPerferConfigKey
 ]);
 
 export type ConfigKey = z.infer<typeof ZConfigKey>;
+
+export const ZOAuth2ProviderSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string().optional(),
+  wellKnown: z.string().optional(),
+  scope: z.string().optional(),
+  authorizationUrl: z.string().optional(),
+  tokenUrl: z.string(),
+  userinfoUrl: z.string(),
+  clientId: z.string(),
+  clientSecret: z.string(),
+});
 
 export const ZConfigSchema = z.object({
   isAutoArchived: z.boolean().optional(),
@@ -100,6 +114,7 @@ export const ZConfigSchema = z.object({
   twoFactorSecret: z.string().optional(),
   spotifyConsumerKey: z.string().optional(),
   spotifyConsumerSecret: z.string().optional(),
+  oauth2Providers: z.array(ZOAuth2ProviderSchema).optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

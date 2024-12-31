@@ -20,6 +20,7 @@ model accounts {
   apiToken  String   @default("") @db.VarChar
   note      Int      @default(0)
   role      String   @default("") @db.VarChar
+  loginType String   @default("") @db.VarChar
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
   notes     notes[]

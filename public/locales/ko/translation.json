@@ -426,5 +426,10 @@
   "redirect-url": "리디렉션 URL",
   "sign-in-with-provider": "{{ provider }}를 사용하여 로그인하세요.",
   "community": "공동체",
-  "theme-color": "테마 색상"
+  "theme-color": "테마 색상",
+  "link-account": "계정 연결",
+  "select-account": "계정 선택",
+  "link-account-warning": "계정을 연결하는 경우 현재 계정에서의 데이터가 연결된 계정으로 동기화되지 않음을 주의해 주세요.",
+  "unlink-account": "연결 끊기",
+  "unlink-account-tips": "이 계정으로 모든 연관 항목에 액세스를 확인합니까?"
 }

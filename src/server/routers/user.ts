@@ -34,6 +34,81 @@ export const userRouter = router({
     .query(async () => {
       return await prisma.accounts.findMany()
     }),
+  nativeAccountList: authProcedure
+    .meta({
+      openapi: {
+        method: 'GET', path: '/v1/user/native-account-list', summary: 'Find native account list',
+        description: 'find native account list which use username and password to login', tags: ['User']
+      }
+    })
+    .input(z.void())
+    .output(z.array(z.object({
+      id: z.number().int(),
+      name: z.string(),
+      nickname: z.string(),
+    })))
+    .query(async () => {
+      const accounts = await prisma.accounts.findMany({
+        where: {
+          loginType: '',
+          NOT: {
+            id: {
+              in: (await prisma.accounts.findMany({
+                where: { linkAccountId: { not: null } },
+                select: { linkAccountId: true }
+              })).map(a => a.linkAccountId!)
+            }
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          nickname: true,
+        }
+      })
+      return accounts
+    }),
+  linkAccount: authProcedure
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/user/link-account', summary: 'Link account',
+        description: 'Link account', tags: ['User']
+      }
+    })
+    .input(z.object({
+      id: z.number(),
+      originalPassword: z.string()
+    }))
+    .output(z.boolean())
+    .mutation(async ({ input, ctx }) => {
+      const user = await prisma.accounts.findFirst({ where: { id: input.id } })
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      }
+      if (input.originalPassword) {
+        if (!(await verifyPassword(input.originalPassword, user?.password ?? ''))) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is incorrect' });
+        }
+      }
+      await prisma.accounts.update({ where: { id: Number(ctx.id) }, data: { linkAccountId: user.id } })
+      return true
+    }),
+  unlinkAccount: authProcedure
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/user/unlink-account', summary: 'Unlink account',
+        description: 'Unlink account', tags: ['User']
+      }
+    })
+    .input(z.object({ id: z.number() }))
+    .output(z.boolean())
+    .mutation(async ({ input }) => {
+      await prisma.accounts.updateMany({
+        where: { linkAccountId: input.id },
+        data: { linkAccountId: null }
+      })
+      return true
+    }),
   detail: authProcedure
     .meta({
       openapi: {
@@ -46,18 +121,23 @@ export const userRouter = router({
       id: z.number(),
       name: z.string(),
       nickName: z.string(),
-      token: z.string()
+      token: z.string(),
+      isLinked: z.boolean(),
+      loginType: z.string()
     }))
     .query(async ({ input, ctx }) => {
       const user = await prisma.accounts.findFirst({ where: { id: input.id } })
       if (user?.id !== Number(ctx.id) && user?.role !== 'superadmin') {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
       }
+      const isLinked = await prisma.accounts.findFirst({ where: { linkAccountId: input.id } })
       return {
         id: input.id,
         name: user?.name ?? '',
         nickName: user?.nickname ?? '',
-        token: user?.apiToken ?? ''
+        token: user?.apiToken ?? '',
+        loginType: user?.loginType ?? '',
+        isLinked: isLinked ? true : false
       }
     }),
   canRegister: publicProcedure
@@ -92,19 +172,19 @@ export const userRouter = router({
         const passwordHash = await hashPassword(password)
         const count = await prisma.accounts.count()
         if (count == 0) {
-          const res = await prisma.accounts.create({ 
-            data: { 
-              name, 
-              password: passwordHash, 
-              nickname: name, 
+          const res = await prisma.accounts.create({
+            data: {
+              name,
+              password: passwordHash,
+              nickname: name,
               role: 'superadmin',
-            } 
+            }
           })
-          await prisma.accounts.update({ 
-            where: { id: res.id }, 
-            data: { 
-              apiToken: await genToken({ id: res.id, name, role: 'superadmin' }) 
-            } 
+          await prisma.accounts.update({
+            where: { id: res.id },
+            data: {
+              apiToken: await genToken({ id: res.id, name, role: 'superadmin' })
+            }
           })
           await prisma.config.create({
             data: {
@@ -314,7 +394,7 @@ export const userRouter = router({
         const userNotes = await prisma.notes.findMany({
           where: { accountId: id }
         })
-        
+
         await deleteNotes(userNotes.map(note => note.id), ctx)
 
         await prisma.config.deleteMany({

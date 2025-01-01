@@ -372,5 +372,10 @@
   "redirect-url": "Yönlendirme url'si",
   "sign-in-with-provider": "{{ sağlayıcı }} ile giriş yap",
   "community": "Topluluk",
-  "theme-color": "Tema Rengi"
+  "theme-color": "Tema Rengi",
+  "link-account": "Hesabı Bağla",
+  "select-account": "Hesap Seçin",
+  "link-account-warning": "Lütfen dikkat edin, hesaplarınızı bağlarsanız, mevcut hesaptaki veriler bağlı hesaba senkronize edilmeyecektir.",
+  "unlink-account": "Hesabı Bağlantısını Kes",
+  "unlink-account-tips": "Bu hesapla tüm kuruluşlara erişimi onaylıyor musunuz?"
 }

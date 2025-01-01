@@ -12,20 +12,21 @@ datasource db {
 }
 
 model accounts {
-  id        Int      @id @default(autoincrement())
-  name      String   @default("") @db.VarChar
-  nickname  String   @default("") @db.VarChar
-  password  String   @default("") @db.VarChar
-  image     String   @default("") @db.VarChar
-  apiToken  String   @default("") @db.VarChar
-  note      Int      @default(0)
-  role      String   @default("") @db.VarChar
-  loginType String   @default("") @db.VarChar
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-  notes     notes[]
-  configs   config[]
-  tags      tag[]
+  id            Int      @id @default(autoincrement())
+  name          String   @default("") @db.VarChar
+  nickname      String   @default("") @db.VarChar
+  password      String   @default("") @db.VarChar
+  image         String   @default("") @db.VarChar
+  apiToken      String   @default("") @db.VarChar
+  note          Int      @default(0)
+  role          String   @default("") @db.VarChar
+  loginType     String   @default("") @db.VarChar
+  linkAccountId Int?
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+  notes         notes[]
+  configs       config[]
+  tags          tag[]
 }
 
 model attachments {
@@ -55,28 +56,28 @@ model config {
 }
 
 model notes {
-  id            Int             @id @default(autoincrement())
-  type          Int             @default(0)
-  content       String          @default("") @db.VarChar
-  isArchived    Boolean         @default(false)
-  isRecycle     Boolean         @default(false)
-  isShare       Boolean         @default(false)
-  isTop         Boolean         @default(false)
-  isReviewed    Boolean         @default(false)
-  sharePassword String          @default("") @db.VarChar
-  shareEncryptedUrl String?     @db.VarChar
-  shareExpiryDate DateTime?     @db.Timestamptz(6)
-  shareMaxView Int?            @default(0)
-  shareViewCount Int?          @default(0)
-  metadata      Json?           @db.Json
-  accountId     Int?
-  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime        @updatedAt @db.Timestamptz(6)
-  attachments   attachments[]
-  tags          tagsToNote[]
-  account       accounts?       @relation(fields: [accountId], references: [id])
-  referencedBy  noteReference[] @relation("ReferencedNote")
-  references    noteReference[] @relation("ReferencingNote")
+  id                Int             @id @default(autoincrement())
+  type              Int             @default(0)
+  content           String          @default("") @db.VarChar
+  isArchived        Boolean         @default(false)
+  isRecycle         Boolean         @default(false)
+  isShare           Boolean         @default(false)
+  isTop             Boolean         @default(false)
+  isReviewed        Boolean         @default(false)
+  sharePassword     String          @default("") @db.VarChar
+  shareEncryptedUrl String?         @db.VarChar
+  shareExpiryDate   DateTime?       @db.Timestamptz(6)
+  shareMaxView      Int?            @default(0)
+  shareViewCount    Int?            @default(0)
+  metadata          Json?           @db.Json
+  accountId         Int?
+  createdAt         DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime        @updatedAt @db.Timestamptz(6)
+  attachments       attachments[]
+  tags              tagsToNote[]
+  account           accounts?       @relation(fields: [accountId], references: [id])
+  referencedBy      noteReference[] @relation("ReferencedNote")
+  references        noteReference[] @relation("ReferencingNote")
 }
 
 model tag {

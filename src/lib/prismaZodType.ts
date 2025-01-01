@@ -14,6 +14,8 @@ export const accountsSchema = z.object({
   apiToken: z.string(),
   note: z.number().int(),
   role: z.string(),
+  loginType: z.string().optional(),
+  linkAccountId: z.number().int().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

@@ -403,5 +403,10 @@
   "redirect-url": "リダイレクトURL",
   "sign-in-with-provider": "{{ プロバイダ }} でサインイン",
   "community": "コミュニティ",
-  "theme-color": "テーマカラー"
+  "theme-color": "テーマカラー",
+  "link-account": "アカウントをリンクする",
+  "select-account": "アカウントを選択",
+  "link-account-warning": "アカウントをリンクすると、現在のアカウントからのデータはリンクされたアカウントに同期されませんのでご注意ください。",
+  "unlink-account": "アカウントのリンク解除",
+  "unlink-account-tips": "このアカウントで全ての関連付けにアクセスできることを確認しますか？"
 }

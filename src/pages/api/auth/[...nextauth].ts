@@ -62,6 +62,9 @@ async function getProviderConfigList() {
         return GitHubProvider({
           clientId: provider.clientId,
           clientSecret: provider.clientSecret,
+          httpOptions: {
+            timeout: 20000
+          },
         });
       case 'google':
         return GoogleProvider({
@@ -174,7 +177,6 @@ export default async function auth(req: any, res: any) {
             const user = await prisma.accounts.findFirst({
               where: {
                 name: credentials!.name,
-                loginType: 'oauth'
               }
             });
 
@@ -188,6 +190,7 @@ export default async function auth(req: any, res: any) {
               user.name,
               credentials!.twoFactorCode
             );
+
             return {
               id: user.id.toString(),
               name: user.name,
@@ -286,7 +289,7 @@ export default async function auth(req: any, res: any) {
     callbacks: {
       async signIn({ user, account }) {
         console.log({ user, account })
-        const userName = user.id ?? user.name ?? ''
+        let userName = user.id ?? user.name ?? ''
         if (account?.type === 'oauth') {
           try {
             const existingUser = await prisma.accounts.findFirst({
@@ -314,12 +317,18 @@ export default async function auth(req: any, res: any) {
               //@ts-ignore
               user.nickname = newUser.nickname;
             } else {
+              let realUser = existingUser;
+              if (existingUser.linkAccountId) {
+                realUser = (await prisma.accounts.findFirst({ where: { id: existingUser.linkAccountId } }))!
+                userName = realUser.name
+              }
+
               const config = await getGlobalConfig({
                 ctx: {
-                  id: existingUser.id.toString(),
-                  role: existingUser.role as 'superadmin' | 'user',
+                  id: realUser.id.toString(),
+                  role: realUser.role as 'superadmin' | 'user',
                   name: userName,
-                  sub: existingUser.id.toString(),
+                  sub: realUser.id.toString(),
                   exp: 0,
                   iat: 0
                 }
@@ -338,13 +347,13 @@ export default async function auth(req: any, res: any) {
                 }
               });
               //@ts-ignore
-              user.id = existingUser.id.toString();
+              user.id = realUser.id.toString();
               //@ts-ignore
               user.name = userName;
               //@ts-ignore
-              user.role = existingUser.role;
+              user.role = realUser.role;
               //@ts-ignore
-              user.nickname = existingUser.nickname;
+              user.nickname = realUser.nickname;
             }
           } catch (error) {
             console.error('OAuth sign in error:', error);

@@ -195,7 +195,7 @@ const Page = observer(() => {
               variant="light"
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
               size="sm"
-              onClick={() => scroll('left')}
+              onPress={() => scroll('left')}
             >
               <Icon icon="tabler:chevron-left" width="18" />
             </Button>
@@ -230,7 +230,7 @@ const Page = observer(() => {
               variant="light"
               className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
               size="sm"
-              onClick={() => scroll('right')}
+              onPress={() => scroll('right')}
             >
               <Icon icon="tabler:chevron-right" width="18" />
             </Button>

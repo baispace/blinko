@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Switch, Tooltip } from "@nextui-org/react";
+import { Button, Card, Input, Switch, Tooltip, Select, SelectItem } from "@nextui-org/react";
 import { RootStore } from "@/store";
 import { Icon } from "@iconify/react";
 import { UserStore } from "@/store/user";
@@ -19,6 +19,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShowGen2FATokenModal } from "../Common/TwoFactorModal/gen2FATokenModal";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { eventBus } from "@/lib/event";
+import { LinkAccountModal } from "../Common/Modals/LinkAccountModal";
+import { showTipsDialog } from "../Common/TipsDialog";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 export const BasicSetting = observer(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -88,6 +91,36 @@ export const BasicSetting = observer(() => {
                   content: <UpdateUserPassword />
                 })
               }} />
+            {
+              user.userInfo?.value?.loginType == 'oauth' &&
+              <Button variant="flat" isIconOnly startContent={<Icon icon="tabler:link" width="20" height="20" />} size='sm'
+                onPress={e => {
+                  RootStore.Get(DialogStore).setData({
+                    title: t('link-account'),
+                    isOpen: true,
+                    size: 'md',
+                    content: <LinkAccountModal />
+                  })
+                }} />
+            }
+
+            {
+              user.userInfo?.value?.isLinked &&
+              <Button color="danger" variant="flat" isIconOnly startContent={<Icon icon="lsicon:unlink-filled" width="20" height="20" />} size='sm'
+                onPress={e => {
+                  showTipsDialog({
+                    title: t('unlink-account'),
+                    content: t('unlink-account-tips'),
+                    onConfirm: async () => {
+                      await PromiseCall(api.users.unlinkAccount.mutate({
+                        id: user.userInfo.value!.id
+                      }))
+                      eventBus.emit('user:signout')
+                      RootStore.Get(DialogStandaloneStore).close()
+                    }
+                  })
+                }} />
+            }
           </div>
         }
       />

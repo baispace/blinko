@@ -429,5 +429,10 @@
   "redirect-url": "Weiterleitungs-URL",
   "sign-in-with-provider": "Melden Sie sich mit {{ Anbieter }} an.",
   "community": "Gemeinschaft",
-  "theme-color": "Hauptfarbe"
+  "theme-color": "Hauptfarbe",
+  "link-account": "Verknüpfen Konto",
+  "select-account": "Konto auswählen",
+  "link-account-warning": "Bitte beachten Sie, dass wenn Sie Ihre Konten verknüpfen, werden keine Daten vom aktuellen Konto mit dem verbundenen Konto synchronisiert.",
+  "unlink-account": "Konto trennen",
+  "unlink-account-tips": "Bestätigen Sie den Zugriff auf alle Verbände mit diesem Konto?"
 }

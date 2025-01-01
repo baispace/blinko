@@ -446,5 +446,11 @@
   "redirect-url": "Redirect url",
   "sign-in-with-provider": "Sign in with {{ provider }}",
   "community": "Community",
-  "theme-color": "Theme Color"
+  "theme-color": "Theme Color",
+  "rest-user-info": "Rest user info",
+  "link-account": "Link Account",
+  "select-account": "Select Account",
+  "link-account-warning": "Please note that if you link your accounts, any data from the current account will not be synced to the linked account.",
+  "unlink-account": "Unlink Account",
+  "unlink-account-tips": "Do you confirm access to all associations with this account?"
 }

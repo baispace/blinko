@@ -354,5 +354,10 @@
   "redirect-url": "Redirecionar url.",
   "sign-in-with-provider": "Entrar com {{provider}}",
   "community": "Comunidade",
-  "theme-color": "Cor do Tema"
+  "theme-color": "Cor do Tema",
+  "link-account": "Vincular Conta",
+  "select-account": "Selecionar Conta",
+  "link-account-warning": "Por favor, observe que se você vincular suas contas, os dados da conta atual não serão sincronizados com a conta vinculada.",
+  "unlink-account": "Desvincular Conta",
+  "unlink-account-tips": "Você confirma o acesso a todas as associações com esta conta?"
 }

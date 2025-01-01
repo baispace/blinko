@@ -146,7 +146,7 @@ export default function Component() {
                 {providers.map((provider) => (
                   <Button
                     key={provider.id}
-                    className="w-full text-primary-foreground"
+                    className="w-full text-primary"
                     color="primary"
                     variant="bordered"
                     startContent={provider.icon && <Icon icon={provider.icon} className="text-xl" />}

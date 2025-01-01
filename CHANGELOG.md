@@ -1,3 +1,10 @@
+## [0.32.7](https://github.com/blinko-space/blinko/compare/v0.32.6...v0.32.7) (2025-01-01)
+
+
+### Bug Fixes
+
+* add 'login-type' translation key across multiple languages ([0c01aa2](https://github.com/blinko-space/blinko/commit/0c01aa28213d23d3c8d43182469b8dd75cebfd12))
+
 ## [0.32.6](https://github.com/blinko-space/blinko/compare/v0.32.5...v0.32.6) (2025-01-01)
 
 

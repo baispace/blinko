@@ -86,7 +86,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     <div ref={cardRef}
       className="overflow-visible relative"
       onKeyDown={e => {
-        console.log('onKeyDown')
+        store.handleKeyDown(e)
         onHeightChange?.()
         if (isPc) return
         store.adjustMobileEditorHeight()

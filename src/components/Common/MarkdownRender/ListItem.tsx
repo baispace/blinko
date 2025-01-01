@@ -66,14 +66,22 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
     let newContent = content;
     const targetState = hasChildren ? !allChildrenChecked : !isChecked;
 
-    const oldMark = `* [${isChecked ? 'x' : ' '}]${taskText}`;
-    const newMark = `* [${targetState ? 'x' : ' '}]${taskText}`;
+    const oldMark = isChecked ? 
+      content.includes('- [x]') ? `- [x]${taskText}` : `* [x]${taskText}` :
+      content.includes('- [ ]') ? `- [ ]${taskText}` : `* [ ]${taskText}`;
+    const newMark = targetState ? 
+      content.includes('- [') ? `- [x]${taskText}` : `* [x]${taskText}` :
+      content.includes('- [') ? `- [ ]${taskText}` : `* [ ]${taskText}`;
     newContent = newContent.replace(oldMark, newMark);
 
     if (hasChildren) {
       childTasks.forEach(task => {
-        const oldChildMark = `* [${task.checked ? 'x' : ' '}]${task.text}`;
-        const newChildMark = `* [${targetState ? 'x' : ' '}]${task.text}`;
+        const oldChildMark = task.checked ? 
+          content.includes('- [x]') ? `- [x]${task.text}` : `* [x]${task.text}` :
+          content.includes('- [ ]') ? `- [ ]${task.text}` : `* [ ]${task.text}`;
+        const newChildMark = targetState ? 
+          content.includes('- [') ? `- [x]${task.text}` : `* [x]${task.text}` :
+          content.includes('- [') ? `- [ ]${task.text}` : `* [ ]${task.text}`;
         newContent = newContent.replace(oldChildMark, newChildMark);
       });
     }

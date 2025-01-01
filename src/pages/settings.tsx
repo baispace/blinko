@@ -185,57 +185,59 @@ const Page = observer(() => {
     });
   };
 
-  return <div className="h-mobile-full">
-    <ScrollArea onBottom={() => { }} className="px-2 md:px-6 pt-2 pb-6">
-      <div className="max-w-screen-lg mx-auto flex flex-col gap-6">
-        <div className="relative group" ref={containerRef}>
-          {showLeftArrow && (
-            <Button
-              isIconOnly
-              variant="light"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
-              size="sm"
-              onPress={() => scroll('left')}
-            >
-              <Icon icon="tabler:chevron-left" width="18" />
-            </Button>
-          )}
-          <Tabs
-            aria-label="Settings categories"
-            color="primary"
-            selectedKey={selected}
-            onSelectionChange={(key) => setSelected(key as string)}
-            classNames={{
-              base: "w-full",
-              tabList: "gap-2 relative rounded-2xl p-1 bg-default-100 w-full bg-background text-foreground overflow-x-auto scroll-smooth",
-              cursor: "shadow-medium rounded-2xl",
-              tab: "max-w-fit px-2 h-10 data-[selected=true]:text-foreground rounded-2xl data-[selected=true]:bg-background",
-            }}
+  return <div className="h-mobile-full flex flex-col">
+    <div className="sticky top-0 z-10 w-full">
+      <div className="relative  md:max-w-[980px] md:-translate-x-[3px] mx-3 md:mx-auto backdrop-blur-md bg-background rounded-2xl" ref={containerRef}>
+        {showLeftArrow && (
+          <Button
+            isIconOnly
+            variant="light"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
+            size="sm"
+            onPress={() => scroll('left')}
           >
-            {getVisibleSettings().map(setting => (
-              <Tab
-                key={setting.key}
-                title={
-                  <div className="flex items-center space-x-2">
-                    <Icon icon={setting.icon} width="18" />
-                    <span className="text-sm">{setting.title}</span>
-                  </div>
-                }
-              />
-            ))}
-          </Tabs>
-          {showRightArrow && (
-            <Button
-              isIconOnly
-              variant="light"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
-              size="sm"
-              onPress={() => scroll('right')}
-            >
-              <Icon icon="tabler:chevron-right" width="18" />
-            </Button>
-          )}
-        </div>
+            <Icon icon="tabler:chevron-left" width="18" />
+          </Button>
+        )}
+        <Tabs
+          aria-label="Settings categories"
+          color="primary"
+          selectedKey={selected}
+          onSelectionChange={(key) => setSelected(key as string)}
+          classNames={{
+            base: "w-full",
+            tabList: "gap-2 relative p-2 w-full bg-transparent text-foreground overflow-x-auto scroll-smooth",
+            cursor: "shadow-medium rounded-xl bg-primary",
+            tab: "max-w-fit px-3 h-10 data-[selected=true]:text-primary-foreground rounded-xl",
+          }}
+        >
+          {getVisibleSettings().map(setting => (
+            <Tab
+              key={setting.key}
+              title={
+                <div className="flex items-center space-x-2">
+                  <Icon icon={setting.icon} width="18" />
+                  <span className="text-sm">{setting.title}</span>
+                </div>
+              }
+            />
+          ))}
+        </Tabs>
+        {showRightArrow && (
+          <Button
+            isIconOnly
+            variant="light"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm"
+            size="sm"
+            onPress={() => scroll('right')}
+          >
+            <Icon icon="tabler:chevron-right" width="18" />
+          </Button>
+        )}
+      </div>
+    </div>
+    <ScrollArea onBottom={() => { }} className="flex-1">
+      <div className="max-w-[1024px] mx-auto flex flex-col gap-6 px-4 md:px-6 py-4">
         {getCurrentComponent()}
       </div>
     </ScrollArea>

@@ -1,3 +1,10 @@
+## [0.32.8](https://github.com/blinko-space/blinko/compare/v0.32.7...v0.32.8) (2025-01-01)
+
+
+### Bug Fixes
+
+* enhance settings page layout and styling ([8b804ee](https://github.com/blinko-space/blinko/commit/8b804eebf3045402ece22f39c6c44b266859f575))
+
 ## [0.32.7](https://github.com/blinko-space/blinko/compare/v0.32.6...v0.32.7) (2025-01-01)
 
 

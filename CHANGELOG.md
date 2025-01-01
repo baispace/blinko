@@ -1,3 +1,10 @@
+## [0.32.9](https://github.com/blinko-space/blinko/compare/v0.32.8...v0.32.9) (2025-01-01)
+
+
+### Bug Fixes
+
+* update HashtagButton to trigger onChange after inserting a hashtag ([ce71596](https://github.com/blinko-space/blinko/commit/ce71596024567f7575b73b0c48df596003ec75ae))
+
 ## [0.32.8](https://github.com/blinko-space/blinko/compare/v0.32.7...v0.32.8) (2025-01-01)
 
 

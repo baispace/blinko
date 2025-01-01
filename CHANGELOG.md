@@ -1,3 +1,10 @@
+## [0.32.4](https://github.com/blinko-space/blinko/compare/v0.32.3...v0.32.4) (2025-01-01)
+
+
+### Bug Fixes
+
+* implement TAB key functionality in editor for better text formatting ([8cb0dd5](https://github.com/blinko-space/blinko/commit/8cb0dd5656d8f726c4004f09dc304862b1de92ab))
+
 ## [0.32.3](https://github.com/blinko-space/blinko/compare/v0.32.2...v0.32.3) (2024-12-31)
 
 

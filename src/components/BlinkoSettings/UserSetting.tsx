@@ -82,7 +82,9 @@ export const UserSetting = observer(() => {
         leftContent={blinko.userList.value ? <Table shadow="none" className="mb-2 max-h-[300px] overflow-y-auto">
           <TableHeader>
             <TableColumn>{t('name-db')}</TableColumn>
+            <TableColumn>{t('nickname')}</TableColumn>
             <TableColumn>{t('role')}</TableColumn>
+            <TableColumn>{t('login-type')}</TableColumn>
             <TableColumn>{t('action')}</TableColumn>
           </TableHeader>
           <TableBody>
@@ -90,9 +92,11 @@ export const UserSetting = observer(() => {
               blinko.userList.value!.map(i => {
                 return <TableRow>
                   <TableCell>{i.name}</TableCell>
+                  <TableCell>{i.nickname}</TableCell>
                   <TableCell>
                     <Chip size="sm" color="warning" variant="bordered">{i.role}</Chip>
                   </TableCell>
+                  <TableCell>{i.loginType == 'oauth' ? 'oauth' : t('password')}</TableCell>
                   <TableCell>
                     <Button isIconOnly variant="flat" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
                       RootStore.Get(DialogStore).setData({

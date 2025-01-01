@@ -452,5 +452,6 @@
   "select-account": "Select Account",
   "link-account-warning": "Please note that if you link your accounts, any data from the current account will not be synced to the linked account.",
   "unlink-account": "Unlink Account",
-  "unlink-account-tips": "Do you confirm access to all associations with this account?"
+  "unlink-account-tips": "Do you confirm access to all associations with this account?",
+  "login-type": "Login Type"
 }

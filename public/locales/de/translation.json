@@ -434,5 +434,6 @@
   "select-account": "Konto auswählen",
   "link-account-warning": "Bitte beachten Sie, dass wenn Sie Ihre Konten verknüpfen, werden keine Daten vom aktuellen Konto mit dem verbundenen Konto synchronisiert.",
   "unlink-account": "Konto trennen",
-  "unlink-account-tips": "Bestätigen Sie den Zugriff auf alle Verbände mit diesem Konto?"
+  "unlink-account-tips": "Bestätigen Sie den Zugriff auf alle Verbände mit diesem Konto?",
+  "login-type": "Anmeldetyp"
 }

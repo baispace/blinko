@@ -377,5 +377,6 @@
   "select-account": "Hesap Seçin",
   "link-account-warning": "Lütfen dikkat edin, hesaplarınızı bağlarsanız, mevcut hesaptaki veriler bağlı hesaba senkronize edilmeyecektir.",
   "unlink-account": "Hesabı Bağlantısını Kes",
-  "unlink-account-tips": "Bu hesapla tüm kuruluşlara erişimi onaylıyor musunuz?"
+  "unlink-account-tips": "Bu hesapla tüm kuruluşlara erişimi onaylıyor musunuz?",
+  "login-type": "Giriş Türü"
 }

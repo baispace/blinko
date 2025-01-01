@@ -359,5 +359,6 @@
   "select-account": "Selecionar Conta",
   "link-account-warning": "Por favor, observe que se você vincular suas contas, os dados da conta atual não serão sincronizados com a conta vinculada.",
   "unlink-account": "Desvincular Conta",
-  "unlink-account-tips": "Você confirma o acesso a todas as associações com esta conta?"
+  "unlink-account-tips": "Você confirma o acesso a todas as associações com esta conta?",
+  "login-type": "Tipo de Login"
 }

@@ -1,3 +1,10 @@
+## [0.32.5](https://github.com/blinko-space/blinko/compare/v0.32.4...v0.32.5) (2025-01-01)
+
+
+### Bug Fixes
+
+* implement account linking functionality [#391](https://github.com/blinko-space/blinko/issues/391) ([c774af9](https://github.com/blinko-space/blinko/commit/c774af93ec9bdf4e3e51bdde8415fe420a24f177))
+
 ## [0.32.4](https://github.com/blinko-space/blinko/compare/v0.32.3...v0.32.4) (2025-01-01)
 
 

@@ -363,4 +363,29 @@ export class EditorStore {
       }
     } catch (error) { }
   }
+
+  handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const vditorInput = document.querySelector(`#vditor-${this.mode} .vditor-reset`) as HTMLElement;
+      if (vditorInput) {
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const tabNode = document.createTextNode('\t');
+        range.insertNode(tabNode);
+
+        range.setStartAfter(tabNode);
+        range.setEndAfter(tabNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        console.log('vditor not found');
+      }
+    }
+  }
 }

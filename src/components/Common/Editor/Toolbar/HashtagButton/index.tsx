@@ -80,6 +80,7 @@ export const HashtagButton = observer(({ store, content }: Props) => {
               onClick={e => {
                 localStore.setShow(false)
                 store.vditor?.insertValue(`#${i}&nbsp;`, true)
+                store.onChange?.(store.vditor?.getValue() ?? '')
                 setTimeout(() => {
                   store.focus()
                 }, 300)

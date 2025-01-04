@@ -3,6 +3,18 @@ import path from "path";
 import { getToken } from "next-auth/jwt";
 import { FileService } from "@/server/plugins/files";
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export const POST = async (req: NextRequest, res: NextResponse) => {
   const token = await getToken({ req });
   if (!token) {
@@ -35,7 +47,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     console.log({ originalName, extension })
     const filePath = await FileService.uploadFile(buffer, originalName);
 
-    return NextResponse.json({
+    const nextResponse = NextResponse.json({
       Message: "Success",
       status: 200,
       ...filePath,
@@ -43,6 +55,11 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
       type: response.headers.get("content-type") || "",
       size: buffer.length
     });
+    nextResponse.headers.set('Access-Control-Allow-Origin', '*');
+    nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    nextResponse.headers.set('Access-Control-Allow-Headers', '*');
+
+    return nextResponse;
 
   } catch (error) {
     console.error("Error uploading file from URL:", error);

@@ -3,15 +3,23 @@ import path from "path";
 import { FileService } from "@/server/plugins/files";
 import { getToken } from "next-auth/jwt";
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export const POST = async (req: NextRequest, res: NextResponse) => {
   const token = await getToken({ req });
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  // if (process.env.IS_DEMO) {
-  //   return NextResponse.json({ error: "In Demo App" }, { status: 401 });
-  // }
 
   try {
     const formData = await req.formData();
@@ -26,13 +34,19 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     
     const filePath = await FileService.uploadFileStream(stream, originalName, file.size);
 
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       Message: "Success", 
       status: 200, 
       ...filePath,
       type: file.type,
       size: file.size
     });
+
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', '*');
+
+    return response;
     
   } catch (error) {
     console.error('Upload error:', error);

@@ -1,3 +1,10 @@
+## [0.32.10](https://github.com/blinko-space/blinko/compare/v0.32.9...v0.32.10) (2025-01-04)
+
+
+### Bug Fixes
+
+* add CORS support for file upload routes ([9fce501](https://github.com/blinko-space/blinko/commit/9fce5015f9f7caece05de3d9816a88eb35db066b))
+
 ## [0.32.9](https://github.com/blinko-space/blinko/compare/v0.32.8...v0.32.9) (2025-01-01)
 
 

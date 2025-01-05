@@ -1,3 +1,10 @@
+## [0.32.11](https://github.com/blinko-space/blinko/compare/v0.32.10...v0.32.11) (2025-01-05)
+
+
+### Bug Fixes
+
+* shareButton issue ([f254fc6](https://github.com/blinko-space/blinko/commit/f254fc656a1c74f0964f5bd2067ca88fe89794c9))
+
 ## [0.32.10](https://github.com/blinko-space/blinko/compare/v0.32.9...v0.32.10) (2025-01-04)
 
 

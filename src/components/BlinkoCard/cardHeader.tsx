@@ -13,6 +13,7 @@ import { _ } from '@/lib/lodash';
 import { useIsIOS } from '@/lib/hooks';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
+import { observer } from 'mobx-react-lite';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -94,7 +95,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
   );
 };
 
-const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, blinko: BlinkoStore, isIOSDevice: boolean }) => {
+const ShareButton = observer(({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, blinko: BlinkoStore, isIOSDevice: boolean }) => {
   const { t } = useTranslation()
   return (
     <Tooltip content={t('share')}>
@@ -107,6 +108,7 @@ const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, bl
           : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
           }`}
         onClick={async (e) => {
+          blinko.curSelectedNote = _.cloneDeep(blinkoItem)
           RootStore.Get(DialogStore).setData({
             isOpen: true,
             size: 'md',
@@ -122,4 +124,4 @@ const ShareButton = ({ blinkoItem, blinko, isIOSDevice }: { blinkoItem: Note, bl
       />
     </Tooltip>
   );
-};
+});

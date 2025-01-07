@@ -1,3 +1,10 @@
+## [0.32.12](https://github.com/blinko-space/blinko/compare/v0.32.11...v0.32.12) (2025-01-07)
+
+
+### Bug Fixes
+
+* update AI integration in note handling ([247677f](https://github.com/blinko-space/blinko/commit/247677f6d391f3cce08572e2af1ddfe5784bdd97))
+
 ## [0.32.11](https://github.com/blinko-space/blinko/compare/v0.32.10...v0.32.11) (2025-01-05)
 
 

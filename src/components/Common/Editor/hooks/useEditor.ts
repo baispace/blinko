@@ -85,6 +85,7 @@ export const useEditorInit = (
           return JSON.stringify(result)
         }
       },
+      tab: '\t',
       undoDelay: 20,
       value: content,
       toolbarConfig: {

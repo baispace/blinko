@@ -329,53 +329,55 @@ export const SSOSetting = observer(() => {
                     {provider.icon && <Icon icon={provider.icon} width="20" height="20" />}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      isIconOnly
-                      variant="flat"
-                      size="sm"
-                      startContent={<Icon icon="tabler:edit" width="18" height="18" />}
-                      onPress={() => {
-                        RootStore.Get(DialogStore).setData({
-                          isOpen: true,
-                          title: t('edit-oauth2-provider'),
-                          content: <UpdateSSOProvider provider={provider} />
-                        })
-                      }}
-                    />
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      size="sm"
-                      className="ml-2"
-                      startContent={<Icon icon="tabler:trash" width="18" height="18" />}
-                      onPress={() => {
-                        showTipsDialog({
-                          size: 'sm',
-                          title: t('confirm-to-delete'),
-                          content: t('confirm-delete-provider'),
-                          onConfirm: async () => {
-                            try {
-                              const newProviders = providers.filter(p => p.id !== provider.id)
-                              await RootStore.Get(ToastPlugin).promise(
-                                api.config.update.mutate({
-                                  key: 'oauth2Providers',
-                                  value: newProviders
-                                }),
-                                {
-                                  loading: t('in-progress'),
-                                  success: <b>{t('your-changes-have-been-saved')}</b>,
-                                  error: (e) => <b>{e.message}</b>,
-                                }
-                              )
-                              await blinko.config.call()
-                              RootStore.Get(DialogStandaloneStore).close()
-                            } catch (e) {
-                              RootStore.Get(DialogStandaloneStore).close()
+                    <div className="flex">
+                      <Button
+                        isIconOnly
+                        variant="flat"
+                        size="sm"
+                        startContent={<Icon icon="tabler:edit" width="18" height="18" />}
+                        onPress={() => {
+                          RootStore.Get(DialogStore).setData({
+                            isOpen: true,
+                            title: t('edit-oauth2-provider'),
+                            content: <UpdateSSOProvider provider={provider} />
+                          })
+                        }}
+                      />
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        size="sm"
+                        className="ml-2"
+                        startContent={<Icon icon="tabler:trash" width="18" height="18" />}
+                        onPress={() => {
+                          showTipsDialog({
+                            size: 'sm',
+                            title: t('confirm-to-delete'),
+                            content: t('confirm-delete-provider'),
+                            onConfirm: async () => {
+                              try {
+                                const newProviders = providers.filter(p => p.id !== provider.id)
+                                await RootStore.Get(ToastPlugin).promise(
+                                  api.config.update.mutate({
+                                    key: 'oauth2Providers',
+                                    value: newProviders
+                                  }),
+                                  {
+                                    loading: t('in-progress'),
+                                    success: <b>{t('your-changes-have-been-saved')}</b>,
+                                    error: (e) => <b>{e.message}</b>,
+                                  }
+                                )
+                                await blinko.config.call()
+                                RootStore.Get(DialogStandaloneStore).close()
+                              } catch (e) {
+                                RootStore.Get(DialogStandaloneStore).close()
+                              }
                             }
-                          }
-                        })
-                      }}
-                    />
+                          })
+                        }}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

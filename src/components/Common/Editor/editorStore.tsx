@@ -363,11 +363,4 @@ export class EditorStore {
       }
     } catch (error) { }
   }
-
-  handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      this.vditor?.insertValue('  ', true);
-    }
-  }
 }

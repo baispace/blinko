@@ -98,42 +98,44 @@ export const UserSetting = observer(() => {
                   </TableCell>
                   <TableCell>{i.loginType == 'oauth' ? 'oauth' : t('password')}</TableCell>
                   <TableCell>
-                    <Button isIconOnly variant="flat" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
-                      RootStore.Get(DialogStore).setData({
-                        isOpen: true,
-                        title: t('edit-user'),
-                        content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} />
-                      })
-                    }}>
-                    </Button>
-                    <Button isIconOnly color="danger" size="sm" className="ml-2"
-                      startContent={<Icon icon="tabler:trash" width="18" height="18" />}
-                      onPress={e => {
-                        showTipsDialog({
-                          size: 'sm',
-                          title: t('confirm-to-delete'),
-                          content: t('after-deletion-all-user-data-will-be-cleared-and-unrecoverable'),
-                          onConfirm: async () => {
-                            try {
-                              await RootStore.Get(ToastPlugin).promise(
-                                api.users.deleteUser.mutate({ id: i.id }),
-                                {
-                                  loading: t('in-progress'),
-                                  success: <b>{t('your-changes-have-been-saved')}</b>,
-                                  error: (e) => {
-                                    return <b>{e.message}</b>
-                                  },
-                                })
-                              blinko.userList.call()
-                              RootStore.Get(DialogStandaloneStore).close()
-                            } catch (e) {
-                              // RootStore.Get(ToastPlugin).error(e.message)
-                              RootStore.Get(DialogStandaloneStore).close()
-                            }
-                          }
+                    <div className="flex">
+                      <Button isIconOnly variant="flat" size="sm" startContent={<Icon icon="tabler:edit" width="18" height="18" />} onPress={e => {
+                        RootStore.Get(DialogStore).setData({
+                          isOpen: true,
+                          title: t('edit-user'),
+                          content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} />
                         })
                       }}>
-                    </Button>
+                      </Button>
+                      <Button isIconOnly color="danger" size="sm" className="ml-2"
+                        startContent={<Icon icon="tabler:trash" width="18" height="18" />}
+                        onPress={e => {
+                          showTipsDialog({
+                            size: 'sm',
+                            title: t('confirm-to-delete'),
+                            content: t('after-deletion-all-user-data-will-be-cleared-and-unrecoverable'),
+                            onConfirm: async () => {
+                              try {
+                                await RootStore.Get(ToastPlugin).promise(
+                                  api.users.deleteUser.mutate({ id: i.id }),
+                                  {
+                                    loading: t('in-progress'),
+                                    success: <b>{t('your-changes-have-been-saved')}</b>,
+                                    error: (e) => {
+                                      return <b>{e.message}</b>
+                                    },
+                                  })
+                                blinko.userList.call()
+                                RootStore.Get(DialogStandaloneStore).close()
+                              } catch (e) {
+                                // RootStore.Get(ToastPlugin).error(e.message)
+                                RootStore.Get(DialogStandaloneStore).close()
+                              }
+                            }
+                          })
+                        }}>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               })

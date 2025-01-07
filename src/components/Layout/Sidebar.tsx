@@ -71,7 +71,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           </Button>
         }
       </div>
-      <ScrollShadow className="-mr-[16px] mt-[-5px] h-full max-h-full pr-6">
+      <ScrollShadow className="-mr-[16px] mt-[-5px] h-full max-h-full pr-6 hide-scrollbar">
         <div className={`flex flex-col gap-2 mt-4 font-semibold ${base.isSidebarCollapsed ? 'items-center gap-4' : ''}`}>
           {base.routerList.map(i => (
             <Link

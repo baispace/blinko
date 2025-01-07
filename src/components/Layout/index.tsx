@@ -97,7 +97,7 @@ export const CommonLayout = observer(({
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
         className={`flex transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-sencondbackground`}>
         {/* nav bar  */}
-        <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2 overflow-x-hidden">
+        <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2 overflow-hidden">
           <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
             <div className="w-full h-[100%] bg-[#9936e6] opacity-20"
               style={{ "clipPath": "circle(50% at 50% 50%)" }} />
@@ -196,7 +196,7 @@ export const CommonLayout = observer(({
         </header>
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
 
-        <ScrollArea onBottom={() => { }} className="flex h-[calc(100%_-_70px)] overflow-y-scroll overflow-x-hidden">
+        <ScrollArea onBottom={() => { }} className="contents h-[calc(100%_-_70px)] overflow-y-scroll overflow-x-hidden">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
             {children}
           </div>

@@ -1,3 +1,5 @@
+import { eventBus } from "@/lib/event"
+
 export const Emoji = {
   name: 'emoji',
   tipPosition: 'e',
@@ -160,6 +162,30 @@ export const ToolbarMobile = [
   List,
   OrderedList,
   Check,
+  // {
+  //   name: 'tab',
+  //   tipPosition: 'e',
+  //   className: 'right',
+  //   icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 12V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6m-10 6H3m18 0h-7m-8-3l-3 3l3 3m12-6l3 3l-3 3"/></svg>',
+  //   click() {
+  //     const editor = document.querySelector('.vditor-ir') || document.querySelector('.vditor-wysiwyg') || document.activeElement;
+  //     if (editor) {
+  //       const tabEvent = new KeyboardEvent('keydown', {
+  //         key: 'Tab',
+  //         code: 'Tab',
+  //         keyCode: 9,
+  //         which: 9,
+  //         bubbles: true,
+  //         cancelable: true,
+  //         composed: true
+  //       });
+  //       //@ts-ignore
+  //       editor.focus();
+  //       editor.dispatchEvent(tabEvent);
+  //       document.activeElement?.dispatchEvent(tabEvent);
+  //     }
+  //   },
+  // },
   MoreMobile
 ]
 // emoji，headings，bold，italic，strike，|，line，quote，list，ordered-list，check ,outdent ,indent，code，inline-code，insert-after，insert-before ,undo，redo，upload，link，table，record，edit-mode，both，preview，fullscreen，outline，code-theme，content-theme，export, devtools，info，help，br

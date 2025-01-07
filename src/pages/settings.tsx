@@ -236,7 +236,7 @@ const Page = observer(() => {
         )}
       </div>
     </div>
-    <ScrollArea onBottom={() => { }} className="flex-1">
+    <ScrollArea onBottom={() => { }} className="flex-1 mb-[70px]">
       <div className="max-w-[1024px] mx-auto flex flex-col gap-6 px-4 md:px-6 py-4">
         {getCurrentComponent()}
       </div>

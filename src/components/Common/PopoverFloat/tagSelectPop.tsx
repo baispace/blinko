@@ -110,7 +110,6 @@ const TagSelect = observer(() => {
     };
 
     if (store.show) {
-      // 使用 requestAnimationFrame 确保在 DOM 更新后执行滚动
       requestAnimationFrame(handleScroll);
     }
   }, [store.selectedIndex, store.show]);

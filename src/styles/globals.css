@@ -263,9 +263,8 @@ body {
 
 ::-webkit-scrollbar {
   background: transparent;
-  width: 6px;
+  width: 8px;
   height: 6px;
-  border-radius: 12px;
 }
 
 ::-webkit-scrollbar-track {
@@ -274,14 +273,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--scrollbar);
+  background: var(--primary);
   border-radius: 1px;
   transition: all 1s;
-  border-radius: 12px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(111, 111, 111, 0.8);
+  background: color-mix(in srgb, var(--primary) 80%, transparent);
 }
 
 .hide-scrollbar {
@@ -315,5 +313,5 @@ body {
 }
 
 .group[data-focus-visible="true"] .group-data-\[focus-visible\=true\]\:ring-2 {
-  --tw-ring-shadow: 0!important;
+  --tw-ring-shadow: 0 !important;
 }

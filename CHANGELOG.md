@@ -1,3 +1,10 @@
+## [0.32.13](https://github.com/blinko-space/blinko/compare/v0.32.12...v0.32.13) (2025-01-07)
+
+
+### Bug Fixes
+
+* simplify tab handling in editorStore ([a8c75e2](https://github.com/blinko-space/blinko/commit/a8c75e2dddcbfa34eeeb92aa0c8896d9c839c6d2))
+
 ## [0.32.12](https://github.com/blinko-space/blinko/compare/v0.32.11...v0.32.12) (2025-01-07)
 
 

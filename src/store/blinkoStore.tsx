@@ -182,15 +182,6 @@ export class BlinkoStore implements Store {
         createdAt: inputCreatedAt ? new Date(inputCreatedAt) : undefined,
         updatedAt: inputUpdatedAt ? new Date(inputUpdatedAt) : undefined
       });
-
-      if (this.config.value?.isUseAI) {
-        if (res?.id) {
-          api.ai.embeddingUpsert.mutate({ id: res!.id, content: res!.content, type: id ? 'update' : 'insert' }, { context: { skipBatch: true } })
-        }
-        for (const attachment of attachments) {
-          api.ai.embeddingInsertAttachments.mutate({ id: res!.id, filePath: attachment.path }, { context: { skipBatch: true } })
-        }
-      }
       eventBus.emit('editor:clear')
       showToast && RootStore.Get(ToastPlugin).success(id ? i18n.t("update-successfully") : i18n.t("create-successfully"))
       refresh && this.updateTicker++

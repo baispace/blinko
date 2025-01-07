@@ -320,6 +320,7 @@ export const noteRouter = router({
       let { id, isArchived, isRecycle, type, attachments, content, isTop, isShare, references } = input
       const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '))
       let newTags: Prisma.tagCreateManyInput[] = []
+      const config = await getGlobalConfig({ ctx })
       const handleAddTags = async (tagTree: TagTreeNode[], parentTag: Prisma.tagCreateManyInput | undefined, noteId?: number) => {
         for (const i of tagTree) {
           let hasTag = await prisma.tag.findFirst({ where: { name: i.name, parent: parentTag?.id ?? 0, accountId: Number(ctx.id) } })
@@ -452,6 +453,13 @@ export const noteRouter = router({
         } catch (err) {
           console.log(err)
         }
+
+        if (config?.isUseAI) {
+          AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt! })
+          for (const attachment of attachments) {
+            AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+          }
+        }
         return note
       } else {
         try {
@@ -490,6 +498,14 @@ export const noteRouter = router({
           }
 
           SendWebhook({ ...note, attachments }, 'create', ctx)
+
+          if (config?.isUseAI) {
+            AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt! })
+            for (const attachment of attachments) {
+              console.log('attachment', attachment)
+              AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+            }
+          }
           return note
         } catch (error) {
           console.log(error)

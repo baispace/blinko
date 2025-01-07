@@ -48,6 +48,20 @@ export const Strike = {
   icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-3-5.5A4 2 0 0 0 12 5h-1a3.5 3.5 0 0 0 0 7h2a3.5 3.5 0 0 1 0 7h-1.5a4 2 0 0 1-4-1.5"/></svg>',
 }
 
+export const Indent = {
+  name: 'indent',
+  tipPosition: 'e',
+  className: 'right',
+  icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 6H9m11 6h-7m7 6H9M4 8l4 4l-4 4"/></svg>',
+}
+
+export const Outdent = {
+  name: 'outdent',
+  tipPosition: 'e',
+  className: 'right',
+  icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 6h-7m7 6h-9m9 6h-7M8 8l-4 4l4 4"/></svg>',
+}
+
 export const Link = {
   name: 'link',
   tipPosition: 'e',
@@ -156,6 +170,8 @@ export const ToolbarMobile = [
   Bold,
   Italic,
   Strike,
+  Indent,
+  Outdent,
   Link,
   List,
   OrderedList,

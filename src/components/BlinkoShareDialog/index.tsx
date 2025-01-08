@@ -109,7 +109,6 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
           <Dropdown>
             <DropdownTrigger>
               <Button
-                variant="bordered"
                 size="lg"
                 className="flex-1 justify-start "
                 startContent={<Icon icon="solar:calendar-bold" className="text-default-500" width="20" height="20" />}
@@ -137,7 +136,6 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
             >
               <PopoverTrigger>
                 <Button
-                  variant="bordered"
                   size="lg"
                   startContent={<Icon icon="solar:calendar-mark-bold" className="text-default-500" width="20" height="20" />}
                 >
@@ -194,9 +192,6 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
         </div>
       </div>
 
-      <Divider className="my-2" />
-
-
       <AnimatePresence mode="wait">
         {
           shareUrl && (
@@ -212,13 +207,8 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
               </div>
               <div className="flex gap-2 items-center">
                 <Input
-                  variant="bordered"
                   value={shareUrl}
                   readOnly
-                  classNames={{
-                    input: "bg-default-50",
-                    inputWrapper: "bg-default-50"
-                  }}
                 />
                 <Copy content={shareUrl} size={24} />
               </div>

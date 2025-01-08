@@ -4,9 +4,9 @@ import { Note, NoteType } from '@/server/types';
 import { ConvertItemFunction } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useTranslation } from 'react-i18next';
-import dayjs from '@/lib/dayjs';
 import { _ } from '@/lib/lodash';
 import { ShowBlinkoReference } from '../BlinkoReference';
+import { CommentCount } from './commentButton';
 
 interface CardFooterProps {
   blinkoItem: Note & {
@@ -67,6 +67,9 @@ const ConvertTypeButton = ({ blinkoItem, blinko, t }) => {
 const RightContent = ({ blinkoItem, t }: { blinkoItem: Note, t: any }) => {
   return (
     <div className='ml-auto flex items-center gap-2'>
+      {
+        <CommentCount blinkoItem={blinkoItem} />
+      }
       {
         ((blinkoItem?.references?.length) ?? 0) > 0 && <Tooltip content={blinkoItem?.references?.length + ' ' + t('reference')} delay={1000}>
           <Icon icon="ix:reference" className='text-[#C35AF7] cursor-pointer' width="16" height="16" onClick={() => ShowBlinkoReference({ item: blinkoItem })} />

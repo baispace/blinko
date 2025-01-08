@@ -145,5 +145,13 @@ export const aiRouter = router({
       const { content } = input
       const res = await AiService.autoEmoji({ content })
       return res
+    }),
+  AIComment: authProcedure
+    .input(z.object({
+      content: z.string(),
+      noteId: z.number()
+    }))
+    .mutation(async function ({ input }) {
+      return await AiService.AIComment(input)
     })
 })

@@ -381,5 +381,9 @@
   "login-type": "Giriş Türü",
   "close-daily-review": "Günlük İncelemeyi Kapat",
   "max-home-page-width": "Ana Sayfa Genişliği Maksimum",
-  "max-home-page-width-tip": "0 olarak ayarlanırsa, bu maksimum genişliktir"
+  "max-home-page-width-tip": "0 olarak ayarlanırsa, bu maksimum genişliktir",
+  "no-comments-yet": "Henüz yorum yapılmadı",
+  "author": "Yazar",
+  "from": "Dan",
+  "reply-to": "Yanıtla"
 }

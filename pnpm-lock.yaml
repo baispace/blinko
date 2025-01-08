@@ -110,6 +110,12 @@ importers:
       axios:
         specifier: ^1.7.7
         version: 1.7.7
+      boring-avatars:
+        specifier: ^1.11.2
+        version: 1.11.2
+      bowser:
+        specifier: ^2.11.0
+        version: 2.11.0
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
@@ -356,6 +362,9 @@ importers:
       remark-task-list:
         specifier: ^0.0.3
         version: 0.0.3
+      request-ip:
+        specifier: ^3.3.0
+        version: 3.3.0
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
@@ -4819,6 +4828,9 @@ packages:
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
 
+  boring-avatars@1.11.2:
+    resolution: {integrity: sha512-3+wkwPeObwS4R37FGXMYViqc4iTrIRj5yzfX9Qy4mnpZ26sX41dGMhsAgmKks1r/uufY1pl4vpgzMWHYfJRb2A==}
+
   bottleneck@2.19.5:
     resolution: {integrity: sha512-VHiNCbI1lKdl44tGrhNfU3lup0Tj/ZBMJB5/2ZbNXRCPuRCO7ed2mgcK4r17y+KB2EfuYuRaVlwNbAeaWGSpbw==}
 
@@ -9153,6 +9165,9 @@ packages:
   repeat-string@1.6.1:
     resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
     engines: {node: '>=0.10'}
+
+  request-ip@3.3.0:
+    resolution: {integrity: sha512-cA6Xh6e0fDBBBwH77SLJaJPBmD3nWVAcF9/XAcsrIHdjhFzFiB5aNQFytdjCGPezU3ROwrR11IddKAM08vohxA==}
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -16787,6 +16802,8 @@ snapshots:
 
   boolbase@1.0.0: {}
 
+  boring-avatars@1.11.2: {}
+
   bottleneck@2.19.5: {}
 
   bowser@2.11.0: {}
@@ -21630,6 +21647,8 @@ snapshots:
       autolinker: 3.16.2
 
   repeat-string@1.6.1: {}
+
+  request-ip@3.3.0: {}
 
   require-directory@2.1.1: {}
 

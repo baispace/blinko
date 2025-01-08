@@ -7,6 +7,7 @@ export type Tag = NonNullable<RouterOutput['tags']['list']>[0]
 export type Config = NonNullable<RouterOutput['config']['list']>
 export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
 export type ResourceType = NonNullable<RouterOutput['attachments']['list']>[0]
+export type Comment = NonNullable<RouterOutput['comments']['list']>
 export enum NoteType {
   'BLINKO',
   'NOTE'

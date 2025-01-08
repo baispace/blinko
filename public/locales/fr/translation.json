@@ -427,5 +427,10 @@
   "login-type": "Type de connexion",
   "close-daily-review": "Examen quotidien de clôture",
   "max-home-page-width": "Largeur maximale de la page d'accueil",
-  "max-home-page-width-tip": "Si réglé à 0, c'est la largeur maximale."
+  "max-home-page-width-tip": "Si réglé à 0, c'est la largeur maximale.",
+  "no-comments-yet": "Pas de commentaires pour le moment",
+  "author": "Auteur",
+  "from": "De",
+  "reply-to": "Répondre à",
+  "comment": "Commentaire"
 }

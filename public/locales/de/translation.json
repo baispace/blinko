@@ -438,5 +438,10 @@
   "login-type": "Anmeldetyp",
   "close-daily-review": "Tägliche Schlussüberprüfung",
   "max-home-page-width": "Maximale Breite der Startseite",
-  "max-home-page-width-tip": "Wenn es auf 0 gesetzt ist, ist es die maximale Breite."
+  "max-home-page-width-tip": "Wenn es auf 0 gesetzt ist, ist es die maximale Breite.",
+  "no-comments-yet": "Es liegen noch keine Kommentare vor.",
+  "author": "Autor",
+  "from": "Von",
+  "reply-to": "Antworten an",
+  "comment": "Kommentar"
 }

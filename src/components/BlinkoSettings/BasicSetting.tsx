@@ -22,6 +22,8 @@ import { eventBus } from "@/lib/event";
 import { LinkAccountModal } from "../Common/Modals/LinkAccountModal";
 import { showTipsDialog } from "../Common/TipsDialog";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { UploadFileWrapper } from "../Common/UploadFile";
+import Avatar from "boring-avatars";
 
 export const BasicSetting = observer(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -75,6 +77,36 @@ export const BasicSetting = observer(() => {
         rightContent={
           <div className="flex gap-2 items-center">
             <div className="text-desc">{user.name}</div>
+            <div className="relative group">
+              <UploadFileWrapper
+                acceptImage
+                onUpload={async ({ filePath }) => {
+                  if (!user.userInfo.value?.id) return
+                  await PromiseCall(api.users.upsertUser.mutate({
+                    id: user.userInfo.value?.id,
+                    image: filePath
+                  }));
+                  user.userInfo.call(user.userInfo.value?.id);
+                }}
+              >
+                {user.userInfo.value?.image ? (
+                  <img
+                    src={user.userInfo.value.image}
+                    alt="avatar"
+                    className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                ) : (
+                  <Avatar
+                    size={30}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    name={user.nickname ?? user.name}
+                    variant="beam"
+                    colors={["#65A30D", "#e3e3e3"]}
+                  />
+                )}
+              </UploadFileWrapper>
+            </div>
+            
             <Button variant="flat" isIconOnly startContent={<Icon icon="tabler:edit" width="20" height="20" />} size='sm'
               onPress={e => {
                 RootStore.Get(DialogStore).setData({

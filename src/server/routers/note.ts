@@ -48,7 +48,10 @@ export const noteRouter = router({
           }))
         ),
         references: z.array(z.object({ toNoteId: z.number() })).optional(),
-        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional()
+        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
+        _count: z.object({
+          comments: z.number()
+        })
       }))
     ))
     .mutation(async function ({ input, ctx }) {
@@ -128,6 +131,11 @@ export const noteRouter = router({
             select: {
               fromNoteId: true
             }
+          },
+          _count: {
+            select: {
+              comments: true
+            }
           }
         }
       })
@@ -140,7 +148,10 @@ export const noteRouter = router({
     }))
     .output(z.array(notesSchema.merge(
       z.object({
-        attachments: z.array(attachmentsSchema)
+        attachments: z.array(attachmentsSchema),
+        _count: z.object({
+          comments: z.number()
+        })
       }))
     ))
     .mutation(async function ({ input }) {
@@ -150,7 +161,15 @@ export const noteRouter = router({
         orderBy: [{ isTop: "desc" }, { updatedAt: 'desc' }],
         skip: (page - 1) * size,
         take: size,
-        include: { tags: true, attachments: true },
+        include: { 
+          tags: true, 
+          attachments: true,
+          _count: {
+            select: {
+              comments: true
+            }
+          }
+        },
       })
     }),
   listByIds: authProcedure
@@ -165,7 +184,10 @@ export const noteRouter = router({
           }))
         ),
         references: z.array(z.object({ toNoteId: z.number() })).optional(),
-        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional()
+        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
+        _count: z.object({
+          comments: z.number()
+        })
       }))
     ))
     .mutation(async function ({ input, ctx }) {
@@ -188,6 +210,11 @@ export const noteRouter = router({
           referencedBy: {
             select: {
               fromNoteId: true
+            }
+          },
+          _count: {
+            select: {
+              comments: true
             }
           }
         }

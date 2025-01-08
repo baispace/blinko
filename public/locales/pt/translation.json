@@ -363,5 +363,10 @@
   "login-type": "Tipo de Login",
   "close-daily-review": "Revisão Diária Encerrar",
   "max-home-page-width": "Largura Máxima da Página Inicial",
-  "max-home-page-width-tip": "Se configurado como 0, é a largura máxima."
+  "max-home-page-width-tip": "Se configurado como 0, é a largura máxima.",
+  "no-comments-yet": "Ainda sem comentários",
+  "author": "Autor",
+  "from": "De",
+  "comment": "Comentário",
+  "reply-to": "Responder a"
 }

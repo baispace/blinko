@@ -167,3 +167,22 @@ export const noteReferenceSchema = z.object({
   fromNoteId: z.number().int(),
   toNoteId: z.number().int(),
 })
+
+/////////////////////////////////////////
+// COMMENTS SCHEMA
+/////////////////////////////////////////
+
+export const commentsSchema = z.object({
+  id: z.number().int(),
+  content: z.string(),
+  accountId: z.number().int().nullable(),
+  guestName: z.string().nullable(),
+  guestIP: z.string().nullable(),
+  guestUA: z.string().nullable(),
+  noteId: z.number().int(),
+  parentId: z.number().int().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type comments = z.infer<typeof commentsSchema>

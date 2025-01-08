@@ -27,6 +27,7 @@ model accounts {
   notes         notes[]
   configs       config[]
   tags          tag[]
+  comments      comments[]
 }
 
 model attachments {
@@ -78,6 +79,25 @@ model notes {
   account           accounts?       @relation(fields: [accountId], references: [id])
   referencedBy      noteReference[] @relation("ReferencedNote")
   references        noteReference[] @relation("ReferencingNote")
+  comments          comments[]      @relation("NoteComments")
+}
+
+model comments {
+  id              Int       @id @default(autoincrement())
+  content         String    @db.Text
+  accountId       Int?
+  guestName       String?   @db.VarChar
+  guestIP         String?   @db.VarChar
+  guestUA         String?   @db.VarChar
+  noteId          Int
+  parentId        Int?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  note            notes     @relation("NoteComments", fields: [noteId], references: [id])
+  account         accounts? @relation(fields: [accountId], references: [id])
+  parent          comments? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies         comments[] @relation("CommentReplies")
 }
 
 model tag {

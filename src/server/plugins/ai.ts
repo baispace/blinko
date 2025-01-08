@@ -335,7 +335,15 @@ export class AiService {
         id: { in: filteredResultsWithScore.map(i => i.doc.metadata?.noteId).filter(i => !!i) },
         accountId: Number(ctx.id)
       },
-      include: { tags: { include: { tag: true } }, attachments: true }
+      include: {
+        tags: { include: { tag: true } },
+        attachments: true,
+        _count: {
+          select: {
+            comments: true
+          }
+        }
+      }
     })
     const sortedNotes = notes.sort((a, b) => {
       const scoreA = filteredResultsWithScore.find(r => r.doc.metadata?.noteId === a.id)?.distance ?? Infinity;
@@ -450,5 +458,51 @@ export class AiService {
     const loader = await AiModelFactory.GetAudioLoader(audioPath)
     const docs = await loader.load();
     return docs
+  }
+
+  static async AIComment({ content, noteId }: { content: string, noteId: number }) {
+    try {
+      const note = await prisma.notes.findUnique({
+        where: { id: noteId },
+        select: { content: true }
+      })
+
+      if (!note) {
+        throw new Error('Note not found')
+      }
+
+      const { LLM } = await AiModelFactory.GetProvider();
+      const commentPrompt = AiPrompt.CommentPrompt();
+      const commentChain = commentPrompt.pipe(LLM).pipe(new StringOutputParser());
+      const aiResponse = await commentChain.invoke({
+        content,
+        noteContent: note.content
+      });
+
+      const comment = await prisma.comments.create({
+        data: {
+          content: aiResponse.trim(),
+          noteId,
+          guestName: 'Blinko AI',
+          guestIP: '',
+          guestUA: ''
+        },
+        include: {
+          account: {
+            select: {
+              id: true,
+              name: true,
+              nickname: true,
+              image: true
+            }
+          }
+        }
+      });
+
+      return comment;
+    } catch (error) {
+      console.log(error);
+      throw new Error(error);
+    }
   }
 }

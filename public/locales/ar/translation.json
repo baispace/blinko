@@ -452,5 +452,10 @@
   "login-type": "نوع تسجيل الدخول",
   "close-daily-review": "مراجعة يومية وثيقة",
   "max-home-page-width": "عرض الصفحة الرئيسية الأقصى",
-  "max-home-page-width-tip": "إذا تم تعيينها على 0 فهذا هو العرض الأقصى"
+  "max-home-page-width-tip": "إذا تم تعيينها على 0 فهذا هو العرض الأقصى",
+  "no-comments-yet": "لا تعليقات حتى الآن",
+  "author": "الكاتب",
+  "from": "من",
+  "reply-to": "الرد على",
+  "comment": "تعليق"
 }

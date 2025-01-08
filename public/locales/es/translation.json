@@ -431,5 +431,10 @@
   "login-type": "Tipo de inicio de sesión",
   "close-daily-review": "Revisión Diaria Cercana",
   "max-home-page-width": "Ancho máximo de la página de inicio",
-  "max-home-page-width-tip": "Si se establece en 0, es el ancho máximo."
+  "max-home-page-width-tip": "Si se establece en 0, es el ancho máximo.",
+  "no-comments-yet": "Todavía no hay comentarios",
+  "author": "Autor",
+  "from": "De",
+  "reply-to": "Responder a",
+  "comment": "Comentario"
 }

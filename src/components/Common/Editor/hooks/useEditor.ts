@@ -12,13 +12,13 @@ import { UserStore } from '@/store/user';
 import { i18nEditor } from '../EditorToolbar/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
-import { Extend } from '../EditorToolbar/extends';
+import { AIExtend, Extend } from '../EditorToolbar/extends';
 
 export const useEditorInit = (
   store: EditorStore,
   onChange: ((content: string) => void) | undefined,
   onSend: (args: OnSendContentType) => Promise<any>,
-  mode: 'create' | 'edit',
+  mode: 'create' | 'edit' | 'comment',
   originReference: number[] = [],
   content: string
 ) => {
@@ -43,7 +43,7 @@ export const useEditorInit = (
         type: 'markdown',
       },
       hint: {
-        extend: Extend
+        extend: mode != 'comment' ? Extend : AIExtend
       },
       async ctrlEnter(md) {
         await store.handleSend()

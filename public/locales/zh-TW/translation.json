@@ -468,5 +468,9 @@
   "login-type": "登入類型",
   "close-daily-review": "結束每日檢查",
   "max-home-page-width": "最大首頁寬度",
-  "max-home-page-width-tip": "如果設為 0，則是最大寬度。"
+  "max-home-page-width-tip": "如果設為 0，則是最大寬度。",
+  "no-comments-yet": "目前尚無評論",
+  "author": "作者",
+  "from": "從",
+  "reply-to": "回覆"
 }

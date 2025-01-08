@@ -30,7 +30,7 @@ export class EditorStore {
   lastSelection: Selection | null = null
   vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null
-  mode: 'edit' | 'create' = 'edit'
+  mode: 'edit' | 'create' | 'comment' = 'edit'
   references: number[] = []
   isShowSearch: boolean = false
   onSend: (args: OnSendContentType) => Promise<any>

@@ -456,5 +456,9 @@
   "login-type": "Login Type",
   "close-daily-review": "Close Daily Review",
   "max-home-page-width": "Max Home Page Width",
-  "max-home-page-width-tip": "If set to 0 it is the maximum width"
+  "max-home-page-width-tip": "If set to 0 it is the maximum width",
+  "reply-to": "Reply To",
+  "author": "Author",
+  "from": "From",
+  "no-comments-yet": "No comments yet"
 }

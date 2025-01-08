@@ -30,7 +30,7 @@ import { AIWriteButton } from "./Toolbar/AIWriteButton";
 
 //https://ld246.com/guide/markdown
 type IProps = {
-  mode: 'create' | 'edit',
+  mode: 'create' | 'edit' | 'comment',
   content: string,
   onChange?: (content: string) => void,
   onHeightChange?: () => void,
@@ -39,9 +39,10 @@ type IProps = {
   bottomSlot?: ReactElement<any, any>,
   originFiles?: Attachment[],
   originReference?: number[],
+  hiddenToolbar?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -105,15 +106,21 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
 
       {/******************** Toolbar Render *****************/}
       <div className='flex w-full items-center gap-1'>
-        <NoteTypeButton />
-        <HashtagButton store={store} content={content} />
-        <AIWriteButton store={store} content={content} />
-        <ReferenceButton store={store} />
-        <UploadButtons
-          getInputProps={getInputProps}
-          open={open}
-          onFileUpload={store.uploadFiles}
-        />
+        {
+          !hiddenToolbar && (
+            <>
+              <NoteTypeButton />
+              <HashtagButton store={store} content={content} />
+              <AIWriteButton store={store} content={content} />
+              <ReferenceButton store={store} />
+              <UploadButtons
+                getInputProps={getInputProps}
+                open={open}
+                onFileUpload={store.uploadFiles}
+              />
+            </>
+          )
+        }
         <div className='flex items-center gap-1 ml-auto'>
           {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
           <ViewModeButton viewMode={store.viewMode} />

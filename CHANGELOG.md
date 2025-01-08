@@ -1,3 +1,10 @@
+## [0.33.2](https://github.com/blinko-space/blinko/compare/v0.33.1...v0.33.2) (2025-01-08)
+
+
+### Bug Fixes
+
+* update ScrollArea margin classes for better layout consistency ([90194bf](https://github.com/blinko-space/blinko/commit/90194bfd31a87c6f8ea5370653ee36ba06ee81f2))
+
 ## [0.33.1](https://github.com/blinko-space/blinko/compare/v0.33.0...v0.33.1) (2025-01-08)
 
 

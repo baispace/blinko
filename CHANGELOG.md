@@ -1,3 +1,10 @@
+## [0.32.22](https://github.com/blinko-space/blinko/compare/v0.32.21...v0.32.22) (2025-01-08)
+
+
+### Bug Fixes
+
+* update Chinese translation for 'outline' in translation.json ([503093a](https://github.com/blinko-space/blinko/commit/503093af96be36463e7a4905ee338a1fcf4f5605))
+
 ## [0.32.21](https://github.com/blinko-space/blinko/compare/v0.32.20...v0.32.21) (2025-01-08)
 
 

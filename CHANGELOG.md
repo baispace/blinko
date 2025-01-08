@@ -1,3 +1,10 @@
+## [0.32.21](https://github.com/blinko-space/blinko/compare/v0.32.20...v0.32.21) (2025-01-08)
+
+
+### Bug Fixes
+
+* add 'max home page width' setting and translations across multiple languages ([344b9e9](https://github.com/blinko-space/blinko/commit/344b9e9dae34b6b2bb56358547c6e8c844decfa7))
+
 ## [0.32.20](https://github.com/blinko-space/blinko/compare/v0.32.19...v0.32.20) (2025-01-08)
 
 

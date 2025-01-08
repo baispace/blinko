@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const { searchParams } = new URL(request.url);
-  const rows = searchParams.get('rows') ? parseInt(searchParams.get('rows')!) : 20;
+  const rows = searchParams.get('row') ? parseInt(searchParams.get('row')!) : 20;
   const origin = request.headers.get('origin') || request.headers.get('host') || 'http://localhost:1111';
   const fullOrigin = origin.startsWith('http') ? origin : `http://${origin}`;
   const feed = await generateFeed(Number(params.userId), fullOrigin, rows);

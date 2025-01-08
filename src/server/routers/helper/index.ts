@@ -30,7 +30,7 @@ export function verifyTOTP(token: string, secret: string): boolean {
   } catch (err) {
     return false;
   }
-} 
+}
 
 
 export async function generateFeed(userId: number, origin: string, rows: number = 20) {
@@ -38,7 +38,17 @@ export async function generateFeed(userId: number, origin: string, rows: number 
     where: {
       accountId: userId,
       isShare: true,
-      sharePassword: ""
+      sharePassword: "",
+      OR: [
+        {
+          shareExpiryDate: {
+            gt: new Date()
+          }
+        },
+        {
+          shareExpiryDate: null
+        }
+      ]
     },
     orderBy: { updatedAt: 'desc' },
     take: rows,

@@ -1,3 +1,10 @@
+## [0.33.1](https://github.com/blinko-space/blinko/compare/v0.33.0...v0.33.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* move generateFeed function to helper module ([b2dbba8](https://github.com/blinko-space/blinko/commit/b2dbba8ce62a4040d8a1bcf527864ff9bf184e0a))
+
 # [0.33.0](https://github.com/blinko-space/blinko/compare/v0.32.23...v0.33.0) (2025-01-08)
 
 

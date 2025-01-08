@@ -1,3 +1,10 @@
+## [0.32.19](https://github.com/blinko-space/blinko/compare/v0.32.18...v0.32.19) (2025-01-08)
+
+
+### Bug Fixes
+
+* comment out Indent and Outdent buttons in EditorToolbar ([1ad1897](https://github.com/blinko-space/blinko/commit/1ad18975bdac3efeaf464d859af71aa8c006242a))
+
 ## [0.32.18](https://github.com/blinko-space/blinko/compare/v0.32.17...v0.32.18) (2025-01-08)
 
 

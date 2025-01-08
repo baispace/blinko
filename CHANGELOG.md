@@ -1,3 +1,10 @@
+## [0.33.3](https://github.com/blinko-space/blinko/compare/v0.33.2...v0.33.3) (2025-01-08)
+
+
+### Bug Fixes
+
+* update query parameter for row count in RSS routes ([d6677ee](https://github.com/blinko-space/blinko/commit/d6677ee3494611d831f964d04f7266c60b770669))
+
 ## [0.33.2](https://github.com/blinko-space/blinko/compare/v0.33.1...v0.33.2) (2025-01-08)
 
 

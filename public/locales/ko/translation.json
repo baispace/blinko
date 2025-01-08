@@ -433,5 +433,7 @@
   "unlink-account": "연결 끊기",
   "unlink-account-tips": "이 계정으로 모든 연관 항목에 액세스를 확인합니까?",
   "login-type": "로그인 유형",
-  "close-daily-review": "일일 리뷰 마감"
+  "close-daily-review": "일일 리뷰 마감",
+  "max-home-page-width": "홈페이지 최대 너비",
+  "max-home-page-width-tip": "0으로 설정하면 최대 폭입니다."
 }

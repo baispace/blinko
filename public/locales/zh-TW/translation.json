@@ -466,5 +466,7 @@
   "unlink-account": "解除帳戶連結",
   "unlink-account-tips": "您確認透過此帳戶可以存取所有聯繫嗎？",
   "login-type": "登入類型",
-  "close-daily-review": "結束每日檢查"
+  "close-daily-review": "結束每日檢查",
+  "max-home-page-width": "最大首頁寬度",
+  "max-home-page-width-tip": "如果設為 0，則是最大寬度。"
 }

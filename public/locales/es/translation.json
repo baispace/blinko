@@ -429,5 +429,7 @@
   "unlink-account": "Desvincular cuenta",
   "unlink-account-tips": "¿Confirma el acceso a todas las asociaciones con esta cuenta?",
   "login-type": "Tipo de inicio de sesión",
-  "close-daily-review": "Revisión Diaria Cercana"
+  "close-daily-review": "Revisión Diaria Cercana",
+  "max-home-page-width": "Ancho máximo de la página de inicio",
+  "max-home-page-width-tip": "Si se establece en 0, es el ancho máximo."
 }

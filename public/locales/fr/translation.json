@@ -425,5 +425,7 @@
   "unlink-account": "Dissocier le compte",
   "unlink-account-tips": "Confirmez-vous l'accès à toutes les associations avec ce compte ?",
   "login-type": "Type de connexion",
-  "close-daily-review": "Examen quotidien de clôture"
+  "close-daily-review": "Examen quotidien de clôture",
+  "max-home-page-width": "Largeur maximale de la page d'accueil",
+  "max-home-page-width-tip": "Si réglé à 0, c'est la largeur maximale."
 }

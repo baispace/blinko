@@ -410,5 +410,7 @@
   "unlink-account": "アカウントのリンク解除",
   "unlink-account-tips": "このアカウントで全ての関連付けにアクセスできることを確認しますか？",
   "login-type": "ログインタイプ",
-  "close-daily-review": "デイリーレビューを閉じる"
+  "close-daily-review": "デイリーレビューを閉じる",
+  "max-home-page-width": "ホームページの最大幅",
+  "max-home-page-width-tip": "0に設定すると、最大の幅になります。"
 }

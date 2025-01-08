@@ -450,5 +450,7 @@
   "unlink-account": "فصل الحساب",
   "unlink-account-tips": "هل تؤكد الوصول إلى جميع الجمعيات باستخدام هذا الحساب؟",
   "login-type": "نوع تسجيل الدخول",
-  "close-daily-review": "مراجعة يومية وثيقة"
+  "close-daily-review": "مراجعة يومية وثيقة",
+  "max-home-page-width": "عرض الصفحة الرئيسية الأقصى",
+  "max-home-page-width-tip": "إذا تم تعيينها على 0 فهذا هو العرض الأقصى"
 }

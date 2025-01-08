@@ -436,5 +436,7 @@
   "unlink-account": "Konto trennen",
   "unlink-account-tips": "Bestätigen Sie den Zugriff auf alle Verbände mit diesem Konto?",
   "login-type": "Anmeldetyp",
-  "close-daily-review": "Tägliche Schlussüberprüfung"
+  "close-daily-review": "Tägliche Schlussüberprüfung",
+  "max-home-page-width": "Maximale Breite der Startseite",
+  "max-home-page-width-tip": "Wenn es auf 0 gesetzt ist, ist es die maximale Breite."
 }

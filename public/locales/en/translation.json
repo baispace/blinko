@@ -454,5 +454,7 @@
   "unlink-account": "Unlink Account",
   "unlink-account-tips": "Do you confirm access to all associations with this account?",
   "login-type": "Login Type",
-  "close-daily-review": "Close Daily Review"
+  "close-daily-review": "Close Daily Review",
+  "max-home-page-width": "Max Home Page Width",
+  "max-home-page-width-tip": "If set to 0 it is the maximum width"
 }

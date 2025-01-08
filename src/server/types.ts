@@ -28,7 +28,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('twoFactorSecret'),
   z.literal('themeColor'),
   z.literal('themeForegroundColor'),
-  z.literal('isCloseDailyReview')
+  z.literal('isCloseDailyReview'),
+  z.literal('maxHomePageWidth')
 ]);
 
 export const ZConfigKey = z.union([
@@ -120,6 +121,7 @@ export const ZConfigSchema = z.object({
   spotifyConsumerKey: z.string().optional(),
   spotifyConsumerSecret: z.string().optional(),
   isCloseDailyReview: z.boolean().optional(),
+  maxHomePageWidth: z.number().optional(),
   oauth2Providers: z.array(ZOAuth2ProviderSchema).optional(),
 });
 

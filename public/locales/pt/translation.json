@@ -361,5 +361,7 @@
   "unlink-account": "Desvincular Conta",
   "unlink-account-tips": "Você confirma o acesso a todas as associações com esta conta?",
   "login-type": "Tipo de Login",
-  "close-daily-review": "Revisão Diária Encerrar"
+  "close-daily-review": "Revisão Diária Encerrar",
+  "max-home-page-width": "Largura Máxima da Página Inicial",
+  "max-home-page-width-tip": "Se configurado como 0, é a largura máxima."
 }

@@ -1,3 +1,10 @@
+## [0.34.1](https://github.com/blinko-space/blinko/compare/v0.34.0...v0.34.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* remove unused fallback-development.js and enhance CommentButton component ([9cfc1a1](https://github.com/blinko-space/blinko/commit/9cfc1a181a1588bd0e922831fbc532e33b0d0f50))
+
 # [0.34.0](https://github.com/blinko-space/blinko/compare/v0.33.3...v0.34.0) (2025-01-08)
 
 

@@ -47,7 +47,7 @@ const Home = observer(() => {
         !blinko.noteList.isEmpty && <ScrollArea
           onBottom={() => blinko.onBottom()}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? store.editorHeight : 0)}px)` : '100%' }}
-          className={`px-2 mt-0 md:mt-4 md:px-6 w-full h-full transition-all scroll-area`}>
+          className={`px-2 mt-0 md:mt-4 md:px-6 w-full h-full transition-all scroll-area mb-[70px]`}>
           <Masonry
             breakpointCols={{
               default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
@@ -65,8 +65,6 @@ const Home = observer(() => {
           {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: blinko.noteList.value?.length })}</div>}
         </ScrollArea>
       }
-
-
     </div>
   );
 });

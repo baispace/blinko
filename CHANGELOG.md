@@ -1,3 +1,10 @@
+# [0.34.0](https://github.com/blinko-space/blinko/compare/v0.33.3...v0.34.0) (2025-01-08)
+
+
+### Features
+
+* add comments feature and enhance user experience ([4a0c830](https://github.com/blinko-space/blinko/commit/4a0c830ecec1a96d1d8cf425e2ce5e2b1feb29a0))
+
 ## [0.33.3](https://github.com/blinko-space/blinko/compare/v0.33.2...v0.33.3) (2025-01-08)
 
 

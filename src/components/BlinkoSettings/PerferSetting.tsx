@@ -138,6 +138,24 @@ export const PerferSetting = observer(() => {
     />
 
     <Item
+      leftContent={<>{t('close-daily-review')}</>}
+      rightContent={
+        <Tooltip content={<GradientBackground className="rounded-lg w-[200px] h-[100px]">
+          <div ></div>
+        </GradientBackground>}>
+          <Switch
+            isSelected={blinko.config.value?.isCloseDailyReview}
+            onChange={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'isCloseDailyReview',
+                value: e.target.checked
+              }))
+            }}
+          />
+        </Tooltip>
+      } />
+
+    <Item
       type={isPc ? 'row' : 'col'}
       leftContent={<ItemWithTooltip content={t('device-card-columns')} toolTipContent={<div className="w-[300px] flex flex-col gap-2">
         <div>{t('columns-for-different-devices')}</div>

@@ -27,7 +27,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('twoFactorEnabled'),
   z.literal('twoFactorSecret'),
   z.literal('themeColor'),
-  z.literal('themeForegroundColor')
+  z.literal('themeForegroundColor'),
+  z.literal('isCloseDailyReview')
 ]);
 
 export const ZConfigKey = z.union([
@@ -118,6 +119,7 @@ export const ZConfigSchema = z.object({
   twoFactorSecret: z.string().optional(),
   spotifyConsumerKey: z.string().optional(),
   spotifyConsumerSecret: z.string().optional(),
+  isCloseDailyReview: z.boolean().optional(),
   oauth2Providers: z.array(ZOAuth2ProviderSchema).optional(),
 });
 

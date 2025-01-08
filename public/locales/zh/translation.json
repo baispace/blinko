@@ -455,5 +455,6 @@
   "link-account-warning": "请注意，如果您将您的账户链接起来，当前账户中的任何数据将不会同步到已链接的账户。",
   "unlink-account": "取消链接账户",
   "unlink-account-tips": "您确认通过该账户可以访问所有关联的协会吗？",
-  "login-type": "登录类型"
+  "login-type": "登录类型",
+  "close-daily-review": "关闭每日回顾"
 }

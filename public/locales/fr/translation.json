@@ -424,5 +424,6 @@
   "link-account-warning": "Veuillez noter que si vous liez vos comptes, toutes les données du compte actuel ne seront pas synchronisées avec le compte lié.",
   "unlink-account": "Dissocier le compte",
   "unlink-account-tips": "Confirmez-vous l'accès à toutes les associations avec ce compte ?",
-  "login-type": "Type de connexion"
+  "login-type": "Type de connexion",
+  "close-daily-review": "Examen quotidien de clôture"
 }

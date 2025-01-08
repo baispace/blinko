@@ -465,5 +465,6 @@
   "link-account-warning": "請注意，如果您連結您的帳戶，當前帳戶中的任何數據將不會同步至已連結的帳戶。",
   "unlink-account": "解除帳戶連結",
   "unlink-account-tips": "您確認透過此帳戶可以存取所有聯繫嗎？",
-  "login-type": "登入類型"
+  "login-type": "登入類型",
+  "close-daily-review": "結束每日檢查"
 }

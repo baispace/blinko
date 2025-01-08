@@ -409,5 +409,6 @@
   "link-account-warning": "アカウントをリンクすると、現在のアカウントからのデータはリンクされたアカウントに同期されませんのでご注意ください。",
   "unlink-account": "アカウントのリンク解除",
   "unlink-account-tips": "このアカウントで全ての関連付けにアクセスできることを確認しますか？",
-  "login-type": "ログインタイプ"
+  "login-type": "ログインタイプ",
+  "close-daily-review": "デイリーレビューを閉じる"
 }

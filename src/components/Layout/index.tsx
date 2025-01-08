@@ -170,7 +170,7 @@ export const CommonLayout = observer(({
               <div className="flex items-center justify-center gap-2 md:gap-4 w-auto ">
                 <BarSearchInput isPc={isPc} />
                 <FilterPop />
-                {blinkoStore.dailyReviewNoteList.value?.length != 0 &&
+                {blinkoStore.dailyReviewNoteList.value?.length != 0 && !blinkoStore.config.value?.isCloseDailyReview &&
                   <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
                     <Link href="/review" passHref legacyBehavior>
                       <Button

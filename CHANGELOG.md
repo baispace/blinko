@@ -1,3 +1,10 @@
+## [0.32.23](https://github.com/blinko-space/blinko/compare/v0.32.22...v0.32.23) (2025-01-08)
+
+
+### Bug Fixes
+
+* update image rendering styles and vditor CSS for better responsiveness ([5c3c41c](https://github.com/blinko-space/blinko/commit/5c3c41c1ef3cbed318cd09702c75090dc8d27e8d))
+
 ## [0.32.22](https://github.com/blinko-space/blinko/compare/v0.32.21...v0.32.22) (2025-01-08)
 
 

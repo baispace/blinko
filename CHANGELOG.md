@@ -1,3 +1,10 @@
+## [0.32.20](https://github.com/blinko-space/blinko/compare/v0.32.19...v0.32.20) (2025-01-08)
+
+
+### Bug Fixes
+
+* add 'close daily review' feature across multiple languages and update settings component [#360](https://github.com/blinko-space/blinko/issues/360) ([99a4f90](https://github.com/blinko-space/blinko/commit/99a4f90912f5b00a559b250539f994c881cd55a4))
+
 ## [0.32.19](https://github.com/blinko-space/blinko/compare/v0.32.18...v0.32.19) (2025-01-08)
 
 

@@ -50,8 +50,7 @@ export const commentRouter = router({
 
       const note = await prisma.notes.findFirst({
         where: {
-          id: noteId,
-          isShare: true
+          id: noteId
         }
       });
 

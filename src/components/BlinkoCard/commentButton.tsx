@@ -20,6 +20,47 @@ import { MarkdownRender } from '../Common/MarkdownRender';
 import { AnimatePresence, motion } from 'framer-motion';
 import Avatar from "boring-avatars";
 
+const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: { 
+  account?: { image?: string; nickname?: string; name?: string; id?: string | number; }; 
+  guestName?: string; 
+  isAuthor?: boolean;
+  blinkoItem?: Note;
+}) => {
+  const { t } = useTranslation();
+  const displayName = account ? (account.nickname || account.name) : (guestName || '');
+  
+  return (
+    <div className="flex items-center gap-2">
+      {account ? (
+        <>
+          {account.image ? (
+            <img src={account.image} alt="" className="w-6 h-6 rounded-full" />
+          ) : (
+            <Avatar
+              size={20}
+              name={displayName}
+              variant="beam"
+            />
+          )}
+          <span className="text-sm font-medium">{displayName}</span>
+          {isAuthor && blinkoItem && String(account.id) === String(blinkoItem.accountId) && (
+            <Chip size="sm" color="warning" variant="flat">{t('author')}</Chip>
+          )}
+        </>
+      ) : (
+        <>
+          <Avatar
+            size={20}
+            name={displayName}
+            variant="beam"
+          />
+          <span className="text-sm font-medium">{displayName}</span>
+        </>
+      )}
+    </div>
+  );
+});
+
 export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { blinkoItem: Note, alwaysShow?: boolean }) => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore);
@@ -97,26 +138,12 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
             {comments?.map((comment: Comment['items'][0]) => (
               <div key={comment.id} className="mb-2 border-divider p-2 rounded-2xl bg-background">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {comment.account ? (
-                      <>
-                        <img src={comment.account.image} alt="" className="w-6 h-6 rounded-full" />
-                        <span className="text-sm font-medium">{comment.account.nickname || comment.account.name}</span>
-                        {String(comment.accountId) === String(blinkoItem.accountId) && (
-                          <Chip size="sm" color="warning" variant="flat">{t('author')}</Chip>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <Avatar
-                          size={20}
-                          name={comment?.guestName || ''}
-                          variant="beam"
-                        />
-                        <span className="text-sm font-medium">{comment?.guestName || ''}</span>
-                      </>
-                    )}
-                  </div>
+                  <UserAvatar 
+                    account={comment.account || undefined} 
+                    guestName={comment.guestName || undefined}
+                    isAuthor={true}
+                    blinkoItem={blinkoItem}
+                  />
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
@@ -157,26 +184,12 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
                     {comment.replies.map((reply) => (
                       <div key={reply.id} className="pl-4 py-1">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {reply.account ? (
-                              <>
-                                <img src={reply.account.image} alt="" className="w-5 h-5 rounded-full" />
-                                <span className="text-sm font-medium">{reply.account.nickname || reply.account.name}</span>
-                                {String(reply.accountId) === String(blinkoItem.accountId) && (
-                                  <Chip size="sm" color="primary" variant="flat">{t('Author')}</Chip>
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <Avatar
-                                  size={20}
-                                  name={reply?.guestName || ''}
-                                  variant="beam"
-                                />
-                                <span className="text-sm font-medium">{reply?.guestName || ''}</span>
-                              </>
-                            )}
-                          </div>
+                          <UserAvatar 
+                            account={reply.account || undefined} 
+                            guestName={reply.guestName || undefined}
+                            isAuthor={true}
+                            blinkoItem={blinkoItem}
+                          />
                           {user.id === String(reply.accountId) && (
                             <Button
                               size="sm"

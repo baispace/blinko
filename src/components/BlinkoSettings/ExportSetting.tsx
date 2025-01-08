@@ -16,7 +16,6 @@ import { Icon } from "@iconify/react";
 import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 
 export const ExportSetting = observer(() => {
-  const blinko = RootStore.Get(BlinkoStore);
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState("markdown");
 

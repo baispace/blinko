@@ -1,3 +1,10 @@
+## [0.32.17](https://github.com/blinko-space/blinko/compare/v0.32.16...v0.32.17) (2025-01-08)
+
+
+### Bug Fixes
+
+* Merge pull request [#408](https://github.com/blinko-space/blinko/issues/408) from cedhuf/main ([b02c1ad](https://github.com/blinko-space/blinko/commit/b02c1ade7540155957f0ce20f20eddb6b6461b43))
+
 ## [0.32.16](https://github.com/blinko-space/blinko/compare/v0.32.15...v0.32.16) (2025-01-08)
 
 

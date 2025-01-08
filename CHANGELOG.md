@@ -1,3 +1,10 @@
+## [0.32.15](https://github.com/blinko-space/blinko/compare/v0.32.14...v0.32.15) (2025-01-08)
+
+
+### Bug Fixes
+
+* Merge pull request [#404](https://github.com/blinko-space/blinko/issues/404) from hnico21/patch-1 ([76b5b7c](https://github.com/blinko-space/blinko/commit/76b5b7c56358b46dfc28f43885131aa76c813d03))
+
 ## [0.32.14](https://github.com/blinko-space/blinko/compare/v0.32.13...v0.32.14) (2025-01-08)
 
 

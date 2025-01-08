@@ -183,7 +183,7 @@ export const tagRouter = router({
       console.log({ tag })
       const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
       console.log(allNotesId)
-      await userCaller(ctx).notes.deleteMany({ ids: allNotesId })
+      await userCaller(ctx).notes.trashMany({ ids: allNotesId })
       return true
     }),
   updateTagOrder: authProcedure

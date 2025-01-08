@@ -1,3 +1,10 @@
+# [0.33.0](https://github.com/blinko-space/blinko/compare/v0.32.23...v0.33.0) (2025-01-08)
+
+
+### Features
+
+* support RSS ([6aade1c](https://github.com/blinko-space/blinko/commit/6aade1c6714aa11735d588eb0e7a7c86eed1a1cc))
+
 ## [0.32.23](https://github.com/blinko-space/blinko/compare/v0.32.22...v0.32.23) (2025-01-08)
 
 

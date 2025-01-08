@@ -1,3 +1,10 @@
+## [0.32.14](https://github.com/blinko-space/blinko/compare/v0.32.13...v0.32.14) (2025-01-08)
+
+
+### Bug Fixes
+
+* enhance UI components and editor functionality ([aa4d3de](https://github.com/blinko-space/blinko/commit/aa4d3de4d325c929358e4fcb7329eea7f7343d2d))
+
 ## [0.32.13](https://github.com/blinko-space/blinko/compare/v0.32.12...v0.32.13) (2025-01-07)
 
 

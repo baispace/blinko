@@ -9,7 +9,6 @@ import pLimit from 'p-limit';
 import * as mm from 'music-metadata';
 import { UPLOAD_FILE_PATH } from '@/lib/constant';
 import { SpotifyClient } from './helper/spotify';
-import { PrismaClient } from '@prisma/client';
 import { getGlobalConfig } from './config';
 import { Readable } from 'stream';
 

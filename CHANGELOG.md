@@ -1,3 +1,10 @@
+## [0.32.18](https://github.com/blinko-space/blinko/compare/v0.32.17...v0.32.18) (2025-01-08)
+
+
+### Bug Fixes
+
+* adjust ScrollArea margin for improved layout on Home page ([16aca50](https://github.com/blinko-space/blinko/commit/16aca50d16dfaebb33345692fbfa4df4709827bf))
+
 ## [0.32.17](https://github.com/blinko-space/blinko/compare/v0.32.16...v0.32.17) (2025-01-08)
 
 

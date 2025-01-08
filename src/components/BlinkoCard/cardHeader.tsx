@@ -55,6 +55,8 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
           </Tooltip>
         )}
 
+
+
         <div className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc`}>
           {blinko.config.value?.timeFormat == 'relative'
             ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
@@ -70,6 +72,14 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
             }`}
           content={blinkoItem.content + `\n${blinkoItem.attachments?.map(i => window.location.origin + i.path).join('\n')}`}
         />
+
+        {isShareMode && (
+          <Tooltip content="RSS">
+            <Icon onClick={e => {
+              window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
+            }} icon="mingcute:rss-2-fill" className='ml-2 cursor-pointer hover:text-primary' width="16" height="16" />
+          </Tooltip>
+        )}
 
         {!isShareMode && (
           <ShareButton blinkoItem={blinkoItem} blinko={blinko} isIOSDevice={isIOSDevice} />

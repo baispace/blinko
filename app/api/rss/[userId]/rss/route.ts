@@ -1,5 +1,5 @@
+import { generateFeed } from '@/server/routers/helper';
 import { NextResponse } from 'next/server';
-import { generateFeed } from '../atom/route';
 
 export async function GET(
   request: Request,

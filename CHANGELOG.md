@@ -1,3 +1,10 @@
+## [0.34.6](https://github.com/blinko-space/blinko/compare/v0.34.5...v0.34.6) (2025-01-09)
+
+
+### Bug Fixes
+
+* update ScrollArea component and layout styles ([21642f8](https://github.com/blinko-space/blinko/commit/21642f8fea65d5bad4ade326cbf0b4a9517cd7fe))
+
 ## [0.34.5](https://github.com/blinko-space/blinko/compare/v0.34.4...v0.34.5) (2025-01-09)
 
 

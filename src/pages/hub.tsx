@@ -16,15 +16,15 @@ const Hub = observer(() => {
   const store = RootStore.Local(() => ({
     forceBlog: new StorageState({ key: 'forceBlog', default: true, value: true }),
     shareNoteList: new PromisePageState({
-      function: async () => {
-        const notes = await api.notes.publicList.mutate({})
+      function: async ({ page, size }) => {
+        const notes = await api.notes.publicList.mutate({ page, size })
         return notes
       }
     })
   }))
 
   useEffect(() => {
-    store.shareNoteList.resetAndCall()
+    store.shareNoteList.resetAndCall({})
   }, [])
 
   return <div className='flex flex-col max-w-[1200px] mx-auto h-full w-full'>

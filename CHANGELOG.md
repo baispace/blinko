@@ -1,3 +1,10 @@
+## [0.34.9](https://github.com/blinko-space/blinko/compare/v0.34.8...v0.34.9) (2025-01-09)
+
+
+### Bug Fixes
+
+* change default state of isInsertBefore to false in AiTag component ([d158ed7](https://github.com/blinko-space/blinko/commit/d158ed732a06ea1f02909a330ba2bb312b0f608b))
+
 ## [0.34.8](https://github.com/blinko-space/blinko/compare/v0.34.7...v0.34.8) (2025-01-09)
 
 

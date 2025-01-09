@@ -465,5 +465,7 @@
   "reply-to": "回复",
   "hub": "广场",
   "home-site": "主页",
-  "use-blinko-hub": "使用 Blinko Hub"
+  "use-blinko-hub": "使用 Blinko Hub",
+  "full-screen": "全屏",
+  "exit-fullscreen": "退出全屏"
 }

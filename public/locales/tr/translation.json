@@ -388,5 +388,7 @@
   "reply-to": "Yanıtla",
   "hub": "Merkez",
   "home-site": "Ana Sayfa",
-  "use-blinko-hub": "Blinko Hub'u kullanın"
+  "use-blinko-hub": "Blinko Hub'u kullanın",
+  "full-screen": "Tam Ekran",
+  "exit-fullscreen": "Tam Ekrandan Çıkış"
 }

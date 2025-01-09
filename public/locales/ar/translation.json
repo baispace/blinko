@@ -460,5 +460,7 @@
   "comment": "تعليق",
   "hub": "محور",
   "home-site": "موقع البيت",
-  "use-blinko-hub": "استخدم برنامج Blinko Hub"
+  "use-blinko-hub": "استخدم برنامج Blinko Hub",
+  "full-screen": "شاشة كاملة",
+  "exit-fullscreen": "الخروج من وضع ملء الشاشة"
 }

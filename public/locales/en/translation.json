@@ -463,5 +463,7 @@
   "no-comments-yet": "No comments yet",
   "hub": "Hub",
   "home-site": "Home Site",
-  "use-blinko-hub": "Use Blinko Hub"
+  "use-blinko-hub": "Use Blinko Hub",
+  "full-screen": "Full Screen",
+  "exit-fullscreen": "Exit Fullscreen"
 }

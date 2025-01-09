@@ -419,5 +419,7 @@
   "reply-to": "返信する",
   "hub": "ハブ",
   "home-site": "ホームサイト",
-  "use-blinko-hub": "Blinko Hub を使用してください。"
+  "use-blinko-hub": "Blinko Hub を使用してください。",
+  "full-screen": "フルスクリーン",
+  "exit-fullscreen": "フルスクリーンを終了"
 }

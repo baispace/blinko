@@ -446,5 +446,7 @@
   "comment": "Kommentar",
   "hub": "Nabe",
   "home-site": "Startseite",
-  "use-blinko-hub": "Verwenden Sie Blinko Hub."
+  "use-blinko-hub": "Verwenden Sie Blinko Hub.",
+  "full-screen": "Vollbild",
+  "exit-fullscreen": "Vollbild beenden"
 }

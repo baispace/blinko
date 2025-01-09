@@ -371,5 +371,7 @@
   "reply-to": "Responder a",
   "hub": "Concentrador",
   "home-site": "Site Inicial",
-  "use-blinko-hub": "Use Blinko Hub\n\nUtilize o Blinko Hub"
+  "use-blinko-hub": "Use Blinko Hub\n\nUtilize o Blinko Hub",
+  "full-screen": "Tela cheia",
+  "exit-fullscreen": "Sair do modo de tela cheia"
 }

@@ -27,6 +27,8 @@ import {
 } from './hooks/useEditor';
 import { EditorStore } from "./editorStore";
 import { AIWriteButton } from "./Toolbar/AIWriteButton";
+import { FullScreenButton } from "./Toolbar/FullScreenButton";
+import { eventBus } from "@/lib/event";
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -79,35 +81,38 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     store.updateFileOrder(newFiles);
   };
 
-  return <Card
-    shadow='none' {...getRootProps()}
-    className={`p-2 relative border-2 border-border transition-all  overflow-visible 
-    ${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} `}>
+  const handleFullScreenToggle = () => {
+    eventBus.emit('editor:setFullScreen', !store.isFullscreen);
+  };
 
-    <div ref={cardRef}
-      className="overflow-visible relative"
-      onKeyDown={e => {
-        onHeightChange?.()
-        if (isPc) return
-        store.adjustMobileEditorHeight()
-      }}>
+  return (
+    <Card
+      shadow='none' {...getRootProps()}
+      className={`p-2 relative border-2 border-border transition-all overflow-visible 
+      ${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} 
+      ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}`}>
 
-      <div id={`vditor-${mode}`} className="vditor" />
-      {/******************** AttchMent Render *****************/}
-      {store.files.length > 0 && (
-        <div className='w-full my-2'>
-          <AttachmentsRender files={store.files} onReorder={handleFileReorder} />
+      <div ref={cardRef}
+        className="overflow-visible relative"
+        onKeyDown={e => {
+          onHeightChange?.()
+          if (isPc) return
+          store.adjustMobileEditorHeight()
+        }}>
+
+        <div id={`vditor-${mode}`} className="vditor" />
+        {store.files.length > 0 && (
+          <div className='w-full my-2 attachment-container'>
+            <AttachmentsRender files={store.files} onReorder={handleFileReorder} />
+          </div>
+        )}
+
+        <div className='w-full mb-2 reference-container'>
+          <ReferenceRender store={store} />
         </div>
-      )}
 
-      <div className='w-full mb-2'>
-        <ReferenceRender store={store} />
-      </div>
-
-      {/******************** Toolbar Render *****************/}
-      <div className='flex w-full items-center gap-1'>
-        {
-          !hiddenToolbar && (
+        <div className='flex w-full items-center gap-1 mt-auto'>
+          {!hiddenToolbar && (
             <>
               <NoteTypeButton />
               <HashtagButton store={store} content={content} />
@@ -119,17 +124,18 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 onFileUpload={store.uploadFiles}
               />
             </>
-          )
-        }
-        <div className='flex items-center gap-1 ml-auto'>
-          {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
-          <ViewModeButton viewMode={store.viewMode} />
-          <SendButton store={store} isSendLoading={isSendLoading} />
+          )}
+          <div className='flex items-center gap-1 ml-auto'>
+            {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
+            {isPc && <FullScreenButton isFullscreen={store.isFullscreen} onClick={handleFullScreenToggle} />}
+            <ViewModeButton viewMode={store.viewMode} />
+            <SendButton store={store} isSendLoading={isSendLoading} />
+          </div>
         </div>
       </div>
-    </div>
-  </Card >
-})
+    </Card>
+  );
+});
 
 export default Editor
 

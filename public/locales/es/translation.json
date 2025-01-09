@@ -439,5 +439,7 @@
   "comment": "Comentario",
   "hub": "Núcleo",
   "home-site": "Sitio web",
-  "use-blinko-hub": "Utiliza Blinko Hub"
+  "use-blinko-hub": "Utiliza Blinko Hub",
+  "full-screen": "Pantalla completa",
+  "exit-fullscreen": "Salir de pantalla completa"
 }

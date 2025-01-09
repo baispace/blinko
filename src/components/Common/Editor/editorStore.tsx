@@ -3,22 +3,19 @@ import { PromiseState } from '@/store/standard/PromiseState';
 import { helper } from '@/lib/helper';
 import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { eventBus } from '@/lib/event';
 import { _ } from '@/lib/lodash';
 import { api } from '@/lib/trpc';
-import { IsTagSelectVisible, showTagSelectPop } from '../PopoverFloat/tagSelectPop';
-import { showAiWriteSuggestions } from '../PopoverFloat/aiWritePop';
 import { AiStore } from '@/store/aiStore';
 import { getEditorElements, type ViewMode } from './editorUtils';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, observable, action } from 'mobx';
 import Vditor from 'vditor';
 import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
-import { handlePaste } from '@/lib/hooks';
 import { Button } from '@nextui-org/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
+
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
@@ -34,6 +31,7 @@ export class EditorStore {
   references: number[] = []
   isShowSearch: boolean = false
   onSend: (args: OnSendContentType) => Promise<any>
+  isFullscreen: boolean = false;
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -362,5 +360,14 @@ export class EditorStore {
         // }
       }
     } catch (error) { }
+  }
+
+  setFullscreen(value: boolean) {
+    this.isFullscreen = value;
+    if (value) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
   }
 }

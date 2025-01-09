@@ -1,3 +1,10 @@
+## [0.34.5](https://github.com/blinko-space/blinko/compare/v0.34.4...v0.34.5) (2025-01-09)
+
+
+### Bug Fixes
+
+* update Tailwind CSS configuration and styles for improved theming [#418](https://github.com/blinko-space/blinko/issues/418) ([9f242fe](https://github.com/blinko-space/blinko/commit/9f242fe762028c670b67f8dd1f449c9a6af70334))
+
 ## [0.34.4](https://github.com/blinko-space/blinko/compare/v0.34.3...v0.34.4) (2025-01-09)
 
 

@@ -80,8 +80,8 @@ body {
 .blinko-tag {
   margin-right: 4px;
   margin-left: 4px;
-  color: var(--tag) !important;
-  background: var(--tag-foreground) !important;
+  color: var(--primary) !important;
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
   border-radius: 7px;
   font-size: 13px;
   padding: 3px;
@@ -135,6 +135,7 @@ body {
 .ͼo.cm-focused .cm-matchingBracket {
   color: var(--desc);
 }
+
 
 @layer base {
   :root {

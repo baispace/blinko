@@ -91,7 +91,7 @@ export const TagListPanel = observer(() => {
   useEffect(() => { }, [blinko.noteListFilterConfig.tagId])
   return (
     <>
-      <div className="ml-2 my-2 text-xs font-bold text-[#a252e1]">{t('total-tags')}</div>
+      <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>
       <TreeView
         className="mb-4"
         data={flattenTree({

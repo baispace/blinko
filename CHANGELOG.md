@@ -1,3 +1,10 @@
+## [0.34.4](https://github.com/blinko-space/blinko/compare/v0.34.3...v0.34.4) (2025-01-09)
+
+
+### Bug Fixes
+
+* enhance note retrieval logic with share password and expiry checks ([5c4da93](https://github.com/blinko-space/blinko/commit/5c4da930c1b73eeb680e3ede2a3e82eecc1accef))
+
 ## [0.34.3](https://github.com/blinko-space/blinko/compare/v0.34.2...v0.34.3) (2025-01-09)
 
 

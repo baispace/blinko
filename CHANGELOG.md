@@ -1,3 +1,10 @@
+## [0.34.12](https://github.com/blinko-space/blinko/compare/v0.34.11...v0.34.12) (2025-01-09)
+
+
+### Bug Fixes
+
+* simplify comment schema and improve type definitions ([2145ab2](https://github.com/blinko-space/blinko/commit/2145ab26d6ce7b410105576fa94b2617178ffc97))
+
 ## [0.34.11](https://github.com/blinko-space/blinko/compare/v0.34.10...v0.34.11) (2025-01-09)
 
 

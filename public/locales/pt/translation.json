@@ -368,5 +368,8 @@
   "author": "Autor",
   "from": "De",
   "comment": "Comentário",
-  "reply-to": "Responder a"
+  "reply-to": "Responder a",
+  "hub": "Concentrador",
+  "home-site": "Site Inicial",
+  "use-blinko-hub": "Use Blinko Hub\n\nUtilize o Blinko Hub"
 }

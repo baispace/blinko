@@ -416,5 +416,8 @@
   "no-comments-yet": "まだコメントはありません",
   "author": "著者",
   "from": "から",
-  "reply-to": "返信する"
+  "reply-to": "返信する",
+  "hub": "ハブ",
+  "home-site": "ホームサイト",
+  "use-blinko-hub": "Blinko Hub を使用してください。"
 }

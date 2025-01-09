@@ -15,14 +15,15 @@ interface CardFooterProps {
     title?: string;
   };
   blinko: BlinkoStore;
+  isShareMode?: boolean;
 }
 
-export const CardFooter = ({ blinkoItem, blinko }: CardFooterProps) => {
+export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps) => {
   const { t } = useTranslation();
 
   return (
     <div className="flex items-center mt-2">
-      <ConvertTypeButton blinkoItem={blinkoItem} blinko={blinko} t={t} />
+      {isShareMode ? <></> : <ConvertTypeButton blinkoItem={blinkoItem} blinko={blinko} t={t} />}
       <RightContent blinkoItem={blinkoItem} t={t} />
     </div>
   );

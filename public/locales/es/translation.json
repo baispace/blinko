@@ -436,5 +436,8 @@
   "author": "Autor",
   "from": "De",
   "reply-to": "Responder a",
-  "comment": "Comentario"
+  "comment": "Comentario",
+  "hub": "Núcleo",
+  "home-site": "Sitio web",
+  "use-blinko-hub": "Utiliza Blinko Hub"
 }

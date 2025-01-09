@@ -472,5 +472,8 @@
   "no-comments-yet": "目前尚無評論",
   "author": "作者",
   "from": "從",
-  "reply-to": "回覆"
+  "reply-to": "回覆",
+  "hub": "據點",
+  "home-site": "首頁",
+  "use-blinko-hub": "使用 Blinko Hub"
 }

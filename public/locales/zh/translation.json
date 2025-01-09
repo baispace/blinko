@@ -462,5 +462,8 @@
   "no-comments-yet": "暂无评论",
   "author": "作者",
   "from": "从",
-  "reply-to": "回复"
+  "reply-to": "回复",
+  "hub": "广场",
+  "home-site": "主页",
+  "use-blinko-hub": "使用 Blinko Hub"
 }

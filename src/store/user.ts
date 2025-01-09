@@ -27,6 +27,7 @@ export class UserStore implements User, Store {
   isSetup: boolean = false;
   languageInitialized: boolean = false;
   themeInitialized: boolean = false;
+  isHubInitialized: boolean = false;
 
   wait() {
     return new Promise<UserStore>((res, rej) => {
@@ -95,6 +96,17 @@ export class UserStore implements User, Store {
   async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
     const savedLanguage = localStorage.getItem('userLanguage');
     const savedTheme = localStorage.getItem('userTheme');
+    const savedHubEnabled = localStorage.getItem('hubEnabled');
+
+    if (savedHubEnabled === 'true' && !this.isHubInitialized) {
+      const base = RootStore.Get(BaseStore);
+      base.routerList.splice(2, 0, {
+        title: "hub",
+        href: '/hub',
+        icon: 'fluent:people-community-16-regular'
+      });
+      this.isHubInitialized = true;
+    }
 
     if (savedLanguage && !this.languageInitialized) {
       RootStore.Get(BaseStore).changeLanugage(i18n, savedLanguage);
@@ -112,7 +124,7 @@ export class UserStore implements User, Store {
     const darkElement = document.querySelector('.dark')
     const lightElement = document.querySelector('.light')
     const config = await this.blinko.config.call();
-    
+
     if (config?.themeColor && config?.themeForegroundColor) {
       if (darkElement) {
         //@ts-ignore
@@ -125,6 +137,26 @@ export class UserStore implements User, Store {
         lightElement.style.setProperty('--primary', config.themeColor)
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+      }
+    }
+
+    if (config?.isUseBlinkoHub !== (savedHubEnabled === 'true')) {
+      localStorage.setItem('hubEnabled', String(config?.isUseBlinkoHub));
+      const base = RootStore.Get(BaseStore);
+      
+      if (config?.isUseBlinkoHub && !this.isHubInitialized) {
+        base.routerList.splice(2, 0, {
+          title: "hub",
+          href: '/hub',
+          icon: 'fluent:people-community-16-regular'
+        });
+        this.isHubInitialized = true;
+      } else if (!config?.isUseBlinkoHub && this.isHubInitialized) {
+        const hubIndex = base.routerList.findIndex(route => route.href === '/hub');
+        if (hubIndex !== -1) {
+          base.routerList.splice(hubIndex, 1);
+        }
+        this.isHubInitialized = false;
       }
     }
 

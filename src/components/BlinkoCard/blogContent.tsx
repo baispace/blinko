@@ -21,14 +21,15 @@ export const BlogContent = ({ blinkoItem, isExpanded }: BlogContentProps) => {
         <Image
           src={blinkoItem.blogCover}
           alt='blog cover'
+          isZoomed
           className={`object-cover aspect-square rounded-lg w-fit max-w-[100px] max-h-[100px]`}
         />
       )}
-      <div className='flex-1 flex flex-col min-w-[70%] pr-2'>
-        <div className={`font-bold line-clamp-1 ${isExpanded ? 'text-xl' : 'text-lg'}`}>
+      <div className='flex-1 flex flex-col min-w-[70%] pr-2 pl-1'>
+        <div className={`font-bold mb-1 line-clamp-1 ${isExpanded ? 'text-xl' : 'text-lg'}`}>
           {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
         </div>
-        <div className={`text-desc ${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-3' : 'line-clamp-5'} flex-1 ${isExpanded ? 'text-sm' : 'text-xs'}`}>
+        <div className={`text-desc ${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-3' : 'line-clamp-4'} flex-1 ${isExpanded ? 'text-sm' : 'text-xs'}`}>
           {blinkoItem.content?.replace(blinkoItem.title ?? '', '').replace(/#/g, '').replace(/\*/g, '')}
         </div>
         {

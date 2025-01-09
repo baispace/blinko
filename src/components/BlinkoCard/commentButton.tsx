@@ -20,8 +20,10 @@ import { MarkdownRender } from '../Common/MarkdownRender';
 import { AnimatePresence, motion } from 'framer-motion';
 import Avatar from "boring-avatars";
 
-const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: {
-  account?: { image?: string; nickname?: string; name?: string; id?: string | number; };
+export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
+
+export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: {
+  account?: AvatarAccount;
   guestName?: string;
   isAuthor?: boolean;
   blinkoItem?: Note;

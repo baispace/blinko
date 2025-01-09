@@ -385,5 +385,8 @@
   "no-comments-yet": "Henüz yorum yapılmadı",
   "author": "Yazar",
   "from": "Dan",
-  "reply-to": "Yanıtla"
+  "reply-to": "Yanıtla",
+  "hub": "Merkez",
+  "home-site": "Ana Sayfa",
+  "use-blinko-hub": "Blinko Hub'u kullanın"
 }

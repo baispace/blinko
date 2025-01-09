@@ -149,6 +149,12 @@ export const noteRouter = router({
     .output(z.array(notesSchema.merge(
       z.object({
         attachments: z.array(attachmentsSchema),
+        account: z.object({
+          image: z.string().optional(),
+          nickname: z.string().optional(),
+          name: z.string().optional(),
+          id: z.number().optional(),
+        }).nullable().optional(),
         _count: z.object({
           comments: z.number()
         })
@@ -170,6 +176,14 @@ export const noteRouter = router({
         take: size,
         include: {
           tags: true,
+          account: {
+            select: {
+              image: true,
+              nickname: true,
+              name: true,
+              id: true,
+            }
+          },
           attachments: true,
           _count: {
             select: {
@@ -238,6 +252,12 @@ export const noteRouter = router({
       data: z.union([z.null(), notesSchema.merge(
         z.object({
           attachments: z.array(attachmentsSchema),
+          account: z.object({
+            image: z.string().optional(),
+            nickname: z.string().optional(),
+            name: z.string().optional(),
+            id: z.number().optional(),
+          }).nullable().optional(),
           _count: z.object({
             comments: z.number()
           })
@@ -253,6 +273,14 @@ export const noteRouter = router({
           isShare: true
         },
         include: {
+          account: {
+            select: {
+              image: true,
+              nickname: true,
+              name: true,
+              id: true,
+            }
+          },
           tags: true,
           attachments: true,
           _count: {

@@ -26,11 +26,12 @@ export class BaseStore implements Store {
       shallow: true,
       icon: 'hugeicons:note'
     },
+
     {
       title: "analytics",
       href: '/analytics',
       hiddenMobile: true,
-      icon: 'lucide:bar-chart-2'
+      icon: 'hugeicons:analytics-01'
     },
     {
       title: "resources",
@@ -90,13 +91,13 @@ export class BaseStore implements Store {
   useInitApp(router) {
     const isPc = useMediaQuery('(min-width: 768px)')
     const { t, i18n } = useTranslation()
-    
+
     const documentHeight = () => {
       const doc = document.documentElement
       this.documentHeight = window.innerHeight
       doc.style.setProperty('--doc-height', `${window.innerHeight}px`)
     }
-    
+
     useEffect(() => {
       const handleOnline = () => this.setOnlineStatus(true);
       const handleOffline = () => this.setOnlineStatus(false);
@@ -128,7 +129,7 @@ export class BaseStore implements Store {
     }, [this.currentRouter, router.pathname])
   }
 
-  sidebarWidth = new StorageState<number>({ 
+  sidebarWidth = new StorageState<number>({
     key: 'sidebar-width',
     default: 288,
     validate: (value: number) => {
@@ -138,9 +139,9 @@ export class BaseStore implements Store {
     }
   });
 
-  sidebarCollapsed = new StorageState<boolean>({ 
+  sidebarCollapsed = new StorageState<boolean>({
     key: 'sidebar-collapsed',
-    default: false 
+    default: false
   });
 
   isResizing = false;
@@ -171,7 +172,7 @@ export class BaseStore implements Store {
 
   handleMouseMove = (e: MouseEvent) => {
     if (!this.isResizing || this.isSidebarCollapsed) return;
-    
+
     e.preventDefault();
     const newWidth = Math.max(80, Math.min(400, e.clientX));
     this.sidebarWidth.save(newWidth);

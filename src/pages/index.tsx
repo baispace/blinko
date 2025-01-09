@@ -54,8 +54,8 @@ const Home = observer(() => {
               1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
               768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
             }}
-            className="my-masonry-grid"
-            columnClassName="my-masonry-grid_column">
+            className="card-masonry-grid"
+            columnClassName="card-masonry-grid_column">
             {
               blinko.noteList?.value?.map(i => {
                 return <BlinkoCard key={i.id} blinkoItem={i} />

@@ -443,5 +443,8 @@
   "author": "Autor",
   "from": "Von",
   "reply-to": "Antworten an",
-  "comment": "Kommentar"
+  "comment": "Kommentar",
+  "hub": "Nabe",
+  "home-site": "Startseite",
+  "use-blinko-hub": "Verwenden Sie Blinko Hub."
 }

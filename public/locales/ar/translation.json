@@ -457,5 +457,8 @@
   "author": "الكاتب",
   "from": "من",
   "reply-to": "الرد على",
-  "comment": "تعليق"
+  "comment": "تعليق",
+  "hub": "محور",
+  "home-site": "موقع البيت",
+  "use-blinko-hub": "استخدم برنامج Blinko Hub"
 }

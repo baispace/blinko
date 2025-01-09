@@ -12,16 +12,17 @@ import { useIsIOS } from '@/lib/hooks';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
-import { CommentButton } from './commentButton';
+import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
 
 interface CardHeaderProps {
   blinkoItem: Note;
   blinko: BlinkoStore;
   isShareMode: boolean;
   isExpanded?: boolean;
+  account?: AvatarAccount;
 }
 
-export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: CardHeaderProps) => {
+export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, account }: CardHeaderProps) => {
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
@@ -54,6 +55,9 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
           </Tooltip>
         )}
 
+        {isShareMode && account && (
+          <UserAvatar account={account} blinkoItem={blinkoItem} />
+        )}
         <div className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc`}>
           {blinko.config.value?.timeFormat == 'relative'
             ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
@@ -76,7 +80,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded }: Card
           <Tooltip content="RSS">
             <Icon onClick={e => {
               window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
-            }} icon="mingcute:rss-2-fill" className='ml-2 cursor-pointer hover:text-primary' width="16" height="16" />
+            }} icon="mingcute:rss-2-fill" className='opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary' width="16" height="16" />
           </Tooltip>
         )}
 

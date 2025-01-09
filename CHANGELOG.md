@@ -1,3 +1,10 @@
+## [0.34.7](https://github.com/blinko-space/blinko/compare/v0.34.6...v0.34.7) (2025-01-09)
+
+
+### Bug Fixes
+
+* update PerferSetting to include maxHomePageWidth in useEffect dependencies ([a6d5cd4](https://github.com/blinko-space/blinko/commit/a6d5cd44dfe1a90c5a4997287628b9de61bd6ee3))
+
 ## [0.34.6](https://github.com/blinko-space/blinko/compare/v0.34.5...v0.34.6) (2025-01-09)
 
 

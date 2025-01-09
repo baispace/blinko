@@ -24,8 +24,9 @@ export const PerferSetting = observer(() => {
 
   useEffect(() => {
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
+    setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
-  }, [blinko.config.value?.textFoldLength]);
+  }, [blinko.config.value?.textFoldLength, blinko.config.value?.maxHomePageWidth]);
 
 
   return <CollapsibleCard

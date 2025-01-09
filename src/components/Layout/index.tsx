@@ -196,7 +196,7 @@ export const CommonLayout = observer(({
         </header>
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
 
-        <ScrollArea onBottom={() => { }} className="md:contents h-[calc(100%_-_70px)] overflow-y-scroll overflow-x-hidden">
+        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] overflow-y-auto overflow-x-hidden">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
             {children}
           </div>

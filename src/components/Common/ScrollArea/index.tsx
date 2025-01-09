@@ -16,7 +16,7 @@ export type ScrollAreaHandles = {
   scrollToBottom: () => void;
 }
 
-export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ style, className, children, onBottom, disableAnimation = false }, ref) => {
+export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ style, className, children, onBottom, disableAnimation = true }, ref) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAtTop, setIsAtTop] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -78,19 +78,19 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ styl
   );
 }))
 
-const styles = `
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-  }
+// const styles = `
+//   .scrollbar-hide {
+//     -ms-overflow-style: none;  /* IE and Edge */
+//     scrollbar-width: none;     /* Firefox */
+//   }
   
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-`;
+//   .scrollbar-hide::-webkit-scrollbar {
+//     display: none;  /* Chrome, Safari and Opera */
+//   }
+// `;
 
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
-}
+// if (typeof document !== 'undefined') {
+//   const styleSheet = document.createElement('style');
+//   styleSheet.textContent = styles;
+//   document.head.appendChild(styleSheet);
+// }

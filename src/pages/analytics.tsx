@@ -10,6 +10,7 @@ import { TagDistributionChart } from "@/components/BlinkoAnalytics/TagDistributi
 import dayjs from "dayjs"
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import { ScrollArea } from '@/components/Common/ScrollArea'
 
 const Analytics = observer(() => {
   const analyticsStore = RootStore.Get(AnalyticsStore)
@@ -38,8 +39,8 @@ const Analytics = observer(() => {
       <div className="w-72">
         <Dropdown>
           <DropdownTrigger>
-            <Button 
-              variant="flat" 
+            <Button
+              variant="flat"
               className="w-[160px] justify-between bg-default-100 hover:bg-default-200"
               size="md"
               endContent={<Icon icon="mdi:chevron-down" className="h-4 w-4" />}
@@ -48,9 +49,9 @@ const Analytics = observer(() => {
               {selectedMonth}
             </Button>
           </DropdownTrigger>
-          <DropdownMenu 
+          <DropdownMenu
             aria-label="Select month"
-            selectionMode="single" 
+            selectionMode="single"
             selectedKeys={[selectedMonth]}
             className="max-h-[400px]"
             onSelectionChange={(key) => {
@@ -59,7 +60,7 @@ const Analytics = observer(() => {
             }}
           >
             {last12Months.map((month) => (
-              <DropdownItem 
+              <DropdownItem
                 key={month}
                 className="data-[selected=true]:bg-primary-500/20"
               >
@@ -81,7 +82,6 @@ const Analytics = observer(() => {
       {stats?.tagStats && stats.tagStats.length > 0 && (
         <TagDistributionChart tagStats={stats.tagStats} />
       )}
-
     </div>
   )
 })

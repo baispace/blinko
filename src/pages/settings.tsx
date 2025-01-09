@@ -185,7 +185,7 @@ const Page = observer(() => {
     });
   };
 
-  return <div className="h-mobile-full flex flex-col">
+  return <div className="h-full flex flex-col">
     <div className="sticky top-0 z-10 w-full">
       <div className="relative  md:max-w-[980px] md:-translate-x-[3px] mx-3 md:mx-auto backdrop-blur-md bg-background rounded-2xl" ref={containerRef}>
         {showLeftArrow && (
@@ -236,7 +236,7 @@ const Page = observer(() => {
         )}
       </div>
     </div>
-    <ScrollArea onBottom={() => { }} className="flex-1 md:mb-[70px]">
+    <ScrollArea onBottom={() => { }} className="flex-1">
       <div className="max-w-[1024px] mx-auto flex flex-col gap-6 px-4 md:px-6 py-4">
         {getCurrentComponent()}
       </div>

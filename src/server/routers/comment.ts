@@ -1,39 +1,25 @@
 import { router, authProcedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
-import { Prisma } from '@prisma/client';
 import { commentsSchema, accountsSchema } from '@/lib/prismaZodType';
 import * as crypto from 'crypto';
 import { AiService } from '../plugins/ai';
 
-type CommentWithRelations = {
-  id: number;
-  content: string;
-  accountId: number | null;
-  guestName: string | null;
-  guestIP: string | null;
-  guestUA: string | null;
-  noteId: number;
-  parentId: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-  account: {
-    id: number;
-    name: string;
-    nickname: string;
-    image: string;
-  } | null;
-  replies?: CommentWithRelations[];
-};
+const accountSchema = accountsSchema.pick({
+  id: true,
+  name: true,
+  nickname: true,
+  image: true
+});
 
-const commentWithRelationsSchema: z.ZodType<CommentWithRelations> = commentsSchema.extend({
-  account: accountsSchema.pick({
-    id: true,
-    name: true,
-    nickname: true,
-    image: true
-  }).nullable(),
-  replies: z.array(z.lazy(() => commentWithRelationsSchema)).optional()
+const baseCommentSchema = commentsSchema.extend({
+  account: accountSchema.nullable(),
+});
+
+const commentWithRelationsSchema: z.ZodType<any> = baseCommentSchema.extend({
+  replies: z.array(baseCommentSchema.extend({
+    account: accountSchema.nullable()
+  })).optional()
 });
 
 export const commentRouter = router({

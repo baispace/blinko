@@ -1,3 +1,11 @@
+## [0.34.11](https://github.com/blinko-space/blinko/compare/v0.34.10...v0.34.11) (2025-01-09)
+
+
+### Bug Fixes
+
+* update shareNoteList function to accept pagination parameters ([18fd8eb](https://github.com/blinko-space/blinko/commit/18fd8eb65f0063a199019c75cc76f30aac3ab450))
+* update shareNoteList function to accept pagination parameters ([019cdd5](https://github.com/blinko-space/blinko/commit/019cdd58514587202e8baeebadc327551ffb26b9))
+
 ## [0.34.10](https://github.com/blinko-space/blinko/compare/v0.34.9...v0.34.10) (2025-01-09)
 
 

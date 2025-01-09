@@ -1,3 +1,11 @@
+## [0.34.10](https://github.com/blinko-space/blinko/compare/v0.34.9...v0.34.10) (2025-01-09)
+
+
+### Bug Fixes
+
+* enhance editor functionality and localization support ([9821c64](https://github.com/blinko-space/blinko/commit/9821c64ee7b0ceb6efca0a8a9e492cd19ff8679b))
+* enhance localization and Blinko Hub integration ([ac7bbe7](https://github.com/blinko-space/blinko/commit/ac7bbe7a47b8c8a37df7e3f0a8b9fdb47ba648cf))
+
 ## [0.34.9](https://github.com/blinko-space/blinko/compare/v0.34.8...v0.34.9) (2025-01-09)
 
 

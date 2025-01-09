@@ -157,12 +157,19 @@ export const noteRouter = router({
     .mutation(async function ({ input }) {
       const { page, size } = input
       return await prisma.notes.findMany({
-        where: { isShare: true },
+        where: {
+          isShare: true,
+          sharePassword: "",
+          OR: [
+            { shareExpiryDate: { gt: new Date() } },
+            { shareExpiryDate: null }
+          ]
+        },
         orderBy: [{ isTop: "desc" }, { updatedAt: 'desc' }],
         skip: (page - 1) * size,
         take: size,
-        include: { 
-          tags: true, 
+        include: {
+          tags: true,
           attachments: true,
           _count: {
             select: {

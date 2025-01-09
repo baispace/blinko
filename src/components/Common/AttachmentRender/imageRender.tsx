@@ -51,46 +51,18 @@ const ImageRender = observer((props: IProps) => {
     if (!preview) {
       return 'flex flex-row gap-2 overflow-x-auto pb-2'
     }
-
-    const imageLength = images?.length
-    if (columns) {
-      return `grid grid-cols-${columns} gap-2`
-    }
-    if (imageLength == 1) {
-      return `grid grid-cols-2 gap-2`
-    }
-    if (imageLength > 1 && imageLength <= 5) {
-      return `grid grid-cols-2 gap-3`
-    }
-    if (imageLength > 5) {
-      return `grid grid-cols-3 gap-3`
-    }
-    return ''
-  }, [images, preview, columns])
+    return 'flex flex-wrap gap-2'
+  }, [preview, columns])
 
   const imageHeight = useMemo(() => {
     if (!preview) {
       return 'h-[160px] w-[160px]'
     }
-
-    const imageLength = images?.length
-    if (columns) {
-      return `max-h-[100px] w-auto`
-    }
-    if (imageLength == 1) {
-      return `h-[200px] max-h-[200px] md:max-w-[200px]`
-    }
-    if (imageLength > 1 && imageLength <= 5) {
-      return `md:h-[180px] h-[160px]`
-    }
-    if (imageLength > 5) {
-      return `lg:h-[160px] md:h-[120px] h-[100px]`
-    }
-    return ''
-  }, [images, preview, columns])
+    return 'md:h-[180px] md:w-[180px] h-[120px] w-[120px] object-cover'
+  }, [preview, columns])
 
   const renderImage = (file: FileType) => (
-    <div className={`relative group ${!preview ? 'min-w-[160px] flex-shrink-0' : 'w-full'} ${imageHeight}`}>
+    <div className={`relative group ${!preview ? 'min-w-[160px] flex-shrink-0' : ''} ${imageHeight}`}>
       {file.uploadPromise?.loading?.value && (
         <div className='absolute inset-0 flex items-center justify-center w-full h-full'>
           <Icon icon="line-md:uploading-loop" width="40" height="40" />

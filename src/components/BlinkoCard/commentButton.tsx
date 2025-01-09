@@ -1,5 +1,5 @@
 import Editor from '../Common/Editor';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
 import { UserStore } from '@/store/user';
 import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
@@ -20,15 +20,15 @@ import { MarkdownRender } from '../Common/MarkdownRender';
 import { AnimatePresence, motion } from 'framer-motion';
 import Avatar from "boring-avatars";
 
-const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: { 
-  account?: { image?: string; nickname?: string; name?: string; id?: string | number; }; 
-  guestName?: string; 
+const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: {
+  account?: { image?: string; nickname?: string; name?: string; id?: string | number; };
+  guestName?: string;
   isAuthor?: boolean;
   blinkoItem?: Note;
 }) => {
   const { t } = useTranslation();
   const displayName = account ? (account.nickname || account.name) : (guestName || '');
-  
+
   return (
     <div className="flex items-center gap-2">
       {account ? (
@@ -113,6 +113,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
       function: async (commentId: number) => {
         await api.comments.delete.mutate({ id: commentId });
         await Store.commentList.resetAndCall({});
+        blinko.updateTicker++
       }
     }),
     safeUA: (ua: string) => {
@@ -124,6 +125,16 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
       }
     }
   }))
+
+  useEffect(() => {
+    let title = t('comment')
+    if (blinkoItem?._count?.comments && blinkoItem?._count?.comments > 0) {
+      title += ` (${blinkoItem?._count?.comments})`
+    }
+    RootStore.Get(DialogStore).setData({
+      title: title
+    })
+  }, [blinkoItem?._count?.comments])
 
 
   const CommentContent = observer(() => {
@@ -138,8 +149,8 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
             {comments?.map((comment: Comment['items'][0]) => (
               <div key={comment.id} className="mb-2 border-divider p-2 rounded-2xl bg-background">
                 <div className="flex items-center justify-between">
-                  <UserAvatar 
-                    account={comment.account || undefined} 
+                  <UserAvatar
+                    account={comment.account || undefined}
                     guestName={comment.guestName || undefined}
                     isAuthor={true}
                     blinkoItem={blinkoItem}
@@ -173,7 +184,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
                     {Store.safeUA(comment?.guestUA ?? '') && (
                       <>
                         <span>·</span>
-                        <span>from {Store.safeUA(comment?.guestUA ?? '')}</span>
+                        <span>{t('from')} {Store.safeUA(comment?.guestUA ?? '')}</span>
                       </>
                     )}
                   </div>
@@ -184,8 +195,8 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
                     {comment.replies.map((reply) => (
                       <div key={reply.id} className="pl-4 py-1">
                         <div className="flex items-center justify-between">
-                          <UserAvatar 
-                            account={reply.account || undefined} 
+                          <UserAvatar
+                            account={reply.account || undefined}
                             guestName={reply.guestName || undefined}
                             isAuthor={true}
                             blinkoItem={blinkoItem}
@@ -269,11 +280,11 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
       <div className="flex items-center gap-2">
         <Icon
           icon="akar-icons:comment"
-          width="16"
-          height="16"
-          className={`cursor-pointer text-desc ml-2 ${isIOSDevice
+          width="15"
+          height="15"
+          className={`cursor-pointer ml-2 ${isIOSDevice
             ? 'opacity-100'
-            : `${alwaysShow ? '' : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}  `
+            : `${alwaysShow ? 'text-ignore' : 'text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}  `
             }`}
           onClick={async (e) => {
             e.stopPropagation()
@@ -302,6 +313,6 @@ export const CommentCount = observer(({ blinkoItem }: { blinkoItem: Note }) => {
   if (blinkoItem?._count?.comments == 0) return null;
   return <div className="flex items-center gap-1">
     <CommentButton blinkoItem={blinkoItem} alwaysShow={true} />
-    <span className="text-sm text-desc">{blinkoItem?._count?.comments}</span>
+    <span className="text-sm text-ignore">{blinkoItem?._count?.comments}</span>
   </div>
 });

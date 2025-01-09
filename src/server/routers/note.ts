@@ -230,7 +230,10 @@ export const noteRouter = router({
       hasPassword: z.boolean(),
       data: z.union([z.null(), notesSchema.merge(
         z.object({
-          attachments: z.array(attachmentsSchema)
+          attachments: z.array(attachmentsSchema),
+          _count: z.object({
+            comments: z.number()
+          })
         })
       )]),
       error: z.union([z.literal('expired'), z.null()]).default(null)
@@ -244,7 +247,12 @@ export const noteRouter = router({
         },
         include: {
           tags: true,
-          attachments: true
+          attachments: true,
+          _count: {
+            select: {
+              comments: true
+            }
+          }
         }
       })
 

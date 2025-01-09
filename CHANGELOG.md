@@ -1,3 +1,10 @@
+## [0.34.3](https://github.com/blinko-space/blinko/compare/v0.34.2...v0.34.3) (2025-01-09)
+
+
+### Bug Fixes
+
+* simplify image rendering logic in ImageRender component ([974b922](https://github.com/blinko-space/blinko/commit/974b9221ee6e5ec2d6857781bb9c179397223d17))
+
 ## [0.34.2](https://github.com/blinko-space/blinko/compare/v0.34.1...v0.34.2) (2025-01-09)
 
 

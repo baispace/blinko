@@ -1,3 +1,11 @@
+## [0.34.8](https://github.com/blinko-space/blinko/compare/v0.34.7...v0.34.8) (2025-01-09)
+
+
+### Bug Fixes
+
+* refine ScrollArea component usage in Home page ([dd36f58](https://github.com/blinko-space/blinko/commit/dd36f580c0ae70e28ff93c8aa748cc5a975a8154))
+* update ScrollArea component in Layout to enforce overflow styles ([eaf5a65](https://github.com/blinko-space/blinko/commit/eaf5a65f0e0fc9162e28de81f5b5fe05a19df203))
+
 ## [0.34.7](https://github.com/blinko-space/blinko/compare/v0.34.6...v0.34.7) (2025-01-09)
 
 

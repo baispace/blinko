@@ -40,7 +40,7 @@ const Hub = observer(() => {
       </Button>
 
     </div>
-    <ScrollArea className='p-4 bg-sencondbackground h-full w-full -pt-[20px]' onBottom={() => store.shareNoteList.callNextPage()}>
+    <ScrollArea className='p-4 bg-sencondbackground h-full w-full -pt-[20px]' onBottom={() => store.shareNoteList.callNextPage({})}>
       <Masonry
         breakpointCols={{
           default: 3,

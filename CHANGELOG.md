@@ -1,3 +1,10 @@
+## [0.34.2](https://github.com/blinko-space/blinko/compare/v0.34.1...v0.34.2) (2025-01-09)
+
+
+### Bug Fixes
+
+* enhance CommentButton component and update note router for comments ([0b8226b](https://github.com/blinko-space/blinko/commit/0b8226b8bfaaa0aa72a0b854982cc5254aa95630))
+
 ## [0.34.1](https://github.com/blinko-space/blinko/compare/v0.34.0...v0.34.1) (2025-01-08)
 
 

@@ -261,10 +261,10 @@ export const helper = {
       }
     },
     cornTimeList: [
-      // {
-      //   label: i18n.t('every-1-minutes'),
-      //   value: '*/1 * * * *'
-      // },
+      ...(process.env.NODE_ENV == 'development' ? [{
+        label: '10 seconds',
+        value: '*/10 * * * * *'
+      }] : []),
       {
         label: i18n.t('every-day'),
         value: '0 0 * * *'

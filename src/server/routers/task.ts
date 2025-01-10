@@ -38,7 +38,7 @@ export const taskRouter = router({
         return task == DBBAK_TASK_NAME ? await DBJob.Stop() : await ArchiveJob.Stop()
       }
       if (type == 'update' && time) {
-        return task == DBBAK_TASK_NAME ? await DBJob.SetCornTime(time) : await ArchiveJob.SetCornTime(time)
+        return task == DBBAK_TASK_NAME ? await DBJob.SetCronTime(time) : await ArchiveJob.SetCronTime(time)
       }
     }),
   importFromBlinko: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)

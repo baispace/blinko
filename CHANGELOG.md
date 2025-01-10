@@ -1,3 +1,10 @@
+## [0.35.5](https://github.com/blinko-space/blinko/compare/v0.35.4...v0.35.5) (2025-01-10)
+
+
+### Bug Fixes
+
+* update Editor and ReferenceButton components for improved functionality ([2c9cae5](https://github.com/blinko-space/blinko/commit/2c9cae57971c2f6d38108fa8ee850d8146f2ee4a))
+
 ## [0.35.4](https://github.com/blinko-space/blinko/compare/v0.35.3...v0.35.4) (2025-01-10)
 
 

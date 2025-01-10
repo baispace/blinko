@@ -17,14 +17,17 @@ import TwitchProvider from "next-auth/providers/twitch";
 import LineProvider from "next-auth/providers/line";
 
 async function verify2FACode(userId: string, userRole: string, userName: string, twoFactorCode: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const thirtyDays = 30 * 24 * 60 * 60;
+  
   const config = await getGlobalConfig({
     ctx: {
       id: userId,
       role: userRole as 'superadmin' | 'user',
       name: userName,
       sub: userId,
-      exp: 0,
-      iat: 0
+      exp: now + thirtyDays,
+      iat: now
     }
   });
 
@@ -41,14 +44,17 @@ async function verify2FACode(userId: string, userRole: string, userName: string,
 }
 
 async function getUserConfig(userId: string, userRole: string, userName: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const thirtyDays = 30 * 24 * 60 * 60;
+  
   return await getGlobalConfig({
     ctx: {
       id: userId,
       role: userRole as 'superadmin' | 'user',
       name: userName,
       sub: userId,
-      exp: 0,
-      iat: 0
+      exp: now + thirtyDays,
+      iat: now
     }
   });
 }
@@ -410,8 +416,13 @@ export default async function auth(req: any, res: any) {
       },
     },
     session: {
+      strategy: "jwt",
       // Set session maxAge to 30 days (30 days * 24 hours * 60 minutes * 60 seconds)
       maxAge: 30 * 24 * 60 * 60, // 30 days
-    }
+    },
+    jwt: {
+      // Set maxAge to 30 days
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
   });
 }

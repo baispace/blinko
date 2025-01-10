@@ -8,6 +8,7 @@ import { BlinkoStore } from '@/store/blinkoStore'
 import { RootStore } from '@/store'
 import { EditorStore } from '../../editorStore'
 import { useEffect } from 'react'
+import { getDisplayTime } from '@/lib/helper'
 
 interface Props {
   store: EditorStore
@@ -62,10 +63,7 @@ export const ReferenceButton = observer(({ store }: Props) => {
               >
                 <div className='flex flex-col w-full p-1'>
                   <div className='text-xs text-desc'>
-                    {blinko.config.value?.timeFormat == 'relative'
-                      ? dayjs(blinko.config.value?.isOrderByCreateTime ? i.createdAt : i.updatedAt).fromNow()
-                      : dayjs(blinko.config.value?.isOrderByCreateTime ? i.createdAt : i.updatedAt).format(blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss')
-                    }
+                    {getDisplayTime(i.createdAt, i.updatedAt)}
                   </div>
                   <div className='text-sm line-clamp-2'>
                     {i.content}

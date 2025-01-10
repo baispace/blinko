@@ -12,6 +12,10 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
 
   const globalConfig = configs.reduce((acc, item) => {
     const config = item.config as { type: string, value: any };
+    if (item.key === 'isUseAI') {
+      acc[item.key] = config.value;
+      return acc;
+    }
     if (!isSuperAdmin && !item.userId) {
       return acc;
     }

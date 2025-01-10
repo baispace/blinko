@@ -88,6 +88,21 @@ body {
   text-decoration: none !important;
 }
 
+.blinko-reference {
+  border: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-radius: 7px;
+  font-size: 13px;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.blinko-reference:hover {
+  background-color: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+
 .contextmenu {
   padding: 2px !important;
   ;

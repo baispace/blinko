@@ -47,7 +47,14 @@ export const noteRouter = router({
             tag: tagSchema
           }))
         ),
-        references: z.array(z.object({ toNoteId: z.number() })).optional(),
+        references: z.array(z.object({
+          toNoteId: z.number(),
+          toNote: z.object({
+            content: z.string().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional()
+          }).optional()
+        })).optional(),
         referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
         _count: z.object({
           comments: z.number()
@@ -124,7 +131,14 @@ export const noteRouter = router({
           },
           references: {
             select: {
-              toNoteId: true
+              toNoteId: true,
+              toNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
             }
           },
           referencedBy: {
@@ -204,7 +218,11 @@ export const noteRouter = router({
             tag: tagSchema
           }))
         ),
-        references: z.array(z.object({ toNoteId: z.number() })).optional(),
+        references: z.array(z.object({ toNoteId: z.number(), toNote: z.object({
+          content: z.string().optional(),
+          createdAt: z.date().optional(),
+          updatedAt: z.date().optional()
+        }).optional() })).optional(),
         referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
         _count: z.object({
           comments: z.number()
@@ -225,7 +243,14 @@ export const noteRouter = router({
           },
           references: {
             select: {
-              toNoteId: true
+              toNoteId: true,
+              toNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
             }
           },
           referencedBy: {
@@ -252,6 +277,14 @@ export const noteRouter = router({
       data: z.union([z.null(), notesSchema.merge(
         z.object({
           attachments: z.array(attachmentsSchema),
+          references: z.array(z.object({
+            toNoteId: z.number(),
+            toNote: z.object({
+              content: z.string().optional(),
+              createdAt: z.date().optional(),
+              updatedAt: z.date().optional()
+            }).optional()
+          })).optional(),
           account: z.object({
             image: z.string().optional(),
             nickname: z.string().optional(),
@@ -279,6 +312,18 @@ export const noteRouter = router({
               nickname: true,
               name: true,
               id: true,
+            }
+          },
+          references: {
+            select: {
+              toNoteId: true,
+              toNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
             }
           },
           tags: true,
@@ -396,7 +441,7 @@ export const noteRouter = router({
         const matches = /!\[.*?\]\((\/api\/(?:s3)?file\/[^)]+)\)/.exec(match);
         return matches?.[1] || '';
       }) || [];
-      if(markdownImages.length > 0) {
+      if (markdownImages.length > 0) {
         const images = await prisma.attachments.findMany({ where: { path: { in: markdownImages } } })
         console.log({ images })
         attachments = [...attachments, ...images.map(i => ({ path: i.path, name: i.name, size: Number(i.size), type: i.type }))]
@@ -737,6 +782,7 @@ export const noteRouter = router({
         }));
       }
     }),
+
   clearRecycleBin: authProcedure.use(demoAuthMiddleware)
     .meta({ openapi: { method: 'POST', path: '/v1/note/clear-recycle-bin', summary: 'Clear recycle bin', protect: true, tags: ['Note'] } })
     .input(z.void())

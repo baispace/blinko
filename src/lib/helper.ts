@@ -2,6 +2,10 @@ import { type Tag } from '@/server/types';
 import { _ } from './lodash';
 import i18n from './i18n';
 import { FileType } from '@/components/Common/Editor/type';
+import dayjs from 'dayjs';
+import { GlobalConfig } from '@/server/types';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
 
 const valMap = {
   undefined: '',
@@ -287,4 +291,24 @@ export const helper = {
       }
     ]
   }
+};
+
+export const formatTime = (
+  time: Date | string | number | undefined,
+  config: Partial<GlobalConfig>
+) => {
+  if (!time) return '';
+  const date = dayjs(time);
+  return config?.timeFormat === 'relative'
+    ? date.fromNow()
+    : date.format(config?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss');
+};
+
+export const getDisplayTime = (
+  createdAt: Date | string | number | undefined,
+  updatedAt: Date | string | number | undefined,
+) => {
+  const config = (RootStore.Get(BlinkoStore).config.value || {}) as Partial<GlobalConfig>;
+  const timeToShow = config.isOrderByCreateTime ? createdAt : updatedAt;
+  return formatTime(timeToShow, config);
 };

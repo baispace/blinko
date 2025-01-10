@@ -26,9 +26,27 @@ export class DBJob {
       const res = await DBJob.RunTask()
       await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isSuccess: true, output: res, lastRun: new Date() } })
     } catch (error) {
-      await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isSuccess: false, output: { error: error.message ?? 'internal error' } } })
+      await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isSuccess: false, output: { error: error.message ?? 'internal error' }, lastRun: new Date() } })
     }
   }, null, false);
+
+  static {
+    setTimeout(async () => {
+      const task = await prisma.scheduledTask.findFirst({ where: { name: DBBAK_TASK_NAME } })
+      if (task?.isRunning) {
+        const job = DBJob.Job;
+        job.setTime(new CronTime(task.schedule));
+        job.start();
+
+        const now = new Date().getTime();
+        const [next1, next2] = job.nextDates(2);
+        if (next1 == null || next2 == null
+          || now - task.lastRun.getTime() > next2.toMillis() - next1.toMillis()) {
+          job.fireOnTick();
+        }
+      }
+    }, 1000);
+  }
 
   static async RunTask() {
     try {
@@ -344,4 +362,5 @@ export class DBJob {
       throw error;
     }
   }
+
 }

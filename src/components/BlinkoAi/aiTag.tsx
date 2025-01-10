@@ -15,7 +15,6 @@ export const AiTag: React.FC<AiTagProps> = ({
   tags,
   defaultSelected = [],
   onSelect,
-  confirmText = "Confirm",
 }) => {
   const [selected, setSelected] = React.useState<string[]>(defaultSelected);
   const [isInsertBefore, setIsInsertBefore] = React.useState(false);

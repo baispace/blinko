@@ -64,8 +64,9 @@ export class AiPrompt {
       Instructions:
       1. Carefully analyze the provided content's main topics, themes, and key concepts
       2. Select ONLY the most relevant tags from the existing tag list
-      3. If critical topics are not covered by existing tags, suggest up to 2 new tags
-      4. Focus on specificity and accuracy over quantity
+      3. MUST return at least 5 tags in total
+      4. If there are not enough relevant existing tags to reach 5, suggest new tags to reach the minimum of 5 tags
+      5. Focus on specificity and accuracy
 
       Content for analysis:
       {context}
@@ -74,6 +75,7 @@ export class AiPrompt {
       ${tags.join(', ')}
 
       Requirements:
+      - MUST return at least 5 tags total
       - Select tags that DIRECTLY relate to the main content only
       - Avoid tangential or loosely related tags
       - New tags must follow format: #category/subcategory
@@ -83,11 +85,11 @@ export class AiPrompt {
       - If content is technical, prefer technical/specific tags
       - If content is general, use broader category tags
 
-      Example good tags: #technology/ai, #development/backend
+      Example good tags: #technology/ai, #development/backend, #programming/tools, #software/architecture, #tech/innovation
       Example bad tags: #interesting, #misc, #other
 
       Output format:
-      #tag1, #tag2, #tag3`
+      #tag1, #tag2, #tag3, #tag4, #tag5`
 
     const autoTagPrompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],

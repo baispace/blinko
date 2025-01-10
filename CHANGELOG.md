@@ -1,3 +1,10 @@
+# [0.35.0](https://github.com/blinko-space/blinko/compare/v0.34.12...v0.35.0) (2025-01-10)
+
+
+### Features
+
+* enhance file upload and attachment handling [#426](https://github.com/blinko-space/blinko/issues/426) ([0d23c3f](https://github.com/blinko-space/blinko/commit/0d23c3f86cbd8bc3da302f706326a4bc2159d5ab))
+
 ## [0.34.12](https://github.com/blinko-space/blinko/compare/v0.34.11...v0.34.12) (2025-01-09)
 
 

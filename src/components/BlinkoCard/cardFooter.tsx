@@ -47,7 +47,7 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
               {getDisplayTime(item.toNote?.createdAt, item.toNote?.updatedAt)}
               <Icon icon="iconamoon:arrow-top-right-1" className='text-primary ml-auto' width="16" height="16" />
             </div>
-            <div className='text-primary-foreground text-xs font-bold ml-1 select-none line-clamp-3 '>{item.toNote?.content}</div>
+            <div className='text-default-700 text-xs font-bold ml-1 select-none line-clamp-3 '>{item.toNote?.content}</div>
           </div>
         })}
       </div>

@@ -110,7 +110,8 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
             <DropdownTrigger>
               <Button
                 size="lg"
-                className="flex-1 justify-start "
+                variant="ghost"
+                className="flex-1 justify-start"
                 startContent={<Icon icon="solar:calendar-bold" className="text-default-500" width="20" height="20" />}
               >
                 {selectedExpiryValue}
@@ -183,6 +184,7 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
         <div className="flex w-full justify-center items-center">
           {!isPublic && (
             <InputOtp
+              size="lg"
               length={6}
               placeholder={t("set-access-password")}
               value={settings.password}

@@ -166,7 +166,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
                     >
                       <Icon icon="akar-icons:comment" width="16" height="16" />
                     </Button>
-                    {user.id === String(comment.accountId) && (
+                    {(user.id === String(comment.note?.account?.id) || user.id === String(comment.account?.id)) && (
                       <Button
                         size="sm"
                         variant="light"

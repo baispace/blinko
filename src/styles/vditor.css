@@ -13,7 +13,7 @@
 }
 
 .vditor a {
-  color: #C35AF7;
+  color: var(--primary);
   font-weight: 700;
 }
 .vditor-wysiwyg__block pre:first-child code{
@@ -149,7 +149,7 @@
   top:4px;
   border-radius: 5px;
   left: 8px;
-  background-color: #C35AF7;
+  background-color: var(--primary);
 }
 
 .vditor-tip__content{

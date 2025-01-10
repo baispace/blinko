@@ -73,7 +73,7 @@ const RightContent = ({ blinkoItem, t }: { blinkoItem: Note, t: any }) => {
       }
       {
         ((blinkoItem?.references?.length) ?? 0) > 0 && <Tooltip content={blinkoItem?.references?.length + ' ' + t('reference')} delay={1000}>
-          <Icon icon="ix:reference" className='text-[#C35AF7] cursor-pointer' width="16" height="16" onClick={() => ShowBlinkoReference({ item: blinkoItem })} />
+          <Icon icon="ix:reference" className='text-primary cursor-pointer' width="16" height="16" onClick={() => ShowBlinkoReference({ item: blinkoItem })} />
         </Tooltip>
       }
       {

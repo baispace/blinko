@@ -17,6 +17,11 @@ const baseCommentSchema = commentsSchema.extend({
 });
 
 const commentWithRelationsSchema: z.ZodType<any> = baseCommentSchema.extend({
+  note: z.object({
+    account: z.object({
+      id: z.number()
+    }).nullable()
+  }).nullable(),
   replies: z.array(baseCommentSchema.extend({
     account: accountSchema.nullable()
   })).optional()
@@ -132,6 +137,15 @@ export const commentRouter = router({
                 image: true
               }
             },
+            note: {
+              select: {
+                account: {
+                  select: {
+                    id: true
+                  }
+                }
+              }
+            },
             replies: {
               orderBy: { createdAt: 'asc' },
               include: {
@@ -165,7 +179,10 @@ export const commentRouter = router({
       const comment = await prisma.comments.findFirst({
         where: {
           id: input.id,
-          accountId: Number(ctx.id)
+          OR: [
+            { accountId: Number(ctx.id) },
+            { note: { accountId: Number(ctx.id) } }
+          ]
         }
       });
 

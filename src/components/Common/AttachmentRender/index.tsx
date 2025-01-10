@@ -137,7 +137,7 @@ const ReferenceRender = observer(({ store }: { store: EditorStore }) => {
         return <Popover placement="bottom">
           <PopoverTrigger>
             <div className="flex items-center gap-1 blinko-tag cursor-pointer hover:opacity-80 group">
-              <Icon className="min-w-[24px] !text-[#C35AF7]" icon="uim:arrow-up-left" width="24" height="24" />
+              <Icon className="min-w-[24px] !text-primary" icon="uim:arrow-up-left" width="24" height="24" />
               <div className="truncate">{i.content}</div>
               <div onClick={(e) => {
                 e.stopPropagation()

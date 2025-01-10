@@ -1,3 +1,10 @@
+## [0.35.1](https://github.com/blinko-space/blinko/compare/v0.35.0...v0.35.1) (2025-01-10)
+
+
+### Bug Fixes
+
+* update component styles and comment schema for consistency ([73e1674](https://github.com/blinko-space/blinko/commit/73e1674cda1ed3494bc45952455776da2d987e33))
+
 # [0.35.0](https://github.com/blinko-space/blinko/compare/v0.34.12...v0.35.0) (2025-01-10)
 
 

@@ -1,3 +1,10 @@
+## [0.35.6](https://github.com/blinko-space/blinko/compare/v0.35.5...v0.35.6) (2025-01-10)
+
+
+### Bug Fixes
+
+* update PromiseCall usage in settings components for consistency ([e3af65b](https://github.com/blinko-space/blinko/commit/e3af65ba798bbd90eb50a6c129edb5b14ef8800f))
+
 ## [0.35.5](https://github.com/blinko-space/blinko/compare/v0.35.4...v0.35.5) (2025-01-10)
 
 

@@ -28,8 +28,8 @@ export const ReferenceButton = observer(({ store }: Props) => {
       <PopoverTrigger>
         <div>
           <IconButton
-            tooltip="@"
-            icon="hugeicons:at"
+            tooltip="reference"
+            icon="ph:link"
             onClick={e => {
               blinko.referenceSearchList.resetAndCall({ searchText: ' ' })
             }}

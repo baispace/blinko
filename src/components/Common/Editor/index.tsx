@@ -116,8 +116,8 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             <>
               <NoteTypeButton />
               <HashtagButton store={store} content={content} />
-              <AIWriteButton store={store} content={content} />
               <ReferenceButton store={store} />
+              <AIWriteButton store={store} content={content} />
               <UploadButtons
                 getInputProps={getInputProps}
                 open={open}

@@ -57,7 +57,7 @@ export const StorageSetting = observer(() => {
             await PromiseCall(api.config.update.mutate({
               key: 'objectStorage',
               value: key.toString()
-            }))
+            }), { autoAlert: false })
           }}>
             <DropdownItem key="local">  {t('local-file-system')}</DropdownItem>
             <DropdownItem key="s3">S3</DropdownItem>
@@ -80,7 +80,7 @@ export const StorageSetting = observer(() => {
             await PromiseCall(api.config.update.mutate({
               key: 'localCustomPath',
               value: e.target.value
-            }))
+            }), { autoAlert: false })
           }} />}
       />
     }
@@ -97,7 +97,7 @@ export const StorageSetting = observer(() => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3AccessKeyId',
                 value: e.target.value
-              }))
+              }), { autoAlert: false })
             }} />} />
         <Item
           leftContent={<>{t('access-key-secret')}</>}
@@ -109,7 +109,7 @@ export const StorageSetting = observer(() => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3AccessKeySecret',
                 value: e.target.value
-              }))
+              }), { autoAlert: false })
             }} />} />
         <Item
           leftContent={<>{t('endpoint')}</>}
@@ -117,7 +117,7 @@ export const StorageSetting = observer(() => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Endpoint',
               value: e.target.value
-            }))
+            }), { autoAlert: false })
           }} />} />
         <Item
           leftContent={<>{t('region')}</>}
@@ -125,7 +125,7 @@ export const StorageSetting = observer(() => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Region',
               value: e.target.value
-            }))
+            }), { autoAlert: false })
           }} />} />
         <Item
           leftContent={<>{t('bucket')}</>}
@@ -133,7 +133,7 @@ export const StorageSetting = observer(() => {
             await PromiseCall(api.config.update.mutate({
               key: 's3Bucket',
               value: e.target.value
-            }))
+            }), { autoAlert: false })
           }} />} />
         <Item
           leftContent={<>
@@ -147,7 +147,7 @@ export const StorageSetting = observer(() => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3CustomPath',
                 value: e.target.value
-              }))
+              }), { autoAlert: false })
             }} />} />
       </>
     }

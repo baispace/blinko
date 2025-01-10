@@ -355,7 +355,7 @@ export const PerferSetting = observer(() => {
           PromiseCall(api.config.update.mutate({
             key: 'customBackgroundUrl',
             value: customBackgroundUrl
-          }))
+          }), { autoAlert: false })
         }} />} />
 
   </CollapsibleCard>

@@ -34,7 +34,7 @@ export const MusicSetting = observer(() => {
               PromiseCall(api.config.update.mutate({
                 key: 'spotifyConsumerKey',
                 value: e.target.value
-              }));
+              }), { autoAlert: false })
             }}
             placeholder={t('enter-spotify-consumer-key')}
           />
@@ -53,7 +53,7 @@ export const MusicSetting = observer(() => {
               PromiseCall(api.config.update.mutate({
                 key: 'spotifyConsumerSecret',
                 value: e.target.value
-              }));
+              }), { autoAlert: false })
             }}
             placeholder={t('enter-spotify-consumer-secret')}
           />

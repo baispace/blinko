@@ -68,7 +68,7 @@ export const AiSetting = observer(() => {
             PromiseCall(api.config.update.mutate({
               key: 'isUseAI',
               value: e.target.checked
-            }))
+            }), { autoAlert: false })
           }}
         />} />
       <Item
@@ -83,7 +83,7 @@ export const AiSetting = observer(() => {
               PromiseCall(api.config.update.mutate({
                 key: 'aiModelProvider',
                 value: value
-              }))
+              }), { autoAlert: false })
             }}
             size="sm"
             className="w-[200px]"
@@ -114,7 +114,7 @@ export const AiSetting = observer(() => {
                 PromiseCall(api.config.update.mutate({
                   key: 'aiModel',
                   value: store.aiModel
-                }))
+                }), { autoAlert: false })
               }}
               onSelectionChange={(key) => {
                 store.aiModel = key as string
@@ -153,7 +153,7 @@ export const AiSetting = observer(() => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingModel',
                     value: store.embeddingModel
-                  }))
+                  }), { autoAlert: false })
                 }}
                 onSelectionChange={(key) => {
                   store.embeddingModel = key as string
@@ -186,7 +186,7 @@ export const AiSetting = observer(() => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingTopK',
                     value: store.embeddingTopK
-                  }))
+                  }), { autoAlert: false }  )
                 }}
                 onChange={e => {
                   store.embeddingTopK = Number(e)
@@ -221,7 +221,7 @@ export const AiSetting = observer(() => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingScore',
                     value: store.embeddingScore
-                  }))
+                  }), { autoAlert: false }  )
                 }}
                 onChange={e => {
                   store.embeddingScore = Number(e)
@@ -255,7 +255,7 @@ export const AiSetting = observer(() => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingLambda',
                     value: store.embeddingLambda
-                  }))
+                  }), { autoAlert: false })
                 }}
                 onChange={e => {
                   store.embeddingLambda = Number(e)
@@ -291,7 +291,7 @@ export const AiSetting = observer(() => {
                   PromiseCall(api.config.update.mutate({
                     key: 'excludeEmbeddingTagId',
                     value: key ? Number(key) : null
-                  }))
+                  }), { autoAlert: false })
                 }}
               />} />
         )
@@ -318,7 +318,7 @@ export const AiSetting = observer(() => {
                 PromiseCall(api.config.update.mutate({
                   key: 'aiApiKey',
                   value: store.apiKey
-                }))
+                }), { autoAlert: false })
               }}
               endContent={
                 <button className="focus:outline-none" type="button" onClick={e => store.isVisible = !store.isVisible} aria-label="toggle password visibility">
@@ -352,7 +352,7 @@ export const AiSetting = observer(() => {
                 PromiseCall(api.config.update.mutate({
                   key: 'aiApiVersion',
                   value: store.apiVersion
-                }))
+                }), { autoAlert: false })
               }}
               type="text"
             />
@@ -377,7 +377,7 @@ export const AiSetting = observer(() => {
             PromiseCall(api.config.update.mutate({
               key: 'aiApiEndpoint',
               value: store.apiEndPoint
-            }))
+            }), { autoAlert: false })
           }}
         />} />
 

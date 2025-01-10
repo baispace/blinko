@@ -30,14 +30,15 @@ export const taskRouter = router({
     .output(z.any())
     .mutation(async ({ input }) => {
       const { time, type, task } = input
-      if (type == 'start' && time) {
-        return task == DBBAK_TASK_NAME ? await DBJob.Start(time, true) : await ArchiveJob.Start(time, true)
+      if (type == 'start') {
+        const cronTime = time ?? '0 0 * * *'
+        return task == DBBAK_TASK_NAME ? await DBJob.Start(cronTime, true) : await ArchiveJob.Start(cronTime, true)
       }
       if (type == 'stop') {
         return task == DBBAK_TASK_NAME ? await DBJob.Stop() : await ArchiveJob.Stop()
       }
       if (type == 'update' && time) {
-        return task == DBBAK_TASK_NAME ? await DBJob.SetCornTime(time) : await ArchiveJob.SetCornTime(time)
+        return task == DBBAK_TASK_NAME ? await DBJob.SetCronTime(time) : await ArchiveJob.SetCronTime(time)
       }
     }),
   importFromBlinko: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)

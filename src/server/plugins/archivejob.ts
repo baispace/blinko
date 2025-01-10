@@ -1,20 +1,14 @@
-import { CronJob, CronTime } from "cron";
-import { ARCHIVE_BLINKO_TASK_NAME, } from "@/lib/constant";
+import { ARCHIVE_BLINKO_TASK_NAME } from "@/lib/constant";
 import { prisma } from "../prisma";
 import { adminCaller } from "../routers/_app";
 import { NoteType } from "../types";
+import { BaseScheduleJob } from "./baseScheduleJob";
 
-export class ArchiveJob {
-  static Job = new CronJob('* * * * *', async () => {
-    try {
-      const res = await ArchiveJob.RunTask()
-      await prisma.scheduledTask.update({ where: { name: ARCHIVE_BLINKO_TASK_NAME }, data: { isSuccess: true, output: res, lastRun: new Date() } })
-    } catch (error) {
-      await prisma.scheduledTask.update({ where: { name: ARCHIVE_BLINKO_TASK_NAME }, data: { isSuccess: false, output: { error: error.message ?? 'internal error' } } })
-    }
-  }, null, false);
+export class ArchiveJob extends BaseScheduleJob {
+  protected static taskName = ARCHIVE_BLINKO_TASK_NAME;
+  protected static job = this.createJob();
 
-  static async RunTask() {
+  protected static async RunTask() {
     try {
       const config = await adminCaller.config.list()
       let autoArchivedDays = config.autoArchivedDays ?? 30
@@ -32,31 +26,7 @@ export class ArchiveJob {
     }
   }
 
-  static async Start(cronTime: string, immediate: boolean = true) {
-    let success = false, output
-    const hasTask = await prisma.scheduledTask.findFirst({ where: { name: ARCHIVE_BLINKO_TASK_NAME } })
-    ArchiveJob.Job.setTime(new CronTime(cronTime))
-    ArchiveJob.Job.start()
-    if (immediate) {
-      try {
-        output = await ArchiveJob.RunTask()
-        success = true
-      } catch (error) { output = error ?? (error.message ?? "internal error") }
-    }
-    if (!hasTask) {
-      return await prisma.scheduledTask.create({ data: { lastRun: new Date(), output, isSuccess: success, schedule: cronTime, name: ARCHIVE_BLINKO_TASK_NAME, isRunning: ArchiveJob.Job.running } })
-    } else {
-      return await prisma.scheduledTask.update({ where: { name: ARCHIVE_BLINKO_TASK_NAME }, data: { lastRun: new Date(), output, isSuccess: success, schedule: cronTime, isRunning: ArchiveJob.Job.running } })
-    }
-  }
-
-  static async Stop() {
-    ArchiveJob.Job.stop()
-    return await prisma.scheduledTask.update({ where: { name: ARCHIVE_BLINKO_TASK_NAME }, data: { isRunning: ArchiveJob.Job.running } })
-  }
-
-  static async SetCornTime(cronTime: string) {
-    ArchiveJob.Job.setTime(new CronTime(cronTime))
-    await this.Start(cronTime, true)
+  static {
+    this.initializeJob();
   }
 }

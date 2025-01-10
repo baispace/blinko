@@ -1,15 +1,16 @@
-import { CronJob, CronTime } from "cron";
+import { CronTime } from "cron";
 import path from 'path';
 import fs from 'fs';
 import { writeFile } from 'fs/promises'
 import Package from '../../../package.json';
 import { $ } from 'execa';
 import AdmZip from 'adm-zip'
-import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, TEMP_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
+import { DBBAK_TASK_NAME, DBBAKUP_PATH, ROOT_PATH, TEMP_PATH, UPLOAD_FILE_PATH } from "@/lib/constant";
 import { prisma } from "../prisma";
 import { unlink } from "fs/promises";
 import { createCaller } from "../routers/_app";
 import { Context } from "../context";
+import { BaseScheduleJob } from "./baseScheduleJob";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -19,18 +20,15 @@ export type RestoreResult = {
 }
 export type ExportTimeRange = 'day' | 'week' | 'month' | 'quarter';
 
+export class DBJob extends BaseScheduleJob {
+  protected static taskName = DBBAK_TASK_NAME;
+  protected static job = this.createJob();
 
-export class DBJob {
-  static Job = new CronJob('* * * * *', async () => {
-    try {
-      const res = await DBJob.RunTask()
-      await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isSuccess: true, output: res, lastRun: new Date() } })
-    } catch (error) {
-      await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isSuccess: false, output: { error: error.message ?? 'internal error' } } })
-    }
-  }, null, false);
+  static {
+    this.initializeJob();
+  }
 
-  static async RunTask() {
+  protected static async RunTask() {
     try {
       const notes = await prisma.notes.findMany({
         select: {
@@ -212,35 +210,6 @@ export class DBJob {
         progress: { current: 0, total: 0 }
       };
     }
-  }
-
-  static async Start(cronTime: string, immediate: boolean = true) {
-    let success = false, output
-    const hasTask = await prisma.scheduledTask.findFirst({ where: { name: DBBAK_TASK_NAME } })
-    DBJob.Job.setTime(new CronTime(cronTime))
-    DBJob.Job.start()
-    if (immediate) {
-      try {
-        output = await DBJob.RunTask()
-        success = true
-      } catch (error) { output = error ?? (error.message ?? "internal error") }
-    }
-    if (!hasTask) {
-      return await prisma.scheduledTask.create({ data: { lastRun: new Date(), output, isSuccess: success, schedule: cronTime, name: DBBAK_TASK_NAME, isRunning: DBJob.Job.running } })
-    } else {
-      return await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { lastRun: new Date(), output, isSuccess: success, schedule: cronTime, isRunning: DBJob.Job.running } })
-    }
-  }
-
-  static async Stop() {
-    DBJob.Job.stop()
-    return await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { isRunning: DBJob.Job.running } })
-  }
-
-  static async SetCornTime(cronTime: string) {
-    DBJob.Job.setTime(new CronTime(cronTime))
-    await this.Start(cronTime, true)
-    // return await prisma.scheduledTask.update({ where: { name: DBBAK_TASK_NAME }, data: { schedule: cronTime, lastRun: new Date() } })
   }
 
   static async ExporMDFiles(params: {

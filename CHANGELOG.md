@@ -1,3 +1,10 @@
+## [0.35.4](https://github.com/blinko-space/blinko/compare/v0.35.3...v0.35.4) (2025-01-10)
+
+
+### Bug Fixes
+
+* update text color in BlinkoCard footer for improved readability ([0353b7a](https://github.com/blinko-space/blinko/commit/0353b7a367260f1766481f560e0d7eeb50ae8671))
+
 ## [0.35.3](https://github.com/blinko-space/blinko/compare/v0.35.2...v0.35.3) (2025-01-10)
 
 

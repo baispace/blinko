@@ -1,3 +1,10 @@
+## [0.35.2](https://github.com/blinko-space/blinko/compare/v0.35.1...v0.35.2) (2025-01-10)
+
+
+### Bug Fixes
+
+* update Home component styling for responsive design [#424](https://github.com/blinko-space/blinko/issues/424) ([2b9dab8](https://github.com/blinko-space/blinko/commit/2b9dab8f473d710a45a1a19bfc25a253787a2d78))
+
 ## [0.35.1](https://github.com/blinko-space/blinko/compare/v0.35.0...v0.35.1) (2025-01-10)
 
 

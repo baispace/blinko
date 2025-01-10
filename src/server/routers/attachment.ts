@@ -401,10 +401,7 @@ export const attachmentsRouter = router({
 
         const attachment = await tx.attachments.findFirst({
           where: {
-            id: id!,
-            note: {
-              accountId: Number(ctx.id)
-            }
+            id: id!
           }
         });
 

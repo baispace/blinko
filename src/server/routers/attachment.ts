@@ -52,13 +52,22 @@ export const attachmentsRouter = router({
       if (searchText) {
         const attachments = await prisma.attachments.findMany({
           where: {
-            note: {
-              accountId: Number(ctx.id)
-            },
             OR: [
-              { name: { contains: searchText, mode: 'insensitive' } },
-              { path: { contains: searchText, mode: 'insensitive' } }
-            ]
+              {
+                note: {
+                  accountId: Number(ctx.id)
+                }
+              },
+              {
+                accountId: Number(ctx.id)
+              }
+            ],
+            AND: {
+              OR: [
+                { name: { contains: searchText, mode: 'insensitive' } },
+                { path: { contains: searchText, mode: 'insensitive' } }
+              ]
+            }
           },
           orderBy: [
             { sortOrder: 'asc' },
@@ -108,9 +117,9 @@ export const attachmentsRouter = router({
               true as is_folder,
               split_part("perfixPath", ',', array_length(string_to_array(${folderPath}, ','), 1) + 1) as folder_name
             FROM attachments
-            WHERE "noteId" IN (
+            WHERE ("noteId" IN (
               SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
-            )
+            ) OR "accountId" = ${Number(ctx.id)})
               AND "perfixPath" LIKE ${`${folderPath},%`}
               AND array_length(string_to_array("perfixPath", ','), 1) > array_length(string_to_array(${folderPath}, ','), 1)
             
@@ -131,9 +140,9 @@ export const attachmentsRouter = router({
               false as is_folder,
               NULL as folder_name
             FROM attachments
-            WHERE "noteId" IN (
+            WHERE ("noteId" IN (
               SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
-            )
+            ) OR "accountId" = ${Number(ctx.id)})
               AND "perfixPath" = ${folderPath}
           )
           SELECT *
@@ -167,9 +176,9 @@ export const attachmentsRouter = router({
             true as is_folder,
             split_part("perfixPath", ',', 1) as folder_name
           FROM attachments
-          WHERE "noteId" IN (
+          WHERE ("noteId" IN (
             SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
-          )
+          ) OR "accountId" = ${Number(ctx.id)})
             AND "perfixPath" != ''
             AND LOWER("perfixPath") LIKE ${`%${searchText?.toLowerCase() || ''}%`}
           
@@ -190,9 +199,9 @@ export const attachmentsRouter = router({
             false as is_folder,
             NULL as folder_name
           FROM attachments
-          WHERE "noteId" IN (
+          WHERE ("noteId" IN (
             SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
-          )
+          ) OR "accountId" = ${Number(ctx.id)})
             AND depth = 0
             AND LOWER(path) LIKE ${`%${searchText?.toLowerCase() || ''}%`}
         )
@@ -225,9 +234,16 @@ export const attachmentsRouter = router({
         if (isFolder && oldFolderPath) {
           const attachments = await tx.attachments.findMany({
             where: {
-              note: {
-                accountId: Number(ctx.id)
-              },
+              OR: [
+                {
+                  note: {
+                    accountId: Number(ctx.id)
+                  },
+                },
+                {
+                  accountId: Number(ctx.id)
+                }
+              ],
               perfixPath: {
                 startsWith: oldFolderPath
               }

@@ -124,9 +124,9 @@ export const helper = {
     const extension = helper.getFileExtension(filename) ?? ''
 
     if (mimeType != '') {
-      if (mimeType.startsWith('audio')) return 'audio'
-      if (mimeType.startsWith('video')) return 'video'
-      if (mimeType.startsWith('image')) return 'image'
+      if (mimeType?.startsWith('audio')) return 'audio'
+      if (mimeType?.startsWith('video')) return 'video'
+      if (mimeType?.startsWith('image')) return 'image'
     }
 
     if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(extension?.toLowerCase() ?? null)) {

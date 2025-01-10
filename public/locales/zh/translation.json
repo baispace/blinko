@@ -467,5 +467,7 @@
   "home-site": "主页",
   "use-blinko-hub": "使用 Blinko Hub",
   "full-screen": "全屏",
-  "exit-fullscreen": "退出全屏"
+  "exit-fullscreen": "退出全屏",
+  "no-note-associated": "没有笔记关联",
+  "insert-context": "插入到正文"
 }

@@ -421,5 +421,7 @@
   "home-site": "ホームサイト",
   "use-blinko-hub": "Blinko Hub を使用してください。",
   "full-screen": "フルスクリーン",
-  "exit-fullscreen": "フルスクリーンを終了"
+  "exit-fullscreen": "フルスクリーンを終了",
+  "no-note-associated": "関連するノートはありません",
+  "insert-context": "コンテキストに挿入"
 }

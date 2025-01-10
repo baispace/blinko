@@ -73,7 +73,7 @@ export const taskRouter = router({
         for await (const result of memos.importMemosDB(ctx)) {
           yield result;
         }
-        for await (const result of memos.importFiles()) {
+        for await (const result of memos.importFiles(ctx)) {
           yield result;
         }
         memos.closeDB();

@@ -373,5 +373,7 @@
   "home-site": "Site Inicial",
   "use-blinko-hub": "Use Blinko Hub\n\nUtilize o Blinko Hub",
   "full-screen": "Tela cheia",
-  "exit-fullscreen": "Sair do modo de tela cheia"
+  "exit-fullscreen": "Sair do modo de tela cheia",
+  "no-note-associated": "Nenhuma nota associada",
+  "insert-context": "Inserir no contexto"
 }

@@ -83,7 +83,7 @@ export class Memos {
     }
   }
 
-  async *importFiles(): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
+  async *importFiles(ctx: Context): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
     const resources = await new Promise<Array<{
       memo_id: number,
       filename: string,
@@ -137,17 +137,24 @@ export class Memos {
         }
 
         if (row?.blob) {
-          //@ts-ignore
-          const { filePath } = await FileService.uploadFile(row!.blob, row?.filename);
-          await prisma.attachments.create({
-            data: {
-              name: row?.filename,
-              path: filePath,
-              size: row?.size,
-              noteId: node.id,
-            }
+          const { filePath } = await FileService.uploadFile({
+            //@ts-ignore
+            buffer: row!.blob,
+            originalName: row?.filename,
+            type: "",
+            accountId: Number(ctx.id),
+            withOutAttachment: true
+          });
+          await FileService.createAttachment({
+            path: filePath,
+            name: row?.filename,
+            size: row?.size,
+            noteId: node.id,
+            accountId: Number(ctx.id),
+            type: ""
           });
         }
+
         const config = await getGlobalConfig({ useAdmin: true });
         //v0.22
         if (row?.reference && row?.reference != '') {

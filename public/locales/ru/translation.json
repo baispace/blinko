@@ -381,5 +381,7 @@
   "home-site": "Домашняя страница",
   "use-blinko-hub": "Используйте Blinko Hub",
   "full-screen": "Полноэкранный",
-  "exit-fullscreen": "Выйти из полноэкранного режима"
+  "exit-fullscreen": "Выйти из полноэкранного режима",
+  "no-note-associated": "Нет примечания, связанного",
+  "insert-context": "Вставить в контекст"
 }

@@ -35,7 +35,7 @@ export const GET = async (req: NextRequest, { params }: any) => {
       }
     })
     
-    if (myFile && !myFile?.note.isShare && Number(token?.id) != myFile?.note.accountId) {
+    if (myFile && !myFile?.note?.isShare && Number(token?.id) != myFile?.note?.accountId && !myFile?.accountId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
@@ -60,11 +60,14 @@ export const GET = async (req: NextRequest, { params }: any) => {
         })
         .toBuffer();
 
+      const filename = path.basename(fullPath);
+      const safeFilename = Buffer.from(filename).toString('base64');
+
       return new Response(thumbnail, {
         headers: {
           "Content-Type": mime.lookup(filePath) || "image/jpeg",
           "Cache-Control": "public, max-age=31536000",
-          "Content-Disposition": `inline; filename="thumb_${path.basename(fullPath)}"`,
+          "Content-Disposition": `inline; filename="${safeFilename}"`,
         }
       });
     }

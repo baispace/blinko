@@ -477,5 +477,7 @@
   "home-site": "首頁",
   "use-blinko-hub": "使用 Blinko Hub",
   "full-screen": "全螢幕",
-  "exit-fullscreen": "退出全螢幕"
+  "exit-fullscreen": "退出全螢幕",
+  "no-note-associated": "沒有附帶的備註",
+  "insert-context": "插入至內文"
 }

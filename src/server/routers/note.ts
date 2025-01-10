@@ -391,6 +391,17 @@ export const noteRouter = router({
       const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '))
       let newTags: Prisma.tagCreateManyInput[] = []
       const config = await getGlobalConfig({ ctx })
+
+      const markdownImages = content?.match(/!\[.*?\]\((\/api\/(?:s3)?file\/[^)]+)\)/g)?.map(match => {
+        const matches = /!\[.*?\]\((\/api\/(?:s3)?file\/[^)]+)\)/.exec(match);
+        return matches?.[1] || '';
+      }) || [];
+      if(markdownImages.length > 0) {
+        const images = await prisma.attachments.findMany({ where: { path: { in: markdownImages } } })
+        console.log({ images })
+        attachments = [...attachments, ...images.map(i => ({ path: i.path, name: i.name, size: Number(i.size), type: i.type }))]
+      }
+
       const handleAddTags = async (tagTree: TagTreeNode[], parentTag: Prisma.tagCreateManyInput | undefined, noteId?: number) => {
         for (const i of tagTree) {
           let hasTag = await prisma.tag.findFirst({ where: { name: i.name, parent: parentTag?.id ?? 0, accountId: Number(ctx.id) } })
@@ -503,20 +514,11 @@ export const noteRouter = router({
             const oldAttachments = await prisma.attachments.findMany({ where: { noteId: note.id } })
             const needTobeAddedAttachmentsPath = _.difference(attachments?.map(i => i.path), oldAttachments.map(i => i.path));
             if (needTobeAddedAttachmentsPath.length != 0) {
-              await prisma.attachments.createMany({
-                data: attachments?.filter(t => needTobeAddedAttachmentsPath.includes(t.path))
-                  .map(i => {
-                    const pathParts = (i.path as string)
-                      .replace('/api/file/', '')
-                      .replace('/api/s3file/', '')
-                      .split('/');
-                    return {
-                      noteId: note.id,
-                      ...i,
-                      depth: pathParts.length - 1,
-                      perfixPath: pathParts.slice(0, -1).join(',')
-                    }
-                  })
+              console.log({ needTobeAddedAttachmentsPath })
+              const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: needTobeAddedAttachmentsPath } } })
+              await prisma.attachments.updateMany({
+                where: { id: { in: attachmentsIds.map(i => i.id) } },
+                data: { noteId: note.id }
               })
             }
           }
@@ -545,21 +547,8 @@ export const noteRouter = router({
             }
           })
           await handleAddTags(tagTree, undefined, note.id)
-          await prisma.attachments.createMany({
-            data: attachments.map(i => {
-              const pathParts = (i.path as string)
-                .replace('/api/file/', '')
-                .replace('/api/s3file/', '')
-                .split('/');
-              return {
-                noteId: note.id,
-                ...i,
-                depth: pathParts.length - 1,
-                perfixPath: pathParts.slice(0, -1).join(',')
-              }
-            })
-          })
-
+          const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: attachments.map(i => i.path) } } })
+          await prisma.attachments.updateMany({ where: { id: { in: attachmentsIds.map(i => i.id) } }, data: { noteId: note.id } })
           //add references
           if (references && references.length > 0) {
             await prisma.noteReference.createMany({

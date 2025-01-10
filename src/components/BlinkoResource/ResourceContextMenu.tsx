@@ -14,7 +14,7 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 const MenuItem = ({ icon, label, className = '' }: { icon: string; label: string; className?: string }) => (
-  <div className={`flex items-center gap-2 ${className}`}>
+  <div className={`flex items-center gap-2 ${className} `}>
     <Icon icon={icon} className="w-5 h-5" />
     <span>{label}</span>
   </div>
@@ -235,7 +235,6 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
         <DropdownItem
           key="delete"
           className="text-danger"
-          color="danger"
           onPress={handleDelete}
         >
           <MenuItem

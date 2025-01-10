@@ -441,5 +441,7 @@
   "home-site": "Sitio web",
   "use-blinko-hub": "Utiliza Blinko Hub",
   "full-screen": "Pantalla completa",
-  "exit-fullscreen": "Salir de pantalla completa"
+  "exit-fullscreen": "Salir de pantalla completa",
+  "no-note-associated": "No hay nota asociada",
+  "insert-context": "Insertar en el contexto"
 }

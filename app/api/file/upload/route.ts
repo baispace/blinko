@@ -32,7 +32,13 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     const originalName = file.name.replaceAll(" ", "_");
     const stream = file.stream();
     
-    const filePath = await FileService.uploadFileStream(stream, originalName, file.size);
+    const filePath = await FileService.uploadFileStream({
+      stream,
+      originalName,
+      fileSize: file.size,
+      type: file.type,
+      accountId: Number(token.id)
+    });
 
     const response = NextResponse.json({ 
       Message: "Success", 

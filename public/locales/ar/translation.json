@@ -462,5 +462,7 @@
   "home-site": "موقع البيت",
   "use-blinko-hub": "استخدم برنامج Blinko Hub",
   "full-screen": "شاشة كاملة",
-  "exit-fullscreen": "الخروج من وضع ملء الشاشة"
+  "exit-fullscreen": "الخروج من وضع ملء الشاشة",
+  "no-note-associated": "لا يوجد مذكرة مرتبطة",
+  "insert-context": "إدراج في السياق"
 }

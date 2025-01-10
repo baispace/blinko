@@ -448,5 +448,7 @@
   "home-site": "Startseite",
   "use-blinko-hub": "Verwenden Sie Blinko Hub.",
   "full-screen": "Vollbild",
-  "exit-fullscreen": "Vollbild beenden"
+  "exit-fullscreen": "Vollbild beenden",
+  "no-note-associated": "Keine Notiz zugeordnet",
+  "insert-context": "Einfügen in den Kontext"
 }

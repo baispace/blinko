@@ -390,5 +390,7 @@
   "home-site": "Ana Sayfa",
   "use-blinko-hub": "Blinko Hub'u kullanın",
   "full-screen": "Tam Ekran",
-  "exit-fullscreen": "Tam Ekrandan Çıkış"
+  "exit-fullscreen": "Tam Ekrandan Çıkış",
+  "no-note-associated": "Herhangi bir not yok.",
+  "insert-context": "Bağlama ekle"
 }

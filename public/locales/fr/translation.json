@@ -437,5 +437,7 @@
   "home-site": "Site d'accueil",
   "use-blinko-hub": "Utilisez Blinko Hub",
   "full-screen": "Plein écran",
-  "exit-fullscreen": "Quitter le mode plein écran"
+  "exit-fullscreen": "Quitter le mode plein écran",
+  "no-note-associated": "Pas de note associée",
+  "insert-context": "Insérer dans le contexte"
 }

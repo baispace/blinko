@@ -28,6 +28,7 @@ model accounts {
   configs       config[]
   tags          tag[]
   comments      comments[]
+  attachments   attachments[]
 }
 
 model attachments {
@@ -38,14 +39,16 @@ model attachments {
   path          String   @default("") @db.VarChar
   size          Decimal  @default(0) @db.Decimal
   type          String   @default("") @db.VarChar
-  noteId        Int      @default(0)
+  noteId        Int?
+  accountId     Int?
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @db.Timestamptz(6)
   perfixPath    String?  @default("") @db.VarChar // folder1,folder2,folder3
   depth         Int?
 
-  note notes @relation(fields: [noteId], references: [id])
+  note          notes?   @relation(fields: [noteId], references: [id])
+  account       accounts? @relation(fields: [accountId], references: [id])
 }
 
 model config {

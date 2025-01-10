@@ -465,5 +465,7 @@
   "home-site": "Home Site",
   "use-blinko-hub": "Use Blinko Hub",
   "full-screen": "Full Screen",
-  "exit-fullscreen": "Exit Fullscreen"
+  "exit-fullscreen": "Exit Fullscreen",
+  "no-note-associated": "No note associated",
+  "insert-context": "Insert to context"
 }

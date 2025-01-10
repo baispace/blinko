@@ -444,5 +444,7 @@
   "home-site": "홈 사이트",
   "use-blinko-hub": "Blinko 허브 사용",
   "full-screen": "전체 화면",
-  "exit-fullscreen": "전체 화면 종료"
+  "exit-fullscreen": "전체 화면 종료",
+  "no-note-associated": "노트가 연관되지 않았습니다.",
+  "insert-context": "맥락에 삽입하세요."
 }

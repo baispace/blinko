@@ -3,7 +3,7 @@ import { FileType } from '../Editor/type';
 import { Image } from '@nextui-org/react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { Icon } from '@iconify/react';
-import { DeleteIcon, DownloadIcon } from './icons';
+import { DeleteIcon, DownloadIcon, InsertConextButton } from './icons';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { DraggableFileGrid } from './DraggableFileGrid';
@@ -78,6 +78,9 @@ const ImageRender = observer((props: IProps) => {
           </div>
         </PhotoView>
       </div>
+      {!file.uploadPromise?.loading?.value && !preview &&
+        <InsertConextButton className='absolute z-10 left-[5px] top-[5px]' files={files} file={file} />
+      }
       {!file.uploadPromise?.loading?.value && !preview &&
         <DeleteIcon className='absolute z-10 right-[5px] top-[5px]' files={files} file={file} />
       }

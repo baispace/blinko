@@ -45,7 +45,12 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     const originalName = path.basename(urlPath).replaceAll(" ", "_");
     const extension = path.extname(originalName);
     console.log({ originalName, extension })
-    const filePath = await FileService.uploadFile(buffer, originalName);
+    const filePath = await FileService.uploadFile({
+      buffer,
+      originalName,
+      type: response.headers.get("content-type") || "",
+      accountId: Number(token.id)
+    });
 
     const nextResponse = NextResponse.json({
       Message: "Success",

@@ -130,18 +130,18 @@ export const useEditorInit = (
 export const useEditorEvents = (store: EditorStore) => {
   const adjustEditorHeight = () => {
     if (!store.isFullscreen) return;
-    
+
     requestAnimationFrame(() => {
       const editorElement = document.querySelector('.vditor-reset') as HTMLElement;
       const attachmentContainer = document.querySelector('.attachment-container') as HTMLElement;
       const referenceContainer = document.querySelector('.reference-container') as HTMLElement;
-      
+
       if (editorElement) {
         const attachmentHeight = attachmentContainer?.offsetHeight || 0;
         const referenceHeight = referenceContainer?.offsetHeight || 0;
         const toolbarHeight = 50;
         const padding = 40;
-        
+
         const availableHeight = `calc(100vh - ${toolbarHeight + attachmentHeight + referenceHeight + padding}px)`;
         editorElement.style.height = availableHeight;
         editorElement.style.maxHeight = availableHeight;
@@ -162,36 +162,36 @@ export const useEditorEvents = (store: EditorStore) => {
       const resizeObserver = new ResizeObserver(() => {
         requestAnimationFrame(adjustEditorHeight);
       });
-      
+
       const attachmentContainer = document.querySelector('.attachment-container');
       const referenceContainer = document.querySelector('.reference-container');
       const editorContainer = document.querySelector('.vditor') as HTMLElement;
-      
+
       if (attachmentContainer) resizeObserver.observe(attachmentContainer);
       if (referenceContainer) resizeObserver.observe(referenceContainer);
       if (editorContainer) resizeObserver.observe(editorContainer);
-      
+
       (store as any)._resizeObserver = resizeObserver;
 
       const mutationObserver = new MutationObserver(() => {
         requestAnimationFrame(adjustEditorHeight);
       });
-      
+
       if (attachmentContainer) {
-        mutationObserver.observe(attachmentContainer, { 
-          childList: true, 
+        mutationObserver.observe(attachmentContainer, {
+          childList: true,
           subtree: true,
-          attributes: true 
+          attributes: true
         });
       }
       if (referenceContainer) {
-        mutationObserver.observe(referenceContainer, { 
-          childList: true, 
+        mutationObserver.observe(referenceContainer, {
+          childList: true,
           subtree: true,
-          attributes: true 
+          attributes: true
         });
       }
-      
+
       (store as any)._mutationObserver = mutationObserver;
     } else {
       const editorElement = document.querySelector('.vditor-reset') as HTMLElement;

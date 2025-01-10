@@ -1,3 +1,10 @@
+## [0.35.7](https://github.com/blinko-space/blinko/compare/v0.35.6...v0.35.7) (2025-01-10)
+
+
+### Bug Fixes
+
+* simplify attachment retrieval logic in attachmentsRouter ([4133ce2](https://github.com/blinko-space/blinko/commit/4133ce2601a2faa379ff147d515c05662d050711))
+
 ## [0.35.6](https://github.com/blinko-space/blinko/compare/v0.35.5...v0.35.6) (2025-01-10)
 
 

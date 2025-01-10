@@ -1,3 +1,10 @@
+## [0.35.3](https://github.com/blinko-space/blinko/compare/v0.35.2...v0.35.3) (2025-01-10)
+
+
+### Bug Fixes
+
+* enhance BlinkoCard and reference handling ([b26a1fb](https://github.com/blinko-space/blinko/commit/b26a1fbf34b575f310f50fc927d0458c3854489d))
+
 ## [0.35.2](https://github.com/blinko-space/blinko/compare/v0.35.1...v0.35.2) (2025-01-10)
 
 

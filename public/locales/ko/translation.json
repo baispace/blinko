@@ -446,5 +446,11 @@
   "full-screen": "전체 화면",
   "exit-fullscreen": "전체 화면 종료",
   "no-note-associated": "노트가 연관되지 않았습니다.",
-  "insert-context": "맥락에 삽입하세요."
+  "insert-context": "맥락에 삽입하세요.",
+  "follow": "따르다",
+  "follower": "추종자",
+  "following": "다음",
+  "admin": "웹마스터",
+  "site-url": "블링코 사이트 URL",
+  "unfollow": "차단하기"
 }

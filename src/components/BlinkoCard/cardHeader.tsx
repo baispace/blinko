@@ -13,6 +13,7 @@ import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
 import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
+import { getDisplayTime } from '@/lib/helper';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -58,11 +59,9 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, accoun
         {isShareMode && account && (
           <UserAvatar account={account} blinkoItem={blinkoItem} />
         )}
+        
         <div className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc`}>
-          {blinko.config.value?.timeFormat == 'relative'
-            ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
-            : dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).format(blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss')
-          }
+          {getDisplayTime(blinkoItem.createdAt, blinkoItem.updatedAt)}
         </div>
 
         <Copy

@@ -469,5 +469,11 @@
   "full-screen": "全屏",
   "exit-fullscreen": "退出全屏",
   "no-note-associated": "没有笔记关联",
-  "insert-context": "插入到正文"
+  "insert-context": "插入到正文",
+  "follow": "关注",
+  "follower": "关注者",
+  "following": "正在关注",
+  "admin": "站长",
+  "site-url": "Blinko 站点网址",
+  "unfollow": "取消关注"
 }

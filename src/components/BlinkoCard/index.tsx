@@ -25,6 +25,7 @@ interface BlinkoCardProps {
     blogCover?: string;
     title?: string;
   };
+  className?: string;
   account?: AvatarAccount;
   isShareMode?: boolean;
   forceBlog?: boolean;
@@ -33,7 +34,7 @@ interface BlinkoCardProps {
   withoutHoverAnimation?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false, className }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -101,6 +102,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''} 
               ${blinkoItem.isBlog ? 'cursor-pointer' : ''} 
               ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
+              ${className}
             `}
           >
             <div className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}>

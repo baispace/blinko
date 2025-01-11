@@ -479,5 +479,11 @@
   "full-screen": "全螢幕",
   "exit-fullscreen": "退出全螢幕",
   "no-note-associated": "沒有附帶的備註",
-  "insert-context": "插入至內文"
+  "insert-context": "插入至內文",
+  "follow": "跟隨",
+  "follower": "追隨者",
+  "following": "遵循",
+  "admin": "網站管理員",
+  "site-url": "Blinko 網站網址",
+  "unfollow": "取消關注"
 }

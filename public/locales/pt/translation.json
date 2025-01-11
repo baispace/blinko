@@ -375,5 +375,11 @@
   "full-screen": "Tela cheia",
   "exit-fullscreen": "Sair do modo de tela cheia",
   "no-note-associated": "Nenhuma nota associada",
-  "insert-context": "Inserir no contexto"
+  "insert-context": "Inserir no contexto",
+  "follow": "Seguir",
+  "follower": "Seguidor",
+  "following": "Seguindo",
+  "admin": "Webmaster\n\nAdministrador de site",
+  "site-url": "URL do site Blinko",
+  "unfollow": "Deixar de seguir"
 }

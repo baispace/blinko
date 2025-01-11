@@ -383,5 +383,11 @@
   "full-screen": "Полноэкранный",
   "exit-fullscreen": "Выйти из полноэкранного режима",
   "no-note-associated": "Нет примечания, связанного",
-  "insert-context": "Вставить в контекст"
+  "insert-context": "Вставить в контекст",
+  "follow": "Следовать",
+  "follower": "Последователь",
+  "following": "Следующий",
+  "admin": "Веб-мастер",
+  "site-url": "Ссылка на сайт Blinko",
+  "unfollow": "Отписаться"
 }

@@ -464,5 +464,11 @@
   "full-screen": "شاشة كاملة",
   "exit-fullscreen": "الخروج من وضع ملء الشاشة",
   "no-note-associated": "لا يوجد مذكرة مرتبطة",
-  "insert-context": "إدراج في السياق"
+  "insert-context": "إدراج في السياق",
+  "follow": "اتبع",
+  "follower": "تابع",
+  "following": "متابعة",
+  "admin": "مدير الموقع",
+  "site-url": "عنوان موقع بلينكو",
+  "unfollow": "إلغاء المتابعة"
 }

@@ -450,5 +450,11 @@
   "full-screen": "Vollbild",
   "exit-fullscreen": "Vollbild beenden",
   "no-note-associated": "Keine Notiz zugeordnet",
-  "insert-context": "Einfügen in den Kontext"
+  "insert-context": "Einfügen in den Kontext",
+  "follow": "Folgen",
+  "follower": "Anhänger",
+  "following": "Folgend",
+  "admin": "Webmaster",
+  "site-url": "Blinko-Website-URL",
+  "unfollow": "Entfolgen"
 }

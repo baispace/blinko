@@ -11,6 +11,7 @@ import { UPLOAD_FILE_PATH } from '@/lib/constant';
 import { SpotifyClient } from './helper/spotify';
 import { getGlobalConfig } from './config';
 import { Readable } from 'stream';
+import { prisma } from '../prisma';
 
 const limit = pLimit(5);
 let spotifyClient: SpotifyClient | null = null;
@@ -207,5 +208,37 @@ export const publicRouter = router({
           };
         }
       }, { ttl: 60 * 60 * 1000 * 24 * 365 })
+    }),
+  siteInfo: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/public/site-info', summary: 'Get site info', tags: ['Public'] } })
+    .input(z.object({
+      id: z.number().nullable().optional()
+    }).optional())
+    .output(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      image: z.string().optional(),
+      description: z.string().optional(),
+      role: z.string().optional(),
+    }))
+    .query(async function ({ input }) {
+      if (!input?.id || input?.id === null) {
+        const superAdmin = await prisma.accounts.findFirst({ where: { role: 'superadmin' } })
+        return {
+          id: Number(superAdmin?.id),
+          name: superAdmin?.nickname ?? superAdmin?.name ?? '',
+          image: superAdmin?.image ?? '',
+          description: superAdmin?.description ?? '',
+          role: 'superadmin'
+        }
+      }
+      const account = await prisma.accounts.findFirst({ where: { id: Number(input?.id) } })
+      return {
+        id: Number(account?.id),
+        name: account?.nickname ?? account?.name ?? '',
+        image: account?.image ?? '',
+        description: account?.description ?? '',
+        role: account?.role ?? 'user'
+      }
     })
 })

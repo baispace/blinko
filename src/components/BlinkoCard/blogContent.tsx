@@ -4,6 +4,7 @@ import { helper } from '@/lib/helper';
 import { RootStore } from '@/store/root';
 import router from 'next/router';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 interface BlogContentProps {
   blinkoItem: Note & {
@@ -14,22 +15,99 @@ interface BlogContentProps {
   isExpanded?: boolean;
 }
 
+const gradientPairs: [string, string][] = [
+  ['#FF6B6B', '#4ECDC4'],
+  ['#764BA2', '#667EEA'],
+  ['#2E3192', '#1BFFFF'],
+  ['#6B73FF', '#000DFF'],
+  ['#FC466B', '#3F5EFB'],
+  ['#11998E', '#38EF7D'],
+  ['#536976', '#292E49'],
+  ['#4776E6', '#8E54E9'],
+  ['#1A2980', '#26D0CE'],
+  ['#4B134F', '#C94B4B'],
+];
+
 export const BlogContent = ({ blinkoItem, isExpanded }: BlogContentProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number>(112);
+
+  const gradientStyle = useMemo(() => {
+    const hash = blinkoItem.title?.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0) ?? 0;
+    const index = Math.abs(hash) % gradientPairs.length;
+    const angle = Math.abs((hash * 137) % 360);
+    const [color1, color2] = gradientPairs[index] ?? ['#000', '#000'];
+    return {
+      background: `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`,
+      opacity: 0.8
+    };
+  }, [blinkoItem.title]);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (contentRef.current) {
+        const height = contentRef.current.offsetHeight;
+        setContentHeight(Math.max(100, height));
+      }
+    };
+
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [blinkoItem.content, blinkoItem.title, blinkoItem.tags]);
+
   return (
-    <div className={`flex items-center justify-between gap-2 w-full ${isExpanded ? 'mb-4' : 'mb-1'}`}>
-      {blinkoItem.blogCover && (
+    <div className={`flex items-start gap-2 mt-4 w-full ${isExpanded ? 'mb-4' : 'mb-1'}`}>
+      {blinkoItem.blogCover ? (
         <Image
           src={blinkoItem.blogCover}
           alt='blog cover'
           isZoomed
-          className={`object-cover aspect-square rounded-lg w-fit max-w-[100px] max-h-[100px]`}
+          style={{
+            width: `${contentHeight}px`,
+            height: `${contentHeight}px`,
+          }}
+          className="object-cover rounded-lg shrink-0"
         />
-      )}
-      <div className='flex-1 flex flex-col min-w-[70%] pr-2 pl-1'>
-        <div className={`font-bold mb-1 line-clamp-1 ${isExpanded ? 'text-xl' : 'text-lg'}`}>
-          {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
+      ) : blinkoItem.title && (
+        <div
+          className="shrink-0 flex items-center justify-center rounded-xl p-2 overflow-hidden"
+          style={{
+            width: `${contentHeight}px`,
+            height: `${contentHeight}px`,
+            ...gradientStyle
+          }}
+        >
+          <div className="text-md font-bold line-clamp-3 text-center text-white">
+            {blinkoItem.title.replace(/#/g, '').replace(/\*/g, '')}
+          </div>
         </div>
-        <div className={`text-desc ${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-3' : 'line-clamp-4'} flex-1 ${isExpanded ? 'text-sm' : 'text-xs'}`}>
+      )}
+      <div
+        ref={contentRef}
+        className='blog-content flex flex-col pr-2'
+        style={{
+          width: 'calc(100% - 112px - 0.5rem)'
+        }}
+      >
+        {blinkoItem.blogCover && (
+          <div className={`font-bold mb-1 line-clamp-2 ${isExpanded ? 'text-md' : 'text-md'}`}>
+            {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
+          </div>
+        )}
+        <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${blinkoItem.blogCover ?
+          `${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-2' : 'line-clamp-3'}` :
+          'line-clamp-4'}`}
+        >
           {blinkoItem.content?.replace(blinkoItem.title ?? '', '').replace(/#/g, '').replace(/\*/g, '')}
         </div>
         {

@@ -467,5 +467,11 @@
   "full-screen": "Full Screen",
   "exit-fullscreen": "Exit Fullscreen",
   "no-note-associated": "No note associated",
-  "insert-context": "Insert to context"
+  "insert-context": "Insert to context",
+  "follow": "Follow",
+  "follower": "Follower",
+  "following": "Following",
+  "admin": "Webmaster",
+  "site-url": "Blinko Site URL",
+  "unfollow": "Unfollow"
 }

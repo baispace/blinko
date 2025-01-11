@@ -439,5 +439,11 @@
   "full-screen": "Plein écran",
   "exit-fullscreen": "Quitter le mode plein écran",
   "no-note-associated": "Pas de note associée",
-  "insert-context": "Insérer dans le contexte"
+  "insert-context": "Insérer dans le contexte",
+  "follow": "Suivre",
+  "follower": "Disciple",
+  "following": "Suivant",
+  "admin": "Webmestre",
+  "site-url": "Adresse URL du site Blinko",
+  "unfollow": "Ne plus suivre"
 }

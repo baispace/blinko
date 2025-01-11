@@ -392,5 +392,11 @@
   "full-screen": "Tam Ekran",
   "exit-fullscreen": "Tam Ekrandan Çıkış",
   "no-note-associated": "Herhangi bir not yok.",
-  "insert-context": "Bağlama ekle"
+  "insert-context": "Bağlama ekle",
+  "follow": "Takip etmek",
+  "follower": "Takipçi",
+  "following": "Takip eden",
+  "admin": "Web yöneticisi",
+  "site-url": "Blinko Sitesi URL'si",
+  "unfollow": "Takip etmeyi bırak"
 }

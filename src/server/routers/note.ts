@@ -169,6 +169,11 @@ export const noteRouter = router({
           name: z.string().optional(),
           id: z.number().optional(),
         }).nullable().optional(),
+        tags: z.array(tagsToNoteSchema.merge(
+          z.object({
+            tag: tagSchema
+          }))
+        ),
         _count: z.object({
           comments: z.number()
         })
@@ -189,7 +194,7 @@ export const noteRouter = router({
         skip: (page - 1) * size,
         take: size,
         include: {
-          tags: true,
+          tags: { include: { tag: true } },
           account: {
             select: {
               image: true,

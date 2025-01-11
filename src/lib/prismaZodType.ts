@@ -15,6 +15,7 @@ export const accountsSchema = z.object({
   note: z.number().int(),
   role: z.string(),
   loginType: z.string().optional(),
+  description: z.string().optional(),
   linkAccountId: z.number().int().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -187,3 +188,22 @@ export const commentsSchema = z.object({
 })
 
 export type comments = z.infer<typeof commentsSchema>
+
+
+/////////////////////////////////////////
+// FOLLOWS SCHEMA
+/////////////////////////////////////////
+
+export const followsSchema = z.object({
+  id: z.number().int(),
+  siteName: z.string().optional(),
+  siteUrl: z.string(),
+  siteAvatar: z.string().optional(),
+  description: z.string().optional(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  followType: z.string(),
+  accountId: z.number().int(),
+})
+
+export type follows = z.infer<typeof followsSchema> 

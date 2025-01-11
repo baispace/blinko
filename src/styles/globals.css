@@ -27,25 +27,39 @@
 
 .card-masonry-grid {
   display: -webkit-box;
-  /* Not needed if autoprefixing */
   display: -ms-flexbox;
-  /* Not needed if autoprefixing */
   display: flex;
   margin-left: -10px;
-  /* gutter size offset */
   width: auto;
 }
 
 .card-masonry-grid_column {
   padding-left: 10px;
-  /* gutter size */
   background-clip: padding-box;
 }
 
 /* Style your items */
 .card-masonry-grid_column>div {
-  /* change div to reference your elements you put in <Masonry> */
   margin-bottom: 10px;
+}
+
+
+.blog-masonry-grid {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  margin-left: -20px;
+  width: auto;
+}
+
+.blog-masonry-grid_column {
+  padding-left: 20px;
+  background-clip: padding-box;
+}
+
+/* Style your items */
+.blog-masonry-grid_column>div {
+  margin-bottom: 20px;
 }
 
 /* Fix card height  */

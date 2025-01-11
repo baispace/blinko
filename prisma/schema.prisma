@@ -12,23 +12,25 @@ datasource db {
 }
 
 model accounts {
-  id            Int      @id @default(autoincrement())
-  name          String   @default("") @db.VarChar
-  nickname      String   @default("") @db.VarChar
-  password      String   @default("") @db.VarChar
-  image         String   @default("") @db.VarChar
-  apiToken      String   @default("") @db.VarChar
-  note          Int      @default(0)
-  role          String   @default("") @db.VarChar
-  loginType     String   @default("") @db.VarChar
+  id            Int           @id @default(autoincrement())
+  name          String        @default("") @db.VarChar
+  nickname      String        @default("") @db.VarChar
+  password      String        @default("") @db.VarChar
+  image         String        @default("") @db.VarChar
+  apiToken      String        @default("") @db.VarChar
+  description   String        @default("") @db.Text
+  note          Int           @default(0)
+  role          String        @default("") @db.VarChar
+  loginType     String        @default("") @db.VarChar
   linkAccountId Int?
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(6)
   notes         notes[]
   configs       config[]
   tags          tag[]
   comments      comments[]
   attachments   attachments[]
+  follows       follows[]
 }
 
 model attachments {
@@ -47,8 +49,8 @@ model attachments {
   perfixPath    String?  @default("") @db.VarChar // folder1,folder2,folder3
   depth         Int?
 
-  note          notes?   @relation(fields: [noteId], references: [id])
-  account       accounts? @relation(fields: [accountId], references: [id])
+  note    notes?    @relation(fields: [noteId], references: [id])
+  account accounts? @relation(fields: [accountId], references: [id])
 }
 
 model config {
@@ -86,21 +88,21 @@ model notes {
 }
 
 model comments {
-  id              Int       @id @default(autoincrement())
-  content         String    @db.Text
-  accountId       Int?
-  guestName       String?   @db.VarChar
-  guestIP         String?   @db.VarChar
-  guestUA         String?   @db.VarChar
-  noteId          Int
-  parentId        Int?
-  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
-  
-  note            notes     @relation("NoteComments", fields: [noteId], references: [id])
-  account         accounts? @relation(fields: [accountId], references: [id])
-  parent          comments? @relation("CommentReplies", fields: [parentId], references: [id])
-  replies         comments[] @relation("CommentReplies")
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  accountId Int?
+  guestName String?  @db.VarChar
+  guestIP   String?  @db.VarChar
+  guestUA   String?  @db.VarChar
+  noteId    Int
+  parentId  Int?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  note    notes      @relation("NoteComments", fields: [noteId], references: [id])
+  account accounts?  @relation(fields: [accountId], references: [id])
+  parent  comments?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies comments[] @relation("CommentReplies")
 }
 
 model tag {
@@ -146,4 +148,19 @@ model noteReference {
   toNote   notes @relation("ReferencedNote", fields: [toNoteId], references: [id])
 
   @@unique([fromNoteId, toNoteId])
+}
+
+model follows {
+  id          Int     @id @default(autoincrement())
+  siteName    String? @db.VarChar
+  siteUrl     String  @db.VarChar
+  siteAvatar  String? @db.VarChar
+  description String? @db.Text
+
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+  followType String   @default("following") @db.VarChar //  "following" or "follower"
+
+  accountId Int
+  account   accounts @relation(fields: [accountId], references: [id])
 }

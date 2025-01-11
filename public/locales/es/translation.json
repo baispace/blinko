@@ -443,5 +443,11 @@
   "full-screen": "Pantalla completa",
   "exit-fullscreen": "Salir de pantalla completa",
   "no-note-associated": "No hay nota asociada",
-  "insert-context": "Insertar en el contexto"
+  "insert-context": "Insertar en el contexto",
+  "follow": "Seguir",
+  "follower": "Seguidor",
+  "following": "Siguiendo",
+  "admin": "Administrador de página web",
+  "site-url": "URL del sitio de Blinko",
+  "unfollow": "Dejar de seguir"
 }

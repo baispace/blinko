@@ -40,7 +40,7 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
               onlyContent: true,
               showOnlyContentCloseButton: true,
               size: '4xl',
-              content: <BlinkoCard blinkoItem={note!} withoutHoverAnimation/>
+              content: <BlinkoCard blinkoItem={note!} withoutHoverAnimation />
             })
           }}>
             <div className='text-desc text-xs ml-1 select-none flex'>
@@ -53,7 +53,7 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
       </div>
 
       <div className="flex items-center mt-2">
-        {isShareMode ? <></> : <ConvertTypeButton blinkoItem={blinkoItem} blinko={blinko} t={t} />}
+        <ConvertTypeButton blinkoItem={blinkoItem} blinko={blinko} t={t} />
         <RightContent blinkoItem={blinkoItem} t={t} />
       </div>
     </div>

@@ -423,5 +423,11 @@
   "full-screen": "フルスクリーン",
   "exit-fullscreen": "フルスクリーンを終了",
   "no-note-associated": "関連するノートはありません",
-  "insert-context": "コンテキストに挿入"
+  "insert-context": "コンテキストに挿入",
+  "follow": "フォロー",
+  "follower": "フォロワー",
+  "following": "以下",
+  "admin": "ウェブマスター",
+  "site-url": "BlinkoサイトのURL",
+  "unfollow": "フォローを外す"
 }

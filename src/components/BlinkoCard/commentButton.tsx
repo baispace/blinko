@@ -5,7 +5,7 @@ import { UserStore } from '@/store/user';
 import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
 import { type Comment } from '@/server/types';
 import { Icon } from '@iconify/react';
-import { Button, Tooltip, Chip } from '@nextui-org/react';
+import { Button, Tooltip, Chip, Image } from '@nextui-org/react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note } from '@/server/types';
 import { RootStore } from '@/store';
@@ -22,11 +22,13 @@ import Avatar from "boring-avatars";
 
 export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
 
-export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }: {
+export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, withoutName, size = 20 }: {
   account?: AvatarAccount;
   guestName?: string;
   isAuthor?: boolean;
   blinkoItem?: Note;
+  withoutName?: boolean;
+  size?: number;
 }) => {
   const { t } = useTranslation();
   const displayName = account ? (account.nickname || account.name) : (guestName || '');
@@ -36,15 +38,15 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }
       {account ? (
         <>
           {account.image ? (
-            <img src={account.image} alt="" className="w-6 h-6 rounded-full" />
+            <Image src={account.image} radius="full" alt="" width={size} height={size} />
           ) : (
             <Avatar
-              size={20}
+              size={size}
               name={displayName}
               variant="beam"
             />
           )}
-          <span className="text-sm font-medium">{displayName}</span>
+          {!withoutName && <span className="text-sm font-medium">{displayName}</span>}
           {isAuthor && blinkoItem && String(account.id) === String(blinkoItem.accountId) && (
             <Chip size="sm" color="warning" variant="flat">{t('author')}</Chip>
           )}
@@ -52,11 +54,11 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem }
       ) : (
         <>
           <Avatar
-            size={20}
+            size={size}
             name={displayName}
             variant="beam"
           />
-          <span className="text-sm font-medium">{displayName}</span>
+          {!withoutName && <span className="text-sm font-medium">{displayName}</span>}
         </>
       )}
     </div>

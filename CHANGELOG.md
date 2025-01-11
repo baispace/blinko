@@ -1,3 +1,10 @@
+## [0.36.3](https://github.com/blinko-space/blinko/compare/v0.36.2...v0.36.3) (2025-01-11)
+
+
+### Bug Fixes
+
+* enhance BlinkoCard and BlinkoFollowDialog components, improve public API caching ([7833ae8](https://github.com/blinko-space/blinko/commit/7833ae89cd94b4c3ad7e53281b56dba1300a6621))
+
 ## [0.36.2](https://github.com/blinko-space/blinko/compare/v0.36.1...v0.36.2) (2025-01-11)
 
 

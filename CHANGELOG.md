@@ -1,3 +1,10 @@
+# [0.36.0](https://github.com/blinko-space/blinko/compare/v0.35.9...v0.36.0) (2025-01-11)
+
+
+### Features
+
+* support hub follow unfollow website 🎉 ([18ffc3b](https://github.com/blinko-space/blinko/commit/18ffc3b641f00e089b97b9fad9a89eaed01cd8c5))
+
 ## [0.35.9](https://github.com/blinko-space/blinko/compare/v0.35.8...v0.35.9) (2025-01-11)
 
 

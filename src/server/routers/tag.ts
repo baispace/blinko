@@ -135,7 +135,7 @@ export const tagRouter = router({
             content: note.content.replace(
               new RegExp(`#[^\\s]*${tag.name}(/[^\\s]*)?(?=\\s|$)`, 'g'),
               ''
-            ).replace(/\s+/g, ' ').trim()
+            ).trim()
           }
         })
 

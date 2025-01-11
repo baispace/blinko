@@ -379,7 +379,6 @@ export class BlinkoStore implements Store {
   }
 
   private clear() {
-    console.log(new Date().toLocaleString(), "blinkoStore.tsx clear() >>>>")
     this.createContentStorage.clear()
     this.editContentStorage.clear()
   }

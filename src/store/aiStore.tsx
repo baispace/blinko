@@ -277,7 +277,6 @@ export class AiStore implements Store {
   }
 
   private clear() {
-    console.log(new Date().toLocaleString(), "aiStore.tsx clear() >>>>")
     this.chatHistory.clear()
   }
 }

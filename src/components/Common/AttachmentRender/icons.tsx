@@ -18,15 +18,18 @@ export const DeleteIcon = observer(({ className, file, files, size = 20 }: { cla
   const store = RootStore.Local(() => ({
     deleteFile: new PromiseState({
       function: async (file) => {
-        await fetch('/api/file/delete', {
-          method: 'POST',
-          body: JSON.stringify({ attachment_path: file.uploadPromise?.value }),
-        });
+        const path = file.uploadPromise?.value;
+        if (path) {
+          await fetch('/api/file/delete', {
+            method: 'POST',
+            body: JSON.stringify({ attachment_path: path }),
+          });
+        }
         const index = files.findIndex(i => i.name == file.name)
         files.splice(index, 1)
         RootStore.Get(DialogStandaloneStore).close()
         RootStore.Get(ToastPlugin).success(t('delete-success'))
-        RootStore.Get(BlinkoStore).updateTicker++
+        RootStore.Get(BlinkoStore).removeCreateAttachments(file)
       }
     })
   }))

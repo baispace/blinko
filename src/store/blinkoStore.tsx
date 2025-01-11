@@ -449,4 +449,9 @@ export class BlinkoStore implements Store {
   constructor() {
     makeAutoObservable(this)
   }
+
+  removeCreateAttachments(file: { name: string, }) {
+    this.createAttachmentsStorage.removeByFind(f => f.name === file.name);
+    this.updateTicker++;
+  }
 }

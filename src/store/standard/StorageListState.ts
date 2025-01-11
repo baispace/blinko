@@ -46,6 +46,11 @@ export class StorageListState<T = any> {
     this.save();
   }
 
+  removeByFind(predicate: (value: T, index: number, obj: T[]) => unknown) {
+    const idx = this.list.findIndex(predicate);
+    if (idx !== -1) this.remove(idx);
+  }
+
   save() {
     try {
       localStorage.setItem(this.key, JSON.stringify(this.list));

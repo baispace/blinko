@@ -1,3 +1,10 @@
+## [0.35.8](https://github.com/blinko-space/blinko/compare/v0.35.7...v0.35.8) (2025-01-10)
+
+
+### Bug Fixes
+
+* update AiTag and AiPrompt for improved tag handling ([985ee23](https://github.com/blinko-space/blinko/commit/985ee23090b4d3f95f678f82b83bcdf34b1d787d))
+
 ## [0.35.7](https://github.com/blinko-space/blinko/compare/v0.35.6...v0.35.7) (2025-01-10)
 
 

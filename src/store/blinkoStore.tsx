@@ -378,6 +378,12 @@ export class BlinkoStore implements Store {
     this.dailyReviewNoteList.call()
   }
 
+  private clear() {
+    console.log(new Date().toLocaleString(), "blinkoStore.tsx clear() >>>>")
+    this.createContentStorage.clear()
+    this.editContentStorage.clear()
+  }
+
   use() {
     useEffect(() => {
       this.firstLoad()
@@ -448,5 +454,8 @@ export class BlinkoStore implements Store {
 
   constructor() {
     makeAutoObservable(this)
+    eventBus.on('user:signout', () => {
+      this.clear()
+    })
   }
 }

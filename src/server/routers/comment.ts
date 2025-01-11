@@ -35,7 +35,7 @@ export const commentRouter = router({
       noteId: z.number(),
       parentId: z.number().optional(),
     }))
-    .output(commentWithRelationsSchema)
+    .output(z.boolean())
     .mutation(async function ({ input, ctx }) {
       const { content, noteId, parentId } = input;
 
@@ -75,7 +75,7 @@ export const commentRouter = router({
         AiService.AIComment({ content, noteId })
       }
 
-      return await prisma.comments.create({
+      await prisma.comments.create({
         data: {
           content,
           noteId,
@@ -96,6 +96,8 @@ export const commentRouter = router({
           }
         }
       });
+
+      return true
     }),
 
   list: publicProcedure

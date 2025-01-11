@@ -1,6 +1,6 @@
 {
   "name": "blinko",
-  "version": "0.35.9",
+  "version": "0.36.0",
   "repository": "https://github.com/blinko-space/blinko.git",
   "private": true,
   "browser": {

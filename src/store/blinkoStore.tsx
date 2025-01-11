@@ -378,6 +378,11 @@ export class BlinkoStore implements Store {
     this.dailyReviewNoteList.call()
   }
 
+  private clear() {
+    this.createContentStorage.clear()
+    this.editContentStorage.clear()
+  }
+
   use() {
     useEffect(() => {
       this.firstLoad()
@@ -448,6 +453,9 @@ export class BlinkoStore implements Store {
 
   constructor() {
     makeAutoObservable(this)
+    eventBus.on('user:signout', () => {
+      this.clear()
+    })
   }
 
   removeCreateAttachments(file: { name: string, }) {

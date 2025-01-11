@@ -148,7 +148,6 @@ const Hub = observer(({ className }: { className?: string }) => {
     <div className="max-w-screen-xl mx-auto p-4 md:p-0">
       <div className='flex items-center justify-between gap-2 my-6 rounded-2xl '>
         <Tabs aria-label="Options" color="primary" onSelectionChange={(e) => {
-          console.log(e)
           if (e == 'site') {
             store.currentSiteURL = ''
             store.shareNoteList.resetAndCall({})

@@ -29,7 +29,6 @@ export const followsRouter = router({
         input.siteUrl = new URL(input.siteUrl).origin;
         input.mySiteUrl = new URL(input.mySiteUrl).origin;
         const followerId = ctx.id;
-        console.log('inputxx', input.siteUrl + '/api/v1/public/site-info')
         const siteInfo = await axios.get(input.siteUrl + '/api/v1/public/site-info', { params: { id: null } });
 
         // Check if already following
@@ -51,7 +50,7 @@ export const followsRouter = router({
             followType: "following",
             siteUrl: input.mySiteUrl,
             siteName: siteInfo.data.name,
-            siteAvatar: input.mySiteUrl + siteInfo.data.image,
+            siteAvatar: siteInfo.data.image ? input.mySiteUrl + siteInfo.data.image : "",
             accountId: Number(followerId),
           },
         });
@@ -97,7 +96,6 @@ export const followsRouter = router({
       data: z.any()
     }))
     .mutation(async ({ input }) => {
-      console.log('followFrom', input)
       return await prisma.$transaction(async (tx) => {
         input.siteUrl = new URL(input.siteUrl).origin;
 

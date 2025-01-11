@@ -1,3 +1,10 @@
+## [0.36.2](https://github.com/blinko-space/blinko/compare/v0.36.1...v0.36.2) (2025-01-11)
+
+
+### Bug Fixes
+
+* improve layout and follow handling in BlinkoFollowDialog and follows router ([6357219](https://github.com/blinko-space/blinko/commit/635721976d1f65b4ff4ec7128502823fa45aeaee))
+
 ## [0.36.1](https://github.com/blinko-space/blinko/compare/v0.36.0...v0.36.1) (2025-01-11)
 
 

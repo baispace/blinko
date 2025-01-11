@@ -42,7 +42,7 @@ export const BlinkoFollowingDialog = observer(({ data, onConfirm }: { data: foll
   return (
     <div>
       {data.map(item => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-2">
           <UserAvatar
             key={item.id}
             guestName={item.siteName}

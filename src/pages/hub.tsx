@@ -176,7 +176,7 @@ const Hub = observer(({ className }: { className?: string }) => {
           default: 3,
           500: 1
         }}
-        className="blog-masonry-grid "
+        className="blog-masonry-grid"
         columnClassName="blog-masonry-grid_column">
         {
           store.shareNoteList?.value?.map(i => {

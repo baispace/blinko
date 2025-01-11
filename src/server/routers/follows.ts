@@ -35,6 +35,8 @@ export const followsRouter = router({
         const existingFollow = await tx.follows.findFirst({
           where: {
             siteUrl: input.siteUrl,
+            accountId: Number(followerId),
+            followType: "following",
           },
         });
 
@@ -48,9 +50,9 @@ export const followsRouter = router({
         const result = await tx.follows.create({
           data: {
             followType: "following",
-            siteUrl: input.mySiteUrl,
+            siteUrl: input.siteUrl,
             siteName: siteInfo.data.name,
-            siteAvatar: siteInfo.data.image ? input.mySiteUrl + siteInfo.data.image : "",
+            siteAvatar: siteInfo.data.image ? input.siteUrl + siteInfo.data.image : "",
             accountId: Number(followerId),
           },
         });

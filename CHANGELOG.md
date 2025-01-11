@@ -1,3 +1,10 @@
+## [0.36.1](https://github.com/blinko-space/blinko/compare/v0.36.0...v0.36.1) (2025-01-11)
+
+
+### Bug Fixes
+
+* remove console logs and improve site avatar handling ([6e09839](https://github.com/blinko-space/blinko/commit/6e09839833e3f92458d664853ebc51dc73e5c3e0))
+
 # [0.36.0](https://github.com/blinko-space/blinko/compare/v0.35.9...v0.36.0) (2025-01-11)
 
 

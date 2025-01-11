@@ -30,6 +30,9 @@ export class AiStore implements Store {
   sid = 'AiStore';
   constructor() {
     makeAutoObservable(this)
+    eventBus.on('user:signout', () => {
+      this.clear()
+    })
   }
   noteContent = '';
   aiSearchText = '';
@@ -271,5 +274,10 @@ export class AiStore implements Store {
     this.abortController = new AbortController()
     this.isLoading = false
     this.isAnswering = false
+  }
+
+  private clear() {
+    console.log(new Date().toLocaleString(), "aiStore.tsx clear() >>>>")
+    this.chatHistory.clear()
   }
 }

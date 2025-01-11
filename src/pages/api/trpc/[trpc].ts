@@ -25,8 +25,12 @@ export default trpcNext.createNextApiHandler({
     const allOps = appRouter._def.procedures;
     const meta = paths?.reduce((acc, path) => {
       const procedure = allOps[path];
-      if (procedure?._def?.meta?.headers) {
-        return { ...acc, ...procedure._def.meta.headers };
+      if (procedure?._def?.headers || procedure?._def?.meta?.headers) {
+        return { 
+          ...acc, 
+          ...procedure._def.headers,
+          ...procedure._def.meta?.headers 
+        };
       }
       return acc;
     }, {});

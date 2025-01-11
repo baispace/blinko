@@ -34,7 +34,16 @@ const Hub = observer(({ className }: { className?: string }) => {
       function: async ({ page, size }) => {
         if (store.currentSiteURL) {
           const res = await axios.post(store.currentSiteURL + '/api/v1/note/public-list', { page, size })
-          return res.data
+          return res.data.map(i=>{
+            i.account.image = store.currentSiteURL + i.account.image
+            i.attachments = i.attachments.map(j=>{
+              j.path = store.currentSiteURL + j.path
+              return j
+            })
+            return {
+              ...i
+            }
+          })
         }
         const notes = await api.notes.publicList.mutate({ page, size })
         return notes
@@ -117,7 +126,6 @@ const Hub = observer(({ className }: { className?: string }) => {
                       </Button>
                     )
                   }
-                  {/* <Icon icon="mdi:dots-horizontal" className="w-6 h-6" /> */}
                 </div>
               </div>
 
@@ -182,7 +190,12 @@ const Hub = observer(({ className }: { className?: string }) => {
           store.shareNoteList?.value?.map(i => {
             return <BlinkoCard
               className='border-1 border-hover rounded-2xl'
-              key={i.id} blinkoItem={i} isShareMode={RootStore.Get(UserStore).userInfo.value?.id != i.accountId} account={i.account ?? undefined} forceBlog={store.forceBlog.value} />
+              key={i.id}
+              blinkoItem={i}
+              isShareMode={
+                RootStore.Get(UserStore).userInfo.value?.id != i.accountId || store.currentSiteURL != ''
+              }
+              account={i.account ?? undefined} forceBlog={store.forceBlog.value} />
           })
         }
       </Masonry>

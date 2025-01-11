@@ -210,7 +210,9 @@ export const publicRouter = router({
       }, { ttl: 60 * 60 * 1000 * 24 * 365 })
     }),
   siteInfo: publicProcedure
-    .meta({ openapi: { method: 'GET', path: '/v1/public/site-info', summary: 'Get site info', tags: ['Public'] } })
+    .meta({
+      openapi: { method: 'GET', path: '/v1/public/site-info', summary: 'Get site info', tags: ['Public'] }
+    })
     .input(z.object({
       id: z.number().nullable().optional()
     }).optional())
@@ -222,23 +224,25 @@ export const publicRouter = router({
       role: z.string().optional(),
     }))
     .query(async function ({ input }) {
-      if (!input?.id || input?.id === null) {
-        const superAdmin = await prisma.accounts.findFirst({ where: { role: 'superadmin' } })
-        return {
-          id: Number(superAdmin?.id),
-          name: superAdmin?.nickname ?? superAdmin?.name ?? '',
-          image: superAdmin?.image ?? '',
-          description: superAdmin?.description ?? '',
-          role: 'superadmin'
+      return cache.wrap(input?.id ? input.id.toString() : 'superadmin-site-info', async () => {
+        if (!input?.id || input?.id === null) {
+          const superAdmin = await prisma.accounts.findFirst({ where: { role: 'superadmin' } })
+          return {
+            id: Number(superAdmin?.id),
+            name: superAdmin?.nickname ?? superAdmin?.name ?? '',
+            image: superAdmin?.image ?? '',
+            description: superAdmin?.description ?? '',
+            role: 'superadmin'
+          }
         }
-      }
-      const account = await prisma.accounts.findFirst({ where: { id: Number(input?.id) } })
-      return {
-        id: Number(account?.id),
-        name: account?.nickname ?? account?.name ?? '',
-        image: account?.image ?? '',
-        description: account?.description ?? '',
-        role: account?.role ?? 'user'
-      }
+        const account = await prisma.accounts.findFirst({ where: { id: Number(input?.id) } })
+        return {
+          id: Number(account?.id),
+          name: account?.nickname ?? account?.name ?? '',
+          image: account?.image ?? '',
+          description: account?.description ?? '',
+          role: account?.role ?? 'user'
+        }
+      }, { ttl: 1000 * 60 * 5 }) // 5 minutes
     })
 })

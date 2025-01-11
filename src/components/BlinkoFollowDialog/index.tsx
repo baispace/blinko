@@ -5,7 +5,7 @@ import { DialogStore } from "@/store/module/Dialog"
 import { PromiseCall } from "@/store/standard/PromiseState"
 import { Icon } from "@iconify/react"
 
-import { Button, Input, user } from "@nextui-org/react"
+import { Button, Input, Link, user } from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
 import { UserAvatar } from "../BlinkoCard/commentButton"
@@ -42,17 +42,20 @@ export const BlinkoFollowingDialog = observer(({ data, onConfirm }: { data: foll
   return (
     <div>
       {data.map(item => (
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-1 mt-2">
           <UserAvatar
             key={item.id}
             guestName={item.siteName}
             account={{
               image: item.siteAvatar
             }}
-            size={30}
+            size={35}
           />
-          <div>{item.siteName}</div>
-          <Button className="ml-auto" startContent={<Icon icon="icon-park-twotone:people-delete" width="14" height="14" />} color='primary' onPress={() => {
+          <div className="flex flex-col">
+            <div>{item.siteName}</div>
+            <Link href={item.siteUrl} target="_blank" className="text-blue-500 text-xs">{item.siteUrl}</Link>
+          </div>
+          <Button size="sm" className="ml-auto" startContent={<Icon icon="icon-park-twotone:people-delete" width="14" height="14" />} color='primary' onPress={() => {
             PromiseCall(api.follows.unfollow.mutate({ siteUrl: item.siteUrl, mySiteUrl: window.location.origin })).then(() => {
               onConfirm()
               RootStore.Get(DialogStore).close()

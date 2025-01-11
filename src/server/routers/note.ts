@@ -11,6 +11,7 @@ import { FileService } from '../plugins/files';
 import { AiService } from '../plugins/ai';
 import { SendWebhook } from './helper';
 import { Context } from '../context';
+import { cache } from '@/lib/cache';
 
 const extractHashtags = (input: string): string[] => {
   const withoutCodeBlocks = input.replace(/```[\s\S]*?```/g, '');
@@ -155,7 +156,14 @@ export const noteRouter = router({
       })
     }),
   publicList: publicProcedure
-    .meta({ openapi: { method: 'POST', path: '/v1/note/public-list', summary: 'Query share notes list', tags: ['Note'] } })
+    .meta({
+      openapi: {
+        method: 'POST', path: '/v1/note/public-list', summary: 'Query share notes list', tags: ['Note']
+      },
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=300'
+      }
+    })
     .input(z.object({
       page: z.number().optional().default(1),
       size: z.number().optional().default(30)
@@ -180,37 +188,39 @@ export const noteRouter = router({
       }))
     ))
     .mutation(async function ({ input }) {
-      const { page, size } = input
-      return await prisma.notes.findMany({
-        where: {
-          isShare: true,
-          sharePassword: "",
-          OR: [
-            { shareExpiryDate: { gt: new Date() } },
-            { shareExpiryDate: null }
-          ]
-        },
-        orderBy: [{ isTop: "desc" }, { updatedAt: 'desc' }],
-        skip: (page - 1) * size,
-        take: size,
-        include: {
-          tags: { include: { tag: true } },
-          account: {
-            select: {
-              image: true,
-              nickname: true,
-              name: true,
-              id: true,
+      return cache.wrap('/v1/note/public-list', async () => {
+        const { page, size } = input
+        return await prisma.notes.findMany({
+          where: {
+            isShare: true,
+            sharePassword: "",
+            OR: [
+              { shareExpiryDate: { gt: new Date() } },
+              { shareExpiryDate: null }
+            ]
+          },
+          orderBy: [{ isTop: "desc" }, { updatedAt: 'desc' }],
+          skip: (page - 1) * size,
+          take: size,
+          include: {
+            tags: { include: { tag: true } },
+            account: {
+              select: {
+                image: true,
+                nickname: true,
+                name: true,
+                id: true,
+              }
+            },
+            attachments: true,
+            _count: {
+              select: {
+                comments: true
+              }
             }
           },
-          attachments: true,
-          _count: {
-            select: {
-              comments: true
-            }
-          }
-        },
-      })
+        })
+      }, { ttl: 1000 * 60 * 5 })
     }),
   listByIds: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list-by-ids', summary: 'Query notes list by ids', protect: true, tags: ['Note'] } })
@@ -223,11 +233,13 @@ export const noteRouter = router({
             tag: tagSchema
           }))
         ),
-        references: z.array(z.object({ toNoteId: z.number(), toNote: z.object({
-          content: z.string().optional(),
-          createdAt: z.date().optional(),
-          updatedAt: z.date().optional()
-        }).optional() })).optional(),
+        references: z.array(z.object({
+          toNoteId: z.number(), toNote: z.object({
+            content: z.string().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional()
+          }).optional()
+        })).optional(),
         referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
         _count: z.object({
           comments: z.number()

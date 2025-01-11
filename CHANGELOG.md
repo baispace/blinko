@@ -1,3 +1,10 @@
+## [0.35.9](https://github.com/blinko-space/blinko/compare/v0.35.8...v0.35.9) (2025-01-11)
+
+
+### Bug Fixes
+
+* update comment mutation to return a boolean ([3c7d7b9](https://github.com/blinko-space/blinko/commit/3c7d7b944b0b1c56054d5275ba5f2a6e9ae898ce))
+
 ## [0.35.8](https://github.com/blinko-space/blinko/compare/v0.35.7...v0.35.8) (2025-01-10)
 
 

@@ -5,16 +5,16 @@ import { stat, readFile } from "fs/promises";
 import mime from "mime-types";
 import { UPLOAD_FILE_PATH } from "@/lib/constant";
 import crypto from "crypto";
-import { getToken } from "next-auth/jwt";
 import sharp from "sharp";
 import { prisma } from "@/server/prisma";
+import { getToken } from "@/server/routers/helper";
 
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
 const ONE_YEAR_IN_SECONDS = 31536000;
 
 export const GET = async (req: NextRequest, { params }: any) => {
   const fullPath = decodeURIComponent(params.filename.join('/'));
-  const token = await getToken({ req });
+  const token = await getToken(req);
 
   const searchParams = req.nextUrl.searchParams;
   const needThumbnail = searchParams.get('thumbnail') === 'true';

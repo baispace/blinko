@@ -1,3 +1,4 @@
+"use client"
 import { _ } from '@/lib/lodash';
 import { useEffect } from 'react';
 import { PromisePageState, PromiseState } from './standard/PromiseState';
@@ -9,7 +10,6 @@ import { eventBus } from '@/lib/event';
 import { StorageListState } from './standard/StorageListState';
 import i18n from '@/lib/i18n';
 import { api } from '@/lib/trpc';
-import { type RouterOutput } from '@/server/routers/_app';
 import { Attachment, NoteType, type Note } from '@/server/types';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@/lib/constant';
 import { makeAutoObservable, observable, action } from 'mobx';

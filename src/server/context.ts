@@ -1,9 +1,7 @@
 import type * as trpcNext from '@trpc/server/adapters/next';
-import { getToken } from 'next-auth/jwt';
-import { prisma } from './prisma';
 import requestIp from 'request-ip';
 import Bowser from 'bowser';
-import { getNextAuthSecret } from './routers/user';
+import { getToken } from "@/server/routers/helper";
 
 export type User = {
   name: string,
@@ -19,8 +17,7 @@ export type User = {
 export async function createContext(
   opts: trpcNext.CreateNextContextOptions,
 ) {
-  const secret = await getNextAuthSecret();
-  const token = await getToken({ req: opts.req, secret }) as User;
+  const token = await getToken(opts.req) as User;
   const ip = requestIp.getClientIp(opts.req);
   const ua = opts.req.headers['user-agent'];
   const userAgent = ua ? Bowser.parse(ua) : null;

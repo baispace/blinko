@@ -15,7 +15,7 @@ import AppleProvider from "next-auth/providers/apple";
 import SlackProvider from "next-auth/providers/slack";
 import TwitchProvider from "next-auth/providers/twitch";
 import LineProvider from "next-auth/providers/line";
-import { getNextAuthSecret } from '@/server/routers/user';
+import { getNextAuthSecret } from '@/server/routers/helper';
 
 async function verify2FACode(userId: string, userRole: string, userName: string, twoFactorCode: string) {
   const now = Math.floor(Date.now() / 1000);

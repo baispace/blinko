@@ -6,40 +6,9 @@ import { encode } from 'next-auth/jwt';
 import { Prisma } from '@prisma/client';
 import { accountsSchema } from '@/lib/prismaZodType';
 import { hashPassword, verifyPassword } from 'prisma/seed';
-import { generateTOTP, generateTOTPQRCode, verifyTOTP } from "./helper";
+import { generateTOTP, generateTOTPQRCode, getNextAuthSecret, verifyTOTP } from "./helper";
 import { deleteNotes } from './note';
 import { createSeed } from 'prisma/seedData';
-import crypto from 'crypto';
-
-let isLoading = false
-export const getNextAuthSecret = async () => {
-  const configKey = 'NEXTAUTH_SECRET';
-  let secret = process.env.NEXTAUTH_SECRET;
-  if (isLoading) {
-    return secret!
-  }
-  if (!secret || secret === 'my_ultra_secure_nextauth_secret') {
-    const savedSecret = await prisma.config.findFirst({
-      where: { key: configKey }
-    });
-    console.log({ savedSecret })
-    if (savedSecret) {
-      // @ts-ignore
-      secret = savedSecret.config.value as string;
-    } else {
-      const newSecret = crypto.randomBytes(32).toString('base64');
-      await prisma.config.create({
-        data: {
-          key: configKey,
-          config: { value: newSecret }
-        }
-      });
-      secret = newSecret;
-    }
-  }
-  isLoading = false
-  return secret;
-}
 
 const genToken = async ({ id, name, role }: { id: number, name: string, role: string }) => {
   const secret = await getNextAuthSecret();

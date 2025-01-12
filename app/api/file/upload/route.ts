@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 import { FileService } from "@/server/plugins/files";
-import { getToken } from "next-auth/jwt";
+import { getToken } from "@/server/routers/helper";
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -16,7 +15,7 @@ export async function OPTIONS() {
 }
 
 export const POST = async (req: NextRequest, res: NextResponse) => {
-  const token = await getToken({ req });
+  const token = await getToken(req);
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -24,14 +23,14 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   try {
     const formData = await req.formData();
     const file = formData.getAll('file')[0] as File;
-    
+
     if (!file) {
       return NextResponse.json({ error: "No files received." }, { status: 400 });
     }
 
     const originalName = file.name.replaceAll(" ", "_");
     const stream = file.stream();
-    
+
     const filePath = await FileService.uploadFileStream({
       stream,
       originalName,
@@ -40,9 +39,9 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
       accountId: Number(token.id)
     });
 
-    const response = NextResponse.json({ 
-      Message: "Success", 
-      status: 200, 
+    const response = NextResponse.json({
+      Message: "Success",
+      status: 200,
       ...filePath,
       type: file.type,
       size: file.size
@@ -53,7 +52,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     response.headers.set('Access-Control-Allow-Headers', '*');
 
     return response;
-    
+
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { getToken } from "next-auth/jwt";
 import { FileService } from "@/server/plugins/files";
+import { getToken } from "@/server/routers/helper";
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -16,7 +16,7 @@ export async function OPTIONS() {
 }
 
 export const POST = async (req: NextRequest, res: NextResponse) => {
-  const token = await getToken({ req });
+  const token = await getToken(req);
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

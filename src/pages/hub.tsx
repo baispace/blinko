@@ -109,13 +109,14 @@ const Hub = observer(({ className }: { className?: string }) => {
         <Tabs aria-label="Options" color="primary" onSelectionChange={(e) => {
           if (e == 'site') {
             store.currentSiteURL = ''
-            store.shareNoteList.value = []
-            store.shareNoteList.resetAndCall({})
           } else {
             store.currentSiteURL = store.followingList.value?.find(item => item.siteUrl == e)?.siteUrl ?? ''
+          }
+          //add to next tick
+          setTimeout(() => {
             store.shareNoteList.value = []
             store.shareNoteList.resetAndCall({})
-          }
+          }, 0)
         }}>
           <Tab key="site" title={t("home-site")}></Tab>
           {
@@ -142,6 +143,7 @@ const Hub = observer(({ className }: { className?: string }) => {
         }}
         className="blog-masonry-grid"
         columnClassName="blog-masonry-grid_column">
+
         {
           store.shareNoteList?.value?.map(i => {
             return <BlinkoCard

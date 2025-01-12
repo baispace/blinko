@@ -55,5 +55,4 @@ export class HubStore implements Store {
     this.followList.resetAndCall({})
     this.followingList.resetAndCall({})
   }
-
 }

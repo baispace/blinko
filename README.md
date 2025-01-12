@@ -20,7 +20,7 @@
 
 <div align="center">
 
-[Live Demo](https://blinkospaceblinkolatest-production.up.railway.app/) •
+[Live Demo](https://blinko-production-2fd1.up.railway.app/) •
 [Docs](https://blinko.mintlify.app/introduction) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
 [Telegram English](https://t.me/blinkoEnglish)

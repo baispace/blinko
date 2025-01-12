@@ -1,3 +1,10 @@
+## [0.36.6](https://github.com/blinko-space/blinko/compare/v0.36.5...v0.36.6) (2025-01-12)
+
+
+### Bug Fixes
+
+* unify token retrieval method across API routes ([13d6729](https://github.com/blinko-space/blinko/commit/13d6729d1d7ee05292dd9fb5d02223fd9e542680))
+
 ## [0.36.5](https://github.com/blinko-space/blinko/compare/v0.36.4...v0.36.5) (2025-01-12)
 
 

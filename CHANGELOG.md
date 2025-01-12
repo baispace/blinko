@@ -1,3 +1,10 @@
+## [0.36.4](https://github.com/blinko-space/blinko/compare/v0.36.3...v0.36.4) (2025-01-12)
+
+
+### Bug Fixes
+
+* integrate HubStore for comment handling and enhance authentication secret management ([4b314d9](https://github.com/blinko-space/blinko/commit/4b314d9b7235f704010f075fb2c767cae6610815))
+
 ## [0.36.3](https://github.com/blinko-space/blinko/compare/v0.36.2...v0.36.3) (2025-01-11)
 
 

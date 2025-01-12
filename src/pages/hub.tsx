@@ -1,16 +1,12 @@
 import { BlinkoCard } from "@/components/BlinkoCard";
 import { ScrollArea } from "@/components/Common/ScrollArea";
-import { api } from "@/lib/trpc";
 import { RootStore } from "@/store";
-import { PromisePageState, PromiseState } from "@/store/standard/PromiseState";
-import { StorageState } from "@/store/standard/StorageState";
 import { Icon } from "@iconify/react";
-import { Button, ButtonGroup, Tabs, Tab, cn, Input } from "@nextui-org/react";
+import { Button, Tabs, Tab } from "@nextui-org/react";
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Masonry from "react-masonry-css";
-import Avatar from "boring-avatars";
 import { GradientBackground } from "@/components/Common/GradientBackground";
 import { UserStore } from "@/store/user";
 import { UserAvatar } from "@/components/BlinkoCard/commentButton";
@@ -19,7 +15,8 @@ import { useMediaQuery } from "usehooks-ts";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { DialogStore } from "@/store/module/Dialog";
 import { BlinkoFollowDialog, BlinkoFollowingDialog } from "@/components/BlinkoFollowDialog";
-import axios from "axios";
+import { HubStore } from "@/store/hubStore";
+import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
 
 const Hub = observer(({ className }: { className?: string }) => {
   const { t } = useTranslation()
@@ -27,53 +24,7 @@ const Hub = observer(({ className }: { className?: string }) => {
   const user = RootStore.Get(UserStore)
   const { query } = useRouter()
   const isPc = useMediaQuery('(min-width: 768px)')
-  const store = RootStore.Local(() => ({
-    currentSiteURL: '',
-    forceBlog: new StorageState({ key: 'forceBlog', default: true, value: true }),
-    shareNoteList: new PromisePageState({
-      function: async ({ page, size }) => {
-        if (store.currentSiteURL) {
-          const res = await axios.post(store.currentSiteURL + '/api/v1/note/public-list', { page, size })
-          return res.data.map(i=>{
-            i.account.image = store.currentSiteURL + i.account.image
-            i.attachments = i.attachments.map(j=>{
-              j.path = store.currentSiteURL + j.path
-              return j
-            })
-            return {
-              ...i
-            }
-          })
-        }
-        const notes = await api.notes.publicList.mutate({ page, size })
-        return notes
-      }
-    }),
-    siteInfo: new PromiseState({
-      function: async () => {
-        const siteInfo = await api.public.siteInfo.query({ id: query?.id ? Number(query.id) : null })
-        return siteInfo
-      }
-    }),
-    followList: new PromisePageState({
-      function: async ({ page, size }) => {
-        const followList = await api.follows.followerList.query({ userId: null })
-        return followList
-      }
-    }),
-    followingList: new PromisePageState({
-      function: async ({ page, size }) => {
-        const followingList = await api.follows.followList.query({ userId: null })
-        return followingList
-      }
-    }),
-    loadAllData() {
-      store.siteInfo.call()
-      store.shareNoteList.resetAndCall({})
-      store.followList.resetAndCall({})
-      store.followingList.resetAndCall({})
-    }
-  }))
+  const store = RootStore.Get(HubStore)
 
   useEffect(() => {
     store.loadAllData()
@@ -158,9 +109,11 @@ const Hub = observer(({ className }: { className?: string }) => {
         <Tabs aria-label="Options" color="primary" onSelectionChange={(e) => {
           if (e == 'site') {
             store.currentSiteURL = ''
+            store.shareNoteList.value = []
             store.shareNoteList.resetAndCall({})
           } else {
             store.currentSiteURL = store.followingList.value?.find(item => item.siteUrl == e)?.siteUrl ?? ''
+            store.shareNoteList.value = []
             store.shareNoteList.resetAndCall({})
           }
         }}>
@@ -178,7 +131,10 @@ const Hub = observer(({ className }: { className?: string }) => {
           <Icon icon="fluent:arrow-expand-all-16-filled" width="20" height="20" className={`transition-transform duration-300 ${store.forceBlog.value ? "rotate-180" : ""}`} />
         </Button>
       </div>
-
+      <LoadingAndEmpty
+        isLoading={store.shareNoteList.isLoading}
+        isEmpty={store.shareNoteList.isEmpty}
+      />
       <Masonry
         breakpointCols={{
           default: 3,

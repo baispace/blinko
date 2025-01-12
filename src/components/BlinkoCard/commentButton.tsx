@@ -19,6 +19,8 @@ import { ScrollArea } from '../Common/ScrollArea';
 import { MarkdownRender } from '../Common/MarkdownRender';
 import { AnimatePresence, motion } from 'framer-motion';
 import Avatar from "boring-avatars";
+import { HubStore } from '@/store/hubStore';
+import axios from 'axios';
 
 export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
 
@@ -32,7 +34,7 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
 }) => {
   const { t } = useTranslation();
   const displayName = account ? (account.nickname || account.name) : (guestName || '');
-
+  const hubStore = RootStore.Get(HubStore)
   return (
     <div className="flex items-center gap-2">
       {account ? (
@@ -71,7 +73,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
   const [content, setContent] = useState('')
   const isIOSDevice = useIsIOS();
   const user = RootStore.Get(UserStore);
-
+  const hubStore = RootStore.Get(HubStore)
   const Store = RootStore.Local(() => ({
     reply: {
       id: null as number | null,
@@ -79,6 +81,16 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
     },
     commentList: new PromisePageState({
       function: async ({ page, size }) => {
+        if (hubStore.currentSiteURL) {
+          const res = await axios.post(hubStore.currentSiteURL + '/api/v1/comment/list', {
+            noteId: blinko.curSelectedNote?.id!,
+            page,
+            size,
+            orderBy: 'desc'
+          })
+          return res.data.items
+        }
+
         const res = await api.comments.list.query({
           noteId: blinko.curSelectedNote?.id!,
           page,
@@ -106,7 +118,15 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
         if (Store.reply.id) {
           params.parentId = Store.reply.id
         }
-        await api.comments.create.mutate(params);
+
+        if (hubStore.currentSiteURL) {
+          await axios.post(hubStore.currentSiteURL + '/api/v1/comment/create', {
+            ...params,
+            guestName: RootStore.Get(UserStore).userInfo.value?.nickName ?? RootStore.Get(UserStore).userInfo.value?.name
+          });
+        } else {
+          await api.comments.create.mutate(params);
+        }
 
         await Store.commentList.resetAndCall({});
         setContent('');
@@ -115,7 +135,13 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
     }),
     handleDelete: new PromiseState({
       function: async (commentId: number) => {
-        await api.comments.delete.mutate({ id: commentId });
+        if (hubStore.currentSiteURL) {
+          await axios.post(hubStore.currentSiteURL + '/api/v1/comment/delete', {
+            id: commentId
+          });
+        } else {
+          await api.comments.delete.mutate({ id: commentId });
+        }
         await Store.commentList.resetAndCall({});
         blinko.updateTicker++
       }

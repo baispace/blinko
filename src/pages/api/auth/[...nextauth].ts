@@ -15,6 +15,7 @@ import AppleProvider from "next-auth/providers/apple";
 import SlackProvider from "next-auth/providers/slack";
 import TwitchProvider from "next-auth/providers/twitch";
 import LineProvider from "next-auth/providers/line";
+import { getNextAuthSecret } from '@/server/routers/user';
 
 async function verify2FACode(userId: string, userRole: string, userName: string, twoFactorCode: string) {
   const now = Math.floor(Date.now() / 1000);
@@ -168,6 +169,8 @@ async function getProviderConfigList() {
 
 export default async function auth(req: any, res: any) {
   const providers = await getProviderConfigList()
+  const secret = await getNextAuthSecret();
+  
   return await NextAuth(req, res, {
     providers: [
       ...providers,
@@ -292,6 +295,7 @@ export default async function auth(req: any, res: any) {
     pages: {
       signIn: '/signin',
     },
+    secret: secret,
     callbacks: {
       async signIn({ user, account }) {
         console.log({ user, account })
@@ -417,12 +421,10 @@ export default async function auth(req: any, res: any) {
     },
     session: {
       strategy: "jwt",
-      // Set session maxAge to 30 days (30 days * 24 hours * 60 minutes * 60 seconds)
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 30 * 24 * 60 * 60,
     },
     jwt: {
-      // Set maxAge to 30 days
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 30 * 24 * 60 * 60,
     },
   });
 }

@@ -34,10 +34,11 @@ export const commentRouter = router({
       content: z.string(),
       noteId: z.number(),
       parentId: z.number().optional(),
+      guestName: z.string().optional()
     }))
     .output(z.boolean())
     .mutation(async function ({ input, ctx }) {
-      const { content, noteId, parentId } = input;
+      let { content, noteId, parentId, guestName } = input;
 
       const note = await prisma.notes.findFirst({
         where: {
@@ -57,7 +58,7 @@ export const commentRouter = router({
           throw new Error('Parent comment not found');
         }
       }
-      let guestName;
+
       if (!ctx.id && !guestName) {
         guestName = "void-" + crypto
           .createHash('md5')

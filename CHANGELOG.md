@@ -1,3 +1,11 @@
+## [0.36.5](https://github.com/blinko-space/blinko/compare/v0.36.4...v0.36.5) (2025-01-12)
+
+
+### Bug Fixes
+
+* add Polish language support to Setting page ([477d0ad](https://github.com/blinko-space/blinko/commit/477d0adab028ff077c6c9b38deb6b2a859c3cc51))
+* update Hub component to reset shared notes on tab change ([c07ce20](https://github.com/blinko-space/blinko/commit/c07ce20ee81b2f126e706f2def2e16970423730e))
+
 ## [0.36.4](https://github.com/blinko-space/blinko/compare/v0.36.3...v0.36.4) (2025-01-12)
 
 

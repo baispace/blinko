@@ -267,5 +267,5 @@ export const useEditorHeight = (
 ) => {
   useEffect(() => {
     onHeightChange?.();
-  }, [blinko.noteTypeDefault, content, store.files?.length, store.viewMode]);
+  }, [store.noteType, content, store.files?.length, store.viewMode]);
 }; 

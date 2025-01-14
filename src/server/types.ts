@@ -12,6 +12,16 @@ export enum NoteType {
   'BLINKO',
   'NOTE'
 }
+export function toNoteTypeEnum(v?: number, fallback: NoteType = NoteType.BLINKO): NoteType {
+  switch (v) {
+    case 0:
+      return NoteType.BLINKO;
+    case 1:
+      return NoteType.NOTE;
+    default:
+      return fallback;
+  }
+}
 
 export const ZUserPerferConfigKey = z.union([
   z.literal('textFoldLength'),

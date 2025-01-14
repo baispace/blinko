@@ -1,3 +1,10 @@
+## [0.36.7](https://github.com/blinko-space/blinko/compare/v0.36.6...v0.36.7) (2025-01-14)
+
+
+### Bug Fixes
+
+* integrate webhook notifications for note updates and deletions ([9693530](https://github.com/blinko-space/blinko/commit/96935300b924cd445db7e48bb55a95e41a9da06e))
+
 ## [0.36.6](https://github.com/blinko-space/blinko/compare/v0.36.5...v0.36.6) (2025-01-12)
 
 

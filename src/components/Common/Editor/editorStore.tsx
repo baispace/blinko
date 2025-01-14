@@ -15,6 +15,7 @@ import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { Button } from '@nextui-org/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
+import { NoteType } from '@/server/types';
 
 export class EditorStore {
   files: FileType[] = []
@@ -32,6 +33,7 @@ export class EditorStore {
   isShowSearch: boolean = false
   onSend: (args: OnSendContentType) => Promise<any>
   isFullscreen: boolean = false;
+  noteType: NoteType;
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -297,6 +299,7 @@ export class EditorStore {
       await this.onSend?.({
         content: this.vditor?.getValue() ?? '',
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
+        noteType: this.noteType,
         references: this.references
       });
       this.clearEditor();

@@ -14,6 +14,7 @@ import { Readable } from 'stream';
 import { prisma } from '../prisma';
 
 const limit = pLimit(5);
+let refreshTicker = 0
 let spotifyClient: SpotifyClient | null = null;
 
 export const publicRouter = router({
@@ -244,5 +245,51 @@ export const publicRouter = router({
           role: account?.role ?? 'user'
         }
       }, { ttl: 1000 * 60 * 5 }) // 5 minutes
-    })
+    }),
+  hubList: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/public/hub-list', summary: 'Get hub list', tags: ['Public'] } })
+    .input(z.void())
+    .output(z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      image: z.string(),
+      description: z.string(),
+    })))
+    .query(async function () {
+      return []
+    }),
+  hubSiteList: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/public/hub-site-list', summary: 'Get hub site list from GitHub', tags: ['Public'] } })
+    .input(z.object({
+      search: z.string().optional(),
+      refresh: z.boolean().optional()
+    }))
+    .output(z.array(z.object({
+      title: z.string(),
+      url: z.string(),
+      tags: z.array(z.string()).optional(),
+      site_description: z.string().optional(),
+      image: z.string().optional(),
+      version: z.string().optional(),
+    })))
+    .query(async function ({ input }) {
+      if (input?.refresh) {
+        refreshTicker++
+      }
+      return await cache.wrap(`hub-site-list-${refreshTicker}`, async () => {
+        try {
+          //raw.gitmirror.com
+          const response = await axios.get('https://raw.githubusercontent.com/blinko-space/blinko-hub/refs/heads/main/index.json', {
+            headers: {
+              'Accept': 'application/vnd.github.v3.raw'
+            }
+          });
+          console.log('response', response.data)
+          return response.data.sites;
+        } catch (error) {
+          console.error('Failed to fetch hub site list:', error);
+          return [];
+        }
+      }, { ttl: 60 * 60 * 12 * 1000 })
+    }),
 })

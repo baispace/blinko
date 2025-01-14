@@ -429,5 +429,6 @@
   "following": "以下",
   "admin": "ウェブマスター",
   "site-url": "BlinkoサイトのURL",
-  "unfollow": "フォローを外す"
+  "unfollow": "フォローを外す",
+  "join-hub": "ハブに参加"
 }

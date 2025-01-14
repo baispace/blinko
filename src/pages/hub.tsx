@@ -48,17 +48,29 @@ const Hub = observer(({ className }: { className?: string }) => {
 
             <div className="flex flex-col gap-2 md:gap-4 flex-1">
               <div className="flex items-center justify-between">
-                <div className="flex gap-1 items-center w-full">
+                <div className="flex gap-1 md:items-center md:w-full md:flex-row flex-col">
                   <div className="md:text-2xl text-md font-bold">{store.siteInfo.value?.name}</div>
                   {
-                    store.siteInfo.value?.role == 'superadmin' && <div className="flex items-center gap-1 bg-primary text-primary-foreground rounded-full px-2 py-1 text-xs">
+                    store.siteInfo.value?.role == 'superadmin' &&
+                    <div className="flex items-center gap-1 bg-primary text-primary-foreground rounded-full w-fit px-2 py-1 text-xs">
                       <div>{t('admin')}</div>
                       <Icon icon="ri:vip-crown-2-fill" width="15" height="15" className="text-yellow-500" />
                     </div>
                   }
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 md:flex-row flex-col">
+                  {
+                    user.isLogin && <Button
+                      onPress={() => {
+                        window.open("https://github.com/blinko-space/blinko-hub/new/main/sites?filename=my-site.yml&value=title%3A%20%22Your%20Site%20Name%22%0Aurl%3A%20%22https%3A%2F%2Fyour-site-domain%22%0Atags%3A%20%0A%20%20-%20english%20%20%20%20%23%20main%20language%0A%20%20-%20blog%20%20%20%20%20%20%20%23%20site%20type%0Acreated_at%3A%20%222024-01-14%22%20%20%23%20creation%20date")
+                      }}
+                      size={isPc ? 'md' : 'sm'}
+                      radius="full"
+                      className="px-4 py-2 rounded-full ">
+                      {t('join-hub')}
+                    </Button>
+                  }
                   {user.isLogin && user.userInfo.value?.id == store.siteInfo.value?.id &&
                     (
                       <Button
@@ -66,12 +78,13 @@ const Hub = observer(({ className }: { className?: string }) => {
                           RootStore.Get(DialogStore).setData({
                             isOpen: true,
                             title: t('follow'),
+                            size: 'lg',
                             content: <BlinkoFollowDialog onConfirm={() => {
                               store.loadAllData()
                             }} />,
                           })
                         }}
-                        size={isPc ? 'md' : 'md'} color="primary" radius="full" startContent={<Icon icon="fluent:people-add-32-regular" className="w-4 h-4" />}
+                        size={isPc ? 'md' : 'sm'} color="primary" radius="full" startContent={<Icon icon="fluent:people-add-32-regular" className="w-4 h-4" />}
                         className="px-4 py-2 rounded-full ">
                         {t('follow')}
                       </Button>
@@ -81,19 +94,28 @@ const Hub = observer(({ className }: { className?: string }) => {
               </div>
 
               <div className="flex items-center gap-8 text-sm text-desc">
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">{store.followList.value?.length ?? 0}</span>
-                  <span>{t('follower')}</span>
-                </div>
                 <div className="flex items-center gap-1 cursor-pointer" onClick={() => {
                   RootStore.Get(DialogStore).setData({
                     isOpen: true,
                     title: t('following'),
-                    content: <BlinkoFollowingDialog data={store.followingList.value ?? []} onConfirm={() => {
+                    content: <BlinkoFollowingDialog isFollowing={false} data={store.followList.value ?? []} onConfirm={() => {
                       store.loadAllData()
                     }} />,
                   })
                 }}>
+                  <span className="font-medium">{store.followList.value?.length ?? 0}</span>
+                  <span>{t('follower')}</span>
+                </div>
+                <div className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => {
+                    RootStore.Get(DialogStore).setData({
+                      isOpen: true,
+                      title: t('following'),
+                      content: <BlinkoFollowingDialog isFollowing={true} data={store.followingList.value ?? []} onConfirm={() => {
+                        store.loadAllData()
+                      }} />,
+                    })
+                  }}>
                   <span className="font-medium">{store.followingList.value?.length ?? 0}</span>
                   <span>{t('following')}</span>
                 </div>

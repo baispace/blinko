@@ -445,5 +445,6 @@
   "following": "Suivant",
   "admin": "Webmestre",
   "site-url": "Adresse URL du site Blinko",
-  "unfollow": "Ne plus suivre"
+  "unfollow": "Ne plus suivre",
+  "join-hub": "Rejoignez Hub"
 }

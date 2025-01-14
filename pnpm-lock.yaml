@@ -10571,8 +10571,8 @@ packages:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
 
-  yaml@2.6.0:
-    resolution: {integrity: sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==}
+  yaml@2.7.0:
+    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
     engines: {node: '>= 14'}
     hasBin: true
 
@@ -19203,7 +19203,7 @@ snapshots:
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
-      yaml: 2.6.0
+      yaml: 2.7.0
       zod: 3.23.8
       zod-to-json-schema: 3.23.3(zod@3.23.8)
     optionalDependencies:
@@ -19508,7 +19508,7 @@ snapshots:
       markmap-html-parser: 0.17.1(markmap-common@0.17.1)
       markmap-view: 0.17.2(markmap-common@0.17.1)
       prismjs: 1.29.0
-      yaml: 2.6.0
+      yaml: 2.7.0
 
   markmap-view@0.17.2(markmap-common@0.17.1):
     dependencies:
@@ -20370,7 +20370,7 @@ snapshots:
 
   openapi3-ts@4.3.3:
     dependencies:
-      yaml: 2.6.0
+      yaml: 2.7.0
 
   opener@1.5.2: {}
 
@@ -20741,7 +20741,7 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.4.47)(ts-node@10.9.2(@types/node@20.2.5)(typescript@5.6.3)):
     dependencies:
       lilconfig: 3.1.2
-      yaml: 2.6.0
+      yaml: 2.7.0
     optionalDependencies:
       postcss: 8.4.47
       ts-node: 10.9.2(@types/node@20.2.5)(typescript@5.6.3)
@@ -23270,7 +23270,7 @@ snapshots:
 
   yaml@1.10.2: {}
 
-  yaml@2.6.0: {}
+  yaml@2.7.0: {}
 
   yargs-parser@20.2.9: {}
 

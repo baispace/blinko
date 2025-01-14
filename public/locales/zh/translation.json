@@ -475,5 +475,6 @@
   "following": "正在关注",
   "admin": "站长",
   "site-url": "Blinko 站点网址",
-  "unfollow": "取消关注"
+  "unfollow": "取消关注",
+  "join-hub": "加入 Hub"
 }

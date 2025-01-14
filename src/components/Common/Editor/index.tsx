@@ -10,7 +10,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { _ } from '@/lib/lodash';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
-import { type Attachment } from '@/server/types';
+import { toNoteTypeEnum, type Attachment } from '@/server/types';
 import { Card } from '@nextui-org/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
 import { UploadButtons } from './Toolbar/UploadButtons';
@@ -51,6 +51,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   const blinko = RootStore.Get(BlinkoStore)
   const { t } = useTranslation()
 
+  store.noteType = mode === 'create' ? blinko.noteTypeDefault : toNoteTypeEnum(blinko.curSelectedNote?.type);
   useEditorInit(store, onChange, onSend, mode, originReference, content);
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
@@ -114,7 +115,10 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
         <div className='flex w-full items-center gap-1 mt-auto'>
           {!hiddenToolbar && (
             <>
-              <NoteTypeButton />
+              <NoteTypeButton
+                noteType={store.noteType}
+                setNoteType={(noteType) => store.noteType = noteType}
+              />
               <HashtagButton store={store} content={content} />
               <ReferenceButton store={store} />
               <AIWriteButton store={store} content={content} />

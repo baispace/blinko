@@ -105,10 +105,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         isCreateMode ? <div className='text-xs text-ignore ml-2'>Drop to upload files</div> :
           <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote!.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div>
       }
-      onSend={async ({ files, references }) => {
+      onSend={async ({ files, references, noteType }) => {
         if (isCreateMode) {
           //@ts-ignore
-          await blinko.upsertNote.call({ references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }) })
+          await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }) })
           blinko.createAttachmentsStorage.clear()
           blinko.createContentStorage.clear()
           if (blinko.noteTypeDefault == NoteType.NOTE && router.pathname != '/notes') {
@@ -124,6 +124,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
           console.log(files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size } }))
           await blinko.upsertNote.call({
             id: blinko.curSelectedNote!.id,
+            type: noteType,
             //@ts-ignore
             content: blinko.curSelectedNote.content,
             //@ts-ignore

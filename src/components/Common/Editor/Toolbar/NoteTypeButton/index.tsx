@@ -4,22 +4,32 @@ import { NoteType } from '@/server/types';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store';
 import { Div } from '@/components/Common/Div';
+import { useEffect, useState } from 'react';
 
-export const NoteTypeButton = () => {
+export const NoteTypeButton = ({ noteType, setNoteType}: {
+  noteType: NoteType,
+  setNoteType: (noteType: NoteType) => void
+}) => {
   const { t } = useTranslation();
-  const blinko = RootStore.Get(BlinkoStore);
+  const [type, setType] = useState(noteType);
 
+  useEffect(() => {
+    setType(noteType);
+  }, [noteType]);
+  
   return (
     <Div
       onTap={() => {
-        blinko.noteTypeDefault = blinko.noteTypeDefault == NoteType.BLINKO ? NoteType.NOTE : NoteType.BLINKO;
+        const newType = type == NoteType.BLINKO ? NoteType.NOTE : NoteType.BLINKO;
+        setType(newType);
+        setNoteType(newType);
       }}>
       <IconButton
-        icon={blinko.noteTypeDefault == NoteType.BLINKO ? 'basil:lightning-solid' : 'solar:notes-minimalistic-bold-duotone'}
+        icon={type == NoteType.BLINKO ? 'basil:lightning-solid' : 'solar:notes-minimalistic-bold-duotone'}
         classNames={{
-          icon: blinko.noteTypeDefault == NoteType.BLINKO ? 'text-[#FFD700]' : 'text-[#3B82F6]'
+          icon: type == NoteType.BLINKO ? 'text-[#FFD700]' : 'text-[#3B82F6]'
         }}
-        tooltip={blinko.noteTypeDefault == NoteType.BLINKO ? t('blinko') : t('note')}
+        tooltip={type == NoteType.BLINKO ? t('blinko') : t('note')}
       />
     </Div>
 

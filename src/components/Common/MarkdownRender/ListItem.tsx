@@ -53,7 +53,19 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
   };
 
   const taskText = getTaskText(childArray);
-  const textContent = childArray.filter((child: any) => child?.type !== 'input');
+  const textContent = childArray.map((child: any) => {
+    if (child?.type === 'input') return null;
+    if (child?.props?.children?.[0]?.props?.type === 'checkbox') {
+      return {
+        ...child,
+        props: {
+          ...child.props,
+          children: child.props.children.slice(1),
+        }
+      }
+    }
+    return child;
+  }).filter(v => v !== null);
   const childTasks = getChildTasks(childArray);
   const hasChildren = childTasks.length > 0;
   const allChildrenChecked = hasChildren && childTasks.every(task => task.checked);
@@ -123,7 +135,7 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
             height="20" 
           />
         </div>
-        <div 
+        <div
           className={`${getTextStyle()} break-all flex-1 min-w-0`}
           onClick={e => e.stopPropagation()}
         >

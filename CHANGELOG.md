@@ -1,3 +1,10 @@
+## [0.36.9](https://github.com/blinko-space/blinko/compare/v0.36.8...v0.36.9) (2025-01-14)
+
+
+### Bug Fixes
+
+* support hub list ([47ab7d2](https://github.com/blinko-space/blinko/commit/47ab7d2f55bf373200188976a88b06dce0a3e540))
+
 ## [0.36.8](https://github.com/blinko-space/blinko/compare/v0.36.7...v0.36.8) (2025-01-14)
 
 

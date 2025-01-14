@@ -594,6 +594,7 @@ export const noteRouter = router({
             AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
           }
         }
+        SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx)
         return note
       } else {
         try {
@@ -713,6 +714,7 @@ export const noteRouter = router({
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
       const { ids } = input
+      SendWebhook({ ids }, 'delete', ctx)
       return await prisma.notes.updateMany({ where: { id: { in: ids }, accountId: Number(ctx.id) }, data: { isRecycle: true } })
     }),
   deleteMany: authProcedure.use(demoAuthMiddleware)

@@ -1,3 +1,10 @@
+## [0.36.8](https://github.com/blinko-space/blinko/compare/v0.36.7...v0.36.8) (2025-01-14)
+
+
+### Bug Fixes
+
+* update user token generation and context logging ([66e321f](https://github.com/blinko-space/blinko/commit/66e321fc3f4251f58843808fd66c0b648b8842c8))
+
 ## [0.36.7](https://github.com/blinko-space/blinko/compare/v0.36.6...v0.36.7) (2025-01-14)
 
 

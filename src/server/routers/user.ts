@@ -17,6 +17,8 @@ const genToken = async ({ id, name, role }: { id: number, name: string, role: st
       role,
       name,
       sub: id.toString(),
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 100),
+      iat: Math.floor(Date.now() / 1000)
     },
     secret
   })

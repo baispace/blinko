@@ -21,7 +21,7 @@ export async function createContext(
   const ip = requestIp.getClientIp(opts.req);
   const ua = opts.req.headers['user-agent'];
   const userAgent = ua ? Bowser.parse(ua) : null;
-  console.log({ userAgent })
+  console.log({ token })
   if (!token?.sub) {
     return { ip, userAgent } as User;
   }

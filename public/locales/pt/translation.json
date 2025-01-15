@@ -382,5 +382,6 @@
   "admin": "Webmaster\n\nAdministrador de site",
   "site-url": "URL do site Blinko",
   "unfollow": "Deixar de seguir",
-  "join-hub": "Participar no Hub"
+  "join-hub": "Participar no Hub",
+  "refresh": "Atualizar"
 }

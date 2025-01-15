@@ -453,5 +453,6 @@
   "admin": "웹마스터",
   "site-url": "블링코 사이트 URL",
   "unfollow": "차단하기",
-  "join-hub": "허브에 참여하기"
+  "join-hub": "허브에 참여하기",
+  "refresh": "새로 고침"
 }

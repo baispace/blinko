@@ -430,5 +430,6 @@
   "admin": "ウェブマスター",
   "site-url": "BlinkoサイトのURL",
   "unfollow": "フォローを外す",
-  "join-hub": "ハブに参加"
+  "join-hub": "ハブに参加",
+  "refresh": "リフレッシュ"
 }

@@ -58,8 +58,10 @@ export const BlinkoFollowDialog = observer(({ onConfirm }: { onConfirm: () => vo
   const store = RootStore.Local(() => ({
     siteUrl: '',
     siteList: new PromiseState({
-      function: async () => {
-        const data = await api.public.hubSiteList.query({})
+      function: async (refresh = false) => {
+        const data = await api.public.hubSiteList.query({
+          refresh: refresh
+        })
         return data
       }
     })
@@ -68,18 +70,25 @@ export const BlinkoFollowDialog = observer(({ onConfirm }: { onConfirm: () => vo
     store.siteList.call()
   }, [])
   return (
-    <div>
+    <div >
       <Input
         value={store.siteUrl}
         onChange={(e) => store.siteUrl = e.target.value}
-        label={t('site-url')} placeholder={"https://www.blinko.com"} endContent={
-          <Button className="w-[100px]" onPress={async () => {
-            await PromiseCall(api.follows.follow.mutate({ siteUrl: store.siteUrl, mySiteUrl: window.location.origin }))
-            onConfirm()
-            RootStore.Get(DialogStore).close()
-          }} size="sm" color="primary" radius="full" startContent={<Icon icon="fluent:people-add-32-regular" className="w-4 h-4" />}>
-            {t('follow')}
-          </Button>
+        label={t('site-url')} placeholder={"https://www.blinko.com"}
+        endContent={
+          <div className="flex items-center gap-2">
+            <Button className="w-[100px]" onPress={async () => {
+              await PromiseCall(api.follows.follow.mutate({ siteUrl: store.siteUrl, mySiteUrl: window.location.origin }))
+              onConfirm()
+              RootStore.Get(DialogStore).close()
+            }} size="sm" color="primary" radius="full" startContent={<Icon icon="fluent:people-add-32-regular" className="w-4 h-4" />}>
+              {t('follow')}
+            </Button>
+            <Button isIconOnly onPress={async () => {
+              store.siteList.call(true)
+            }} size="sm"  radius="full" startContent={<Icon icon="ion:refresh" className="w-4 h-4" />}>
+            </Button>
+          </div>
         } />
 
       <LoadingAndEmpty
@@ -87,7 +96,7 @@ export const BlinkoFollowDialog = observer(({ onConfirm }: { onConfirm: () => vo
         isEmpty={store.siteList.value?.length == 0}
       />
 
-      <div className="flex items-center gap-2 text-ignore text-bold mx-auto mt-4">
+      <div className="flex flex-col items-center gap-2 text-ignore text-bold mx-auto mt-4">
         {store.siteList.value?.map(item => (
           <BlinkoSiteUser
             item={{

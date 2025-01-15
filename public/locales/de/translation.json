@@ -458,5 +458,14 @@
   "site-url": "Blinko-Website-URL",
   "unfollow": "Entfolgen",
   "join-hub": "Treten Sie dem Hub bei.",
-  "refresh": "Aktualisieren"
+  "refresh": "Aktualisieren",
+  "comment-notification": "Kommentarbenachrichtigung",
+  "follow-notification": "Folgen Benachrichtigung",
+  "followed-you": "folgte dir",
+  "mark-all-as-read": "Alles als gelesen markieren",
+  "no-notification": "Keine Benachrichtigung",
+  "new-notification": "Neue Benachrichtigung",
+  "notification": "Benachrichtigung",
+  "backup-success": "Sicherung erfolgreich🎉",
+  "system-notification": "Systembenachrichtigung"
 }

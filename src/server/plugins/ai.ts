@@ -23,6 +23,8 @@ import { FileService } from './files';
 import { AiPrompt } from './ai/aiPrompt';
 import { Context } from '../context';
 import dayjs from 'dayjs';
+import { CreateNotification } from '../routers/notification';
+import { NotificationType } from '@/lib/prismaZodType';
 
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
@@ -464,7 +466,7 @@ export class AiService {
     try {
       const note = await prisma.notes.findUnique({
         where: { id: noteId },
-        select: { content: true }
+        select: { content: true, accountId: true }
       })
 
       if (!note) {
@@ -498,7 +500,12 @@ export class AiService {
           }
         }
       });
-
+      await CreateNotification({
+        accountId: note.accountId ?? 0,
+        title: 'comment-notification',
+        content: 'comment-notification',
+        type: NotificationType.COMMENT,
+      })
       return comment;
     } catch (error) {
       console.log(error);

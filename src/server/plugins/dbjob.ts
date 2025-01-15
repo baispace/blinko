@@ -11,6 +11,8 @@ import { unlink } from "fs/promises";
 import { createCaller } from "../routers/_app";
 import { Context } from "../context";
 import { BaseScheduleJob } from "./baseScheduleJob";
+import { CreateNotification } from "../routers/notification";
+import { NotificationType } from "@/lib/prismaZodType";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -67,7 +69,12 @@ export class DBJob extends BaseScheduleJob {
       const zip = new AdmZip();
       zip.addLocalFolder(ROOT_PATH);
       zip.writeZip(targetFile);
-
+      await CreateNotification({
+        type: NotificationType.SYSTEM,
+        title: 'system-notification',
+        content: 'backup-success',
+        useAdmin: true,
+      })
       return { filePath: `/api/file/blinko_export.bko` };
     } catch (error) {
       throw new Error(error)

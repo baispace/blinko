@@ -454,5 +454,14 @@
   "site-url": "블링코 사이트 URL",
   "unfollow": "차단하기",
   "join-hub": "허브에 참여하기",
-  "refresh": "새로 고침"
+  "refresh": "새로 고침",
+  "comment-notification": "댓글 알림",
+  "follow-notification": "알림 팔로우",
+  "followed-you": "당신을 따라왔습니다.",
+  "mark-all-as-read": "모두 읽음으로 표시하기",
+  "no-notification": "알림 없음",
+  "new-notification": "새로운 알림",
+  "notification": "통지",
+  "backup-success": "백업 성공🎉",
+  "system-notification": "시스템 알림"
 }

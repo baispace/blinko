@@ -12,25 +12,26 @@ datasource db {
 }
 
 model accounts {
-  id            Int           @id @default(autoincrement())
-  name          String        @default("") @db.VarChar
-  nickname      String        @default("") @db.VarChar
-  password      String        @default("") @db.VarChar
-  image         String        @default("") @db.VarChar
-  apiToken      String        @default("") @db.VarChar
-  description   String        @default("") @db.Text
-  note          Int           @default(0)
-  role          String        @default("") @db.VarChar
-  loginType     String        @default("") @db.VarChar
+  id            Int             @id @default(autoincrement())
+  name          String          @default("") @db.VarChar
+  nickname      String          @default("") @db.VarChar
+  password      String          @default("") @db.VarChar
+  image         String          @default("") @db.VarChar
+  apiToken      String          @default("") @db.VarChar
+  description   String          @default("") @db.Text
+  note          Int             @default(0)
+  role          String          @default("") @db.VarChar
+  loginType     String          @default("") @db.VarChar
   linkAccountId Int?
-  createdAt     DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime      @updatedAt @db.Timestamptz(6)
+  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @db.Timestamptz(6)
   notes         notes[]
   configs       config[]
   tags          tag[]
   comments      comments[]
   attachments   attachments[]
   follows       follows[]
+  notifications notifications[]
 }
 
 model attachments {
@@ -163,4 +164,18 @@ model follows {
 
   accountId Int
   account   accounts @relation(fields: [accountId], references: [id])
+}
+
+model notifications {
+  id        Int      @id @default(autoincrement())
+  type      String   @db.VarChar // follow, comment, mention 等
+  title     String   @db.VarChar
+  content   String   @db.Text
+  metadata  Json?    @db.Json
+  isRead    Boolean  @default(false)
+  accountId Int
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id])
 }

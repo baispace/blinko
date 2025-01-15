@@ -475,5 +475,14 @@
   "site-url": "Adres URL witryny Blinko",
   "unfollow": "Przestań obserwować",
   "join-hub": "Dołącz do Hub'a",
-  "refresh": "Odświeżać"
+  "refresh": "Odświeżać",
+  "comment-notification": "Powiadomienie o komentarzu",
+  "follow-notification": "Śledź powiadomienie",
+  "followed-you": "podążał za tobą",
+  "mark-all-as-read": "Oznacz wszystkie jako przeczytane",
+  "no-notification": "Brak powiadomienia",
+  "new-notification": "Nowe powiadomienie",
+  "notification": "Powiadomienie",
+  "backup-success": "Pomyślna kopia zapasowa🎉",
+  "system-notification": "Powiadomienie systemowe"
 }

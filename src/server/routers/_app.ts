@@ -15,6 +15,7 @@ import { Context } from '../context';
 import { analyticsRouter } from './analytics';
 import { commentRouter } from './comment';
 import { followsRouter } from './follows';
+import { notificationRouter } from './notification';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -27,7 +28,8 @@ export const appRouter = router({
   task: taskRouter,
   analytics: analyticsRouter,
   comments: commentRouter,
-  follows: followsRouter
+  follows: followsRouter,
+  notifications: notificationRouter
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

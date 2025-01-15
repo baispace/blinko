@@ -206,4 +206,37 @@ export const followsSchema = z.object({
   accountId: z.number().int(),
 })
 
-export type follows = z.infer<typeof followsSchema> 
+export type follows = z.infer<typeof followsSchema>
+
+/////////////////////////////////////////
+// NOTIFICATIONS SCHEMA
+/////////////////////////////////////////
+export const NotificationType = {
+  FOLLOW: 'follow',
+  COMMENT: 'comment',
+  SYSTEM: 'system',
+} as const
+
+export const notificationType = z.union([
+  z.enum([
+    NotificationType.FOLLOW,
+    NotificationType.COMMENT,
+    NotificationType.SYSTEM,
+  ]),
+  z.string()
+])
+
+export const notificationsSchema = z.object({
+  id: z.number().int(),
+  type: notificationType,
+  title: z.string(),
+  content: z.string(),
+  metadata: z.any(),
+  isRead: z.boolean(),
+  accountId: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type Notifications = z.infer<typeof notificationsSchema> 
+export type InputNotificationType = z.infer<typeof notificationType>

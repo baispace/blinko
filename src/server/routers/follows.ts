@@ -3,7 +3,8 @@ import { router, authProcedure, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { prisma } from '../prisma';
 import axios from "axios";
-import { followsSchema } from "@/lib/prismaZodType";
+import { followsSchema, NotificationType } from "@/lib/prismaZodType";
+import { CreateNotification } from "./notification";
 
 export const followsRouter = router({
   // i want to follow a site
@@ -125,6 +126,13 @@ export const followsRouter = router({
             followType: "follower",
           },
         });
+
+        CreateNotification({
+          type: NotificationType.FOLLOW,
+          title: 'follow-notification',
+          content: input.siteName + 'followed-you',
+          accountId: input.mySiteAccountId,
+        })
 
         return {
           success: true,

@@ -1,9 +1,10 @@
 import { router, authProcedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
-import { commentsSchema, accountsSchema } from '@/lib/prismaZodType';
+import { commentsSchema, accountsSchema, NotificationType } from '@/lib/prismaZodType';
 import * as crypto from 'crypto';
 import { AiService } from '../plugins/ai';
+import { CreateNotification } from './notification';
 
 const accountSchema = accountsSchema.pick({
   id: true,
@@ -43,6 +44,9 @@ export const commentRouter = router({
       const note = await prisma.notes.findFirst({
         where: {
           id: noteId
+        },
+        select: {
+          accountId: true
         }
       });
 
@@ -97,7 +101,20 @@ export const commentRouter = router({
           }
         }
       });
-
+      console.log(Number(ctx.id) !== note?.accountId)
+      console.log(!ctx.id,'!ctx.id')
+      if (Number(ctx.id) !== note?.accountId || !ctx.id) {
+        CreateNotification({
+          type: NotificationType.COMMENT,
+          title: 'comment-notification',
+          content: (ctx?.name ?? guestName) + ':' + content,
+          metadata: {
+            noteId,
+            guestName,
+          },
+          accountId: Number(note?.accountId),
+        })
+      }
       return true
     }),
 

@@ -1,3 +1,10 @@
+## [0.37.1](https://github.com/blinko-space/blinko/compare/v0.37.0...v0.37.1) (2025-01-15)
+
+
+### Bug Fixes
+
+* add embedding API configuration and update translations ([6ef0f89](https://github.com/blinko-space/blinko/commit/6ef0f89c9762084bab1859ff0e88a17bb4d87630))
+
 # [0.37.0](https://github.com/blinko-space/blinko/compare/v0.36.12...v0.37.0) (2025-01-15)
 
 

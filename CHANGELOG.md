@@ -1,3 +1,10 @@
+## [0.37.3](https://github.com/blinko-space/blinko/compare/v0.37.2...v0.37.3) (2025-01-15)
+
+
+### Bug Fixes
+
+* update API endpoint placeholders in AiSetting component ([7920499](https://github.com/blinko-space/blinko/commit/7920499334d1d4b5926100bf4425cd6877067b0a))
+
 ## [0.37.2](https://github.com/blinko-space/blinko/compare/v0.37.1...v0.37.2) (2025-01-15)
 
 

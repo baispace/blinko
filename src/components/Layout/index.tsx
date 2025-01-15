@@ -31,6 +31,7 @@ import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarSearchInput } from "./BarSearchInput";
+import { BlinkoNotification } from "@/components/BlinkoNotification";
 
 export const SideBarItem = "p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all"
 
@@ -189,6 +190,8 @@ export const CommonLayout = observer(({
                     </Link>
                   </Badge>
                 }
+
+                <BlinkoNotification />
               </div>
             </div>
           </div>

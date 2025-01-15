@@ -447,5 +447,14 @@
   "site-url": "Adresse URL du site Blinko",
   "unfollow": "Ne plus suivre",
   "join-hub": "Rejoignez Hub",
-  "refresh": "Actualiser"
+  "refresh": "Actualiser",
+  "comment-notification": "Notification de commentaire",
+  "follow-notification": "Notification de suivi",
+  "followed-you": "je t'ai suivi",
+  "mark-all-as-read": "Marquer tout comme lu",
+  "no-notification": "Aucune notification",
+  "new-notification": "Nouvelle notification",
+  "notification": "Notification",
+  "backup-success": "Sauvegarde réussie🎉",
+  "system-notification": "Notification système"
 }

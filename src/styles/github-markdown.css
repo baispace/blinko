@@ -457,8 +457,7 @@ menu {
   height: 22px;
   margin-right: 5px;
   display: inline-block;
-  background-color: #FFD700;
-
+  background-color: var(--primary);
 }
 
 .expand-container .markdown-body p {

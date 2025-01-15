@@ -129,7 +129,7 @@ export const BlinkoNotification = observer(() => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {!notification.isRead && (
-                        <div className="w-2 h-2 rounded-full bg-success-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
                       )}
                       <div className="font-medium text-sm line-clamp-1">
                         {t(notification.title || 'new-notification')}

@@ -192,7 +192,7 @@ export const AiSetting = observer(() => {
                 label={t('api-endpoint')}
                 variant="bordered"
                 className="w-full"
-                placeholder="https://api.openapi.com/v1/embeddings"
+                placeholder="https://api.openapi.com/v1/"
                 value={store.embeddingApiEndpoint}
                 onChange={e => {
                   store.embeddingApiEndpoint = e.target.value
@@ -448,7 +448,7 @@ export const AiSetting = observer(() => {
           label={t('api-endpoint')}
           variant="bordered"
           className="w-full md:w-[300px]"
-          placeholder="https://api.openapi.com"
+          placeholder="https://api.openapi.com/v1/"
           value={store.apiEndPoint}
           onChange={e => { store.apiEndPoint = e.target.value }}
           onBlur={e => {

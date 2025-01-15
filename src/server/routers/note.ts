@@ -291,7 +291,8 @@ export const noteRouter = router({
     }))
     .output(z.object({
       hasPassword: z.boolean(),
-      data: z.union([z.null(), notesSchema.merge(
+      data: z.union([z.null(),
+      notesSchema.merge(
         z.object({
           attachments: z.array(attachmentsSchema),
           references: z.array(z.object({
@@ -320,7 +321,8 @@ export const noteRouter = router({
       const note = await prisma.notes.findFirst({
         where: {
           shareEncryptedUrl,
-          isShare: true
+          isShare: true,
+          isRecycle: false
         },
         include: {
           account: {

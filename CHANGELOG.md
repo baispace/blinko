@@ -1,3 +1,10 @@
+## [0.36.12](https://github.com/blinko-space/blinko/compare/v0.36.11...v0.36.12) (2025-01-15)
+
+
+### Bug Fixes
+
+* update note query to exclude recycled notes ([b256949](https://github.com/blinko-space/blinko/commit/b256949a1dd05877639a3c9d75302da6373711e2))
+
 ## [0.36.11](https://github.com/blinko-space/blinko/compare/v0.36.10...v0.36.11) (2025-01-15)
 
 

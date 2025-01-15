@@ -1,3 +1,15 @@
+# [0.37.0](https://github.com/blinko-space/blinko/compare/v0.36.12...v0.37.0) (2025-01-15)
+
+
+### Bug Fixes
+
+* add offline fallback functionality ([4080e52](https://github.com/blinko-space/blinko/commit/4080e52ce27807429f2bd5054edcabb148401f3e))
+
+
+### Features
+
+* add notifications feature and update translations ([e1ad253](https://github.com/blinko-space/blinko/commit/e1ad2539c3bf96ff839d5d55699282285e88f789))
+
 ## [0.36.12](https://github.com/blinko-space/blinko/compare/v0.36.11...v0.36.12) (2025-01-15)
 
 

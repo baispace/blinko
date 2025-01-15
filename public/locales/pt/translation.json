@@ -392,5 +392,7 @@
   "new-notification": "Nova notificação",
   "notification": "Notificação",
   "backup-success": "Sucesso do Backup🎉",
-  "system-notification": "Notificação do sistema"
+  "system-notification": "Notificação do sistema",
+  "embedding-api-endpoint": "Incorporando o Ponto de Extremidade da API",
+  "embedding-api-key": "Incorporar chave da API"
 }

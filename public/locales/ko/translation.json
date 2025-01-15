@@ -463,5 +463,7 @@
   "new-notification": "새로운 알림",
   "notification": "통지",
   "backup-success": "백업 성공🎉",
-  "system-notification": "시스템 알림"
+  "system-notification": "시스템 알림",
+  "embedding-api-endpoint": "API 엔드포인트 임베딩",
+  "embedding-api-key": "API 키 포함하기"
 }

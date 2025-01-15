@@ -23,8 +23,11 @@ export const AiSetting = observer(() => {
 
   const store = RootStore.Local(() => ({
     isVisible: false,
+    isEmbeddingKeyVisible: false,
     apiKey: '',
     apiVersion: '',
+    embeddingApiKey: '',
+    embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
     embeddingModel: '',
@@ -32,7 +35,10 @@ export const AiSetting = observer(() => {
     embeddingScore: 1.5,
     embeddingLambda: 0.5,
     showEmeddingAdvancedSetting: false,
-    excludeEmbeddingTagId: null as number | null
+    excludeEmbeddingTagId: null as number | null,
+    setIsOpen(open: boolean) {
+      this.isOpen = open;
+    }
   }))
 
   useEffect(() => {
@@ -44,6 +50,8 @@ export const AiSetting = observer(() => {
     store.embeddingTopK = blinko.config.value?.embeddingTopK!
     store.embeddingScore = blinko.config.value?.embeddingScore!
     store.embeddingLambda = blinko.config.value?.embeddingLambda!
+    store.embeddingApiEndpoint = blinko.config.value?.embeddingApiEndpoint!
+    store.embeddingApiKey = blinko.config.value?.embeddingApiKey!
     store.excludeEmbeddingTagId = blinko.config.value?.excludeEmbeddingTagId!
   }, [blinko.config.value])
 
@@ -174,19 +182,86 @@ export const AiSetting = observer(() => {
 
       {
         store.showEmeddingAdvancedSetting && <Item
+          className="ml-6"
+          type={isPc ? 'row' : 'col'}
+          leftContent={<>{t('embedding-api-endpoint')}</>}
+          rightContent={
+            <div className="flex md:w-[300px] w-full ml-auto justify-start">
+              <Input
+                size='sm'
+                label={t('api-endpoint')}
+                variant="bordered"
+                className="w-full"
+                placeholder="https://api.openapi.com/v1/embeddings"
+                value={store.embeddingApiEndpoint}
+                onChange={e => {
+                  store.embeddingApiEndpoint = e.target.value
+                }}
+                onBlur={() => {
+                  PromiseCall(api.config.update.mutate({
+                    key: 'embeddingApiEndpoint',
+                    value: store.embeddingApiEndpoint
+                  }), { autoAlert: false })
+                }}
+              />
+            </div>
+          } />
+      }
+
+      {
+        store.showEmeddingAdvancedSetting && <Item
+          className="ml-6"
+          type={isPc ? 'row' : 'col'}
+          leftContent={<>{t('embedding-api-key')}</>}
+          rightContent={
+            <div className="flex md:w-[300px] w-full ml-auto justify-start">
+              <Input
+                size='sm'
+                label="API key"
+                variant="bordered"
+                className="w-full"
+                placeholder="Enter your embedding api key"
+                value={store.embeddingApiKey}
+                onChange={e => {
+                  store.embeddingApiKey = e.target.value
+                }}
+                onBlur={() => {
+                  PromiseCall(api.config.update.mutate({
+                    key: 'embeddingApiKey',
+                    value: store.embeddingApiKey
+                  }), { autoAlert: false })
+                }}
+                endContent={
+                  <button className="focus:outline-none" type="button" onClick={e => store.isEmbeddingKeyVisible = !store.isEmbeddingKeyVisible}>
+                    {store.isEmbeddingKeyVisible ? (
+                      <Icon icon="mdi:eye-off" width="20" height="20" />
+                    ) : (
+                      <Icon icon="mdi:eye" width="20" height="20" />
+                    )}
+                  </button>
+                }
+                type={store.isEmbeddingKeyVisible ? "text" : "password"}
+              />
+            </div>
+          } />
+      }
+
+      {
+        store.showEmeddingAdvancedSetting && <Item
+          className="ml-6"
           type={isPc ? 'row' : 'col'}
           leftContent={<ItemWithTooltip
-            content={<>Top K</>} toolTipContent={<div className="w-[300px] flex flex-col gap-2">
+            content={<>Top K</>} toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
               <div>{t('top-k-description')}</div>
             </div>} />}
           rightContent={
-            <div className="flex w-[300px] ml-auto justify-start">
+            <div className="flex md:w-[300px] w-full ml-auto justify-start">
               <Slider
                 onChangeEnd={e => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingTopK',
                     value: store.embeddingTopK
-                  }), { autoAlert: false }  )
+                  }), { autoAlert: false })
                 }}
                 onChange={e => {
                   store.embeddingTopK = Number(e)
@@ -208,20 +283,21 @@ export const AiSetting = observer(() => {
 
       {
         store.showEmeddingAdvancedSetting && <Item
+          className="ml-6"
           type={isPc ? 'row' : 'col'}
           leftContent={<ItemWithTooltip
             content={<>Score</>}
-            toolTipContent={<div className="w-[300px] flex flex-col gap-2">
+            toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
               <div>{t('embedding-score-description')}</div>
             </div>} />}
           rightContent={
-            <div className="flex w-[300px] ml-auto justify-start">
+            <div className="flex md:w-[300px] w-full ml-auto justify-start">
               <Slider
                 onChangeEnd={e => {
                   PromiseCall(api.config.update.mutate({
                     key: 'embeddingScore',
                     value: store.embeddingScore
-                  }), { autoAlert: false }  )
+                  }), { autoAlert: false })
                 }}
                 onChange={e => {
                   store.embeddingScore = Number(e)
@@ -242,14 +318,15 @@ export const AiSetting = observer(() => {
       }
       {
         store.showEmeddingAdvancedSetting && <Item
+          className="ml-6"
           type={isPc ? 'row' : 'col'}
           leftContent={<ItemWithTooltip
             content={<>Embedding Lambda</>}
-            toolTipContent={<div className="w-[300px] flex flex-col gap-2">
+            toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
               <div>{t('embedding-lambda-description')}</div>
             </div>} />}
           rightContent={
-            <div className="flex w-[300px] ml-auto justify-start">
+            <div className="flex md:w-[300px] w-full ml-auto justify-start">
               <Slider
                 onChangeEnd={e => {
                   PromiseCall(api.config.update.mutate({
@@ -278,6 +355,7 @@ export const AiSetting = observer(() => {
       {
         store.showEmeddingAdvancedSetting && (
           <Item
+            className="ml-6"
             type={isPc ? 'row' : 'col'}
             leftContent={<div className="flex flex-col gap-1">
               <ItemWithTooltip content={<>{t('exclude-tag-from-embedding')}</>} toolTipContent={t('exclude-tag-from-embedding-tip')} />

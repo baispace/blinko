@@ -14,8 +14,8 @@ export class AzureOpenAIModelProvider extends AiBaseModelPrivider {
 
   Embeddings() {
     return new AzureOpenAIEmbeddings({
-      azureOpenAIApiInstanceName: this.globalConfig.aiApiEndpoint,
-      apiKey: this.globalConfig.aiApiKey,
+      azureOpenAIApiInstanceName: this.globalConfig.embeddingApiEndpoint ?? this.globalConfig.aiApiEndpoint,
+      apiKey: this.globalConfig.embeddingApiKey ?? this.globalConfig.aiApiKey,
       deploymentName: this.globalConfig.embeddingModel,      
       openAIApiVersion: this.globalConfig.aiApiVersion
     })

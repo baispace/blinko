@@ -467,5 +467,7 @@
   "new-notification": "Neue Benachrichtigung",
   "notification": "Benachrichtigung",
   "backup-success": "Sicherung erfolgreich🎉",
-  "system-notification": "Systembenachrichtigung"
+  "system-notification": "Systembenachrichtigung",
+  "embedding-api-endpoint": "Einbetten von API-Endpunkt",
+  "embedding-api-key": "API-Schlüssel einbetten"
 }

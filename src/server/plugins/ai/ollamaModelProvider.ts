@@ -14,7 +14,7 @@ export class OllamaModelProvider extends AiBaseModelPrivider {
   Embeddings() {
     return new OllamaEmbeddings({
       model: this.globalConfig.embeddingModel ?? "mxbai-embed-large", //default model
-      baseUrl: this.globalConfig.aiApiEndpoint,// "http://localhost:11434"
+      baseUrl: this.globalConfig.embeddingApiEndpoint ?? this.globalConfig.aiApiEndpoint,// "http://localhost:11434"
     });
   }
 

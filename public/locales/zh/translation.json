@@ -486,5 +486,7 @@
   "new-notification": "新通知",
   "notification": "通知",
   "backup-success": "备份成功🎉",
-  "system-notification": "系统通知"
+  "system-notification": "系统通知",
+  "embedding-api-endpoint": "嵌入式API端点",
+  "embedding-api-key": "嵌入式 API 密钥"
 }

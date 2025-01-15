@@ -409,7 +409,10 @@ export const noteRouter = router({
     ))
     .query(async function ({ ctx }) {
       return await prisma.notes.findMany({
-        where: { createdAt: { gt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) }, isReviewed: false, isArchived: false, accountId: Number(ctx.id) },
+        where: {
+          createdAt: { gt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
+          isReviewed: false, isArchived: false, isRecycle: false, accountId: Number(ctx.id)
+        },
         orderBy: { id: 'desc' },
         include: { attachments: true }
       })

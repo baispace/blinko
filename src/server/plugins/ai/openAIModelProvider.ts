@@ -89,10 +89,11 @@ export class OpenAIModelProvider extends AiBaseModelPrivider {
 
   Embeddings() {
     return new OpenAIEmbeddings({
-      apiKey: this.globalConfig.aiApiKey,
+      apiKey: this.globalConfig.embeddingApiKey ?? this.globalConfig.aiApiKey,
       model: this.globalConfig.embeddingModel ?? 'text-embedding-3-small',
     }, {
-      baseURL: this.globalConfig.aiApiEndpoint || null
+      baseURL: (this.globalConfig.embeddingApiEndpoint ?? this.globalConfig.aiApiEndpoint) || null
     })
   }
 }
+

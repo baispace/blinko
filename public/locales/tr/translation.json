@@ -409,5 +409,7 @@
   "new-notification": "Yeni Bildirim",
   "notification": "Bildirim",
   "backup-success": "Yedekleme Başarılı🎉",
-  "system-notification": "Sistem Bildirimi"
+  "system-notification": "Sistem Bildirimi",
+  "embedding-api-endpoint": "API Nokta Sonlandırıcı gömme",
+  "embedding-api-key": "API Anahtarını Gömülü Olarak Kullanma"
 }

@@ -440,5 +440,7 @@
   "new-notification": "新しい通知",
   "notification": "通知",
   "backup-success": "バックアップ成功🎉",
-  "system-notification": "システム通知"
+  "system-notification": "システム通知",
+  "embedding-api-endpoint": "APIエンドポイントの埋め込み",
+  "embedding-api-key": "APIキーの埋め込み"
 }

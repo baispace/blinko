@@ -72,6 +72,8 @@ export const ZConfigKey = z.union([
   z.literal('isCloseBackgroundAnimation'),
   z.literal('customBackgroundUrl'),
   z.literal('oauth2Providers'),
+  z.literal('embeddingApiEndpoint'),
+  z.literal('embeddingApiKey'),
   ZUserPerferConfigKey
 ]);
 
@@ -136,6 +138,8 @@ export const ZConfigSchema = z.object({
   maxHomePageWidth: z.number().optional(),
   oauth2Providers: z.array(ZOAuth2ProviderSchema).optional(),
   isUseBlinkoHub: z.boolean().optional(),
+  embeddingApiEndpoint: z.string().optional(),
+  embeddingApiKey: z.string().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

@@ -484,5 +484,7 @@
   "new-notification": "New Notification",
   "notification": "Notification",
   "system-notification": "System Notification",
-  "backup-success": "Backup Success🎉"
+  "backup-success": "Backup Success🎉",
+  "embedding-api-endpoint": "Embedding API Endpoint",
+  "embedding-api-key": "Embedding API Key"
 }

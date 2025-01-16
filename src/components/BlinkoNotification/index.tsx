@@ -10,10 +10,11 @@ import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
 import { ScrollArea } from '../Common/ScrollArea';
 import { Notifications, NotificationType } from '@/lib/prismaZodType';
 import { ShowCommentDialog } from '../BlinkoCard/commentButton';
+import { BlinkoStore } from '@/store/blinkoStore';
 
 export const BlinkoNotification = observer(() => {
   const { t } = useTranslation();
-
+  const blinko = RootStore.Get(BlinkoStore)
   const store = RootStore.Local(() => ({
     isOpen: false,
     setIsOpen(open: boolean) {
@@ -55,6 +56,11 @@ export const BlinkoNotification = observer(() => {
     store.unreadCount.call();
     store.notificationList.resetAndCall({});
   }, []);
+
+  useEffect(() => {
+    store.unreadCount.call();
+    store.notificationList.resetAndCall({});
+  }, [blinko.updateTicker]);
 
   if (store.unreadCount.value === 0) {
     return null

@@ -19,9 +19,12 @@ export const followsRouter = router({
         tags: ['Follows']
       }
     })
-    .input(z.void())
+    .input(z.object({
+      searchText: z.string().optional().default('')
+    }).optional())
     .output(recommandListSchema)
-    .query(async function ({ ctx }) {
+    .query(async function ({ ctx, input }) {
+      const searchText = input?.searchText ?? ''
       const res = await prisma.cache.findFirst({
         where: {
           key: 'recommand_list'
@@ -32,7 +35,7 @@ export const followsRouter = router({
       })
       const recommandList = res?.value?.[String(ctx.id)] as RecommandListType
       console.log(recommandList, 'recommand_list')
-      return recommandList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      return recommandList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).filter(item => item.content.includes(searchText))
     }),
   // i want to follow a site
   follow: authProcedure

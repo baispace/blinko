@@ -126,7 +126,10 @@ export const CommonLayout = observer(({
                   {
                     router.pathname != '/trash'
                       ? <Icon className="cursor-pointer hover:rotate-180 transition-all"
-                        onClick={() => blinkoStore.refreshData()}
+                        onClick={() => {
+                          blinkoStore.refreshData()
+                          blinkoStore.updateTicker++
+                        }}
                         icon="fluent:arrow-sync-12-filled"
                         width="20"
                         height="20"

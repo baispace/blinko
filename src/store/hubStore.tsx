@@ -3,6 +3,8 @@ import axios from "axios";
 import { Store } from "./standard/base";
 import { StorageState } from "./standard/StorageState";
 import { PromisePageState, PromiseState } from "./standard/PromiseState";
+import { BlinkoStore } from "./blinkoStore";
+import { RootStore } from ".";
 
 export class HubStore implements Store {
   sid = 'hubStore'
@@ -15,15 +17,16 @@ export class HubStore implements Store {
 
   shareNoteList = new PromisePageState({
     function: async ({ page, size }) => {
+      const searchText = RootStore.Get(BlinkoStore).noteListFilterConfig.searchText
       if (this.currentListType == 'home') {
-        const notes = await api.notes.publicList.mutate({ page, size })
+        const notes = await api.notes.publicList.mutate({ page, size, searchText })
         return notes
       } else if (this.currentListType == 'recommand') {
-        const recommandList = await api.follows.recommandList.query()
+        const recommandList = await api.follows.recommandList.query({ searchText })
         return recommandList
       } else if (this.currentListType == 'site') {
         if (this.currentSiteURL) {
-          const res = await axios.post(this.currentSiteURL + '/api/v1/note/public-list', { page, size })
+          const res = await axios.post(this.currentSiteURL + '/api/v1/note/public-list', { page, size, searchText })
           return res.data.map(i => {
             i.attachments = i.attachments.map(j => {
               j.path = this.currentSiteURL + j.path

@@ -166,7 +166,8 @@ export const noteRouter = router({
     })
     .input(z.object({
       page: z.number().optional().default(1),
-      size: z.number().optional().default(30)
+      size: z.number().optional().default(30),
+      searchText: z.string().optional().default('')
     }))
     .output(z.array(notesSchema.merge(
       z.object({
@@ -189,7 +190,7 @@ export const noteRouter = router({
     ))
     .mutation(async function ({ input }) {
       return cache.wrap('/v1/note/public-list', async () => {
-        const { page, size } = input
+        const { page, size, searchText } = input
         return await prisma.notes.findMany({
           where: {
             isShare: true,
@@ -197,7 +198,8 @@ export const noteRouter = router({
             OR: [
               { shareExpiryDate: { gt: new Date() } },
               { shareExpiryDate: null }
-            ]
+            ],
+            ...(searchText != '' && { content: { contains: searchText, mode: 'insensitive' } })
           },
           orderBy: [{ isTop: "desc" }, { updatedAt: 'desc' }],
           skip: (page - 1) * size,

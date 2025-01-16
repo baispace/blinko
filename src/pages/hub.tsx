@@ -17,6 +17,7 @@ import { DialogStore } from "@/store/module/Dialog";
 import { BlinkoFollowDialog, BlinkoFollowingDialog } from "@/components/BlinkoFollowDialog";
 import { HubStore } from "@/store/hubStore";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
+import { _ } from "@/lib/lodash";
 
 const Hub = observer(({ className }: { className?: string }) => {
   const { t } = useTranslation()
@@ -25,6 +26,9 @@ const Hub = observer(({ className }: { className?: string }) => {
   const { query } = useRouter()
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = RootStore.Get(HubStore)
+  const debounceLoadData = _.debounce(() => {
+    store.loadAllData()
+  }, 1000)
 
   useEffect(() => {
     store.loadAllData()
@@ -33,6 +37,10 @@ const Hub = observer(({ className }: { className?: string }) => {
   useEffect(() => {
     store.loadAllData()
   }, [blinko.updateTicker])
+
+  useEffect(() => {
+    debounceLoadData()
+  }, [blinko.noteListFilterConfig.searchText])
 
   return <ScrollArea className={'h-full bg-background'} onBottom={() => store.shareNoteList.callNextPage({})}>
     <GradientBackground className="flex flex-col gap-2 bg-background md:h-[300px] h-[150px]">
@@ -147,7 +155,7 @@ const Hub = observer(({ className }: { className?: string }) => {
           <Tab key="site" title={t("home-site")}></Tab>
           {
             //@ts-ignore
-            store.followList.value?.length > 0 &&
+            store.followingList.value?.length > 0 &&
             <Tab key="recommand" title={t("recommand")}></Tab>
           }
           {

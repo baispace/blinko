@@ -1,3 +1,10 @@
+## [0.37.4](https://github.com/blinko-space/blinko/compare/v0.37.3...v0.37.4) (2025-01-16)
+
+
+### Bug Fixes
+
+* support recommand list ([def886f](https://github.com/blinko-space/blinko/commit/def886ff42c1eb668101214de525cfb74341c8ae))
+
 ## [0.37.3](https://github.com/blinko-space/blinko/compare/v0.37.2...v0.37.3) (2025-01-15)
 
 

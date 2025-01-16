@@ -1,3 +1,10 @@
+## [0.37.5](https://github.com/blinko-space/blinko/compare/v0.37.4...v0.37.5) (2025-01-16)
+
+
+### Bug Fixes
+
+* enhance notification and search functionality ([116b433](https://github.com/blinko-space/blinko/commit/116b4333fc52633888576ce5d33671cb83936f4b))
+
 ## [0.37.4](https://github.com/blinko-space/blinko/compare/v0.37.3...v0.37.4) (2025-01-16)
 
 

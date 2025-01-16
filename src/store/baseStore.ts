@@ -67,6 +67,7 @@ export class BaseStore implements Store {
     { value: 'zh-tw', label: '繁體中文' },
     { value: 'vi', label: 'Tiếng Việt' },
     { value: 'tr', label: 'Türkçe' },
+    { value: 'ka', label: 'ქართული' },
     { value: 'de', label: 'Deutsch' },
     { value: 'es', label: 'Español' },
     { value: 'fr', label: 'Français' },

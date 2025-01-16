@@ -33,7 +33,7 @@ export const attachmentsSchema = z.object({
   sharePassword: z.string(),
   name: z.string(),
   path: z.string(),
-  size: z.instanceof(Prisma.Decimal, { message: "Field 'size' must be a Decimal. Location: ['Models', 'attachments']" }),
+  size: z.union([z.instanceof(Prisma.Decimal, { message: "Field 'size' must be a Decimal. Location: ['Models', 'attachments']" }), z.number(), z.string()]),
   noteId: z.number().int().nullable(),
   accountId: z.number().int().nullable(),
   createdAt: z.coerce.date(),
@@ -238,5 +238,16 @@ export const notificationsSchema = z.object({
   updatedAt: z.coerce.date(),
 })
 
-export type Notifications = z.infer<typeof notificationsSchema> 
+export type Notifications = z.infer<typeof notificationsSchema>
 export type InputNotificationType = z.infer<typeof notificationType>
+
+/////////////////////////////////////////
+// CACHE SCHEMA
+/////////////////////////////////////////
+
+export const cacheSchema = z.object({
+  id: z.number().int(),
+  key: z.string(),
+  value: z.any(),
+})
+

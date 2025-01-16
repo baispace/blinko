@@ -220,7 +220,7 @@ export const noteRouter = router({
             }
           },
         })
-      }, { ttl: 1000 * 60 * 5 })
+      }, { ttl: 1000 * 5 })
     }),
   listByIds: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list-by-ids', summary: 'Query notes list by ids', protect: true, tags: ['Note'] } })
@@ -495,7 +495,6 @@ export const noteRouter = router({
       }) || [];
       if (markdownImages.length > 0) {
         const images = await prisma.attachments.findMany({ where: { path: { in: markdownImages } } })
-        console.log({ images })
         attachments = [...attachments, ...images.map(i => ({ path: i.path, name: i.name, size: Number(i.size), type: i.type }))]
       }
 
@@ -611,7 +610,7 @@ export const noteRouter = router({
             const oldAttachments = await prisma.attachments.findMany({ where: { noteId: note.id } })
             const needTobeAddedAttachmentsPath = _.difference(attachments?.map(i => i.path), oldAttachments.map(i => i.path));
             if (needTobeAddedAttachmentsPath.length != 0) {
-              console.log({ needTobeAddedAttachmentsPath })
+              // console.log({ needTobeAddedAttachmentsPath })
               const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: needTobeAddedAttachmentsPath } } })
               await prisma.attachments.updateMany({
                 where: { id: { in: attachmentsIds.map(i => i.id) } },
@@ -659,7 +658,6 @@ export const noteRouter = router({
           if (config?.isUseAI) {
             AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt! })
             for (const attachment of attachments) {
-              console.log('attachment', attachment)
               AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
             }
           }

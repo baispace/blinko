@@ -179,3 +179,11 @@ model notifications {
 
   account accounts @relation(fields: [accountId], references: [id])
 }
+
+model cache {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique @db.VarChar
+  value     Json     @db.Json
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+}

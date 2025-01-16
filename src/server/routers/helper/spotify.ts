@@ -85,7 +85,6 @@ export class SpotifyClient {
       // 1. Try to get track cover first
       const trackCoverUrl = await this.getTrackCover(artist, title);
       if (trackCoverUrl) {
-        console.log('Found track cover');
         return trackCoverUrl;
       }
 

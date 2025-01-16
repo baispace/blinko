@@ -65,7 +65,6 @@ export const FocusEditorFixMobile = () => {
   try {
     requestAnimationFrame(() => {
       const editorElements = document.querySelectorAll('.vditor-ir .vditor-reset') as NodeListOf<HTMLElement>
-      console.log('editorElements', editorElements)
       if (editorElements.length === 0) return
 
       if (editorElements.length > 0) {

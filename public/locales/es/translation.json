@@ -462,5 +462,6 @@
   "backup-success": "Éxito de la copia de seguridad🎉",
   "system-notification": "Notificación del sistema",
   "embedding-api-endpoint": "Incrustación de punto final de API",
-  "embedding-api-key": "Incrustar clave de API"
+  "embedding-api-key": "Incrustar clave de API",
+  "recommand": "Recomendar"
 }

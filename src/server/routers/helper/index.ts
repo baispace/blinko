@@ -118,7 +118,6 @@ export const getNextAuthSecret = async () => {
     const savedSecret = await prisma.config.findFirst({
       where: { key: configKey }
     });
-    console.log({ savedSecret })
     if (savedSecret) {
       // @ts-ignore
       secret = savedSecret.config.value as string;

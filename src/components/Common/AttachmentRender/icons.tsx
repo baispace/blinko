@@ -53,7 +53,6 @@ export const InsertConextButton = observer(({ className, file, files, size = 20 
     <Tooltip content={t('insert-context')}>
       <div onClick={(e) => {
         e.stopPropagation()
-        console.log(file)
         eventBus.emit('editor:insert', `![${file.name}](${file.preview})`)
       }} className={`opacity-70 hover:opacity-100 bg-black cursor-pointer rounded-sm transition-al ${className}`}>
         <Icon className='!text-white' icon="material-symbols:variable-insert-outline-rounded" width={size} height={size} />

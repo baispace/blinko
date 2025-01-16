@@ -294,7 +294,6 @@ export class EditorStore {
 
   handleSend = async () => {
     if (!this.canSend) return;
-    console.log('handleSend', this.vditor?.getValue())
     try {
       await this.onSend?.({
         content: this.vditor?.getValue() ?? '',

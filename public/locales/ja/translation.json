@@ -442,5 +442,6 @@
   "backup-success": "バックアップ成功🎉",
   "system-notification": "システム通知",
   "embedding-api-endpoint": "APIエンドポイントの埋め込み",
-  "embedding-api-key": "APIキーの埋め込み"
+  "embedding-api-key": "APIキーの埋め込み",
+  "recommand": "お勧め"
 }

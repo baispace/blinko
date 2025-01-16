@@ -35,7 +35,7 @@ const Hub = observer(({ className }: { className?: string }) => {
   }, [blinko.updateTicker])
 
   return <ScrollArea className={'h-full bg-background'} onBottom={() => store.shareNoteList.callNextPage({})}>
-    <GradientBackground className="flex flex-col gap-2 bg-background md:h-[300px] h-[120px]">
+    <GradientBackground className="flex flex-col gap-2 bg-background md:h-[300px] h-[150px]">
       <div className="flex flex-col gap-2 h-full">
         <div className=" border-2 border-hover w-full h-full md:h-fit md:max-w-screen-xl glass-effect mx-auto md:mt-[70px] md:rounded-2xl p-4 md:p-6">
           <div className="flex items-start gap-2 md:gap-6">
@@ -127,11 +127,15 @@ const Hub = observer(({ className }: { className?: string }) => {
     </GradientBackground>
 
     <div className="max-w-screen-xl mx-auto p-4 md:p-0">
-      <div className='flex items-center justify-between gap-2 my-6 rounded-2xl '>
+      <div className='flex items-center justify-between gap-2 mb-4 md:mb-6 md:my-6 rounded-2xl '>
         <Tabs aria-label="Options" color="primary" onSelectionChange={(e) => {
           if (e == 'site') {
             store.currentSiteURL = ''
+            store.currentListType = 'home'
+          } else if (e == 'recommand') {
+            store.currentListType = 'recommand'
           } else {
+            store.currentListType = 'site'
             store.currentSiteURL = store.followingList.value?.find(item => item.siteUrl == e)?.siteUrl ?? ''
           }
           //add to next tick
@@ -141,6 +145,11 @@ const Hub = observer(({ className }: { className?: string }) => {
           }, 0)
         }}>
           <Tab key="site" title={t("home-site")}></Tab>
+          {
+            //@ts-ignore
+            store.followList.value?.length > 0 &&
+            <Tab key="recommand" title={t("recommand")}></Tab>
+          }
           {
             store.followingList.value?.map(item => {
               return <Tab key={item.siteUrl} title={item.siteName}></Tab>
@@ -165,7 +174,6 @@ const Hub = observer(({ className }: { className?: string }) => {
         }}
         className="blog-masonry-grid"
         columnClassName="blog-masonry-grid_column">
-
         {
           store.shareNoteList?.value?.map(i => {
             return <BlinkoCard
@@ -173,7 +181,7 @@ const Hub = observer(({ className }: { className?: string }) => {
               key={i.id}
               blinkoItem={i}
               isShareMode={
-                RootStore.Get(UserStore).userInfo.value?.id != i.accountId || store.currentSiteURL != ''
+                RootStore.Get(UserStore).userInfo.value?.id != i.accountId || store.currentSiteURL != '' || i.originURL
               }
               account={i.account ?? undefined} forceBlog={store.forceBlog.value} />
           })

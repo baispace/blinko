@@ -44,7 +44,6 @@ const AiWritePop = observer(() => {
     },
 
     async handleSubmit() {
-      console.log('handleSubmit')
       if (!ai.writeQuestion.trim()) return
       try {
         ai.writeStream('custom', blinko.isCreateMode ? blinko.noteContent : blinko.curSelectedNote!.content)

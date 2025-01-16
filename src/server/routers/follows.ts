@@ -5,8 +5,35 @@ import { prisma } from '../prisma';
 import axios from "axios";
 import { followsSchema, NotificationType } from "@/lib/prismaZodType";
 import { CreateNotification } from "./notification";
+import { cache } from "@/lib/cache";
+import { RecommandJob, recommandListSchema, RecommandListType } from "../plugins/recommandJob";
+
 
 export const followsRouter = router({
+  recommandList: authProcedure
+    .meta({
+      openapi: {
+        method: 'GET',
+        path: '/v1/follows/recommand-list',
+        summary: 'Get recommand list by following users',
+        tags: ['Follows']
+      }
+    })
+    .input(z.void())
+    .output(recommandListSchema)
+    .query(async function ({ ctx }) {
+      const res = await prisma.cache.findFirst({
+        where: {
+          key: 'recommand_list'
+        },
+        select: {
+          value: true
+        }
+      })
+      const recommandList = res?.value?.[String(ctx.id)] as RecommandListType
+      console.log(recommandList, 'recommand_list')
+      return recommandList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    }),
   // i want to follow a site
   follow: authProcedure
     .meta({
@@ -70,6 +97,8 @@ export const followsRouter = router({
           siteName: mySiteInfo?.nickname ?? mySiteInfo?.name,
           siteAvatar: input.mySiteUrl + mySiteInfo?.image,
         });
+
+        RecommandJob.RunTask()
 
         return {
           success: true,
@@ -176,6 +205,8 @@ export const followsRouter = router({
           siteUrl: input.mySiteUrl,
         });
 
+        RecommandJob.RunTask()
+        
         return true
       });
     }),

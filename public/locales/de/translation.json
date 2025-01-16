@@ -469,5 +469,6 @@
   "backup-success": "Sicherung erfolgreich🎉",
   "system-notification": "Systembenachrichtigung",
   "embedding-api-endpoint": "Einbetten von API-Endpunkt",
-  "embedding-api-key": "API-Schlüssel einbetten"
+  "embedding-api-key": "API-Schlüssel einbetten",
+  "recommand": "Empfehlung"
 }

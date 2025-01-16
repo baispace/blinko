@@ -83,7 +83,6 @@ export const GET = async (req: NextRequest, { params }: any) => {
 
     const fileHash = generateFileHash(filePath);
     const etag = `"${fileHash}"`;
-    console.log({ etag })
     const ifNoneMatch = req.headers.get("if-none-match");
     if (ifNoneMatch === etag) {
       return new Response(null, { status: 304 });

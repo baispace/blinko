@@ -19,12 +19,15 @@ import { useRouter } from "next/router";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { AvatarAccount } from "./commentButton";
 
+export type BlinkoItem = Note & {
+  isBlog?: boolean;
+  blogCover?: string;
+  title?: string;
+  originURL?: string;
+}
+
 interface BlinkoCardProps {
-  blinkoItem: Note & {
-    isBlog?: boolean;
-    blogCover?: string;
-    title?: string;
-  };
+  blinkoItem: BlinkoItem;
   className?: string;
   account?: AvatarAccount;
   isShareMode?: boolean;

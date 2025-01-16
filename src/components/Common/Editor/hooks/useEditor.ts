@@ -58,7 +58,6 @@ export const useEditorInit = (
       upload: {
         url: '/api/file/upload',
         success: (editor, res) => {
-          console.log(res)
           const { fileName, filePath, type, size } = JSON.parse(res)
           store.handlePasteFile({
             fileName,
@@ -81,7 +80,6 @@ export const useEditorInit = (
               url: data.filePath,
             }
           }
-          console.log(result)
           return JSON.stringify(result)
         }
       },

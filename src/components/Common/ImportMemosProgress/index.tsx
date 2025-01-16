@@ -30,7 +30,6 @@ export const ImportProgress = observer(({ filePath }: { filePath: string }) => {
     handleAsyncGenerator: async () => {
       const asyncGeneratorRes = await streamApi.task.importFromMemos.mutate({ filePath })
       for await (const item of asyncGeneratorRes) {
-        console.log(item)
         store.progress = item.progress?.current ?? 0
         store.total = item.progress?.total ?? 0
         store.message.unshift(item)

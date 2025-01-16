@@ -2,6 +2,7 @@ import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } f
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { DBJob } from '../plugins/dbjob';
+import '../plugins/recommandJob';
 import { ArchiveJob } from '../plugins/archivejob';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME, TEMP_PATH, UPLOAD_FILE_PATH } from '@/lib/constant';
 import { scheduledTaskSchema } from '@/lib/prismaZodType';
@@ -78,7 +79,6 @@ export const taskRouter = router({
           yield result;
         }
         memos.closeDB();
-        console.log({ dbPath })
         try {
           await unlink(dbPath)
           await FileService.deleteFile(input.filePath)

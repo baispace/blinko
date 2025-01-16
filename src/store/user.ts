@@ -162,7 +162,6 @@ export class UserStore implements User, Store {
 
     if (this.isLogin) {
       try {
-        console.log('initializeSettings in login loaded')
 
         if (config) {
           if (config.language && config.language !== savedLanguage) {

@@ -27,7 +27,6 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
 
   try {
     const body = await req.json();
-    console.log(body)
     const { url } = body;
 
     if (!url) {
@@ -44,7 +43,6 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     const urlPath = new URL(url).pathname;
     const originalName = path.basename(urlPath).replaceAll(" ", "_");
     const extension = path.extname(originalName);
-    console.log({ originalName, extension })
     const filePath = await FileService.uploadFile({
       buffer,
       originalName,

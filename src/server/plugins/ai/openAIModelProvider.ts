@@ -49,7 +49,6 @@ export abstract class AiBaseModelPrivider {
           pageContent: "init faiss store",
           metadata: { id: '0' },
         }];
-        console.log('init faiss store', documents)
         await VectorStore.addDocuments(documents, { ids: ["0"] });
         await VectorStore.save(FaissStorePath)
         return VectorStore

@@ -486,5 +486,6 @@
   "system-notification": "System Notification",
   "backup-success": "Backup Success🎉",
   "embedding-api-endpoint": "Embedding API Endpoint",
-  "embedding-api-key": "Embedding API Key"
+  "embedding-api-key": "Embedding API Key",
+  "recommand": "Recommand"
 }

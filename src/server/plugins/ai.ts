@@ -37,15 +37,12 @@ export class AiService {
       let loader: BaseDocumentLoader;
       switch (true) {
         case filePath.endsWith('.pdf'):
-          console.log('load pdf')
           loader = new PDFLoader(filePath);
           break;
         case filePath.endsWith('.docx') || filePath.endsWith('.doc'):
-          console.log('load docx')
           loader = new DocxLoader(filePath);
           break;
         case filePath.endsWith('.txt'):
-          console.log('load txt')
           loader = new TextLoader(filePath);
           break;
         // case filePath.endsWith('.csv'):
@@ -65,7 +62,6 @@ export class AiService {
 
   static async embeddingDeleteAll(id: number, VectorStore: FaissStore) {
     for (const index of new Array(9999).keys()) {
-      console.log('delete', `${id}-${index}`)
       try {
         await VectorStore.delete({ ids: [`${id}-${index}`] })
         await VectorStore.save(FaissStorePath)
@@ -191,7 +187,6 @@ export class AiService {
     await AiService.embeddingDeleteAll(id, VectorStore)
     const attachments = await prisma.attachments.findMany({ where: { noteId: id } })
     for (const attachment of attachments) {
-      console.log({ deletPath: attachment.path })
       await AiService.embeddingDeleteAllAttachments(attachment.path, VectorStore)
     }
     return { ok: true }
@@ -207,7 +202,6 @@ export class AiService {
       fetchK: topK * 3,
       lambda: lambda
     });
-    console.log('similaritySearch with scores:', results)
     const DISTANCE_THRESHOLD = score;
     const filteredResults = results
       .filter(([doc, distance]) => distance < DISTANCE_THRESHOLD)
@@ -231,7 +225,6 @@ export class AiService {
     const total = notes.length;
     const BATCH_SIZE = 5;
 
-    console.log({ total })
     let current = 0;
 
     for (let i = 0; i < notes.length; i += BATCH_SIZE) {

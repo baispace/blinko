@@ -130,7 +130,6 @@ export default function FilterPop() {
               placeholder={t('select-tag-status')}
               renderValue={(items) => {
                 const item = items[0];
-                console.log(item)
                 const getIcon = (value: string) => {
                   switch (value) {
                     case 'all':

@@ -121,7 +121,6 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
           }
           blinko.updateTicker++
         } else {
-          console.log(files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size } }))
           await blinko.upsertNote.call({
             id: blinko.curSelectedNote!.id,
             type: noteType,

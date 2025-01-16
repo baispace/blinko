@@ -73,7 +73,6 @@ const ResourceCard = observer(({
   const isS3File = useMemo(() => item.path?.includes('s3file'), [item.path]);
 
   const handleContextMenu = useCallback(() => {
-    console.log('handlContetxmet')
     resourceStore.setContextMenuResource(_.cloneDeep(item));
   }, [item, resourceStore]);
 

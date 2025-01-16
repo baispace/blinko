@@ -48,7 +48,6 @@ export const AiTag: React.FC<AiTagProps> = ({
           className='flex-1'
           value={isInsertBefore ? 'insert-before' : 'insert-after'}
           onChange={(e) => {
-            console.log(e)
             setIsInsertBefore(e.target.value === 'insert-before')
           }}
         >

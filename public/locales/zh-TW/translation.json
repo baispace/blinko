@@ -498,5 +498,6 @@
   "backup-success": "備份成功🎉",
   "system-notification": "系統通知",
   "embedding-api-endpoint": "嵌入 API 端點",
-  "embedding-api-key": "嵌入式 API 金鑰"
+  "embedding-api-key": "嵌入式 API 金鑰",
+  "recommand": "推薦"
 }

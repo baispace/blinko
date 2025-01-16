@@ -24,6 +24,7 @@ import axios from 'axios';
 import i18n from '@/lib/i18n';
 import { Spinner } from '@nextui-org/react';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
+import { BlinkoItem } from '.';
 
 export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
 
@@ -31,19 +32,18 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
   account?: AvatarAccount;
   guestName?: string;
   isAuthor?: boolean;
-  blinkoItem?: Note;
+  blinkoItem?: BlinkoItem;
   withoutName?: boolean;
   size?: number;
 }) => {
   const { t } = useTranslation();
   const displayName = account ? (account.nickname || account.name) : (guestName || '');
-  const hubStore = RootStore.Get(HubStore)
   return (
     <div className="flex items-center gap-2">
       {account ? (
         <>
           {account.image ? (
-            <Image src={account.image} radius="full" alt="" width={size} height={size} />
+            <Image src={blinkoItem?.originURL ? blinkoItem.originURL + account.image : account.image} radius="full" alt="" width={size} height={size} />
           ) : (
             <Avatar
               size={size}
@@ -70,7 +70,7 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
   );
 });
 
-export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: Note }) => {
+export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
   const [content, setContent] = useState('');
@@ -84,8 +84,8 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: Note }) => 
     },
     commentList: new PromisePageState({
       function: async ({ page, size }) => {
-        if (hubStore.currentSiteURL) {
-          const res = await axios.post(hubStore.currentSiteURL + '/api/v1/comment/list', {
+        if (blinkoItem.originURL) {
+          const res = await axios.post(blinkoItem.originURL + '/api/v1/comment/list', {
             noteId: blinkoItem.id,
             page,
             size,
@@ -120,8 +120,8 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: Note }) => 
           params.parentId = Store.reply.id
         }
 
-        if (hubStore.currentSiteURL) {
-          await axios.post(hubStore.currentSiteURL + '/api/v1/comment/create', {
+        if (blinkoItem.originURL) {
+          await axios.post(blinkoItem.originURL + '/api/v1/comment/create', {
             ...params,
             guestName: user.userInfo.value?.nickName ?? user.userInfo.value?.name
           });
@@ -136,8 +136,8 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: Note }) => 
     }),
     handleDelete: new PromiseState({
       function: async (commentId: number) => {
-        if (hubStore.currentSiteURL) {
-          await axios.post(hubStore.currentSiteURL + '/api/v1/comment/delete', {
+        if (blinkoItem.originURL) {
+          await axios.post(blinkoItem.originURL + '/api/v1/comment/delete', {
             id: commentId
           });
         } else {
@@ -188,7 +188,7 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: Note }) => 
                   >
                     <Icon icon="akar-icons:comment" width="16" height="16" />
                   </Button>
-                  {(user.id === String(comment.note?.account?.id) || user.id === String(comment.account?.id)) && (
+                  {(user.id === String(comment.note?.account?.id) || user.id === String(comment.account?.id)) && !blinkoItem.originURL && (
                     <Button
                       size="sm"
                       variant="light"

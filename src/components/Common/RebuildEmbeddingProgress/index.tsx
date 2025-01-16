@@ -29,7 +29,6 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
     handleAsyncGenerator: async () => {
       const asyncGeneratorRes = await streamApi.ai.rebuildingEmbeddings.mutate({ force })
       for await (const item of asyncGeneratorRes) {
-        console.log(item)
         store.progress = item.progress?.current ?? 0
         store.total = item.progress?.total ?? 0
         store.message.unshift(item)

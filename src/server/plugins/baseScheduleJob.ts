@@ -91,13 +91,23 @@ export abstract class BaseScheduleJob {
     await this.Start(cronTime, true);
   }
 
+  protected static async autoStart(schedule: string) {
+    const task = await prisma.scheduledTask.findFirst({
+      where: { name: this.taskName }
+    });
+    if (!task) {
+      await this.Start(schedule, true);
+    }
+    await this.initializeJob();
+  }
+
   protected static async initializeJob() {
     setTimeout(async () => {
       try {
         const task = await prisma.scheduledTask.findFirst({
           where: { name: this.taskName }
         });
-        
+
         if (task?.isRunning) {
           this.job.setTime(new CronTime(task.schedule));
           this.job.start();

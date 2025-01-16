@@ -411,5 +411,6 @@
   "backup-success": "Yedekleme Başarılı🎉",
   "system-notification": "Sistem Bildirimi",
   "embedding-api-endpoint": "API Nokta Sonlandırıcı gömme",
-  "embedding-api-key": "API Anahtarını Gömülü Olarak Kullanma"
+  "embedding-api-key": "API Anahtarını Gömülü Olarak Kullanma",
+  "recommand": "Tavsiye etmek"
 }

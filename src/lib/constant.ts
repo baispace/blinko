@@ -7,3 +7,4 @@ export const TEMP_PATH = '.blinko/files/temp'
 
 export const DBBAK_TASK_NAME = 'Backup Database'
 export const ARCHIVE_BLINKO_TASK_NAME = 'Auto Archive Blinko'
+export const RECOMMAND_TASK_NAME = 'Follow Recommand Index'

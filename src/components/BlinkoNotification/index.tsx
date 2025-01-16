@@ -17,7 +17,6 @@ export const BlinkoNotification = observer(() => {
   const store = RootStore.Local(() => ({
     isOpen: false,
     setIsOpen(open: boolean) {
-      console.log('open', open);
       this.isOpen = open;
       if (open) {
         this.notificationList.resetAndCall({});
@@ -45,7 +44,6 @@ export const BlinkoNotification = observer(() => {
       this.markAsRead.call({ all: true });
     },
     handleMarkAsRead(notification: Notifications) {
-      console.log('notification', notification, NotificationType.COMMENT);
       if (notification.type === NotificationType.COMMENT) {
         ShowCommentDialog(notification.metadata.noteId);
       }

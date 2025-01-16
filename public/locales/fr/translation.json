@@ -458,5 +458,6 @@
   "backup-success": "Sauvegarde réussie🎉",
   "system-notification": "Notification système",
   "embedding-api-endpoint": "Incorporation du point de terminaison de l'API",
-  "embedding-api-key": "Clé API d'intégration"
+  "embedding-api-key": "Clé API d'intégration",
+  "recommand": "Recommander"
 }

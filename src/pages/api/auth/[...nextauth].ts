@@ -271,7 +271,6 @@ export default async function auth(req: any, res: any) {
                 role: user.role
               };
             }
-            console.log({ credentials })
             if (config.twoFactorEnabled) {
               return {
                 id: user.id.toString(),
@@ -298,7 +297,6 @@ export default async function auth(req: any, res: any) {
     secret: secret,
     callbacks: {
       async signIn({ user, account }) {
-        console.log({ user, account })
         let userName = user.id ?? user.name ?? ''
         if (account?.type === 'oauth') {
           try {

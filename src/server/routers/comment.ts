@@ -101,8 +101,6 @@ export const commentRouter = router({
           }
         }
       });
-      console.log(Number(ctx.id) !== note?.accountId)
-      console.log(!ctx.id,'!ctx.id')
       if (Number(ctx.id) !== note?.accountId || !ctx.id) {
         CreateNotification({
           type: NotificationType.COMMENT,

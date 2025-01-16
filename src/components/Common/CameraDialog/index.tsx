@@ -112,11 +112,7 @@ export const MyCamera = ({ onComplete }: MyCameraProps) => {
           setTimeout(() => {
             setShowBlackScreen(false);
           }, 300);
-
           const url = URL.createObjectURL(blob);
-          // console.log("recorded blob:", blob);
-          // console.log("recorded url:", url);
-          // console.log("recorded size:", blob.size);
         }
       };
 

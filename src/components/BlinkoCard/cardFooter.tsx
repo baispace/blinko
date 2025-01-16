@@ -34,7 +34,6 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
           return <div key={item.toNoteId} className='blinko-reference flex flex-col gap-1 rounded-md !p-2' onClick={async (e) => {
             e.stopPropagation()
             const note = await api.notes.detail.mutate({ id: item.toNoteId! })
-            console.log(note)
             RootStore.Get(DialogStandaloneStore).setData({
               isOpen: true,
               onlyContent: true,

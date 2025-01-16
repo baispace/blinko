@@ -73,7 +73,6 @@ export default MyApp;
 
 const useProgressBar = () => {
   const routeChangeStart = (url: string, { shallow }) => {
-    console.log(url, shallow);
     if (shallow) return;
     NProgress.start();
   };

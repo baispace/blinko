@@ -394,5 +394,6 @@
   "backup-success": "Sucesso do Backup🎉",
   "system-notification": "Notificação do sistema",
   "embedding-api-endpoint": "Incorporando o Ponto de Extremidade da API",
-  "embedding-api-key": "Incorporar chave da API"
+  "embedding-api-key": "Incorporar chave da API",
+  "recommand": "Recomendar"
 }

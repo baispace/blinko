@@ -100,7 +100,6 @@ export const tagRouter = router({
         include: { tagsToNote: true }
       })
 
-      console.log({ tag }, '+++++++++++++++++++++++')
       if (!tag) return true
 
       const allNotesId = tag.tagsToNote.map(i => i.noteId)
@@ -180,9 +179,7 @@ export const tagRouter = router({
     .mutation(async function ({ input, ctx }) {
       const { id } = input
       const tag = await prisma.tag.findFirst({ where: { id, accountId: Number(ctx.id) }, include: { tagsToNote: true } })
-      console.log({ tag })
       const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
-      console.log(allNotesId)
       await userCaller(ctx).notes.trashMany({ ids: allNotesId })
       return true
     }),

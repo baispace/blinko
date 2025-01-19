@@ -1,3 +1,10 @@
+## [0.37.6](https://github.com/blinko-space/blinko/compare/v0.37.5...v0.37.6) (2025-01-19)
+
+
+### Bug Fixes
+
+* update markdown insertion and replacement methods in EditorStore [#463](https://github.com/blinko-space/blinko/issues/463) ([01213fc](https://github.com/blinko-space/blinko/commit/01213fc1b247211067367bebf0ae4377468d541d))
+
 ## [0.37.5](https://github.com/blinko-space/blinko/compare/v0.37.4...v0.37.5) (2025-01-16)
 
 

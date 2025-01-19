@@ -484,5 +484,6 @@
   "system-notification": "إشعار النظام",
   "embedding-api-endpoint": "تضمين نقطة نهاية واجهة برمجة التطبيقات",
   "embedding-api-key": "تضمين مفتاح واجهة برمجة التطبيقات",
-  "recommand": "اقتراح"
+  "recommand": "اقتراح",
+  "has-todo": "يجب القيام به"
 }

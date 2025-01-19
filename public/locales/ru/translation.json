@@ -403,5 +403,6 @@
   "system-notification": "Уведомление системы",
   "embedding-api-endpoint": "Встраивание конечной точки API",
   "embedding-api-key": "Встраивание API-ключа",
-  "recommand": "Рекомендовать"
+  "recommand": "Рекомендовать",
+  "has-todo": "Есть ДЛЯ-СДЕЛКИ"
 }

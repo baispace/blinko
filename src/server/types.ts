@@ -144,3 +144,19 @@ export const ZConfigSchema = z.object({
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;
 
+export interface NoteListFilterConfig {
+  isArchived: boolean | null;
+  isRecycle: boolean;
+  isShare: boolean | null;
+  type: number;
+  tagId: number | null;
+  searchText: string;
+  withoutTag: boolean;
+  withFile: boolean;
+  withLink: boolean;
+  isUseAiQuery: boolean;
+  startDate: Date | null;
+  endDate: Date | null;
+  hasTodo: boolean;
+}
+

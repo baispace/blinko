@@ -487,5 +487,6 @@
   "backup-success": "Backup Success🎉",
   "embedding-api-endpoint": "Embedding API Endpoint",
   "embedding-api-key": "Embedding API Key",
-  "recommand": "Recommand"
+  "recommand": "Recommand",
+  "has-todo": "Has TO-DO"
 }

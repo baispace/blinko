@@ -29,6 +29,7 @@ export default function FilterPop() {
     { label: t('has-link'), value: 'hasLink' },
     { label: t('has-file'), value: 'hasFile' },
     { label: t('public'), value: 'isShare' },
+    { label: t('has-todo'), value: 'hasTodo' },
   ];
 
   const handleApplyFilter = () => {
@@ -41,6 +42,7 @@ export default function FilterPop() {
       withFile: selectedCondition === 'hasFile',
       withLink: selectedCondition === 'hasLink',
       isShare: selectedCondition === 'isShare' ? true : false,
+      hasTodo: selectedCondition === 'hasTodo',
       isArchived: null
     };
     blinkoStore.noteList.resetAndCall({});
@@ -61,7 +63,8 @@ export default function FilterPop() {
       withFile: false,
       withLink: false,
       isArchived: false,
-      isShare: null
+      isShare: null,
+      hasTodo: false
     };
     blinkoStore.noteList.resetAndCall({});
   };

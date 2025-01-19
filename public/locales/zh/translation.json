@@ -489,5 +489,6 @@
   "system-notification": "系统通知",
   "embedding-api-endpoint": "嵌入式API端点",
   "embedding-api-key": "嵌入式 API 密钥",
-  "recommand": "推荐"
+  "recommand": "推荐",
+  "has-todo": "有待完成"
 }

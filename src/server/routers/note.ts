@@ -39,6 +39,7 @@ export const noteRouter = router({
       isUseAiQuery: z.boolean().default(false).optional(),
       startDate: z.union([z.date(), z.null()]).default(null).optional(),
       endDate: z.union([z.date(), z.null()]).default(null).optional(),
+      hasTodo: z.boolean().default(false).optional(),
     }))
     .output(z.array(notesSchema.merge(
       z.object({
@@ -63,7 +64,7 @@ export const noteRouter = router({
       }))
     ))
     .mutation(async function ({ input, ctx }) {
-      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate, isShare } = input
+      const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate, isShare, hasTodo } = input
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
           return await AiService.enhanceQuery({ query: searchText!, ctx })
@@ -113,6 +114,14 @@ export const noteRouter = router({
         where.OR = [
           { content: { contains: 'http://', mode: 'insensitive' } },
           { content: { contains: 'https://', mode: 'insensitive' } }
+        ];
+      }
+      if (hasTodo) {
+        where.OR = [
+          { content: { contains: '- [ ]', mode: 'insensitive' } },
+          { content: { contains: '- [x]', mode: 'insensitive' } },
+          { content: { contains: '* [ ]', mode: 'insensitive' } },  
+          { content: { contains: '* [x]', mode: 'insensitive' } }
         ];
       }
       const config = await getGlobalConfig({ ctx })

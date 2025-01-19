@@ -10,7 +10,7 @@ import { eventBus } from '@/lib/event';
 import { StorageListState } from './standard/StorageListState';
 import i18n from '@/lib/i18n';
 import { api } from '@/lib/trpc';
-import { Attachment, NoteType, type Note } from '@/server/types';
+import { Attachment, NoteType, type Note, toNoteTypeEnum, NoteListFilterConfig } from '@/server/types';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@/lib/constant';
 import { makeAutoObservable, observable, action } from 'mobx';
 import { UserStore } from './user';
@@ -100,6 +100,7 @@ export class BlinkoStore implements Store {
     isUseAiQuery: false,
     startDate: null as Date | null,
     endDate: null as Date | null,
+    hasTodo: false
   }
   noteTypeDefault: NoteType = NoteType.BLINKO
   currentCommonFilter: filterType | null = null
@@ -395,7 +396,7 @@ export class BlinkoStore implements Store {
   }
 
   useQuery(router) {
-    const { tagId, withoutTag, withFile, withLink, searchText } = router.query;
+    const { tagId, withoutTag, withFile, withLink, searchText, hasTodo } = router.query;
     useEffect(() => {
       if (!router.isReady) return
       this.noteListFilterConfig.type = NoteType.BLINKO
@@ -410,6 +411,7 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.startDate = null
       this.noteListFilterConfig.endDate = null
       this.noteListFilterConfig.isShare = null
+      this.noteListFilterConfig.hasTodo = false
 
       if (router.pathname == '/notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
@@ -426,6 +428,9 @@ export class BlinkoStore implements Store {
       }
       if (withFile) {
         this.noteListFilterConfig.withFile = true
+      }
+      if (hasTodo) {
+        this.noteListFilterConfig.hasTodo = true
       }
 
       if (router.pathname == '/all') {

@@ -78,11 +78,13 @@ export class EditorStore {
 
   insertMarkdown = (text) => {
     this.vditor?.insertValue(text)
+    this.onChange?.(this.vditor?.getValue() ?? '')
     this.focus()
   }
 
   replaceMarkdown = (text) => {
     this.vditor?.setValue(text)
+    this.onChange?.(this.vditor?.getValue() ?? '')
     this.focus()
   }
 

@@ -1,3 +1,10 @@
+## [0.37.7](https://github.com/blinko-space/blinko/compare/v0.37.6...v0.37.7) (2025-01-19)
+
+
+### Bug Fixes
+
+* add 'has-todo' translation key across multiple languages and integrate into filter functionality ([069bb14](https://github.com/blinko-space/blinko/commit/069bb1461ac6ec18d244635cff3e26075d4ad24d))
+
 ## [0.37.6](https://github.com/blinko-space/blinko/compare/v0.37.5...v0.37.6) (2025-01-19)
 
 

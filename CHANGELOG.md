@@ -1,3 +1,10 @@
+## [0.37.8](https://github.com/blinko-space/blinko/compare/v0.37.7...v0.37.8) (2025-01-20)
+
+
+### Bug Fixes
+
+* support backward reference  enhance Dockerfile and localization with new reset password script and translation keys [#460](https://github.com/blinko-space/blinko/issues/460) ([9cb27bf](https://github.com/blinko-space/blinko/commit/9cb27bfe262c6055c5531cec4413567855fd3535))
+
 ## [0.37.7](https://github.com/blinko-space/blinko/compare/v0.37.6...v0.37.7) (2025-01-19)
 
 

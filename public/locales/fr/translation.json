@@ -460,5 +460,6 @@
   "embedding-api-endpoint": "Incorporation du point de terminaison de l'API",
   "embedding-api-key": "Clé API d'intégration",
   "recommand": "Recommander",
-  "has-todo": "A faire"
+  "has-todo": "A faire",
+  "reference-by": "Référence par"
 }

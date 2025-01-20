@@ -39,6 +39,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/seed.js ./seed.js
+COPY --from=builder /app/resetpassword.js ./resetpassword.js
 
 ENV NODE_ENV=production
 ENV PORT=1111

@@ -488,5 +488,6 @@
   "embedding-api-endpoint": "Osadzanie punktu końcowego interfejsu API.",
   "embedding-api-key": "Osadzanie klucza API",
   "recommand": "Polecaj",
-  "has-todo": "Do wykonania"
+  "has-todo": "Do wykonania",
+  "reference-by": "Odnośnik do"
 }

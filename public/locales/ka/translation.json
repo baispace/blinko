@@ -487,5 +487,6 @@
   "embedding-api-endpoint": "ჩასაშენებელი API წერტილი",
   "embedding-api-key": "ჩასაშენებელი API გასაღები",
   "recommand": "რეკომენ­დ­­a­t­i­o­n",
-  "has-todo": "გაკეთე!"
+  "has-todo": "გაკეთე!",
+  "reference-by": "მისათი Reference By"
 }

@@ -464,5 +464,6 @@
   "embedding-api-endpoint": "Incrustación de punto final de API",
   "embedding-api-key": "Incrustar clave de API",
   "recommand": "Recomendar",
-  "has-todo": "Tiene TODO"
+  "has-todo": "Tiene TODO",
+  "reference-by": "Referencia Por"
 }

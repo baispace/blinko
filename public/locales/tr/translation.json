@@ -413,5 +413,6 @@
   "embedding-api-endpoint": "API Nokta Sonlandırıcı gömme",
   "embedding-api-key": "API Anahtarını Gömülü Olarak Kullanma",
   "recommand": "Tavsiye etmek",
-  "has-todo": "YAPILACAKLAR"
+  "has-todo": "YAPILACAKLAR",
+  "reference-by": "Referans Tarafından"
 }

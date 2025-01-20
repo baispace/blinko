@@ -3,6 +3,7 @@ import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { Note } from '@/server/types';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
+import { ReferencesContent } from './referencesContent';
 
 interface NoteContentProps {
   blinkoItem: Note;
@@ -23,6 +24,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         }}
         isShareMode={isShareMode}
       />
+      <ReferencesContent blinkoItem={blinkoItem} className={`${isExpanded ? 'my-4' : 'my-2'}`} />
       <div className={blinkoItem.attachments?.length != 0 ? 'my-2' : ''}>
         <FilesAttachmentRender files={blinkoItem.attachments ?? []} preview />
       </div>

@@ -500,5 +500,6 @@
   "embedding-api-endpoint": "嵌入 API 端點",
   "embedding-api-key": "嵌入式 API 金鑰",
   "recommand": "推薦",
-  "has-todo": "有待辦事項"
+  "has-todo": "有待辦事項",
+  "reference-by": "被引用"
 }

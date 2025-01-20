@@ -57,7 +57,14 @@ export const noteRouter = router({
             updatedAt: z.date().optional()
           }).optional()
         })).optional(),
-        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
+        referencedBy: z.array(z.object({
+          fromNoteId: z.number(),
+          fromNote: z.object({
+            content: z.string().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional()
+          }).optional()
+        })).optional(),
         _count: z.object({
           comments: z.number()
         })
@@ -120,7 +127,7 @@ export const noteRouter = router({
         where.OR = [
           { content: { contains: '- [ ]', mode: 'insensitive' } },
           { content: { contains: '- [x]', mode: 'insensitive' } },
-          { content: { contains: '* [ ]', mode: 'insensitive' } },  
+          { content: { contains: '* [ ]', mode: 'insensitive' } },
           { content: { contains: '* [x]', mode: 'insensitive' } }
         ];
       }
@@ -153,7 +160,14 @@ export const noteRouter = router({
           },
           referencedBy: {
             select: {
-              fromNoteId: true
+              fromNoteId: true,
+              fromNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
             }
           },
           _count: {
@@ -251,7 +265,14 @@ export const noteRouter = router({
             updatedAt: z.date().optional()
           }).optional()
         })).optional(),
-        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
+        referencedBy: z.array(z.object({
+          fromNoteId: z.number(),
+          fromNote: z.object({
+            content: z.string().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional()
+          }).optional()
+        })).optional(),
         _count: z.object({
           comments: z.number()
         })
@@ -283,7 +304,14 @@ export const noteRouter = router({
           },
           referencedBy: {
             select: {
-              fromNoteId: true
+              fromNoteId: true,
+              fromNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
             }
           },
           _count: {
@@ -309,6 +337,14 @@ export const noteRouter = router({
           references: z.array(z.object({
             toNoteId: z.number(),
             toNote: z.object({
+              content: z.string().optional(),
+              createdAt: z.date().optional(),
+              updatedAt: z.date().optional()
+            }).optional()
+          })).optional(),
+          referencedBy: z.array(z.object({
+            fromNoteId: z.number(),
+            fromNote: z.object({
               content: z.string().optional(),
               createdAt: z.date().optional(),
               updatedAt: z.date().optional()
@@ -420,7 +456,14 @@ export const noteRouter = router({
             updatedAt: z.date().optional()
           }).optional()
         })).optional(),
-        referencedBy: z.array(z.object({ fromNoteId: z.number() })).optional(),
+        referencedBy: z.array(z.object({
+          fromNoteId: z.number(),
+          fromNote: z.object({
+            content: z.string().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional()
+          }).optional()
+        })).optional(),
         _count: z.object({
           comments: z.number()
         })
@@ -436,8 +479,30 @@ export const noteRouter = router({
             }
           },
           attachments: true,
-          references: true,
-          referencedBy: true,
+          references: {
+            select: {
+              toNoteId: true,
+              toNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
+            }
+          },
+          referencedBy: {
+            select: {
+              fromNoteId: true,
+              fromNote: {
+                select: {
+                  content: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              }
+            }
+          },
           _count: { select: { comments: true } }
         },
       })

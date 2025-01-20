@@ -444,5 +444,6 @@
   "embedding-api-endpoint": "APIエンドポイントの埋め込み",
   "embedding-api-key": "APIキーの埋め込み",
   "recommand": "お勧め",
-  "has-todo": "「やるべきこと」"
+  "has-todo": "「やるべきこと」",
+  "reference-by": "言及者"
 }

@@ -404,5 +404,6 @@
   "embedding-api-endpoint": "Встраивание конечной точки API",
   "embedding-api-key": "Встраивание API-ключа",
   "recommand": "Рекомендовать",
-  "has-todo": "Есть ДЛЯ-СДЕЛКИ"
+  "has-todo": "Есть ДЛЯ-СДЕЛКИ",
+  "reference-by": "Ссылкой от"
 }

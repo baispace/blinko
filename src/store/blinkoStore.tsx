@@ -10,7 +10,7 @@ import { eventBus } from '@/lib/event';
 import { StorageListState } from './standard/StorageListState';
 import i18n from '@/lib/i18n';
 import { api } from '@/lib/trpc';
-import { Attachment, NoteType, type Note, toNoteTypeEnum, NoteListFilterConfig } from '@/server/types';
+import { Attachment, NoteType, type Note } from '@/server/types';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@/lib/constant';
 import { makeAutoObservable, observable, action } from 'mobx';
 import { UserStore } from './user';

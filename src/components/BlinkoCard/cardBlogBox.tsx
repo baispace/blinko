@@ -28,7 +28,7 @@ const gradientPairs: [string, string][] = [
   ['#4B134F', '#C94B4B'],
 ];
 
-export const BlogContent = ({ blinkoItem, isExpanded }: BlogContentProps) => {
+export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(112);
 

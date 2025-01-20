@@ -488,5 +488,6 @@
   "embedding-api-endpoint": "Embedding API Endpoint",
   "embedding-api-key": "Embedding API Key",
   "recommand": "Recommand",
-  "has-todo": "Has TO-DO"
+  "has-todo": "Has TO-DO",
+  "reference-by": "Reference By"
 }

@@ -28,7 +28,8 @@
     "start": "prisma migrate & prisma db seed & next start -p 1111",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "postinstall": "pnpm generate"
+    "postinstall": "pnpm generate",
+    "docker:reset:password": "node prisma/resetpassword.js"
   },
   "dependencies": {
     "@ashwamegh/react-link-preview": "^1.0.1",

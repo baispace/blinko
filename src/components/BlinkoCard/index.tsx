@@ -9,7 +9,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
 import { useState, useEffect } from "react";
 import { ExpandableContainer } from "./expandContainer";
-import { BlogContent } from "./blogContent";
+import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
 import { helper } from "@/lib/helper";
 import { CardHeader } from "./cardHeader";
@@ -112,7 +112,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={isExpanded} account={account} />
 
               {blinkoItem.isBlog && !isExpanded && (
-                <BlogContent blinkoItem={blinkoItem} />
+                <CardBlogBox blinkoItem={blinkoItem} />
               )}
 
               {(!blinkoItem.isBlog || isExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}

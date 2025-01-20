@@ -471,5 +471,6 @@
   "embedding-api-endpoint": "Einbetten von API-Endpunkt",
   "embedding-api-key": "API-Schlüssel einbetten",
   "recommand": "Empfehlung",
-  "has-todo": "Hat ZU TUN"
+  "has-todo": "Hat ZU TUN",
+  "reference-by": "Referenz Durch"
 }

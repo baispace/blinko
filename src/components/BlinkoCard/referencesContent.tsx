@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 
 export const ReferencesContent = ({ blinkoItem, className }: { blinkoItem: BlinkoItem, className?: string }) => {
   const { t } = useTranslation()
+  if (!blinkoItem.references || blinkoItem.references?.length == 0 && (!blinkoItem.referencedBy || blinkoItem.referencedBy?.length == 0)) return null
   return <div className={cn('flex flex-col gap-2', className)}>
     {blinkoItem.references?.map(item => {
       return <div key={item.toNoteId} className='blinko-reference flex flex-col gap-1 rounded-md !p-2' onClick={async (e) => {

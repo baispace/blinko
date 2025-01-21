@@ -35,6 +35,7 @@ export class EditorStore {
   onSend: (args: OnSendContentType) => Promise<any>
   isFullscreen: boolean = false;
   noteType: NoteType;
+  currentTagLabel: string = ''
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -298,7 +299,11 @@ export class EditorStore {
   async handleSend() {
     if (!this.canSend) return;
     try {
-      console.log(RootStore.Get(BaseStore).currentQuery)
+      let content = this.vditor?.getValue() ?? ''
+      if (this.mode == 'create' && this.currentTagLabel != '') {
+        this.vditor?.insertValue(`\n\n${this.currentTagLabel} `)
+        this.onChange?.(this.vditor?.getValue() ?? '')
+      }
       await this.onSend?.({
         content: this.vditor?.getValue() ?? '',
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),

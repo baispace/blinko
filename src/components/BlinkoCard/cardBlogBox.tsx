@@ -66,7 +66,7 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   }, [blinkoItem.content, blinkoItem.title, blinkoItem.tags]);
 
   return (
-    <div className={`flex items-start gap-2 mt-4 w-full ${isExpanded ? 'mb-4' : 'mb-1'}`}>
+    <div className={`flex items-start gap-2 mt-4 w-full mb-4`}>
       {blinkoItem.blogCover ? (
         <Image
           src={blinkoItem.blogCover}

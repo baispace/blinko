@@ -21,6 +21,43 @@ export const tagRouter = router({
       });
       return tags;
     }),
+
+  fullTagNameById: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .output(z.string())
+    .query(async function ({ input }) {
+      const { id } = input
+      const tag = await prisma.tag.findFirst({ where: { id } })
+      if (!tag) {
+        throw new Error('Tag not found')
+      }
+
+      if (tag.parent === 0) {
+        return '#' + tag.name;
+      }
+
+      const getParentTags = async (currentTag: typeof tag): Promise<string[]> => {
+        if (!currentTag || currentTag.parent === 0) {
+          return [currentTag.name];
+        }
+        
+        const parentTag = await prisma.tag.findFirst({
+          where: { id: currentTag.parent }
+        });
+        
+        if (!parentTag) {
+          return [currentTag.name];
+        }
+
+        const parentNames = await getParentTags(parentTag);
+        return [...parentNames, currentTag.name];
+      };
+
+      const tagNames = await getParentTags(tag);
+      return '#' + tagNames.join('/');
+    }),
   updateTagMany: authProcedure
     .meta({
       openapi: {

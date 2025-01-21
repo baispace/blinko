@@ -15,6 +15,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import { AIExtend, Extend } from '../EditorToolbar/extends';
 import { toNoteTypeEnum } from '@/server/types';
 import { useRouter } from 'next/router';
+import { api } from '@/lib/trpc';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -28,6 +29,7 @@ export const useEditorInit = (
   const router = useRouter()
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
+
   useEffect(() => {
     const showToolbar = store.isShowEditorToolbar(isPc)
     if (store.vditor) {
@@ -131,10 +133,21 @@ export const useEditorInit = (
       setTimeout(() => {
         store.noteType = blinko.noteTypeDefault
       }, 100)
+      if (router.query.tagId) {
+        try {
+          api.tags.fullTagNameById.query({ id: Number(router.query.tagId) }).then(res => {
+            store.currentTagLabel = res
+          })
+        } catch (error) {
+          console.error(error)
+        }
+      } else {
+        store.currentTagLabel = ''
+      }
     } else {
       store.noteType = toNoteTypeEnum(blinko.curSelectedNote?.type)
     }
-  }, [mode, router.query.path]);
+  }, [mode, router?.query?.path, router?.query?.tagId]);
 };
 
 

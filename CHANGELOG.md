@@ -1,3 +1,10 @@
+## [0.37.10](https://github.com/blinko-space/blinko/compare/v0.37.9...v0.37.10) (2025-01-21)
+
+
+### Bug Fixes
+
+* refactor /note /trash /archived like spa ([7873c4b](https://github.com/blinko-space/blinko/commit/7873c4b6ee30fe6cc8b4205920dce9b957f5cfdf))
+
 ## [0.37.9](https://github.com/blinko-space/blinko/compare/v0.37.8...v0.37.9) (2025-01-21)
 
 

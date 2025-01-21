@@ -29,8 +29,8 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
         <Link
           className="flex-1"
           key={i.title}
-          shallow={i.shallow}
           href={i.href}
+          shallow={i.shallow}
           onClick={() => {
             base.currentRouter = i;
             onItemClick?.();
@@ -38,7 +38,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
         >
           <div
             className={`flex flex-col group ${SideBarItem} ${
-              i?.href == router.pathname ? '!text-foreground' : '!text-desc'
+              base.isSideBarActive(router, i) ? '!text-foreground' : '!text-desc'
             }`}
           >
             <Icon className={`text-center`} icon={i.icon} width="20" height="20" />

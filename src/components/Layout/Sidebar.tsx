@@ -78,6 +78,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             <Link
               key={i.title}
               href={i.href}
+              shallow={i.shallow}
               onClick={() => {
                 base.currentRouter = i;
                 onItemClick?.();

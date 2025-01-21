@@ -17,10 +17,12 @@ export class BaseStore implements Store {
     {
       title: "blinko",
       href: '/',
+      shallow: true,
       icon: 'basil:lightning-outline'
     },
     {
       title: "notes",
+      shallow: true,
       href: '/?path=notes',
       icon: 'hugeicons:note'
     },

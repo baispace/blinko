@@ -134,7 +134,6 @@ export const useEditorInit = (
     } else {
       store.noteType = toNoteTypeEnum(blinko.curSelectedNote?.type)
     }
-    console.log(store.noteType, blinko.noteTypeDefault)
   }, [mode, router.query.path]);
 };
 

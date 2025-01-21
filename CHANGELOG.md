@@ -1,3 +1,10 @@
+## [0.37.13](https://github.com/blinko-space/blinko/compare/v0.37.12...v0.37.13) (2025-01-21)
+
+
+### Bug Fixes
+
+* improve BlinkoCard components and editor functionality ([6646476](https://github.com/blinko-space/blinko/commit/6646476712eb31550ed88f9bab8417c2680a32df))
+
 ## [0.37.12](https://github.com/blinko-space/blinko/compare/v0.37.11...v0.37.12) (2025-01-21)
 
 

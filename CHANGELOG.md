@@ -1,3 +1,10 @@
+## [0.37.11](https://github.com/blinko-space/blinko/compare/v0.37.10...v0.37.11) (2025-01-21)
+
+
+### Bug Fixes
+
+* update routing and editor logic for improved consistency ([6d96d65](https://github.com/blinko-space/blinko/commit/6d96d65e9edb4219ce70e7963c7f6193b3cbf34f))
+
 ## [0.37.10](https://github.com/blinko-space/blinko/compare/v0.37.9...v0.37.10) (2025-01-21)
 
 

@@ -16,6 +16,7 @@ import { Button } from '@nextui-org/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { NoteType } from '@/server/types';
+import { BaseStore } from '@/store/baseStore';
 
 export class EditorStore {
   files: FileType[] = []
@@ -294,9 +295,10 @@ export class EditorStore {
   }
   // ************************************* reference logic  end ************************************************************************************
 
-  handleSend = async () => {
+  async handleSend() {
     if (!this.canSend) return;
     try {
+      console.log(RootStore.Get(BaseStore).currentQuery)
       await this.onSend?.({
         content: this.vditor?.getValue() ?? '',
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),

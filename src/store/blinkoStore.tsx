@@ -130,6 +130,7 @@ export class BlinkoStore implements Store {
 
   upsertNote = new PromiseState({
     function: async (params: UpsertNoteParams) => {
+      console.log("upsertNote", params)
       const {
         content = null,
         isArchived,

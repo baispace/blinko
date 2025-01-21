@@ -54,6 +54,7 @@ export class BaseStore implements Store {
     }
   ];
   currentRouter = this.routerList[0]
+  currentQuery = {}
   currentTitle = ''
   documentHeight = 0
   isSideBarActive(router: any, currentRouter: any) {
@@ -135,6 +136,10 @@ export class BaseStore implements Store {
         this.currentRouter = this.routerList.find(item => item.href == router.pathname)
       }
     }, [this.currentRouter, router.pathname])
+
+    useEffect(() => {
+      this.currentQuery = router.query
+    }, [router.query])
   }
 
   sidebarWidth = new StorageState<number>({

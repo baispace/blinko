@@ -13,6 +13,8 @@ import { i18nEditor } from '../EditorToolbar/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { AIExtend, Extend } from '../EditorToolbar/extends';
+import { toNoteTypeEnum } from '@/server/types';
+import { useRouter } from 'next/router';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -23,6 +25,7 @@ export const useEditorInit = (
   content: string
 ) => {
   const { t } = useTranslation()
+  const router = useRouter()
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
   useEffect(() => {
@@ -122,6 +125,17 @@ export const useEditorInit = (
       store.noteListByIds.call({ ids: store.references })
     }
   }, []);
+
+  useEffect(() => {
+    if (mode == 'create') {
+      setTimeout(() => {
+        store.noteType = blinko.noteTypeDefault
+      }, 100)
+    } else {
+      store.noteType = toNoteTypeEnum(blinko.curSelectedNote?.type)
+    }
+    console.log(store.noteType, blinko.noteTypeDefault)
+  }, [mode, router.query.path]);
 };
 
 
@@ -242,8 +256,6 @@ export const useEditorEvents = (store: EditorStore) => {
     };
   }, []);
 };
-
-
 
 export const useEditorFiles = (
   store: EditorStore,

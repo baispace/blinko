@@ -124,7 +124,7 @@ export const CommonLayout = observer(({
                 <div className="flex flex-row items-center gap-1">
                   <div className="font-black select-none">{t(base.currentTitle)}</div>
                   {
-                    router.pathname != '/trash'
+                    router.query?.path != 'trash'
                       ? <Icon className="cursor-pointer hover:rotate-180 transition-all"
                         onClick={() => {
                           blinkoStore.refreshData()

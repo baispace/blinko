@@ -275,7 +275,7 @@ export const PerferSetting = observer(() => {
       rightContent={
         <Input
           type="number"
-          min="30"
+          min="10"
           max="100"
           value={PageSize.value}
           onChange={e => {

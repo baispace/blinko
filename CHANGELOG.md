@@ -1,3 +1,10 @@
+## [0.37.9](https://github.com/blinko-space/blinko/compare/v0.37.8...v0.37.9) (2025-01-21)
+
+
+### Bug Fixes
+
+* update minimum page size in PerferSetting component ([cd9ff84](https://github.com/blinko-space/blinko/commit/cd9ff845177fbf12b24a355c765c6607477dd5e3))
+
 ## [0.37.8](https://github.com/blinko-space/blinko/compare/v0.37.7...v0.37.8) (2025-01-20)
 
 

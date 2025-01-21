@@ -54,7 +54,7 @@ const HighlightTags = observer(({ text, }: { text: any }) => {
               className={`select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 transition-all ${isShareMode ? 'pointer-events-none' : ''}`}
               onClick={async () => {
                 if (isShareMode) return;
-                await router.replace(`/all?searchText=${encodeURIComponent(part)}`)
+                await router.replace(`/?path=all&searchText=${encodeURIComponent(part)}`)
                 RootStore.Get(BlinkoStore).forceQuery++
               }}>
               {part + " "}

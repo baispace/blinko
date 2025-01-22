@@ -13,7 +13,7 @@ import { i18nEditor } from '../EditorToolbar/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { AIExtend, Extend } from '../EditorToolbar/extends';
-import { toNoteTypeEnum } from '@/server/types';
+import { NoteType, toNoteTypeEnum } from '@/server/types';
 import { useRouter } from 'next/router';
 import { api } from '@/lib/trpc';
 
@@ -130,9 +130,11 @@ export const useEditorInit = (
 
   useEffect(() => {
     if (mode == 'create') {
-      setTimeout(() => {
-        store.noteType = blinko.noteTypeDefault
-      }, 100)
+      if (router.query.path == 'notes') {
+        store.noteType = NoteType.NOTE
+      } else {
+        store.noteType = NoteType.BLINKO
+      }
       if (router.query.tagId) {
         try {
           api.tags.fullTagNameById.query({ id: Number(router.query.tagId) }).then(res => {

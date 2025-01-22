@@ -416,7 +416,7 @@ export class BlinkoStore implements Store {
 
       if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
-        this.noteTypeDefault = NoteType.NOTE
+        // this.noteTypeDefault = NoteType.NOTE
       }
       if (tagId) {
         this.noteListFilterConfig.tagId = Number(tagId) as number

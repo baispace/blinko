@@ -1,3 +1,10 @@
+## [0.37.14](https://github.com/blinko-space/blinko/compare/v0.37.13...v0.37.14) (2025-01-22)
+
+
+### Bug Fixes
+
+* update editor logic and remove unused fallback script ([33ce02d](https://github.com/blinko-space/blinko/commit/33ce02d2f3329417e2120a7f100234774ef12c2d))
+
 ## [0.37.13](https://github.com/blinko-space/blinko/compare/v0.37.12...v0.37.13) (2025-01-21)
 
 

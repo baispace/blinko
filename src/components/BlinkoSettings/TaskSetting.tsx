@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Select, SelectItem, Switch, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
+import { Button, Card, Input, Select, SelectItem, Switch, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Progress } from "@nextui-org/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -20,11 +20,27 @@ const UpdateDebounceCall = _.debounce((v) => {
 export const TaskSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   const [autoArchivedDays, setAutoArchivedDays] = useState("90")
+  const [polling, setPolling] = useState(false);
+
   useEffect(() => {
     if (blinko.config.value?.autoArchivedDays) {
       setAutoArchivedDays(String(blinko.config.value?.autoArchivedDays))
     }
   }, [blinko.config.value?.autoArchivedDays])
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (polling) {
+      timer = setInterval(() => {
+        blinko.task.call();
+      }, 1000);
+    }
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [polling]);
 
   const { t } = useTranslation()
   return (
@@ -40,7 +56,9 @@ export const TaskSetting = observer(() => {
             isDisabled={blinko.updateDBTask.loading.value}
             isSelected={blinko.DBTask?.isRunning}
             onChange={async e => {
-              await blinko.updateDBTask.call(e.target.checked)
+              setPolling(true);
+              await blinko.updateDBTask.call(e.target.checked);
+              setPolling(false);
             }}
           />} />
       <Item
@@ -87,6 +105,7 @@ const TasksPanel = observer(() => {
     <TableBody>
       {
         blinko.task.value!.map(i => {
+          const progress = i.output?.progress;
           return <TableRow>
             <TableCell>{i.name}</TableCell>
             <TableCell>
@@ -118,15 +137,33 @@ const TasksPanel = observer(() => {
                     {/* @ts-ignore  */}
                     {i.output?.filePath}
                     {/* @ts-ignore  */}
-                    <Icon className='cursor-pointer' onClick={e => helper.download.downloadByLink(i?.output?.filePath)} className="cursor-pointer" icon="tabler:download" width="24" height="24" />
+                    <Icon className='cursor-pointer' onClick={e => helper.download.downloadByLink(i?.output?.filePath)} icon="tabler:download" width="24" height="24" />
                   </>
                 }
+                {progress && !i.output?.filePath && (
+                  <div className="w-full max-w-[200px]">
+                    <Progress
+                      size="sm"
+                      value={progress.percent}
+                      color="primary"
+                      className="max-w-md"
+                      showValueLabel={true}
+                    />
+                    <div className="text-xs text-gray-500">
+                      {`${(progress.processedBytes / (1024 * 1024)).toFixed(2)} MB`}
+                    </div>
+                  </div>
+                )}
               </div>
             </TableCell>
             <TableCell>
               <div className={`${i?.isRunning ? 'text-green-500' : 'text-red-500'} flex items-center `}>
                 <Icon icon="bi:dot" width="24" height="24" />
-                <div className="min-w-[50px]">{i?.isRunning ? t('running') : t('stopped')}</div>
+                <div className="min-w-[50px]">
+                  {i?.isRunning ? (
+                    progress ? `${t('running')}` : t('running')
+                  ) : t('stopped')}
+                </div>
               </div>
             </TableCell>
           </TableRow>

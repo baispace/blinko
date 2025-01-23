@@ -29,7 +29,8 @@
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
     "postinstall": "pnpm generate",
-    "docker:reset:password": "node prisma/resetpassword.js"
+    "docker:reset:password": "node prisma/resetpassword.js",
+    "build:types": "tsc -p tsconfig.types.json"
   },
   "dependencies": {
     "@ashwamegh/react-link-preview": "^1.0.1",

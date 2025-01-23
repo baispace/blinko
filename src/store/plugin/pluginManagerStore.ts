@@ -14,6 +14,7 @@ export class PluginManagerStore extends Store {
       window.Blinko = {
         api,
         eventBus,
+        version: '1.0.0',
       };
     }
   }
@@ -45,11 +46,5 @@ export class PluginManagerStore extends Store {
       plugin.destroy();
       this.plugins.delete(pluginName);
     }
-  }
-}
-
-declare global {
-  interface Window {
-    System: typeof System;
   }
 }

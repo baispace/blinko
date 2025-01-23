@@ -84,7 +84,7 @@ export class BlinkoStore implements Store {
   forceQuery: number = 0;
   allTagRouter = {
     title: 'total',
-    href: '/all',
+    href: '/?path=all',
     icon: ''
   }
   noteListFilterConfig = {
@@ -130,6 +130,7 @@ export class BlinkoStore implements Store {
 
   upsertNote = new PromiseState({
     function: async (params: UpsertNoteParams) => {
+      console.log("upsertNote", params)
       const {
         content = null,
         isArchived,
@@ -396,7 +397,7 @@ export class BlinkoStore implements Store {
   }
 
   useQuery(router) {
-    const { tagId, withoutTag, withFile, withLink, searchText, hasTodo } = router.query;
+    const { tagId, withoutTag, withFile, withLink, searchText, hasTodo, path } = router.query;
     useEffect(() => {
       if (!router.isReady) return
       this.noteListFilterConfig.type = NoteType.BLINKO
@@ -413,9 +414,9 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.isShare = null
       this.noteListFilterConfig.hasTodo = false
 
-      if (router.pathname == '/notes') {
+      if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
-        this.noteTypeDefault = NoteType.NOTE
+        // this.noteTypeDefault = NoteType.NOTE
       }
       if (tagId) {
         this.noteListFilterConfig.tagId = Number(tagId) as number
@@ -433,19 +434,19 @@ export class BlinkoStore implements Store {
         this.noteListFilterConfig.hasTodo = true
       }
 
-      if (router.pathname == '/all') {
+      if (path == 'all') {
         this.noteListFilterConfig.type = -1
       }
-      if (router.pathname == '/archived') {
+      if (path == 'archived') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isArchived = true
       }
-      if (router.pathname == '/trash') {
+      if (path == 'trash') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isRecycle = true
       }
       this.noteList.resetAndCall({})
-    }, [router.isReady, this.forceQuery])
+    }, [router.isReady, this.forceQuery, router?.query?.path])
   }
 
   @observable

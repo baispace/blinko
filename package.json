@@ -1,6 +1,6 @@
 {
   "name": "blinko",
-  "version": "0.37.8",
+  "version": "0.37.15",
   "repository": "https://github.com/blinko-space/blinko.git",
   "private": true,
   "browser": {
@@ -64,6 +64,7 @@
     "@trpc/server": "11.0.0-rc.553",
     "@types/mime-types": "^2.1.4",
     "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "axios": "^1.7.7",
     "boring-avatars": "^1.11.2",
     "bowser": "^2.11.0",
@@ -165,6 +166,7 @@
     "usehooks-ts": "^3.1.0",
     "vanilla-tilt": "^1.8.1",
     "vditor": "^3.10.8",
+    "yauzl-promise": "^4.0.0",
     "zod": "^3.23.8",
     "zod-prisma-types": "^3.1.8"
   },

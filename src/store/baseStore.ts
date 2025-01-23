@@ -22,8 +22,8 @@ export class BaseStore implements Store {
     },
     {
       title: "notes",
-      href: '/notes',
       shallow: true,
+      href: '/?path=notes',
       icon: 'hugeicons:note'
     },
 
@@ -40,13 +40,12 @@ export class BaseStore implements Store {
     },
     {
       title: "archived",
-      href: '/archived',
-      shallow: true,
+      href: '/?path=archived',
       icon: 'solar:box-broken'
     },
     {
       title: "trash",
-      href: '/trash',
+      href: '/?path=trash',
       hiddenMobile: true,
       icon: 'formkit:trash'
     },
@@ -57,8 +56,18 @@ export class BaseStore implements Store {
     }
   ];
   currentRouter = this.routerList[0]
+  currentQuery = {}
   currentTitle = ''
   documentHeight = 0
+  isSideBarActive(router: any, currentRouter: any) {
+    if (router.pathname == currentRouter.href && !router.query?.path) {
+      return true
+    }
+    if (router.query?.path == currentRouter.title) {
+      return true
+    }
+    return false
+  }
 
   locale = new StorageState({ key: 'language', default: 'en' });
   locales = [
@@ -120,7 +129,7 @@ export class BaseStore implements Store {
         this.currentTitle = 'daily-review'
       } else if (router.pathname == '/detail') {
         this.currentTitle = 'detail'
-      } else if (router.pathname == '/all') {
+      } else if (router.query?.path == 'all') {
         this.currentTitle = t('total')
       } else {
         this.currentTitle = this.currentRouter?.title ?? ''
@@ -129,6 +138,10 @@ export class BaseStore implements Store {
         this.currentRouter = this.routerList.find(item => item.href == router.pathname)
       }
     }, [this.currentRouter, router.pathname])
+
+    useEffect(() => {
+      this.currentQuery = router.query
+    }, [router.query])
   }
 
   sidebarWidth = new StorageState<number>({

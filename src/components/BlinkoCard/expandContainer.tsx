@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 interface ExpandableContainerProps {
   isExpanded: boolean;
   children: React.ReactNode;
+  onClose?: () => void;
 }
 
 const ANIMATION_CONFIG = {
@@ -20,9 +21,23 @@ const BASE_STYLES = {
   boxShadow: '0 0 15px -5px #5858581a',
 } as const;
 
-export const ExpandableContainer = ({ isExpanded, children }: ExpandableContainerProps) => {
+export const ExpandableContainer = ({ isExpanded, children, onClose }: ExpandableContainerProps) => {
   const isIOS = useIsIOS()
   
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('isExpanded', e.key,isExpanded)
+      if (e.key === 'Escape' && isExpanded) {
+        onClose?.();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isExpanded, onClose]);
+
   if (isIOS) {
     if (isExpanded) {
       return createPortal(

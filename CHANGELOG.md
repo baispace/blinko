@@ -1,3 +1,52 @@
+## [0.37.15](https://github.com/blinko-space/blinko/compare/v0.37.14...v0.37.15) (2025-01-23)
+
+
+### Bug Fixes
+
+* enhance task management and file handling ([1290b7f](https://github.com/blinko-space/blinko/commit/1290b7f8891fefef5493b6a6272fcc4e665445be))
+
+## [0.37.14](https://github.com/blinko-space/blinko/compare/v0.37.13...v0.37.14) (2025-01-22)
+
+
+### Bug Fixes
+
+* update editor logic and remove unused fallback script ([33ce02d](https://github.com/blinko-space/blinko/commit/33ce02d2f3329417e2120a7f100234774ef12c2d))
+
+## [0.37.13](https://github.com/blinko-space/blinko/compare/v0.37.12...v0.37.13) (2025-01-21)
+
+
+### Bug Fixes
+
+* improve BlinkoCard components and editor functionality ([6646476](https://github.com/blinko-space/blinko/commit/6646476712eb31550ed88f9bab8417c2680a32df))
+
+## [0.37.12](https://github.com/blinko-space/blinko/compare/v0.37.11...v0.37.12) (2025-01-21)
+
+
+### Bug Fixes
+
+* streamline routing and editor logic ([a7b432a](https://github.com/blinko-space/blinko/commit/a7b432a00b07d5fb0cf563f6d2ae4aa7d8c781c0))
+
+## [0.37.11](https://github.com/blinko-space/blinko/compare/v0.37.10...v0.37.11) (2025-01-21)
+
+
+### Bug Fixes
+
+* update routing and editor logic for improved consistency ([6d96d65](https://github.com/blinko-space/blinko/commit/6d96d65e9edb4219ce70e7963c7f6193b3cbf34f))
+
+## [0.37.10](https://github.com/blinko-space/blinko/compare/v0.37.9...v0.37.10) (2025-01-21)
+
+
+### Bug Fixes
+
+* refactor /note /trash /archived like spa ([7873c4b](https://github.com/blinko-space/blinko/commit/7873c4b6ee30fe6cc8b4205920dce9b957f5cfdf))
+
+## [0.37.9](https://github.com/blinko-space/blinko/compare/v0.37.8...v0.37.9) (2025-01-21)
+
+
+### Bug Fixes
+
+* update minimum page size in PerferSetting component ([cd9ff84](https://github.com/blinko-space/blinko/commit/cd9ff845177fbf12b24a355c765c6607477dd5e3))
+
 ## [0.37.8](https://github.com/blinko-space/blinko/compare/v0.37.7...v0.37.8) (2025-01-20)
 
 

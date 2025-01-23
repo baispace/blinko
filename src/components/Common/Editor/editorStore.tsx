@@ -16,6 +16,7 @@ import { Button } from '@nextui-org/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { NoteType } from '@/server/types';
+import { BaseStore } from '@/store/baseStore';
 
 export class EditorStore {
   files: FileType[] = []
@@ -34,6 +35,7 @@ export class EditorStore {
   onSend: (args: OnSendContentType) => Promise<any>
   isFullscreen: boolean = false;
   noteType: NoteType;
+  currentTagLabel: string = ''
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -294,9 +296,14 @@ export class EditorStore {
   }
   // ************************************* reference logic  end ************************************************************************************
 
-  handleSend = async () => {
+  async handleSend() {
     if (!this.canSend) return;
     try {
+      let content = this.vditor?.getValue() ?? ''
+      if (this.mode == 'create' && this.currentTagLabel != '') {
+        this.vditor?.insertValue(`\n\n${this.currentTagLabel} `)
+        this.onChange?.(this.vditor?.getValue() ?? '')
+      }
       await this.onSend?.({
         content: this.vditor?.getValue() ?? '',
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),

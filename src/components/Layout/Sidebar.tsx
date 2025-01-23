@@ -26,6 +26,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const blinkoStore = RootStore.Get(BlinkoStore);
 
   useEffect(() => {
+    console.log('router.query', router)
     if (!isPc) {
       base.collapseSidebar();
     }
@@ -51,9 +52,9 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       <div className="flex items-center  select-none w-full">
         {!base.isSidebarCollapsed && (
           theme == 'dark' ? (
-            <Image src="/logo-dark.png" width={100} radius="none"/>
+            <Image src="/logo-dark.png" width={100} radius="none" />
           ) : (
-            <Image src="/logo-light.png" width={100} radius="none"/>
+            <Image src="/logo-light.png" width={100} radius="none" />
           )
         )}
         {
@@ -76,15 +77,15 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           {base.routerList.map(i => (
             <Link
               key={i.title}
-              shallow={i.shallow}
               href={i.href}
+              shallow={i.shallow}
               onClick={() => {
                 base.currentRouter = i;
                 onItemClick?.();
               }}
             >
               <div
-                className={`group ${SideBarItem} ${i?.href == router.pathname ? '!bg-primary !text-primary-foreground' : ''}`}
+                className={`group ${SideBarItem} ${base.isSideBarActive(router, i) ? '!bg-primary !text-primary-foreground' : ''}`}
               >
                 <Icon
                   className={`${base.isSidebarCollapsed ? '' : 'group-hover:translate-x-1'} transition-all`}
@@ -106,15 +107,15 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
               <TagListPanel />
             )}
         </div>
-      </ScrollShadow>
+      </ScrollShadow >
 
       {/* ***** background *****  */}
-      <div className="halation absolute inset-0 h-[250px] w-[250px] overflow-hidden blur-3xl z-[0] pointer-events-none">
+      <div className="halation absolute inset-0 h-[250px] w-[250px] overflow-hidden blur-3xl z-[0] pointer-events-none" >
         <div
           className="w-full h-[100%] bg-[#ffc65c] opacity-20"
           style={{ clipPath: "circle(35% at 50% 50%)" }}
         />
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }); 

@@ -13,6 +13,12 @@ import { Context } from "../context";
 import { BaseScheduleJob } from "./baseScheduleJob";
 import { CreateNotification } from "../routers/notification";
 import { NotificationType } from "@/lib/prismaZodType";
+import archiver from 'archiver';
+import { createWriteStream } from 'fs';
+import yauzl from 'yauzl-promise';
+import { FileService } from "./files";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getGlobalConfig } from "../routers/config";
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -32,6 +38,7 @@ export class DBJob extends BaseScheduleJob {
 
   protected static async RunTask() {
     try {
+      const config = await getGlobalConfig({ useAdmin: true });
       const notes = await prisma.notes.findMany({
         select: {
           id: true,
@@ -63,28 +70,159 @@ export class DBJob extends BaseScheduleJob {
       const targetFile = UPLOAD_FILE_PATH + `/blinko_export.bko`;
       try {
         await unlink(targetFile);
-      } catch (error) {
+      } catch (error) { }
+
+      const output = createWriteStream(targetFile);
+      const archive = archiver('zip', {
+        zlib: { level: 9 }
+      });
+
+      archive.on('error', (err) => {
+        throw err;
+      });
+
+      const archiveComplete = new Promise((resolve, reject) => {
+        output.on('close', resolve);
+        output.on('error', reject);
+        archive.on('error', reject);
+      });
+
+      archive.pipe(output);
+
+      const addFilesRecursively = async (dirPath: string, basePath: string = '') => {
+        const files = fs.readdirSync(dirPath);
+
+        for (const file of files) {
+          const fullPath = path.join(dirPath, file);
+          const stat = fs.statSync(fullPath);
+
+          if (stat.isDirectory()) {
+            await addFilesRecursively(fullPath, path.join(basePath, file));
+          } else {
+            archive.file(fullPath, {
+              name: path.join(basePath, file)
+            });
+          }
+        }
+      };
+
+      await addFilesRecursively(ROOT_PATH, '');
+
+      let lastUpdateTime = 0;
+      const updateInterval = 1000;
+      let finalProgress: any = null;
+
+      const task = await prisma.scheduledTask.findFirst({
+        where: { name: this.taskName }
+      })
+      if (!task) {
+        await prisma.scheduledTask.create({
+          data: {
+            name: this.taskName,
+            isRunning: true,
+            isSuccess: false,
+            lastRun: new Date(),
+            schedule: '0 0 * * *'
+          }
+        });
       }
 
-      const zip = new AdmZip();
-      zip.addLocalFolder(ROOT_PATH);
-      zip.writeZip(targetFile);
+      archive.on('progress', async (progress) => {
+        finalProgress = {
+          processed: progress.entries.processed,
+          total: progress.entries.total,
+          processedBytes: progress.fs.processedBytes,
+          percent: Math.floor((progress.entries.processed / progress.entries.total) * 100)
+        };
+
+        const now = Date.now();
+        if (now - lastUpdateTime >= updateInterval) {
+          lastUpdateTime = now;
+          await prisma.scheduledTask.update({
+            where: { name: this.taskName },
+            data: {
+              output: {
+                progress: finalProgress
+              }
+            }
+          });
+        }
+      });
+
+      archive.finalize();
+      await archiveComplete;
+
       await CreateNotification({
         type: NotificationType.SYSTEM,
         title: 'system-notification',
         content: 'backup-success',
         useAdmin: true,
-      })
-      return { filePath: `/api/file/blinko_export.bko` };
+      });
+
+      if (config.objectStorage === 's3') {
+        const { s3ClientInstance } = await FileService.getS3Client();
+        const fileStream = fs.createReadStream(targetFile);
+        await s3ClientInstance.send(new PutObjectCommand({
+          Bucket: config.s3Bucket,
+          Key: `/BLINKO_BACKUP/blinko_export.bko`,
+          Body: fileStream
+        }));
+        return {
+          filePath: `/api/s3file/BLINKO_BACKUP/blinko_export.bko`,
+          progress: finalProgress
+        };
+      }
+
+      return {
+        filePath: `/api/file/blinko_export.bko`,
+        progress: finalProgress
+      };
     } catch (error) {
-      throw new Error(error)
+      throw new Error(error);
     }
   }
 
   static async *RestoreDB(filePath: string, ctx: Context): AsyncGenerator<RestoreResult & { progress: { current: number; total: number } }, void, unknown> {
     try {
-      const zip = new AdmZip(filePath);
-      zip.extractAllTo(ROOT_PATH, true);
+      const zipFile = await yauzl.open(filePath);
+      let processedBytes = 0;
+      let entryCount = 0;
+      const totalEntries = await (async () => {
+        let count = 0;
+        for await (const _ of zipFile) {
+          count++;
+        }
+        await zipFile.close();
+        return count;
+      })();
+
+      const zipFileForExtract = await yauzl.open(filePath);
+      for await (const entry of zipFileForExtract) {
+        if (entry.filename.endsWith('/')) {
+          await fs.promises.mkdir(path.join(ROOT_PATH, entry.filename), { recursive: true });
+          continue;
+        }
+        const targetPath = path.join(ROOT_PATH, entry.filename);
+        await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+        const readStream = await entry.openReadStream();
+        const writeStream = fs.createWriteStream(targetPath);
+        await new Promise((resolve, reject) => {
+          readStream
+            .pipe(writeStream)
+            .on('finish', resolve)
+            .on('error', reject);
+        });
+        processedBytes += entry.uncompressedSize;
+        entryCount++;
+
+        yield {
+          type: 'success',
+          content: `extract: ${entry.filename}`,
+          progress: { current: entryCount, total: totalEntries }
+        };
+      }
+
+      await zipFileForExtract.close();
 
       const backupData = JSON.parse(
         fs.readFileSync(`${DBBAKUP_PATH}/bak.json`, 'utf-8')
@@ -213,7 +351,7 @@ export class DBJob extends BaseScheduleJob {
       yield {
         type: 'error',
         error,
-        content: error.message ?? 'internal error',
+        content: `extract failed: ${error.message}`,
         progress: { current: 0, total: 0 }
       };
     }

@@ -16,7 +16,6 @@ interface CardFooterProps {
 
 export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps) => {
   const { t } = useTranslation();
-
   return (
     <div className="flex items-center">
       <ConvertTypeButton blinkoItem={blinkoItem} blinko={blinko} t={t} />

@@ -37,7 +37,7 @@ export abstract class BaseScheduleJob {
 
   static async Start(cronTime: string, immediate: boolean = true) {
     let success = false, output;
-    const hasTask = await prisma.scheduledTask.findFirst({
+    let hasTask = await prisma.scheduledTask.findFirst({
       where: { name: this.taskName }
     });
 
@@ -47,6 +47,9 @@ export abstract class BaseScheduleJob {
     if (immediate) {
       try {
         output = await this.RunTask();
+        hasTask = await prisma.scheduledTask.findFirst({
+          where: { name: this.taskName }
+        });
         success = true;
       } catch (error) {
         output = error ?? (error.message ?? "internal error");

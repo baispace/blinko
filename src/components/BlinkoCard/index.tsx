@@ -89,7 +89,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   };
 
   return (
-    <ExpandableContainer isExpanded={isExpanded} key={blinkoItem.id}>
+    <ExpandableContainer isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
       <ContextMenuTrigger id="blink-item-context-menu">
         <div
           onContextMenu={handleContextMenu}

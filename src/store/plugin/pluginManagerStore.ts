@@ -2,40 +2,42 @@ import { api } from "@/lib/trpc";
 import { BasePlugin } from ".";
 import { Store } from "../standard/base";
 import { eventBus } from "@/lib/event";
+import System from 'systemjs/dist/system.js';
 
 export class PluginManagerStore extends Store {
   sid = 'pluginManagerStore';
   private plugins: Map<string, BasePlugin> = new Map();
 
-  async loadPlugin(pluginPath: string) {
-    try {
-      const response = await fetch('/plugins/index.js');
-      const code = await response.text();
-
-      const processedCode = code.replace(/export\s*{[\s\S]*}.*;/, '');
-      console.log(processedCode);
-      const moduleFactory = new Function(`
-        ${processedCode}
-        return function createPlugin(args) {
-          return new MyCustomPlugin(args);
-        }
-      `);
-      console.log(moduleFactory);
-      const createPlugin = moduleFactory();
-      console.log(createPlugin);
-      const plugin = createPlugin({});
-      plugin.mount({
+  constructor() {
+    super();
+    if (typeof window !== 'undefined') {
+      window.Blinko = {
         api,
-        eventBus
-      });
-      this.plugins.set(plugin.name, plugin);
-      return plugin;
-    } catch (error) {
-      console.error(`error loading plugin: ${pluginPath}`, error);
-      throw error;
+        eventBus,
+      };
     }
   }
 
+  async loadPlugin(pluginPath: string) {
+    try {
+      if (typeof window !== 'undefined' && !window.System) {
+        window.System = System;
+      }
+      const module = await window.System.import(`/plugins/index.js`);
+      console.log(module);
+      const PluginClass = module.default;
+      console.log(PluginClass);
+      const plugin = new PluginClass();
+      console.log(plugin);
+      plugin.mount();
+
+      this.plugins.set(plugin.name, plugin);
+      return plugin;
+    } catch (error) {
+      console.error(`load plugin error: ${pluginPath}`, error);
+      throw error;
+    }
+  }
 
   destroyPlugin(pluginName: string) {
     const plugin = this.plugins.get(pluginName);
@@ -43,5 +45,11 @@ export class PluginManagerStore extends Store {
       plugin.destroy();
       this.plugins.delete(pluginName);
     }
+  }
+}
+
+declare global {
+  interface Window {
+    System: typeof System;
   }
 }

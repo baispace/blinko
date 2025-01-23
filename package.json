@@ -156,6 +156,7 @@
     "superjson": "^2.2.1",
     "swagger-ui-react": "^5.17.14",
     "swiper": "^11.1.14",
+    "systemjs": "^6.15.1",
     "tailwind-merge": "^1.14.0",
     "three": "^0.171.0",
     "three-stdlib": "^2.35.2",

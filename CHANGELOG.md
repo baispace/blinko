@@ -1,3 +1,10 @@
+## [0.37.20](https://github.com/blinko-space/blinko/compare/v0.37.19...v0.37.20) (2025-01-27)
+
+
+### Bug Fixes
+
+* remove right click menu on share mode card [#432](https://github.com/blinko-space/blinko/issues/432) ([8ee0a9d](https://github.com/blinko-space/blinko/commit/8ee0a9de77c23c93b1fe2b9cb3478acfb3b94b52))
+
 ## [0.37.19](https://github.com/blinko-space/blinko/compare/v0.37.18...v0.37.19) (2025-01-27)
 
 

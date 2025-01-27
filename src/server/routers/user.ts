@@ -119,7 +119,7 @@ export const userRouter = router({
         description: 'Find user detail from user id, need login', tags: ['User']
       }
     })
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number().optional() }))
     .output(z.object({
       id: z.number(),
       name: z.string(),
@@ -130,13 +130,13 @@ export const userRouter = router({
       image: z.string().nullable()
     }))
     .query(async ({ input, ctx }) => {
-      const user = await prisma.accounts.findFirst({ where: { id: input.id } })
+      const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
       if (user?.id !== Number(ctx.id) && user?.role !== 'superadmin') {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
       }
       const isLinked = await prisma.accounts.findFirst({ where: { linkAccountId: input.id } })
       return {
-        id: input.id,
+        id: input.id ?? Number(ctx.id),
         name: user?.name ?? '',
         nickName: user?.nickname ?? '',
         token: user?.apiToken ?? '',
@@ -210,10 +210,10 @@ export const userRouter = router({
             });
           } else {
             const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
-            if (hasSameUser && await verifyPassword(password, hasSameUser?.password ?? '')) {
-              throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'User and password already exists',
+            if (hasSameUser) {
+              throw new TRPCError({ 
+                code: 'CONFLICT', 
+                message: 'Username already exists' 
               });
             }
             const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } })
@@ -305,12 +305,10 @@ export const userRouter = router({
         const update: Prisma.accountsUpdateInput = {}
         const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
         if (hasSameUser) {
-          if (password) {
-            if (hasSameUser && await verifyPassword(password, hasSameUser?.password ?? '')) {
-              throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User and password already exists' });
-            }
-          }
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User and password already exists' });
+          throw new TRPCError({ 
+            code: 'CONFLICT', 
+            message: 'Username already exists' 
+          });
         }
         if (id) {
           if (name) update.name = name

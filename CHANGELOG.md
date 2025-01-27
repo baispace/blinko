@@ -1,3 +1,10 @@
+## [0.37.18](https://github.com/blinko-space/blinko/compare/v0.37.17...v0.37.18) (2025-01-27)
+
+
+### Bug Fixes
+
+* Login screen animated wallpaper not disabled [#468](https://github.com/blinko-space/blinko/issues/468) ([b608985](https://github.com/blinko-space/blinko/commit/b608985f827113c3cb9a1f4898134e93373430bd))
+
 ## [0.37.17](https://github.com/blinko-space/blinko/compare/v0.37.16...v0.37.17) (2025-01-27)
 
 

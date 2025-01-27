@@ -1,3 +1,10 @@
+## [0.37.21](https://github.com/blinko-space/blinko/compare/v0.37.20...v0.37.21) (2025-01-27)
+
+
+### Bug Fixes
+
+* Update search text reference in share note list retrieval ([95cd577](https://github.com/blinko-space/blinko/commit/95cd577ccdff0caf4f0282f7a9c019accd0ddde2))
+
 ## [0.37.20](https://github.com/blinko-space/blinko/compare/v0.37.19...v0.37.20) (2025-01-27)
 
 

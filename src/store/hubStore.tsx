@@ -17,7 +17,7 @@ export class HubStore implements Store {
 
   shareNoteList = new PromisePageState({
     function: async ({ page, size }) => {
-      const searchText = RootStore.Get(BlinkoStore).noteListFilterConfig.searchText
+      const searchText = RootStore.Get(BlinkoStore).searchText
       if (this.currentListType == 'home') {
         const notes = await api.notes.publicList.mutate({ page, size, searchText })
         return notes

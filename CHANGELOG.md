@@ -1,3 +1,10 @@
+## [0.37.19](https://github.com/blinko-space/blinko/compare/v0.37.18...v0.37.19) (2025-01-27)
+
+
+### Bug Fixes
+
+* Add notification hiding and search settings functionality ([279eb97](https://github.com/blinko-space/blinko/commit/279eb9709c363e718278d6592e1bc2200476805e))
+
 ## [0.37.18](https://github.com/blinko-space/blinko/compare/v0.37.17...v0.37.18) (2025-01-27)
 
 

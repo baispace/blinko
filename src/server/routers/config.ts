@@ -1,4 +1,4 @@
-import { router, authProcedure, superAdminAuthMiddleware } from '../trpc';
+import { router, authProcedure, superAdminAuthMiddleware, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { GlobalConfig, ZConfigKey, ZConfigSchema, ZUserPerferConfigKey } from '../types';
@@ -6,13 +6,21 @@ import { configSchema } from '@/lib/prismaZodType';
 import { Context } from '../context';
 
 export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context, useAdmin?: boolean }) => {
-  const userId = Number(ctx?.id ?? 1);
+  const userId = Number(ctx?.id ?? 0);
   const configs = await prisma.config.findMany();
   const isSuperAdmin = useAdmin ? true : ctx?.role === 'superadmin';
 
   const globalConfig = configs.reduce((acc, item) => {
     const config = item.config as { type: string, value: any };
-    if (item.key === 'isUseAI') {
+    if (item.key === 'isUseAI'
+      || item.key == 'isCloseBackgroundAnimation'
+      || item.key == 'isAllowRegister'
+      || item.key == 'language'
+      || item.key == 'theme'
+      || item.key == 'themeColor'
+      || item.key == 'themeForegroundColor'
+      || item.key == 'maxHomePageWidth'
+    ) {
       acc[item.key] = config.value;
       return acc;
     }
@@ -30,7 +38,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
 };
 
 export const configRouter = router({
-  list: authProcedure
+  list: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/config/list', summary: 'Query user config list', protect: true, tags: ['Config'] } })
     .input(z.void())
     .output(ZConfigSchema)

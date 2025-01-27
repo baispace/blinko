@@ -1,3 +1,10 @@
+## [0.37.17](https://github.com/blinko-space/blinko/compare/v0.37.16...v0.37.17) (2025-01-27)
+
+
+### Bug Fixes
+
+* /v1/user/detail returns information about the current user. [#470](https://github.com/blinko-space/blinko/issues/470) ([613a2ce](https://github.com/blinko-space/blinko/commit/613a2ce92345fb5045757897f768d485165bdfb3))
+
 ## [0.37.16](https://github.com/blinko-space/blinko/compare/v0.37.15...v0.37.16) (2025-01-23)
 
 

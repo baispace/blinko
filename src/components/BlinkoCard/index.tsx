@@ -90,55 +90,65 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
 
   return (
     <ExpandableContainer isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
-      <ContextMenuTrigger id="blink-item-context-menu">
-        <div
-          onContextMenu={handleContextMenu}
-          onDoubleClick={handleDoubleClick}
-          onClick={handleClick}
-        >
-          <Card
-            onContextMenu={e => !isPc && e.stopPropagation()}
-            shadow='none'
-            className={`
-              flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} transition-all group/card 
-              ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''} 
-              ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''} 
-              ${blinkoItem.isBlog ? 'cursor-pointer' : ''} 
-              ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
-              ${className}
-            `}
+      {(() => {
+        const cardContent = (
+          <div
+            {...(!isShareMode && {
+              onContextMenu: handleContextMenu,
+              onDoubleClick: handleDoubleClick
+            })}
+            onClick={handleClick}
           >
-            <div className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}>
-              <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={isExpanded} account={account} />
+            <Card
+              onContextMenu={e => !isPc && e.stopPropagation()}
+              shadow='none'
+              className={`
+                flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} transition-all group/card 
+                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''} 
+                ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''} 
+                ${blinkoItem.isBlog ? 'cursor-pointer' : ''} 
+                ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
+                ${className}
+              `}
+            >
+              <div className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}>
+                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={isExpanded} account={account} />
 
-              {blinkoItem.isBlog && !isExpanded && (
-                <CardBlogBox blinkoItem={blinkoItem} />
-              )}
+                {blinkoItem.isBlog && !isExpanded && (
+                  <CardBlogBox blinkoItem={blinkoItem} />
+                )}
 
-              {(!blinkoItem.isBlog || isExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
+                {(!blinkoItem.isBlog || isExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
 
-              <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
 
-              {isExpanded && (
-                <>
-                  <div className="halation absolute bottom-10 left-0 md:left-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
-                    <div
-                      className="w-full h-[100%] bg-[#c45cff] opacity-5"
-                      style={{ clipPath: "circle(50% at 50% 50%)" }}
-                    />
-                  </div>
-                  <div className="halation absolute top-10 md:right-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
-                    <div
-                      className="w-full h-[100%] bg-[#c45cff] opacity-5"
-                      style={{ clipPath: "circle(50% at 50% 50%)" }}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </Card>
-        </div>
-      </ContextMenuTrigger>
+                {isExpanded && (
+                  <>
+                    <div className="halation absolute bottom-10 left-0 md:left-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
+                      <div
+                        className="w-full h-[100%] bg-[#c45cff] opacity-5"
+                        style={{ clipPath: "circle(50% at 50% 50%)" }}
+                      />
+                    </div>
+                    <div className="halation absolute top-10 md:right-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
+                      <div
+                        className="w-full h-[100%] bg-[#c45cff] opacity-5"
+                        style={{ clipPath: "circle(50% at 50% 50%)" }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </Card>
+          </div>
+        );
+
+        return isShareMode ? cardContent : (
+          <ContextMenuTrigger id="blink-item-context-menu">
+            {cardContent}
+          </ContextMenuTrigger>
+        );
+      })()}
     </ExpandableContainer>
   );
 });

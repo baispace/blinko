@@ -461,5 +461,7 @@
   "embedding-api-key": "Clé API d'intégration",
   "recommand": "Recommander",
   "has-todo": "A faire",
-  "reference-by": "Référence par"
+  "reference-by": "Référence par",
+  "hide-notification": "Masquer la notification",
+  "search-settings": "Paramètres de recherche..."
 }

@@ -465,5 +465,7 @@
   "embedding-api-key": "Incrustar clave de API",
   "recommand": "Recomendar",
   "has-todo": "Tiene TODO",
-  "reference-by": "Referencia Por"
+  "reference-by": "Referencia Por",
+  "hide-notification": "Ocultar notificación",
+  "search-settings": "Configuración de búsqueda..."
 }

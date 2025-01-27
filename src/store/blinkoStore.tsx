@@ -77,6 +77,7 @@ export class BlinkoStore implements Store {
     key: 'editModeAttachments'
   });
 
+  searchText: string = '';
   isCreateMode: boolean = true
   curSelectedNote: Note | null = null;
   curMultiSelectIds: number[] = [];
@@ -93,7 +94,6 @@ export class BlinkoStore implements Store {
     isShare: null as boolean | null,
     type: 0,
     tagId: null as number | null,
-    searchText: "",
     withoutTag: false,
     withFile: false,
     withLink: false,
@@ -228,7 +228,7 @@ export class BlinkoStore implements Store {
       let notes: Note[] = [];
 
       if (this.isOnline) {
-        notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, page, size });
+        notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, searchText: this.searchText, page, size });
         if (this.offlineNotes.length > 0) {
           await this.syncOfflineNotes();
         }
@@ -407,7 +407,6 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.withoutTag = false
       this.noteListFilterConfig.withLink = false
       this.noteListFilterConfig.withFile = false
-      this.noteListFilterConfig.searchText = searchText ?? ''
       this.noteListFilterConfig.isRecycle = false
       this.noteListFilterConfig.startDate = null
       this.noteListFilterConfig.endDate = null
@@ -456,6 +455,8 @@ export class BlinkoStore implements Store {
   setExcludeEmbeddingTagId(tagId: number | null) {
     this.excludeEmbeddingTagId = tagId;
   }
+
+  settingsSearchText: string = '';
 
   constructor() {
     makeAutoObservable(this)

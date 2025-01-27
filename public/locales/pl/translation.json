@@ -489,5 +489,7 @@
   "embedding-api-key": "Osadzanie klucza API",
   "recommand": "Polecaj",
   "has-todo": "Do wykonania",
-  "reference-by": "Odnośnik do"
+  "reference-by": "Odnośnik do",
+  "hide-notification": "Ukryj powiadomienie",
+  "search-settings": "Ustawienia wyszukiwania..."
 }

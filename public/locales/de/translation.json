@@ -472,5 +472,7 @@
   "embedding-api-key": "API-Schlüssel einbetten",
   "recommand": "Empfehlung",
   "has-todo": "Hat ZU TUN",
-  "reference-by": "Referenz Durch"
+  "reference-by": "Referenz Durch",
+  "hide-notification": "Benachrichtigung ausblenden",
+  "search-settings": "Sucheinstellungen..."
 }

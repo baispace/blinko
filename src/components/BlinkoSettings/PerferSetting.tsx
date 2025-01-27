@@ -80,6 +80,19 @@ export const PerferSetting = observer(() => {
           value: value
         }))
       }} />} />
+      
+    <Item
+      leftContent={<>{t('hide-notification')}</>}
+      rightContent={<Switch
+        isSelected={blinko.config.value?.isHiddenNotification}
+        onChange={e => {
+          PromiseCall(api.config.update.mutate({
+            key: 'isHiddenNotification',
+            value: e.target.checked
+          }))
+        }}
+      />} />
+
     <Item
       leftContent={<>{t('show-navigation-bar-on-mobile')}</>}
       rightContent={<Switch
@@ -91,6 +104,7 @@ export const PerferSetting = observer(() => {
           }))
         }}
       />} />
+
 
     <Item
       leftContent={<>{t('order-by-create-time')}</>}

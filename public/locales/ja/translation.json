@@ -445,5 +445,7 @@
   "embedding-api-key": "APIキーの埋め込み",
   "recommand": "お勧め",
   "has-todo": "「やるべきこと」",
-  "reference-by": "言及者"
+  "reference-by": "言及者",
+  "hide-notification": "通知を非表示",
+  "search-settings": "検索設定..."
 }

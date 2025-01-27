@@ -41,7 +41,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('themeForegroundColor'),
   z.literal('isCloseDailyReview'),
   z.literal('maxHomePageWidth'),
-  z.literal('isUseBlinkoHub')
+  z.literal('isUseBlinkoHub'),
+  z.literal('isHiddenNotification')
 ]);
 
 export const ZConfigKey = z.union([
@@ -140,6 +141,7 @@ export const ZConfigSchema = z.object({
   isUseBlinkoHub: z.boolean().optional(),
   embeddingApiEndpoint: z.string().optional(),
   embeddingApiKey: z.string().optional(),
+  isHiddenNotification: z.boolean().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

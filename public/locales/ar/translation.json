@@ -486,5 +486,7 @@
   "embedding-api-key": "تضمين مفتاح واجهة برمجة التطبيقات",
   "recommand": "اقتراح",
   "has-todo": "يجب القيام به",
-  "reference-by": "بالمرجعية"
+  "reference-by": "بالمرجعية",
+  "hide-notification": "إخفاء الإشعارات",
+  "search-settings": "إعدادات البحث..."
 }

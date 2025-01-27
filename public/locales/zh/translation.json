@@ -491,5 +491,7 @@
   "embedding-api-key": "嵌入式 API 密钥",
   "recommand": "推荐",
   "has-todo": "有待完成",
-  "reference-by": "被引用"
+  "reference-by": "被引用",
+  "hide-notification": "隐藏通知",
+  "search-settings": "搜索设置..."
 }

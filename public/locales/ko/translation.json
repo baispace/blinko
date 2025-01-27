@@ -468,5 +468,7 @@
   "embedding-api-key": "API 키 포함하기",
   "recommand": "추천하기",
   "has-todo": "할 일",
-  "reference-by": "참조자"
+  "reference-by": "참조자",
+  "hide-notification": "알림 숨기기",
+  "search-settings": "검색 설정..."
 }

@@ -397,5 +397,7 @@
   "embedding-api-key": "Incorporar chave da API",
   "recommand": "Recomendar",
   "has-todo": "Tem PARA FAZER",
-  "reference-by": "Referência por"
+  "reference-by": "Referência por",
+  "hide-notification": "Ocultar notificação",
+  "search-settings": "Configurações de pesquisa..."
 }

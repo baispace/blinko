@@ -405,5 +405,7 @@
   "embedding-api-key": "Встраивание API-ключа",
   "recommand": "Рекомендовать",
   "has-todo": "Есть ДЛЯ-СДЕЛКИ",
-  "reference-by": "Ссылкой от"
+  "reference-by": "Ссылкой от",
+  "hide-notification": "Скрыть уведомление",
+  "search-settings": "Настройки поиска..."
 }

@@ -29,7 +29,7 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
 
   const handleClose = () => {
     setShowSearchInput(false);
-    blinkoStore.noteListFilterConfig.searchText = '';
+    blinkoStore.searchText = '';
     throttleSearchRef.current();
   }
 
@@ -49,11 +49,11 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
             variant="light"
             onPress={() => setShowSearchInput(true)}
           >
-            <Icon 
-              className="text-default-600" 
-              icon="lets-icons:search" 
-              width="24" 
-              height="24" 
+            <Icon
+              className="text-default-600"
+              icon="lets-icons:search"
+              width="24"
+              height="24"
             />
           </Button>
         </motion.div>
@@ -75,28 +75,33 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
               className={`${blinkoStore.noteListFilterConfig.isUseAiQuery ? 'input-highlight' : ''} `}
               classNames={{
                 base: "w-full",
-                inputWrapper: `bg-default-400/20 data-[hover=true]:bg-default-500/30 group-data-[focus=true]:bg-default-500/20 ${
-                  blinkoStore.noteListFilterConfig.isUseAiQuery ? 'border-2 border-primary' : ''
-                }`,
+                inputWrapper: `bg-default-400/20 data-[hover=true]:bg-default-500/30 group-data-[focus=true]:bg-default-500/20 ${blinkoStore.noteListFilterConfig.isUseAiQuery ? 'border-2 border-primary' : ''
+                  }`,
                 input: "placeholder:text-default-600 group-data-[has-value=true]:text-foreground",
               }}
               labelPlacement="outside"
-              placeholder={t('search')}
-              value={blinkoStore.noteListFilterConfig.searchText}
+              placeholder={router.pathname == '/settings' ? t('search-settings') : t('search')}
+              value={blinkoStore.searchText}
               onChange={e => {
-                blinkoStore.noteListFilterConfig.searchText = e.target.value
+                blinkoStore.searchText = e.target.value;
                 throttleSearchRef.current()
               }}
               startContent={
-                <Icon 
-                  className={`text-default-600 [&>g]:stroke-[2px] ${!isPc ? 'cursor-pointer' : ''}`}
-                  icon={!isPc && showSearchInput ? "material-symbols:close" : "lets-icons:search"}
-                  width="24" 
-                  height="24"
-                  onClick={() => !isPc && handleClose()}
-                />
+                <>
+                  {
+                    router.pathname != '/settings' && (
+                      <Icon
+                        className={`text-default-600 [&>g]:stroke-[2px] ${!isPc ? 'cursor-pointer' : ''}`}
+                        icon={!isPc && showSearchInput ? "material-symbols:close" : "lets-icons:search"}
+                        width="24"
+                        height="24"
+                        onClick={() => !isPc && handleClose()}
+                      />
+                    )
+                  }
+                </>
               }
-              endContent={router.pathname != '/resources' && (
+              endContent={router.pathname != '/resources' && router.pathname != '/settings' && (
                 <Tooltip content={t('ai-enhanced-search')}>
                   <Icon
                     className="text-default-600 [&>g]:stroke-[2px] cursor-pointer hover:text-primary transition-colors"
@@ -106,7 +111,7 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
                     onClick={() => {
                       searchInputRef.current?.focus()
                       blinkoStore.noteListFilterConfig.isUseAiQuery = !blinkoStore.noteListFilterConfig.isUseAiQuery
-                      if (blinkoStore.noteListFilterConfig.searchText != '') {
+                      if (blinkoStore.searchText != '') {
                         throttleSearchRef.current()
                       }
                     }}

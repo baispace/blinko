@@ -107,6 +107,9 @@ importers:
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
+      alpinejs:
+        specifier: ^3.14.8
+        version: 3.14.8
       archiver:
         specifier: ^7.0.1
         version: 7.0.1
@@ -383,6 +386,9 @@ importers:
       swiper:
         specifier: ^11.1.14
         version: 11.1.14
+      systemjs:
+        specifier: ^6.15.1
+        version: 6.15.1
       tailwind-merge:
         specifier: ^1.14.0
         version: 1.14.0
@@ -465,6 +471,9 @@ importers:
       '@types/react-grid-layout':
         specifier: ^1.3.2
         version: 1.3.5
+      '@types/systemjs':
+        specifier: ^6.15.1
+        version: 6.15.1
       '@types/three':
         specifier: ^0.171.0
         version: 0.171.0
@@ -4565,6 +4574,9 @@ packages:
   '@types/stats.js@0.17.3':
     resolution: {integrity: sha512-pXNfAD3KHOdif9EQXZ9deK82HVNaXP5ZIF5RP2QG6OQFNTaY2YIetfrE9t528vEreGQvEPRDDc8muaoYeK0SxQ==}
 
+  '@types/systemjs@6.15.1':
+    resolution: {integrity: sha512-MfDFIN+jRQOX1JRBrbbb72tsFJnK0n7mtLC+L2Y3t7As/vFxJiFGA/09FE+6ssFheHAibd8Q3gs959c+Sgf/9A==}
+
   '@types/three@0.171.0':
     resolution: {integrity: sha512-oLuT1SAsT+CUg/wxUTFHo0K3NtJLnx9sJhZWQJp/0uXqFpzSk1hRHmvWvpaAWSfvx2db0lVKZ5/wV0I0isD2mQ==}
 
@@ -4591,6 +4603,12 @@ packages:
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+
+  '@vue/reactivity@3.1.5':
+    resolution: {integrity: sha512-1tdfLmNjWG6t/CsPldh+foumYFo3cpyCHgBYQ34ylaMsJ+SNHQ1kApMIa8jN+i593zQuaw3AdWH0nJTARzCFhg==}
+
+  '@vue/shared@3.1.5':
+    resolution: {integrity: sha512-oJ4F3TnvpXaQwZJNF3ZK+kLPHKarDmJjJ6jyzVNDKH9md1dptjC7lWR//jrGuLdek/U6iltWxqAnYOu8gCiOvA==}
 
   '@webassemblyjs/ast@1.12.1':
     resolution: {integrity: sha512-EKfMUOPRRUTy5UII4qJDGPpqfwjOmZ5jeGFwid9mnoqIFK+e0vqoi1qH56JpmZSzEL53jKnNzScdmftJyG5xWg==}
@@ -4738,6 +4756,9 @@ packages:
 
   ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
+
+  alpinejs@3.14.8:
+    resolution: {integrity: sha512-wT2fuP2DXpGk/jKaglwy7S/IJpm1FD+b7U6zUrhwErjoq5h27S4dxkJEXVvhbdwyPv9U+3OkUuNLkZT4h2Kfrg==}
 
   amdefine@1.0.1:
     resolution: {integrity: sha512-S2Hw0TtNkMJhIabBwIojKL9YHO5T0n5eNqWJ7Lrlel/zDbftQpxpapi8tZs3X1HWa+u+QeydGmzzNU0m09+Rcg==}
@@ -9881,6 +9902,9 @@ packages:
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
+
+  systemjs@6.15.1:
+    resolution: {integrity: sha512-Nk8c4lXvMB98MtbmjX7JwJRgJOL8fluecYCfCeYBznwmpOs8Bf15hLM6z4z71EDAhQVrQrI+wt1aLWSXZq+hXA==}
 
   tabbable@6.2.0:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
@@ -16671,6 +16695,8 @@ snapshots:
 
   '@types/stats.js@0.17.3': {}
 
+  '@types/systemjs@6.15.1': {}
+
   '@types/three@0.171.0':
     dependencies:
       '@tweenjs/tween.js': 23.1.3
@@ -16695,6 +16721,12 @@ snapshots:
   '@types/webxr@0.5.20': {}
 
   '@ungap/structured-clone@1.2.0': {}
+
+  '@vue/reactivity@3.1.5':
+    dependencies:
+      '@vue/shared': 3.1.5
+
+  '@vue/shared@3.1.5': {}
 
   '@webassemblyjs/ast@1.12.1':
     dependencies:
@@ -16870,6 +16902,10 @@ snapshots:
       fast-uri: 3.0.3
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
+
+  alpinejs@3.14.8:
+    dependencies:
+      '@vue/reactivity': 3.1.5
 
   amdefine@1.0.1:
     optional: true
@@ -22674,6 +22710,8 @@ snapshots:
 
   symbol-tree@3.2.4:
     optional: true
+
+  systemjs@6.15.1: {}
 
   tabbable@6.2.0: {}
 

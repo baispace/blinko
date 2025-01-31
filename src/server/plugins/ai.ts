@@ -83,7 +83,7 @@ export class AiService {
     }
   }
 
-  static async embeddingUpsert({ id, content, type, createTime }: { id: number, content: string, type: 'update' | 'insert', createTime: Date }) {
+  static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number, content: string, type: 'update' | 'insert', createTime: Date, updatedAt?: Date }) {
     try {
       const { VectorStore, MarkdownSplitter } = await AiModelFactory.GetProvider()
       const config = await AiModelFactory.globalConfig()
@@ -111,8 +111,10 @@ export class AiService {
           data: {
             metadata: {
               isIndexed: true
-            }
-          }
+            },
+            updatedAt,
+          },
+        
         })
       } catch (error) {
         console.log(error)
@@ -244,6 +246,7 @@ export class AiService {
           if (note?.content != '') {
             const { ok, error } = await AiService.embeddingUpsert({
               createTime: note.createdAt,
+              updatedAt: note.updatedAt,
               id: note?.id,
               content: note?.content,
               type: 'update' as const

@@ -133,7 +133,7 @@ export class AiService {
   }
 
   //api/file/123.pdf
-  static async embeddingInsertAttachments({ id, filePath }: { id: number, filePath: string }) {
+  static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number, updatedAt?: Date, filePath: string }) {
     try {
       // const note = await prisma.notes.findUnique({ where: { id } })
       // //@ts-ignore
@@ -161,7 +161,8 @@ export class AiService {
             metadata: {
               isIndexed: true,
               isAttachmentsIndexed: true
-            }
+            },
+            updatedAt
           }
         })
       } catch (error) {
@@ -266,12 +267,11 @@ export class AiService {
               };
             }
           }
-          //@ts-ignore
           if (note?.attachments) {
-            //@ts-ignore
-            for (const attachment of note?.attachments) {
+            for (const attachment of note.attachments) {
               const { ok, error } = await AiService.embeddingInsertAttachments({
-                id: note?.id,
+                id: note.id,
+                updatedAt: note.updatedAt,
                 filePath: attachment?.path
               });
               if (ok) {

@@ -701,7 +701,7 @@ export const noteRouter = router({
         if (config?.isUseAI) {
           AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt })
           for (const attachment of attachments) {
-            AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+            AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path })
           }
         }
         SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx)
@@ -734,7 +734,7 @@ export const noteRouter = router({
           if (config?.isUseAI) {
             AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt })
             for (const attachment of attachments) {
-              AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+              AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path })
             }
           }
           return note

@@ -1,3 +1,13 @@
+## [0.37.22](https://github.com/blinko-space/blinko/compare/v0.37.21...v0.37.22) (2025-02-05)
+
+
+### Bug Fixes
+
+* **ai:** keep note.updatedAt unchanged when embeddingInsertAttachments. ([5c29944](https://github.com/blinko-space/blinko/commit/5c29944855c9e2f0228a9446791a22cfd14ad411))
+* **ai:** keep note.updatedAt unchanged when import from memos. ([7e55724](https://github.com/blinko-space/blinko/commit/7e557240844c0c8016267b2376d8a138a1637f50))
+* **ai:** keep note.updatedAt unchanged when rebuilding index. ([0ebbe18](https://github.com/blinko-space/blinko/commit/0ebbe18055084e8f1329a4491a1d82a845d2d3f5))
+* **ai:** keep note.updatedAt unchanged when upsert note. ([9b7972a](https://github.com/blinko-space/blinko/commit/9b7972accbddbc71f91cadef31ff04fd415a39ba))
+
 ## [0.37.21](https://github.com/blinko-space/blinko/compare/v0.37.20...v0.37.21) (2025-01-27)
 
 

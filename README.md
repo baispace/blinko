@@ -26,8 +26,9 @@
 [Telegram English](https://t.me/blinkoEnglish)
 </div>
 
-> username:blinko
-> password:blinko
+
+> Live Demo: username:blinko password:blinko
+
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/InjVjN?referralCode=tZHs0g)
 

@@ -20,6 +20,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'themeColor'
       || item.key == 'themeForegroundColor'
       || item.key == 'maxHomePageWidth'
+      || item.key == 'customBackgroundUrl'
     ) {
       acc[item.key] = config.value;
       return acc;

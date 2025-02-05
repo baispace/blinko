@@ -83,7 +83,7 @@ export class AiService {
     }
   }
 
-  static async embeddingUpsert({ id, content, type, createTime }: { id: number, content: string, type: 'update' | 'insert', createTime: Date }) {
+  static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number, content: string, type: 'update' | 'insert', createTime: Date, updatedAt?: Date }) {
     try {
       const { VectorStore, MarkdownSplitter } = await AiModelFactory.GetProvider()
       const config = await AiModelFactory.globalConfig()
@@ -111,8 +111,10 @@ export class AiService {
           data: {
             metadata: {
               isIndexed: true
-            }
-          }
+            },
+            updatedAt,
+          },
+        
         })
       } catch (error) {
         console.log(error)
@@ -131,7 +133,7 @@ export class AiService {
   }
 
   //api/file/123.pdf
-  static async embeddingInsertAttachments({ id, filePath }: { id: number, filePath: string }) {
+  static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number, updatedAt?: Date, filePath: string }) {
     try {
       // const note = await prisma.notes.findUnique({ where: { id } })
       // //@ts-ignore
@@ -159,7 +161,8 @@ export class AiService {
             metadata: {
               isIndexed: true,
               isAttachmentsIndexed: true
-            }
+            },
+            updatedAt
           }
         })
       } catch (error) {
@@ -244,6 +247,7 @@ export class AiService {
           if (note?.content != '') {
             const { ok, error } = await AiService.embeddingUpsert({
               createTime: note.createdAt,
+              updatedAt: note.updatedAt,
               id: note?.id,
               content: note?.content,
               type: 'update' as const
@@ -263,12 +267,11 @@ export class AiService {
               };
             }
           }
-          //@ts-ignore
           if (note?.attachments) {
-            //@ts-ignore
-            for (const attachment of note?.attachments) {
+            for (const attachment of note.attachments) {
               const { ok, error } = await AiService.embeddingInsertAttachments({
-                id: note?.id,
+                id: note.id,
+                updatedAt: note.updatedAt,
                 filePath: attachment?.path
               });
               if (ok) {

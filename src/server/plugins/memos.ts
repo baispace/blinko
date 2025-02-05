@@ -55,16 +55,11 @@ export class Memos {
 
         const note = await userCaller(ctx).notes.upsert({
           content: row?.content,
+          createdAt: new Date(row!.created_ts * 1000),
+          updatedAt: new Date(row!.updated_ts * 1000),
         });
 
         if (note) {
-          await prisma.notes.update({
-            where: { id: note.id },
-            data: {
-              createdAt: new Date(row!.created_ts * 1000),
-              updatedAt: new Date(row!.updated_ts * 1000),
-            }
-          });
           yield {
             type: 'success',
             content: note.content.slice(0, 30),

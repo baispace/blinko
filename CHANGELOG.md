@@ -1,3 +1,10 @@
+# [0.38.0](https://github.com/blinko-space/blinko/compare/v0.37.22...v0.38.0) (2025-02-05)
+
+
+### Features
+
+* **memos:** correct import comments. ([9d49040](https://github.com/blinko-space/blinko/commit/9d49040cd5b84e56cce846f8ec0fa19ab331d85d))
+
 ## [0.37.22](https://github.com/blinko-space/blinko/compare/v0.37.21...v0.37.22) (2025-02-05)
 
 

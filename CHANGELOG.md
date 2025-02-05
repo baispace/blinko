@@ -1,3 +1,10 @@
+## [0.38.2](https://github.com/blinko-space/blinko/compare/v0.38.1...v0.38.2) (2025-02-05)
+
+
+### Bug Fixes
+
+* Add child count display for branch tags ([78f17cc](https://github.com/blinko-space/blinko/commit/78f17cca6b509b62b951d69ed3f7461bfb114376))
+
 ## [0.38.1](https://github.com/blinko-space/blinko/compare/v0.38.0...v0.38.1) (2025-02-05)
 
 

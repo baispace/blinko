@@ -278,6 +278,7 @@ export const useEditorFiles = (
 ) => {
   useEffect(() => {
     if (originFiles?.length) {
+      console.log({originFiles})
       store.files = HandleFileType(originFiles);
     }
   }, [originFiles]);

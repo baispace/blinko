@@ -45,7 +45,6 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
 const ImageRender = observer((props: IProps) => {
   const { files, preview = false, columns } = props
   const isPc = useMediaQuery('(min-width: 768px)')
-  const images = files?.filter(i => i.previewType == 'image')
 
   const imageRenderClassName = useMemo(() => {
     if (!preview) {

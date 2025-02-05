@@ -57,12 +57,13 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
           return []
         }
       } else {
-        const attachments = blinko.editAttachmentsStorage.list.filter(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
-        if (attachments?.length) {
-          return attachments
-        } else {
-          return blinko.curSelectedNote?.attachments
-        }
+        return blinko.curSelectedNote?.attachments
+        // const attachments = blinko.editAttachmentsStorage.list.filter(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        // if (attachments?.length) {
+        //   return attachments
+        // } else {
+        //   return blinko.curSelectedNote?.attachments
+        // }
       }
     }
   }))

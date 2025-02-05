@@ -17,6 +17,7 @@ import uniqWith from "lodash/uniqWith";
 import orderBy from "lodash/orderBy";
 import pick from "lodash/pick";
 import difference from "lodash/difference";
+import uniqBy from "lodash/uniqBy";
 export const _ = {
   throttle,
   debounce,
@@ -36,5 +37,6 @@ export const _ = {
   uniqWith,
   orderBy,
   pick,
-  difference
+  difference,
+  uniqBy
 };

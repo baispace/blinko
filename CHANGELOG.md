@@ -1,3 +1,10 @@
+## [0.38.1](https://github.com/blinko-space/blinko/compare/v0.38.0...v0.38.1) (2025-02-05)
+
+
+### Bug Fixes
+
+* pin pnpm and sqlite3 package versions ([86a0f1b](https://github.com/blinko-space/blinko/commit/86a0f1bce7b1df990200d001cbe4a2a10bbdbe43))
+
 # [0.38.0](https://github.com/blinko-space/blinko/compare/v0.37.22...v0.38.0) (2025-02-05)
 
 

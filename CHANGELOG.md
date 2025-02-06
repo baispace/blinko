@@ -1,3 +1,11 @@
+## [0.38.3](https://github.com/blinko-space/blinko/compare/v0.38.2...v0.38.3) (2025-02-06)
+
+
+### Bug Fixes
+
+* **note:** FE accidentally turned into blinko after operating on note ([ee3ab80](https://github.com/blinko-space/blinko/commit/ee3ab80b34847cce1317bb0bdc2a54486e467feb))
+* **server/config:** customBackgroundUrl not work on Login Page & Share Page. ([9ef5dc2](https://github.com/blinko-space/blinko/commit/9ef5dc238375b2963d8c5fd5e0a03ad765ff024f))
+
 ## [0.38.2](https://github.com/blinko-space/blinko/compare/v0.38.1...v0.38.2) (2025-02-05)
 
 

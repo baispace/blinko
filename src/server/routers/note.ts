@@ -542,7 +542,7 @@ export const noteRouter = router({
     })
     .input(z.object({
       content: z.union([z.string(), z.null()]).default(null),
-      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(0),
+      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
       attachments: z.array(z.object({
         name: z.string(),
         path: z.string(),

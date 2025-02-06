@@ -135,7 +135,7 @@ export class BlinkoStore implements Store {
         content = null,
         isArchived,
         isRecycle,
-        type = this.noteTypeDefault,
+        type,
         id,
         attachments = [],
         refresh = true,

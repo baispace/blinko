@@ -22,8 +22,11 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'maxHomePageWidth'
       || item.key == 'customBackgroundUrl'
     ) {
-      acc[item.key] = config.value;
-      return acc;
+      //if user not login, then use frist find config
+      if (!userId) {
+        acc[item.key] = config.value;
+        return acc;
+      }
     }
     if (!isSuperAdmin && !item.userId) {
       return acc;

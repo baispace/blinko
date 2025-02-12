@@ -1,3 +1,10 @@
+## [0.38.4](https://github.com/blinko-space/blinko/compare/v0.38.3...v0.38.4) (2025-02-12)
+
+
+### Bug Fixes
+
+* webhookEndpoint get issue ([6f751e0](https://github.com/blinko-space/blinko/commit/6f751e0539dc67a733634feb0149341daec8d6ef))
+
 ## [0.38.3](https://github.com/blinko-space/blinko/compare/v0.38.2...v0.38.3) (2025-02-06)
 
 

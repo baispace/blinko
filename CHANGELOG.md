@@ -1,3 +1,10 @@
+## [0.38.5](https://github.com/blinko-space/blinko/compare/v0.38.4...v0.38.5) (2025-02-12)
+
+
+### Bug Fixes
+
+* globalConfig get issue ([a745602](https://github.com/blinko-space/blinko/commit/a745602e2338ffd2de65fe7745f7d10d032db264))
+
 ## [0.38.4](https://github.com/blinko-space/blinko/compare/v0.38.3...v0.38.4) (2025-02-12)
 
 

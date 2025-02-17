@@ -1,3 +1,10 @@
+## [0.38.6](https://github.com/blinko-space/blinko/compare/v0.38.5...v0.38.6) (2025-02-17)
+
+
+### Bug Fixes
+
+* Add multi-select functionality and delete confirmation for resources [#492](https://github.com/blinko-space/blinko/issues/492) ([7375b6f](https://github.com/blinko-space/blinko/commit/7375b6ff2d89ede3f50158a1743fe45f0a70637d))
+
 ## [0.38.5](https://github.com/blinko-space/blinko/compare/v0.38.4...v0.38.5) (2025-02-12)
 
 

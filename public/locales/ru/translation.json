@@ -407,5 +407,6 @@
   "has-todo": "Есть ДЛЯ-СДЕЛКИ",
   "reference-by": "Ссылкой от",
   "hide-notification": "Скрыть уведомление",
-  "search-settings": "Настройки поиска..."
+  "search-settings": "Настройки поиска...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Эта операция удалит выбранные файлы и не может быть восстановлена. Подтвердите, пожалуйста."
 }

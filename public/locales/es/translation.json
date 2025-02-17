@@ -467,5 +467,6 @@
   "has-todo": "Tiene TODO",
   "reference-by": "Referencia Por",
   "hide-notification": "Ocultar notificación",
-  "search-settings": "Configuración de búsqueda..."
+  "search-settings": "Configuración de búsqueda...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Esta operación eliminará los archivos seleccionados y no se podrá restaurar. Por favor, confirme."
 }

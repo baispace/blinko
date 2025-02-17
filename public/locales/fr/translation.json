@@ -463,5 +463,6 @@
   "has-todo": "A faire",
   "reference-by": "Référence par",
   "hide-notification": "Masquer la notification",
-  "search-settings": "Paramètres de recherche..."
+  "search-settings": "Paramètres de recherche...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Cette opération supprimera les fichiers sélectionnés et ne pourra pas être restaurée. Veuillez confirmer."
 }

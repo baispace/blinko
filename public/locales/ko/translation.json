@@ -470,5 +470,6 @@
   "has-todo": "할 일",
   "reference-by": "참조자",
   "hide-notification": "알림 숨기기",
-  "search-settings": "검색 설정..."
+  "search-settings": "검색 설정...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "이 작업은 선택한 파일을 삭제하며 복원할 수 없습니다. 확인해 주십시오."
 }

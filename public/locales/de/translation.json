@@ -474,5 +474,6 @@
   "has-todo": "Hat ZU TUN",
   "reference-by": "Referenz Durch",
   "hide-notification": "Benachrichtigung ausblenden",
-  "search-settings": "Sucheinstellungen..."
+  "search-settings": "Sucheinstellungen...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Dieser Vorgang wird die ausgewählten Dateien löschen und kann nicht wiederhergestellt werden. Bitte bestätigen Sie."
 }

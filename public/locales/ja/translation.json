@@ -447,5 +447,6 @@
   "has-todo": "「やるべきこと」",
   "reference-by": "言及者",
   "hide-notification": "通知を非表示",
-  "search-settings": "検索設定..."
+  "search-settings": "検索設定...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "この操作により選択したファイルが削除され、元に戻すことはできません。ご確認ください。"
 }

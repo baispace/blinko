@@ -488,5 +488,6 @@
   "has-todo": "يجب القيام به",
   "reference-by": "بالمرجعية",
   "hide-notification": "إخفاء الإشعارات",
-  "search-settings": "إعدادات البحث..."
+  "search-settings": "إعدادات البحث...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "سيقوم هذا الإجراء بحذف الملفات المحددة ولا يمكن استعادتها، يرجى تأكيد."
 }

@@ -420,4 +420,17 @@ export const attachmentsRouter = router({
         }
       });
     }),
+    deleteMany: authProcedure
+    .input(z.object({
+      ids: z.array(z.number()),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { ids } = input;
+      await prisma.attachments.deleteMany({
+        where: {
+          id: { in: ids }
+        }
+      });
+      return { success: true, message: 'Files deleted successfully' };
+    }),
 });

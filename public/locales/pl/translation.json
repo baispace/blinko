@@ -491,5 +491,6 @@
   "has-todo": "Do wykonania",
   "reference-by": "Odnośnik do",
   "hide-notification": "Ukryj powiadomienie",
-  "search-settings": "Ustawienia wyszukiwania..."
+  "search-settings": "Ustawienia wyszukiwania...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "To działanie spowoduje usunięcie wybranych plików i nie będzie możliwe ich przywrócenie. Proszę potwierdzić."
 }

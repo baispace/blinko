@@ -416,5 +416,6 @@
   "has-todo": "YAPILACAKLAR",
   "reference-by": "Referans Tarafından",
   "hide-notification": "Bildirimi Gizle",
-  "search-settings": "Arama Ayarları..."
+  "search-settings": "Arama Ayarları...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Bu işlem seçilen dosyaları silecek ve geri alınamaz, Lütfen onaylayın."
 }

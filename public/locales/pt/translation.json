@@ -399,5 +399,6 @@
   "has-todo": "Tem PARA FAZER",
   "reference-by": "Referência por",
   "hide-notification": "Ocultar notificação",
-  "search-settings": "Configurações de pesquisa..."
+  "search-settings": "Configurações de pesquisa...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Esta operação irá apagar os arquivos selecionados e não poderá ser restaurada, por favor confirme."
 }

@@ -68,6 +68,9 @@ importers:
       '@nextui-org/theme':
         specifier: ^2.4.1
         version: 2.4.1(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.2.5)(typescript@5.6.3)))
+      '@preact/compat':
+        specifier: ^18.3.1
+        version: 18.3.1(preact@10.26.1)
       '@prisma/client':
         specifier: ^5.21.1
         version: 5.22.0(prisma@5.21.1)
@@ -281,6 +284,9 @@ importers:
       postcss-import:
         specifier: ^16.1.0
         version: 16.1.0(postcss@8.4.47)
+      preact:
+        specifier: ^10.26.1
+        version: 10.26.1
       qrcode.react:
         specifier: ^4.1.0
         version: 4.1.0(react@18.3.1)
@@ -2950,6 +2956,11 @@ packages:
 
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
+
+  '@preact/compat@18.3.1':
+    resolution: {integrity: sha512-Kog4PSRxtT4COtOXjsuQPV1vMXpUzREQfv+6Dmcy9/rMk0HOPK0HTE9fspFjAmY8R80T/T8gtgmZ68u5bOSngw==}
+    peerDependencies:
+      preact: '*'
 
   '@prisma/client@5.22.0':
     resolution: {integrity: sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==}
@@ -8766,8 +8777,8 @@ packages:
     peerDependencies:
       preact: '>=10'
 
-  preact@10.24.3:
-    resolution: {integrity: sha512-Z2dPnBnMUfyQfSQ+GBdsGa16hz35YmLmtTLhM169uW944hYL6xzTYkJjC07j+Wosz733pMWx0fgON3JNw1jJQA==}
+  preact@10.26.1:
+    resolution: {integrity: sha512-K5aMG0NdGHZ8yV1GfGtGA4JwnWxe/HIDzyr9svdo2DeokLUJ/+W8MpeuPrfOytu5rHHgYQrvGxUoW83sapJZnw==}
 
   prebuild-install@7.1.2:
     resolution: {integrity: sha512-UnNke3IQb6sgarcZIDU3gbMeTp/9SSU1DAIkil7PrqG1vZlBtY5msYccSKSHDqa3hNg436IXK+SNImReuA1wEQ==}
@@ -14152,6 +14163,10 @@ snapshots:
       config-chain: 1.1.13
 
   '@polka/url@1.0.0-next.28': {}
+
+  '@preact/compat@18.3.1(preact@10.26.1)':
+    dependencies:
+      preact: 10.26.1
 
   '@prisma/client@5.22.0(prisma@5.21.1)':
     optionalDependencies:
@@ -20465,8 +20480,8 @@ snapshots:
       next: 14.2.21(@babel/core@7.25.8)(@opentelemetry/api@1.4.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       oauth: 0.9.15
       openid-client: 5.7.0
-      preact: 10.24.3
-      preact-render-to-string: 5.2.6(preact@10.24.3)
+      preact: 10.26.1
+      preact-render-to-string: 5.2.6(preact@10.26.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       uuid: 8.3.2
@@ -21290,12 +21305,12 @@ snapshots:
 
   potpack@1.0.2: {}
 
-  preact-render-to-string@5.2.6(preact@10.24.3):
+  preact-render-to-string@5.2.6(preact@10.26.1):
     dependencies:
-      preact: 10.24.3
+      preact: 10.26.1
       pretty-format: 3.8.0
 
-  preact@10.24.3: {}
+  preact@10.26.1: {}
 
   prebuild-install@7.1.2:
     dependencies:

@@ -29,9 +29,9 @@ import { EditorStore } from "./editorStore";
 import { AIWriteButton } from "./Toolbar/AIWriteButton";
 import { FullScreenButton } from "./Toolbar/FullScreenButton";
 import { eventBus } from "@/lib/event";
-import { usePlugin } from './hooks/usePlugin';
 import { Icon } from "@iconify/react";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
+import { PluginRender } from '@/store/plugin/pluginRender';
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -132,24 +132,8 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 open={open}
                 onFileUpload={store.uploadFiles}
               />
-               {pluginApi.customToolbarIcons.map((item) => (
-                <Popover key={item.name} placement={item.placement}>
-                  <PopoverTrigger>
-                    <button className="p-1 hover:bg-default-100 rounded-md">
-                      {item.icon.includes('svg') ? 
-                        <div dangerouslySetInnerHTML={{ __html: item.icon }} className="w-[20px] h-[20px]"/> :
-                        <Icon icon={item.icon} className="w-[20px] h-[20px]" />
-                      }
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <div 
-                      className="p-4"
-                      style={{ maxWidth: item.maxWidth }}
-                      dangerouslySetInnerHTML={{ __html: item.content }}
-                    />
-                  </PopoverContent>
-                </Popover>
+              {pluginApi.customToolbarIcons.map((item) => (
+                <PluginRender key={item.name} item={item} />
               ))}
             </>
           )}

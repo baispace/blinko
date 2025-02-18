@@ -1,9 +1,9 @@
 import { Store } from "../standard/base";
 
-type ToolbarIcon = {
+export type ToolbarIcon = {
   name: string;
   icon: string;
-  content: string;
+  content: () => HTMLElement;
   placement: 'top' | 'bottom' | 'left' | 'right';
   maxWidth: number;
 }
@@ -11,17 +11,18 @@ type ToolbarIcon = {
 type AddToolBarIconOptions = {
   name: string;
   icon: string;
-  content: string;
+  content: () => HTMLElement;
   placement?: 'top' | 'bottom' | 'left' | 'right';
   maxWidth?: number;
 }
 
 export class PluginApiStore extends Store {
   sid = 'pluginApiStore';
-  
+
   customToolbarIcons: ToolbarIcon[] = [];
 
   addToolBarIcon(options: AddToolBarIconOptions) {
+    console.log('addToolBarIcon', options);
     this.customToolbarIcons.push({
       name: options.name,
       icon: options.icon,

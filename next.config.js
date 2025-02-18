@@ -106,7 +106,7 @@ module.exports = withPWA({
           },
         ],
         source: '/logo-dark.png',
-      },
+      }
     ];
   },
   webpack: (config, { dev,isServer }) => {

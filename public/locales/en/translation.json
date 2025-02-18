@@ -489,5 +489,8 @@
   "embedding-api-key": "Embedding API Key",
   "recommand": "Recommand",
   "has-todo": "Has TO-DO",
-  "reference-by": "Reference By"
+  "reference-by": "Reference By",
+  "hide-notification": "Hide Notification",
+  "search-settings": "Search Settings...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "This operation will delete the selected files and cannot be restored,Please confirm"
 }

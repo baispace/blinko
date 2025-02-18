@@ -414,5 +414,8 @@
   "embedding-api-key": "API Anahtarını Gömülü Olarak Kullanma",
   "recommand": "Tavsiye etmek",
   "has-todo": "YAPILACAKLAR",
-  "reference-by": "Referans Tarafından"
+  "reference-by": "Referans Tarafından",
+  "hide-notification": "Bildirimi Gizle",
+  "search-settings": "Arama Ayarları...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Bu işlem seçilen dosyaları silecek ve geri alınamaz, Lütfen onaylayın."
 }

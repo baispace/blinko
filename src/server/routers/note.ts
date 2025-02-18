@@ -542,7 +542,7 @@ export const noteRouter = router({
     })
     .input(z.object({
       content: z.union([z.string(), z.null()]).default(null),
-      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(0),
+      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
       attachments: z.array(z.object({
         name: z.string(),
         path: z.string(),
@@ -699,9 +699,9 @@ export const noteRouter = router({
         }
 
         if (config?.isUseAI) {
-          AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt! })
+          AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt })
           for (const attachment of attachments) {
-            AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+            AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path })
           }
         }
         SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx)
@@ -732,9 +732,9 @@ export const noteRouter = router({
           SendWebhook({ ...note, attachments }, 'create', ctx)
 
           if (config?.isUseAI) {
-            AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt! })
+            AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt })
             for (const attachment of attachments) {
-              AiService.embeddingInsertAttachments({ id: note.id, filePath: attachment.path })
+              AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path })
             }
           }
           return note

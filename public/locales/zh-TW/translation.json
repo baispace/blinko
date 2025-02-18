@@ -501,5 +501,8 @@
   "embedding-api-key": "嵌入式 API 金鑰",
   "recommand": "推薦",
   "has-todo": "有待辦事項",
-  "reference-by": "被引用"
+  "reference-by": "被引用",
+  "hide-notification": "隱藏通知",
+  "search-settings": "搜尋設定...",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "這個操作將刪除選定的檔案，無法復原，請確認。"
 }

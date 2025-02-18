@@ -143,6 +143,9 @@ export const TagListPanel = observer(() => {
 
               <div className="truncate overflow-hidden whitespace-nowrap" title={element.name}>
                 {element.name}
+                {isBranch && element.children?.length > 0 && (
+                  <span className="ml-1 text-xs opacity-60">({element.children.length})</span>
+                )}
               </div>
               <Dropdown>
                 <DropdownTrigger>

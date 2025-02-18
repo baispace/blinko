@@ -20,14 +20,15 @@
 
 <div align="center">
 
-[Live Demo](https://blinko.up.railway.app/) •
+[Live Demo](https://blinko-demo.vercel.app/) •
 [Docs](https://blinko.mintlify.app/introduction) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
 [Telegram English](https://t.me/blinkoEnglish)
 </div>
 
-> username:blinko
-> password:blinko
+
+> Live Demo: username:blinko password:blinko
+
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/InjVjN?referralCode=tZHs0g)
 

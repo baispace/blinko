@@ -1,14 +1,22 @@
 import sqlite3 from 'sqlite3';
 import { prisma } from '../prisma';
-import { adminCaller, userCaller } from '../routers/_app';
+import { userCaller } from '../routers/_app';
 import { FileService } from './files';
 import { getGlobalConfig } from '../routers/config';
 import { Context } from '../context';
 type Memo = {
-  id: string,
-  created_ts: number,
-  updated_ts: number,
-  content: string,
+  id: number;
+  creator_id: number;
+  created_ts: number;
+  updated_ts: number;
+  content: string;
+
+  // join memo_relation
+  related_memo_id: number | null;
+  type: 'REFERENCE' | 'COMMENT' | null;
+
+  // join user
+  nickname: string;
 }
 export type ProgressResult = {
   type: 'success' | 'skip' | 'error';
@@ -34,7 +42,17 @@ export class Memos {
 
   async *importMemosDB(ctx: Context): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
     const rows: Memo[] = await new Promise((resolve, reject) => {
-      this.db.all(`SELECT * FROM memo`, (err, rows: Memo[]) => {
+      this.db.all(`
+            SELECT
+              memo.id id, memo.creator_id creator_id, memo.created_ts created_ts, memo.updated_ts updated_ts, memo.content content,
+              filtered_relation.related_memo_id related_memo_id, filtered_relation.type type,
+              user.nickname nickname
+            FROM memo
+            LEFT JOIN (SELECT * FROM memo_relation WHERE type = 'COMMENT') AS filtered_relation
+            ON memo.id = filtered_relation.memo_id
+            LEFT JOIN user ON memo.creator_id = user.id
+            ORDER BY id;
+          `, (err, rows: Memo[]) => {
         if (err) {
           reject(err);
           return;
@@ -45,37 +63,83 @@ export class Memos {
 
     const total = rows.length;
     for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
+      const row = rows[i]!;
       try {
-        const blinkoNote = await prisma.notes.findFirst({ where: { content: row?.content } });
-        if (blinkoNote) {
-          yield { type: 'skip', content: row?.content, progress: { current: i + 1, total } };
-          continue;
-        }
+        if (row.type === 'COMMENT') {
+          const parentMemo = rows.find(r => r.id === row.related_memo_id);
+          if (!parentMemo) {
+            yield { type: 'error', content: row?.content, error: new Error('parent memo note not found'), progress: { current: i + 1, total } };
+            continue;
+          }
 
-        const note = await userCaller(ctx).notes.upsert({
-          content: row?.content,
-        });
+          const blinkoNote = await prisma.notes.findFirst({ where: { content: parentMemo.content } });
+          if (!blinkoNote) {
+            yield { type: 'error', content: row?.content, error: new Error('parent blinko note not found'), progress: { current: i + 1, total } };
+            continue;
+          }
 
-        if (note) {
-          await prisma.notes.update({
-            where: { id: note.id },
-            data: {
-              createdAt: new Date(row!.created_ts * 1000),
-              updatedAt: new Date(row!.updated_ts * 1000),
-            }
+          let blinkoComment = await prisma.comments.findFirst({ where: { content: row.content, noteId: blinkoNote.id } });
+          if (blinkoComment) {
+            yield { type: 'skip', content: row?.content, progress: { current: i + 1, total } };
+            continue;
+          }
+
+           // original author comment or anonymous comment
+          if (parentMemo.creator_id === row.creator_id) {
+            await userCaller(ctx).comments.create({
+              content: row.content,
+              noteId: blinkoNote.id
+            });
+          } else {
+            await userCaller( { ...ctx, id: '' }).comments.create({
+              content: row.content,
+              noteId: blinkoNote.id,
+              guestName: row.nickname,
+            });
+          }
+
+          blinkoComment = await prisma.comments.findFirst({ where: { content: row.content, noteId: blinkoNote.id } });
+          if (blinkoComment) {
+            await prisma.comments.update({
+              where: { id: blinkoComment.id },
+              data: {
+                createdAt: new Date(row.created_ts * 1000),
+                updatedAt: new Date(row.updated_ts * 1000),
+              }
+            })
+
+            yield {
+              type: 'success',
+              content: blinkoComment.content.slice(0, 30),
+              progress: { current: i + 1, total }
+            };
+          }
+        } else {
+          const blinkoNote = await prisma.notes.findFirst({ where: { content: row.content } });
+          if (blinkoNote) {
+            yield { type: 'skip', content: row?.content, progress: { current: i + 1, total } };
+            continue;
+          }
+
+          const note = await userCaller(ctx).notes.upsert({
+            content: row.content,
+            createdAt: new Date(row.created_ts * 1000),
+            updatedAt: new Date(row.updated_ts * 1000),
           });
-          yield {
-            type: 'success',
-            content: note.content.slice(0, 30),
-            progress: { current: i + 1, total }
-          };
+
+          if (note) {
+            yield {
+              type: 'success',
+              content: note.content.slice(0, 30),
+              progress: { current: i + 1, total }
+            };
+          }
         }
       } catch (error) {
         console.error('import memos error->', error);
         yield {
           type: 'error',
-          content: row?.content.slice(0, 30),
+          content: row.content.slice(0, 30),
           error,
           progress: { current: i + 1, total }
         };

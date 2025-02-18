@@ -1,6 +1,6 @@
 {
   "name": "blinko",
-  "version": "0.37.15",
+  "version": "0.38.5",
   "repository": "https://github.com/blinko-space/blinko.git",
   "private": true,
   "browser": {
@@ -154,7 +154,7 @@
     "remark-task-list": "^0.0.3",
     "request-ip": "^3.3.0",
     "sharp": "^0.33.5",
-    "sqlite3": "^5.1.7",
+    "sqlite3": "5.1.7",
     "superjson": "^2.2.1",
     "swagger-ui-react": "^5.17.14",
     "swiper": "^11.1.14",

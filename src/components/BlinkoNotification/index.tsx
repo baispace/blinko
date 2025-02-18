@@ -62,7 +62,7 @@ export const BlinkoNotification = observer(() => {
     store.notificationList.resetAndCall({});
   }, [blinko.updateTicker]);
 
-  if (store.unreadCount.value === 0) {
+  if (store.unreadCount.value === 0 || blinko.config.value?.isHiddenNotification) {
     return null
   }
 

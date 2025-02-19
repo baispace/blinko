@@ -31,8 +31,7 @@ const MyApp = ({ Component, pageProps }) => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
-    // my-custom-plugin
-    RootStore.Get(PluginManagerStore).loadPlugin('/plugins/index.js');
+    RootStore.Get(PluginManagerStore).initInstalledPlugins();
     return () => clearTimeout(timer);
   }, []);
 

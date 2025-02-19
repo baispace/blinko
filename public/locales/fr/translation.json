@@ -464,5 +464,14 @@
   "reference-by": "Référence par",
   "hide-notification": "Masquer la notification",
   "search-settings": "Paramètres de recherche...",
-  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Cette opération supprimera les fichiers sélectionnés et ne pourra pas être restaurée. Veuillez confirmer."
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Cette opération supprimera les fichiers sélectionnés et ne pourra pas être restaurée. Veuillez confirmer.",
+  "plugin-settings": "Paramètres du plugin",
+  "installed-plugins": "Installé",
+  "marketplace": "Place de marché",
+  "local-development": "Développement local",
+  "add-local-plugin": "Ajouter le plugin local",
+  "local-plugin": "Plugin local",
+  "uninstall": "Désinstaller",
+  "install": "Installer",
+  "downloads": "Téléchargements"
 }

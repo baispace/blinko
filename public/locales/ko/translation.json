@@ -471,5 +471,14 @@
   "reference-by": "참조자",
   "hide-notification": "알림 숨기기",
   "search-settings": "검색 설정...",
-  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "이 작업은 선택한 파일을 삭제하며 복원할 수 없습니다. 확인해 주십시오."
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "이 작업은 선택한 파일을 삭제하며 복원할 수 없습니다. 확인해 주십시오.",
+  "plugin-settings": "플러그인 설정",
+  "installed-plugins": "설치됨",
+  "marketplace": "시장",
+  "local-development": "현지 개발",
+  "add-local-plugin": "로컬 플러그인 추가",
+  "local-plugin": "로컬 플러그인",
+  "uninstall": "제거하기",
+  "install": "설치하다",
+  "downloads": "다운로드"
 }

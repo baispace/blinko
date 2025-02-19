@@ -475,5 +475,14 @@
   "reference-by": "Referenz Durch",
   "hide-notification": "Benachrichtigung ausblenden",
   "search-settings": "Sucheinstellungen...",
-  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Dieser Vorgang wird die ausgewählten Dateien löschen und kann nicht wiederhergestellt werden. Bitte bestätigen Sie."
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Dieser Vorgang wird die ausgewählten Dateien löschen und kann nicht wiederhergestellt werden. Bitte bestätigen Sie.",
+  "plugin-settings": "Plugin-Einstellung",
+  "installed-plugins": "Installiert",
+  "marketplace": "Marktplatz",
+  "local-development": "Lokale Entwicklung",
+  "add-local-plugin": "Füge lokales Plugin hinzu",
+  "local-plugin": "Lokales Plugin",
+  "uninstall": "Deinstallieren",
+  "install": "Install\n\nInstallation",
+  "downloads": "Downloads\n\nHerunterladen"
 }

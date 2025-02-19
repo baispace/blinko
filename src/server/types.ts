@@ -146,3 +146,34 @@ export const ZConfigSchema = z.object({
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;
 
+// Zod schema for plugin information
+export const pluginInfoSchema = z.object({
+  name: z.string(),
+  author: z.string(),
+  url: z.string(),
+  version: z.string(),
+  minAppVersion: z.string(),
+  displayName: z.object({
+    default: z.string(),
+    zh_CN: z.string()
+  }),
+  description: z.object({
+    default: z.string(),
+    zh_CN: z.string()
+  }),
+  readme: z.object({
+    default: z.string(),
+    zh_CN: z.string()
+  }),
+  downloads: z.number()
+});
+
+// Schema for plugin installation input (subset of PluginInfo)
+export const installPluginSchema = pluginInfoSchema.omit({ 
+  readme: true,
+  downloads: true 
+});
+
+// TypeScript types derived from the schemas
+export type PluginInfo = z.infer<typeof pluginInfoSchema>;
+export type InstallPluginInput = z.infer<typeof installPluginSchema>; 

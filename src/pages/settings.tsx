@@ -127,7 +127,7 @@ const Page = observer(() => {
     {
       key: "plugin",
       title: t('plugin-settings'),
-      icon: "tabler:puzzle",
+      icon: "mingcute:plugin-line",
       component: <PluginSetting />,
       requireAdmin: true,
       keywords: ['plugin', 'plugins', '插件', '插件设置']

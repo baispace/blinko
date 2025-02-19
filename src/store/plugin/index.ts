@@ -28,7 +28,20 @@ declare global {
 
 export interface I18nString {
   default: string;
-  zh_CN?: string;
+  zh?: string;
+  'zh-tw'?: string;
+  en?: string;
+  vi?: string;
+  tr?: string;
+  ka?: string;
+  de?: string;
+  es?: string;
+  fr?: string;
+  pt?: string;
+  pl?: string;
+  ru?: string;
+  ko?: string;
+  ja?: string;
   [key: string]: string | undefined;
 }
 

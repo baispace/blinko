@@ -417,5 +417,14 @@
   "reference-by": "Referans Tarafından",
   "hide-notification": "Bildirimi Gizle",
   "search-settings": "Arama Ayarları...",
-  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Bu işlem seçilen dosyaları silecek ve geri alınamaz, Lütfen onaylayın."
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "Bu işlem seçilen dosyaları silecek ve geri alınamaz, Lütfen onaylayın.",
+  "plugin-settings": "Eklenti Ayarı",
+  "installed-plugins": "Yüklendi",
+  "marketplace": "Pazar yeri",
+  "local-development": "Yerel Kalkınma",
+  "add-local-plugin": "Yerel Eklenti Ekle",
+  "local-plugin": "Yerel Eklenti",
+  "uninstall": "Kaldır",
+  "install": "Yüklemek",
+  "downloads": "İndirmeler"
 }

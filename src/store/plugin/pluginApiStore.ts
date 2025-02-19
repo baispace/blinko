@@ -23,6 +23,18 @@ export class PluginApiStore extends Store {
 
   addToolBarIcon(options: AddToolBarIconOptions) {
     console.log('addToolBarIcon', options);
+
+    const sameNameIndex = this.customToolbarIcons.findIndex(item => item.name === options.name);
+
+    if (sameNameIndex !== -1) {
+      this.customToolbarIcons[sameNameIndex] = {
+        ...options,
+        placement: options.placement || 'top',
+        maxWidth: options.maxWidth || 300,
+      };
+      return;
+    }
+
     this.customToolbarIcons.push({
       name: options.name,
       icon: options.icon,

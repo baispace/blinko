@@ -184,9 +184,11 @@ export class PluginManagerStore implements Store {
       const module = await window.System.import(`/plugins/dev/${fileName}`);
       const PluginClass = module.default;
       const plugin = new PluginClass();
-      console.log('plugin', plugin);
       plugin.init();
-      this.plugins.set(plugin.name, plugin);
+      if (plugin.withSettingPanel) {
+        this.devPluginMetadata.withSettingPanel = true;
+      }
+      this.plugins.set("dev", plugin);
       return plugin;
     } catch (error) {
       console.error('Load dev plugin error:', error);

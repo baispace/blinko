@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 import path from 'path';
 import { FileService } from '../plugins/files';
 
-interface AttachmentResult {
+export interface AttachmentResult {
   id: number | null;
   path: string;
   name: string;

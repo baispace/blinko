@@ -1,3 +1,15 @@
+# [0.40.0](https://github.com/blinko-space/blinko/compare/v0.39.3...v0.40.0) (2025-02-20)
+
+
+### Bug Fixes
+
+* Improve plugin installation and error handling ([9b99200](https://github.com/blinko-space/blinko/commit/9b992001c4d6c12109a0fe18095a8dd749519b7c))
+
+
+### Features
+
+* **config:** Add rewrite rule for serving plugins from public directory ([6db57d0](https://github.com/blinko-space/blinko/commit/6db57d0445361fcdfdce92b680f9fb7a11e924a9))
+
 ## [0.39.3](https://github.com/blinko-space/blinko/compare/v0.39.2...v0.39.3) (2025-02-20)
 
 

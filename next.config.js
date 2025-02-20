@@ -136,7 +136,7 @@ module.exports = withPWA({
     return [
       {
         source: '/plugins/:path*',
-        destination: '/public/plugins/:path*',
+        destination: '/api/serve-plugin/:path*',
       },
     ]
   }

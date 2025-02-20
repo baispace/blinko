@@ -79,7 +79,7 @@ const PluginCard = ({ name, version, displayName, description, author, downloads
             {description?.[i18n.language] || description?.default}
           </p>
 
-          {downloads && (
+          {!!downloads && downloads > 0 && (
             <div className="flex items-center gap-4 mt-1">
               <div className="flex items-center gap-1.5 text-xs text-default-500">
                 <Icon icon="mdi:download" className="text-base" />
@@ -119,7 +119,7 @@ const InstalledPlugins = observer(() => {
             {...metadata}
             actionButton={
               <div className="flex gap-2">
-                {pluginManager.isIntalledPluginWithSettingPanel(plugin.metadata.name) && (
+                {pluginManager.isIntalledPluginWithSettingPanel(metadata.name) && (
                   <Button
                     size="sm"
                     color="primary"
@@ -157,11 +157,16 @@ const InstalledPlugins = observer(() => {
 const AllPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
-  const [loading, setLoading] = useState(false);
+  const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
+
   const handleInstall = async (plugin: PluginInfo) => {
-    setLoading(true);
-    await PromiseCall(pluginManager.installPlugin(plugin));
-    setLoading(false);
+    setLoadingPluginName(plugin.name);
+    try {
+      await PromiseCall(pluginManager.installPlugin(plugin), { autoAlert: true });
+      pluginManager.loadAllPlugins();
+    } finally {
+      setLoadingPluginName(null);
+    }
   };
 
   return (
@@ -175,7 +180,7 @@ const AllPlugins = observer(() => {
             <Button
               size="sm"
               color="primary"
-              isLoading={loading}
+              isLoading={loadingPluginName === plugin.name}
               className="min-w-[80px]"
               startContent={<Icon icon="mdi:download" width="16" height="16" />}
               onPress={() => handleInstall(plugin)}
@@ -264,8 +269,8 @@ const LocalDevelopment = observer(() => {
               <div className="relative flex-shrink-0 w-2">
                 <div
                   className={`absolute top-2 left-0 w-2 h-2 rounded-full animate-pulse ${pluginManager.wsConnectionStatus === 'connected' ? 'bg-success' :
-                      pluginManager.wsConnectionStatus === 'error' ? 'bg-danger' :
-                        'bg-warning'
+                    pluginManager.wsConnectionStatus === 'error' ? 'bg-danger' :
+                      'bg-warning'
                     }`}
                 />
               </div>

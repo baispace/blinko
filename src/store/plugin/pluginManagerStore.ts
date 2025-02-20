@@ -246,16 +246,7 @@ export class PluginManagerStore implements Store {
 
   async installPlugin(plugin: PluginInfo) {
     try {
-      const input: InstallPluginInput = {
-        name: plugin.name,
-        url: plugin.url,
-        version: plugin.version,
-        author: plugin.author,
-        minAppVersion: plugin.minAppVersion,
-        displayName: plugin.displayName,
-        description: plugin.description
-      };
-      await api.plugin.installPlugin.mutate(input);
+      await api.plugin.installPlugin.mutate(plugin);
       await this.marketplacePlugins.call();
       await this.initInstalledPlugins();
     } catch (error) {

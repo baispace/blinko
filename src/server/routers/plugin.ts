@@ -11,6 +11,25 @@ import { pluginSchema } from '@/lib/prismaZodType';
 import { cache } from '@/lib/cache';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+async function downloadWithRetry(url: string, filePath: string, retries = MAX_RETRIES): Promise<void> {
+  try {
+    const response = await axios.get(url, { 
+      responseType: 'arraybuffer',
+      timeout: 30000, // 30 seconds timeout
+      maxContentLength: 50 * 1024 * 1024 // 50MB max
+    });
+    await fs.writeFile(filePath, response.data);
+  } catch (error) {
+    if (retries > 0 && (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT')) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return downloadWithRetry(url, filePath, retries - 1);
+    }
+    throw error;
+  }
+}
 
 export const pluginRouter = router({
   getAllPlugins: authProcedure
@@ -71,7 +90,6 @@ export const pluginRouter = router({
           }
         });
 
-        // If plugin exists and version is different, clean up old version
         if (existingPlugin) {
           const metadata = existingPlugin.metadata as { version: string };
           if (metadata.version !== input.version) {
@@ -84,8 +102,9 @@ export const pluginRouter = router({
         // Create plugin directory and download files
         await fs.mkdir(pluginDir, { recursive: true });
         const releaseUrl = `${input.url}/releases/download/v${input.version}/release.zip`;
-        const response = await axios.get(releaseUrl, { responseType: 'arraybuffer' });
-        await fs.writeFile(tempZipPath, response.data);
+        
+        // Use retry mechanism for download
+        await downloadWithRetry(releaseUrl, tempZipPath);
 
         // Extract zip file
         const zipFile = await yauzl.open(tempZipPath);
@@ -112,46 +131,26 @@ export const pluginRouter = router({
         await zipFile.close();
         await fs.unlink(tempZipPath);
 
-        // Save to database with increased timeout
+        // Save to database
         return await prisma.$transaction(async (tx) => {
           if (existingPlugin) {
-            // Update existing plugin
-            const plugin = await tx.plugin.update({
+            return await tx.plugin.update({
               where: { id: existingPlugin.id },
               data: {
-                metadata: {
-                  name: input.name,
-                  version: input.version,
-                  author: input.author,
-                  minAppVersion: input.minAppVersion,
-                  displayName: input.displayName,
-                  description: input.description
-                },
+                metadata: input,
                 path: `/plugins/${input.name}/index.js`,
               }
             });
-            return plugin;
           } else {
-            // Create new plugin
-            const plugin = await tx.plugin.create({
+            return await tx.plugin.create({
               data: {
-                metadata: {
-                  name: input.name,
-                  version: input.version,
-                  author: input.author,
-                  minAppVersion: input.minAppVersion,
-                  displayName: input.displayName,
-                  description: input.description
-                },
+                metadata: input,
                 path: `/plugins/${input.name}/index.js`,
                 isUse: true,
                 isDev: false,
               }
             });
-            return plugin;
           }
-        }, {
-          timeout: 300000 // 300 seconds timeout
         });
       } catch (error) {
         // Clean up on error

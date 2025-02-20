@@ -1,3 +1,10 @@
+## [0.39.3](https://github.com/blinko-space/blinko/compare/v0.39.2...v0.39.3) (2025-02-20)
+
+
+### Bug Fixes
+
+* update ([47beb64](https://github.com/blinko-space/blinko/commit/47beb64d557dc983289a221586ac1d7dd70eb543))
+
 ## [0.39.2](https://github.com/blinko-space/blinko/compare/v0.39.1...v0.39.2) (2025-02-20)
 
 

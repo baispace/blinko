@@ -1,3 +1,23 @@
+# [0.39.0](https://github.com/blinko-space/blinko/compare/v0.38.6...v0.39.0) (2025-02-20)
+
+
+### Bug Fixes
+
+* add TypeScript type definitions and enhance plugin architecture ([cd7db9c](https://github.com/blinko-space/blinko/commit/cd7db9cc7caeb4989b375d167c18745737447566))
+* **plugin:** improve plugin ([d62a1ef](https://github.com/blinko-space/blinko/commit/d62a1ef087b42d3e9509f90c01ae5ec513c1b755))
+
+
+### Features
+
+* enhance plugin system with Alpine.js and custom toolbar icons ([7499ba7](https://github.com/blinko-space/blinko/commit/7499ba7591396451afc8206e1650dbacc82bc893))
+* integrate custom plugin loading in MyApp component ([7a81b81](https://github.com/blinko-space/blinko/commit/7a81b81c451722c45088312b58d5b92e5d477049))
+* integrate SystemJS for dynamic plugin loading ([3ef8db6](https://github.com/blinko-space/blinko/commit/3ef8db62905d1659604bf693f81dec40406d44f9))
+* **plugin:** Add settings panel support for installed plugins ([2c71ebf](https://github.com/blinko-space/blinko/commit/2c71ebf100976b2f213f9e5a446f5679b08e5976))
+* **plugin:** Enhance plugin system with advanced features and UI improvements ([819ddcb](https://github.com/blinko-space/blinko/commit/819ddcbb9a9fa091af8d4204520808cc7794728b))
+* **plugin:** Enhance plugin system with dynamic toolbar rendering and global Blinko interface ([df2ef70](https://github.com/blinko-space/blinko/commit/df2ef70d3513644812f4cbba85ddd969d9817e9a))
+* **plugin:** Implement comprehensive plugin management system ([f76c451](https://github.com/blinko-space/blinko/commit/f76c45117d6a637a3b4569c0a973af64cb4b1ea9))
+* **plugin:** Modify dev plugin loading to support settings panel detection ([1428bbb](https://github.com/blinko-space/blinko/commit/1428bbb93aa36ff2ab66beff32e63a12d494b13a))
+
 ## [0.38.6](https://github.com/blinko-space/blinko/compare/v0.38.5...v0.38.6) (2025-02-17)
 
 

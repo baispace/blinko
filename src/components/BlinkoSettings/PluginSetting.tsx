@@ -112,6 +112,7 @@ const InstalledPlugins = observer(() => {
           description: { default: string; zh_CN: string };
           withSettingPanel?: boolean;
         };
+
         return (
           <PluginCard
             key={plugin.id}
@@ -304,7 +305,7 @@ const LocalDevelopment = observer(() => {
                 className="h-6 px-2 min-w-0"
                 startContent={<Icon icon="mdi:cog" className="text-sm" />}
                 onPress={() => {
-                  const pluginInstance = pluginManager.getPluginInstanceByName(pluginManager.devPluginMetadata.name);
+                  const pluginInstance = pluginManager.getPluginInstanceByName("dev");
                   RootStore.Get(DialogStandaloneStore).setData({
                     isOpen: true,
                     title: t('settings'),

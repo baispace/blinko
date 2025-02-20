@@ -211,10 +211,10 @@ export class PluginManagerStore implements Store {
       const PluginClass = module.default;
       const plugin = new PluginClass();
       plugin.init();
+      this.plugins.set(plugin.name, plugin);
       if (plugin.withSettingPanel) {
         this.plugins[plugin.name].withSettingPanel = true;
       }
-      this.plugins.set(plugin.name, plugin);
       return plugin;
     } catch (error) {
       console.error(`load plugin error: ${pluginPath}`, error);

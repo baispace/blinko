@@ -33,7 +33,7 @@ const PluginCard = ({ name, version, displayName, description, author, downloads
   return (
     <Card key={name} className="group relative overflow-hidden backdrop-blur-sm border border-default-200 dark:border-default-100/20">
       <div className="absolute inset-0 bg-gradient-to-r from-default-100/50 via-default-200/30 to-default-100/50 dark:from-default-50/10 dark:via-default-100/5 dark:to-default-50/10 opacity-0 transition-opacity duration-300" />
-      
+
       <CardBody className="p-5">
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between">
@@ -101,7 +101,6 @@ const InstalledPlugins = observer(() => {
     await PromiseCall(pluginManager.uninstallPlugin(id));
   };
 
-
   return (
     <div className="space-y-2">
       <LoadingAndEmpty isLoading={pluginManager.installedPlugins.loading.value} isEmpty={pluginManager.installedPlugins.value?.length === 0} />
@@ -111,21 +110,41 @@ const InstalledPlugins = observer(() => {
           version: string;
           displayName: { default: string; zh_CN: string };
           description: { default: string; zh_CN: string };
+          withSettingPanel?: boolean;
         };
         return (
           <PluginCard
             key={plugin.id}
             {...metadata}
             actionButton={
-              <Button
-                size="sm"
-                color="danger"
-                startContent={<Icon icon="mdi:trash-can" width="16" height="16" />}
-                className="min-w-[80px]"
-                onPress={() => handleUninstall(plugin.id)}
-              >
-                {t('uninstall')}
-              </Button>
+              <div className="flex gap-2">
+                {pluginManager.isIntalledPluginWithSettingPanel(plugin.metadata.name) && (
+                  <Button
+                    size="sm"
+                    color="primary"
+                    isIconOnly
+                    startContent={<Icon icon="mdi:cog" width="16" height="16" />}
+                    onPress={() => {
+                      const pluginInstance = pluginManager.getPluginInstanceByName(metadata.name);
+                      RootStore.Get(DialogStandaloneStore).setData({
+                        isOpen: true,
+                        title: t('settings'),
+                        size: 'lg',
+                        content: <PluginRender content={pluginInstance?.renderSettingPanel!} />
+                      });
+                    }}
+                  />
+                )}
+                <Button
+                  size="sm"
+                  color="danger"
+                  startContent={<Icon icon="mdi:trash-can" width="16" height="16" />}
+                  className="min-w-[80px]"
+                  onPress={() => handleUninstall(plugin.id)}
+                >
+                  {t('uninstall')}
+                </Button>
+              </div>
             }
           />
         );
@@ -242,32 +261,31 @@ const LocalDevelopment = observer(() => {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div className="relative flex-shrink-0 w-2">
-                <div 
-                  className={`absolute top-2 left-0 w-2 h-2 rounded-full animate-pulse ${
-                    pluginManager.wsConnectionStatus === 'connected' ? 'bg-success' :
-                    pluginManager.wsConnectionStatus === 'error' ? 'bg-danger' :
-                    'bg-warning'
-                  }`}
+                <div
+                  className={`absolute top-2 left-0 w-2 h-2 rounded-full animate-pulse ${pluginManager.wsConnectionStatus === 'connected' ? 'bg-success' :
+                      pluginManager.wsConnectionStatus === 'error' ? 'bg-danger' :
+                        'bg-warning'
+                    }`}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
                 <div className="font-medium text-foreground">
-                  {pluginManager.devPluginMetadata?.displayName?.[i18n.language] || 
-                   pluginManager.devPluginMetadata?.displayName?.default || 
-                   t('local-plugin')}
+                  {pluginManager.devPluginMetadata?.displayName?.[i18n.language] ||
+                    pluginManager.devPluginMetadata?.displayName?.default ||
+                    t('local-plugin')}
                 </div>
                 <div className="text-sm text-default-500 line-clamp-2">
-                  {pluginManager.devPluginMetadata?.description?.[i18n.language] || 
-                   pluginManager.devPluginMetadata?.description?.default}
+                  {pluginManager.devPluginMetadata?.description?.[i18n.language] ||
+                    pluginManager.devPluginMetadata?.description?.default}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-default-400">
                     <Icon icon="mdi:link-variant" className="text-sm" />
                     <span>{pluginManager.devWebscoketUrl.value}</span>
                   </div>
-                  <Button 
-                    size="sm" 
-                    color="danger" 
+                  <Button
+                    size="sm"
+                    color="danger"
                     variant="flat"
                     className="h-6 px-2 min-w-0"
                     startContent={<Icon icon="mdi:link-off" className="text-sm" />}

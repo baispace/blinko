@@ -54,9 +54,13 @@ export class PluginManagerStore implements Store {
   installedPlugins = new PromiseState({
     function: async () => {
       const plugins = await api.plugin.getInstalledPlugins.query();
-      return plugins as (InstalledPluginInfo & { withSettingPanel: boolean })[];
+      return plugins;
     }
   })
+
+  isIntalledPluginWithSettingPanel(pluginName: string) {
+    return this.plugins.get(pluginName)?.withSettingPanel;
+  }
 
   loadAllPlugins() {
     this.marketplacePlugins.call();
@@ -182,10 +186,6 @@ export class PluginManagerStore implements Store {
       const plugin = new PluginClass();
       console.log('plugin', plugin);
       plugin.init();
-      if (plugin.withSettingPanel) {
-        this.devPluginMetadata.withSettingPanel = true;
-      }
-      console.log('this.devPluginMetadata', this.devPluginMetadata);
       this.plugins.set(plugin.name, plugin);
       return plugin;
     } catch (error) {
@@ -210,10 +210,7 @@ export class PluginManagerStore implements Store {
       const plugin = new PluginClass();
       plugin.init();
       if (plugin.withSettingPanel) {
-        const installedPluginIdx = this.installedPlugins.value?.findIndex(item => item.metadata.name === plugin.name);
-        if (installedPluginIdx !== -1) {
-          this.installedPlugins.value![installedPluginIdx!]!.withSettingPanel = true;
-        }
+        this.plugins[plugin.name].withSettingPanel = true;
       }
       this.plugins.set(plugin.name, plugin);
       return plugin;

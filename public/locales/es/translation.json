@@ -477,5 +477,10 @@
   "local-plugin": "Plugin local",
   "uninstall": "Desinstalar",
   "install": "Instalar",
-  "downloads": "Descargas"
+  "downloads": "Descargas",
+  "plugin-updated": "Plugin actualizado",
+  "plugin-update-failed": "Error al actualizar el plugin",
+  "plugin-connection-failed": "Conexión del complemento fallida",
+  "disconnect": "Desconectar",
+  "local-development-description": "Agregar un complemento de desarrollo local y depurarlo."
 }

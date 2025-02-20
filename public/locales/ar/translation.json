@@ -498,5 +498,10 @@
   "local-plugin": "الإضافة المحلية",
   "uninstall": "إلغاء التثبيت",
   "install": "تثبيت",
-  "downloads": "تنزيلات"
+  "downloads": "تنزيلات",
+  "plugin-updated": "تم تحديث الإضافة",
+  "plugin-update-failed": "فشل تحديث الإضافة",
+  "plugin-connection-failed": "فشل الاتصال بالإضافة",
+  "disconnect": "افصل",
+  "local-development-description": "أضف إضافة تطوير محلية وقم بتصحيح الأخطاء فيها."
 }

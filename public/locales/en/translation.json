@@ -501,5 +501,10 @@
   "add-local-plugin": "Add Local Plugin",
   "uninstall": "Uninstall",
   "install": "Install",
-  "downloads": "Downloads"
+  "downloads": "Downloads",
+  "plugin-updated": "Plugin Updated",
+  "plugin-update-failed": "Plugin Update Failed",
+  "plugin-connection-failed": "Plugin Connection Failed",
+  "disconnect": "Disconnect",
+  "local-development-description": "Add a local development plug-in and debug it."
 }

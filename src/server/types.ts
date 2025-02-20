@@ -8,6 +8,7 @@ export type Config = NonNullable<RouterOutput['config']['list']>
 export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
 export type ResourceType = NonNullable<RouterOutput['attachments']['list']>[0]
 export type Comment = NonNullable<RouterOutput['comments']['list']>
+export type InstalledPluginInfo = NonNullable<RouterOutput['plugin']['getInstalledPlugins']>[0]
 export enum NoteType {
   'BLINKO',
   'NOTE'
@@ -75,7 +76,8 @@ export const ZConfigKey = z.union([
   z.literal('oauth2Providers'),
   z.literal('embeddingApiEndpoint'),
   z.literal('embeddingApiKey'),
-  ZUserPerferConfigKey
+  ZUserPerferConfigKey,
+  z.any()
 ]);
 
 export type ConfigKey = z.infer<typeof ZConfigKey>;
@@ -153,18 +155,9 @@ export const pluginInfoSchema = z.object({
   url: z.string(),
   version: z.string(),
   minAppVersion: z.string(),
-  displayName: z.object({
-    default: z.string(),
-    zh_CN: z.string()
-  }),
-  description: z.object({
-    default: z.string(),
-    zh_CN: z.string()
-  }),
-  readme: z.object({
-    default: z.string(),
-    zh_CN: z.string()
-  }),
+  displayName: z.any(),
+  description: z.any(),
+  readme: z.any(),
   downloads: z.number()
 });
 

@@ -513,5 +513,10 @@
   "local-plugin": "本地插件",
   "uninstall": "解除安裝",
   "install": "安裝",
-  "downloads": "下載"
+  "downloads": "下載",
+  "plugin-updated": "插件已更新",
+  "plugin-update-failed": "插件更新失敗",
+  "plugin-connection-failed": "外掛程式連線失敗",
+  "disconnect": "中文（台灣）：斷開連線",
+  "local-development-description": "新增本地開發外掛程式並進行除錯。"
 }

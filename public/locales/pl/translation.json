@@ -501,5 +501,10 @@
   "local-plugin": "Lokalny dodatek",
   "uninstall": "Odinstaluj",
   "install": "Zainstaluj",
-  "downloads": "Pobrania"
+  "downloads": "Pobrania",
+  "plugin-updated": "Wtyczka zaktualizowana",
+  "plugin-update-failed": "Aktualizacja wtyczki nie powiodła się",
+  "plugin-connection-failed": "Wtyczka nieudane połączenie",
+  "disconnect": "Rozłączać",
+  "local-development-description": "Dodaj wtyczkę do lokalnego środowiska programistycznego i ją zdebuguj."
 }

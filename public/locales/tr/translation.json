@@ -426,5 +426,10 @@
   "local-plugin": "Yerel Eklenti",
   "uninstall": "Kaldır",
   "install": "Yüklemek",
-  "downloads": "İndirmeler"
+  "downloads": "İndirmeler",
+  "plugin-updated": "Eklenti Güncellendi.",
+  "plugin-update-failed": "Eklenti Güncelleme Başarısız oldu",
+  "plugin-connection-failed": "Eklenti Bağlantısı Başarısız oldu",
+  "disconnect": "Bağlantıyı kesmek",
+  "local-development-description": "Yerel geliştirme eklentisi ekleyin ve hata ayıklamayı yapın."
 }

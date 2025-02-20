@@ -14,22 +14,25 @@ import { type PluginInfo } from "@/server/types";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { LoadingAndEmpty } from "../Common/LoadingAndEmpty";
 import { PromiseCall } from "@/store/standard/PromiseState";
+import { I18nString } from "@/store/plugin";
+import { PluginRender } from "@/store/plugin/pluginRender";
 
 interface PluginCardProps {
   name: string;
   version: string;
-  displayName: { default: string; zh_CN: string };
-  description: { default: string; zh_CN: string };
+  displayName?: I18nString;
+  description?: I18nString;
   author?: string;
   downloads?: number;
   actionButton: React.ReactNode;
+  url?: string;
 }
 
-const PluginCard = ({ name, version, displayName, description, author, downloads, actionButton }: PluginCardProps) => {
+const PluginCard = ({ name, version, displayName, description, author, downloads, actionButton, url }: PluginCardProps) => {
   const { t } = useTranslation();
   return (
     <Card key={name} className="group relative overflow-hidden backdrop-blur-sm border border-default-200 dark:border-default-100/20">
-      <div className="absolute inset-0 bg-gradient-to-r from-default-100/50 via-default-200/30 to-default-100/50 dark:from-default-50/10 dark:via-default-100/5 dark:to-default-50/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-gradient-to-r from-default-100/50 via-default-200/30 to-default-100/50 dark:from-default-50/10 dark:via-default-100/5 dark:to-default-50/10 opacity-0 transition-opacity duration-300" />
       
       <CardBody className="p-5">
         <div className="flex flex-col gap-2">
@@ -37,9 +40,18 @@ const PluginCard = ({ name, version, displayName, description, author, downloads
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <div>
-                  <h3 className="text-lg font-semibold">
-                    {displayName[i18n.language] || displayName.default}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold hover:text-primary cursor-pointer" onClick={() => url && window.open(url, '_blank')}>
+                      {displayName?.[i18n.language] || displayName?.default}
+                    </h3>
+                    {url && (
+                      <Icon
+                        icon="mdi:github"
+                        className="text-lg text-default-500 hover:text-primary cursor-pointer"
+                        onClick={() => window.open(url, '_blank')}
+                      />
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <Chip
                       size="sm"
@@ -64,7 +76,7 @@ const PluginCard = ({ name, version, displayName, description, author, downloads
           </div>
 
           <p className="text-sm text-default-600 dark:text-default-400 leading-relaxed">
-            {description[i18n.language] || description.default}
+            {description?.[i18n.language] || description?.default}
           </p>
 
           {downloads && (
@@ -125,9 +137,11 @@ const InstalledPlugins = observer(() => {
 const AllPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
-
+  const [loading, setLoading] = useState(false);
   const handleInstall = async (plugin: PluginInfo) => {
+    setLoading(true);
     await PromiseCall(pluginManager.installPlugin(plugin));
+    setLoading(false);
   };
 
   return (
@@ -141,6 +155,7 @@ const AllPlugins = observer(() => {
             <Button
               size="sm"
               color="primary"
+              isLoading={loading}
               className="min-w-[80px]"
               startContent={<Icon icon="mdi:download" width="16" height="16" />}
               onPress={() => handleInstall(plugin)}
@@ -154,67 +169,137 @@ const AllPlugins = observer(() => {
   );
 });
 
+const AddLocalPluginDialog = observer(({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
+  const [url, setUrl] = useState('');
+
+  const handleConfirm = () => {
+    RootStore.Get(PluginManagerStore).connectDevPlugin(url);
+    onClose();
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Input
+        label={t('endpoint')}
+        placeholder="ws://192.168.31.100:8080"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        startContent={
+          <Icon icon="mdi:link-variant" className="text-default-400 pointer-events-none flex-shrink-0" />
+        }
+        className="w-full"
+      />
+      <div className="flex justify-end gap-2">
+        <Button color="danger" variant="light" onPress={onClose}>
+          {t('cancel')}
+        </Button>
+        <Button color="primary" onPress={handleConfirm}>
+          {t('confirm')}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 const LocalDevelopment = observer(() => {
   const { t } = useTranslation();
   const dialog = RootStore.Get(DialogStandaloneStore);
-  const [url, setUrl] = useState('');
+  const pluginManager = RootStore.Get(PluginManagerStore);
 
-  const handleAddLocalPlugin = async () => {
+  const handleAddLocalPlugin = () => {
     dialog.setData({
       isOpen: true,
       title: t('add-local-plugin'),
       size: 'md',
-      content: <div className="flex flex-col gap-4">
-        <Input
-          label={t('endpoint')}
-          placeholder="ws://192.168.16.x:8080"
-          value={url}
-          onChange={(e) => {
-            console.log(e.target.value);
-            setUrl(e.target.value);
-          }}
-        />
-        <div className="flex justify-end gap-2">
-          <Button color="danger" variant="light" onPress={() => dialog.close()}>
-            {t('cancel')}
-          </Button>
-          <Button color="primary" onPress={() => {
-            RootStore.Get(PluginManagerStore).connectDevPlugin(url);
-            dialog.close();
-          }}>
-            {t('confirm')}
-          </Button>
-        </div>
-      </div>
+      content: <AddLocalPluginDialog onClose={() => dialog.close()} />
     });
+  };
+
+  const handleDisconnect = () => {
+    pluginManager.disconnectDevPlugin();
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-default-500">
+          {t('local-development-description')}
+        </div>
         <Button
           color="primary"
-          startContent={<Icon icon="mdi:plus" />}
+          size="sm"
+          className="px-4"
+          startContent={<Icon icon="mdi:plus" className="text-lg" />}
           onPress={handleAddLocalPlugin}
         >
           {t('add-local-plugin')}
         </Button>
       </div>
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon icon="mdi:code-braces" width="24" height="24" />
-            <div>
-              <div className="font-medium">{t('local-plugin')}</div>
-              <div className="text-sm text-default-500">ws://192.168.1.100:8080</div>
+      {pluginManager.devWebscoketUrl.value && (
+        <Card className="p-4 bg-content2/40 backdrop-blur-lg border border-content3/20">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="relative flex-shrink-0 w-2">
+                <div 
+                  className={`absolute top-2 left-0 w-2 h-2 rounded-full animate-pulse ${
+                    pluginManager.wsConnectionStatus === 'connected' ? 'bg-success' :
+                    pluginManager.wsConnectionStatus === 'error' ? 'bg-danger' :
+                    'bg-warning'
+                  }`}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="font-medium text-foreground">
+                  {pluginManager.devPluginMetadata?.displayName?.[i18n.language] || 
+                   pluginManager.devPluginMetadata?.displayName?.default || 
+                   t('local-plugin')}
+                </div>
+                <div className="text-sm text-default-500 line-clamp-2">
+                  {pluginManager.devPluginMetadata?.description?.[i18n.language] || 
+                   pluginManager.devPluginMetadata?.description?.default}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-1.5 text-xs text-default-400">
+                    <Icon icon="mdi:link-variant" className="text-sm" />
+                    <span>{pluginManager.devWebscoketUrl.value}</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    color="danger" 
+                    variant="flat"
+                    className="h-6 px-2 min-w-0"
+                    startContent={<Icon icon="mdi:link-off" className="text-sm" />}
+                    onPress={handleDisconnect}
+                  >
+                    {t('disconnect')}
+                  </Button>
+                </div>
+              </div>
             </div>
+            {pluginManager.devPluginMetadata?.withSettingPanel && (
+              <Button
+                size="sm"
+                color="primary"
+                isIconOnly
+                className="h-6 px-2 min-w-0"
+                startContent={<Icon icon="mdi:cog" className="text-sm" />}
+                onPress={() => {
+                  const pluginInstance = pluginManager.getPluginInstanceByName(pluginManager.devPluginMetadata.name);
+                  RootStore.Get(DialogStandaloneStore).setData({
+                    isOpen: true,
+                    title: t('settings'),
+                    size: 'lg',
+                    content: <PluginRender content={pluginInstance?.renderSettingPanel!} />
+                  });
+                }}
+              >
+              </Button>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" color="danger">{t('remove')}</Button>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 });

@@ -8,66 +8,45 @@ import yauzl from 'yauzl-promise';
 import { createWriteStream } from 'fs';
 import { pluginInfoSchema, installPluginSchema } from '../types';
 import { pluginSchema } from '@/lib/prismaZodType';
+import { cache } from '@/lib/cache';
 
-let pluginCache: z.infer<typeof pluginInfoSchema>[] = [];
-let lastCacheTime: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 
 export const pluginRouter = router({
   getAllPlugins: authProcedure
-    .meta({
-      openapi: {
-        method: 'GET',
-        path: '/v1/plugin/all',
-        summary: 'Get all available plugins',
-        protect: true,
-        tags: ['Plugin']
-      }
-    })
     .output(z.array(pluginInfoSchema))
     .query(async () => {
-      const now = Date.now();
-
-      if (pluginCache.length > 0 && (now - lastCacheTime) < CACHE_DURATION) {
-        return pluginCache;
-      }
-
-      try {
-        const response = await axios.get('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
-        pluginCache = response.data;
-        lastCacheTime = now;
-        return pluginCache;
-      } catch (error) {
-        console.error('Failed to fetch plugin list:', error);
-        return [];
-      }
+      return cache.wrap('plugin-list', async () => {
+        try {
+          const response = await axios.get('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
+          return response.data;
+        } catch (error) {
+          console.error('Failed to fetch plugin list:', error);
+          return [];
+        }
+      }, {
+        ttl: CACHE_DURATION
+      });
     }),
 
   saveDevPlugin: authProcedure
-    .meta({
-      openapi: {
-        method: 'POST',
-        path: '/v1/plugin/save-dev',
-        summary: 'Save development plugin',
-        protect: true,
-        tags: ['Plugin']
-      }
-    })
     .input(z.object({
       code: z.string(),
       fileName: z.string(),
+      metadata: z.any()
     }))
     .output(z.any())
     .mutation(async function ({ input }) {
       const devPluginDir = path.join(process.cwd(), 'public', 'plugins', 'dev');
       try {
-        await fs.rm(path.join(devPluginDir), { force: true });
+        await fs.rm(devPluginDir, { recursive: true, force: true });
+      } catch (error) { }
+      try {
         await fs.mkdir(devPluginDir, { recursive: true });
         await fs.writeFile(
           path.join(devPluginDir, input.fileName),
           input.code
         );
-
         return { success: true };
       } catch (error) {
         console.error('Save dev plugin error:', error);
@@ -118,10 +97,10 @@ export const pluginRouter = router({
 
           const targetPath = path.join(pluginDir, entry.filename);
           await fs.mkdir(path.dirname(targetPath), { recursive: true });
-          
+
           const readStream = await entry.openReadStream();
           const writeStream = createWriteStream(targetPath);
-          
+
           await new Promise((resolve, reject) => {
             readStream
               .pipe(writeStream)
@@ -187,14 +166,6 @@ export const pluginRouter = router({
     }),
 
   getInstalledPlugins: authProcedure
-    .meta({
-      openapi: {
-        method: 'GET',
-        path: '/v1/plugin/installed',
-        summary: 'Get installed plugins',
-        protect: true,
-      }
-    })
     .output(z.array(pluginSchema))
     .query(async () => {
       const plugins = await prisma.plugin.findMany();

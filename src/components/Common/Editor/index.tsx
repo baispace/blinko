@@ -32,6 +32,7 @@ import { eventBus } from "@/lib/event";
 import { Icon } from "@iconify/react";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from '@/store/plugin/pluginRender';
+import { IconButton } from "./Toolbar/IconButton";
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -133,7 +134,16 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 onFileUpload={store.uploadFiles}
               />
               {pluginApi.customToolbarIcons.map((item) => (
-                <PluginRender key={item.name} item={item} />
+                <Popover key={item.name} placement={item.placement}>
+                  <PopoverTrigger>
+                    <div className="hover:bg-default-100 rounded-md">
+                      <IconButton icon={item.icon} tooltip={item.tooltip} />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PluginRender content={item.content} />
+                  </PopoverContent>
+                </Popover>
               ))}
             </>
           )}

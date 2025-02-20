@@ -78,4 +78,45 @@ export const configRouter = router({
         return await prisma.config.create({ data: { key, config: { type: typeof value, value } } })
       }
     }),
+
+  setPluginConfig: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/config/setPluginConfig', summary: 'Set plugin config', protect: true, tags: ['Config'] } })
+    .input(z.object({
+      pluginName: z.string(),
+      key: z.string(),
+      value: z.any()
+    }))
+    .output(z.any())
+    .mutation(async function ({ input, ctx }) {
+      const userId = Number(ctx.id)
+      const { pluginName, key, value } = input
+      const hasKey = await prisma.config.findFirst({ where: { userId, key: `plugin_config_${pluginName}_${key}` } })
+      if (hasKey) {
+        return await prisma.config.update({ where: { id: hasKey.id }, data: { config: { type: typeof value, value } } })
+      }
+      return await prisma.config.create({ data: { userId, key: `plugin_config_${pluginName}_${key}`, config: { type: typeof value, value } } })
+    }),
+  getPluginConfig: authProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/config/getPluginConfig', summary: 'Get plugin config', protect: true, tags: ['Config'] } })
+    .input(z.object({
+      pluginName: z.string()
+    }))
+    .output(z.any())
+    .query(async function ({ input, ctx }) {
+      const userId = Number(ctx.id)
+      const { pluginName } = input
+      const configs = await prisma.config.findMany({ 
+        where: { 
+          userId, 
+          key: { 
+            contains: `plugin_config_${pluginName}_` 
+          } 
+        } 
+      })
+      return configs.reduce((acc, item) => {
+        const key = item.key.replace(`plugin_config_${pluginName}_`, '');
+        acc[key] = (item.config as { value: any }).value;
+        return acc;
+      }, {} as Record<string, any>);
+    })
 })

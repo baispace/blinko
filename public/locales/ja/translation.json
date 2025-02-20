@@ -457,5 +457,11 @@
   "local-plugin": "ローカル プラグイン",
   "uninstall": "アンインストール",
   "install": "インストールします。",
-  "downloads": "ダウンロード"
+  "downloads": "ダウンロード",
+  "plugin-updated": "プラグインが更新されました",
+  "plugin-update-failed": "プラグインの更新に失敗しました",
+  "plugin-connection-failed": "プラグインの接続に失敗しました",
+  "disconnect": "切断",
+  "local-development-description": "ローカル開発プラグインを追加してデバッグします。",
+  "setting": ""
 }

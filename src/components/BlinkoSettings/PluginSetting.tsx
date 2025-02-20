@@ -112,7 +112,7 @@ const InstalledPlugins = observer(() => {
           description: { default: string; zh_CN: string };
           withSettingPanel?: boolean;
         };
-
+        console.log('metadata', metadata);
         return (
           <PluginCard
             key={plugin.id}

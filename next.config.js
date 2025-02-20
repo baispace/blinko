@@ -132,4 +132,12 @@ module.exports = withPWA({
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/plugins/:path*',
+        destination: '/public/plugins/:path*',
+      },
+    ]
+  }
 })

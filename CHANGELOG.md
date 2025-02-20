@@ -1,3 +1,10 @@
+## [0.39.1](https://github.com/blinko-space/blinko/compare/v0.39.0...v0.39.1) (2025-02-20)
+
+
+### Bug Fixes
+
+* Remove debug logging of plugin menu length in right-click menu ([f6028e4](https://github.com/blinko-space/blinko/commit/f6028e4157788aafcc615b82ef69e8585ce59792))
+
 # [0.39.0](https://github.com/blinko-space/blinko/compare/v0.38.6...v0.39.0) (2025-02-20)
 
 

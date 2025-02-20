@@ -1,3 +1,10 @@
+## [0.40.1](https://github.com/blinko-space/blinko/compare/v0.40.0...v0.40.1) (2025-02-20)
+
+
+### Bug Fixes
+
+* **config:** Update plugin route to use API endpoint for serving plugins ([f893873](https://github.com/blinko-space/blinko/commit/f893873c6795fed965b0c1b5c94e9b5bf9b1280f))
+
 # [0.40.0](https://github.com/blinko-space/blinko/compare/v0.39.3...v0.40.0) (2025-02-20)
 
 

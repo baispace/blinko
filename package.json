@@ -23,6 +23,7 @@
     "dev": "next dev -p 1111",
     "dev:https": "ngrok http 1111",
     "build": "set NODE_ENV=production & next build",
+    "build:dev": "set NODE_ENV=development & next build",
     "build:debug": "set DEBUG=* & next build",
     "build:max": "set NODE_OPTIONS=--max-old-space-size=16384 & set DEBUG=* & next build",
     "start": "prisma migrate & prisma db seed & next start -p 1111",

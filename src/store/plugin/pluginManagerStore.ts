@@ -16,6 +16,8 @@ import { BlinkoStore } from "../blinkoStore";
 import { BaseStore } from "../baseStore";
 import { ResourceStore } from "../resourceStore";
 import { HubStore } from "../hubStore";
+import copy from "copy-to-clipboard"
+
 export class PluginManagerStore implements Store {
   sid = 'pluginManagerStore';
   private plugins: Map<string, BasePlugin> = new Map();
@@ -139,6 +141,7 @@ export class PluginManagerStore implements Store {
       //@ts-ignore
       window.Blinko = {
         api,
+        copyToClipboard: copy,
         eventBus,
         i18n,
         //@ts-ignore

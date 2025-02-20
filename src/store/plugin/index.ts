@@ -11,6 +11,7 @@ import { StorageState } from "../standard/StorageState";
 import { PromiseState } from "../standard/PromiseState";
 import { PromisePageState } from "../standard/PromiseState";
 import { PluginApiStore } from "./pluginApiStore";
+import copy from "copy-to-clipboard"
 
 declare global {
   interface Window {
@@ -19,6 +20,7 @@ declare global {
       eventBus: typeof eventBus;
       i18n: typeof i18n;
       version: string;
+      copyToClipboard: typeof copy;
       toast: InstanceType<typeof ToastPlugin>;
       store: {
         StorageState: typeof StorageState;

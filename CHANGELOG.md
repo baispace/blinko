@@ -1,3 +1,10 @@
+## [0.39.2](https://github.com/blinko-space/blinko/compare/v0.39.1...v0.39.2) (2025-02-20)
+
+
+### Bug Fixes
+
+* **plugin:** Hardcode dev plugin name for settings configuration ([96baf02](https://github.com/blinko-space/blinko/commit/96baf0278c0887ec3b42378039b63c1a90237a3a))
+
 ## [0.39.1](https://github.com/blinko-space/blinko/compare/v0.39.0...v0.39.1) (2025-02-20)
 
 

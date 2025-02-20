@@ -316,7 +316,7 @@ export const BlinkoRightClickMenu = observer(() => {
       <ContextMenuItem key={menu.name} onClick={() => menu.onClick(blinko.curSelectedNote!)} disabled={menu.disabled}>
         <div className="flex items-start gap-2">
           {menu.icon && <Icon icon={menu.icon} width="20" height="20" />}
-          <div>{menu.label}{pluginApi.customRightClickMenus.length}</div>
+          <div>{menu.label}</div>
         </div>
       </ContextMenuItem>
     ))}

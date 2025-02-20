@@ -102,8 +102,8 @@ const InstalledPlugins = observer(() => {
   };
 
   return (
-    <div className="space-y-2">
-      <LoadingAndEmpty isLoading={pluginManager.installedPlugins.loading.value} isEmpty={pluginManager.installedPlugins.value?.length === 0} />
+    <div className="space-y-2 ">
+      <LoadingAndEmpty isAbsolute={false} className='mt-2' isLoading={pluginManager.installedPlugins.loading.value} isEmpty={pluginManager.installedPlugins.value?.length === 0} />
       {pluginManager.installedPlugins.value?.map((plugin) => {
         const metadata = plugin.metadata as {
           name: string;
@@ -170,8 +170,9 @@ const AllPlugins = observer(() => {
   };
 
   return (
-    <div className="space-y-2">
-      <LoadingAndEmpty isLoading={pluginManager.marketplacePlugins.loading.value} isEmpty={pluginManager.marketplacePlugins.value?.length === 0} />
+    <div className="space-y-2 relative">
+      <LoadingAndEmpty isAbsolute={false} isLoading={pluginManager.marketplacePlugins.loading.value} isEmpty={pluginManager.marketplacePlugins.value?.length === 0} />
+
       {pluginManager.marketplacePlugins.value?.map((plugin) => (
         <PluginCard
           key={plugin.name}

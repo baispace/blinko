@@ -71,7 +71,7 @@ const Page = observer(() => {
     {
       key: "ai",
       title: 'AI',
-      icon: "tabler:brain",
+      icon: "mingcute:ai-line",
       component: <AiSetting />,
       requireAdmin: true,
       keywords: ['ai', 'artificial intelligence', '人工智能']

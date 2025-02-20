@@ -79,7 +79,7 @@ export const BlinkoNotification = observer(() => {
           size="sm"
         >
           <Badge
-            content={store.unreadCount.value}
+            content=""
             color="danger"
             isInvisible={!store.unreadCount.value}
             shape="circle"

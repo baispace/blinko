@@ -12,8 +12,9 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
 
   const globalConfig = configs.reduce((acc, item) => {
     const config = item.config as { type: string, value: any };
-    if (item.key === 'isUseAI'
-      || item.key == 'isCloseBackgroundAnimation'
+    //If not login return the frist config
+    if (
+      item.key == 'isCloseBackgroundAnimation'
       || item.key == 'isAllowRegister'
       || item.key == 'language'
       || item.key == 'theme'
@@ -27,6 +28,11 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
         acc[item.key] = config.value;
         return acc;
       }
+    }
+    //always return isUseAI config
+    if (item.key == 'isUseAI') {
+      acc[item.key] = config.value;
+      return acc
     }
     if (!isSuperAdmin && !item.userId) {
       return acc;
@@ -105,13 +111,13 @@ export const configRouter = router({
     .query(async function ({ input, ctx }) {
       const userId = Number(ctx.id)
       const { pluginName } = input
-      const configs = await prisma.config.findMany({ 
-        where: { 
-          userId, 
-          key: { 
-            contains: `plugin_config_${pluginName}_` 
-          } 
-        } 
+      const configs = await prisma.config.findMany({
+        where: {
+          userId,
+          key: {
+            contains: `plugin_config_${pluginName}_`
+          }
+        }
       })
       return configs.reduce((acc, item) => {
         const key = item.key.replace(`plugin_config_${pluginName}_`, '');

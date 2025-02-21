@@ -1,3 +1,11 @@
+## [0.40.2](https://github.com/blinko-space/blinko/compare/v0.40.1...v0.40.2) (2025-02-20)
+
+
+### Bug Fixes
+
+* Add global clipboard copy function and update build configurations ([147d8c7](https://github.com/blinko-space/blinko/commit/147d8c7a9cc2b7e6c56281f443a4282c6908c258))
+* plugin issues ([4cb83f4](https://github.com/blinko-space/blinko/commit/4cb83f4373e4f06a7fc922d3aece9c4c07bcebfe))
+
 ## [0.40.1](https://github.com/blinko-space/blinko/compare/v0.40.0...v0.40.1) (2025-02-20)
 
 

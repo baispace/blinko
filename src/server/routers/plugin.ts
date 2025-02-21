@@ -180,15 +180,6 @@ export const pluginRouter = router({
     }),
 
   uninstallPlugin: authProcedure
-    .meta({
-      openapi: {
-        method: 'POST',
-        path: '/v1/plugin/uninstall',
-        summary: 'Uninstall a plugin',
-        protect: true,
-        tags: ['Plugin']
-      }
-    })
     .input(z.object({
       id: z.number()
     }))
@@ -221,5 +212,4 @@ export const pluginRouter = router({
     }),
 });
 
-// 在应用启动时调用
 ensurePluginDir().catch(console.error);

@@ -57,7 +57,7 @@ const withPWA = require('next-pwa')({
 })
 
 module.exports = withPWA({
-  output: isProduction ? 'standalone' : undefined,
+  output: 'standalone',
   transpilePackages: ['react-diff-view','highlight.js','remark-gfm','rehype-raw'],
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   async headers() {
@@ -126,7 +126,7 @@ module.exports = withPWA({
     })
     return config;
   },
-  outputFileTracing:!isProduction, 
+  outputFileTracing: true, 
   reactStrictMode: isProduction? true : false,
   swcMinify: true,
   eslint: {

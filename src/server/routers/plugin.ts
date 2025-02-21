@@ -9,14 +9,22 @@ import { createWriteStream } from 'fs';
 import { pluginInfoSchema, installPluginSchema } from '../types';
 import { pluginSchema } from '@/lib/prismaZodType';
 import { cache } from '@/lib/cache';
+import { existsSync } from 'fs';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
+const ensurePluginDir = async () => {
+  const dir = path.join(process.cwd(), '.blinko', 'plugins');
+  if (!existsSync(dir)) {
+    await fs.mkdir(dir, { recursive: true });
+  }
+};
+
 async function downloadWithRetry(url: string, filePath: string, retries = MAX_RETRIES): Promise<void> {
   try {
-    const response = await axios.get(url, { 
+    const response = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: 30000, // 30 seconds timeout
       maxContentLength: 50 * 1024 * 1024 // 50MB max
@@ -56,7 +64,7 @@ export const pluginRouter = router({
     }))
     .output(z.any())
     .mutation(async function ({ input }) {
-      const devPluginDir = path.join(process.cwd(), 'public', 'plugins', 'dev');
+      const devPluginDir = path.join('.blinko', 'plugins', 'dev');
       try {
         await fs.rm(devPluginDir, { recursive: true, force: true });
       } catch (error) { }
@@ -76,7 +84,7 @@ export const pluginRouter = router({
   installPlugin: authProcedure
     .input(installPluginSchema)
     .mutation(async ({ input }) => {
-      const pluginDir = path.join(process.cwd(), 'public', 'plugins', input.name);
+      const pluginDir = path.join('.blinko', 'plugins', input.name);
       const tempZipPath = path.join(pluginDir, 'release.zip');
 
       try {
@@ -102,7 +110,7 @@ export const pluginRouter = router({
         // Create plugin directory and download files
         await fs.mkdir(pluginDir, { recursive: true });
         const releaseUrl = `${input.url}/releases/download/v${input.version}/release.zip`;
-        
+
         // Use retry mechanism for download
         await downloadWithRetry(releaseUrl, tempZipPath);
 
@@ -195,7 +203,7 @@ export const pluginRouter = router({
         }
 
         const metadata = plugin.metadata as { name: string };
-        const pluginDir = path.join(process.cwd(), 'public', 'plugins', metadata.name);
+        const pluginDir = path.join('.blinko', 'plugins', metadata.name);
 
         // Delete plugin files
         await fs.rm(pluginDir, { recursive: true, force: true });
@@ -212,3 +220,6 @@ export const pluginRouter = router({
       }
     }),
 });
+
+// 在应用启动时调用
+ensurePluginDir().catch(console.error);

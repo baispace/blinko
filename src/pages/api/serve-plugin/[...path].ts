@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { path } = req.query;
   const pathArray = Array.isArray(path) ? path : [path || ''].filter(Boolean);
-  const filePath = join(process.cwd(), 'public', 'plugins', ...pathArray);
+  const filePath = join('.blinko', 'plugins', ...pathArray);
 
   try {
     const stream = createReadStream(filePath);

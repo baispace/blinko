@@ -1,3 +1,10 @@
+## [0.40.4](https://github.com/blinko-space/blinko/compare/v0.40.3...v0.40.4) (2025-02-21)
+
+
+### Bug Fixes
+
+* next.config.js ([2afa8aa](https://github.com/blinko-space/blinko/commit/2afa8aac1fe1bfbb7b83e69d321b0635f9376b57))
+
 ## [0.40.3](https://github.com/blinko-space/blinko/compare/v0.40.2...v0.40.3) (2025-02-21)
 
 

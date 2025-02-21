@@ -1,3 +1,10 @@
+## [0.40.5](https://github.com/blinko-space/blinko/compare/v0.40.4...v0.40.5) (2025-02-21)
+
+
+### Bug Fixes
+
+* Improve global configuration retrieval logic ([5627ef9](https://github.com/blinko-space/blinko/commit/5627ef9e20f424371b5e221f5f312b8d2450fb7d))
+
 ## [0.40.4](https://github.com/blinko-space/blinko/compare/v0.40.3...v0.40.4) (2025-02-21)
 
 

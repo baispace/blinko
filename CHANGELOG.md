@@ -1,3 +1,10 @@
+## [0.40.3](https://github.com/blinko-space/blinko/compare/v0.40.2...v0.40.3) (2025-02-21)
+
+
+### Bug Fixes
+
+* Move plugin storage to .blinko directory ([37d63c2](https://github.com/blinko-space/blinko/commit/37d63c28e4437351273e035ac989c4867fa6c929))
+
 ## [0.40.2](https://github.com/blinko-space/blinko/compare/v0.40.1...v0.40.2) (2025-02-20)
 
 

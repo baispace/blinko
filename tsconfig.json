@@ -24,7 +24,8 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@mastra/core/*": ["node_modules/@mastra/core/dist/*"]
     },
     "plugins": [
       {

@@ -34,7 +34,7 @@ async function main() {
   } catch (error) { }
 
   try {
-    await Promise.all([fs.mkdir(".blinko/files"), fs.mkdir(".blinko/faiss"), fs.mkdir(".blinko/pgdump")])
+    await Promise.all([fs.mkdir(".blinko/files"), fs.mkdir(".blinko/vector"), fs.mkdir(".blinko/pgdump")])
   } catch (error) { }
 
   //Compatible with users prior to v0.2.9

@@ -506,5 +506,6 @@
   "plugin-update-failed": "Plugin Update Failed",
   "plugin-connection-failed": "Plugin Connection Failed",
   "disconnect": "Disconnect",
-  "local-development-description": "Add a local development plug-in and debug it."
+  "local-development-description": "Add a local development plug-in and debug it.",
+  "ai": "AI"
 }

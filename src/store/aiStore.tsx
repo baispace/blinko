@@ -34,6 +34,12 @@ export class AiStore implements Store {
       this.clear()
     })
   }
+  isChatting = false
+  currentConversation = {
+    title: '',
+    // history: [] as Chat[]
+  }
+
   noteContent = '';
   aiSearchText = '';
   aiSearchResult = {

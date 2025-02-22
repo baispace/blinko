@@ -503,5 +503,6 @@
   "plugin-update-failed": "فشل تحديث الإضافة",
   "plugin-connection-failed": "فشل الاتصال بالإضافة",
   "disconnect": "افصل",
-  "local-development-description": "أضف إضافة تطوير محلية وقم بتصحيح الأخطاء فيها."
+  "local-development-description": "أضف إضافة تطوير محلية وقم بتصحيح الأخطاء فيها.",
+  "ai": "الذكاء الاصطناعي"
 }

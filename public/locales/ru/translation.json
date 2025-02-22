@@ -422,5 +422,6 @@
   "plugin-update-failed": "Обновление плагина не удалось",
   "plugin-connection-failed": "Ошибка соединения с плагином",
   "disconnect": "Отключить",
-  "local-development-description": "Добавьте локальный плагин разработки и отладите его."
+  "local-development-description": "Добавьте локальный плагин разработки и отладите его.",
+  "ai": "ИИ (искусственный интеллект)"
 }

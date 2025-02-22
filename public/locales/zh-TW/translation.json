@@ -518,5 +518,6 @@
   "plugin-update-failed": "插件更新失敗",
   "plugin-connection-failed": "外掛程式連線失敗",
   "disconnect": "中文（台灣）：斷開連線",
-  "local-development-description": "新增本地開發外掛程式並進行除錯。"
+  "local-development-description": "新增本地開發外掛程式並進行除錯。",
+  "ai": "人工智慧"
 }

@@ -17,6 +17,8 @@ import { commentRouter } from './comment';
 import { followsRouter } from './follows';
 import { notificationRouter } from './notification';
 import { pluginRouter } from './plugin';
+import { conversationRouter } from './conversation';
+import { messageRouter } from './message';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -31,7 +33,9 @@ export const appRouter = router({
   comments: commentRouter,
   follows: followsRouter,
   notifications: notificationRouter,
-  plugin: pluginRouter
+  plugin: pluginRouter,
+  conversation: conversationRouter,
+  message: messageRouter,
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

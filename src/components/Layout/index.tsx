@@ -202,8 +202,12 @@ export const CommonLayout = observer(({
         </header>
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
 
-        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] !overflow-y-auto overflow-x-hidden">
+        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] !overflow-y-auto overflow-x-hidden mt-[-4px]">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
+            <div className="hidden md:block absolute top-[-37%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
+              <div className="w-full h-[356px] bg-[#9936e6] opacity-20"
+                style={{ "clipPath": "circle(50% at 50% 50%)" }} />
+            </div>
             {children}
           </div>
         </ScrollArea>

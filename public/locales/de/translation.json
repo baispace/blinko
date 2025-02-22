@@ -489,5 +489,6 @@
   "plugin-update-failed": "Plugin-Update fehlgeschlagen.",
   "plugin-connection-failed": "Plugin-Verbindung fehlgeschlagen",
   "disconnect": "Trennen",
-  "local-development-description": "Fügen Sie ein lokales Entwicklungs-Plugin hinzu und debuggen Sie es."
+  "local-development-description": "Fügen Sie ein lokales Entwicklungs-Plugin hinzu und debuggen Sie es.",
+  "ai": "KI"
 }

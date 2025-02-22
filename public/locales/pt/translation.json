@@ -414,5 +414,6 @@
   "plugin-update-failed": "Falha na Atualização do Plugin",
   "plugin-connection-failed": "Falha na conexão do plugin",
   "disconnect": "Desconectar",
-  "local-development-description": "Adicione um plug-in de desenvolvimento local e depure-o."
+  "local-development-description": "Adicione um plug-in de desenvolvimento local e depure-o.",
+  "ai": "IA"
 }

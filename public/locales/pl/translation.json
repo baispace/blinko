@@ -506,5 +506,6 @@
   "plugin-update-failed": "Aktualizacja wtyczki nie powiodła się",
   "plugin-connection-failed": "Wtyczka nieudane połączenie",
   "disconnect": "Rozłączać",
-  "local-development-description": "Dodaj wtyczkę do lokalnego środowiska programistycznego i ją zdebuguj."
+  "local-development-description": "Dodaj wtyczkę do lokalnego środowiska programistycznego i ją zdebuguj.",
+  "ai": "Sztuczna inteligencja"
 }

@@ -4,6 +4,8 @@ import { AiService } from '../plugins/ai';
 import { prisma } from '../prisma';
 import { FileService } from '../plugins/files';
 import { TRPCError } from '@trpc/server';
+import { _ } from '@/lib/lodash';
+import { CoreMessage } from '@mastra/core';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -59,10 +61,13 @@ export const aiRouter = router({
     .mutation(async function* ({ input, ctx }) {
       try {
         const { question, conversations } = input
-        const { result: responseStream, notes } = await AiService.completions({ question, conversations, ctx })
+        let _conversations = conversations as CoreMessage[]
+        const { result: responseStream, notes } = await AiService.completions({ question, conversations: _conversations, ctx })
         yield { notes }
-        for await (const chunk of responseStream) {
-          yield { context: chunk }
+        for await (const chunk of responseStream.fullStream) {
+          console.log(chunk)
+          //@ts-ignore
+          yield { context: chunk?.textDelta }
         }
       } catch (error) {
         throw new TRPCError({
@@ -117,8 +122,10 @@ export const aiRouter = router({
           content
         })
 
-        for await (const chunk of responseStream) {
-          yield { content: chunk }
+        for await (const chunk of responseStream.fullStream) {
+          console.log(chunk)
+            //@ts-ignore
+          yield { content: chunk?.textDelta }
         }
       } catch (error) {
         throw new TRPCError({

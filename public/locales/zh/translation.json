@@ -508,5 +508,6 @@
   "plugin-update-failed": "插件更新失败。",
   "plugin-connection-failed": "插件连接失败",
   "disconnect": "断开连接",
-  "local-development-description": "添加本地开发插件并对其进行调试。"
+  "local-development-description": "添加本地开发插件并对其进行调试。",
+  "ai": "人工智能"
 }

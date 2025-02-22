@@ -173,10 +173,14 @@ export class AiStore implements Store {
       })
       const res = await streamApi.ai.completions.mutate({ question: this.aiSearchText, conversations }, { signal: this.abortController.signal })
       for await (const item of res) {
+        console.log(item)
         if (item.notes) {
           this.chatHistory.list[this.chatHistory.list.length - 1]!.relationNotes = item.notes
         } else {
-          this.chatHistory.list[this.chatHistory.list.length - 1]!.content += item.context
+          if (item.chunk.type == 'text-delta') {
+            //@ts-ignore
+            this.chatHistory.list[this.chatHistory.list.length - 1]!.content += item.chunk.textDelta
+          }
           this.scrollTicker++
         }
       }
@@ -207,8 +211,11 @@ export class AiStore implements Store {
         content
       }, { signal: this.abortController.signal })
       for await (const item of res) {
-        // eventBus.emit('editor:insert', item.content)
-        this.writingResponseText += item.content
+        // console.log(item)
+        if (item.type == 'text-delta') {
+          //@ts-ignore
+          this.writingResponseText += item.textDelta
+        }
         this.scrollTicker++
       }
       this.writeQuestion = ''

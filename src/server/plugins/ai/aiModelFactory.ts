@@ -19,21 +19,21 @@ import { VECTOR_DB_FILE_PATH } from "@/lib/constant"
 
 export class AiModelFactory {
   //metadata->>'id'
-  static async queryAndDeleteVectorById(indexName: string, targetId: string) {
-    const store = new DefaultVectorDB({ connectionUrl: VECTOR_DB_FILE_PATH });
+  static async queryAndDeleteVectorById(targetId: number) {
+    const { VectorStore } = await AiModelFactory.GetProvider()
     try {
       const query = `
           WITH target_record AS (
             SELECT vector_id 
-            FROM ${indexName} 
+            FROM 'blinko'
             WHERE metadata->>'id' = ? 
             LIMIT 1
           )
-          DELETE FROM ${indexName}
+          DELETE FROM 'blinko'
           WHERE vector_id IN (SELECT vector_id FROM target_record)
           RETURNING *;`;
       //@ts-ignore
-      const result = await store.turso.execute({
+      const result = await VectorStore.turso.execute({
         sql: query,
         args: [targetId]
       });
@@ -82,15 +82,18 @@ export class AiModelFactory {
     })).map(i => { return { ...i, score: filteredResults.find(t => Number(t.metadata?.id) == i.id)?.score ?? 0 } }) ?? [];
   }
 
-  static async rebuildVectorIndex(vectorStore: DefaultVectorDB) {
+  static async rebuildVectorIndex({ vectorStore, isDelete = false }: { vectorStore: DefaultVectorDB, isDelete?: boolean }) {
     try {
-      await vectorStore.deleteIndex('blinko');
+      if (isDelete) {
+        await vectorStore.deleteIndex('blinko');
+      }
     } catch (error) {
       console.error('delete vector index failed:', error);
     }
 
     const config = await AiModelFactory.globalConfig()
     const model = config.embeddingModel.toLowerCase();
+    let userConfigDimensions = config.embeddingDimensions;
     let dimensions: number;
     switch (true) {
       case model.includes('text-embedding-3-small'):
@@ -116,6 +119,9 @@ export class AiModelFactory {
         break;
       default:
         dimensions = 1536;
+    }
+    if (userConfigDimensions != 0 && userConfigDimensions != undefined) {
+      dimensions = userConfigDimensions;
     }
     await vectorStore.createIndex('blinko', dimensions);
   }
@@ -251,22 +257,38 @@ export class AiModelFactory {
   static async WritingAgent(type: 'expand' | 'polish' | 'custom' = 'custom') {
     const provider = await AiModelFactory.GetProvider();
     const prompts = {
-      expand: `You are a writing expansion assistant. Requirements:
+      expand: `# Text Expansion Expert
+        ## Original Content
+        {content}
+
+        ## Requirements
         1. Use same language as input
-        2. Add details and examples
-        3. Maintain original style
-        Original: {content}`,
+        2. Add details/examples without introducing new concepts
+        3. Maintain original structure and style
+        4. Use Markdown formatting
+        5. Output format with markdown
+        6. Do not add explanation`,
 
-      polish: `You are a text polishing expert. Requirements:
-        1. Optimize wording and sentence structure
-        2. Keep core meaning
-        3. Use Markdown formatting
-        Original: {content}`,
+      polish: `# Text Refinement Specialist
+        ## Input Text
+        {content}
 
-      custom: `You are a multi-purpose writing assistant. Requirements:
-        1. Create content as needed
-        2. Follow technical documentation standards
-        Original: {content}`
+        ## Guidelines
+        1. Optimize sentence flow and vocabulary
+        2. Preserve core meaning
+        3. Apply technical writing standards
+        4. Use Markdown formatting
+        5. Output format with markdown`,
+
+      custom: `# Multi-Purpose Writing Assistant
+          ## User Request
+          {content}
+
+          ## Requirements
+          1. Create content as needed
+          2. Follow industry-standard documentation
+          3. Use Markdown formatting
+          4. Output format with markdown`,
     };
 
     const agent = new Agent({

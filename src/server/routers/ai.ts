@@ -63,12 +63,10 @@ export const aiRouter = router({
         const { question, conversations } = input
         let _conversations = conversations as CoreMessage[]
         const { result: responseStream, notes } = await AiService.completions({ question, conversations: _conversations, ctx })
-        yield { notes }
         for await (const chunk of responseStream.fullStream) {
-          console.log(chunk)
-          //@ts-ignore
-          yield { context: chunk?.textDelta }
+          yield { chunk }
         }
+        yield { notes }
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -123,9 +121,7 @@ export const aiRouter = router({
         })
 
         for await (const chunk of responseStream.fullStream) {
-          console.log(chunk)
-            //@ts-ignore
-          yield { content: chunk?.textDelta }
+          yield chunk
         }
       } catch (error) {
         throw new TRPCError({

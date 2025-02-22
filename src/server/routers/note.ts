@@ -12,6 +12,7 @@ import { AiService } from '../plugins/ai';
 import { SendWebhook } from './helper';
 import { Context } from '../context';
 import { cache } from '@/lib/cache';
+import { AiModelFactory } from '../plugins/ai/aiModelFactory';
 
 const extractHashtags = (input: string): string[] => {
   const withoutCodeBlocks = input.replace(/```[\s\S]*?```/g, '');
@@ -1027,6 +1028,8 @@ export async function deleteNotes(ids: number[], ctx: Context) {
           where: { id: { in: note.attachments.map(i => i.id) } }
         });
       }
+
+      AiModelFactory.queryAndDeleteVectorById(note.id)
     }
   };
 

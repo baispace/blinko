@@ -41,7 +41,7 @@ export abstract class AiBaseModelPrivider {
         connectionUrl: VECTOR_DB_FILE_PATH,
       });
       //!index must be created before use
-      await AiModelFactory.rebuildVectorIndex(vectorStore)
+      await AiModelFactory.rebuildVectorIndex({ vectorStore })
     }
     return vectorStore
   }

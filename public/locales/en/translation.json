@@ -507,5 +507,7 @@
   "plugin-connection-failed": "Plugin Connection Failed",
   "disconnect": "Disconnect",
   "local-development-description": "Add a local development plug-in and debug it.",
-  "ai": "AI"
+  "ai": "AI",
+  "embedding-dimensions": "Embedding Dimensions",
+  "embedding-dimensions-description": "You need to ensure that the model dimensions are correct, and you need to force index records to be rebuilt after changes"
 }

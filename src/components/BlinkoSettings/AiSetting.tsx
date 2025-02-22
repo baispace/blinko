@@ -31,6 +31,7 @@ export const AiSetting = observer(() => {
     apiEndPoint: '',
     aiModel: '',
     embeddingModel: '',
+    embeddingDimensions: 0,
     embeddingTopK: 2,
     embeddingScore: 1.5,
     embeddingLambda: 0.5,
@@ -53,6 +54,7 @@ export const AiSetting = observer(() => {
     store.embeddingApiEndpoint = blinko.config.value?.embeddingApiEndpoint!
     store.embeddingApiKey = blinko.config.value?.embeddingApiKey!
     store.excludeEmbeddingTagId = blinko.config.value?.excludeEmbeddingTagId!
+    store.embeddingDimensions = blinko.config.value?.embeddingDimensions!
   }, [blinko.config.value])
 
   return (
@@ -246,6 +248,35 @@ export const AiSetting = observer(() => {
           } />
       }
 
+      {store.showEmeddingAdvancedSetting && <Item
+        className="ml-6"
+        type={isPc ? 'row' : 'col'}
+        leftContent={<ItemWithTooltip
+          content={<>{t('embedding-dimensions')}</>}
+          toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
+            <div>{t('embedding-dimensions-description')}</div>
+          </div>} />}
+        rightContent={
+          <div className="flex md:w-[300px] w-full ml-auto justify-start">
+            <Input
+              type="number"
+              size="sm"
+              variant="bordered"
+              //@ts-ignore
+              value={store.embeddingDimensions}
+              onChange={e => {
+                store.embeddingDimensions = Number(e.target.value)
+              }}
+              onBlur={() => {
+                PromiseCall(api.config.update.mutate({
+                  key: 'embeddingDimensions',
+                  value: store.embeddingDimensions
+                }), { autoAlert: false })
+              }}
+            />
+          </div>
+        } />}
+
       {
         store.showEmeddingAdvancedSetting && <Item
           className="ml-6"
@@ -280,6 +311,8 @@ export const AiSetting = observer(() => {
             </div>
           } />
       }
+
+
 
       {
         store.showEmeddingAdvancedSetting && <Item
@@ -316,42 +349,7 @@ export const AiSetting = observer(() => {
             </div>
           } />
       }
-      {
-        store.showEmeddingAdvancedSetting && <Item
-          className="ml-6"
-          type={isPc ? 'row' : 'col'}
-          leftContent={<ItemWithTooltip
-            content={<>Embedding Lambda</>}
-            toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
-              <div>{t('embedding-lambda-description')}</div>
-            </div>} />}
-          rightContent={
-            <div className="flex md:w-[300px] w-full ml-auto justify-start">
-              <Slider
-                onChangeEnd={e => {
-                  PromiseCall(api.config.update.mutate({
-                    key: 'embeddingLambda',
-                    value: store.embeddingLambda
-                  }), { autoAlert: false })
-                }}
-                onChange={e => {
-                  store.embeddingLambda = Number(e)
-                }}
-                value={store.embeddingLambda}
-                size="md"
-                step={0.1}
-                color="foreground"
-                label={'value'}
-                showSteps={true}
-                maxValue={1.0}
-                minValue={0.1}
-                defaultValue={0.3}
-                className="w-full"
-              />
-            </div>
-          } />
-      }
-
+      
       {
         store.showEmeddingAdvancedSetting && (
           <Item
@@ -488,6 +486,8 @@ export const AiSetting = observer(() => {
             }}>{t('rebuild')}</Button>
           </div>
         } />
+
+
 
     </CollapsibleCard>
   );

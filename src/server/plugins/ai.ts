@@ -35,31 +35,31 @@ import { VECTOR_PATH } from '@/lib/constant';
 
 export class AiService {
   static async loadFileContent(filePath: string): Promise<string> {
-    // try {
-    //   let loader: BaseDocumentLoader;
-    //   switch (true) {
-    //     case filePath.endsWith('.pdf'):
-    //       loader = new PDFLoader(filePath);
-    //       break;
-    //     case filePath.endsWith('.docx') || filePath.endsWith('.doc'):
-    //       loader = new DocxLoader(filePath);
-    //       break;
-    //     case filePath.endsWith('.txt'):
-    //       loader = new TextLoader(filePath);
-    //       break;
-    //     case filePath.endsWith('.csv'):
-    //       console.log('load csv')
-    //       loader = new CSVLoader(filePath);
-    //       break;
-    //     default:
-    //       loader = new UnstructuredLoader(filePath);
-    //   }
-    //   const docs = await loader.load();
-    //   return docs.map(doc => doc.pageContent).join('\n');
-    // } catch (error) {
-    //   console.error('File loading error:', error);
-    //   throw new Error(`can not load file: ${filePath}`);
-    // }
+    try {
+      let loader: BaseDocumentLoader;
+      switch (true) {
+        case filePath.endsWith('.pdf'):
+          loader = new PDFLoader(filePath);
+          break;
+        case filePath.endsWith('.docx') || filePath.endsWith('.doc'):
+          loader = new DocxLoader(filePath);
+          break;
+        case filePath.endsWith('.txt'):
+          loader = new TextLoader(filePath);
+          break;
+        case filePath.endsWith('.csv'):
+          console.log('load csv')
+          loader = new CSVLoader(filePath);
+          break;
+        default:
+          loader = new UnstructuredLoader(filePath);
+      }
+      const docs = await loader.load();
+      return docs.map(doc => doc.pageContent).join('\n');
+    } catch (error) {
+      console.error('File loading error:', error);
+      throw new Error(`can not load file: ${filePath}`);
+    }
     return ''
   }
 
@@ -85,11 +85,11 @@ export class AiService {
         }
       }
 
-      console.log(content,'contentxxx')
+      console.log(content, 'contentxxx')
       const chunks = await MDocument.fromMarkdown(content).chunk();
-      console.log(chunks,'xxxxx')
+      console.log(chunks, 'xxxxx')
       if (type == 'update') {
-        AiModelFactory.queryAndDeleteVectorById('blinko', `${id}`)
+        AiModelFactory.queryAndDeleteVectorById(id)
       }
 
       const { embeddings } = await embedMany({
@@ -97,8 +97,8 @@ export class AiService {
         model: Embeddings,
       });
 
-      console.log(embeddings,'embeddingsxxx')
-    
+      console.log(embeddings, 'embeddingsxxx')
+
       await VectorStore.upsert(
         'blinko',
         embeddings,
@@ -122,7 +122,7 @@ export class AiService {
 
       return { ok: true }
     } catch (error) {
-      console.log(error,'errorxxx')
+      console.log(error, 'errorxxx')
       return { ok: false, error: error?.message }
     }
   }
@@ -134,19 +134,8 @@ export class AiService {
       const content = await AiService.loadFileContent(absolutePath);
       const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider()
 
-      // const chunks = await TokenTextSplitter.splitText(content);
       const doc = MDocument.fromText(content);
       const chunks = await doc.chunk();
-
-      // const documents: Document[] = chunks.map((chunk, index) => {
-      //   return {
-      //     pageContent: chunk,
-      //     metadata: {
-      //       noteId: id,
-      //       uniqDocId: `${filePath}-${index}`
-      //     },
-      //   }
-      // })
 
       const { embeddings } = await embedMany({
         values: chunks.map(chunk => chunk.text),
@@ -173,15 +162,6 @@ export class AiService {
       } catch (error) {
         console.log(error)
       }
-
-      // const BATCH_SIZE = 5;
-      // for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-      //   const batch = documents.slice(i, i + BATCH_SIZE);
-      //   const batchIds = batch.map(doc => doc.metadata.uniqDocId);
-      //   await VectorStore.addDocuments(batch, { ids: batchIds });
-      // }
-
-      // await VectorStore.save(FaissStorePath)
       return { ok: true }
     } catch (error) {
       return { ok: false, error }
@@ -191,8 +171,7 @@ export class AiService {
 
 
   static async embeddingDelete({ id }: { id: number }) {
-    const { VectorStore } = await AiModelFactory.GetProvider()
-    await VectorStore.truncateIndex('blinko')
+    AiModelFactory.queryAndDeleteVectorById(id)
     return { ok: true }
   }
 
@@ -200,7 +179,10 @@ export class AiService {
   static async *rebuildEmbeddingIndex({ force = false }: { force?: boolean }): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
     const { VectorStore } = await AiModelFactory.GetProvider()
     if (force) {
-      await AiModelFactory.rebuildVectorIndex(VectorStore)
+      await AiModelFactory.rebuildVectorIndex({
+        vectorStore: VectorStore,
+        isDelete: true
+      })
     }
     const notes = await prisma.notes.findMany({
       include: {
@@ -359,7 +341,7 @@ export class AiService {
       })
       const agent = await AiModelFactory.BaseChatAgent({ withTools })
       const result = await agent.stream(conversations)
-      return { result, notes   }
+      return { result, notes }
     } catch (error) {
       console.log(error)
       throw new Error(error)
@@ -409,8 +391,8 @@ export class AiService {
           content: question
         },
         {
-          role: 'user',
-          content: content || ''
+          role: 'system',
+          content: `This is the user's note content: ${content || ''}`
         }
       ]);
 

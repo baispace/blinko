@@ -294,6 +294,7 @@ export const messageSchema = z.object({
   conversationId: z.number().int(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  metadata: z.any(),
 })
 
 export type message = z.infer<typeof messageSchema>

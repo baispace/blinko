@@ -9,6 +9,8 @@ export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
 export type ResourceType = NonNullable<RouterOutput['attachments']['list']>[0]
 export type Comment = NonNullable<RouterOutput['comments']['list']>
 export type InstalledPluginInfo = NonNullable<RouterOutput['plugin']['getInstalledPlugins']>[0]
+export type Conversation = NonNullable<RouterOutput['conversation']['list']>[0]
+export type Message = NonNullable<RouterOutput['message']['list']>
 export enum NoteType {
   'BLINKO',
   'NOTE'

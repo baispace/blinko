@@ -6,8 +6,11 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MarkdownRender } from "../Common/MarkdownRender";
+import { AiStore } from "@/store/aiStore";
+import { RootStore } from "@/store";
+import { useEffect } from "react";
+import { useRef } from "react";
 
-// 用户消息组件
 const UserMessage = ({ content, time }: { content: string; time: string }) => (
   <motion.div
     className="flex flex-col w-full gap-2"
@@ -22,15 +25,14 @@ const UserMessage = ({ content, time }: { content: string; time: string }) => (
   </motion.div>
 );
 
-const AiMessage = ({ content }: { content: string }) => (
+const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = false }: { content: string, withoutAnimation?: boolean, withStreamAnimation?: boolean }) => (
   <motion.div
-    className="flex flex-col gap-1 relative group"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
+    initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
+    animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
+    transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
   >
     <div className="max-w-[80%] bg-sencondbackground px-2 py-1 rounded-xl">
-      <MarkdownRender content={content} />
+      <MarkdownRender content={content} highlightLastChar={withStreamAnimation}/>
     </div>
     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-4">
       <div className="flex gap-1 bg-background/50 backdrop-blur-sm rounded-full p-1">
@@ -49,18 +51,41 @@ const AiMessage = ({ content }: { content: string }) => (
 );
 
 export const BlinkoChatBox = observer(() => {
+  const aiStore = RootStore.Get(AiStore)
+  const scrollAreaRef = useRef<ScrollAreaHandles>(null)
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollToBottom()
+    }
+  }, [aiStore.currentConversation.value])
   return (
     <ScrollArea
+      ref={scrollAreaRef}
       onBottom={() => { }}
       className="h-full"
     >
       <div className="flex flex-col p-0 md:p-2 relative h-full w-[95%] md:w-[78%] mx-auto">
         <AnimatePresence>
-          <UserMessage content="你好，这是一个测试消息" time="刚刚" />
-          
-          {new Array(50).fill(0).map((item, index) => (
-            <AiMessage key={index} content="你好！我是AI助手，有什么可以帮你的吗？" />
-          ))}
+          {
+            aiStore.currentConversation.value?.messages.map((item, index) => (
+              <>
+                {item.role == 'user' ? (
+                  <UserMessage key={item.id} content={item.content} time={item.createdAt.toLocaleString()} />
+                ) : (
+                  <AiMessage key={index} content={item.content} withoutAnimation={index == (aiStore.currentConversation.value?.messages.length ?? 0) - 1} />
+                )}
+              </>
+            ))
+          }
+
+          {aiStore.isAnswering && (
+            <div key="streaming-message">
+              <AiMessage 
+                content={aiStore.currentMessageResult.content} 
+                withStreamAnimation
+              />
+            </div>
+          )}
         </AnimatePresence>
       </div>
     </ScrollArea>

@@ -4,14 +4,14 @@ import { prisma } from '../prisma';
 
 export const conversationRouter = router({
   create: authProcedure
-    .meta({ 
-      openapi: { 
-        method: 'POST', 
-        path: '/v1/conversation/create', 
-        summary: 'Create a new conversation', 
-        protect: true, 
-        tags: ['Conversation'] 
-      } 
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/conversation/create',
+        summary: 'Create a new conversation',
+        protect: true,
+        tags: ['Conversation']
+      }
     })
     .input(z.object({
       title: z.string().optional(),
@@ -43,7 +43,19 @@ export const conversationRouter = router({
           orderBy: { createdAt: 'desc' }
         })
       ]);
-      return { total, items: conversations };
+      return conversations;
+    }),
+  detail: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .query(async ({ input, ctx }) => {
+      return await prisma.conversation.findUnique({
+        where: { id: input.id, accountId: Number(ctx.id) },
+        include: {
+          messages: true
+        }
+      });
     }),
 
   update: authProcedure
@@ -54,7 +66,7 @@ export const conversationRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.conversation.update({
-        where: { 
+        where: {
           id: input.id,
           accountId: Number(ctx.id)
         },
@@ -65,21 +77,21 @@ export const conversationRouter = router({
     }),
 
   delete: authProcedure
-    .meta({ 
-      openapi: { 
-        method: 'POST', 
-        path: '/v1/conversation/delete', 
-        summary: 'Delete a conversation', 
-        protect: true, 
-        tags: ['Conversation'] 
-      } 
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/conversation/delete',
+        summary: 'Delete a conversation',
+        protect: true,
+        tags: ['Conversation']
+      }
     })
     .input(z.object({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.conversation.delete({
-        where: { 
+        where: {
           id: input.id,
           accountId: Number(ctx.id)
         }

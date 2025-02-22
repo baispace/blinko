@@ -75,9 +75,72 @@ const Table = ({ children }: { children: React.ReactNode }) => {
   return <div className="table-container">{children}</div>;
 };
 
-export const MarkdownRender = observer(({ content = '', onChange, isShareMode }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean }) => {
-  const { theme } = useTheme()
+export const MarkdownRender = observer(({
+  content = '',
+  onChange,
+  isShareMode,
+  highlightLastChar = false
+}: {
+  content?: string,
+  onChange?: (newContent: string) => void,
+  isShareMode?: boolean,
+  highlightLastChar?: boolean
+}) => {
+  const { theme } = useTheme();
   const contentRef = useRef(null);
+
+  const renderHighlightedText = (text: string) => {
+    if (!highlightLastChar || text.length === 0) return text;
+
+    const lastChar = text.slice(-1);
+    const secondLastChar = text.slice(-2, -1);
+    const thirdLastChar = text.slice(-3, -2);
+    const fourthLastChar = text.slice(-4, -3);
+    const fifthLastChar = text.slice(-5, -4);
+    const restText = text.slice(0, -5);
+
+    const isDarkTheme = theme === 'dark';
+    const purpleColorsDarkMode = [
+      'rgba(255, 255, 255, 0.4)',
+      'rgba(204, 166, 242, 0.6)',
+      'rgba(175, 107, 244, 0.8)',
+      'rgba(165, 81, 250, 1)',
+      'rgba(107, 0, 215, 1)'
+    ];
+    const purpleColorsLightMode = [
+      'black',
+      'rgba(22, 19, 26, 0.6)',
+      'rgba(60, 35, 86, 0.8)',
+      'rgba(51, 10, 92, 1)',
+      '#4c0178'
+    ];
+    const chars = [
+      fifthLastChar,
+      fourthLastChar,
+      thirdLastChar,
+      secondLastChar,
+      lastChar
+    ];
+
+    return (
+      <>
+        {restText}
+        {chars.map((char, index) => (
+          <span
+            key={index}
+            style={{
+              color: isDarkTheme ? purpleColorsDarkMode[index] : purpleColorsLightMode[index],
+              display: 'inline-block',
+              transform: 'translateY(0)',
+              animation: `bounce 0.2s ${index * 0.1}s cubic-bezier(0.3, 0.7, 0.4, 1.2) forwards`
+            }}
+          >
+            {char}
+          </span>
+        ))}
+      </>
+    );
+  };
 
   return (
     <div className={`markdown-body`}>
@@ -102,7 +165,20 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode }:
             }]
           ]}
           components={{
-            p: ({ node, children }) => <p><HighlightTags text={children} /></p>,
+            p: ({ node, children }) => {
+              const text = String(children);
+              return (
+                <p>
+                  {highlightLastChar ? (
+                    <span>
+                      {renderHighlightedText(text)}
+                    </span>
+                  ) : (
+                    <HighlightTags text={children} />
+                  )}
+                </p>
+              );
+            },
             code: ({ node, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const language = match ? match[1] : '';

@@ -17,6 +17,7 @@ CREATE TABLE "message" (
     "conversationId" INTEGER NOT NULL,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(6) NOT NULL,
+    "metadata" JSON,
 
     CONSTRAINT "message_pkey" PRIMARY KEY ("id")
 );

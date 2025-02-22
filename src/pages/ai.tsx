@@ -72,7 +72,7 @@ const AIPage = observer(() => {
       textSize={24}
       textColor={theme.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
     >
-  
+
       <div className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[20%]'} w-full gap-4 relative h-[calc(100vh_-_140px)] md:h-[calc(100vh_-_80px)]`}>
         {!aiStore.isChatting ? (
           <div className="flex justify-center w-full">
@@ -122,7 +122,7 @@ const AIPage = observer(() => {
                 <Button
                   key={index}
                   variant='flat'
-                  startContent={<Icon icon={button.icon} className={`text-[${button.color}]`} width="20" height="20" />}
+                  startContent={<Icon icon={button.icon} color={button.color} width="20" height="20" />}
                 >
                   {button.label}
                 </Button>
@@ -134,10 +134,7 @@ const AIPage = observer(() => {
           </div>
 
 
-          <AiInput mode={aiStore.isChatting ? 'inline' : 'card'} className={aiStore.isChatting ? 'mt-0' : 'mt-2'} onSubmit={() => {
-            console.log('提交prompt:', prompt);
-            aiStore.isChatting = !aiStore.isChatting
-          }} />
+          <AiInput className={aiStore.isChatting ? 'mt-0' : 'mt-2'} />
 
         </motion.div>
       </div>

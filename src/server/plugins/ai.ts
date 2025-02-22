@@ -19,7 +19,6 @@ import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/uns
 import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
-import { AiPrompt } from './ai/aiPrompt';
 import { Context } from '../context';
 import dayjs from 'dayjs';
 import { CreateNotification } from '../routers/notification';
@@ -327,18 +326,26 @@ export class AiService {
     return sortedNotes;
   }
 
-  static async completions({ question, conversations, withTools = false, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, ctx: Context }) {
+  static async completions({ question, conversations, withTools, withRAG = true, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, ctx: Context }) {
     try {
       console.log('completions')
       conversations.push({
         role: 'user',
         content: question
       })
-      const notes = await AiModelFactory.queryVector(question, Number(ctx.id))
       conversations.push({
         role: 'system',
-        content: `This is the note content which search from vector database: ${notes.map(i => i.content).join('\n')}`
+        content: `Current time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n
+        Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`
       })
+      let notes: any[] = []
+      if (withRAG) {
+        notes = await AiModelFactory.queryVector(question, Number(ctx.id))
+        conversations.push({
+          role: 'system',
+          content: `This is the note content which search from vector database: ${notes.map(i => i.content).join('\n')}`
+        })
+      }
       const agent = await AiModelFactory.BaseChatAgent({ withTools })
       const result = await agent.stream(conversations)
       return { result, notes }
@@ -348,67 +355,6 @@ export class AiService {
     }
   }
 
-  static async autoTag({ content, tags }: { content: string, tags: string[] }) {
-    try {
-      const agent = await AiModelFactory.TagAgent(tags)
-      const result = await agent.generate("Please select and suggest appropriate tags for the above content")
-
-      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? [];
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async autoEmoji({ content }: { content: string }) {
-    try {
-      const agent = await AiModelFactory.EmojiAgent()
-      const result = await agent.generate("Please select and suggest appropriate emojis for the above content")
-      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? [];
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async writing({
-    question,
-    type = 'custom',
-    content
-  }: {
-    question: string,
-    type?: 'expand' | 'polish' | 'custom',
-    content?: string
-  }) {
-    try {
-      // const { LLM } = await AiModelFactory.GetProvider({ withOutVectorStore: true });
-      // const writingPrompt = AiPrompt.WritingPrompt(type, content);
-      // const writingChain = writingPrompt.pipe(LLM).pipe(new StringOutputParser());
-      const agent = await AiModelFactory.WritingAgent(type)
-      const result = await agent.stream([
-        {
-          role: 'user',
-          content: question
-        },
-        {
-          role: 'system',
-          content: `This is the user's note content: ${content || ''}`
-        }
-      ]);
-
-      return { result };
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async speechToText(audioPath: string) {
-    // const loader = await AiModelFactory.GetAudioLoader(audioPath)
-    // const docs = await loader.load();
-    // return docs
-    return null
-  }
 
   static async AIComment({ content, noteId }: { content: string, noteId: number }) {
     try {
@@ -420,14 +366,6 @@ export class AiService {
       if (!note) {
         throw new Error('Note not found')
       }
-
-      // const { LLM } = await AiModelFactory.GetProvider();
-      // const commentPrompt = AiPrompt.CommentPrompt();
-      // const commentChain = commentPrompt.pipe(LLM).pipe(new StringOutputParser());
-      // const aiResponse = await commentChain.invoke({
-      //   content,
-      //   noteContent: note.content
-      // });
 
       const agent = await AiModelFactory.CommentAgent()
       const result = await agent.generate([

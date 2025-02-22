@@ -6,6 +6,7 @@ import { FileService } from '../plugins/files';
 import { TRPCError } from '@trpc/server';
 import { _ } from '@/lib/lodash';
 import { CoreMessage } from '@mastra/core';
+import { AiModelFactory } from '../plugins/ai/aiModelFactory';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -26,6 +27,7 @@ export const aiRouter = router({
       }
       return { ok }
     }),
+
   embeddingInsertAttachments: authProcedure
     .input(z.object({
       id: z.number(),
@@ -40,6 +42,7 @@ export const aiRouter = router({
         return { ok: false, msg: error?.message }
       }
     }),
+
   embeddingDelete: authProcedure
     .input(z.object({
       id: z.number()
@@ -53,16 +56,25 @@ export const aiRouter = router({
         return { ok: false, msg: error?.message }
       }
     }),
+
   completions: authProcedure
     .input(z.object({
       question: z.string(),
+      withTools: z.boolean().optional(),
+      withRAG: z.boolean().optional(),
       conversations: z.array(z.object({ role: z.string(), content: z.string() }))
     }))
     .mutation(async function* ({ input, ctx }) {
       try {
-        const { question, conversations } = input
+        const { question, conversations, withTools = false, withRAG = true } = input
         let _conversations = conversations as CoreMessage[]
-        const { result: responseStream, notes } = await AiService.completions({ question, conversations: _conversations, ctx })
+        const { result: responseStream, notes } = await AiService.completions({
+          question,
+          conversations: _conversations,
+          ctx,
+          withTools,
+          withRAG
+        })
         for await (const chunk of responseStream.fullStream) {
           yield { chunk }
         }
@@ -74,20 +86,22 @@ export const aiRouter = router({
         })
       }
     }),
+
   speechToText: authProcedure
     .input(z.object({
       filePath: z.string()
     }))
     .mutation(async function ({ input }) {
-      const { filePath } = input
-      try {
-        const localFilePath = await FileService.getFile(filePath)
-        const doc = await AiService.speechToText(localFilePath)
-        return doc
-      } catch (error) {
-        throw new Error(error)
-      }
+      // const { filePath } = input
+      // try {
+      //   const localFilePath = await FileService.getFile(filePath)
+      //   const doc = await AiService.speechToText(localFilePath)
+      //   return doc
+      // } catch (error) {
+      //   throw new Error(error)
+      // }
     }),
+
   rebuildingEmbeddings: authProcedure
     .input(z.object({
       force: z.boolean().optional()
@@ -105,6 +119,31 @@ export const aiRouter = router({
         })
       }
     }),
+
+  summarizeConversationTitle: authProcedure
+    .input(z.object({
+      conversations: z.array(z.object({ role: z.string(), content: z.string() })),
+      conversationId: z.number()
+    }))
+    .mutation(async function ({ input }) {
+      const { conversations, conversationId } = input
+      const agent = await AiModelFactory.SummarizeAgent()
+      const conversationString = JSON.stringify(
+        conversations.map(i => ({ 
+          role: i.role, 
+          content: i.content.replace(/\n/g, '\\n') 
+        })),
+        null, 2 
+      );
+      const result = await agent.generate(conversationString)
+      console.log(result)
+      const conversation = await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { title: result?.text }
+      })
+      return conversation
+    }),
+
   writing: authProcedure
     .input(z.object({
       question: z.string(),
@@ -113,21 +152,19 @@ export const aiRouter = router({
     }))
     .mutation(async function* ({ input }) {
       const { question, type = 'custom', content } = input
-      try {
-        const { result: responseStream } = await AiService.writing({
-          question,
-          type,
-          content
-        })
-
-        for await (const chunk of responseStream.fullStream) {
-          yield chunk
+      const agent = await AiModelFactory.WritingAgent(type)
+      const result = await agent.stream([
+        {
+          role: 'user',
+          content: question
+        },
+        {
+          role: 'system',
+          content: `This is the user's note content: ${content || ''}`
         }
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error?.message
-        })
+      ]);
+      for await (const chunk of result.fullStream) {
+        yield chunk
       }
     }),
   autoTag: authProcedure
@@ -137,8 +174,11 @@ export const aiRouter = router({
     }))
     .mutation(async function ({ input }) {
       const { content, tags } = input
-      const res = await AiService.autoTag({ content, tags })
-      return res
+      const agent = await AiModelFactory.TagAgent()
+      const result = await agent.generate(
+        `Existing tags list: [${tags.join(', ')}]\nPlease recommend appropriate tags for the following content:\n${content}`
+      )
+      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
     }),
   autoEmoji: authProcedure
     .input(z.object({
@@ -146,8 +186,9 @@ export const aiRouter = router({
     }))
     .mutation(async function ({ input }) {
       const { content } = input
-      const res = await AiService.autoEmoji({ content })
-      return res
+      const agent = await AiModelFactory.EmojiAgent()
+      const result = await agent.generate("Please select and suggest appropriate emojis for the above content" + content)
+      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? [];
     }),
   AIComment: authProcedure
     .input(z.object({

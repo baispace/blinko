@@ -179,15 +179,13 @@ export class AiModelFactory {
     }, { ttl: 24 * 60 * 60 * 1000 })
   }
 
-
-
   static async BaseChatAgent({ withTools = true }: { withTools?: boolean }) {
     //globel.model.name cache
     const provider = await AiModelFactory.GetProvider()
     let tools: Record<string, any> = {}
     if (withTools) {
       tools = {
-        createBlinkoTool
+        tools: { createBlinkoTool }
       }
     }
     const BlinkoAgent = new Agent({
@@ -207,127 +205,122 @@ export class AiModelFactory {
 
     const mastra = new Mastra({
       agents: { BlinkoAgent },
-      logger: createLogger({ name: 'Blinko', level: 'info' }),
+      logger: createLogger({ name: 'Blinko', level: 'debug' }),
     });
     return mastra.getAgent('BlinkoAgent')
   }
 
-  static async TagAgent(tags: string[]) {
-    const provider = await AiModelFactory.GetProvider();
-    const systemPrompt = `You are a precision tag classification expert. Rules:
-      1. Select 5 most relevant tags from existing list
-      2. Create new tags in #category/subcategory format if needed
-      3. Return comma-separated tags only
-      
-      Available tags: ${tags.join(', ')}
-      Example: #technology/ai, #development/backend`;
+  static #createAgentFactory(
+    name: string,
+    systemPrompt: string | ((type?: string) => string),
+    loggerName: string,
+    options?: {
+      tools?: Record<string, any>;
+      isWritingAgent?: boolean;
+    }
+  ) {
+    return async (type?: 'expand' | 'polish' | 'custom') => {
+      const provider = await AiModelFactory.GetProvider();
+      const finalPrompt = typeof systemPrompt === 'function'
+        ? systemPrompt(type!)
+        : systemPrompt;
 
-    const agent = new Agent({
-      name: 'Blinko Tagging Agent',
-      instructions: systemPrompt,
-      model: provider?.LLM!
-    });
+      const agent = new Agent({
+        name: options?.isWritingAgent ? `${name} - ${type}` : name,
+        instructions: finalPrompt,
+        model: provider?.LLM!,
+        ...(options?.tools || {})
+      });
 
-    return new Mastra({
-      agents: { agent },
-      logger: createLogger({ name: 'BlinkoTag', level: 'info' })
-    }).getAgent('agent');
+      return new Mastra({
+        agents: { agent },
+        logger: createLogger({ name: loggerName, level: 'info' })
+      }).getAgent('agent');
+    };
   }
 
-  static async EmojiAgent() {
-    const provider = await AiModelFactory.GetProvider();
-    const systemPrompt = `You are an emoji recommendation expert. Rules:
-      1. Analyze content theme and emotion
-      2. Return 4-10 comma-separated emojis
-      3. Use 💻🔧 for tech content, 😊🎉 for emotional content
-      Example: 🚀,💻,🔧,📱`;
+  static TagAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Tagging Agent',
+    `You are a precision tag classification expert. Rules:
+     1. Select 5 most relevant tags from existing list
+     2. Create new tags in #category/subcategory format if needed
+     3. Return comma-separated tags only`,
+    'BlinkoTag'
+  );
 
-    const agent = new Agent({
-      name: 'Blinko Emoji Agent',
-      instructions: systemPrompt,
-      model: provider?.LLM!
-    });
+  static EmojiAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Emoji Agent',
+    `You are an emoji recommendation expert. Rules:
+     1. Analyze content theme and emotion
+     2. Return 4-10 comma-separated emojis
+     3. Use 💻🔧 for tech content, 😊🎉 for emotional content`,
+    'BlinkoEmoji'
+  );
 
-    return new Mastra({
-      agents: { agent },
-      logger: createLogger({ name: 'BlinkoEmoji', level: 'info' })
-    }).getAgent('agent');
-  }
+  static CommentAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Comment Agent',
+    `You are Blinko Comment Assistant. Guidelines:
+     1. Use Markdown formatting
+     2. Include 1-2 relevant emojis
+     3. Maintain professional tone
+     4. Keep responses concise (50-150 words)
+     5. Match user's language`,
+    'BlinkoComment'
+  );
 
-  static async WritingAgent(type: 'expand' | 'polish' | 'custom' = 'custom') {
-    const provider = await AiModelFactory.GetProvider();
-    const prompts = {
-      expand: `# Text Expansion Expert
-        ## Original Content
-        {content}
+  static SummarizeAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Summary Agent',
+    `You are a conversation title summarizer. Rules:
+      1. Summarize the content 
+      2. Return the title only
+      3. Generate titles based on the user's language
+      4. Do not return any punctuation marks in the result
+      5. Keep it short and concise`,
+    'BlinkoSummary'
+  );
 
-        ## Requirements
-        1. Use same language as input
-        2. Add details/examples without introducing new concepts
-        3. Maintain original structure and style
-        4. Use Markdown formatting
-        5. Output format with markdown
-        6. Do not add explanation`,
-
-      polish: `# Text Refinement Specialist
-        ## Input Text
-        {content}
-
-        ## Guidelines
-        1. Optimize sentence flow and vocabulary
-        2. Preserve core meaning
-        3. Apply technical writing standards
-        4. Use Markdown formatting
-        5. Output format with markdown`,
-
-      custom: `# Multi-Purpose Writing Assistant
-          ## User Request
+  static WritingAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Writing Agent',
+    (type) => {
+      const prompts = {
+        expand: `# Text Expansion Expert
+          ## Original Content
           {content}
 
           ## Requirements
-          1. Create content as needed
-          2. Follow industry-standard documentation
-          3. Use Markdown formatting
-          4. Output format with markdown`,
-    };
+          1. Use same language as input
+          2. Add details/examples without introducing new concepts
+          3. Maintain original structure and style
+          4. Use Markdown formatting
+          5. Output format with markdown
+          6. Do not add explanation`,
 
-    const agent = new Agent({
-      name: `Blinko Writing Agent - ${type}`,
-      instructions: prompts[type],
-      model: provider?.LLM!
-    });
+        polish: `# Text Refinement Specialist
+          ## Input Text
+          {content}
 
-    return new Mastra({
-      agents: { agent },
-      logger: createLogger({ name: 'BlinkoWriting', level: 'info' })
-    }).getAgent('agent');
-  }
+          ## Guidelines
+          1. Optimize sentence flow and vocabulary
+          2. Preserve core meaning
+          3. Apply technical writing standards
+          4. Use Markdown formatting
+          5. Output format with markdown`,
 
-  static async CommentAgent() {
-    const provider = await AiModelFactory.GetProvider();
-    const systemPrompt = `You are Blinko Comment Assistant. Guidelines:
-      1. Use Markdown formatting
-      2. Include 1-2 relevant emojis
-      3. Maintain professional tone
-      4. Keep responses concise (50-150 words)
-      5. Match user's language
-      
-      Structure:
-      1. Start with greeting
-      2. Provide structured insights
-      3. End with conclusion`;
+        custom: `# Multi-Purpose Writing Assistant
+            ## User Request
+            {content}
 
-    const agent = new Agent({
-      name: 'Blinko Comment Agent',
-      instructions: systemPrompt,
-      model: provider?.LLM!
-    });
-
-    return new Mastra({
-      agents: { agent },
-      logger: createLogger({ name: 'BlinkoComment', level: 'info' })
-    }).getAgent('agent');
-  }
+            ## Requirements
+            1. Create content as needed
+            2. Follow industry-standard documentation
+            3. Use Markdown formatting
+            4. Output format with markdown`,
+      };
+      return prompts[type || 'custom'];
+    },
+    'BlinkoWriting',
+    { isWritingAgent: true }
+  );
 
   // static async GetAudioLoader(audioPath: string) {
   //   const globalConfig = await AiModelFactory.ValidConfig()
@@ -338,6 +331,5 @@ export class AiModelFactory {
   //     throw new Error('not support other loader')
   //   }
   // }
-
 
 }

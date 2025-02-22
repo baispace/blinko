@@ -17,6 +17,7 @@ export const messageRouter = router({
       conversationId: z.number(),
       content: z.string(),
       role: z.enum(['user', 'assistant']),
+      metadata: z.any(),
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.message.create({
@@ -24,6 +25,7 @@ export const messageRouter = router({
           content: input.content,
           role: input.role,
           conversationId: input.conversationId,
+          metadata: input.metadata,
         }
       });
     }),

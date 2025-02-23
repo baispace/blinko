@@ -34,7 +34,8 @@ export type AssisantMessageMetadata = {
 }
 export type currentMessageResult = AssisantMessageMetadata & {
   toolcall: string[],
-  content: string
+  content: string,
+  id?: number
 }
 
 export class AiStore implements Store {
@@ -52,6 +53,7 @@ export class AiStore implements Store {
   withTools = new StorageState({ key: 'withTools', value: false })
   referencesNotes: BlinkoItem[] = []
   currentMessageResult: currentMessageResult = {
+    id: 0,
     notes: [],
     usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     fristCharDelay: 0,
@@ -80,6 +82,7 @@ export class AiStore implements Store {
   onInputSubmit = async (isRegenerate = false) => {
     try {
       const userQuestion = _.cloneDeep(this.input)
+      this.clearCurrentMessageResult()
       this.input = ""
       this.isChatting = true
       this.isAnswering = true
@@ -113,7 +116,7 @@ export class AiStore implements Store {
         }, { signal: this.aiChatabortController.signal })
 
         for await (const item of res) {
-          console.log(JSON.parse(JSON.stringify(item)))
+          // console.log(JSON.parse(JSON.stringify(item)))
           if (item.chunk?.type == 'tool-call') {
             this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`)
           }
@@ -135,7 +138,7 @@ export class AiStore implements Store {
             }
           }
         }
-        await api.message.create.mutate({
+        const newAssisantMessage = await api.message.create.mutate({
           conversationId: this.currentConversationId,
           content: this.currentMessageResult.content,
           role: 'assistant',
@@ -151,9 +154,10 @@ export class AiStore implements Store {
             conversationId: this.currentConversationId
           })
         }
-        await this.currentConversation.call()
+        this.currentMessageResult.id = newAssisantMessage.id
+        // await this.currentConversation.call()
         this.isAnswering = false
-        this.clearCurrentMessageResult()
+        // this.clearCurrentMessageResult()
       }
     } catch (error) {
       if (!error.message.includes('interrupted')) {
@@ -399,7 +403,8 @@ export class AiStore implements Store {
       content: '',
       toolcall: [],
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-      fristCharDelay: 0
+      fristCharDelay: 0,
+      id: 0
     }
   }
 

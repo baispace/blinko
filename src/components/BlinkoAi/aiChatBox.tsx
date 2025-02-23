@@ -37,6 +37,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
   <motion.div
     className="group"
     initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
+    exit={withoutAnimation ? {} : { opacity: 0, y: -20 }}
     animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
     transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
   >
@@ -107,7 +108,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           containerSize={25}
         />
         {
-          id && <IconButton
+          !!id && <IconButton
             tooltip={i18n.t('refresh')}
             icon="solar:refresh-outline"
             onClick={() => {
@@ -158,7 +159,13 @@ export const BlinkoChatBox = observer(() => {
                   <UserMessage key={item.content} content={item.content} time={item.createdAt.toLocaleString()} />
                 )}
                 {item.role == 'assistant' && (
-                  <AiMessage key={item.content} id={item.id} metadata={item.metadata as AssisantMessageMetadata} content={item.content} withoutAnimation={index == (aiStore.currentConversation.value?.messages.length ?? 0) - 1} />
+                  <AiMessage
+                    key={item.content}
+                    id={item.id}
+                    metadata={item.metadata as AssisantMessageMetadata}
+                    content={item.content}
+                  // withoutAnimation={index == (aiStore.currentConversation.value?.messages.length ?? 0) - 1}
+                  />
                 )}
               </>
             ))
@@ -186,13 +193,15 @@ export const BlinkoChatBox = observer(() => {
             ))
           }
 
-          {aiStore.isAnswering && (
-            <AiMessage
-              key="streaming-message"
-              content={aiStore.currentMessageResult.content}
-              withStreamAnimation
-            />
-          )}
+          {/* {aiStore.isAnswering && ( */}
+          <AiMessage
+            key="streaming-message"
+            content={aiStore.currentMessageResult.content}
+            withStreamAnimation
+            metadata={aiStore.currentMessageResult}
+            id={aiStore.currentMessageResult.id}
+          />
+          {/* )} */}
 
         </AnimatePresence>
       </div>

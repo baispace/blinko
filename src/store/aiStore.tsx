@@ -16,6 +16,8 @@ import { AiTag } from '@/components/BlinkoAi/aiTag';
 import i18n from '@/lib/i18n';
 import { Icon } from '@iconify/react';
 import { AiEmoji } from '@/components/BlinkoAi/aiEmoji';
+import { StorageState } from './standard/StorageState';
+import { BlinkoItem } from '@/components/BlinkoCard';
 
 type Chat = {
   content: string
@@ -25,6 +27,15 @@ type Chat = {
 }
 
 type WriteType = 'expand' | 'polish' | 'custom'
+export type AssisantMessageMetadata = {
+  notes?: BlinkoItem[],
+  usage?: { promptTokens?: number, completionTokens?: number, totalTokens?: number },
+  fristCharDelay?: number,
+}
+export type currentMessageResult = AssisantMessageMetadata & {
+  toolcall: string[],
+  content: string
+}
 
 export class AiStore implements Store {
   sid = 'AiStore';
@@ -37,13 +48,16 @@ export class AiStore implements Store {
   isChatting = false
   isAnswering = false
   input = '';
-  currentMessageResult: {
-    notes: Note[],
-    content: string
-  } = {
-      notes: [],
-      content: ''
-    }
+  withRAG = new StorageState({ key: 'withRAG', value: true })
+  withTools = new StorageState({ key: 'withTools', value: false })
+  referencesNotes: BlinkoItem[] = []
+  currentMessageResult: currentMessageResult = {
+    notes: [],
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    fristCharDelay: 0,
+    toolcall: [],
+    content: ''
+  }
 
   currentConversationId = 0
   currentConversation = new PromiseState({
@@ -54,7 +68,7 @@ export class AiStore implements Store {
   })
 
   conversactionList = new PromisePageState({
-    function: async ({ page, size }: { page: number, size: number }) => {
+    function: async ({ page, size }) => {
       const res = await api.conversation.list.query({
         page,
         size
@@ -63,36 +77,60 @@ export class AiStore implements Store {
     }
   })
 
-  onInputSubmit = async () => {
+  onInputSubmit = async (isRegenerate = false) => {
     try {
+      const userQuestion = _.cloneDeep(this.input)
+      this.input = ""
       this.isChatting = true
+      this.isAnswering = true
       if (this.currentConversationId == 0) {
         const conversation = await api.conversation.create.mutate({ title: '' });
         this.currentConversationId = conversation.id
       }
 
       if (this.currentConversationId != 0) {
-        await api.message.create.mutate({
-          conversationId: this.currentConversationId,
-          content: this.input,
-          role: 'user',
-        });
+        if (!isRegenerate) {
+          await api.message.create.mutate({
+            conversationId: this.currentConversationId,
+            content: userQuestion,
+            role: 'user',
+          });
+        }
+
         //update conversation message list
         await this.currentConversation.call()
 
         const filteredChatConversation = [
           ...(this.currentConversation.value?.messages?.slice(0, -1) || [])
         ];
-
-        this.isAnswering = true
-        const res = await streamApi.ai.completions.mutate({ question: this.input, conversations: filteredChatConversation }, { signal: this.aiChatabortController.signal })
+        const startTime = Date.now()
+        let isFristChunk = true
+        this.currentMessageResult.fristCharDelay = 0
+        const res = await streamApi.ai.completions.mutate({
+          question: userQuestion, conversations: filteredChatConversation,
+          withRAG: this.withRAG.value,
+          withTools: this.withTools.value
+        }, { signal: this.aiChatabortController.signal })
 
         for await (const item of res) {
-          console.log(item)
+          console.log(JSON.parse(JSON.stringify(item)))
+          if (item.chunk?.type == 'tool-call') {
+            this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`)
+          }
+          if (item.chunk?.type == 'tool-result') {
+            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}调用成功!`)
+          }
+          if (item.chunk?.type == 'finish') {
+            this.currentMessageResult.usage = item?.chunk?.usage
+          }
           if (item.notes) {
             this.currentMessageResult.notes = item.notes
           } else {
             if (item.chunk.type == 'text-delta') {
+              if (isFristChunk) {
+                this.currentMessageResult.fristCharDelay = Date.now() - startTime
+                isFristChunk = false
+              }
               this.currentMessageResult.content += item.chunk.textDelta
             }
           }
@@ -101,7 +139,11 @@ export class AiStore implements Store {
           conversationId: this.currentConversationId,
           content: this.currentMessageResult.content,
           role: 'assistant',
-          metadata: this.currentMessageResult.notes
+          metadata: {
+            notes: this.currentMessageResult.notes,
+            usage: this.currentMessageResult.usage,
+            fristCharDelay: this.currentMessageResult.fristCharDelay
+          }
         })
         if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 4) {
           await api.ai.summarizeConversationTitle.mutate({
@@ -111,10 +153,7 @@ export class AiStore implements Store {
         }
         await this.currentConversation.call()
         this.isAnswering = false
-        this.currentMessageResult = {
-          notes: [],
-          content: ''
-        }
+        this.clearCurrentMessageResult()
       }
     } catch (error) {
       if (!error.message.includes('interrupted')) {
@@ -124,14 +163,37 @@ export class AiStore implements Store {
     }
   }
 
+  regenerate = async (messageId: number) => {
+    await api.message.delete.mutate({ id: messageId })
+    await this.currentConversation.call()
+    const lastMessage = this.currentConversation.value?.messages[this.currentConversation.value?.messages?.length - 1]
+    this.input = lastMessage?.content ?? ''
+    await this.onInputSubmit(true)
+  }
+
   newChat = () => {
     this.currentConversationId = 0
     this.input = ''
-    this.currentMessageResult = {
-      notes: [],
-      content: ''
-    }
+    this.clearCurrentMessageResult()
     this.isChatting = false
+  }
+
+  newRoleChat = async (prompt: string) => {
+    this.isChatting = true
+
+    if (this.currentConversationId == 0) {
+      const conversation = await api.conversation.create.mutate({ title: '' });
+      this.currentConversationId = conversation.id
+    }
+
+    if (this.currentConversationId != 0) {
+      await api.message.create.mutate({
+        conversationId: this.currentConversationId,
+        content: prompt,
+        role: 'system',
+      });
+      await this.currentConversation.call()
+    }
   }
 
 
@@ -245,45 +307,6 @@ export class AiStore implements Store {
   currentWriteType: WriteType | undefined = undefined
   isLoading = false
 
-  // async completionsStream() {
-  //   try {
-  //     this.isAnswering = true
-  //     this.chatHistory.push({
-  //       content: this.aiSearchText,
-  //       role: 'user',
-  //       createAt: new Date().getTime()
-  //     })
-  //     this.scrollTicker++
-  //     const conversations = this.chatHistory.list.map(i => { return { role: i.role, content: i.content } })
-  //     this.chatHistory.push({
-  //       content: '',
-  //       role: 'assistant',
-  //       createAt: new Date().getTime(),
-  //       relationNotes: []
-  //     })
-  //     const res = await streamApi.ai.completions.mutate({ question: this.aiSearchText, conversations }, { signal: this.abortController.signal })
-  //     for await (const item of res) {
-  //       console.log(item)
-  //       if (item.notes) {
-  //         this.chatHistory.list[this.chatHistory.list.length - 1]!.relationNotes = item.notes
-  //       } else {
-  //         if (item.chunk.type == 'text-delta') {
-  //           //@ts-ignore
-  //           this.chatHistory.list[this.chatHistory.list.length - 1]!.content += item.chunk.textDelta
-  //         }
-  //         this.scrollTicker++
-  //       }
-  //     }
-  //     this.chatHistory.save()
-  //     this.isAnswering = false
-  //   } catch (error) {
-  //     this.isAnswering = false
-  //     if (!error.message.includes('interrupted')) {
-  //       RootStore.Get(ToastPlugin).error(error.message)
-  //     }
-  //   }
-  // }
-
   get blinko() {
     return RootStore.Get(BlinkoStore)
   }
@@ -370,6 +393,16 @@ export class AiStore implements Store {
     }
   })
 
+  clearCurrentMessageResult = () => {
+    this.currentMessageResult = {
+      notes: [],
+      content: '',
+      toolcall: [],
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      fristCharDelay: 0
+    }
+  }
+
   abortAiWrite() {
     this.aiWriteAbortController.abort()
     this.aiWriteAbortController = new AbortController()
@@ -389,10 +422,8 @@ export class AiStore implements Store {
         metadata: this.currentMessageResult.notes
       })
     }
-    this.currentMessageResult = {
-      notes: [],
-      content: ''
-    }
+    this.clearCurrentMessageResult()
+    await this.currentConversation.call()
   }
 
   private clear() {

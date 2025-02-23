@@ -1,4 +1,3 @@
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { AiBaseModelPrivider } from '.';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 

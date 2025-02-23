@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { observer } from "mobx-react-lite";
 
 export const IconButton = observer(({ tooltip, icon, onClick, classNames, children, size = 20, containerSize }: {
-  tooltip: string,
+  tooltip: string | React.ReactNode,
   icon: string | any,
   onClick?: (e) => void,
   classNames?: {
@@ -19,7 +19,7 @@ export const IconButton = observer(({ tooltip, icon, onClick, classNames, childr
     <Tooltip content={tooltip} placement="bottom" delay={1000}>
       <motion.div 
         whileTap={{ y: 1 }} 
-        className={`hover:bg-hover cursor-pointer rounded-md flex items-center justify-center ${classNames?.base}`} 
+        className={`hover:bg-hover transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center ${classNames?.base}`} 
         style={{ 
           width: containerSize || size + 3, 
           height: containerSize || size + 3 

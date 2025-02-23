@@ -1,13 +1,6 @@
 import { _ } from '@/lib/lodash';
 import "pdf-parse";
-import { ChatOpenAI, ClientOptions, OpenAIEmbeddings, } from "@langchain/openai";
-import path from 'path';
-import fs from 'fs';
-import type { Document } from "@langchain/core/documents";
-import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
 import { AiModelFactory } from './ai/aiModelFactory';
 import { ProgressResult } from './memos';
@@ -16,14 +9,12 @@ import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
-import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
 import { Context } from '../context';
 import dayjs from 'dayjs';
 import { CreateNotification } from '../routers/notification';
 import { NotificationType } from '@/lib/prismaZodType';
-import { z } from 'zod';
 import { CoreMessage, DefaultVectorDB } from '@mastra/core';
 import { MDocument } from "@mastra/rag";
 import { embed, embedMany } from 'ai';
@@ -72,7 +63,6 @@ export class AiService {
 
   static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number, content: string, type: 'update' | 'insert', createTime: Date, updatedAt?: Date }) {
     try {
-      console.log('embeddingUpsertxxxx')
       const { VectorStore, Embeddings } = await AiModelFactory.GetProvider()
       const config = await AiModelFactory.globalConfig()
 
@@ -84,24 +74,21 @@ export class AiService {
         }
       }
 
-      console.log(content, 'contentxxx')
       const chunks = await MDocument.fromMarkdown(content).chunk();
-      console.log(chunks, 'xxxxx')
       if (type == 'update') {
         AiModelFactory.queryAndDeleteVectorById(id)
       }
 
       const { embeddings } = await embedMany({
-        values: chunks.map(chunk => chunk.text),
+        values: chunks.map(chunk => chunk.text + 'Create At: ' + createTime.toISOString() + ' Update At: ' + updatedAt?.toISOString()),
         model: Embeddings,
       });
 
-      console.log(embeddings, 'embeddingsxxx')
 
       await VectorStore.upsert(
         'blinko',
         embeddings,
-        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id })),
+        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
       );
 
       try {
@@ -326,7 +313,7 @@ export class AiService {
     return sortedNotes;
   }
 
-  static async completions({ question, conversations, withTools, withRAG = true, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, ctx: Context }) {
+  static async completions({ question, conversations, withTools, withRAG = true, systemPrompt, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, systemPrompt?: string, ctx: Context }) {
     try {
       console.log('completions')
       conversations.push({
@@ -338,6 +325,12 @@ export class AiService {
         content: `Current time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n
         Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`
       })
+      if (systemPrompt) {
+        conversations.push({
+          role: 'system',
+          content: systemPrompt
+        })
+      }
       let notes: any[] = []
       if (withRAG) {
         notes = await AiModelFactory.queryVector(question, Number(ctx.id))

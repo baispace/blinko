@@ -24,7 +24,20 @@ export const conversationRouter = router({
         }
       });
     }),
-
+  clearMessages: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      await prisma.message.deleteMany({
+        where: {
+          conversationId: input.id
+        }
+      });
+      return {
+        success: true
+      }
+    }),
   list: authProcedure
     .input(z.object({
       page: z.number().default(1),
@@ -53,7 +66,11 @@ export const conversationRouter = router({
       return await prisma.conversation.findUnique({
         where: { id: input.id, accountId: Number(ctx.id) },
         include: {
-          messages: true
+          messages: {
+            orderBy: {
+              createdAt: 'asc'
+            }
+          }
         }
       });
     }),
@@ -62,7 +79,6 @@ export const conversationRouter = router({
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),
-      model: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.conversation.update({
@@ -90,11 +106,18 @@ export const conversationRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      return await prisma.conversation.delete({
-        where: {
-          id: input.id,
-          accountId: Number(ctx.id)
-        }
+      return await prisma.$transaction(async (prisma) => {
+        await prisma.message.deleteMany({
+          where: {
+            conversationId: input.id
+          }
+        });
+        return await prisma.conversation.delete({
+          where: {
+            id: input.id,
+            accountId: Number(ctx.id)
+          }
+        });
       });
     }),
 }); 

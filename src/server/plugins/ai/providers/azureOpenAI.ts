@@ -1,4 +1,3 @@
-import { AzureChatOpenAI, AzureOpenAIEmbeddings } from '@langchain/openai'
 import { AiBaseModelPrivider } from '.'
 import { createAzure } from '@ai-sdk/azure';
 

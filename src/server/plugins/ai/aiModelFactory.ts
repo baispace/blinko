@@ -77,7 +77,42 @@ export class AiModelFactory {
         }
       },
       include: {
-        attachments: true
+        tags: { include: { tag: true } },
+        attachments: {
+          orderBy: [
+            { sortOrder: 'asc' },
+            { id: 'asc' }
+          ]
+        },
+        references: {
+          select: {
+            toNoteId: true,
+            toNote: {
+              select: {
+                content: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            }
+          }
+        },
+        referencedBy: {
+          select: {
+            fromNoteId: true,
+            fromNote: {
+              select: {
+                content: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            comments: true
+          }
+        }
       }
     })).map(i => { return { ...i, score: filteredResults.find(t => Number(t.metadata?.id) == i.id)?.score ?? 0 } }) ?? [];
   }

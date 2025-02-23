@@ -1,4 +1,3 @@
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { createOpenAI, openai } from "@ai-sdk/openai";
 import { AiBaseModelPrivider } from '.';
 

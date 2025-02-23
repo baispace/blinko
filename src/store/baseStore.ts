@@ -27,7 +27,7 @@ export class BaseStore implements Store {
       icon: 'hugeicons:note'
     },
     {
-      title: "ai",
+      title: "AI",
       shallow: true,
       href: '/ai',
       icon: 'mingcute:ai-line'

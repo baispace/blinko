@@ -62,18 +62,20 @@ export const aiRouter = router({
       question: z.string(),
       withTools: z.boolean().optional(),
       withRAG: z.boolean().optional(),
-      conversations: z.array(z.object({ role: z.string(), content: z.string() }))
+      conversations: z.array(z.object({ role: z.string(), content: z.string() })),
+      systemPrompt: z.string().optional()
     }))
     .mutation(async function* ({ input, ctx }) {
       try {
-        const { question, conversations, withTools = false, withRAG = true } = input
+        const { question, conversations, withTools = false, withRAG = true, systemPrompt } = input
         let _conversations = conversations as CoreMessage[]
         const { result: responseStream, notes } = await AiService.completions({
           question,
           conversations: _conversations,
           ctx,
           withTools,
-          withRAG
+          withRAG,
+          systemPrompt
         })
         for await (const chunk of responseStream.fullStream) {
           yield { chunk }

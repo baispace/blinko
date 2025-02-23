@@ -1,5 +1,3 @@
-import { ChatOllama } from "@langchain/ollama";
-import { OllamaEmbeddings } from "@langchain/ollama";
 import { BufferLoader } from "langchain/document_loaders/fs/buffer";
 import { createOllama } from 'ollama-ai-provider';
 import { AiBaseModelPrivider } from ".";

@@ -4,19 +4,19 @@ import { prisma } from '../prisma';
 
 export const messageRouter = router({
   create: authProcedure
-    .meta({ 
-      openapi: { 
-        method: 'POST', 
-        path: '/v1/message/create', 
-        summary: 'Create a new message', 
-        protect: true, 
-        tags: ['Message'] 
-      } 
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/message/create',
+        summary: 'Create a new message',
+        protect: true,
+        tags: ['Message']
+      }
     })
     .input(z.object({
       conversationId: z.number(),
       content: z.string(),
-      role: z.enum(['user', 'assistant']),
+      role: z.enum(['user', 'assistant', 'system']),
       metadata: z.any(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -31,14 +31,14 @@ export const messageRouter = router({
     }),
 
   list: authProcedure
-    .meta({ 
-      openapi: { 
-        method: 'GET', 
-        path: '/v1/message/list', 
-        summary: 'Get messages by conversation', 
-        protect: true, 
-        tags: ['Message'] 
-      } 
+    .meta({
+      openapi: {
+        method: 'GET',
+        path: '/v1/message/list',
+        summary: 'Get messages by conversation',
+        protect: true,
+        tags: ['Message']
+      }
     })
     .input(z.object({
       conversationId: z.number(),
@@ -49,12 +49,12 @@ export const messageRouter = router({
       const skip = (input.page - 1) * input.size;
       const [total, messages] = await Promise.all([
         prisma.message.count({
-          where: { 
+          where: {
             conversationId: input.conversationId,
           }
         }),
         prisma.message.findMany({
-          where: { 
+          where: {
             conversationId: input.conversationId,
           },
           skip,
@@ -62,7 +62,7 @@ export const messageRouter = router({
           orderBy: { createdAt: 'asc' }
         })
       ]);
-      return { total, items: messages };
+      return messages;
     }),
 
   update: authProcedure
@@ -72,7 +72,7 @@ export const messageRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.message.update({
-        where: { 
+        where: {
           id: input.id,
         },
         data: {
@@ -86,10 +86,35 @@ export const messageRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      return await prisma.message.delete({
-        where: { 
+      const message = await prisma.message.findUnique({
+        where: {
           id: input.id,
-        }
+        },
+        select: {
+          conversationId: true,
+          createdAt: true,
+        },
+      });
+
+      if (!message) {
+        throw new Error('Message not found');
+      }
+
+      return await prisma.$transaction(async (prisma) => {
+        await prisma.message.delete({
+          where: {
+            id: input.id,
+          },
+        });
+
+        await prisma.message.deleteMany({
+          where: {
+            conversationId: message.conversationId,
+            createdAt: {
+              gt: message.createdAt,
+            },
+          },
+        });
       });
     }),
 }); 

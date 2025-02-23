@@ -165,15 +165,12 @@ body {
   color: var(--desc);
 }
 
-@keyframes bounce {
-  0% {
-      transform: translateY(0);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  50% {
-      transform: translateY(-6px);
-  }
-  100% {
-      transform: translateY(0);
+  to {
+    opacity: 1;
   }
 }
 

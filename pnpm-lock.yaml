@@ -59,18 +59,6 @@ importers:
       '@langchain/core':
         specifier: ^0.3.13
         version: 0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8))
-      '@langchain/deepseek':
-        specifier: ^0.0.1
-        version: 0.0.1(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)
-      '@langchain/ollama':
-        specifier: ^0.1.2
-        version: 0.1.2(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))
-      '@langchain/openai':
-        specifier: ^0.4.4
-        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)
-      '@langchain/pinecone':
-        specifier: ^0.1.1
-        version: 0.1.1(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))
       '@langchain/textsplitters':
         specifier: ^0.1.0
         version: 0.1.0(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))
@@ -191,9 +179,6 @@ importers:
       faiss-node:
         specifier: ^0.5.1
         version: 0.5.1
-      fast-json-patch:
-        specifier: ^3.1.1
-        version: 3.1.1
       feed:
         specifier: ^4.2.2
         version: 4.2.2
@@ -2259,12 +2244,6 @@ packages:
     resolution: {integrity: sha512-RGhJOTzJv6H+3veBAnDlH2KXuZ68CXMEg6B6DPTzL3IGDyd+vLxXG4FIttzUwjdeQKjrrFBwlXpJDl7bkoApzQ==}
     engines: {node: '>=18'}
 
-  '@langchain/deepseek@0.0.1':
-    resolution: {integrity: sha512-jgrbitvV4p7Kqo/Fyni9coCliNXUrJ2XChdR8eHvQg3RL+w13DIQjJn2mrkCrb7v6Is1rI7It2x3yIbADL71Yg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': ^0.3.13
-
   '@langchain/ollama@0.1.2':
     resolution: {integrity: sha512-WCeogCFjdWf6jGwLt12cxkSpm5eVamv43b48DIlbJ4np9vChwVlZZB6FU7uEXNrJ9c0dsoa6877hJ5mYHdbJvw==}
     engines: {node: '>=18'}
@@ -2273,18 +2252,6 @@ packages:
 
   '@langchain/openai@0.3.10':
     resolution: {integrity: sha512-kKapg816ZMNscCKdfo7vQiugtfJPIt14LPHoOsDBQxYRK5fSLUHQ/5eb2iujLipymjMeHlataOGzObSVEwzEmw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': ^0.3.13
-
-  '@langchain/openai@0.4.4':
-    resolution: {integrity: sha512-UZybJeMd8+UX7Kn47kuFYfqKdBCeBUWNqDtmAr6ZUIMMnlsNIb6MkrEEhGgAEjGCpdT4CU8U/DyyddTz+JayOQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': ^0.3.13
-
-  '@langchain/pinecone@0.1.1':
-    resolution: {integrity: sha512-NxIqag6tp2rFKXjy9DTx+wBERXgDlWLlZ56nyje9G/mEd3TCSs9bZk8Tjx8rkT19BgvdHOSqyMyiTzEz6o5cKw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': ^0.3.13
@@ -14539,20 +14506,12 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/deepseek@0.0.1(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)':
-    dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8))
-      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)
-      zod: 3.24.2
-    transitivePeerDependencies:
-      - encoding
-      - ws
-
   '@langchain/ollama@0.1.2(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))':
     dependencies:
       '@langchain/core': 0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8))
       ollama: 0.5.10
       uuid: 10.0.0
+    optional: true
 
   '@langchain/openai@0.3.10(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)':
     dependencies:
@@ -14564,24 +14523,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - ws
-
-  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))(encoding@0.1.13)(ws@8.18.0)':
-    dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8))
-      js-tiktoken: 1.0.15
-      openai: 4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.24.2)
-      zod: 3.24.2
-      zod-to-json-schema: 3.23.3(zod@3.24.2)
-    transitivePeerDependencies:
-      - encoding
-      - ws
-
-  '@langchain/pinecone@0.1.1(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))':
-    dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8))
-      '@pinecone-database/pinecone': 3.0.3
-      flat: 5.0.2
-      uuid: 10.0.0
 
   '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.3(encoding@0.1.13)(ws@8.18.0)(zod@3.23.8)))':
     dependencies:
@@ -16895,6 +16836,7 @@ snapshots:
   '@pinecone-database/pinecone@3.0.3':
     dependencies:
       encoding: 0.1.13
+    optional: true
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -21342,6 +21284,7 @@ snapshots:
   encoding@0.1.13:
     dependencies:
       iconv-lite: 0.6.3
+    optional: true
 
   end-of-stream@1.4.4:
     dependencies:
@@ -24004,6 +23947,7 @@ snapshots:
   ollama@0.5.10:
     dependencies:
       whatwg-fetch: 3.6.20
+    optional: true
 
   on-exit-leak-free@2.1.2: {}
 
@@ -26897,7 +26841,8 @@ snapshots:
       iconv-lite: 0.6.3
     optional: true
 
-  whatwg-fetch@3.6.20: {}
+  whatwg-fetch@3.6.20:
+    optional: true
 
   whatwg-mimetype@3.0.0:
     optional: true

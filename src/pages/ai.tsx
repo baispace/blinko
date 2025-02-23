@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@iconify/react';
 import { useMediaQuery } from 'usehooks-ts';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AiStore } from '@/store/aiStore';
 import { RootStore } from '@/store';
 import { cn } from '@/lib/utils';
@@ -11,10 +11,18 @@ import { observer } from 'mobx-react-lite';
 import { BlinkoChatBox } from '@/components/BlinkoAi/aiChatBox';
 import { Watermark } from '@hirohe/react-watermark';
 import { useTheme } from 'next-themes';
+import { UserStore } from '@/store/user';
+import { useTranslation } from 'react-i18next';
+import { BaseStore } from '@/store/baseStore';
+import i18n from '@/lib/i18n';
+
 const AIPage = observer(() => {
   const [prompt, setPrompt] = useState('');
   const isPc = useMediaQuery('(min-width: 768px)');
+  const userStore = RootStore.Get(UserStore)
+  const { t } = useTranslation()
   const aiStore = RootStore.Get(AiStore)
+  const baseStore = RootStore.Get(BaseStore)
   const InputBoxRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const [inputHeight, setInputHeight] = useState(0);
@@ -41,30 +49,28 @@ const AIPage = observer(() => {
 
   const buttons = [
     {
-      label: '写作',
+      label: t('writing'),
       icon: 'hugeicons:quill-write-02',
       color: '#0057FF',
+      prompt: t('ai-prompt-writing')
     },
     {
-      label: '学习',
-      icon: 'hugeicons:book-02',
-      color: '#FF9500'
+      label: t('coding'),
+      icon: 'solar:code-bold',
+      color: '#FF9500',
+      prompt: t('ai-prompt-coding')
     },
     {
-      label: '创意',
-      icon: 'hugeicons:falling-star',
-      color: '#FF3B30'
-    },
-    {
-      label: '翻译',
+      label: t('translation'),
       icon: 'hugeicons:message-translate',
-      color: '#2FBC52'
+      color: '#2FBC52',
+      prompt: t('ai-prompt-translation', { lang: i18n.language })
     }
   ];
 
   return (
     <Watermark
-      text="内容由人工智能生成"
+      text={t('content-generated-by-ai')}
       multiline
       rotate={-30}
       fontFamily="sans-serif"
@@ -91,7 +97,7 @@ const AIPage = observer(() => {
               }}
               className="text-3xl font-bold overflow-hidden whitespace-nowrap origin-left"
             >
-              欢迎你，Blinko!
+              {t('welcome-to-blinko', { name: userStore.userInfo?.value?.nickName.toUpperCase() ?? userStore.userInfo?.value?.name.toUpperCase() })}!
             </motion.div>
           </div>
         ) : (
@@ -110,29 +116,41 @@ const AIPage = observer(() => {
             aiStore.isChatting ? "absolute bottom-2" : "mt-4"
           )}
         >
-          <div className={`w-full md:w-[85%] flex items-center  gap-2 mt-4 overflow-x-scroll scrollbar-hide my-3`}>
-            <motion.div
-              className="flex gap-2 px-4 w-full"
-              animate={{
-                x: aiStore.isChatting ? 0 : 'calc(50% - 20vw + 2rem)'
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              {buttons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant='flat'
-                  startContent={<Icon icon={button.icon} color={button.color} width="20" height="20" />}
-                >
-                  {button.label}
-                </Button>
-              ))}
-              <Button variant='light' startContent={<Icon icon="hugeicons:book-edit" width="20" height="20" />}>
-                更多
-              </Button>
-            </motion.div>
-          </div>
-
+          <AnimatePresence>
+            {!aiStore.isChatting && (
+              <motion.div
+                className="w-full md:w-[85%] flex items-center gap-2 mt-4 overflow-x-scroll scrollbar-hide my-3"
+                initial={{ y: 0, opacity: 1 }}
+                exit={{
+                  y: 150,
+                  opacity: 0,
+                  transition: {
+                    type: "spring",
+                    damping: 10,
+                    stiffness: 100
+                  }
+                }}
+              >
+                <div className="flex gap-2 px-4 w-full items-center justify-center">
+                  {buttons.map((button, index) => (
+                    <Button
+                      onClick={() => {
+                        aiStore.newRoleChat(button.prompt)
+                      }}
+                      className='w-fit'
+                      key={index}
+                      variant='light'
+                      startContent={<Icon className='min-w-[20px]' icon={button.icon} color={button.color} width="20" height="20" />}
+                    >
+                      {button.label}
+                    </Button>
+                  ))}
+                  <Button isIconOnly variant='light' startContent={<Icon icon="icon-park-outline:more" className='min-w-[20px]' width="20" height="20" />}>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <AiInput className={aiStore.isChatting ? 'mt-0' : 'mt-2'} />
 

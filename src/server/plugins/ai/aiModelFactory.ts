@@ -16,6 +16,8 @@ import { embed } from "ai";
 import { prisma } from "@/server/prisma"
 import { _ } from "@/lib/lodash"
 import { VECTOR_DB_FILE_PATH } from "@/lib/constant"
+import { GeminiModelProvider } from "./providers/gemini"
+import { GrokModelProvider } from "./providers/grok"
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -208,6 +210,10 @@ export class AiModelFactory {
           return createProviderResult(new DeepSeekModelProvider({ globalConfig }));
         case 'Anthropic':
           return createProviderResult(new AnthropicModelProvider({ globalConfig }));
+        case 'Grok':
+          return createProviderResult(new GrokModelProvider({ globalConfig }));
+        case 'Gemini':
+          return createProviderResult(new GeminiModelProvider({ globalConfig }));
         default:
           throw new Error(`Unsupported AI model provider: ${globalConfig.aiModelProvider}`);
       }

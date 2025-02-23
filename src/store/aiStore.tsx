@@ -11,7 +11,7 @@ import { eventBus } from '@/lib/event';
 import { showAiWriteSuggestions } from '@/components/Common/PopoverFloat/aiWritePop';
 import { PromiseCall, PromisePageState, PromiseState } from './standard/PromiseState';
 import { DialogStore } from './module/Dialog';
-import { CheckboxGroup } from '@nextui-org/react';
+import { Image } from '@nextui-org/react';
 import { AiTag } from '@/components/BlinkoAi/aiTag';
 import i18n from '@/lib/i18n';
 import { Icon } from '@iconify/react';
@@ -205,18 +205,43 @@ export class AiStore implements Store {
     {
       label: "OpenAI",
       value: "OpenAI",
-      icon: <Icon icon="ri:openai-fill" width="20" height="20" />
+      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
+        <Image className='text-primary' src="/images/openai.svg" width={20} height={20} />
+      </div>
     },
     {
       label: "AzureOpenAI",
       value: "AzureOpenAI",
-      icon: <Icon icon="teenyicons:azure-outline" width="20" height="20" />
+      icon: <Image src="/images/azure.png" width={20} height={20} />
     },
     {
       label: "Ollama",
       value: "Ollama",
-      icon: <Icon icon="simple-icons:ollama" width="20" height="20" />
-    }
+      icon: <Image src="/images/ollama.png" width={20} height={20} />
+    },
+    {
+      label: "Grok",
+      value: "Grok",
+      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
+        <Image src="/images/grok.svg" width={20} height={20} />
+      </div>
+    },
+    {
+      label: "Gemini",
+      value: "Gemini",
+      icon: <Image src="/images/google.png" width={20} height={20} />
+    },
+    {
+      label: "DeepSeek",
+      value: "DeepSeek",
+      icon: <Image src="/images/deepseek.svg" width={20} height={20} />
+    },
+    {
+      label: "Anthropic",
+      value: "Anthropic",
+      icon: <Image src="/images/anthropic.svg" width={20} height={20} />
+    },
+
   ]
 
   modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string, value: string }>> = {

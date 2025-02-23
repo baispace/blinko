@@ -26,6 +26,9 @@ importers:
       '@ai-sdk/provider':
         specifier: ^1.0.8
         version: 1.0.8
+      '@ai-sdk/xai':
+        specifier: ^1.1.11
+        version: 1.1.11(zod@3.23.8)
       '@ashwamegh/react-link-preview':
         specifier: ^1.0.1
         version: 1.0.1(prop-types@15.8.1)(react@18.3.1)
@@ -609,6 +612,12 @@ packages:
     peerDependenciesMeta:
       zod:
         optional: true
+
+  '@ai-sdk/xai@1.1.11':
+    resolution: {integrity: sha512-eag7OmwoDXvqXX9p/WQIYHrmX3Q3ZdTRWX01BiMCY5qri/+/FK/2CkGuxxMI3PHy2bqvWaK85A02j3AALafVIw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -12288,6 +12297,13 @@ snapshots:
       zod-to-json-schema: 3.24.2(zod@3.24.2)
     optionalDependencies:
       zod: 3.24.2
+
+  '@ai-sdk/xai@1.1.11(zod@3.23.8)':
+    dependencies:
+      '@ai-sdk/openai-compatible': 0.1.11(zod@3.23.8)
+      '@ai-sdk/provider': 1.0.8
+      '@ai-sdk/provider-utils': 2.1.9(zod@3.23.8)
+      zod: 3.23.8
 
   '@alloc/quick-lru@5.2.0': {}
 

@@ -1,3 +1,16 @@
+# [0.41.0](https://github.com/blinko-space/blinko/compare/v0.40.5...v0.41.0) (2025-02-23)
+
+
+### Features
+
+* Add embedding dimensions configuration for AI vector indexing ([d8db39e](https://github.com/blinko-space/blinko/commit/d8db39edbedb87775dbd16898959e3ac190475d7))
+* Enhance AI and Vector Database Integration ([fe558ba](https://github.com/blinko-space/blinko/commit/fe558ba162f7eba7c7a8642e74ac218c36856bac))
+* Enhance AI Chat and Conversation Management ([61af683](https://github.com/blinko-space/blinko/commit/61af683df3feb9a5df3e779718914f711205a16c))
+* Enhance AI Chat and Localization with Comprehensive Updates ([e3a8331](https://github.com/blinko-space/blinko/commit/e3a833147fd1e9e46194bb9367fc66f6cd1909f9))
+* Implement AI Conversation and Streaming Chat Features ([66726a0](https://github.com/blinko-space/blinko/commit/66726a0405739b2fdedbfb349ac4e5757369d02a))
+* Improve AI Chat Message Rendering and State Management ([a61f843](https://github.com/blinko-space/blinko/commit/a61f843157fa5191d5d799f9b204ffba84004175))
+* Improve AI Chat Message Rendering and State Management ([04023be](https://github.com/blinko-space/blinko/commit/04023be04cf269cf8ba37967397b3e9fe8570705))
+
 ## [0.40.5](https://github.com/blinko-space/blinko/compare/v0.40.4...v0.40.5) (2025-02-21)
 
 

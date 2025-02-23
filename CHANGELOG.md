@@ -1,3 +1,10 @@
+## [0.41.1](https://github.com/blinko-space/blinko/compare/v0.41.0...v0.41.1) (2025-02-23)
+
+
+### Bug Fixes
+
+* Add @mastra/rag package for enhanced RAG capabilities ([3267c9f](https://github.com/blinko-space/blinko/commit/3267c9f4db4b13f52dae5e86e0c908180ee7ecb4))
+
 # [0.41.0](https://github.com/blinko-space/blinko/compare/v0.40.5...v0.41.0) (2025-02-23)
 
 

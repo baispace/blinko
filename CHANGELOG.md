@@ -1,3 +1,10 @@
+## [0.41.3](https://github.com/blinko-space/blinko/compare/v0.41.2...v0.41.3) (2025-02-23)
+
+
+### Bug Fixes
+
+* update package-lock ([a30e3b5](https://github.com/blinko-space/blinko/commit/a30e3b5cf89478c9ae430244ad9629e624bddc1e))
+
 ## [0.41.2](https://github.com/blinko-space/blinko/compare/v0.41.1...v0.41.2) (2025-02-23)
 
 

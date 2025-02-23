@@ -1,7 +1,7 @@
 const isProduction = process.env.NODE_ENV === 'production';
-const isVercel = process.env.VERCEL === '1';
 const withPWA = require('next-pwa')({
   dest: 'public',
+  maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, 
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development', 
@@ -56,7 +56,11 @@ const withPWA = require('next-pwa')({
   ]
 })
 
-module.exports = withPWA({
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true'
+})
+
+module.exports = withBundleAnalyzer(withPWA({
   output: 'standalone',
   transpilePackages: ['react-diff-view','highlight.js','remark-gfm','rehype-raw'],
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
@@ -126,7 +130,7 @@ module.exports = withPWA({
     })
     return config;
   },
-  outputFileTracing: isVercel? false : true,
+  outputFileTracing: true,
   reactStrictMode: isProduction? true : false,
   swcMinify: true,
   eslint: {
@@ -141,4 +145,4 @@ module.exports = withPWA({
     ]
   }
   
-})
+}))

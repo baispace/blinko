@@ -11,7 +11,7 @@ import { _ } from '@/lib/lodash';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { type Attachment } from '@/server/types';
-import { Card, Popover, PopoverTrigger, PopoverContent } from '@nextui-org/react';
+import { Card, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
 import { UploadButtons } from './Toolbar/UploadButtons';
 import { ReferenceButton } from './Toolbar/ReferenceButton';

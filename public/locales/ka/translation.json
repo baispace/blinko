@@ -529,5 +529,7 @@
   "check-connect": "შეამოწმე",
   "check-connect-error": "შეერთების ჩავა ក្រុ׆ាស់ អ្នក /v1- ការดាប់",
   "check-connect-success": "შემოწმება და კო­­­­- -νекciyиs Success",
-  "loading": "ჩატვირთვა"
+  "loading": "ჩატვირთვა",
+  "embedding-dimensions": "ჩაშენებუ ზომებি",
+  "embedding-dimensions-description": "თქვენ უნდა განზო-ო, ความผิดพลาดของพวกเขาในการตอบสนองข้อกล่าวหาарам с толькой же уверенностью, как если бы они были истинными."
 }

@@ -5,7 +5,7 @@ import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { Icon } from "@iconify/react";
 import { SideBarItem } from "../Layout";
-import { Popover, PopoverTrigger, PopoverContent, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Chip, Button } from "@nextui-org/react";
+import { Popover, PopoverTrigger, PopoverContent, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Chip, Button } from "@heroui/react";
 import EmojiPicker, { EmojiStyle, Theme } from 'emoji-picker-react';
 import { useTheme } from "next-themes";
 import { useRouter } from "next/router";

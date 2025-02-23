@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
-import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown } from '@nextui-org/react';
+import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown } from '@heroui/react';
 import { FileUploadIcon } from '../../../Icons';
 import { IconButton } from '../IconButton';
 import { ShowCamera } from '../../../CameraDialog';

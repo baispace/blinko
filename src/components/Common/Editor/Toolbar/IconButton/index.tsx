@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { Tooltip } from "@nextui-org/react";
+import { Tooltip } from "@heroui/react";
 import { motion } from "motion/react";
 import { observer } from "mobx-react-lite";
 

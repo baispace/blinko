@@ -17,7 +17,7 @@ import { LinkPreview } from './LinkPreview';
 import { ImageWrapper } from './ImageWrapper';
 import { ListItem } from './ListItem';
 import dynamic from 'next/dynamic';
-import { Skeleton } from '@nextui-org/react';
+import { Skeleton } from '@heroui/react';
 import { TableWrapper } from './TableWrapper';
 import router, { useRouter } from 'next/router';
 import remarkTaskList from 'remark-task-list';

@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import { Tooltip } from '@nextui-org/react';
+import { Tooltip } from '@heroui/react';
 import { Note, NoteType } from '@/server/types';
 import { ConvertItemFunction } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';

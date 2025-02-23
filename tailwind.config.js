@@ -1,10 +1,10 @@
 /** @type {import('tailwindcss').Config} */
-const { nextui } = require('@nextui-org/react');
+const { heroui } = require('@heroui/react');
 module.exports = {
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}', // Tremor module
-    './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}', // NextUI theme
+    './node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}', // NextUI theme
   ],
   darkMode: 'class',
   theme: {
@@ -201,8 +201,8 @@ module.exports = {
     require('@headlessui/tailwindcss'),
     require('@tailwindcss/typography'),
     require('@tailwindcss/line-clamp'),
-    nextui({
-      prefix: 'nextui', // prefix for themes variables
+    heroui({
+      prefix: 'heroui', // prefix for themes variables
       addCommonColors: false, // override common colors (e.g. "blue", "green", "pink").
       defaultTheme: 'light', // default theme from the themes object
       defaultExtendTheme: 'light', // default theme to extend on custom themes

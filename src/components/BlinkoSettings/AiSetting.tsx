@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { AccordionItem, Accordion, Autocomplete, AutocompleteItem, Button, Card, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider } from "@nextui-org/react";
+import { AccordionItem, Accordion, Autocomplete, AutocompleteItem, Button, Card, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -81,6 +81,7 @@ export const AiSetting = observer(() => {
               key: 'isUseAI',
               value: e.target.checked
             }), { autoAlert: false })
+            window.location.reload()
           }}
         />} />
       <Item
@@ -102,7 +103,7 @@ export const AiSetting = observer(() => {
             label={t('select-model-provider')}
           >
             {ai.modelProviderSelect.map((item) => (
-              <SelectItem key={item.value ?? ''} value={item.value} startContent={item.icon}>
+              <SelectItem key={item.value ?? ''} startContent={item.icon}>
                 {item.label}
               </SelectItem>
             ))}
@@ -136,7 +137,7 @@ export const AiSetting = observer(() => {
               label={t('select-model')}
             >
               {ai.modelSelect[blinko.config.value?.aiModelProvider!]!.map((item) => (
-                <AutocompleteItem key={item.value} value={item.value}>
+                <AutocompleteItem key={item.value}>
                   {item.label}
                 </AutocompleteItem>
               ))}
@@ -175,7 +176,7 @@ export const AiSetting = observer(() => {
                 label={t('embedding-model')}
               >
                 {ai.embeddingSelect[blinko.config.value?.aiModelProvider!]!.map((item) => (
-                  <AutocompleteItem key={item.value} value={item.value}>
+                  <AutocompleteItem key={item.value}>
                     {item.label}
                   </AutocompleteItem>
                 ))}

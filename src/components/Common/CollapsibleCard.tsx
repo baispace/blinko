@@ -1,4 +1,4 @@
-import { Card, Button } from "@nextui-org/react";
+import { Card, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, ReactNode, useEffect } from "react";

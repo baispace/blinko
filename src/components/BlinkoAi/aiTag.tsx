@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckboxGroup, Checkbox, Button, Radio, RadioGroup } from "@nextui-org/react";
+import { CheckboxGroup, Checkbox, Button, Radio, RadioGroup } from "@heroui/react";
 import { CustomCheckbox } from '../Common/CustomCheckbox';
 import { useTranslation } from 'react-i18next';
 

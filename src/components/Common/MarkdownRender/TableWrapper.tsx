@@ -1,6 +1,6 @@
 import React from 'react';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@nextui-org/react";
-import { Pagination } from "@nextui-org/react";
+import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@heroui/react";
+import { Pagination } from "@heroui/react";
 
 export const TableWrapper = ({ children }: { children: React.ReactNode }) => {
     //@ts-ignore

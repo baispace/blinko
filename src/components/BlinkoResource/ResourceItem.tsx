@@ -1,4 +1,4 @@
-import { Card, Image, Checkbox, Chip, Tooltip } from "@nextui-org/react";
+import { Card, Image, Checkbox, Chip, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { filesize } from "filesize";

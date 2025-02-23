@@ -5,10 +5,10 @@ import { AnalyticsStore } from "@/store/analyticsStore"
 import { useTranslation } from "react-i18next"
 import { HeatMap } from "@/components/BlinkoAnalytics/HeatMap"
 import { StatsCards } from "@/components/BlinkoAnalytics/StatsCards"
-import { Select, SelectItem } from "@nextui-org/react"
+import { Select, SelectItem } from "@heroui/react"
 import { TagDistributionChart } from "@/components/BlinkoAnalytics/TagDistributionChart"
 import dayjs from "dayjs"
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@nextui-org/react"
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react"
 import { Icon } from "@iconify/react"
 import { ScrollArea } from '@/components/Common/ScrollArea'
 

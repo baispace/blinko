@@ -1,4 +1,4 @@
-import { Image } from '@nextui-org/react';
+import { Image } from '@heroui/react';
 import { Note } from '@/server/types';
 import { helper } from '@/lib/helper';
 import { RootStore } from '@/store/root';

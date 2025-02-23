@@ -532,5 +532,7 @@
   "check-connect": "核对",
   "check-connect-error": "连接失败可能会被添加到 /v1 的末尾。",
   "check-connect-success": "检查连接成功",
-  "loading": "加载中"
+  "loading": "加载中",
+  "embedding-dimensions": "嵌入维度",
+  "embedding-dimensions-description": "您需要确保模型尺寸正确无误，并且在更改后需要强制重建索引记录。"
 }

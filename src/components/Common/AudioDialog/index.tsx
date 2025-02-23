@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, Suspense } from "react"
 import useAudioRecorder from "../AudioRecorder/hook"
 import { LiveAudioVisualizer } from "react-audio-visualize"
 import { Icon } from "@iconify/react"
-import { Button } from "@nextui-org/react"
+import { Button } from "@heroui/react"
 import { SendIcon } from "../Icons"
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
 

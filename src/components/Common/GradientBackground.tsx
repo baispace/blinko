@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
 import { RootStore } from '@/store/root';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { cn } from '@nextui-org/react';
+import { cn } from '@heroui/react';
 interface GradientBackgroundProps {
   children: ReactNode;
   className?: string;

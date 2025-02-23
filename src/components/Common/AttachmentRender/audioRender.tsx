@@ -7,7 +7,7 @@ import { RootStore, useStore } from '@/store';
 import { MusicManagerStore } from '@/store/musicManagerStore'
 import { observer } from 'mobx-react-lite';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@nextui-org/react';
+import { Button } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 
 interface AudioMetadata {

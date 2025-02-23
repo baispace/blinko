@@ -528,5 +528,7 @@
   "check-connect": "فحص",
   "check-connect-error": "قد يُضاف فشل الاتصال إلى نهاية /v1",
   "check-connect-success": "تحقق من نجاح الاتصال",
-  "loading": "جارِ التحميل"
+  "loading": "جارِ التحميل",
+  "embedding-dimensions": "أبعاد التضمين",
+  "embedding-dimensions-description": "عليك التأكد من أن أبعاد النموذج صحيحة، وتحتاج إلى فرض إعادة بناء سجلات الفهرس بعد إجراء التغييرات."
 }

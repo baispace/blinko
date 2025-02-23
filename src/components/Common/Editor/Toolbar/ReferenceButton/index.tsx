@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react'
-import { Input, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@nextui-org/react'
+import { Input, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@heroui/react'
 import { observer } from 'mobx-react-lite'
 import dayjs from 'dayjs'
 import { IconButton } from '../IconButton'

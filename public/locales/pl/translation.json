@@ -530,5 +530,7 @@
   "check-connect": "Sprawdź",
   "check-connect-error": "Błąd połączenia może zostać dodany na końcu /v1",
   "check-connect-success": "Sprawdź powodzenie połączenia",
-  "loading": "Ładowanie"
+  "loading": "Ładowanie",
+  "embedding-dimensions": "Wymiary osadzenia",
+  "embedding-dimensions-description": "Musisz upewnić się, że wymiary modelu są poprawne i musisz wymusić przebudowanie indeksów rekordów po zmianach."
 }

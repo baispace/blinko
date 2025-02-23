@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Card } from '@nextui-org/react';
+import { Card } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ContextMenuTrigger } from '@/components/Common/ContextMenu';
 import { Note } from '@/server/types';

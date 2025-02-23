@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Input, Checkbox, Link, Image, Divider } from "@nextui-org/react";
+import { Button, Input, Checkbox, Link, Image, Divider } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { signIn } from "next-auth/react";
 import { RootStore } from "@/store";

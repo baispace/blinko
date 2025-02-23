@@ -3,7 +3,7 @@ import { DialogStore } from "@/store/module/Dialog"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
-import { Popover, PopoverTrigger, PopoverContent, Button } from "@nextui-org/react";
+import { Popover, PopoverTrigger, PopoverContent, Button } from "@heroui/react";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
 
 const TipsDialog = observer(({ content, onConfirm, onCancel, buttonSlot }: any) => {

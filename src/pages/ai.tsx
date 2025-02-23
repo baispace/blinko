@@ -1,4 +1,4 @@
-import { Button, Card } from '@nextui-org/react';
+import { Button, Card } from '@heroui/react';
 import { useRef, useState, useEffect } from 'react';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@iconify/react';

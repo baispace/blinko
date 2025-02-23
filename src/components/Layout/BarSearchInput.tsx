@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Button, Input, Tooltip } from "@nextui-org/react";
+import { Button, Input, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";

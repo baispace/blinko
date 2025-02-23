@@ -455,5 +455,7 @@
   "check-connect": "Kontrol et",
   "check-connect-error": "Bağlantı hatası /v1 sonuna eklenebilir.",
   "check-connect-success": "Bağlantı Kontrolü Başarılı",
-  "loading": "Yükleniyor"
+  "loading": "Yükleniyor",
+  "embedding-dimensions": "Gömülü Boyutlar",
+  "embedding-dimensions-description": "Model boyutlarının doğru olduğundan emin olmalı ve değişikliklerden sonra dizin kayıtlarının yeniden oluşturulmasını zorlamalısınız."
 }

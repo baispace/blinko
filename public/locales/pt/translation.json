@@ -439,5 +439,7 @@
   "check-connect": "Conferir",
   "check-connect-error": "A falha de conexão pode ser adicionada ao final de /v1.",
   "check-connect-success": "Verificar Sucesso da Conexão",
-  "loading": "Carregando"
+  "loading": "Carregando",
+  "embedding-dimensions": "Dimensões de Incorporação",
+  "embedding-dimensions-description": "Você precisa garantir que as dimensões do modelo estão corretas e precisa forçar a reconstrução dos registros de índice após as alterações."
 }

@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button } from "@nextui-org/react";
+import { Button } from "@heroui/react";
 import { api } from "@/lib/trpc";
 import { PromiseCall } from "@/store/standard/PromiseState";
 

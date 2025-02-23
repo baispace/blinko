@@ -487,5 +487,7 @@
   "check-connect": "確認",
   "check-connect-error": "接続障害は/v1の末尾に追加されることがあります。",
   "check-connect-success": "接続成功を確認してください。",
-  "loading": "読み込み中"
+  "loading": "読み込み中",
+  "embedding-dimensions": "埋め込み次元",
+  "embedding-dimensions-description": "モデルの寸法が正しいことを確認する必要があり、変更後にインデックスレコードを再構築するよう強制する必要があります。"
 }

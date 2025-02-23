@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { Autocomplete, AutocompleteItem } from "@nextui-org/react";
+import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";

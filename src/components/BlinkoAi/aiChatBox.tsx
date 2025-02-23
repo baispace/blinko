@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
-import { Button } from "@nextui-org/react";
+import { Button } from "@heroui/react";
 import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarkdownRender } from "../Common/MarkdownRender";
@@ -50,7 +50,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           <div className="text-desc text-xs font-bold ml-1 select-none line-clamp-1 ">{i18n.t('ai-chat-box-notes')}</div>
           {
             //@ts-ignore
-            notes?.map((item: BlinkoItem) => (
+            metadata?.notes?.map((item: BlinkoItem) => (
               <Button
                 key={item.id}
                 size="sm"

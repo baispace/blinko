@@ -10,7 +10,7 @@ import { PromiseCall } from "./standard/PromiseState";
 import { Resource, t } from "i18next";
 import { ToastPlugin } from "./module/Toast/Toast";
 import { DialogStore } from "./module/Dialog";
-import { Button, Input } from "@nextui-org/react";
+import { Button, Input } from "@heroui/react";
 
 export class ResourceStore implements Store {
   sid = 'resourceStore';

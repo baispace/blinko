@@ -127,7 +127,8 @@ export const userRouter = router({
       token: z.string(),
       isLinked: z.boolean(),
       loginType: z.string(),
-      image: z.string().nullable()
+      image: z.string().nullable(),
+      role: z.string()
     }))
     .query(async ({ input, ctx }) => {
       const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
@@ -142,7 +143,8 @@ export const userRouter = router({
         token: user?.apiToken ?? '',
         loginType: user?.loginType ?? '',
         isLinked: isLinked ? true : false,
-        image: user?.image ?? null
+        image: user?.image ?? null,
+        role: user?.role ?? ''
       }
     }),
   canRegister: publicProcedure

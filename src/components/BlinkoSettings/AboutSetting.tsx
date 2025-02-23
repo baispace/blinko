@@ -1,7 +1,7 @@
 // blinko.public.value?.version
 
 import { observer } from "mobx-react-lite";
-import { Card, Tooltip, Link, Image, Chip } from "@nextui-org/react";
+import { Card, Tooltip, Link, Image, Chip } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseState } from "@/store/standard/PromiseState";

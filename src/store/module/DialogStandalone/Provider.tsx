@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button, Modal, ModalBody, ModalContent, ModalHeader } from "@nextui-org/react";
+import { Button, Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
 import { observer, useLocalStore } from "mobx-react-lite";
 import { DialogStandaloneStore } from ".";
 import { RootStore } from "@/store/root";

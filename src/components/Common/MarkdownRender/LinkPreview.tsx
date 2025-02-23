@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Card, Image } from '@nextui-org/react';
+import { Card, Image } from '@heroui/react';
 import { api } from '@/lib/trpc';
 import { LinkInfo } from '@/server/types';
 import { RootStore } from '@/store';

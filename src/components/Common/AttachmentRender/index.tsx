@@ -8,7 +8,7 @@ import { DeleteIcon, DownloadIcon } from './icons';
 import { ImageRender } from './imageRender';
 import { HandleFileType } from '../Editor/editorUtils';
 import { Icon } from '@iconify/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@nextui-org/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@heroui/popover';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { api } from '@/lib/trpc';
 import { EditorStore } from '../Editor/editorStore';

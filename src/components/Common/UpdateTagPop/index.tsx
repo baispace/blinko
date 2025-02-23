@@ -3,7 +3,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { _ } from '@/lib/lodash';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
-import { Button, Input, Select, SelectItem } from '@nextui-org/react';
+import { Button, Input, Select, SelectItem } from '@heroui/react';
 import { useEffect } from 'react';
 import { DialogStore } from '@/store/module/Dialog';
 import i18n from '@/lib/i18n';

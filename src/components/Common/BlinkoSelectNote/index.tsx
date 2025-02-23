@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@nextui-org/react';
+import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { observer } from 'mobx-react-lite';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store';

@@ -5,7 +5,7 @@ import { DialogStore } from "@/store/module/Dialog"
 import { PromiseCall, PromiseState } from "@/store/standard/PromiseState"
 import { Icon } from "@iconify/react"
 
-import { Button, Input, Link, user } from "@nextui-org/react"
+import { Button, Input, Link, user } from "@heroui/react"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
 import { UserAvatar } from "../BlinkoCard/commentButton"

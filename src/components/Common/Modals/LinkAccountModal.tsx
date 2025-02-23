@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Switch, Tooltip, Select, SelectItem, Alert } from "@nextui-org/react";
+import { Button, Card, Input, Switch, Tooltip, Select, SelectItem, Alert } from "@heroui/react";
 import { RootStore } from "@/store";
 import { useTranslation } from "react-i18next";
 import { DialogStore } from "@/store/module/Dialog";
@@ -50,7 +50,7 @@ export const LinkAccountModal = observer(() => {
         onChange={(e) => setSelectedAccount(e.target.value)}
       >
         {accounts.map((account) => (
-          <SelectItem key={account.id} value={account.id}>
+          <SelectItem key={account.id} >
             {account.nickname}
           </SelectItem>
         ))}

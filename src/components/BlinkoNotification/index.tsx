@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Popover, PopoverTrigger, PopoverContent, Button, Badge } from "@nextui-org/react";
+import { Popover, PopoverTrigger, PopoverContent, Button, Badge } from "@heroui/react";
 import { Icon } from '@iconify/react';
 import { api } from '@/lib/trpc';
 import dayjs from '@/lib/dayjs';

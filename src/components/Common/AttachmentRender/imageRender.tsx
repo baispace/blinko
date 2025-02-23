@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FileType } from '../Editor/type';
-import { Image } from '@nextui-org/react';
+import { Image } from '@heroui/react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { Icon } from '@iconify/react';
 import { DeleteIcon, DownloadIcon, InsertConextButton } from './icons';

@@ -1,4 +1,4 @@
-import { Card, CardBody } from "@nextui-org/react"
+import { Card, CardBody } from "@heroui/react"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"

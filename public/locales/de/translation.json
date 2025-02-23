@@ -514,5 +514,7 @@
   "check-connect": "Überprüfen",
   "check-connect-error": "Der Verbindungsfehler kann am Ende von /v1 hinzugefügt werden.",
   "check-connect-success": "Prüfung der Verbindung erfolgreich",
-  "loading": "Laden"
+  "loading": "Laden",
+  "embedding-dimensions": "Einbettungsdimensionen",
+  "embedding-dimensions-description": "Sie müssen sicherstellen, dass die Modellabmessungen korrekt sind, und Sie müssen erzwingen, dass Indexdatensätze nach Änderungen neu aufgebaut werden."
 }

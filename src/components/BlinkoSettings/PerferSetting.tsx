@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input, Tooltip } from "@nextui-org/react";
+import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input, Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
 import ThemeSwitcher from "../Common/Theme/ThemeSwitcher";

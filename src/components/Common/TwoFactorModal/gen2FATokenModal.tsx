@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, InputOtp, code } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, InputOtp, code } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import { RootStore } from "@/store";

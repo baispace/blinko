@@ -5,7 +5,7 @@ import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall, PromiseState } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
-import { Badge, Button, Card, Chip, Input, Select, SelectItem, Switch, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, user } from "@nextui-org/react";
+import { Badge, Button, Card, Chip, Input, Select, SelectItem, Switch, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, user } from "@heroui/react";
 import dayjs from "@/lib/dayjs";
 import { useEffect } from "react";
 import { Icon } from "@iconify/react";

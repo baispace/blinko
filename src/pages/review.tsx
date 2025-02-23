@@ -13,7 +13,7 @@ import dayjs from '@/lib/dayjs';
 import { Note, NoteType } from '@/server/types';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
-import { Button, Tooltip } from '@nextui-org/react';
+import { Button, Tooltip } from '@heroui/react';
 import { LightningIcon, NotesIcon } from '@/components/Common/Icons';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { api } from '@/lib/trpc';

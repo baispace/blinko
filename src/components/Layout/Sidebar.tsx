@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { ScrollShadow, Image, Button } from "@nextui-org/react";
+import { ScrollShadow, Image, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useRouter } from "next/router";

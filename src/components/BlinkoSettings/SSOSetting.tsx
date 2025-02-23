@@ -5,7 +5,7 @@ import { RootStore } from "@/store"
 import { BlinkoStore } from "@/store/blinkoStore"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { api } from "@/lib/trpc"
-import { Alert, Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react"
+import { Alert, Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Icon } from "@iconify/react"
 import { DialogStore } from "@/store/module/Dialog"
 import { CollapsibleCard } from "../Common/CollapsibleCard"
@@ -15,7 +15,7 @@ import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
 import { ZOAuth2ProviderSchema } from "@/server/types"
 import { z } from "zod"
 import { PasswordInput } from "../Common/PasswordInput"
-import { Select, SelectItem } from "@nextui-org/react"
+import { Select, SelectItem } from "@heroui/react"
 
 const OAUTH_TEMPLATES = {
   custom: {
@@ -160,7 +160,6 @@ const UpdateSSOProvider = observer(({ provider }: { provider?: z.infer<typeof ZO
       {Object.entries(OAUTH_TEMPLATES).map(([key, template]) => (
         <SelectItem
           key={key}
-          value={key}
           startContent={template.icon && <Icon icon={template.icon} width="20" height="20" />}
         >
           {template.name}

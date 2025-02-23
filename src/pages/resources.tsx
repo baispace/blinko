@@ -10,7 +10,7 @@ import { toJS } from "mobx";
 import { useRouter } from 'next/router';
 import { MemoizedResourceItem } from "@/components/BlinkoResource/ResourceItem";
 import { ResourceMultiSelectPop } from "@/components/BlinkoResource/ResourceMultiSelectpop";
-import { Breadcrumbs, BreadcrumbItem, Button } from "@nextui-org/react";
+import { Breadcrumbs, BreadcrumbItem, Button } from "@heroui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
 import { PhotoProvider } from "react-photo-view";

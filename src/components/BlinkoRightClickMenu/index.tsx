@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@nextui-org/react';
+import { Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@heroui/react';
 import { _ } from '@/lib/lodash';
 import { useTranslation } from 'react-i18next';
 import { ContextMenu, ContextMenuItem } from '@/components/Common/ContextMenu';

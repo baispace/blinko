@@ -1,4 +1,4 @@
-import { Button } from '@nextui-org/react';
+import { Button } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { SendIcon } from '../../../Icons';
 import { EditorStore } from '../../editorStore';

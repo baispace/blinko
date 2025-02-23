@@ -11,7 +11,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { helper } from '@/lib/helper';
 import { FileType } from '../Editor/type';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
-import { Tooltip } from '@nextui-org/react';
+import { Tooltip } from '@heroui/react';
 import { eventBus } from '@/lib/event';
 
 export const DeleteIcon = observer(({ className, file, files, size = 20 }: { className: string, file: FileType, files: FileType[], size?: number }) => {

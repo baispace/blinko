@@ -8,7 +8,7 @@ import NProgress from 'nprogress';
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from 'next-auth/react';
-import { NextUIProvider } from '@nextui-org/react';
+import { HeroUIProvider } from '@heroui/react';
 import { Router } from 'next/router';
 import { initStore } from '@/store/init';
 import { Inspector, InspectParams } from 'react-dev-inspector';
@@ -20,7 +20,6 @@ import { BlinkoMusicPlayer } from '@/components/BlinkoMusicPlayer';
 import { LoadingPage } from '@/components/Common/LoadingPage';
 import { PluginManagerStore } from '@/store/plugin/pluginManagerStore';
 import { RootStore } from '@/store';
-import { api } from '@/lib/trpc';
 
 const MyApp = ({ Component, pageProps }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +42,6 @@ const MyApp = ({ Component, pageProps }) => {
     <>
       <Inspector
         keys={['control', 'shift', 'c']}
-        disableLaunchEditor={true}
         onClickElement={({ codeInfo }: InspectParams) => {
           if (!codeInfo?.absolutePath) return
           const { absolutePath, lineNumber, columnNumber } = codeInfo
@@ -51,7 +49,7 @@ const MyApp = ({ Component, pageProps }) => {
         }}
       />
       <SessionProvider session={pageProps.session}>
-        <NextUIProvider>
+        <HeroUIProvider>
           <ThemeProvider attribute="class" enableSystem={false} >
             <AppProvider />
             <CommonLayout>
@@ -66,7 +64,7 @@ const MyApp = ({ Component, pageProps }) => {
               </motion.div>
             </CommonLayout>
           </ThemeProvider>
-        </NextUIProvider>
+        </HeroUIProvider>
       </SessionProvider>
       <BlinkoMusicPlayer />
     </>

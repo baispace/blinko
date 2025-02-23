@@ -2,8 +2,8 @@ import { IconButton } from '../IconButton';
 import { useTranslation } from 'react-i18next';
 import { EditorStore } from '../../editorStore';
 import { useMediaQuery } from 'usehooks-ts';
-import { Input, Button } from '@nextui-org/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@nextui-org/react';
+import { Input, Button } from '@heroui/react';
+import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { ScrollArea } from '@/components/Common/ScrollArea';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store/root';
@@ -142,7 +142,7 @@ export const AIWriteButton = observer(({ store, content }: Props) => {
                 size='sm' variant='light' color='danger'>{t('reject')}</Button>
 
               <Button onPress={() => {
-                ai.abort();
+                ai.abortAiWrite();
               }} startContent={<Icon icon="mynaui:stop" className='blinko' />}
                 size='sm' variant='light' color='warning'>{t('stop')}</Button>
             </div>

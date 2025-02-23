@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import VanillaTilt from 'vanilla-tilt';
 import dynamic from "next/dynamic";
-import { Card, InputOtp, Button } from "@nextui-org/react";
+import { Card, InputOtp, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 

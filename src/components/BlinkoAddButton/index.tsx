@@ -6,9 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';
 import { FocusEditorFixMobile } from '../Common/Editor/editorUtils';
-import { RootStore } from '@/store';
-import { DialogStore } from '@/store/module/Dialog';
-import { BlinkoAiChat } from '../BlinkoAi';
+import { useRouter } from 'next/router';
 
 export const BlinkoAddButton = observer(() => {
   // Constants for button spacing and icon sizes
@@ -30,6 +28,7 @@ export const BlinkoAddButton = observer(() => {
   const [isDragging, setIsDragging] = useState(false);
   const [activeButton, setActiveButton] = useState<'none' | 'top' | 'bottom'>('none');
   const isPc = useMediaQuery('(min-width: 768px)');
+  const router = useRouter()
 
   // Add touch-related states
   const touchStartRef = useRef({ x: 0, y: 0 });
@@ -87,12 +86,7 @@ export const BlinkoAddButton = observer(() => {
 
   // Handle AI action
   const handleAiAction = () => {
-    RootStore.Get(DialogStore).setData({
-      isOpen: true,
-      title: 'Blinko AI',
-      content: <BlinkoAiChat />,
-      size: '5xl'
-    })
+    router.push('/ai')
     setShowActions(false);
   };
 

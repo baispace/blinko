@@ -5,7 +5,7 @@ import { UserStore } from '@/store/user';
 import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
 import { type Comment } from '@/server/types';
 import { Icon } from '@iconify/react';
-import { Button, Tooltip, Chip, Image } from '@nextui-org/react';
+import { Button, Tooltip, Chip, Image } from '@heroui/react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note } from '@/server/types';
 import { RootStore } from '@/store';
@@ -22,7 +22,7 @@ import Avatar from "boring-avatars";
 import { HubStore } from '@/store/hubStore';
 import axios from 'axios';
 import i18n from '@/lib/i18n';
-import { Spinner } from '@nextui-org/react';
+import { Spinner } from '@heroui/react';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { BlinkoItem } from '.';
 

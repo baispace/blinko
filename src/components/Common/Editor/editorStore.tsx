@@ -12,7 +12,7 @@ import Vditor from 'vditor';
 import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
-import { Button } from '@nextui-org/react';
+import { Button } from '@heroui/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { NoteType } from '@/server/types';

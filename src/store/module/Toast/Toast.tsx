@@ -1,7 +1,7 @@
 import { Store } from "@/store/standard/base";
 import React from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { Progress } from "@nextui-org/react";
+import { Progress } from "@heroui/react";
 import i18n from "@/lib/i18n";
 
 interface UploadProgressProps {

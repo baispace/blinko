@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Card, Input, Button } from '@nextui-org/react';
+import { Card, Input, Button } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { eventBus } from '@/lib/event';
 import PopoverFloat from '.';

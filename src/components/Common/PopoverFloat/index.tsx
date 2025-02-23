@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Card } from '@nextui-org/react';
+import { Card } from '@heroui/react';
 import { motion } from "motion/react"
 import { useMediaQuery } from 'usehooks-ts'
 

@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Input } from "@nextui-org/react";
+import { Input } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip } from "./Item";
 import { RootStore } from "@/store";

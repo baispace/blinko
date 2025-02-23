@@ -28,6 +28,7 @@ export class UserStore implements User, Store {
   languageInitialized: boolean = false;
   themeInitialized: boolean = false;
   isHubInitialized: boolean = false;
+  isUseAIInitialized: boolean = false;
 
   wait() {
     return new Promise<UserStore>((res, rej) => {
@@ -94,19 +95,61 @@ export class UserStore implements User, Store {
   }
 
   async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
+    const base = RootStore.Get(BaseStore);
+    const config = await this.blinko.config.call();
+
+    const handleFeatureRoute = (
+      featureKey: 'hub' | 'ai',
+      storageKey: string,
+      routeConfig: {
+        title: string;
+        href: string;
+        icon: string;
+      },
+      stateFlag: 'isHubInitialized' | 'isUseAIInitialized'
+    ) => {
+      const savedValue = localStorage.getItem(storageKey);
+      const configKey = featureKey === 'ai' ? 'isUseAI' : `isUse${featureKey.charAt(0).toUpperCase() + featureKey.slice(1)}`;
+      const configValue = config?.[configKey];
+      const currentValue = configValue ?? (savedValue === 'true');
+
+      if (configValue !== undefined && savedValue !== String(configValue)) {
+        localStorage.setItem(storageKey, String(configValue));
+      }
+
+      const routeIndex = base.routerList.findIndex(route => route.href === routeConfig.href);
+
+      if (currentValue) {
+        if (!this[stateFlag]) {
+          if (routeIndex === -1) {
+            base.routerList.splice(2, 0, routeConfig);
+          }
+          this[stateFlag] = true;
+        }
+      } else {
+        if (this[stateFlag]) {
+          if (routeIndex !== -1) {
+            base.routerList.splice(routeIndex, 1);
+          }
+          this[stateFlag] = false;
+        }
+      }
+    };
+
+    handleFeatureRoute('hub', 'hubEnabled', {
+      title: "hub",
+      href: '/hub',
+      icon: 'fluent:people-community-16-regular'
+    }, 'isHubInitialized');
+
+    handleFeatureRoute('ai', 'useAI', {
+      title: "AI",
+      href: '/ai',
+      icon: 'mingcute:ai-line'
+    }, 'isUseAIInitialized');
+
     const savedLanguage = localStorage.getItem('userLanguage');
     const savedTheme = localStorage.getItem('userTheme');
-    const savedHubEnabled = localStorage.getItem('hubEnabled');
-
-    if (savedHubEnabled === 'true' && !this.isHubInitialized) {
-      const base = RootStore.Get(BaseStore);
-      base.routerList.splice(2, 0, {
-        title: "hub",
-        href: '/hub',
-        icon: 'fluent:people-community-16-regular'
-      });
-      this.isHubInitialized = true;
-    }
 
     if (savedLanguage && !this.languageInitialized) {
       RootStore.Get(BaseStore).changeLanugage(i18n, savedLanguage);
@@ -123,7 +166,6 @@ export class UserStore implements User, Store {
 
     const darkElement = document.querySelector('.dark')
     const lightElement = document.querySelector('.light')
-    const config = await this.blinko.config.call();
 
     if (config?.themeColor && config?.themeForegroundColor) {
       if (darkElement) {
@@ -140,29 +182,8 @@ export class UserStore implements User, Store {
       }
     }
 
-    if (config?.isUseBlinkoHub !== (savedHubEnabled === 'true')) {
-      localStorage.setItem('hubEnabled', String(config?.isUseBlinkoHub));
-      const base = RootStore.Get(BaseStore);
-      
-      if (config?.isUseBlinkoHub && !this.isHubInitialized) {
-        base.routerList.splice(2, 0, {
-          title: "hub",
-          href: '/hub',
-          icon: 'fluent:people-community-16-regular'
-        });
-        this.isHubInitialized = true;
-      } else if (!config?.isUseBlinkoHub && this.isHubInitialized) {
-        const hubIndex = base.routerList.findIndex(route => route.href === '/hub');
-        if (hubIndex !== -1) {
-          base.routerList.splice(hubIndex, 1);
-        }
-        this.isHubInitialized = false;
-      }
-    }
-
     if (this.isLogin) {
       try {
-
         if (config) {
           if (config.language && config.language !== savedLanguage) {
             localStorage.setItem('userLanguage', config.language);

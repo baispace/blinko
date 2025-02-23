@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Tabs, Tab, Card, Button, Chip, Modal, Input, Spinner, CardBody } from "@nextui-org/react";
+import { Tabs, Tab, Card, Button, Chip, Modal, Input, Spinner, CardBody } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";

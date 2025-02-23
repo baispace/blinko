@@ -503,5 +503,7 @@
   "check-connect": "Vérifier",
   "check-connect-error": "La défaillance de connexion peut être ajoutée à la fin de /v1",
   "check-connect-success": "Vérification de la réussite de connexion",
-  "loading": "Chargement"
+  "loading": "Chargement",
+  "embedding-dimensions": "Dimensions d'encastrement",
+  "embedding-dimensions-description": "Vous devez vous assurer que les dimensions du modèle sont correctes et vous devez forcer la reconstruction des index des enregistrements après les modifications."
 }

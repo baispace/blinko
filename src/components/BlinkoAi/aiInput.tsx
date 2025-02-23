@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Button, Textarea } from "@nextui-org/react";
+import { Button, Textarea } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 import { motion } from "framer-motion";

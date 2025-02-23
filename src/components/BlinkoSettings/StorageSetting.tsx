@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input } from "@nextui-org/react";
+import { Button, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";

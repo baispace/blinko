@@ -1,5 +1,5 @@
-import { Button } from "@nextui-org/react";
-import { Tabs, Tab } from "@nextui-org/react";
+import { Button } from "@heroui/react";
+import { Tabs, Tab } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useState, useRef, useEffect } from "react";
 

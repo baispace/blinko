@@ -1,6 +1,6 @@
 import React from "react";
 import Provider from "./Provider";
-import { ModalSlots, SlotsToClasses } from "@nextui-org/react";
+import { ModalSlots, SlotsToClasses } from "@heroui/react";
 import { Store } from "@/store/standard/base";
 import { RootStore } from "@/store/root";
 import { makeAutoObservable } from "mobx";

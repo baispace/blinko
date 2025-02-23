@@ -3,8 +3,8 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem
-} from "@nextui-org/dropdown";
-import { Button } from '@nextui-org/react';
+} from "@heroui/dropdown";
+import { Button } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
 import { useTranslation } from 'react-i18next';

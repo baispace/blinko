@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Input, Link } from "@nextui-org/react";
+import { Button, Input, Link } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import { RootStore } from "@/store/root";

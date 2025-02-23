@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Switch, Tooltip, Select, SelectItem } from "@nextui-org/react";
+import { Button, Card, Input, Switch, Tooltip, Select, SelectItem } from "@heroui/react";
 import { RootStore } from "@/store";
 import { Icon } from "@iconify/react";
 import { UserStore } from "@/store/user";

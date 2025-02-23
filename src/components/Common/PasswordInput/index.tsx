@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite"
 
-import { Input } from "@nextui-org/react"
+import { Input } from "@heroui/react"
 import { Icon } from "@iconify/react"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"

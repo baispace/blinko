@@ -5,8 +5,8 @@ import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
 import { BlinkoCard } from "./index"
 import { getDisplayTime } from "@/lib/helper"
 import { Icon } from "@iconify/react"
-import { cn } from "@nextui-org/theme"
-import { Tooltip } from "@nextui-org/react"
+import { cn } from "@heroui/theme"
+import { Tooltip } from "@heroui/react"
 import { useTranslation } from "react-i18next"
 
 export const ReferencesContent = ({ blinkoItem, className }: { blinkoItem: BlinkoItem, className?: string }) => {

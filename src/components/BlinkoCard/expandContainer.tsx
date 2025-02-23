@@ -1,4 +1,3 @@
-import { helper } from "@/lib/helper";
 import { useIsIOS } from "@/lib/hooks";
 import { motion } from "motion/react";
 import { useEffect } from "react";

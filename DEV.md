@@ -28,3 +28,8 @@ docker run -d \
   --restart always \
   blinkospace/blinko:fa46f26
 ```
+
+# add @mastra/rag
+```
+pnpm add @mastra/rag --ignore-scripts
+```

@@ -1,3 +1,10 @@
+## [0.41.2](https://github.com/blinko-space/blinko/compare/v0.41.1...v0.41.2) (2025-02-23)
+
+
+### Bug Fixes
+
+* replace NextUI with HeroUI components ([1bd0ecd](https://github.com/blinko-space/blinko/commit/1bd0ecd15b275e77722787cfe7e873504f331c52))
+
 ## [0.41.1](https://github.com/blinko-space/blinko/compare/v0.41.0...v0.41.1) (2025-02-23)
 
 

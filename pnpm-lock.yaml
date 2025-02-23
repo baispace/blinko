@@ -84,6 +84,12 @@ importers:
       '@langchain/textsplitters':
         specifier: ^0.1.0
         version: 0.1.0(@langchain/core@0.3.40(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2)))
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
+      '@libsql/linux-x64-musl':
+        specifier: 0.5.0-pre.6
+        version: 0.5.0-pre.6
       '@mastra/client-js':
         specifier: ^0.1.1
         version: 0.1.2(encoding@0.1.13)(react@18.3.1)
@@ -2949,6 +2955,11 @@ packages:
 
   '@libsql/linux-x64-musl@0.4.7':
     resolution: {integrity: sha512-nI6tpS1t6WzGAt1Kx1n1HsvtBbZ+jHn0m7ogNNT6pQHZQj7AFFTIMeDQw/i/Nt5H38np1GVRNsFe99eSIMs9XA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@libsql/linux-x64-musl@0.5.0-pre.6':
+    resolution: {integrity: sha512-BGICFHvEKIZtrD4UYjIg7SfGmak6zGRUAp/MVS+40FMe4eh7d6uvmQFs6JAaHErazLEKHLKbIKIYAXe1srHKVQ==}
     cpu: [x64]
     os: [linux]
 
@@ -8607,6 +8618,7 @@ packages:
 
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
+    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
@@ -16060,6 +16072,8 @@ snapshots:
 
   '@libsql/linux-x64-musl@0.4.7':
     optional: true
+
+  '@libsql/linux-x64-musl@0.5.0-pre.6': {}
 
   '@libsql/win32-x64-msvc@0.4.7':
     optional: true

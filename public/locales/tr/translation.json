@@ -451,5 +451,9 @@
   "ai-prompt-coding": "Sen profesyonel bir kod yazıcısın, lütfen kullanıcı tarafından sağlanan konuya dayalı basit bir Python programı yaz.",
   "translation": "Çeviri",
   "first-char-delay": "İlk karakter gecikmesi",
-  "total-tokens": "Toplam jetonlar"
+  "total-tokens": "Toplam jetonlar",
+  "check-connect": "Kontrol et",
+  "check-connect-error": "Bağlantı hatası /v1 sonuna eklenebilir.",
+  "check-connect-success": "Bağlantı Kontrolü Başarılı",
+  "loading": "Yükleniyor"
 }

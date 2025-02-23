@@ -510,5 +510,9 @@
   "ai-prompt-coding": "Sie sind ein professioneller Programmierer, bitte schreiben Sie ein einfaches Python-Programm basierend auf dem vom Benutzer bereitgestellten Thema.",
   "translation": "Übersetzung",
   "first-char-delay": "First-Zeichenverzögerung",
-  "total-tokens": "Gesamttokens"
+  "total-tokens": "Gesamttokens",
+  "check-connect": "Überprüfen",
+  "check-connect-error": "Der Verbindungsfehler kann am Ende von /v1 hinzugefügt werden.",
+  "check-connect-success": "Prüfung der Verbindung erfolgreich",
+  "loading": "Laden"
 }

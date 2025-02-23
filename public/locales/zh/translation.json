@@ -528,5 +528,9 @@
   "ai-prompt-coding": "你是一名专业程序员，请根据用户提供的主题编写一个简单的Python程序。",
   "translation": "翻译",
   "first-char-delay": "首字符延迟",
-  "total-tokens": "总代币"
+  "total-tokens": "总代币",
+  "check-connect": "核对",
+  "check-connect-error": "连接失败可能会被添加到 /v1 的末尾。",
+  "check-connect-success": "检查连接成功",
+  "loading": "加载中"
 }

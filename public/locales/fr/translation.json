@@ -499,5 +499,9 @@
   "ai-prompt-coding": "Vous êtes un codeur professionnel, veuillez écrire un programme Python simple basé sur le sujet fourni par l'utilisateur.",
   "translation": "Traduction",
   "first-char-delay": "Premier retard de caractère",
-  "total-tokens": "Nombre total de jetons"
+  "total-tokens": "Nombre total de jetons",
+  "check-connect": "Vérifier",
+  "check-connect-error": "La défaillance de connexion peut être ajoutée à la fin de /v1",
+  "check-connect-success": "Vérification de la réussite de connexion",
+  "loading": "Chargement"
 }

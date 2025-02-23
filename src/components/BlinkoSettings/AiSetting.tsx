@@ -14,6 +14,8 @@ import { ShowRebuildEmbeddingProgressDialog } from "../Common/RebuildEmbeddingPr
 import { showTipsDialog } from "../Common/TipsDialog";
 import TagSelector from "@/components/Common/TagSelector";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -349,7 +351,7 @@ export const AiSetting = observer(() => {
             </div>
           } />
       }
-      
+
       {
         store.showEmeddingAdvancedSetting && (
           <Item
@@ -441,21 +443,35 @@ export const AiSetting = observer(() => {
           <>{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTitle}</>
           <div className="text-desc text-xs">{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTooltip}</div>
         </div >}
-        rightContent={< Input
-          size='sm'
-          label={t('api-endpoint')}
-          variant="bordered"
-          className="w-full md:w-[300px]"
-          placeholder="https://api.openapi.com/v1/"
-          value={store.apiEndPoint}
-          onChange={e => { store.apiEndPoint = e.target.value }}
-          onBlur={e => {
-            PromiseCall(api.config.update.mutate({
-              key: 'aiApiEndpoint',
-              value: store.apiEndPoint
-            }), { autoAlert: false })
-          }}
-        />} />
+        rightContent={<div className="flex gap-2 items-center">
+          <Input
+            size='sm'
+            label={t('api-endpoint')}
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="https://api.openapi.com/v1/"
+            value={store.apiEndPoint}
+            onChange={e => { store.apiEndPoint = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiApiEndpoint',
+                value: store.apiEndPoint
+              }), { autoAlert: false })
+            }}
+          />
+          <IconButton
+            icon="hugeicons:connect"
+            containerSize={40}
+            tooltip={<div>{t('check-connect')}</div>}
+            onClick={async e => {
+              RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
+                loading: t('loading'),
+                success: t('check-connect-success'),
+                error: t('check-connect-error')
+              })
+            }}
+          />
+        </div>} />
 
 
       <Item

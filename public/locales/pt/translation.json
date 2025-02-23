@@ -435,5 +435,9 @@
   "ai-prompt-coding": "Você é um programador profissional, por favor escreva um programa Python simples com base no tópico fornecido pelo usuário.",
   "translation": "Tradução",
   "first-char-delay": "Atraso do primeiro caractere",
-  "total-tokens": "Total de tokens"
+  "total-tokens": "Total de tokens",
+  "check-connect": "Conferir",
+  "check-connect-error": "A falha de conexão pode ser adicionada ao final de /v1.",
+  "check-connect-success": "Verificar Sucesso da Conexão",
+  "loading": "Carregando"
 }

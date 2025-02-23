@@ -357,6 +357,12 @@ export class AiModelFactory {
     { isWritingAgent: true }
   );
 
+  static TestConnectAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Test Connect Agent',
+    `Test the api is working,return 1 words`,
+    'BlinkoTestConnect'
+  );
+
   // static async GetAudioLoader(audioPath: string) {
   //   const globalConfig = await AiModelFactory.ValidConfig()
   //   if (globalConfig.aiModelProvider == 'OpenAI') {

@@ -525,5 +525,9 @@
   "ai-prompt-coding": "თქვენ ხართ პროფეσო-кодер, пожалуйста напишите Դ.еtqo Пайтһон-программу, основанную на предложенной пользователем теме.",
   "translation": "თარგმანი",
   "first-char-delay": "პირველ სიმბოლო-delay",
-  "total-tokens": "სულ ტოკენები"
+  "total-tokens": "სულ ტოკენები",
+  "check-connect": "შეამოწმე",
+  "check-connect-error": "შეერთების ჩავა ក្រុ׆ាស់ អ្នក /v1- ការดាប់",
+  "check-connect-success": "შემოწმება და კო­­­­- -νекciyиs Success",
+  "loading": "ჩატვირთვა"
 }

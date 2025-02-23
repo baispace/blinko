@@ -131,11 +131,11 @@ export const aiRouter = router({
       const { conversations, conversationId } = input
       const agent = await AiModelFactory.SummarizeAgent()
       const conversationString = JSON.stringify(
-        conversations.map(i => ({ 
-          role: i.role, 
-          content: i.content.replace(/\n/g, '\\n') 
+        conversations.map(i => ({
+          role: i.role,
+          content: i.content.replace(/\n/g, '\\n')
         })),
-        null, 2 
+        null, 2
       );
       const result = await agent.generate(conversationString)
       console.log(result)
@@ -199,5 +199,16 @@ export const aiRouter = router({
     }))
     .mutation(async function ({ input }) {
       return await AiService.AIComment(input)
+    }),
+
+  testConnect: authProcedure
+    .mutation(async function () {
+      const agent = await AiModelFactory.TestConnectAgent()
+      const result = await agent.generate([
+        { role: 'user', content: 'test' }
+      ])
+      if (result) {
+        return true
+      }
     })
 })

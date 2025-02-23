@@ -538,5 +538,9 @@
   "ai-prompt-coding": "您是一名專業的程式設計師，請根據用戶提供的主題編寫一個簡單的Python程式。",
   "translation": "翻譯",
   "first-char-delay": "首個字符延遲",
-  "total-tokens": "總代幣"
+  "total-tokens": "總代幣",
+  "check-connect": "查看",
+  "check-connect-error": "连接失败可能会被添加到 /v1 的末尾。",
+  "check-connect-success": "檢查連線成功",
+  "loading": "載入中"
 }

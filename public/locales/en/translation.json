@@ -529,5 +529,9 @@
   "coding": "Coding",
   "translation": "Translation",
   "total-tokens": "Total tokens",
-  "first-char-delay": "Frist char delay"
+  "first-char-delay": "Frist char delay",
+  "check-connect": "Check",
+  "check-connect-success": "Check Connect Success",
+  "check-connect-error": "The connection failure may be added to the end of /v1",
+  "loading": "Loading"
 }

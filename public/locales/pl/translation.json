@@ -526,5 +526,9 @@
   "ai-prompt-coding": "Jesteś profesjonalnym programistą, proszę napisz prosty program w Pythonie na podstawany na temacie podanym przez użytkownika.",
   "translation": "Tłumaczenie",
   "first-char-delay": "Opóźnienie pierwszego znaku",
-  "total-tokens": "Całkowita liczba tokenów"
+  "total-tokens": "Całkowita liczba tokenów",
+  "check-connect": "Sprawdź",
+  "check-connect-error": "Błąd połączenia może zostać dodany na końcu /v1",
+  "check-connect-success": "Sprawdź powodzenie połączenia",
+  "loading": "Ładowanie"
 }

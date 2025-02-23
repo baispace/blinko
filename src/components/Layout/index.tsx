@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Button, ScrollShadow, Image, Input, Popover, PopoverTrigger, PopoverContent, Card, Badge, Tooltip } from "@nextui-org/react";
+import React, { useEffect,  useState } from "react";
+import { Button, Badge } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { UserStore } from "@/store/user";
 import Link from "next/link";
@@ -7,29 +7,23 @@ import { useRouter } from "next/router";
 import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { TagListPanel } from "../Common/TagListPanel";
 import { useTheme } from "next-themes";
 import { _ } from "@/lib/lodash";
 import { useTranslation } from "react-i18next";
 import { BaseStore } from "@/store/baseStore";
-import { BlinkoAi } from "../BlinkoAi";
 import { ScrollArea } from "../Common/ScrollArea";
 import { BlinkoRightClickMenu } from '@/components/BlinkoRightClickMenu';
 import { useMediaQuery } from "usehooks-ts";
 import { push as Menu } from 'react-burger-menu';
 import { eventBus } from "@/lib/event";
-import TagSelectPop from "../Common/PopoverFloat/tagSelectPop";
 import AiWritePop from "../Common/PopoverFloat/aiWritePop";
-import { createPortal } from "react-dom";
 import { Sidebar } from "./Sidebar";
 import { MobileNavBar } from "./MobileNavBar";
 import FilterPop from "../Common/PopoverFloat/filterPop";
-import { AppProvider } from "@/store/module/AppProvider";
 import { api } from "@/lib/trpc";
 import { showTipsDialog } from "../Common/TipsDialog";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
-import { motion, AnimatePresence } from "framer-motion";
 import { BarSearchInput } from "./BarSearchInput";
 import { BlinkoNotification } from "@/components/BlinkoNotification";
 import { AiStore } from "@/store/aiStore";
@@ -80,7 +74,6 @@ export const CommonLayout = observer(({
 
   return (
     <div className="flex w-full h-mobile-full overflow-x-hidden" id="outer-container">
-      {blinkoStore.showAi && createPortal(<BlinkoAi />, document.body)}
       <AiWritePop />
       <Menu
         disableAutoFocus

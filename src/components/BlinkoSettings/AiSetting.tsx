@@ -81,6 +81,7 @@ export const AiSetting = observer(() => {
               key: 'isUseAI',
               value: e.target.checked
             }), { autoAlert: false })
+            window.location.reload()
           }}
         />} />
       <Item

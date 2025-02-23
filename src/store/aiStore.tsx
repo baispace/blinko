@@ -8,13 +8,11 @@ import { GlobalConfig, Note } from '@/server/types';
 import { makeAutoObservable } from 'mobx';
 import { BlinkoStore } from './blinkoStore';
 import { eventBus } from '@/lib/event';
-import { showAiWriteSuggestions } from '@/components/Common/PopoverFloat/aiWritePop';
 import { PromiseCall, PromisePageState, PromiseState } from './standard/PromiseState';
 import { DialogStore } from './module/Dialog';
 import { Image } from '@nextui-org/react';
 import { AiTag } from '@/components/BlinkoAi/aiTag';
 import i18n from '@/lib/i18n';
-import { Icon } from '@iconify/react';
 import { AiEmoji } from '@/components/BlinkoAi/aiEmoji';
 import { StorageState } from './standard/StorageState';
 import { BlinkoItem } from '@/components/BlinkoCard';
@@ -49,8 +47,8 @@ export class AiStore implements Store {
   isChatting = false
   isAnswering = false
   input = '';
-  withRAG = new StorageState({ key: 'withRAG', value: true })
-  withTools = new StorageState({ key: 'withTools', value: false })
+  withRAG = new StorageState({ key: 'withRAG', value: true, default: true })
+  withTools = new StorageState({ key: 'withTools', value: false, default: false })
   referencesNotes: BlinkoItem[] = []
   currentMessageResult: currentMessageResult = {
     id: 0,
@@ -111,8 +109,8 @@ export class AiStore implements Store {
         this.currentMessageResult.fristCharDelay = 0
         const res = await streamApi.ai.completions.mutate({
           question: userQuestion, conversations: filteredChatConversation,
-          withRAG: this.withRAG.value,
-          withTools: this.withTools.value
+          withRAG: this.withRAG.value ?? false,
+          withTools: this.withTools.value ?? false
         }, { signal: this.aiChatabortController.signal })
 
         for await (const item of res) {

@@ -27,12 +27,6 @@ export class BaseStore implements Store {
       icon: 'hugeicons:note'
     },
     {
-      title: "AI",
-      shallow: true,
-      href: '/ai',
-      icon: 'mingcute:ai-line'
-    },
-    {
       title: "analytics",
       href: '/analytics',
       hiddenMobile: true,
@@ -41,12 +35,14 @@ export class BaseStore implements Store {
     {
       title: "resources",
       href: '/resources',
-      icon: 'solar:database-linear'
+      icon: 'solar:database-linear',
+      hiddenMobile: true,
     },
     {
       title: "archived",
       href: '/?path=archived',
-      icon: 'solar:box-broken'
+      icon: 'solar:box-broken',
+      hiddenMobile: true,
     },
     {
       title: "trash",

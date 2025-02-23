@@ -142,7 +142,7 @@ export const AIWriteButton = observer(({ store, content }: Props) => {
                 size='sm' variant='light' color='danger'>{t('reject')}</Button>
 
               <Button onPress={() => {
-                ai.abort();
+                ai.abortAiWrite();
               }} startContent={<Icon icon="mynaui:stop" className='blinko' />}
                 size='sm' variant='light' color='warning'>{t('stop')}</Button>
             </div>

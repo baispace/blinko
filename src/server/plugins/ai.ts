@@ -1,15 +1,7 @@
 import { _ } from '@/lib/lodash';
 import "pdf-parse";
-import { ChatOpenAI, ClientOptions, OpenAIEmbeddings, } from "@langchain/openai";
-import path from 'path';
-import fs from 'fs';
-import type { Document } from "@langchain/core/documents";
-import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
-import { FAISS_PATH, UPLOAD_FILE_PATH } from '@/lib/constant';
 import { AiModelFactory } from './ai/aiModelFactory';
 import { ProgressResult } from './memos';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
@@ -17,19 +9,19 @@ import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
-import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
-import { AiPrompt } from './ai/aiPrompt';
 import { Context } from '../context';
 import dayjs from 'dayjs';
 import { CreateNotification } from '../routers/notification';
 import { NotificationType } from '@/lib/prismaZodType';
-
+import { CoreMessage, DefaultVectorDB } from '@mastra/core';
+import { MDocument } from "@mastra/rag";
+import { embed, embedMany } from 'ai';
+import { VECTOR_PATH } from '@/lib/constant';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
-const FaissStorePath = path.join(FAISS_PATH);
 
 export class AiService {
   static async loadFileContent(filePath: string): Promise<string> {
@@ -58,35 +50,22 @@ export class AiService {
       console.error('File loading error:', error);
       throw new Error(`can not load file: ${filePath}`);
     }
+    return ''
   }
 
-  static async embeddingDeleteAll(id: number, VectorStore: FaissStore) {
-    for (const index of new Array(9999).keys()) {
-      try {
-        await VectorStore.delete({ ids: [`${id}-${index}`] })
-        await VectorStore.save(FaissStorePath)
-      } catch (error) {
-        console.log('error', error)
-        break;
-      }
-    }
+  static async embeddingDeleteAll(id: number, VectorStore: DefaultVectorDB) {
+    await VectorStore.truncateIndex('blinko')
   }
 
-  static async embeddingDeleteAllAttachments(filePath: string, VectorStore: FaissStore) {
-    for (const index of new Array(9999).keys()) {
-      try {
-        await VectorStore.delete({ ids: [`${filePath}-${index}`] })
-        await VectorStore.save(FaissStorePath)
-      } catch (error) {
-        break;
-      }
-    }
+  static async embeddingDeleteAllAttachments(filePath: string, VectorStore: DefaultVectorDB) {
+    await VectorStore.truncateIndex('blinko')
   }
 
   static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number, content: string, type: 'update' | 'insert', createTime: Date, updatedAt?: Date }) {
     try {
-      const { VectorStore, MarkdownSplitter } = await AiModelFactory.GetProvider()
+      const { VectorStore, Embeddings } = await AiModelFactory.GetProvider()
       const config = await AiModelFactory.globalConfig()
+
       if (config.excludeEmbeddingTagId) {
         const tag = await prisma.tag.findUnique({ where: { id: config.excludeEmbeddingTagId } })
         if (tag && content.includes(tag.name)) {
@@ -95,16 +74,23 @@ export class AiService {
         }
       }
 
-      const chunks = await MarkdownSplitter.splitText(content);
+      const chunks = await MDocument.fromMarkdown(content).chunk();
       if (type == 'update') {
-        await AiService.embeddingDeleteAll(id, VectorStore)
+        AiModelFactory.queryAndDeleteVectorById(id)
       }
-      const documents: Document[] = chunks.map((chunk, index) => {
-        return {
-          pageContent: chunk + `\n\nCreated At: ${dayjs(createTime).format('YYYY-MM-DD HH:mm:ss')}`,
-          metadata: { noteId: id, uniqDocId: `${id}-${index}`, id: `${id}-${index}` },
-        }
-      })
+
+      const { embeddings } = await embedMany({
+        values: chunks.map(chunk => chunk.text + 'Create At: ' + createTime.toISOString() + ' Update At: ' + updatedAt?.toISOString()),
+        model: Embeddings,
+      });
+
+
+      await VectorStore.upsert(
+        'blinko',
+        embeddings,
+        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
+      );
+
       try {
         await prisma.notes.update({
           where: { id },
@@ -114,20 +100,15 @@ export class AiService {
             },
             updatedAt,
           },
-        
+
         })
       } catch (error) {
         console.log(error)
       }
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-        const batch = documents.slice(i, i + BATCH_SIZE);
-        const batchIds = batch.map(doc => doc.metadata.uniqDocId);
-        await VectorStore.addDocuments(batch, { ids: batchIds });
-      }
-      await VectorStore.save(FaissStorePath)
+
       return { ok: true }
     } catch (error) {
+      console.log(error, 'errorxxx')
       return { ok: false, error: error?.message }
     }
   }
@@ -135,24 +116,23 @@ export class AiService {
   //api/file/123.pdf
   static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number, updatedAt?: Date, filePath: string }) {
     try {
-      // const note = await prisma.notes.findUnique({ where: { id } })
-      // //@ts-ignore
-      // if (note?.metadata?.isAttachmentsIndexed) {
-      //   return { ok: true, msg: 'already indexed' }
-      // }
       const absolutePath = await FileService.getFile(filePath)
       const content = await AiService.loadFileContent(absolutePath);
-      const { VectorStore, TokenTextSplitter } = await AiModelFactory.GetProvider()
-      const chunks = await TokenTextSplitter.splitText(content);
-      const documents: Document[] = chunks.map((chunk, index) => {
-        return {
-          pageContent: chunk,
-          metadata: {
-            noteId: id,
-            uniqDocId: `${filePath}-${index}`
-          },
-        }
-      })
+      const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider()
+
+      const doc = MDocument.fromText(content);
+      const chunks = await doc.chunk();
+
+      const { embeddings } = await embedMany({
+        values: chunks.map(chunk => chunk.text),
+        model: Embeddings,
+      });
+
+      await VectorStore.upsert(
+        'blinko',
+        embeddings,
+        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id })),
+      );
 
       try {
         await prisma.notes.update({
@@ -168,15 +148,6 @@ export class AiService {
       } catch (error) {
         console.log(error)
       }
-
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-        const batch = documents.slice(i, i + BATCH_SIZE);
-        const batchIds = batch.map(doc => doc.metadata.uniqDocId);
-        await VectorStore.addDocuments(batch, { ids: batchIds });
-      }
-
-      await VectorStore.save(FaissStorePath)
       return { ok: true }
     } catch (error) {
       return { ok: false, error }
@@ -186,36 +157,18 @@ export class AiService {
 
 
   static async embeddingDelete({ id }: { id: number }) {
-    const { VectorStore } = await AiModelFactory.GetProvider()
-    await AiService.embeddingDeleteAll(id, VectorStore)
-    const attachments = await prisma.attachments.findMany({ where: { noteId: id } })
-    for (const attachment of attachments) {
-      await AiService.embeddingDeleteAllAttachments(attachment.path, VectorStore)
-    }
+    AiModelFactory.queryAndDeleteVectorById(id)
     return { ok: true }
   }
 
-  static async similaritySearch({ question }: { question: string }) {
-    const { VectorStore, } = await AiModelFactory.GetProvider()
-    const config = await AiModelFactory.globalConfig()
-    const topK = config.embeddingTopK ?? 2
-    const lambda = config.embeddingLambda ?? 0.5
-    const score = config.embeddingScore ?? 1.5
-    const results = await VectorStore.similaritySearchWithScore(question, topK, {
-      fetchK: topK * 3,
-      lambda: lambda
-    });
-    const DISTANCE_THRESHOLD = score;
-    const filteredResults = results
-      .filter(([doc, distance]) => distance < DISTANCE_THRESHOLD)
-      .map(([doc]) => doc);
-    return filteredResults;
-  }
 
   static async *rebuildEmbeddingIndex({ force = false }: { force?: boolean }): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
+    const { VectorStore } = await AiModelFactory.GetProvider()
     if (force) {
-      const faissPath = path.join(FAISS_PATH)
-      fs.rmSync(faissPath, { recursive: true, force: true })
+      await AiModelFactory.rebuildVectorIndex({
+        vectorStore: VectorStore,
+        isDelete: true
+      })
     }
     const notes = await prisma.notes.findMany({
       include: {
@@ -316,21 +269,29 @@ export class AiService {
   }
 
   static async enhanceQuery({ query, ctx }: { query: string, ctx: Context }) {
-    const { VectorStore } = await AiModelFactory.GetProvider()
+    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider()
     const config = await AiModelFactory.globalConfig()
-    const results = await VectorStore.similaritySearchWithScore(query, 20);
-    const DISTANCE_THRESHOLD = config.embeddingScore ?? 1.5
+
+    const { embedding } = await embed({
+      value: query,
+      model: Embeddings,
+    });
+
+    const results = await VectorStore.query('blinko', embedding, 20);
+
+    const DISTANCE_THRESHOLD = config.embeddingScore ?? 0.3
+
     const filteredResultsWithScore = results
-      .filter(([doc, distance]) => distance < DISTANCE_THRESHOLD)
-      .sort(([, distanceA], [, distanceB]) => distanceA - distanceB)
-      .map(([doc, distance]) => ({
-        doc,
-        distance
+      .filter(({ score }) => score > DISTANCE_THRESHOLD)
+      .sort((a, b) => a.score - b.score)
+      .map(({ metadata, score }) => ({
+        metadata,
+        distance: score
       }));
     console.log(filteredResultsWithScore)
     const notes = await prisma.notes.findMany({
       where: {
-        id: { in: filteredResultsWithScore.map(i => i.doc.metadata?.noteId).filter(i => !!i) },
+        id: { in: filteredResultsWithScore.map(i => i.metadata?.id).filter(i => !!i) },
         accountId: Number(ctx.id)
       },
       include: {
@@ -344,45 +305,42 @@ export class AiService {
       }
     })
     const sortedNotes = notes.sort((a, b) => {
-      const scoreA = filteredResultsWithScore.find(r => r.doc.metadata?.noteId === a.id)?.distance ?? Infinity;
-      const scoreB = filteredResultsWithScore.find(r => r.doc.metadata?.noteId === b.id)?.distance ?? Infinity;
+      const scoreA = filteredResultsWithScore.find(r => r.metadata?.id === a.id)?.distance ?? Infinity;
+      const scoreB = filteredResultsWithScore.find(r => r.metadata?.id === b.id)?.distance ?? Infinity;
       return scoreA - scoreB;
     });
 
     return sortedNotes;
   }
 
-  static async completions({ question, conversations, ctx }: { question: string, conversations: { role: string, content: string }[], ctx: Context }) {
+  static async completions({ question, conversations, withTools, withRAG = true, systemPrompt, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, systemPrompt?: string, ctx: Context }) {
     try {
-      const { LLM } = await AiModelFactory.GetProvider()
-      let searchRes = await AiService.similaritySearch({ question })
-      console.log('searchRes', searchRes)
-      let notes: any[] = []
-      if (searchRes && searchRes.length != 0) {
-        notes = await prisma.notes.findMany({
-          where: {
-            accountId: Number(ctx.id),
-            id: {
-              in: _.uniqWith(searchRes.map(i => i.metadata?.noteId)).filter(i => !!i) as number[]
-            }
-          },
-          include: {
-            attachments: true
-          }
+      console.log('completions')
+      conversations.push({
+        role: 'user',
+        content: question
+      })
+      conversations.push({
+        role: 'system',
+        content: `Current time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n
+        Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`
+      })
+      if (systemPrompt) {
+        conversations.push({
+          role: 'system',
+          content: systemPrompt
         })
       }
-      notes = notes?.map(i => { return { ...i, index: searchRes.findIndex(t => t.metadata.noteId == i.id) } }) ?? []
-      //@ts-ignore
-      notes.sort((a, b) => a.index! - b.index!)
-      const chat_history = AiService.getChatHistory({ conversations })
-      const qaPrompt = AiPrompt.QAPrompt()
-      const qaChain = qaPrompt.pipe(LLM).pipe(new StringOutputParser())
-      const context = searchRes.map(doc => doc.pageContent).join('\n\n');
-      const result = await qaChain.stream({
-        chat_history,
-        input: question,
-        context: context
-      })
+      let notes: any[] = []
+      if (withRAG) {
+        notes = await AiModelFactory.queryVector(question, Number(ctx.id))
+        conversations.push({
+          role: 'system',
+          content: `This is the note content which search from vector database: ${notes.map(i => i.content).join('\n')}`
+        })
+      }
+      const agent = await AiModelFactory.BaseChatAgent({ withTools })
+      const result = await agent.stream(conversations)
       return { result, notes }
     } catch (error) {
       console.log(error)
@@ -390,73 +348,6 @@ export class AiService {
     }
   }
 
-  static async autoTag({ content, tags }: { content: string, tags: string[] }) {
-    try {
-      const { LLM } = await AiModelFactory.GetProvider();
-      const autoTagPrompt = AiPrompt.AutoTagPrompt(tags);
-      const autoTagChain = autoTagPrompt.pipe(LLM).pipe(new StringOutputParser());
-
-      const result = await autoTagChain.invoke({
-        question: "Please select and suggest appropriate tags for the above content",
-        context: content
-      });
-
-      return result.trim().split(',').map(tag => tag.trim()).filter(Boolean);
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async autoEmoji({ content }: { content: string }) {
-    try {
-      const { LLM } = await AiModelFactory.GetProvider();
-      const autoTagPrompt = AiPrompt.AutoEmojiPrompt();
-      const autoTagChain = autoTagPrompt.pipe(LLM).pipe(new StringOutputParser());
-
-      const result = await autoTagChain.invoke({
-        question: "Please select and suggest appropriate emojis for the above content",
-        context: content
-      });
-
-      return result.trim().split(',').map(tag => tag.trim()).filter(Boolean);
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async writing({
-    question,
-    type = 'custom',
-    content
-  }: {
-    question: string,
-    type?: 'expand' | 'polish' | 'custom',
-    content?: string
-  }) {
-    try {
-      const { LLM } = await AiModelFactory.GetProvider();
-      const writingPrompt = AiPrompt.WritingPrompt(type, content);
-      const writingChain = writingPrompt.pipe(LLM).pipe(new StringOutputParser());
-
-      const result = await writingChain.stream({
-        question,
-        content: content || ''
-      });
-
-      return { result };
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
-
-  static async speechToText(audioPath: string) {
-    const loader = await AiModelFactory.GetAudioLoader(audioPath)
-    const docs = await loader.load();
-    return docs
-  }
 
   static async AIComment({ content, noteId }: { content: string, noteId: number }) {
     try {
@@ -469,17 +360,21 @@ export class AiService {
         throw new Error('Note not found')
       }
 
-      const { LLM } = await AiModelFactory.GetProvider();
-      const commentPrompt = AiPrompt.CommentPrompt();
-      const commentChain = commentPrompt.pipe(LLM).pipe(new StringOutputParser());
-      const aiResponse = await commentChain.invoke({
-        content,
-        noteContent: note.content
-      });
+      const agent = await AiModelFactory.CommentAgent()
+      const result = await agent.generate([
+        {
+          role: 'user',
+          content: content
+        },
+        {
+          role: 'user',
+          content: `This is the note content: ${note.content}`
+        }
+      ])
 
       const comment = await prisma.comments.create({
         data: {
-          content: aiResponse.trim(),
+          content: result.text.trim(),
           noteId,
           guestName: 'Blinko AI',
           guestIP: '',
@@ -508,4 +403,5 @@ export class AiService {
       throw new Error(error);
     }
   }
+
 }

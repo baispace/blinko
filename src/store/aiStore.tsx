@@ -9,13 +9,15 @@ import { makeAutoObservable } from 'mobx';
 import { BlinkoStore } from './blinkoStore';
 import { eventBus } from '@/lib/event';
 import { showAiWriteSuggestions } from '@/components/Common/PopoverFloat/aiWritePop';
-import { PromiseCall, PromiseState } from './standard/PromiseState';
+import { PromiseCall, PromisePageState, PromiseState } from './standard/PromiseState';
 import { DialogStore } from './module/Dialog';
-import { CheckboxGroup } from '@nextui-org/react';
+import { Image } from '@nextui-org/react';
 import { AiTag } from '@/components/BlinkoAi/aiTag';
 import i18n from '@/lib/i18n';
 import { Icon } from '@iconify/react';
 import { AiEmoji } from '@/components/BlinkoAi/aiEmoji';
+import { StorageState } from './standard/StorageState';
+import { BlinkoItem } from '@/components/BlinkoCard';
 
 type Chat = {
   content: string
@@ -25,6 +27,16 @@ type Chat = {
 }
 
 type WriteType = 'expand' | 'polish' | 'custom'
+export type AssisantMessageMetadata = {
+  notes?: BlinkoItem[],
+  usage?: { promptTokens?: number, completionTokens?: number, totalTokens?: number },
+  fristCharDelay?: number,
+}
+export type currentMessageResult = AssisantMessageMetadata & {
+  toolcall: string[],
+  content: string,
+  id?: number
+}
 
 export class AiStore implements Store {
   sid = 'AiStore';
@@ -34,28 +46,202 @@ export class AiStore implements Store {
       this.clear()
     })
   }
-  noteContent = '';
-  aiSearchText = '';
-  aiSearchResult = {
-    content: "",
-    notes: [] as Note[]
+  isChatting = false
+  isAnswering = false
+  input = '';
+  withRAG = new StorageState({ key: 'withRAG', value: true })
+  withTools = new StorageState({ key: 'withTools', value: false })
+  referencesNotes: BlinkoItem[] = []
+  currentMessageResult: currentMessageResult = {
+    id: 0,
+    notes: [],
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    fristCharDelay: 0,
+    toolcall: [],
+    content: ''
   }
+
+  currentConversationId = 0
+  currentConversation = new PromiseState({
+    function: async () => {
+      const res = await api.conversation.detail.query({ id: this.currentConversationId })
+      return res
+    }
+  })
+
+  conversactionList = new PromisePageState({
+    function: async ({ page, size }) => {
+      const res = await api.conversation.list.query({
+        page,
+        size
+      })
+      return res
+    }
+  })
+
+  onInputSubmit = async (isRegenerate = false) => {
+    try {
+      const userQuestion = _.cloneDeep(this.input)
+      this.clearCurrentMessageResult()
+      this.input = ""
+      this.isChatting = true
+      this.isAnswering = true
+      if (this.currentConversationId == 0) {
+        const conversation = await api.conversation.create.mutate({ title: '' });
+        this.currentConversationId = conversation.id
+      }
+
+      if (this.currentConversationId != 0) {
+        if (!isRegenerate) {
+          await api.message.create.mutate({
+            conversationId: this.currentConversationId,
+            content: userQuestion,
+            role: 'user',
+          });
+        }
+
+        //update conversation message list
+        await this.currentConversation.call()
+
+        const filteredChatConversation = [
+          ...(this.currentConversation.value?.messages?.slice(0, -1) || [])
+        ];
+        const startTime = Date.now()
+        let isFristChunk = true
+        this.currentMessageResult.fristCharDelay = 0
+        const res = await streamApi.ai.completions.mutate({
+          question: userQuestion, conversations: filteredChatConversation,
+          withRAG: this.withRAG.value,
+          withTools: this.withTools.value
+        }, { signal: this.aiChatabortController.signal })
+
+        for await (const item of res) {
+          // console.log(JSON.parse(JSON.stringify(item)))
+          if (item.chunk?.type == 'tool-call') {
+            this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`)
+          }
+          if (item.chunk?.type == 'tool-result') {
+            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}调用成功!`)
+          }
+          if (item.chunk?.type == 'finish') {
+            this.currentMessageResult.usage = item?.chunk?.usage
+          }
+          if (item.notes) {
+            this.currentMessageResult.notes = item.notes
+          } else {
+            if (item.chunk.type == 'text-delta') {
+              if (isFristChunk) {
+                this.currentMessageResult.fristCharDelay = Date.now() - startTime
+                isFristChunk = false
+              }
+              this.currentMessageResult.content += item.chunk.textDelta
+            }
+          }
+        }
+        const newAssisantMessage = await api.message.create.mutate({
+          conversationId: this.currentConversationId,
+          content: this.currentMessageResult.content,
+          role: 'assistant',
+          metadata: {
+            notes: this.currentMessageResult.notes,
+            usage: this.currentMessageResult.usage,
+            fristCharDelay: this.currentMessageResult.fristCharDelay
+          }
+        })
+        if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 4) {
+          await api.ai.summarizeConversationTitle.mutate({
+            conversations: this.currentConversation.value?.messages ?? [],
+            conversationId: this.currentConversationId
+          })
+        }
+        this.currentMessageResult.id = newAssisantMessage.id
+        // await this.currentConversation.call()
+        this.isAnswering = false
+        // this.clearCurrentMessageResult()
+      }
+    } catch (error) {
+      if (!error.message.includes('interrupted')) {
+        RootStore.Get(ToastPlugin).error(error.message)
+      }
+      this.isAnswering = false
+    }
+  }
+
+  regenerate = async (messageId: number) => {
+    await api.message.delete.mutate({ id: messageId })
+    await this.currentConversation.call()
+    const lastMessage = this.currentConversation.value?.messages[this.currentConversation.value?.messages?.length - 1]
+    this.input = lastMessage?.content ?? ''
+    await this.onInputSubmit(true)
+  }
+
+  newChat = () => {
+    this.currentConversationId = 0
+    this.input = ''
+    this.clearCurrentMessageResult()
+    this.isChatting = false
+  }
+
+  newRoleChat = async (prompt: string) => {
+    this.isChatting = true
+
+    if (this.currentConversationId == 0) {
+      const conversation = await api.conversation.create.mutate({ title: '' });
+      this.currentConversationId = conversation.id
+    }
+
+    if (this.currentConversationId != 0) {
+      await api.message.create.mutate({
+        conversationId: this.currentConversationId,
+        content: prompt,
+        role: 'system',
+      });
+      await this.currentConversation.call()
+    }
+  }
+
+
   modelProviderSelect: { label: string, value: GlobalConfig['aiModelProvider'], icon: React.ReactNode }[] = [
     {
       label: "OpenAI",
       value: "OpenAI",
-      icon: <Icon icon="ri:openai-fill" width="20" height="20" />
+      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
+        <Image className='text-primary' src="/images/openai.svg" width={20} height={20} />
+      </div>
     },
     {
       label: "AzureOpenAI",
       value: "AzureOpenAI",
-      icon: <Icon icon="teenyicons:azure-outline" width="20" height="20" />
+      icon: <Image src="/images/azure.png" width={20} height={20} />
     },
     {
       label: "Ollama",
       value: "Ollama",
-      icon: <Icon icon="simple-icons:ollama" width="20" height="20" />
-    }
+      icon: <Image src="/images/ollama.png" width={20} height={20} />
+    },
+    {
+      label: "Grok",
+      value: "Grok",
+      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
+        <Image src="/images/grok.svg" width={20} height={20} />
+      </div>
+    },
+    {
+      label: "Gemini",
+      value: "Gemini",
+      icon: <Image src="/images/google.png" width={20} height={20} />
+    },
+    {
+      label: "DeepSeek",
+      value: "DeepSeek",
+      icon: <Image src="/images/deepseek.svg" width={20} height={20} />
+    },
+    {
+      label: "Anthropic",
+      value: "Anthropic",
+      icon: <Image src="/images/anthropic.svg" width={20} height={20} />
+    },
+
   ]
 
   modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string, value: string }>> = {
@@ -141,48 +327,14 @@ export class AiStore implements Store {
 
   scrollTicker = 0
   chatHistory = new StorageListState<Chat>({ key: 'chatHistory' })
-  private abortController = new AbortController()
+  private aiChatabortController = new AbortController()
+  private aiWriteAbortController = new AbortController()
   writingResponseText = ''
   isWriting = false
-  isAnswering = false
+
   writeQuestion = ''
   currentWriteType: WriteType | undefined = undefined
   isLoading = false
-
-  async completionsStream() {
-    try {
-      this.isAnswering = true
-      this.chatHistory.push({
-        content: this.aiSearchText,
-        role: 'user',
-        createAt: new Date().getTime()
-      })
-      this.scrollTicker++
-      const conversations = this.chatHistory.list.map(i => { return { role: i.role, content: i.content } })
-      this.chatHistory.push({
-        content: '',
-        role: 'assistant',
-        createAt: new Date().getTime(),
-        relationNotes: []
-      })
-      const res = await streamApi.ai.completions.mutate({ question: this.aiSearchText, conversations }, { signal: this.abortController.signal })
-      for await (const item of res) {
-        if (item.notes) {
-          this.chatHistory.list[this.chatHistory.list.length - 1]!.relationNotes = item.notes
-        } else {
-          this.chatHistory.list[this.chatHistory.list.length - 1]!.content += item.context
-          this.scrollTicker++
-        }
-      }
-      this.chatHistory.save()
-      this.isAnswering = false
-    } catch (error) {
-      this.isAnswering = false
-      if (!error.message.includes('interrupted')) {
-        RootStore.Get(ToastPlugin).error(error.message)
-      }
-    }
-  }
 
   get blinko() {
     return RootStore.Get(BlinkoStore)
@@ -199,10 +351,13 @@ export class AiStore implements Store {
         question: this.writeQuestion,
         type: writeType,
         content
-      }, { signal: this.abortController.signal })
+      }, { signal: this.aiWriteAbortController.signal })
       for await (const item of res) {
-        // eventBus.emit('editor:insert', item.content)
-        this.writingResponseText += item.content
+        // console.log(item)
+        if (item.type == 'text-delta') {
+          //@ts-ignore
+          this.writingResponseText += item.textDelta
+        }
         this.scrollTicker++
       }
       this.writeQuestion = ''
@@ -267,11 +422,38 @@ export class AiStore implements Store {
     }
   })
 
-  abort() {
-    this.abortController.abort()
-    this.abortController = new AbortController()
+  clearCurrentMessageResult = () => {
+    this.currentMessageResult = {
+      notes: [],
+      content: '',
+      toolcall: [],
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      fristCharDelay: 0,
+      id: 0
+    }
+  }
+
+  abortAiWrite() {
+    this.aiWriteAbortController.abort()
+    this.aiWriteAbortController = new AbortController()
+    this.isWriting = false
+  }
+
+  async abortAiChat() {
+    this.aiChatabortController.abort()
+    this.aiChatabortController = new AbortController()
     this.isLoading = false
     this.isAnswering = false
+    if (this.currentMessageResult.content.trim() != '') {
+      await api.message.create.mutate({
+        conversationId: this.currentConversationId,
+        content: this.currentMessageResult.content,
+        role: 'assistant',
+        metadata: this.currentMessageResult.notes
+      })
+    }
+    this.clearCurrentMessageResult()
+    await this.currentConversation.call()
   }
 
   private clear() {

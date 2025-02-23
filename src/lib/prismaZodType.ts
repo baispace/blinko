@@ -269,3 +269,36 @@ export const pluginSchema = z.object({
 export type plugin = z.infer<typeof pluginSchema>
 
   
+/////////////////////////////////////////
+// CONVERSATION SCHEMA
+/////////////////////////////////////////
+
+export const conversationSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  accountId: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type conversation = z.infer<typeof conversationSchema>
+
+/////////////////////////////////////////
+// MESSAGE SCHEMA
+/////////////////////////////////////////
+
+export const messageSchema = z.object({
+  id: z.number().int(),
+  content: z.string(),
+  role: z.string(),
+  conversationId: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  metadata: z.any(),
+})
+
+export type message = z.infer<typeof messageSchema>
+
+
+
+

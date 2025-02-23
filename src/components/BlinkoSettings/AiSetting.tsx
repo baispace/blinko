@@ -14,6 +14,8 @@ import { ShowRebuildEmbeddingProgressDialog } from "../Common/RebuildEmbeddingPr
 import { showTipsDialog } from "../Common/TipsDialog";
 import TagSelector from "@/components/Common/TagSelector";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -31,6 +33,7 @@ export const AiSetting = observer(() => {
     apiEndPoint: '',
     aiModel: '',
     embeddingModel: '',
+    embeddingDimensions: 0,
     embeddingTopK: 2,
     embeddingScore: 1.5,
     embeddingLambda: 0.5,
@@ -53,6 +56,7 @@ export const AiSetting = observer(() => {
     store.embeddingApiEndpoint = blinko.config.value?.embeddingApiEndpoint!
     store.embeddingApiKey = blinko.config.value?.embeddingApiKey!
     store.excludeEmbeddingTagId = blinko.config.value?.excludeEmbeddingTagId!
+    store.embeddingDimensions = blinko.config.value?.embeddingDimensions!
   }, [blinko.config.value])
 
   return (
@@ -246,6 +250,35 @@ export const AiSetting = observer(() => {
           } />
       }
 
+      {store.showEmeddingAdvancedSetting && <Item
+        className="ml-6"
+        type={isPc ? 'row' : 'col'}
+        leftContent={<ItemWithTooltip
+          content={<>{t('embedding-dimensions')}</>}
+          toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
+            <div>{t('embedding-dimensions-description')}</div>
+          </div>} />}
+        rightContent={
+          <div className="flex md:w-[300px] w-full ml-auto justify-start">
+            <Input
+              type="number"
+              size="sm"
+              variant="bordered"
+              //@ts-ignore
+              value={store.embeddingDimensions}
+              onChange={e => {
+                store.embeddingDimensions = Number(e.target.value)
+              }}
+              onBlur={() => {
+                PromiseCall(api.config.update.mutate({
+                  key: 'embeddingDimensions',
+                  value: store.embeddingDimensions
+                }), { autoAlert: false })
+              }}
+            />
+          </div>
+        } />}
+
       {
         store.showEmeddingAdvancedSetting && <Item
           className="ml-6"
@@ -281,6 +314,8 @@ export const AiSetting = observer(() => {
           } />
       }
 
+
+
       {
         store.showEmeddingAdvancedSetting && <Item
           className="ml-6"
@@ -311,41 +346,6 @@ export const AiSetting = observer(() => {
                 maxValue={2.0}
                 minValue={0.1}
                 defaultValue={0.8}
-                className="w-full"
-              />
-            </div>
-          } />
-      }
-      {
-        store.showEmeddingAdvancedSetting && <Item
-          className="ml-6"
-          type={isPc ? 'row' : 'col'}
-          leftContent={<ItemWithTooltip
-            content={<>Embedding Lambda</>}
-            toolTipContent={<div className="md:w-[300px] flex flex-col gap-2">
-              <div>{t('embedding-lambda-description')}</div>
-            </div>} />}
-          rightContent={
-            <div className="flex md:w-[300px] w-full ml-auto justify-start">
-              <Slider
-                onChangeEnd={e => {
-                  PromiseCall(api.config.update.mutate({
-                    key: 'embeddingLambda',
-                    value: store.embeddingLambda
-                  }), { autoAlert: false })
-                }}
-                onChange={e => {
-                  store.embeddingLambda = Number(e)
-                }}
-                value={store.embeddingLambda}
-                size="md"
-                step={0.1}
-                color="foreground"
-                label={'value'}
-                showSteps={true}
-                maxValue={1.0}
-                minValue={0.1}
-                defaultValue={0.3}
                 className="w-full"
               />
             </div>
@@ -443,21 +443,35 @@ export const AiSetting = observer(() => {
           <>{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTitle}</>
           <div className="text-desc text-xs">{ai.modelSelectUILabel[blinko.config.value?.aiModelProvider!]?.endpointTooltip}</div>
         </div >}
-        rightContent={< Input
-          size='sm'
-          label={t('api-endpoint')}
-          variant="bordered"
-          className="w-full md:w-[300px]"
-          placeholder="https://api.openapi.com/v1/"
-          value={store.apiEndPoint}
-          onChange={e => { store.apiEndPoint = e.target.value }}
-          onBlur={e => {
-            PromiseCall(api.config.update.mutate({
-              key: 'aiApiEndpoint',
-              value: store.apiEndPoint
-            }), { autoAlert: false })
-          }}
-        />} />
+        rightContent={<div className="flex gap-2 items-center">
+          <Input
+            size='sm'
+            label={t('api-endpoint')}
+            variant="bordered"
+            className="w-full md:w-[300px]"
+            placeholder="https://api.openapi.com/v1/"
+            value={store.apiEndPoint}
+            onChange={e => { store.apiEndPoint = e.target.value }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'aiApiEndpoint',
+                value: store.apiEndPoint
+              }), { autoAlert: false })
+            }}
+          />
+          <IconButton
+            icon="hugeicons:connect"
+            containerSize={40}
+            tooltip={<div>{t('check-connect')}</div>}
+            onClick={async e => {
+              RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
+                loading: t('loading'),
+                success: t('check-connect-success'),
+                error: t('check-connect-error')
+              })
+            }}
+          />
+        </div>} />
 
 
       <Item
@@ -488,6 +502,8 @@ export const AiSetting = observer(() => {
             }}>{t('rebuild')}</Button>
           </div>
         } />
+
+
 
     </CollapsibleCard>
   );

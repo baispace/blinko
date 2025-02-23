@@ -131,7 +131,7 @@ const AiWritePop = observer(() => {
                 store.hidden()
               }} startContent={<Icon icon="ic:sharp-close" className='red' />} size='sm' variant='light' color='danger'>{t('reject')}</Button>
               <Button onPress={() => {
-                ai.abort();
+                ai.abortAiWrite();
               }} startContent={<Icon icon="mynaui:stop" className='blinko' />} size='sm' variant='light' color='warning'>{t('stop')} </Button>
             </div>
           )}

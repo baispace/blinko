@@ -32,6 +32,7 @@ model accounts {
   attachments   attachments[]
   follows       follows[]
   notifications notifications[]
+  conversations conversation[]
 }
 
 model attachments {
@@ -196,4 +197,31 @@ model plugin {
   isDev     Boolean  @default(false)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model conversation {
+  id          Int       @id @default(autoincrement())
+  title       String    @default("") @db.VarChar(255)
+  accountId   Int
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+  messages    message[]
+
+  account     accounts  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+}
+
+model message {
+  id             Int         @id @default(autoincrement())
+  content        String      @db.Text
+  role           String      @db.VarChar(50) // user or assistant
+  conversationId Int
+  createdAt      DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(6)
+  metadata       Json?       @db.Json
+
+  conversation   conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
 }

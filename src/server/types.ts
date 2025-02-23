@@ -9,6 +9,8 @@ export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
 export type ResourceType = NonNullable<RouterOutput['attachments']['list']>[0]
 export type Comment = NonNullable<RouterOutput['comments']['list']>
 export type InstalledPluginInfo = NonNullable<RouterOutput['plugin']['getInstalledPlugins']>[0]
+export type Conversation = NonNullable<RouterOutput['conversation']['list']>[0]
+export type Message = NonNullable<RouterOutput['message']['list']>[0]
 export enum NoteType {
   'BLINKO',
   'NOTE'
@@ -65,6 +67,7 @@ export const ZConfigKey = z.union([
   z.literal('s3CustomPath'),
   z.literal('localCustomPath'),
   z.literal('embeddingModel'),
+  z.literal('embeddingDimensions'),
   z.literal('embeddingTopK'),
   z.literal('embeddingLambda'),
   z.literal('embeddingScore'),
@@ -124,6 +127,7 @@ export const ZConfigSchema = z.object({
   s3Region: z.any().optional(),
   localCustomPath: z.any().optional(),
   embeddingModel: z.any().optional(),
+  embeddingDimensions: z.number().optional(),
   embeddingTopK: z.number().optional(),
   embeddingLambda: z.number().optional(),
   embeddingScore: z.number().optional(),

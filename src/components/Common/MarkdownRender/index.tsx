@@ -75,9 +75,59 @@ const Table = ({ children }: { children: React.ReactNode }) => {
   return <div className="table-container">{children}</div>;
 };
 
-export const MarkdownRender = observer(({ content = '', onChange, isShareMode }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean }) => {
-  const { theme } = useTheme()
+export const MarkdownRender = observer(({
+  content = '',
+  onChange,
+  isShareMode,
+  highlightLastChar = false
+}: {
+  content?: string,
+  onChange?: (newContent: string) => void,
+  isShareMode?: boolean,
+  highlightLastChar?: boolean
+}) => {
+  const { theme } = useTheme();
   const contentRef = useRef(null);
+
+  const renderHighlightedText = (text: string) => {
+    if (!highlightLastChar || text.length === 0) return text;
+
+    if (content.endsWith(text)) {
+      const lastChar = text.slice(-1);
+      const secondLastChar = text.slice(-2, -1);
+      const thirdLastChar = text.slice(-3, -2);
+      const fourthLastChar = text.slice(-4, -3);
+      const fifthLastChar = text.slice(-5, -4);
+      const restText = text.slice(0, -5);
+
+      const chars = [
+        fifthLastChar,
+        fourthLastChar,
+        thirdLastChar,
+        secondLastChar,
+        lastChar
+      ];
+
+      return (
+        <>
+          {restText}
+          {chars.map((char, index) => (
+            <span
+              key={index}
+              style={{
+                opacity: 0,
+                animation: `fadeIn 0.3s ${index * 0.1}s ease-in-out forwards`
+              }}
+            >
+              {char}
+            </span>
+          ))}
+        </>
+      );
+    }
+
+    return text;
+  };
 
   return (
     <div className={`markdown-body`}>
@@ -102,7 +152,20 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode }:
             }]
           ]}
           components={{
-            p: ({ node, children }) => <p><HighlightTags text={children} /></p>,
+            p: ({ node, children }) => {
+              const text = String(children);
+              return (
+                <p>
+                  {highlightLastChar ? (
+                    <span>
+                      {renderHighlightedText(text)}
+                    </span>
+                  ) : (
+                    <HighlightTags text={children} />
+                  )}
+                </p>
+              );
+            },
             code: ({ node, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const language = match ? match[1] : '';

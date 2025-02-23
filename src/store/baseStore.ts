@@ -26,7 +26,12 @@ export class BaseStore implements Store {
       href: '/?path=notes',
       icon: 'hugeicons:note'
     },
-
+    {
+      title: "AI",
+      shallow: true,
+      href: '/ai',
+      icon: 'mingcute:ai-line'
+    },
     {
       title: "analytics",
       href: '/analytics',
@@ -146,7 +151,7 @@ export class BaseStore implements Store {
 
   sidebarWidth = new StorageState<number>({
     key: 'sidebar-width',
-    default: 288,
+    default: 220,
     validate: (value: number) => {
       if (value < 220) return 220;
       if (value > 400) return 400;

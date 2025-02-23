@@ -32,6 +32,7 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarSearchInput } from "./BarSearchInput";
 import { BlinkoNotification } from "@/components/BlinkoNotification";
+import { AiStore } from "@/store/aiStore";
 
 export const SideBarItem = "p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all"
 
@@ -122,7 +123,9 @@ export const CommonLayout = observer(({
               <div className="flex items-center gap-2">
                 <div className="w-[4px] h-[16px] bg-primary rounded-xl" />
                 <div className="flex flex-row items-center gap-1">
-                  <div className="font-black select-none">{t(base.currentTitle)}</div>
+                  <div className="font-black select-none">{router.asPath == '/ai'
+                    ? !!RootStore.Get(AiStore).currentConversation.value?.title ? RootStore.Get(AiStore).currentConversation.value?.title : t(base.currentTitle)
+                    : t(base.currentTitle)}</div>
                   {
                     router.query?.path != 'trash'
                       ? <Icon className="cursor-pointer hover:rotate-180 transition-all"
@@ -202,8 +205,12 @@ export const CommonLayout = observer(({
         </header>
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
 
-        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] !overflow-y-auto overflow-x-hidden">
+        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] !overflow-y-auto overflow-x-hidden mt-[-4px]">
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container" >
+            <div className="hidden md:block absolute top-[-37%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
+              <div className="w-full h-[356px] bg-[#9936e6] opacity-20"
+                style={{ "clipPath": "circle(50% at 50% 50%)" }} />
+            </div>
             {children}
           </div>
         </ScrollArea>

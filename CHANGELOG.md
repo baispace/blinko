@@ -1,3 +1,10 @@
+## [0.41.4](https://github.com/blinko-space/blinko/compare/v0.41.3...v0.41.4) (2025-02-23)
+
+
+### Bug Fixes
+
+* build ([4555180](https://github.com/blinko-space/blinko/commit/45551804a7d7fc25ba7f89f4cd12655e44cf3035))
+
 ## [0.41.3](https://github.com/blinko-space/blinko/compare/v0.41.2...v0.41.3) (2025-02-23)
 
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,6 +7,8 @@ import { BaseStore } from "@/store/baseStore";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { SideBarItem } from "./index";
 import { useTranslation } from "react-i18next";
+import { useSwiper } from "@/lib/hooks";
+import { motion } from "framer-motion";
 
 interface MobileNavBarProps {
   onItemClick?: () => void;
@@ -16,15 +17,23 @@ interface MobileNavBarProps {
 export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
   const router = useRouter();
   const base = RootStore.Get(BaseStore);
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
   const blinkoStore = RootStore.Get(BlinkoStore);
-
+  const isVisible = useSwiper();
   if (blinkoStore.config.value?.isHiddenMobileBar) {
     return null;
   }
 
   return (
-    <div className="h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden">
+    <motion.div
+      className="h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
+      animate={{ y: isVisible ? 0 : 100 }}
+      transition={{ 
+        type: "tween",
+        duration: 0.3,
+        ease: [0.25, 0.1, 0.25, 1] 
+      }}
+    >
       {base.routerList.filter(i => !i.hiddenMobile).map(i => (
         <Link
           className="flex-1"
@@ -37,15 +46,14 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
           }}
         >
           <div
-            className={`flex flex-col group ${SideBarItem} ${
-              base.isSideBarActive(router, i) ? '!text-foreground' : '!text-desc'
-            }`}
+            className={`flex flex-col group ${SideBarItem} ${base.isSideBarActive(router, i) ? '!text-foreground' : '!text-desc'
+              }`}
           >
             <Icon className={`text-center`} icon={i.icon} width="20" height="20" />
             <div className="text-center text-[10px] mt-[-4px]">{t(i.title)}</div>
           </div>
         </Link>
       ))}
-    </div>
+    </motion.div>
   );
 }); 

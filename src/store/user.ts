@@ -109,7 +109,7 @@ export class UserStore implements User, Store {
       stateFlag: 'isHubInitialized' | 'isUseAIInitialized'
     ) => {
       const savedValue = localStorage.getItem(storageKey);
-      const configKey = featureKey === 'ai' ? 'isUseAI' : `isUse${featureKey.charAt(0).toUpperCase() + featureKey.slice(1)}`;
+      const configKey = featureKey === 'ai' ? 'isUseAI' : `isUseBlinkoHub`;
       const configValue = config?.[configKey];
       const currentValue = configValue ?? (savedValue === 'true');
 
@@ -135,18 +135,18 @@ export class UserStore implements User, Store {
         }
       }
     };
+    
+    handleFeatureRoute('ai', 'useAI', {
+      title: "AI",
+      href: '/ai',
+      icon: 'mingcute:ai-line'
+    }, 'isUseAIInitialized');
 
     handleFeatureRoute('hub', 'hubEnabled', {
       title: "hub",
       href: '/hub',
       icon: 'fluent:people-community-16-regular'
     }, 'isHubInitialized');
-
-    handleFeatureRoute('ai', 'useAI', {
-      title: "AI",
-      href: '/ai',
-      icon: 'mingcute:ai-line'
-    }, 'isUseAIInitialized');
 
     const savedLanguage = localStorage.getItem('userLanguage');
     const savedTheme = localStorage.getItem('userTheme');

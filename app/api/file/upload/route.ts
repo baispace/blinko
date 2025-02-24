@@ -14,7 +14,7 @@ export async function OPTIONS() {
   });
 }
 
-export const POST = async (req: NextRequest, res: NextResponse) => {
+export const POST = async (req: NextRequest) => {
   const token = await getToken(req);
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

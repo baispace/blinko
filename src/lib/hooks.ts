@@ -1,5 +1,45 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { helper } from "./helper";
+
+export const useSwiper = (threshold = 50) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const touchStartY = useRef(0);
+  const lastDirection = useRef<'up' | 'down'>();
+
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0]?.clientY || 0;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchY = e.touches[0]?.clientY || 0;
+      const deltaY = touchY - touchStartY.current;
+
+      if (Math.abs(deltaY) > threshold) {
+        if (deltaY > 0) {
+          lastDirection.current = 'down';
+          setIsVisible(true);
+        } else { 
+          lastDirection.current = 'up';
+          setIsVisible(false);
+        }
+        touchStartY.current = touchY; 
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchmove', handleTouchMove);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [threshold]);
+
+  return isVisible;
+};
+
+
 export const handlePaste = (event) => {
   //@ts-ignore
   const clipboardData = event.clipboardData || window.clipboardData;

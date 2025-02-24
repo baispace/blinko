@@ -1,5 +1,17 @@
 import { observer } from "mobx-react-lite";
-import { AccordionItem, Accordion, Autocomplete, AutocompleteItem, Button, Card, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider } from "@heroui/react";
+import {
+  Autocomplete,
+  AutocompleteItem,
+  Button,
+  Code,
+  Input,
+  Select,
+  SelectItem,
+  Switch,
+  Tooltip,
+  Chip,
+  Slider,
+} from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -377,7 +389,7 @@ export const AiSetting = observer(() => {
       }
 
       {
-        blinko.config.value?.aiModelProvider != 'Ollama' &&
+        blinko.config.value?.aiModelProvider != 'Ollama' && !process.env.NEXT_PUBLIC_IS_DEMO &&
         <Item
           type={isPc ? 'row' : 'col'}
           leftContent={<div className="flex flex-col ga-1">

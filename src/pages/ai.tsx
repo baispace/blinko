@@ -1,4 +1,4 @@
-import { Button, Card } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { useRef, useState, useEffect } from 'react';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@iconify/react';
@@ -15,7 +15,7 @@ import { UserStore } from '@/store/user';
 import { useTranslation } from 'react-i18next';
 import { BaseStore } from '@/store/baseStore';
 import i18n from '@/lib/i18n';
-
+import { useSwiper } from '@/lib/hooks';
 const AIPage = observer(() => {
   const [prompt, setPrompt] = useState('');
   const isPc = useMediaQuery('(min-width: 768px)');
@@ -26,7 +26,7 @@ const AIPage = observer(() => {
   const InputBoxRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const [inputHeight, setInputHeight] = useState(0);
-
+  const isVisible = useSwiper();
   useEffect(() => {
     if (!InputBoxRef.current) return;
 
@@ -79,7 +79,11 @@ const AIPage = observer(() => {
       textColor={theme.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
     >
 
-      <div className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[20%]'} w-full gap-4 relative h-[calc(100vh_-_140px)] md:h-[calc(100vh_-_80px)]`}>
+      <div
+        style={{
+          height: `calc(100vh - ${!isVisible ? '70px' : '140px'})`
+        }}
+        className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[10vh] md:pt-[20vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
         {!aiStore.isChatting ? (
           <div className="flex justify-center w-full">
             <motion.div

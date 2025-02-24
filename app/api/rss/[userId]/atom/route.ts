@@ -3,14 +3,14 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
 ) {
   const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
   const rows = searchParams.get('row') ? parseInt(searchParams.get('row')!) : 20;
   const origin = request.headers.get('origin') || request.headers.get('host') || 'http://localhost:1111';
   const fullOrigin = origin.startsWith('http') ? origin : `http://${origin}`;
-  const feed = await generateFeed(Number(params.userId), fullOrigin, rows);
-  
+  const feed = await generateFeed(Number(userId), fullOrigin, rows);
+
   return new NextResponse(feed.atom1(), {
     headers: {
       'Content-Type': 'application/atom+xml; charset=UTF-8',

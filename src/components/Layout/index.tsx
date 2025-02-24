@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Badge } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { UserStore } from "@/store/user";
@@ -8,7 +8,6 @@ import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { useTheme } from "next-themes";
-import { _ } from "@/lib/lodash";
 import { useTranslation } from "react-i18next";
 import { BaseStore } from "@/store/baseStore";
 import { ScrollArea } from "../Common/ScrollArea";

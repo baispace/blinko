@@ -72,16 +72,18 @@ const AIPage = observer(() => {
     <Watermark
       text={t('content-generated-by-ai')}
       multiline
+      wrapperStyle={{
+        height: '100%'
+      }}
       rotate={-30}
       fontFamily="sans-serif"
       gutter={10}
       textSize={24}
       textColor={theme.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
     >
-
       <div
         style={{
-          height: `calc(100vh - ${!isVisible ? '70px' : '140px'})`
+          height: isPc ? '100%' : `calc(100% - ${!isVisible ? '0px' : '60px'})`
         }}
         className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[10vh] md:pt-[20vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
         {!aiStore.isChatting ? (

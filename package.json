@@ -223,14 +223,14 @@
     "typescript": "^5.1.6"
   },
   "resolutions": {
-    "@langchain/core": "^0.3.13"
+    "@langchain/core": "^0.3.40"
   },
   "overrides": {
-    "@langchain/core": "^0.3.13"
+    "@langchain/core": "^0.3.40"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "^0.3.13",
+      "@langchain/core": "^0.3.40",
       "sharp": "^0.33.5"
     }
   },

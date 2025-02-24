@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@langchain/core': ^0.3.13
+  '@langchain/core': ^0.3.40
   sharp: ^0.33.5
 
 importers:
@@ -79,7 +79,7 @@ importers:
         specifier: ^0.3.6
         version: 0.3.32(mjja7edkhpwksinxys7mdlcnlq)
       '@langchain/core':
-        specifier: ^0.3.13
+        specifier: ^0.3.40
         version: 0.3.40(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2))
       '@langchain/textsplitters':
         specifier: ^0.1.0
@@ -2558,7 +2558,7 @@ packages:
       '@huggingface/transformers': ^3.2.3
       '@ibm-cloud/watsonx-ai': '*'
       '@lancedb/lancedb': ^0.12.0
-      '@langchain/core': ^0.3.13
+      '@langchain/core': ^0.3.40
       '@layerup/layerup-security': ^1.5.12
       '@libsql/client': ^0.14.0
       '@mendable/firecrawl-js': ^1.4.3
@@ -2904,13 +2904,13 @@ packages:
     resolution: {integrity: sha512-UZybJeMd8+UX7Kn47kuFYfqKdBCeBUWNqDtmAr6ZUIMMnlsNIb6MkrEEhGgAEjGCpdT4CU8U/DyyddTz+JayOQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': ^0.3.13
+      '@langchain/core': ^0.3.40
 
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': ^0.3.13
+      '@langchain/core': ^0.3.40
 
   '@libsql/client@0.14.0':
     resolution: {integrity: sha512-/9HEKfn6fwXB5aTEEoMeFh4CtG0ZzbncBb1e++OCdVpgKZ/xyMsIVYXm0w7Pv4RUel803vE6LwniB3PqD72R0Q==}
@@ -2945,7 +2945,6 @@ packages:
 
   '@libsql/linux-arm64-gnu@0.5.0-pre.6':
     resolution: {integrity: sha512-HDQH42ZxzhPMcFdcARV2I7oH7LK/jk2eqhODtIbnVn0kiklHY98F4wk1rbqFIzJljMuzq9HSycJtntUyubpnWg==}
-    cpu: [arm64]
     os: [linux]
 
   '@libsql/linux-arm64-musl@0.4.7':
@@ -8534,7 +8533,7 @@ packages:
       '@langchain/aws': '*'
       '@langchain/cerebras': '*'
       '@langchain/cohere': '*'
-      '@langchain/core': ^0.3.13
+      '@langchain/core': ^0.3.40
       '@langchain/deepseek': '*'
       '@langchain/google-genai': '*'
       '@langchain/google-vertexai': '*'

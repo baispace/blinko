@@ -1,3 +1,10 @@
+## [0.41.6](https://github.com/blinko-space/blinko/compare/v0.41.5...v0.41.6) (2025-02-24)
+
+
+### Bug Fixes
+
+* @mastra/rag@0.1.3 use canvas ([25c7f1f](https://github.com/blinko-space/blinko/commit/25c7f1f68f3abc1e42eeda70e643a84de08d9448))
+
 ## [0.41.5](https://github.com/blinko-space/blinko/compare/v0.41.4...v0.41.5) (2025-02-24)
 
 

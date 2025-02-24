@@ -131,6 +131,7 @@ module.exports = withBundleAnalyzer(withPWA({
     return config;
   },
   outputFileTracing: true,
+  outputFileTracingExcludes: ["**canvas**"],
   reactStrictMode: isProduction? true : false,
   swcMinify: true,
   eslint: {

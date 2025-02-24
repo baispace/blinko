@@ -1,3 +1,10 @@
+## [0.41.7](https://github.com/blinko-space/blinko/compare/v0.41.6...v0.41.7) (2025-02-24)
+
+
+### Bug Fixes
+
+* upgrade Next.js and dependencies to latest versions ([0274e85](https://github.com/blinko-space/blinko/commit/0274e8565dc2ae83a3e25611383ef7bdd1688d82))
+
 ## [0.41.6](https://github.com/blinko-space/blinko/compare/v0.41.5...v0.41.6) (2025-02-24)
 
 

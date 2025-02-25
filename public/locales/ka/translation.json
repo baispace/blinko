@@ -515,7 +515,7 @@
   "conversation-history": "საუბრის ისტორია",
   "new-conversation": "ახალი ჩეთი",
   "knowledge-base-search": "ცოდნის ბაზის ძებნა",
-  "add-tools-to-model": "დიდ მოდელზე ხელ- իմ sasurveliBooloo er chveneba, agaroltu zoglebi modeli ar mkopisaTvis mas. esec sen daabrunebs shenishvnebis.",
+  "add-tools-to-model": "იძიეთ ინტერნეტო (ო) և  (ꞏ) AI-wndeba ´´blinko´´ API-zze",
   "clear-current-content": "გაასუფთაო მოქმედ ში",
   "welcome-to-blinko": "კეთილი მოსვლა, {{name}}",
   "coding": "კოდირება",
@@ -531,5 +531,11 @@
   "check-connect-success": "შემოწმება და კო­­­­- -νекciyиs Success",
   "loading": "ჩატვირთვა",
   "embedding-dimensions": "ჩაშენებუ ზომებি",
-  "embedding-dimensions-description": "თქვენ უნდა განზო-ო, ความผิดพลาดของพวกเขาในการตอบสนองข้อกล่าวหาарам с толькой же уверенностью, как если бы они были истинными."
+  "embedding-dimensions-description": "თქვენ უნდა განზო-ო, ความผิดพลาดของพวกเขาในการตอบสนองข้อกล่าวหาарам с толькой же уверенностью, как если бы они были истинными.",
+  "model": "მოდელი",
+  "ai-tools": "ხელოვნურ ინტელექტ-  (AI - Artificial Intelligence) \nTranslated to Georgian, \"AI Tools\" would be:\n\nAI  (Artificial Intelligence in English abbreviation) - \n\n\"AI Tools\" as a concept or term generally doesn't get translated into Georgian and is often used as-is even in non-English speaking contexts. However, if we were to approximate it using Georgian words for tools related to artificial intelligence, you might say: \n\n\"Ხ.Ი.-s Ხnstrumentebi\"\n\nWhich breaks down to:\n   \n   AI's tools",
+  "tavily-api-key": "ტავილი ძებნო  API  გასაღ (Tavily Dzebna API Gasagz)",
+  "tavily-max-results": "ტავილი მაქ  - (Please note that direct translation may not convey the same meaning or be a proper phrase in Georgian. \"Tavily\" and \"Max\" seem to be proper names, which usually are not translated, and \"Results\" translates to \"rezultatebi\". If you provide context, I can offer a more accurate translation.)",
+  "ai-prompt-writing-content": "დაწერე 200 სიტყვიაн article- and save it in your notes",
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko ვებ კონტენტის ამოღო."
 }

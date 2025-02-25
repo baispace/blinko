@@ -489,7 +489,7 @@
   "conversation-history": "Historique des conversations",
   "new-conversation": "Nouveau Chat",
   "knowledge-base-search": "Recherche dans la base de connaissances",
-  "add-tools-to-model": "L'ajout d'un outil à un grand modèle capable de faire fonctionner Blinko peut échouer si certains grands modèles ne prennent pas en charge l'appel. Vous pouvez maintenant enregistrer des notes.",
+  "add-tools-to-model": "Effectuez une recherche en ligne ou autorisez l'IA à appeler l'API blinko.",
   "clear-current-content": "Effacer le contenu actuel",
   "welcome-to-blinko": "Bienvenue, {{name}}",
   "ai-prompt-writing": "Vous êtes écrivain professionnel, veuillez rédiger un article professionnel sur le sujet fourni par l'utilisateur.",
@@ -505,5 +505,11 @@
   "check-connect-success": "Vérification de la réussite de connexion",
   "loading": "Chargement",
   "embedding-dimensions": "Dimensions d'encastrement",
-  "embedding-dimensions-description": "Vous devez vous assurer que les dimensions du modèle sont correctes et vous devez forcer la reconstruction des index des enregistrements après les modifications."
+  "embedding-dimensions-description": "Vous devez vous assurer que les dimensions du modèle sont correctes et vous devez forcer la reconstruction des index des enregistrements après les modifications.",
+  "model": "Modèle",
+  "ai-tools": "Outils d'IA",
+  "tavily-api-key": "Clé API de recherche Tavily",
+  "tavily-max-results": "Résultats Maximaux de Tavily",
+  "ai-prompt-writing-content": "Rédigez un article de 200 mots et enregistrez-le dans vos notes",
+  "ai-prompt-coding-content": "Extraction du contenu web https://github.com/blinko-space/blinko"
 }

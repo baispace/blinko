@@ -1,4 +1,4 @@
-import { router, authProcedure, superAdminAuthMiddleware, publicProcedure } from '../trpc';
+import { router, authProcedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { GlobalConfig, ZConfigKey, ZConfigSchema, ZUserPerferConfigKey } from '../types';

@@ -4,20 +4,21 @@ import { OpenAIModelProvider } from "./providers/openAI"
 import { getGlobalConfig } from "@/server/routers/config"
 import { OllamaModelProvider } from "./providers/ollama"
 import { AnthropicModelProvider } from "./providers/anthropic"
-import { Agent } from "@mastra/core/agent";
+import { Agent } from "@mastra/core/agent"
 import { createBlinkoTool } from "./tools/createBlinko"
 import { DefaultVectorDB } from "@mastra/core/vector/libsql"
 import { DeepSeekModelProvider } from "./providers/deepseek"
 import dayjs from "dayjs"
-import { createLogger, Mastra } from "@mastra/core";
-import { LanguageModelV1, EmbeddingModelV1 } from "@ai-sdk/provider";
+import { createLogger, Mastra } from "@mastra/core"
+import { LanguageModelV1, EmbeddingModelV1 } from "@ai-sdk/provider"
 import { MarkdownTextSplitter, TokenTextSplitter } from "@langchain/textsplitters"
-import { embed } from "ai";
+import { embed } from "ai"
 import { prisma } from "@/server/prisma"
 import { _ } from "@/lib/lodash"
-import { VECTOR_DB_FILE_PATH } from "@/lib/constant"
 import { GeminiModelProvider } from "./providers/gemini"
 import { GrokModelProvider } from "./providers/grok"
+import { webSearchTool } from "./tools/webSearch"
+import { webExtra } from './tools/webExtra'
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -219,14 +220,21 @@ export class AiModelFactory {
       }
     }, { ttl: 24 * 60 * 60 * 1000 })
   }
-
-  static async BaseChatAgent({ withTools = true }: { withTools?: boolean }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false }: { withTools?: boolean, withOnlineSearch?: boolean }) {
     //globel.model.name cache
     const provider = await AiModelFactory.GetProvider()
     let tools: Record<string, any> = {}
     if (withTools) {
       tools = {
-        tools: { createBlinkoTool }
+        tools: { 
+          createBlinkoTool,
+          webExtra
+        }
+      }
+    }
+    if (withOnlineSearch) {
+      tools = {
+        tools: { ...tools?.tools, webSearchTool }
       }
     }
     const BlinkoAgent = new Agent({
@@ -238,6 +246,7 @@ export class AiModelFactory {
         "3. Help with planning and organizing ideas\n" +
         "4. Assist with content creation and editing\n" +
         "5. Perform basic calculations and reasoning\n\n" +
+        "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
         "Always respond in the user's language.\n" +
         "Maintain a friendly and professional conversational tone.",
       model: provider?.LLM!,

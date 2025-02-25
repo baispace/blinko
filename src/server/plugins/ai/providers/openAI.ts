@@ -1,4 +1,4 @@
-import { createOpenAI, openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { AiBaseModelPrivider } from '.';
 
 
@@ -23,23 +23,6 @@ export class OpenAIModelProvider extends AiBaseModelPrivider {
     try {
       return this.provider.imageModel?.('dall-e-3')
     } catch (error) {
-      throw error
-    }
-  }
-
-  Embeddings() {
-    console.log(this.globalConfig.embeddingApiKey,'embeddingApiKeyxxx')
-    try {
-      if (this.globalConfig.embeddingApiKey) {
-        let overrideProvider = createOpenAI({
-          apiKey: this.globalConfig.embeddingApiKey,
-          baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
-        })
-        return overrideProvider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
-      }
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
-    } catch (error) {
-      console.log(error,'errorxxx')
       throw error
     }
   }

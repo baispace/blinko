@@ -2,9 +2,7 @@ import { router, authProcedure } from '../trpc';
 import { z } from 'zod';
 import { AiService } from '../plugins/ai';
 import { prisma } from '../prisma';
-import { FileService } from '../plugins/files';
 import { TRPCError } from '@trpc/server';
-import { _ } from '@/lib/lodash';
 import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '../plugins/ai/aiModelFactory';
 
@@ -61,19 +59,21 @@ export const aiRouter = router({
     .input(z.object({
       question: z.string(),
       withTools: z.boolean().optional(),
+      withOnline: z.boolean().optional(),
       withRAG: z.boolean().optional(),
       conversations: z.array(z.object({ role: z.string(), content: z.string() })),
       systemPrompt: z.string().optional()
     }))
     .mutation(async function* ({ input, ctx }) {
       try {
-        const { question, conversations, withTools = false, withRAG = true, systemPrompt } = input
+        const { question, conversations, withTools = false, withOnline = false, withRAG = true, systemPrompt } = input
         let _conversations = conversations as CoreMessage[]
         const { result: responseStream, notes } = await AiService.completions({
           question,
           conversations: _conversations,
           ctx,
           withTools,
+          withOnline,
           withRAG,
           systemPrompt
         })

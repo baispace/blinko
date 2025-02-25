@@ -514,7 +514,7 @@
   "conversation-history": "سجل المحادثة",
   "new-conversation": "محادثة جديدة",
   "knowledge-base-search": "بحث في قاعدة المعرفة",
-  "add-tools-to-model": "إضافة أداة إلى نموذج كبير قادر على تشغيل بلينكو قد يفشل إذا لم بعض النماذج الكبيرة تدعم الطلب. يُمكنك الآن حفظ الملاحظات.",
+  "add-tools-to-model": "ابحث عبر الإنترنت أو اسمح للذكاء الاصطناعي بالاتصال بـ API لـ blinko",
   "clear-current-content": "امسح المحتوى الحالي",
   "welcome-to-blinko": "مرحبًا، {{name}}",
   "ai-prompt-writing": "أنت كاتب محترف، يرجى كتابة مقال احترافي حول الموضوع الذي قدمه المستخدم.",
@@ -530,5 +530,11 @@
   "check-connect-success": "تحقق من نجاح الاتصال",
   "loading": "جارِ التحميل",
   "embedding-dimensions": "أبعاد التضمين",
-  "embedding-dimensions-description": "عليك التأكد من أن أبعاد النموذج صحيحة، وتحتاج إلى فرض إعادة بناء سجلات الفهرس بعد إجراء التغييرات."
+  "embedding-dimensions-description": "عليك التأكد من أن أبعاد النموذج صحيحة، وتحتاج إلى فرض إعادة بناء سجلات الفهرس بعد إجراء التغييرات.",
+  "model": "نموذج",
+  "ai-tools": "أدوات الذكاء الاصطناعي",
+  "tavily-api-key": "مفتاح واجهة برمجة تطبيقات البحث في \"تافيلي\"",
+  "tavily-max-results": "نتائج تافيلي ماكس",
+  "ai-prompt-writing-content": "اكتب مقالًا مكونًا من 200 كلمة واحفظه في ملاحظاتك",
+  "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko"
 }

@@ -441,7 +441,7 @@
   "conversation-history": "Konuşma geçmişi",
   "new-conversation": "Yeni Sohbet",
   "knowledge-base-search": "Bilgi tabanı araması",
-  "add-tools-to-model": "Büyük bir modele, Blinko ile çalışabilecek bir araç eklemek, bazı büyük modellerin çağrıyı desteklememesi durumunda başarısız olabilir. Artık notları kaydedebilirsiniz.",
+  "add-tools-to-model": "Çevrimiçi ara veya AI'nın blinko api'sini çağırmasına izin ver",
   "clear-current-content": "Mevcut içeriği temizle",
   "welcome-to-blinko": "Hoş geldin, {{name}}",
   "coding": "Kodlama",
@@ -457,5 +457,11 @@
   "check-connect-success": "Bağlantı Kontrolü Başarılı",
   "loading": "Yükleniyor",
   "embedding-dimensions": "Gömülü Boyutlar",
-  "embedding-dimensions-description": "Model boyutlarının doğru olduğundan emin olmalı ve değişikliklerden sonra dizin kayıtlarının yeniden oluşturulmasını zorlamalısınız."
+  "embedding-dimensions-description": "Model boyutlarının doğru olduğundan emin olmalı ve değişikliklerden sonra dizin kayıtlarının yeniden oluşturulmasını zorlamalısınız.",
+  "model": "Model",
+  "ai-tools": "AI Araçları",
+  "tavily-api-key": "Tavily Arama API Anahtarı",
+  "tavily-max-results": "Tavily Max Sonuçlar",
+  "ai-prompt-writing-content": "200 kelimelik bir makale yazın ve notlarınıza kaydedin.",
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko web içeriğini çıkarıyor"
 }

@@ -18,11 +18,4 @@ export class GrokModelProvider extends AiBaseModelPrivider {
     }
   }
 
-  Embeddings() {
-    try {
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel);
-    } catch (error) {
-      throw error;
-    }
-  }
 }  

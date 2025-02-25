@@ -18,14 +18,6 @@ export class OllamaModelProvider extends AiBaseModelPrivider {
     }
   }
 
-  Embeddings() {
-    try {
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'mxbai-embed-large')
-    } catch (error) {
-      throw error
-    }
-  }
-
   public AudioLoader(audioPath): BufferLoader {
     return null as unknown as BufferLoader;
   }

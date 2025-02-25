@@ -518,7 +518,7 @@
   "conversation-history": "会话历史",
   "new-conversation": "新聊天",
   "knowledge-base-search": "知识库搜索",
-  "add-tools-to-model": "向一个可以操作Blinko的大型模型添加工具可能会失败，如果有些大型模型不支持该调用。你现在可以保存笔记了。",
+  "add-tools-to-model": "在线搜索或允许AI调用blinko api。",
   "clear-current-content": "清除当前内容",
   "welcome-to-blinko": "欢迎您，{{name}}",
   "coding": "编码",
@@ -530,9 +530,15 @@
   "first-char-delay": "首字符延迟",
   "total-tokens": "总代币",
   "check-connect": "核对",
-  "check-connect-error": "连接失败可能会被添加到 /v1 的末尾。",
+  "check-connect-error": "连接失败!",
   "check-connect-success": "检查连接成功",
   "loading": "加载中",
   "embedding-dimensions": "嵌入维度",
-  "embedding-dimensions-description": "您需要确保模型尺寸正确无误，并且在更改后需要强制重建索引记录。"
+  "embedding-dimensions-description": "您需要确保模型尺寸正确无误，并且在更改后需要强制重建索引记录。",
+  "model": "模型",
+  "ai-tools": "AI工具",
+  "tavily-api-key": "Tavily搜索API密钥",
+  "tavily-max-results": "Tavily Max结果",
+  "ai-prompt-writing-content": "撰写一篇200字的文章并将其保存在你的笔记中。",
+  "ai-prompt-coding-content": "提取 https://github.com/blinko-space/blinko 网页内容"
 }

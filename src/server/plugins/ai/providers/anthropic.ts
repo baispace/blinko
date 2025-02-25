@@ -18,13 +18,5 @@ export class AnthropicModelProvider extends AiBaseModelPrivider {
       throw error
     }
   }
-
-  Embeddings() {
-    try {
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
-    } catch (error) {
-      throw error
-    }
-  }
 }
 

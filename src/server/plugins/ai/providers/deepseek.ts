@@ -17,13 +17,5 @@ export class DeepSeekModelProvider extends AiBaseModelPrivider {
       throw error
     }
   }
-
-  Embeddings() {
-    try {
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel)
-    } catch (error) {
-      throw error
-    }
-  }
 }
 

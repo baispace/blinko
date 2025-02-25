@@ -1,7 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Button, Textarea } from "@heroui/react";
+import { Textarea } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 import { motion } from "framer-motion";
@@ -15,6 +13,7 @@ import { PromiseCall } from "@/store/standard/PromiseState";
 import { BlinkoSelectNote } from "../Common/BlinkoSelectNote";
 import i18n from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
+import { AiSetting } from "../BlinkoSettings/AiSetting";
 
 interface AiInputProps {
   mode?: 'card' | 'inline';
@@ -53,8 +52,28 @@ const cardIcons = [
     }
   },
   {
+    tooltip: <>{i18n.t('online-search')}</>,
+    icon: 'hugeicons:global-search',
+    size: 20,
+    containerSize: 30,
+    onClick: () => {
+      RootStore.Get(AiStore).withOnline.save(!RootStore.Get(AiStore).withOnline.value)
+    },
+    classNames: () => {
+      return RootStore.Get(AiStore).withOnline.value
+        ? {
+          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
+          icon: 'text-primary-foreground font-bold'
+        }
+        : {
+          base: 'bg-transparent text-foreground',
+          icon: 'text-foreground'
+        }
+    }
+  },
+  {
     tooltip: <div className="w-[200px]">{i18n.t('add-tools-to-model')}</div>,
-    icon: 'hugeicons:bend-tool',
+    icon: 'pajamas:issue-type-enhancement',
     size: 20,
     containerSize: 30,
     onClick: () => {
@@ -160,6 +179,22 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
             onClick={async () => {
               RootStore.Get(DialogStore).setData({
                 isOpen: true,
+                size: '2xl',
+                onlyContent: true,
+                title: t('settings'),
+                content: <AiSetting />
+              })
+            }}
+            tooltip={t('settings')}
+            icon="hugeicons:settings-03"
+            size={20}
+            containerSize={30}
+          />
+
+          <IconButton
+            onClick={async () => {
+              RootStore.Get(DialogStore).setData({
+                isOpen: true,
                 title: t('conversation-history'),
                 content: <AiConversactionList />
               })
@@ -169,6 +204,8 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
             size={20}
             containerSize={30}
           />
+
+
 
           <div className="text-ignore opacity-50 w-[2px] h-[20px] bg-desc rounded-full"></div>
 

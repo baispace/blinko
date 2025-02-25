@@ -1,5 +1,36 @@
 import { useEffect, useState, useRef } from "react";
 import { helper } from "./helper";
+import { BlinkoStore } from "@/store/blinkoStore";
+import { RootStore } from "@/store";
+
+export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
+  const blinko = RootStore.Get(BlinkoStore);
+
+  const store = RootStore.Local(() => ({
+    value: '',
+    isVisible: false,
+    setValue(newValue: string) {
+      this.value = newValue;
+    },
+    toggleVisibility() {
+      this.isVisible = !this.isVisible;
+    }
+  }));
+
+  useEffect(() => {
+    if (blinko.config.value && blinko.config.value[configKey]) {
+      store.setValue(blinko.config.value[configKey] as string);
+    }
+  }, [blinko.config.value, configKey]);
+
+  return {
+    value: store.value,
+    isVisible: store.isVisible,
+    setValue: store.setValue,
+    toggleVisibility: store.toggleVisibility
+  };
+};
+
 
 export const useSwiper = (threshold = 50) => {
   const [isVisible, setIsVisible] = useState(true);

@@ -425,7 +425,7 @@
   "conversation-history": "Histórico de conversa",
   "new-conversation": "Nova Conversa",
   "knowledge-base-search": "Pesquisa em base de conhecimento",
-  "add-tools-to-model": "Adicionar uma ferramenta a um modelo grande que pode operar o Blinko pode falhar se alguns modelos grandes não suportarem a chamada. Você agora pode salvar anotações.",
+  "add-tools-to-model": "Pesquise online ou permita que a IA chame a API blinko.",
   "clear-current-content": "Limpar conteúdo atual",
   "welcome-to-blinko": "Bem-vindo(a), {{name}}",
   "coding": "Programação",
@@ -441,5 +441,11 @@
   "check-connect-success": "Verificar Sucesso da Conexão",
   "loading": "Carregando",
   "embedding-dimensions": "Dimensões de Incorporação",
-  "embedding-dimensions-description": "Você precisa garantir que as dimensões do modelo estão corretas e precisa forçar a reconstrução dos registros de índice após as alterações."
+  "embedding-dimensions-description": "Você precisa garantir que as dimensões do modelo estão corretas e precisa forçar a reconstrução dos registros de índice após as alterações.",
+  "model": "Modelo",
+  "ai-tools": "Ferramentas de IA",
+  "tavily-api-key": "Chave da API de Pesquisa Tavily",
+  "tavily-max-results": "Resultados Máximos de Tavily",
+  "ai-prompt-writing-content": "Escreva um artigo de 200 palavras e salve-o em suas anotações",
+  "ai-prompt-coding-content": "Extraindo o conteúdo da web https://github.com/blinko-space/blinko"
 }

@@ -1,5 +1,5 @@
-import { Icon } from "@iconify/react"
-import { observer } from "mobx-react-lite"
+import { Icon } from "@iconify/react";
+import { observer } from "mobx-react-lite";
 import { Button } from "@heroui/react";
 import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,8 +55,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
                 key={item.id}
                 size="sm"
                 className="w-fit"
-                onClick={async (e) => {
-                  e.stopPropagation()
+                onPress={async () => {
                   RootStore.Get(DialogStandaloneStore).setData({
                     isOpen: true,
                     onlyContent: true,
@@ -119,7 +118,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           />
         }
         {
-          metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold ml-1 select-none line-clamp-1">
+          !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold ml-1 select-none line-clamp-1">
             {i18n.t('total-tokens')}: {metadata?.usage?.totalTokens} | {i18n.t('first-char-delay')}: {metadata?.fristCharDelay}ms
           </div>
         }
@@ -164,7 +163,6 @@ export const BlinkoChatBox = observer(() => {
                     id={item.id}
                     metadata={item.metadata as AssisantMessageMetadata}
                     content={item.content}
-                  // withoutAnimation={index == (aiStore.currentConversation.value?.messages.length ?? 0) - 1}
                   />
                 )}
               </>

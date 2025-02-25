@@ -43,10 +43,6 @@ const AIPage = observer(() => {
     };
   }, []);
 
-  const handleSubmit = async () => {
-    console.log('提交prompt:', prompt);
-  };
-
   const buttons = [
     {
       label: t('writing'),
@@ -67,6 +63,15 @@ const AIPage = observer(() => {
       prompt: t('ai-prompt-translation', { lang: i18n.language })
     }
   ];
+
+  const suggestionActions = [
+    {
+      prompt: t('ai-prompt-writing-content')
+    },
+    {
+      prompt: t('ai-prompt-coding-content')
+    }
+  ]
 
   return (
     <Watermark
@@ -140,7 +145,7 @@ const AIPage = observer(() => {
                 <div className="flex gap-2 px-4 w-full items-center justify-center">
                   {buttons.map((button, index) => (
                     <Button
-                      onClick={() => {
+                      onPress={() => {
                         aiStore.newRoleChat(button.prompt)
                       }}
                       className='w-fit'
@@ -151,14 +156,39 @@ const AIPage = observer(() => {
                       {button.label}
                     </Button>
                   ))}
-                  <Button isIconOnly variant='light' startContent={<Icon icon="icon-park-outline:more" className='min-w-[20px]' width="20" height="20" />}>
-                  </Button>
+                  <Button isIconOnly variant='light' startContent={<Icon icon="icon-park-outline:more" className='min-w-[20px]' width="20" height="20" />} />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           <AiInput className={aiStore.isChatting ? 'mt-0' : 'mt-2'} />
+
+          <AnimatePresence>
+            {RootStore.Get(AiStore).withTools.value && !aiStore.isChatting && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className='flex gap-2 mt-4 flex-col items-center'
+              >
+                {suggestionActions.map((action, index) => (
+                  <Button
+                    onPress={() => {
+                      aiStore.newChatWithSuggestion(t(action.prompt))
+                    }}
+                    className='w-fit'
+                    key={index}
+                    radius='full'
+                    variant='flat'
+                  >
+                    {t(action.prompt)}
+                  </Button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </motion.div>
       </div>

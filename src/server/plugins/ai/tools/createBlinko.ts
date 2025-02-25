@@ -1,4 +1,4 @@
-import { createCaller, userCaller } from '@/server/routers/_app';
+import { userCaller } from '@/server/routers/_app';
 import { NoteType } from '@/server/types';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';

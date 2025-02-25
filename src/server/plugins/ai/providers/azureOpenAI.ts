@@ -1,4 +1,4 @@
-import { AiBaseModelPrivider } from '.'
+import { AiBaseModelPrivider } from '.';
 import { createAzure } from '@ai-sdk/azure';
 
 export class AzureOpenAIModelProvider extends AiBaseModelPrivider {
@@ -19,11 +19,4 @@ export class AzureOpenAIModelProvider extends AiBaseModelPrivider {
     }
   }
 
-  Embeddings() {
-    try {
-      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'mxbai-embed-large')
-    } catch (error) {
-      throw error
-    }
-  }
 }

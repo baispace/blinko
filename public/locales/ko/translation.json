@@ -495,7 +495,7 @@
   "conversation-history": "대화 기록",
   "new-conversation": "새 채팅",
   "knowledge-base-search": "지식 베이스 검색",
-  "add-tools-to-model": "큰 모델에 Blinko 작동이 가능한 도구를 추가하려 할 때 일부 큰 모델은 호출을 지원하지 않아 실패할 수 있습니다. 이제 메모를 저장할 수 있습니다.",
+  "add-tools-to-model": "온라인으로 검색하거나 AI가 blinko API를 호출하도록 허용하세요.",
   "clear-current-content": "현재 내용 지우기",
   "welcome-to-blinko": "환영합니다, {{name}}",
   "coding": "코딩",
@@ -511,5 +511,11 @@
   "check-connect-success": "연결 확인 성공",
   "loading": "로딩",
   "embedding-dimensions": "임베딩 차원",
-  "embedding-dimensions-description": "모델 치수가 정확한지 확인해야 하며, 변경 사항이 있을 때 색인 기록을 다시 빌드하도록 강제해야 합니다."
+  "embedding-dimensions-description": "모델 치수가 정확한지 확인해야 하며, 변경 사항이 있을 때 색인 기록을 다시 빌드하도록 강제해야 합니다.",
+  "model": "모델",
+  "ai-tools": "AI 도구",
+  "tavily-api-key": "Tavily 검색 API 키",
+  "tavily-max-results": "타빌리 맥스 결과",
+  "ai-prompt-writing-content": "200단어의 기사를 작성하고 메모에 저장하십시오.",
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko 웹 콘텐츠 추출"
 }

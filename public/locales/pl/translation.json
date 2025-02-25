@@ -516,7 +516,7 @@
   "conversation-history": "Historia rozmów",
   "new-conversation": "Nowa Czat",
   "knowledge-base-search": "Wyszukiwanie w bazie wiedzy",
-  "add-tools-to-model": "Dodanie narzędzia do dużego modelu, które może obsługiwać Blinko, może się nie powieść, jeśli niektóre duże modele nie obsługują wywołania. Teraz możesz zapisywać notatki.",
+  "add-tools-to-model": "Wyszukaj w internecie lub pozwól sztucznej inteligencji zadzwonić do API blinko.",
   "clear-current-content": "Wyczyść bieżącą zawartość",
   "welcome-to-blinko": "Witaj, {{name}}",
   "coding": "Kodowanie",
@@ -532,5 +532,11 @@
   "check-connect-success": "Sprawdź powodzenie połączenia",
   "loading": "Ładowanie",
   "embedding-dimensions": "Wymiary osadzenia",
-  "embedding-dimensions-description": "Musisz upewnić się, że wymiary modelu są poprawne i musisz wymusić przebudowanie indeksów rekordów po zmianach."
+  "embedding-dimensions-description": "Musisz upewnić się, że wymiary modelu są poprawne i musisz wymusić przebudowanie indeksów rekordów po zmianach.",
+  "model": "Model",
+  "ai-tools": "Narzędzia SI",
+  "tavily-api-key": "Klucz API do wyszukiwarki Tavily",
+  "tavily-max-results": "Maksymalne Wyniki Tavily",
+  "ai-prompt-writing-content": "Napisz artykuł o długości 200 słów i zapisz go w swoich notatkach.",
+  "ai-prompt-coding-content": "Wyodrębnianie zawartości strony internetowej https://github.com/blinko-space/blinko"
 }

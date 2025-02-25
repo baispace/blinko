@@ -1,5 +1,5 @@
-import { RouterOutput, RouterInput } from "./routers/_app"
-import { z } from "zod"
+import { RouterOutput } from "./routers/_app";
+import { z } from "zod";
 
 export type Note = Partial<NonNullable<RouterOutput['notes']['list'][0]>>
 export type Attachment = NonNullable<Note['attachments']>[0] & { size: any }
@@ -79,6 +79,8 @@ export const ZConfigKey = z.union([
   z.literal('oauth2Providers'),
   z.literal('embeddingApiEndpoint'),
   z.literal('embeddingApiKey'),
+  z.literal('tavilyApiKey'),
+  z.literal('tavilyMaxResult'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -148,6 +150,8 @@ export const ZConfigSchema = z.object({
   embeddingApiEndpoint: z.string().optional(),
   embeddingApiKey: z.string().optional(),
   isHiddenNotification: z.boolean().optional(),
+  tavilyApiKey: z.string().optional(),
+  tavilyMaxResult: z.number().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

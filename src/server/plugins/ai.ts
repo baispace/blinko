@@ -1,4 +1,3 @@
-import { _ } from '@/lib/lodash';
 import "pdf-parse";
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
@@ -12,13 +11,11 @@ import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/uns
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
 import { FileService } from './files';
 import { Context } from '../context';
-import dayjs from 'dayjs';
 import { CreateNotification } from '../routers/notification';
 import { NotificationType } from '@/lib/prismaZodType';
 import { CoreMessage, DefaultVectorDB } from '@mastra/core';
 import { MDocument } from "@mastra/rag";
 import { embed, embedMany } from 'ai';
-import { VECTOR_PATH } from '@/lib/constant';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
@@ -313,7 +310,7 @@ export class AiService {
     return sortedNotes;
   }
 
-  static async completions({ question, conversations, withTools, withRAG = true, systemPrompt, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, systemPrompt?: string, ctx: Context }) {
+  static async completions({ question, conversations, withTools, withRAG = true, withOnline = false, systemPrompt, ctx }: { question: string, conversations: CoreMessage[], withTools?: boolean, withRAG?: boolean, withOnline?: boolean, systemPrompt?: string, ctx: Context }) {
     try {
       console.log('completions')
       conversations.push({
@@ -322,8 +319,7 @@ export class AiService {
       })
       conversations.push({
         role: 'system',
-        content: `Current time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n
-        Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`
+        content: `Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`
       })
       if (systemPrompt) {
         conversations.push({
@@ -339,7 +335,7 @@ export class AiService {
           content: `This is the note content which search from vector database: ${notes.map(i => i.content).join('\n')}`
         })
       }
-      const agent = await AiModelFactory.BaseChatAgent({ withTools })
+      const agent = await AiModelFactory.BaseChatAgent({ withTools, withOnlineSearch: withOnline })
       const result = await agent.stream(conversations)
       return { result, notes }
     } catch (error) {

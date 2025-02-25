@@ -49,6 +49,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/seed.js ./seed.js
 COPY --from=builder /app/resetpassword.js ./resetpassword.js
+COPY --from=builder /app/node_modules/@libsql/linux-arm64-gnu ./node_modules/@libsql/linux-arm64-gnu
 
 ENV NODE_ENV=production \
     PORT=1111

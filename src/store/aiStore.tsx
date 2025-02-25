@@ -49,6 +49,7 @@ export class AiStore implements Store {
   input = '';
   withRAG = new StorageState({ key: 'withRAG', value: true, default: true })
   withTools = new StorageState({ key: 'withTools', value: false, default: false })
+  withOnline = new StorageState({ key: 'withOnline', value: false, default: false })
   referencesNotes: BlinkoItem[] = []
   currentMessageResult: currentMessageResult = {
     id: 0,
@@ -110,11 +111,12 @@ export class AiStore implements Store {
         const res = await streamApi.ai.completions.mutate({
           question: userQuestion, conversations: filteredChatConversation,
           withRAG: this.withRAG.value ?? false,
-          withTools: this.withTools.value ?? false
+          withTools: this.withTools.value ?? false,
+          withOnline: this.withOnline.value?? false,
         }, { signal: this.aiChatabortController.signal })
 
         for await (const item of res) {
-          // console.log(JSON.parse(JSON.stringify(item)))
+          console.log(JSON.parse(JSON.stringify(item)))
           if (item.chunk?.type == 'tool-call') {
             this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`)
           }
@@ -180,6 +182,12 @@ export class AiStore implements Store {
     this.isChatting = false
   }
 
+  newChatWithSuggestion = async (prompt: string) => {
+    this.isChatting = true
+    this.input = prompt
+    this.onInputSubmit()
+  }
+
   newRoleChat = async (prompt: string) => {
     this.isChatting = true
 
@@ -197,6 +205,7 @@ export class AiStore implements Store {
       await this.currentConversation.call()
     }
   }
+
 
 
   modelProviderSelect: { label: string, value: GlobalConfig['aiModelProvider'], icon: React.ReactNode }[] = [
@@ -268,6 +277,30 @@ export class AiStore implements Store {
         value: "llama3.2"
       }
     ],
+    Grok: [
+      {
+        label: "grok-3.5-sonnet",
+        value: "grok-3.5-sonnet"
+      }
+    ],
+    Gemini: [
+      {
+        label: "gemini-1.5-flash",
+        value: "gemini-1.5-flash"
+      }
+    ],
+    DeepSeek: [
+      {
+        label: "deepseek-v3",
+        value: "deepseek-v3"
+      }
+    ],
+    Anthropic: [
+      {
+        label: "claude-3-5-sonnet",
+        value: "claude-3-5-sonnet"
+      }
+    ]
   }
 
   embeddingSelect: Record<string, Array<{ label: string, value: string }>> = {

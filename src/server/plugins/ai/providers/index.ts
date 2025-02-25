@@ -1,12 +1,12 @@
-import { MarkdownTextSplitter, TokenTextSplitter } from "@langchain/textsplitters"
-import path from "path"
-import { GlobalConfig } from "@/server/types"
+import { MarkdownTextSplitter, TokenTextSplitter } from "@langchain/textsplitters";
+import { GlobalConfig } from "@/server/types";
 import { BufferLoader } from "langchain/document_loaders/fs/buffer";
-import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio"
-import { ProviderV1, LanguageModelV1, EmbeddingModelV1 } from '@ai-sdk/provider';
+import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
+import { ProviderV1, LanguageModelV1 } from '@ai-sdk/provider';
 import { DefaultVectorDB } from '@mastra/core/storage';
 import { VECTOR_DB_FILE_PATH } from "@/lib/constant";
 import { AiModelFactory } from "../aiModelFactory";
+import { createOpenAI } from "@ai-sdk/openai";
 
 let vectorStore: DefaultVectorDB
 
@@ -19,7 +19,22 @@ export abstract class AiBaseModelPrivider {
   }
 
   abstract LLM(): LanguageModelV1;
-  abstract Embeddings(): EmbeddingModelV1<string>
+  // abstract Embeddings(): EmbeddingModelV1<string>
+  Embeddings() {
+    try {
+      if (this.globalConfig.embeddingApiKey) {
+        let overrideProvider = createOpenAI({
+          apiKey: this.globalConfig.embeddingApiKey,
+          baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+        })
+        return overrideProvider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
+      }
+      return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
+    } catch (error) {
+      console.log(error,'errorxxx')
+      throw error
+    }
+  }
 
   public MarkdownSplitter(): MarkdownTextSplitter {
     return new MarkdownTextSplitter({

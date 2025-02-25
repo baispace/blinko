@@ -1,3 +1,10 @@
+## [0.41.8](https://github.com/blinko-space/blinko/compare/v0.41.7...v0.41.8) (2025-02-24)
+
+
+### Bug Fixes
+
+* ai style ([c9a4662](https://github.com/blinko-space/blinko/commit/c9a4662d7be557d73a47cc6fc0be83fbf5892891))
+
 ## [0.41.7](https://github.com/blinko-space/blinko/compare/v0.41.6...v0.41.7) (2025-02-24)
 
 

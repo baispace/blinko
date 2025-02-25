@@ -1,3 +1,10 @@
+## [0.41.9](https://github.com/blinko-space/blinko/compare/v0.41.8...v0.41.9) (2025-02-25)
+
+
+### Bug Fixes
+
+* **ai:** integrate webExtra tool for enhanced web interaction ([b6f27f5](https://github.com/blinko-space/blinko/commit/b6f27f5f3fd75a84dfa19cd365e3f78b1ed77fd6))
+
 ## [0.41.8](https://github.com/blinko-space/blinko/compare/v0.41.7...v0.41.8) (2025-02-24)
 
 

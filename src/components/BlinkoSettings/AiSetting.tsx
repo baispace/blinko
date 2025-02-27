@@ -407,7 +407,7 @@ export const AiSetting = observer(() => {
                 onBlur={e => {
                   PromiseCall(api.config.update.mutate({
                     key: 'aiApiKey',
-                    value: store.apiKey
+                    value: store.apiKey.trim()
                   }), { autoAlert: false })
                 }}
                 endContent={
@@ -466,7 +466,7 @@ export const AiSetting = observer(() => {
               onBlur={e => {
                 PromiseCall(api.config.update.mutate({
                   key: 'aiApiEndpoint',
-                  value: store.apiEndPoint
+                  value: store.apiEndPoint.trim()
                 }), { autoAlert: false })
               }}
             />

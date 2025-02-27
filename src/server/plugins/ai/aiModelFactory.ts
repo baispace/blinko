@@ -51,7 +51,6 @@ export class AiModelFactory {
       };
 
     } catch (error) {
-      console.error('delete vector failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'unknown error'
@@ -72,7 +71,7 @@ export class AiModelFactory {
     const filteredResults = result
       .filter(({ score }) => score > embeddingMinScore)
 
-    return (await prisma.notes.findMany({
+    const notes = (await prisma.notes.findMany({
       where: {
         accountId: accountId,
         id: {
@@ -118,6 +117,9 @@ export class AiModelFactory {
         }
       }
     })).map(i => { return { ...i, score: filteredResults.find(t => Number(t.metadata?.id) == i.id)?.score ?? 0 } }) ?? [];
+
+    let aiContext = filteredResults.filter(i => i.metadata?.isAttachment).map(i => i.metadata?.text + '\n') || ''
+    return { notes, aiContext: aiContext }
   }
 
   static async rebuildVectorIndex({ vectorStore, isDelete = false }: { vectorStore: DefaultVectorDB, isDelete?: boolean }) {
@@ -140,14 +142,14 @@ export class AiModelFactory {
       case model.includes('text-embedding-3-large'):
         dimensions = 3072;
         break;
-      case model.includes('cohere/embed-english-v3') || model.includes('bge-m3'):
+      case model.includes('cohere/embed-english-v3') || model.includes('bge-m3') || model.includes('voyage') || model.includes('bge-large'):
         dimensions = 1024;
         break;
       case model.includes('cohere'):
         dimensions = 4096;
         break;
-      case model.includes('bge-large'):
-        dimensions = 1024;
+      case model.includes('voyage-3-lite'):
+        dimensions = 512;
         break;
       case model.includes('bge') || model.includes('bert') || model.includes('bce-embedding-base'):
         dimensions = 768;
@@ -156,7 +158,7 @@ export class AiModelFactory {
         dimensions = 384;
         break;
       default:
-        dimensions = 1536;
+        throw new Error("Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings")
     }
     if (userConfigDimensions != 0 && userConfigDimensions != undefined) {
       dimensions = userConfigDimensions;
@@ -226,7 +228,7 @@ export class AiModelFactory {
     let tools: Record<string, any> = {}
     if (withTools) {
       tools = {
-        tools: { 
+        tools: {
           createBlinkoTool,
           webExtra
         }

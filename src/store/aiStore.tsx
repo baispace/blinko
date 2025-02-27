@@ -112,7 +112,7 @@ export class AiStore implements Store {
           question: userQuestion, conversations: filteredChatConversation,
           withRAG: this.withRAG.value ?? false,
           withTools: this.withTools.value ?? false,
-          withOnline: this.withOnline.value?? false,
+          withOnline: this.withOnline.value ?? false,
         }, { signal: this.aiChatabortController.signal })
 
         for await (const item of res) {
@@ -212,8 +212,8 @@ export class AiStore implements Store {
     {
       label: "OpenAI",
       value: "OpenAI",
-      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
-        <Image className='text-primary' src="/images/openai.svg" width={20} height={20} />
+      icon: <div className='bg-black w-[22x] h-[22px] rounded-full'>
+        <Image src="/images/openai.svg" width={20} height={20} />
       </div>
     },
     {
@@ -251,23 +251,31 @@ export class AiStore implements Store {
 
   ]
 
-  modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string, value: string }>> = {
+  modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string, value: string, maxTokens?: string, supportToolCall?: boolean }>> = {
     OpenAI: [
       {
         label: "gpt-3.5-turbo",
-        value: "gpt-3.5-turbo"
+        value: "gpt-3.5-turbo",
+        maxTokens: '16K',
+        supportToolCall: true
       },
       {
         label: "gpt-4",
-        value: "gpt-4"
+        value: "gpt-4",
+        maxTokens: '8K',
+        supportToolCall: true
       },
       {
         label: "gpt-4o",
-        value: "gpt-4o"
+        value: "gpt-4o",
+        maxTokens: '128K',
+        supportToolCall: true
       },
       {
         label: "gpt-4o-mini",
-        value: "gpt-4o-mini"
+        value: "gpt-4o-mini",
+        maxTokens: '128K',
+        supportToolCall: true
       }
     ],
     AzureOpenAI: [],

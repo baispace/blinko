@@ -62,10 +62,10 @@ async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: s
   }
 }
 
-export const GET = async (req: Request, { params }: any) => {
+export const GET = async (req: Request, { params }) => {
   const { s3ClientInstance, config } = await FileService.getS3Client();
   try {
-    const fullPath = params.filename.join('/');
+    const fullPath = (await params).filename.join('/');
     const url = new URL(req.url);
     const needThumbnail = url.searchParams.get('thumbnail') === 'true';
 
@@ -89,9 +89,14 @@ export const GET = async (req: Request, { params }: any) => {
           ResponseCacheControl: `public, max-age=${CACHE_DURATION}, immutable`,
         });
 
+        console.log('Bucket:', config.s3Bucket);
+        console.log('Key:', decodeURIComponent(fullPath));
+
         const signedUrl = await getSignedUrl(s3ClientInstance, command, {
           expiresIn: MAX_PRESIGNED_URL_EXPIRY,
         });
+
+        console.log('Signed URL:', signedUrl);
 
         return NextResponse.redirect(signedUrl);
       }
@@ -106,6 +111,7 @@ export const GET = async (req: Request, { params }: any) => {
     const signedUrl = await getSignedUrl(s3ClientInstance, command, {
       expiresIn: MAX_PRESIGNED_URL_EXPIRY,
     });
+
 
     return NextResponse.redirect(signedUrl, {
       headers: {

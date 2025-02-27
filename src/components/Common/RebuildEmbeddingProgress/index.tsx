@@ -4,6 +4,7 @@ import { type ProgressResult } from '@/server/plugins/memos'
 import { RootStore } from '@/store'
 import { BlinkoStore } from '@/store/blinkoStore'
 import { DialogStore } from '@/store/module/Dialog'
+import { ToastPlugin } from '@/store/module/Toast/Toast'
 import { Progress } from '@heroui/react'
 import { observer } from 'mobx-react-lite'
 import { useEffect } from 'react'
@@ -27,18 +28,22 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
       return store.status === 'error'
     },
     handleAsyncGenerator: async () => {
-      const asyncGeneratorRes = await streamApi.ai.rebuildingEmbeddings.mutate({ force })
-      for await (const item of asyncGeneratorRes) {
-        store.progress = item.progress?.current ?? 0
-        store.total = item.progress?.total ?? 0
-        store.message.unshift(item)
-        store.status = item.type === 'success' ? 'success' : 'error'
+      try {
+        const asyncGeneratorRes = await streamApi.ai.rebuildingEmbeddings.mutate({ force })
+        for await (const item of asyncGeneratorRes) {
+          store.progress = item.progress?.current ?? 0
+          store.total = item.progress?.total ?? 0
+          store.message.unshift(item)
+          store.status = item.type === 'success' ? 'success' : 'error'
+        }
+        store.message.unshift({
+          type: 'success',
+          content: t('import-done'),
+        })
+        blinko.updateTicker++
+      } catch (err) {
+        RootStore.Get(ToastPlugin).error(err?.message)
       }
-      store.message.unshift({
-        type: 'success',
-        content: t('import-done'),
-      })
-      blinko.updateTicker++
     }
   }))
 

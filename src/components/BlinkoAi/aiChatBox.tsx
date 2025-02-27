@@ -14,6 +14,8 @@ import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 import copy from "copy-to-clipboard";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
+import { BlinkoStore } from "@/store/blinkoStore";
+import { NoteType } from "@/server/types";
 
 const UserMessage = ({ content, time }: { content: string; time: string }) => (
   <motion.div
@@ -42,7 +44,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
     transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
   >
     <div className="max-w-[80%] bg-sencondbackground px-2 py-1 rounded-xl">
-      <MarkdownRender content={content} highlightLastChar={withStreamAnimation} />
+      <MarkdownRender content={content} />
     </div>
     <>
       {
@@ -82,6 +84,12 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           classNames={{
             icon: 'text-yellow-500'
           }}
+          onClick={() => {
+            RootStore.Get(BlinkoStore).upsertNote.call({
+              content: content,
+              type: NoteType.BLINKO,
+            })
+          }}
           size={20}
           containerSize={25}
         />
@@ -91,6 +99,12 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           icon="solar:notes-minimalistic-bold-duotone"
           classNames={{
             icon: 'text-blue-500'
+          }}
+          onClick={() => {
+            RootStore.Get(BlinkoStore).upsertNote.call({
+              content: content,
+              type: NoteType.NOTE
+            })
           }}
           size={20}
           containerSize={25}
@@ -191,7 +205,6 @@ export const BlinkoChatBox = observer(() => {
             ))
           }
 
-          {/* {aiStore.isAnswering && ( */}
           <AiMessage
             key="streaming-message"
             content={aiStore.currentMessageResult.content}
@@ -199,8 +212,6 @@ export const BlinkoChatBox = observer(() => {
             metadata={aiStore.currentMessageResult}
             id={aiStore.currentMessageResult.id}
           />
-          {/* )} */}
-
         </AnimatePresence>
       </div>
     </ScrollArea>

@@ -7,6 +7,7 @@ import { DefaultVectorDB } from '@mastra/core/storage';
 import { VECTOR_DB_FILE_PATH } from "@/lib/constant";
 import { AiModelFactory } from "../aiModelFactory";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createVoyage } from 'voyage-ai-provider';
 
 let vectorStore: DefaultVectorDB
 
@@ -23,15 +24,20 @@ export abstract class AiBaseModelPrivider {
   Embeddings() {
     try {
       if (this.globalConfig.embeddingApiKey) {
-        let overrideProvider = createOpenAI({
+        const config = {
           apiKey: this.globalConfig.embeddingApiKey,
           baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
-        })
-        return overrideProvider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
+        }
+        console.log(this.globalConfig.embeddingModel,'this.globalConfig.embeddingModel')
+        if (this.globalConfig.embeddingModel?.includes('voyage')) {
+          return createVoyage(config).textEmbeddingModel(this.globalConfig.embeddingModel );
+        } else {
+          return createOpenAI(config).textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
+        }
       }
       return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small')
     } catch (error) {
-      console.log(error,'errorxxx')
+      console.log(error, 'ERROR Create Embedding model')
       throw error
     }
   }

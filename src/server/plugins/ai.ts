@@ -105,7 +105,7 @@ export class AiService {
 
       return { ok: true }
     } catch (error) {
-      console.log(error, 'errorxxx')
+      console.log(error, 'embeddingUpsert error')
       return { ok: false, error: error?.message }
     }
   }
@@ -121,14 +121,14 @@ export class AiService {
       const chunks = await doc.chunk();
 
       const { embeddings } = await embedMany({
-        values: chunks.map(chunk => chunk.text),
+        values: chunks.map(chunk => chunk.text + 'Create At: ' + updatedAt?.toISOString() + ' Update At: ' + updatedAt?.toISOString()),
         model: Embeddings,
       });
 
       await VectorStore.upsert(
         'blinko',
         embeddings,
-        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id })),
+        chunks?.map(chunk => ({ text: chunk.text, id, noteId: id, isAttachment: true, updatedAt })),
       );
 
       try {
@@ -327,17 +327,19 @@ export class AiService {
           content: systemPrompt
         })
       }
-      let notes: any[] = []
+      let ragNote: any[] = []
       if (withRAG) {
-        notes = await AiModelFactory.queryVector(question, Number(ctx.id))
+        let { notes, aiContext } = await AiModelFactory.queryVector(question, Number(ctx.id))
+        ragNote = notes
         conversations.push({
           role: 'system',
-          content: `This is the note content which search from vector database: ${notes.map(i => i.content).join('\n')}`
+          content: `This is the note content ${ragNote.map(i => i.content).join('\n')} ${aiContext}`
         })
       }
+      console.log(conversations, 'conversations')
       const agent = await AiModelFactory.BaseChatAgent({ withTools, withOnlineSearch: withOnline })
       const result = await agent.stream(conversations)
-      return { result, notes }
+      return { result, notes: ragNote }
     } catch (error) {
       console.log(error)
       throw new Error(error)

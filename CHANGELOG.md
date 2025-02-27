@@ -1,3 +1,10 @@
+## [0.41.10](https://github.com/blinko-space/blinko/compare/v0.41.9...v0.41.10) (2025-02-27)
+
+
+### Bug Fixes
+
+* **ai:** add Voyage AI embedding support and enhance vector search ([7b4c241](https://github.com/blinko-space/blinko/commit/7b4c241aa329c88f66014a9f306c1d9f7c2a0db6))
+
 ## [0.41.9](https://github.com/blinko-space/blinko/compare/v0.41.8...v0.41.9) (2025-02-25)
 
 

@@ -1,3 +1,10 @@
+## [0.41.11](https://github.com/blinko-space/blinko/compare/v0.41.10...v0.41.11) (2025-02-28)
+
+
+### Bug Fixes
+
+* **ai:** improve embedding dimension handling and Ollama provider configuration ([916034f](https://github.com/blinko-space/blinko/commit/916034fc42a0a9484b35d8fa3b2ca5b43d665696))
+
 ## [0.41.10](https://github.com/blinko-space/blinko/compare/v0.41.9...v0.41.10) (2025-02-27)
 
 

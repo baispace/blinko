@@ -134,7 +134,7 @@ export class AiModelFactory {
     const config = await AiModelFactory.globalConfig()
     const model = config.embeddingModel.toLowerCase();
     let userConfigDimensions = config.embeddingDimensions;
-    let dimensions: number;
+    let dimensions: number = 0;
     switch (true) {
       case model.includes('text-embedding-3-small'):
         dimensions = 1536;
@@ -158,7 +158,9 @@ export class AiModelFactory {
         dimensions = 384;
         break;
       default:
-        throw new Error("Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings")
+        if (userConfigDimensions == 0 || userConfigDimensions == undefined || !userConfigDimensions) {
+          throw new Error("Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings")
+        }
     }
     if (userConfigDimensions != 0 && userConfigDimensions != undefined) {
       dimensions = userConfigDimensions;

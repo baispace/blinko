@@ -6,7 +6,7 @@ export class OllamaModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createOllama({
-      baseURL: this.globalConfig.aiApiEndpoint.trim(),
+      baseURL: this.globalConfig.aiApiEndpoint.trim() || undefined,
     });
   }
 

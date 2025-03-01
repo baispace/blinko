@@ -5,6 +5,7 @@ import { prisma } from '../prisma';
 import { TRPCError } from '@trpc/server';
 import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '../plugins/ai/aiModelFactory';
+import { RebuildEmbeddingJob } from '../plugins/rebuildEmbeddingJob';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -201,14 +202,46 @@ export const aiRouter = router({
       return await AiService.AIComment(input)
     }),
 
+  rebuildEmbeddingStart: authProcedure
+    .input(z.object({
+      force: z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      await RebuildEmbeddingJob.ForceRebuild(input.force ?? true);
+      return { success: true };
+    }),
+
+  rebuildEmbeddingStop: authProcedure
+    .mutation(async () => {
+      await RebuildEmbeddingJob.StopRebuild();
+      return { success: true };
+    }),
+
+  rebuildEmbeddingProgress: authProcedure
+    .query(async () => {
+      const progress = await RebuildEmbeddingJob.GetProgress();
+      return progress || {
+        current: 0,
+        total: 0,
+        percentage: 0,
+        isRunning: false,
+        results: [],
+        lastUpdate: new Date().toISOString()
+      };
+    }),
+
   testConnect: authProcedure
-    .mutation(async function () {
-      const agent = await AiModelFactory.TestConnectAgent()
-      const result = await agent.generate([
-        { role: 'user', content: 'test' }
-      ])
-      if (result) {
-        return true
+    .mutation(async () => {
+      try {
+        const agent = await AiModelFactory.TestConnectAgent();
+        const result = await agent.generate([
+          { role: 'user', content: 'test' }
+        ]);
+        
+        return { success: !!result };
+      } catch (error) {
+        console.error("Connection test failed:", error);
+        throw new Error(`Connection test failed: ${error?.message || "Unknown error"}`);
       }
-    })
+    }),
 })

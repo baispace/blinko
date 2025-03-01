@@ -463,5 +463,8 @@
   "tavily-api-key": "Tavily Arama API Anahtarı",
   "tavily-max-results": "Tavily Max Sonuçlar",
   "ai-prompt-writing-content": "200 kelimelik bir makale yazın ve notlarınıza kaydedin.",
-  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko web içeriğini çıkarıyor"
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko web içeriğini çıkarıyor",
+  "stop-task": "Görevi durdur",
+  "processing": "İşleniyor",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Devam eden bir yeniden yapılandırma görevi var, yeniden başlatmak ister misiniz?"
 }

@@ -495,5 +495,8 @@
   "tavily-api-key": "Tavily Search API キー",
   "tavily-max-results": "タヴィリーマックスリザルト",
   "ai-prompt-writing-content": "200語の記事を書いて、メモに保存してください",
-  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko のWebコンテンツを抽出"
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko のWebコンテンツを抽出",
+  "stop-task": "タスクを停止",
+  "processing": "処理中",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "再構築作業が進行中です、再起動しますか？"
 }

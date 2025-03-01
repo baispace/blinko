@@ -19,7 +19,7 @@ type Memo = {
   nickname: string;
 }
 export type ProgressResult = {
-  type: 'success' | 'skip' | 'error';
+  type: 'success' | 'skip' | 'error' | 'info';
   content?: string;
   error?: unknown;
 }

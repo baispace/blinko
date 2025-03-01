@@ -538,5 +538,8 @@
   "tavily-api-key": "Klucz API do wyszukiwarki Tavily",
   "tavily-max-results": "Maksymalne Wyniki Tavily",
   "ai-prompt-writing-content": "Napisz artykuł o długości 200 słów i zapisz go w swoich notatkach.",
-  "ai-prompt-coding-content": "Wyodrębnianie zawartości strony internetowej https://github.com/blinko-space/blinko"
+  "ai-prompt-coding-content": "Wyodrębnianie zawartości strony internetowej https://github.com/blinko-space/blinko",
+  "stop-task": "Zatrzymaj zadanie",
+  "processing": "Przetwarzanie",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Trwa zadanie przebudowy, czy chcesz zrestartować?"
 }

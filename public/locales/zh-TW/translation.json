@@ -550,5 +550,8 @@
   "tavily-api-key": "Tavily搜尋API密鑰",
   "tavily-max-results": "塔維利最大成果",
   "ai-prompt-writing-content": "撰寫一篇200字的文章並將其儲存在你的筆記中",
-  "ai-prompt-coding-content": "提取https://github.com/blinko-space/blinko 網頁內容"
+  "ai-prompt-coding-content": "提取https://github.com/blinko-space/blinko 網頁內容",
+  "stop-task": "停止任務",
+  "processing": "處理中",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "正在進行重建任務，您要重新啟動嗎？"
 }

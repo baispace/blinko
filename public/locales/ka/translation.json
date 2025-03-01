@@ -537,5 +537,8 @@
   "tavily-api-key": "ტავილი ძებნო  API  გასაღ (Tavily Dzebna API Gasagz)",
   "tavily-max-results": "ტავილი მაქ  - (Please note that direct translation may not convey the same meaning or be a proper phrase in Georgian. \"Tavily\" and \"Max\" seem to be proper names, which usually are not translated, and \"Results\" translates to \"rezultatebi\". If you provide context, I can offer a more accurate translation.)",
   "ai-prompt-writing-content": "დაწერე 200 სიტყვიაн article- and save it in your notes",
-  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko ვებ კონტენტის ამოღო."
+  "ai-prompt-coding-content": "https://github.com/blinko-space/blinko ვებ კონტენტის ამოღო.",
+  "stop-task": "შეწყვიტე დავაлეבа",
+  "processing": "დამუშავება",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "მიმდინარეობს გა‍‍‎‌-‎‌‍​܈äänäörperāէiօnăn, əẗşцeœrsyֆ ‎הwрайt t៚ ë’rēکtar⇋?"
 }

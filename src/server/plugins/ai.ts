@@ -16,11 +16,20 @@ import { NotificationType } from '@/lib/prismaZodType';
 import { CoreMessage, DefaultVectorDB } from '@mastra/core';
 import { MDocument } from "@mastra/rag";
 import { embed, embedMany } from 'ai';
+import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
 
+export function isImage(filePath: string): boolean {
+  if (!filePath) return false;
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+  return imageExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
+}
+
 export class AiService {
+  static isImage = isImage;
+  
   static async loadFileContent(filePath: string): Promise<string> {
     try {
       let loader: BaseDocumentLoader;
@@ -160,97 +169,16 @@ export class AiService {
 
 
   static async *rebuildEmbeddingIndex({ force = false }: { force?: boolean }): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
-    const { VectorStore } = await AiModelFactory.GetProvider()
-    if (force) {
-      await AiModelFactory.rebuildVectorIndex({
-        vectorStore: VectorStore,
-        isDelete: true
-      })
-    }
-    const notes = await prisma.notes.findMany({
-      include: {
-        attachments: true
-      },
-      where: {
-        isRecycle: false
-      }
-    });
-    const total = notes.length;
-    const BATCH_SIZE = 5;
-
-    let current = 0;
-
-    for (let i = 0; i < notes.length; i += BATCH_SIZE) {
-      const noteBatch = notes.slice(i, i + BATCH_SIZE);
-      for (const note of noteBatch) {
-        current++;
-        try {
-          //@ts-ignore
-          if (note.metadata?.isIndexed && !force) {
-            yield {
-              type: 'skip' as const,
-              content: note.content.slice(0, 30),
-              progress: { current, total }
-            };
-            continue;
-          }
-          if (note?.content != '') {
-            const { ok, error } = await AiService.embeddingUpsert({
-              createTime: note.createdAt,
-              updatedAt: note.updatedAt,
-              id: note?.id,
-              content: note?.content,
-              type: 'update' as const
-            });
-            if (ok) {
-              yield {
-                type: 'success' as const,
-                content: note?.content.slice(0, 30) ?? '',
-                progress: { current, total }
-              };
-            } else {
-              yield {
-                type: 'error' as const,
-                content: note?.content.slice(0, 30) ?? '',
-                error,
-                progress: { current, total }
-              };
-            }
-          }
-          if (note?.attachments) {
-            for (const attachment of note.attachments) {
-              const { ok, error } = await AiService.embeddingInsertAttachments({
-                id: note.id,
-                updatedAt: note.updatedAt,
-                filePath: attachment?.path
-              });
-              if (ok) {
-                yield {
-                  type: 'success' as const,
-                  content: decodeURIComponent(attachment?.path),
-                  progress: { current, total }
-                };
-              } else {
-                yield {
-                  type: 'error' as const,
-                  content: decodeURIComponent(attachment?.path),
-                  error,
-                  progress: { current, total }
-                };
-              }
-            }
-          }
-
-        } catch (error) {
-          yield {
-            type: 'error' as const,
-            content: note.content.slice(0, 30),
-            error,
-            progress: { current, total }
-          };
-        }
-      }
-    }
+    // This method is now a wrapper around the RebuildEmbeddingJob
+    // We'll just return a simple message directing to use the job instead
+    yield {
+      type: 'info' as const,
+      content: 'Rebuild embedding index task started - check task progress for details',
+      progress: { current: 0, total: 0 }
+    };
+    
+    // Start the job
+    await RebuildEmbeddingJob.ForceRebuild(force);
   }
 
 

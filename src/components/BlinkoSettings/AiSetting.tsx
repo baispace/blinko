@@ -20,7 +20,7 @@ import { api } from "@/lib/trpc";
 import { AiStore } from "@/store/aiStore";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip } from "./Item";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { ShowRebuildEmbeddingProgressDialog } from "../Common/RebuildEmbeddingProgress";
 import { showTipsDialog } from "../Common/TipsDialog";
@@ -34,6 +34,54 @@ export const AiSetting = observer(() => {
   const ai = RootStore.Get(AiStore)
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
+
+  const [rebuildProgress, setRebuildProgress] = useState<{ percentage: number, isRunning: boolean } | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchRebuildProgress = async () => {
+    try {
+      const data = await api.ai.rebuildEmbeddingProgress.query();
+      if (data) {
+        setRebuildProgress({
+          percentage: data.percentage,
+          isRunning: data.isRunning
+        });
+        
+        if (data.isRunning && !pollingIntervalRef.current) {
+          startPolling();
+        }
+        else if (!data.isRunning && pollingIntervalRef.current) {
+          stopPolling();
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching rebuild progress:", error);
+    }
+  };
+
+  const startPolling = () => {
+    if (!pollingIntervalRef.current) {
+      fetchRebuildProgress();
+      pollingIntervalRef.current = setInterval(() => {
+        fetchRebuildProgress();
+      }, 2000);
+    }
+  };
+
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    fetchRebuildProgress();
+    
+    return () => {
+      stopPolling();
+    };
+  }, []);
 
   const store = RootStore.Local(() => ({
     isVisible: false,
@@ -355,7 +403,7 @@ export const AiSetting = observer(() => {
                   color="foreground"
                   label={'value'}
                   showSteps={true}
-                  maxValue={2.0}
+                  maxValue={1.0}
                   minValue={0.1}
                   defaultValue={0.8}
                   className="w-full"
@@ -453,6 +501,7 @@ export const AiSetting = observer(() => {
           type={isPc ? 'row' : 'col'}
           leftContent={<div className="flex flex-col gap-1">
             <>{t('endpoint')}</>
+            {blinko.config.value?.aiModelProvider == 'Ollama' && <div className="text-desc text-xs">http://127.0.0.1:11434/api</div>}
           </div>}
           rightContent={<div className="flex gap-2 items-center" >
             <Input
@@ -493,24 +542,52 @@ export const AiSetting = observer(() => {
           </div >}
           rightContent={
             <div className="flex w-full ml-auto justify-end gap-2" >
-              <Button color='danger' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onPress={() => {
-                showTipsDialog({
-                  title: t('force-rebuild-embedding-index'),
-                  content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
-                  onConfirm: () => {
-                    ShowRebuildEmbeddingProgressDialog(true)
+              <Button
+                color='danger'
+                startContent={
+                  rebuildProgress?.isRunning
+                    ? <div className="flex items-center gap-1">
+                      <Icon icon="line-md:loading-twotone-loop" width="20" height="20" />
+                      {rebuildProgress.percentage}%
+                    </div>
+                    : <Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />
+                }
+                onPress={() => {
+                  if (rebuildProgress?.isRunning) {
+                    showTipsDialog({
+                      title: t('rebuild-in-progress'),
+                      content: t('there-is-a-rebuild-task-in-progress-do-you-want-to-restart'),
+                      onConfirm: async () => {
+                        await api.ai.rebuildEmbeddingStart.mutate({ force: true });
+                        setRebuildProgress(prev => ({
+                          percentage: 0,
+                          isRunning: true
+                        }));
+                        startPolling();
+                        ShowRebuildEmbeddingProgressDialog(true);
+                      },
+                    });
+                  } else {
+                    showTipsDialog({
+                      title: t('force-rebuild-embedding-index'),
+                      content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
+                      onConfirm: async () => {
+                        await api.ai.rebuildEmbeddingStart.mutate({ force: true });
+                        setRebuildProgress(prev => ({
+                          percentage: 0,
+                          isRunning: true
+                        }));
+                        startPolling();
+                        ShowRebuildEmbeddingProgressDialog(true);
+                      }
+                    });
                   }
-                })
-              }}>{t('force-rebuild')}</Button>
-              <Button color='primary' startContent={<Icon icon="mingcute:refresh-4-ai-line" width="20" height="20" />} onPress={() => {
-                showTipsDialog({
-                  title: t('rebuild-embedding-index'),
-                  content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
-                  onConfirm: () => {
-                    ShowRebuildEmbeddingProgressDialog()
-                  }
-                })
-              }}>{t('rebuild')}</Button>
+                }}
+              >
+                {!!rebuildProgress?.isRunning
+                  ? t('rebuild-in-progress')
+                  : t('force-rebuild')}
+              </Button>
             </div >
           } />
       </CollapsibleCard >

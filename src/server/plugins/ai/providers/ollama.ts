@@ -6,13 +6,14 @@ export class OllamaModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createOllama({
-      baseURL: this.globalConfig.aiApiEndpoint.trim() || undefined,
+      baseURL: !!this.globalConfig.aiApiEndpoint ? this.globalConfig.aiApiEndpoint.trim() : undefined,
     });
   }
 
   LLM() {
     try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'llama2')
+      console.log(this.globalConfig.aiModel)
+      return this.provider.languageModel(this.globalConfig.aiModel ?? 'llama3.2')
     } catch (error) {
       throw error
     }

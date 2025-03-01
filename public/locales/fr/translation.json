@@ -511,5 +511,8 @@
   "tavily-api-key": "Clé API de recherche Tavily",
   "tavily-max-results": "Résultats Maximaux de Tavily",
   "ai-prompt-writing-content": "Rédigez un article de 200 mots et enregistrez-le dans vos notes",
-  "ai-prompt-coding-content": "Extraction du contenu web https://github.com/blinko-space/blinko"
+  "ai-prompt-coding-content": "Extraction du contenu web https://github.com/blinko-space/blinko",
+  "stop-task": "Arrêter la tâche",
+  "processing": "Traitement",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Il y a une tâche de reconstruction en cours, voulez-vous redémarrer ?"
 }

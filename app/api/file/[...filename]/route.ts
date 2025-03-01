@@ -180,7 +180,7 @@ function generateFileHash(filePath: string): string {
   return hashSum.digest('hex');
 }
 
-function isImage(filename: string): boolean {
+export function isImage(filename: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 }

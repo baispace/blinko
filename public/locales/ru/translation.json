@@ -455,5 +455,8 @@
   "tavily-api-key": "Ключ API для поиска Tavily",
   "tavily-max-results": "Результаты Tavily Max",
   "ai-prompt-writing-content": "Напишите статью на 200 слов и сохраните ее в своих заметках.",
-  "ai-prompt-coding-content": "Извлечение веб-содержимого https://github.com/blinko-space/blinko"
+  "ai-prompt-coding-content": "Извлечение веб-содержимого https://github.com/blinko-space/blinko",
+  "stop-task": "Остановить задачу",
+  "processing": "Обработка",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Идет задача по пересборке, хотите перезагрузиться?"
 }

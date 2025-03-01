@@ -151,7 +151,7 @@ export const ZConfigSchema = z.object({
   embeddingApiKey: z.string().optional(),
   isHiddenNotification: z.boolean().optional(),
   tavilyApiKey: z.string().optional(),
-  tavilyMaxResult: z.number().optional(),
+  tavilyMaxResult: z.number().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

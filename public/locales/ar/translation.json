@@ -536,5 +536,8 @@
   "tavily-api-key": "مفتاح واجهة برمجة تطبيقات البحث في \"تافيلي\"",
   "tavily-max-results": "نتائج تافيلي ماكس",
   "ai-prompt-writing-content": "اكتب مقالًا مكونًا من 200 كلمة واحفظه في ملاحظاتك",
-  "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko"
+  "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko",
+  "stop-task": "إيقاف المهمة",
+  "processing": "معالجة",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟"
 }

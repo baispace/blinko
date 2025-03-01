@@ -522,5 +522,8 @@
   "tavily-api-key": "Tavily Search API-Schlüssel",
   "tavily-max-results": "Tavily Max Ergebnisse",
   "ai-prompt-writing-content": "Schreiben Sie einen 200-Wörter-Artikel und speichern Sie ihn in Ihren Notizen.",
-  "ai-prompt-coding-content": "Extrahieren von Webinhalten aus https://github.com/blinko-space/blinko"
+  "ai-prompt-coding-content": "Extrahieren von Webinhalten aus https://github.com/blinko-space/blinko",
+  "stop-task": "Aufgabe beenden",
+  "processing": "Verarbeitung",
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Läuft gerade eine Wiederherstellungsaufgabe, möchten Sie neu starten?"
 }

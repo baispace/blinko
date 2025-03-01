@@ -9,7 +9,7 @@ const MAX_PRESIGNED_URL_EXPIRY = 604800 - (60 * 60 * 24);
 const CACHE_DURATION = MAX_PRESIGNED_URL_EXPIRY;
 const MAX_THUMBNAIL_SIZE = 1024 * 1024; // 1MB
 
-function isImage(filename: string): boolean {
+export function isImage(filename: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 }

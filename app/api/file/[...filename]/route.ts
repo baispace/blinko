@@ -19,7 +19,7 @@ export const GET = async (req: NextRequest, { params }: any) => {
   const searchParams = req.nextUrl.searchParams;
   const needThumbnail = searchParams.get('thumbnail') === 'true';
   const isDownload = searchParams.get('download') === 'true';
- 
+
   if (!fullPath.includes('temp/') && !fullPath.endsWith('.bko')) {
     const myFile = await prisma.attachments.findFirst({
       where: {
@@ -34,7 +34,7 @@ export const GET = async (req: NextRequest, { params }: any) => {
         }
       }
     })
-    
+
     if (myFile && !myFile?.note?.isShare && Number(token?.id) != myFile?.note?.accountId && !myFile?.accountId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -180,7 +180,7 @@ function generateFileHash(filePath: string): string {
   return hashSum.digest('hex');
 }
 
-export function isImage(filename: string): boolean {
+function isImage(filename: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 }

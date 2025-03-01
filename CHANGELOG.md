@@ -1,3 +1,10 @@
+## [0.41.13](https://github.com/blinko-space/blinko/compare/v0.41.12...v0.41.13) (2025-03-01)
+
+
+### Bug Fixes
+
+* Simplify isImage function visibility in file route handlers ([287289f](https://github.com/blinko-space/blinko/commit/287289f03969c8388a5b1914fcaf349128abf7fe))
+
 ## [0.41.12](https://github.com/blinko-space/blinko/compare/v0.41.11...v0.41.12) (2025-03-01)
 
 

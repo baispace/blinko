@@ -1,3 +1,11 @@
+## [0.41.12](https://github.com/blinko-space/blinko/compare/v0.41.11...v0.41.12) (2025-03-01)
+
+
+### Bug Fixes
+
+* **ai:** Enhance embedding rebuild process with real-time progress tracking ([c84c15e](https://github.com/blinko-space/blinko/commit/c84c15e169b587c54623e1e693cfc43f2a633bae))
+* pin vditor to exact version 3.10.8 ([b3f817f](https://github.com/blinko-space/blinko/commit/b3f817f1172a3e2b70edce867b5327d535a60dbe))
+
 ## [0.41.11](https://github.com/blinko-space/blinko/compare/v0.41.10...v0.41.11) (2025-02-28)
 
 

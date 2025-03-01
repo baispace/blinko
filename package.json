@@ -186,7 +186,7 @@
     "unfurl.js": "^6.4.0",
     "usehooks-ts": "^3.1.0",
     "vanilla-tilt": "^1.8.1",
-    "vditor": "^3.10.8",
+    "vditor": "3.10.8",
     "voyage-ai-provider": "^1.0.1",
     "yauzl-promise": "^4.0.0",
     "zod": "^3.23.8",

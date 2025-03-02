@@ -1,3 +1,11 @@
+# [0.42.0](https://github.com/blinko-space/blinko/compare/v0.41.13...v0.42.0) (2025-03-02)
+
+
+### Features
+
+* **ai:** Add support for additional embedding dimensions in AiModelFactory ([9155ea6](https://github.com/blinko-space/blinko/commit/9155ea6e998c6496c6f2a56bdc07fee377cfa7a1))
+* **settings:** Set custom background URL input only for "superadmin" ([dbe8acf](https://github.com/blinko-space/blinko/commit/dbe8acf20267ae978c1f36975143864836ea248a))
+
 ## [0.41.13](https://github.com/blinko-space/blinko/compare/v0.41.12...v0.41.13) (2025-03-01)
 
 

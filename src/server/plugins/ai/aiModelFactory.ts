@@ -157,6 +157,15 @@ export class AiModelFactory {
       case model.includes('all-minilm'):
         dimensions = 384;
         break;
+      case model.includes('mxbai-embed-large'):
+        dimensions = 1024;
+        break;
+      case model.includes('nomic-embed-text'):
+        dimensions = 768;
+        break;
+      case model.includes('bge-large-en'):
+        dimensions = 1024;
+        break;
       default:
         if (userConfigDimensions == 0 || userConfigDimensions == undefined || !userConfigDimensions) {
           throw new Error("Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings")

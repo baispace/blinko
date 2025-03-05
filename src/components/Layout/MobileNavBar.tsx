@@ -24,6 +24,10 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
     return null;
   }
 
+  // Get all visible items for mobile, including those that might be hidden in sidebar
+  // Make sure to include items even if they have hiddenSidebar=true but hiddenMobile=false
+  const mobileItems = base.routerList.filter(i => !i.hiddenMobile);
+
   return (
     <motion.div
       className="h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
@@ -34,7 +38,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
         ease: [0.25, 0.1, 0.25, 1] 
       }}
     >
-      {base.routerList.filter(i => !i.hiddenMobile).map(i => (
+      {mobileItems.map(i => (
         <Link
           className="flex-1"
           key={i.title}
@@ -56,4 +60,4 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
       ))}
     </motion.div>
   );
-}); 
+});

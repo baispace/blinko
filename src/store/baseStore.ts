@@ -48,11 +48,14 @@ export class BaseStore implements Store {
       title: "trash",
       href: '/?path=trash',
       hiddenMobile: true,
+      hiddenSidebar: true,
       icon: 'formkit:trash'
     },
     {
       title: "settings",
       href: '/settings',
+      hiddenSidebar: true,
+      hiddenMobile: true,
       icon: 'lsicon:setting-outline'
     }
   ];
@@ -132,13 +135,24 @@ export class BaseStore implements Store {
         this.currentTitle = 'detail'
       } else if (router.query?.path == 'all') {
         this.currentTitle = t('total')
+      } else if (router.query?.path == 'notes') {
+        this.currentTitle = 'notes'
+      } else if (router.query?.path == 'archived') {
+        this.currentTitle = 'archived'
+      } else if (router.pathname == '/resources') {
+        this.currentTitle = 'resources'
+      } else if (router.query?.path == 'trash') {
+        this.currentTitle = 'trash'
+      } else if (router.pathname == '/') {
+        this.currentTitle = 'blinko'
       } else {
         this.currentTitle = this.currentRouter?.title ?? ''
       }
+      
       if (this.currentRouter?.href != router.pathname) {
         this.currentRouter = this.routerList.find(item => item.href == router.pathname)
       }
-    }, [this.currentRouter, router.pathname])
+    }, [this.currentRouter, router.pathname, router.query])
 
     useEffect(() => {
       this.currentQuery = router.query

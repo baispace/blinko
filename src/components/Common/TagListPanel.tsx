@@ -115,6 +115,7 @@ export const TagListPanel = observer(() => {
           <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) + 6 }} >
             <div className={`${SideBarItem} mb-1 relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : ''}`}
               onClick={async e => {
+                //@ts-ignore
                 base.currentRouter = blinko.allTagRouter
                 await router.push('/?path=all&tagId=' + element.id, undefined, { shallow: true })
                 blinko.forceQuery++

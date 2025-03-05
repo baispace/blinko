@@ -307,7 +307,8 @@ export class AiModelFactory {
     `You are a precision tag classification expert. Rules:
      1. Select 5 most relevant tags from existing list
      2. Create new tags in #category/subcategory format if needed
-     3. Return comma-separated tags only`,
+     3. Return comma-separated tags only
+     4. Must start with #`,
     'BlinkoTag'
   );
 
@@ -316,7 +317,8 @@ export class AiModelFactory {
     `You are an emoji recommendation expert. Rules:
      1. Analyze content theme and emotion
      2. Return 4-10 comma-separated emojis
-     3. Use 💻🔧 for tech content, 😊🎉 for emotional content`,
+     3. Use '💻,🔧' for tech content, '😊,🎉' for emotional content
+     4. Must be separated by comma like '💻,🔧'`,
     'BlinkoEmoji'
   );
 

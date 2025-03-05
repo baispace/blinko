@@ -432,6 +432,11 @@ export class BlinkoStore implements Store {
       if (hasTodo) {
         this.noteListFilterConfig.hasTodo = true
       }
+      if (searchText) {
+        this.searchText = searchText as string;
+      } else {
+        this.searchText = '';
+      }
 
       if (path == 'all') {
         this.noteListFilterConfig.type = -1
@@ -445,7 +450,7 @@ export class BlinkoStore implements Store {
         this.noteListFilterConfig.isRecycle = true
       }
       this.noteList.resetAndCall({})
-    }, [router.isReady, this.forceQuery, router?.query?.path])
+    }, [router.isReady, this.forceQuery, router?.query?.path, router?.query?.searchText])
   }
 
   @observable

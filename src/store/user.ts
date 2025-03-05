@@ -105,7 +105,7 @@ export class UserStore implements User, Store {
         title: string;
         href: string;
         icon: string;
-      },
+      } & any,
       stateFlag: 'isHubInitialized' | 'isUseAIInitialized'
     ) => {
       const savedValue = localStorage.getItem(storageKey);

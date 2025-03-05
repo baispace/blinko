@@ -191,6 +191,7 @@ export const aiRouter = router({
       const { content } = input
       const agent = await AiModelFactory.EmojiAgent()
       const result = await agent.generate("Please select and suggest appropriate emojis for the above content" + content)
+      console.log(result.text)
       return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? [];
     }),
   AIComment: authProcedure

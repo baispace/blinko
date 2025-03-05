@@ -458,5 +458,6 @@
   "ai-prompt-coding-content": "Извлечение веб-содержимого https://github.com/blinko-space/blinko",
   "stop-task": "Остановить задачу",
   "processing": "Обработка",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Идет задача по пересборке, хотите перезагрузиться?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Идет задача по пересборке, хотите перезагрузиться?",
+  "hide-blog-images": "Скрыть изображения блога"
 }

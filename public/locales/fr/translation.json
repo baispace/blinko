@@ -514,5 +514,6 @@
   "ai-prompt-coding-content": "Extraction du contenu web https://github.com/blinko-space/blinko",
   "stop-task": "Arrêter la tâche",
   "processing": "Traitement",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Il y a une tâche de reconstruction en cours, voulez-vous redémarrer ?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Il y a une tâche de reconstruction en cours, voulez-vous redémarrer ?",
+  "hide-blog-images": "Masquer les images du blog"
 }

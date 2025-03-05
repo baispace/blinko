@@ -22,6 +22,7 @@ export type RightClickMenu = {
 
 export type DialogOptions = {
   title: string;
+  size: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "xs" | "3xl" | "4xl" | "5xl" | 'full';
   content: () => HTMLElement;
 }
 
@@ -68,7 +69,8 @@ export class PluginApiStore implements Store {
     RootStore.Get(DialogStandaloneStore).setData({
       isOpen: true,
       title: options.title,
-      content:<PluginRender content={options.content} />,
+      size: options.size as any,
+      content: <PluginRender content={options.content} />,
     });
   }
 

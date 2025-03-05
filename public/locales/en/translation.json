@@ -543,5 +543,6 @@
   "rebuild-in-progress": "Rebuild in progress",
   "processing": "Processing",
   "stop-task": "Stop task",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "There is a rebuild task in progress, do you want to restart?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "There is a rebuild task in progress, do you want to restart?",
+  "hide-blog-images": "Hide blog images"
 }

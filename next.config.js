@@ -67,6 +67,23 @@ module.exports = withBundleAnalyzer(withPWA({
   async headers() {
     return [
       {
+        source: '/api/openapi.json',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          }
+        ]
+      },
+      {
         headers: [
           {
             key: 'Cache-Control',

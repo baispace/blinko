@@ -466,5 +466,6 @@
   "ai-prompt-coding-content": "https://github.com/blinko-space/blinko web içeriğini çıkarıyor",
   "stop-task": "Görevi durdur",
   "processing": "İşleniyor",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Devam eden bir yeniden yapılandırma görevi var, yeniden başlatmak ister misiniz?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Devam eden bir yeniden yapılandırma görevi var, yeniden başlatmak ister misiniz?",
+  "hide-blog-images": "Blog resimlerini gizle"
 }

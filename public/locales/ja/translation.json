@@ -498,5 +498,6 @@
   "ai-prompt-coding-content": "https://github.com/blinko-space/blinko のWebコンテンツを抽出",
   "stop-task": "タスクを停止",
   "processing": "処理中",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "再構築作業が進行中です、再起動しますか？"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "再構築作業が進行中です、再起動しますか？",
+  "hide-blog-images": "ブログ画像を非表示にします"
 }

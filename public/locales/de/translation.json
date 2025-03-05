@@ -525,5 +525,6 @@
   "ai-prompt-coding-content": "Extrahieren von Webinhalten aus https://github.com/blinko-space/blinko",
   "stop-task": "Aufgabe beenden",
   "processing": "Verarbeitung",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Läuft gerade eine Wiederherstellungsaufgabe, möchten Sie neu starten?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Läuft gerade eine Wiederherstellungsaufgabe, möchten Sie neu starten?",
+  "hide-blog-images": "Blogbilder ausblenden"
 }

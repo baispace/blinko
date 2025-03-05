@@ -518,5 +518,6 @@
   "ai-prompt-coding-content": "Extrayendo contenido web de https://github.com/blinko-space/blinko",
   "stop-task": "Detén tarea",
   "processing": "Procesamiento",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Hay una tarea de reconstrucción en progreso, ¿quieres reiniciar?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Hay una tarea de reconstrucción en progreso, ¿quieres reiniciar?",
+  "hide-blog-images": "Ocultar imágenes de blog"
 }

@@ -539,5 +539,6 @@
   "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko",
   "stop-task": "إيقاف المهمة",
   "processing": "معالجة",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟",
+  "hide-blog-images": "إخفاء صور المدونة"
 }

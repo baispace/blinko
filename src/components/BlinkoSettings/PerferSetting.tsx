@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Card, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Select, SelectItem, Switch, Button, Input, Tooltip } from "@heroui/react";
+import { Switch, Input, Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
 import ThemeSwitcher from "../Common/Theme/ThemeSwitcher";
@@ -115,6 +115,20 @@ export const PerferSetting = observer(() => {
         onChange={e => {
           PromiseCall(api.config.update.mutate({
             key: 'isOrderByCreateTime',
+            value: e.target.checked
+          }))
+        }}
+      />} />
+
+    <Item
+      leftContent={<div className="flex flex-col">
+        <div>{t('hide-blog-images')}</div>
+      </div>}
+      rightContent={<Switch
+        isSelected={blinko.config.value?.isHideBlogImages}
+        onChange={e => {
+          PromiseCall(api.config.update.mutate({
+            key: 'isHideBlogImages',
             value: e.target.checked
           }))
         }}

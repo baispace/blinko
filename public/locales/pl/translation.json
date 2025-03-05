@@ -541,5 +541,6 @@
   "ai-prompt-coding-content": "Wyodrębnianie zawartości strony internetowej https://github.com/blinko-space/blinko",
   "stop-task": "Zatrzymaj zadanie",
   "processing": "Przetwarzanie",
-  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Trwa zadanie przebudowy, czy chcesz zrestartować?"
+  "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Trwa zadanie przebudowy, czy chcesz zrestartować?",
+  "hide-blog-images": "Ukryj obrazy na blogu"
 }

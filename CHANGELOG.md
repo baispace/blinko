@@ -1,3 +1,10 @@
+## [0.42.2](https://github.com/blinko-space/blinko/compare/v0.42.1...v0.42.2) (2025-03-05)
+
+
+### Bug Fixes
+
+* ui improve & ai prompt improve ([15c8d74](https://github.com/blinko-space/blinko/commit/15c8d74fdb656c9ddbdf9bb97b4f31ccf470b2b4))
+
 ## [0.42.1](https://github.com/blinko-space/blinko/compare/v0.42.0...v0.42.1) (2025-03-05)
 
 

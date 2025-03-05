@@ -4,15 +4,6 @@ import { prisma } from '../prisma';
 
 export const messageRouter = router({
   create: authProcedure
-    .meta({
-      openapi: {
-        method: 'POST',
-        path: '/v1/message/create',
-        summary: 'Create a new message',
-        protect: true,
-        tags: ['Message']
-      }
-    })
     .input(z.object({
       conversationId: z.number(),
       content: z.string(),
@@ -31,15 +22,6 @@ export const messageRouter = router({
     }),
 
   list: authProcedure
-    .meta({
-      openapi: {
-        method: 'GET',
-        path: '/v1/message/list',
-        summary: 'Get messages by conversation',
-        protect: true,
-        tags: ['Message']
-      }
-    })
     .input(z.object({
       conversationId: z.number(),
       page: z.number().default(1),

@@ -4,15 +4,6 @@ import { prisma } from '../prisma';
 
 export const conversationRouter = router({
   create: authProcedure
-    .meta({
-      openapi: {
-        method: 'POST',
-        path: '/v1/conversation/create',
-        summary: 'Create a new conversation',
-        protect: true,
-        tags: ['Conversation']
-      }
-    })
     .input(z.object({
       title: z.string().optional(),
     }))
@@ -93,15 +84,6 @@ export const conversationRouter = router({
     }),
 
   delete: authProcedure
-    .meta({
-      openapi: {
-        method: 'POST',
-        path: '/v1/conversation/delete',
-        summary: 'Delete a conversation',
-        protect: true,
-        tags: ['Conversation']
-      }
-    })
     .input(z.object({
       id: z.number()
     }))

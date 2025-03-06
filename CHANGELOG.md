@@ -1,3 +1,10 @@
+## [0.42.4](https://github.com/blinko-space/blinko/compare/v0.42.3...v0.42.4) (2025-03-06)
+
+
+### Bug Fixes
+
+* rag ai enhance ([2fa83c7](https://github.com/blinko-space/blinko/commit/2fa83c78354bc3ea0a9a88cb038bad5cdfbedaa4))
+
 ## [0.42.3](https://github.com/blinko-space/blinko/compare/v0.42.2...v0.42.3) (2025-03-06)
 
 

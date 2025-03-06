@@ -451,5 +451,7 @@
   "stop-task": "Interromper tarefa",
   "processing": "Processamento",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Há uma tarefa de reconstrução em andamento, deseja reiniciar?",
-  "hide-blog-images": "Ocultar imagens do blog"
+  "hide-blog-images": "Ocultar imagens do blog",
+  "ai-prompt-translation-content": "Verifique as notas NO Tags nos últimos dois dias e marque -as.",
+  "ai-prompt-delete-content": "Encontre 2 notas arquivadas, resuma e salve -as como novas notas e exclua essas duas notas arquivadas"
 }

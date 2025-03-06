@@ -554,5 +554,7 @@
   "stop-task": "停止任務",
   "processing": "處理中",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "正在進行重建任務，您要重新啟動嗎？",
-  "hide-blog-images": "隱藏博客圖像"
+  "hide-blog-images": "隱藏博客圖像",
+  "ai-prompt-translation-content": "在過去兩天中檢查無標籤筆記並標記它們。",
+  "ai-prompt-delete-content": "查找2個存檔的筆記，總結並保存為新筆記，然後刪除這兩個存檔的筆記"
 }

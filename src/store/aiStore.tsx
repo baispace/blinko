@@ -120,10 +120,7 @@ export class AiStore implements Store {
         for await (const item of res) {
           console.log(JSON.parse(JSON.stringify(item)));
           if (item.chunk?.type == 'tool-call') {
-            this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`);
-          }
-          if (item.chunk?.type == 'tool-result') {
-            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}调用成功!`);
+            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}`);
           }
           if (item.chunk?.type == 'finish') {
             this.currentMessageResult.usage = item?.chunk?.usage;
@@ -182,6 +179,7 @@ export class AiStore implements Store {
     this.input = '';
     this.clearCurrentMessageResult();
     this.isChatting = false;
+    this.currentConversation.call();
   };
 
   newChatWithSuggestion = async (prompt: string) => {

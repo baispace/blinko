@@ -5,7 +5,7 @@ import { getGlobalConfig } from "@/server/routers/config"
 import { OllamaModelProvider } from "./providers/ollama"
 import { AnthropicModelProvider } from "./providers/anthropic"
 import { Agent } from "@mastra/core/agent"
-import { createBlinkoTool } from "./tools/createBlinko"
+import { upsertBlinkoTool } from "./tools/createBlinko"
 import { DefaultVectorDB } from "@mastra/core/vector/libsql"
 import { DeepSeekModelProvider } from "./providers/deepseek"
 import dayjs from "dayjs"
@@ -20,6 +20,9 @@ import { GrokModelProvider } from "./providers/grok"
 import { OpenRouterModelProvider } from "./providers/openRouter"
 import { webSearchTool } from "./tools/webSearch"
 import { webExtra } from './tools/webExtra'
+import { searchBlinkoTool } from "./tools/searchBlinko"
+import { updateBlinkoTool } from "./tools/updateBlinko"
+import { deleteBlinkoTool } from "./tools/deleteBlinko"
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -243,7 +246,10 @@ export class AiModelFactory {
     if (withTools) {
       tools = {
         tools: {
-          createBlinkoTool,
+          upsertBlinkoTool,
+          searchBlinkoTool,
+          updateBlinkoTool,
+          deleteBlinkoTool,
           webExtra
         }
       }
@@ -263,6 +269,7 @@ export class AiModelFactory {
         "4. Assist with content creation and editing\n" +
         "5. Perform basic calculations and reasoning\n\n" +
         "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
+        "7. When using 'search-blinko-tool', The entire content of the note should not be returned unless specifically specified by the user " +
         "Always respond in the user's language.\n" +
         "Maintain a friendly and professional conversational tone.",
       model: provider?.LLM!,

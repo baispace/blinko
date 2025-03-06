@@ -69,6 +69,12 @@ const AIPage = observer(() => {
       prompt: t('ai-prompt-writing-content')
     },
     {
+      prompt: t('ai-prompt-translation-content')
+    },
+    {
+      prompt: t('ai-prompt-delete-content')
+    },
+    {
       prompt: t('ai-prompt-coding-content')
     }
   ]
@@ -175,6 +181,7 @@ const AIPage = observer(() => {
               >
                 {suggestionActions.map((action, index) => (
                   <Button
+                    size={isPc ? 'md' : 'sm'}
                     onPress={() => {
                       aiStore.newChatWithSuggestion(t(action.prompt))
                     }}

@@ -515,5 +515,7 @@
   "stop-task": "Arrêter la tâche",
   "processing": "Traitement",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Il y a une tâche de reconstruction en cours, voulez-vous redémarrer ?",
-  "hide-blog-images": "Masquer les images du blog"
+  "hide-blog-images": "Masquer les images du blog",
+  "ai-prompt-translation-content": "Vérifiez les notes No Tags au cours des deux derniers jours et étiquetez-les.",
+  "ai-prompt-delete-content": "Trouvez 2 notes archivées, résumez-les et économisez en tant que nouvelles notes, et supprimez ces deux notes archivées"
 }

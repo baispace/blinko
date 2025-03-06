@@ -541,5 +541,7 @@
   "stop-task": "შეწყვიტე დავაлეבа",
   "processing": "დამუშავება",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "მიმდინარეობს გა‍‍‎‌-‎‌‍​܈äänäörperāէiօnăn, əẗşцeœrsyֆ ‎הwрайt t៚ ë’rēکtar⇋?",
-  "hide-blog-images": "დამალეთ ბლოგის სურათები"
+  "hide-blog-images": "დამალეთ ბლოგის სურათები",
+  "ai-prompt-translation-content": "ბოლო ორი დღის განმავლობაში შეამოწმეთ No tags შენიშვნები და მიუთითეთ ისინი.",
+  "ai-prompt-delete-content": "იპოვნეთ 2 დაარქივებული ნოტი, შეაჯამეთ და შეინახეთ ისინი, როგორც ახალი ნოტები, და წაშალეთ ეს ორი დაარქივებული ნოტი"
 }

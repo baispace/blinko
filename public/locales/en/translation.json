@@ -544,5 +544,7 @@
   "processing": "Processing",
   "stop-task": "Stop task",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "There is a rebuild task in progress, do you want to restart?",
-  "hide-blog-images": "Hide blog images"
+  "hide-blog-images": "Hide blog images",
+  "ai-prompt-translation-content": "Check the no tags notes in the past two days and tag them.",
+  "ai-prompt-delete-content": "Find 2 archived notes, summarize and save them as new notes, and delete these two archived notes"
 }

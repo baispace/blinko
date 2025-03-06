@@ -542,5 +542,7 @@
   "stop-task": "Zatrzymaj zadanie",
   "processing": "Przetwarzanie",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Trwa zadanie przebudowy, czy chcesz zrestartować?",
-  "hide-blog-images": "Ukryj obrazy na blogu"
+  "hide-blog-images": "Ukryj obrazy na blogu",
+  "ai-prompt-translation-content": "Sprawdź notatki No Tags w ciągu ostatnich dwóch dni i oznacz je.",
+  "ai-prompt-delete-content": "Znajdź 2 zarchiwizowane notatki, podsumuj i zapisz je jako nowe notatki i usuń te dwie zarchiwizowane notatki"
 }

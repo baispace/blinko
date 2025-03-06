@@ -3,13 +3,13 @@ import { NoteType } from '@/server/types';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
-export const createBlinkoTool = createTool({
-  id: 'create-blinko-tool',
+export const upsertBlinkoTool = createTool({
+  id: 'upsert-blinko-tool',
   description: 'you are a blinko assistant,you can use api to create blinko,save to database',
   //@ts-ignore
   inputSchema: z.object({
-    content: z.string(),
-    accountId: z.number()
+    content: z.string().describe("Tag is start with #"),
+    accountId: z.number(),
   }),
   execute: async ({ context }) => {
     console.log(`create note:${context.content}`);

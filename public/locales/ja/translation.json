@@ -499,5 +499,7 @@
   "stop-task": "タスクを停止",
   "processing": "処理中",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "再構築作業が進行中です、再起動しますか？",
-  "hide-blog-images": "ブログ画像を非表示にします"
+  "hide-blog-images": "ブログ画像を非表示にします",
+  "ai-prompt-translation-content": "過去2日間でNOタグノートを確認し、タグを付けます。",
+  "ai-prompt-delete-content": "アーカイブされた2つのメモを見つけ、それらを要約して新しいメモとして保存し、これら2つのアーカイブメモを削除します"
 }

@@ -521,5 +521,7 @@
   "stop-task": "작업 중지",
   "processing": "처리 중",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "진행 중인 재구축 작업이 있습니다, 다시 시작하시겠습니까?",
-  "hide-blog-images": "블로그 이미지를 숨기십시오"
+  "hide-blog-images": "블로그 이미지를 숨기십시오",
+  "ai-prompt-translation-content": "지난 이틀 동안 NO 태그 노트를 확인하고 태그를 붙입니다.",
+  "ai-prompt-delete-content": "보관 된 메모 2 개를 찾고 새 메모로 요약하고 저장 한 다음이 두 개의 보관 된 음표를 삭제하십시오."
 }

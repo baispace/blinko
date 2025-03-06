@@ -544,5 +544,7 @@
   "stop-task": "停止任务",
   "processing": "处理",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "正在进行重建任务，您是否想要重新开始？",
-  "hide-blog-images": "隐藏博客图像"
+  "hide-blog-images": "隐藏博客图像",
+  "ai-prompt-translation-content": "在过去两天中检查无标签笔记并标记它们。",
+  "ai-prompt-delete-content": "查找2个归档的笔记，总结并保存为新笔记，然后删除这两个存档的笔记"
 }

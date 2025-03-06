@@ -1,6 +1,6 @@
 {
   "name": "blinko",
-  "version": "0.42.1",
+  "version": "0.42.3",
   "repository": "https://github.com/blinko-space/blinko.git",
   "private": true,
   "browser": {
@@ -62,9 +62,10 @@
     "@langchain/textsplitters": "^0.1.0",
     "@libsql/client": "^0.14.0",
     "@libsql/linux-arm64-gnu": "0.5.0-pre.6",
-    "@mastra/client-js": "^0.1.1",
-    "@mastra/core": "^0.3.0",
-    "@mastra/rag": "^0.1.3",
+    "@mastra/client-js": "^0.1.6",
+    "@mastra/core": "^0.4.4",
+    "@mastra/rag": "^0.1.7",
+    "@openrouter/ai-sdk-provider": "^0.4.3",
     "@preact/compat": "^18.3.1",
     "@prisma/client": "^5.22.0",
     "@radix-ui/colors": "^3.0.0",

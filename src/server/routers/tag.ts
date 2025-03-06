@@ -169,7 +169,7 @@ export const tagRouter = router({
           where: { id: note.id },
           data: { 
             content: note.content.replace(
-              new RegExp(`#[^\\s]*${tag.name}(/[^\\s]*)?(?=\\s|$)`, 'g'),
+              new RegExp(`#[^\\s]*${tag.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/[^\\s]*)?(?=\\s|$)`, 'g'),
               ''
             ).trim()
           }

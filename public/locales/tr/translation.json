@@ -467,5 +467,7 @@
   "stop-task": "Görevi durdur",
   "processing": "İşleniyor",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Devam eden bir yeniden yapılandırma görevi var, yeniden başlatmak ister misiniz?",
-  "hide-blog-images": "Blog resimlerini gizle"
+  "hide-blog-images": "Blog resimlerini gizle",
+  "ai-prompt-translation-content": "Son iki gün içinde etiket yok notlarını kontrol edin ve etiketleyin.",
+  "ai-prompt-delete-content": "2 arşivlenmiş notu bulun, özetleyin ve yeni notlar olarak kaydedin ve bu iki arşivlenmiş notu silin"
 }

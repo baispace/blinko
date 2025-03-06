@@ -16,6 +16,7 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@/server/types";
+import { ToolUsageChip } from "./ToolComponents";
 
 const UserMessage = ({ content, time }: { content: string; time: string }) => (
   <motion.div
@@ -153,7 +154,7 @@ export const BlinkoChatBox = observer(() => {
   return (
     <ScrollArea
       ref={scrollAreaRef}
-      onBottom={() => { }}
+      onBottom={() => {}}
       className="h-full"
     >
       <div className="flex flex-col p-0 md:p-2 relative h-full w-[95%] md:w-[78%] mx-auto">
@@ -184,25 +185,19 @@ export const BlinkoChatBox = observer(() => {
           }
 
           {
-            aiStore.isAnswering && !aiStore.currentMessageResult.content && !aiStore.currentMessageResult.toolcall.length && (
+            aiStore.isAnswering && !aiStore.currentMessageResult.content && (
               <Icon className="text-desc" icon="eos-icons:three-dots-loading" width="40" height="40" />
             )
           }
 
           {
-            aiStore.isAnswering && aiStore.currentMessageResult.toolcall.map((item, index) => (
-              <motion.div
-                key={index}
-                className="text-desc text-xs font-bold ml-1 select-none line-clamp-1"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
-                viewport={{ once: true, amount: 0.5 }}
-              >
-                {item}
-              </motion.div>
-            ))
+            aiStore.currentMessageResult.toolcall.length > 0 && (
+              <div className="my-2 flex flex-wrap">
+                {aiStore.currentMessageResult.toolcall.map((item, index) => (
+                  <ToolUsageChip key={`active-${item}-${index}`} toolName={item} index={index} />
+                ))}
+              </div>
+            )
           }
 
           <AiMessage

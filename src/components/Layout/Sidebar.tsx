@@ -88,7 +88,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
                   onItemClick?.();
                 }}
               >
-                <div className={`flex items-center gap-2 group ${SideBarItem} ${base.isSideBarActive(router, i) ? '!bg-primary  !text-foreground' : ''}`}>
+                <div className={`flex items-center gap-2 group ${SideBarItem} ${base.isSideBarActive(router, i) ? '!bg-primary  !text-primary-foreground' : ''}`}>
                   <Icon className={`${base.isSidebarCollapsed ? 'mx-auto' : ''}`} icon={i.icon} width="20" height="20" />
                   {!base.isSidebarCollapsed && <span className="transition-all">{t(i.title)}</span>}
                 </div>

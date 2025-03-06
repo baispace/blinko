@@ -1,6 +1,6 @@
-import { BufferLoader } from "langchain/document_loaders/fs/buffer";
-import { createOllama } from 'ollama-ai-provider';
-import { AiBaseModelPrivider } from ".";
+import { BufferLoader } from 'langchain/document_loaders/fs/buffer';
+import { createOllama, OllamaProvider } from 'ollama-ai-provider';
+import { AiBaseModelPrivider } from '.';
 
 export class OllamaModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
@@ -12,10 +12,13 @@ export class OllamaModelProvider extends AiBaseModelPrivider {
 
   LLM() {
     try {
-      console.log(this.globalConfig.aiModel)
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'llama3.2')
+      console.log(this.globalConfig.aiModel);
+      const provider = this.provider as OllamaProvider;
+      return provider.chat(this.globalConfig.aiModel, {
+        simulateStreaming: true,
+      });
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 

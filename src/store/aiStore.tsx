@@ -18,76 +18,76 @@ import { StorageState } from './standard/StorageState';
 import { BlinkoItem } from '@/components/BlinkoCard';
 
 type Chat = {
-  content: string
-  role: 'user' | 'system' | 'assistant',
-  createAt: number
-  relationNotes?: Note[]
-}
+  content: string;
+  role: 'user' | 'system' | 'assistant';
+  createAt: number;
+  relationNotes?: Note[];
+};
 
-type WriteType = 'expand' | 'polish' | 'custom'
+type WriteType = 'expand' | 'polish' | 'custom';
 export type AssisantMessageMetadata = {
-  notes?: BlinkoItem[],
-  usage?: { promptTokens?: number, completionTokens?: number, totalTokens?: number },
-  fristCharDelay?: number,
-}
+  notes?: BlinkoItem[];
+  usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  fristCharDelay?: number;
+};
 export type currentMessageResult = AssisantMessageMetadata & {
-  toolcall: string[],
-  content: string,
-  id?: number
-}
+  toolcall: string[];
+  content: string;
+  id?: number;
+};
 
 export class AiStore implements Store {
   sid = 'AiStore';
   constructor() {
-    makeAutoObservable(this)
+    makeAutoObservable(this);
     eventBus.on('user:signout', () => {
-      this.clear()
-    })
+      this.clear();
+    });
   }
-  isChatting = false
-  isAnswering = false
+  isChatting = false;
+  isAnswering = false;
   input = '';
-  withRAG = new StorageState({ key: 'withRAG', value: true, default: true })
-  withTools = new StorageState({ key: 'withTools', value: false, default: false })
-  withOnline = new StorageState({ key: 'withOnline', value: false, default: false })
-  referencesNotes: BlinkoItem[] = []
+  withRAG = new StorageState({ key: 'withRAG', value: true, default: true });
+  withTools = new StorageState({ key: 'withTools', value: false, default: false });
+  withOnline = new StorageState({ key: 'withOnline', value: false, default: false });
+  referencesNotes: BlinkoItem[] = [];
   currentMessageResult: currentMessageResult = {
     id: 0,
     notes: [],
     usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     fristCharDelay: 0,
     toolcall: [],
-    content: ''
-  }
+    content: '',
+  };
 
-  currentConversationId = 0
+  currentConversationId = 0;
   currentConversation = new PromiseState({
     function: async () => {
-      const res = await api.conversation.detail.query({ id: this.currentConversationId })
-      return res
-    }
-  })
+      const res = await api.conversation.detail.query({ id: this.currentConversationId });
+      return res;
+    },
+  });
 
   conversactionList = new PromisePageState({
     function: async ({ page, size }) => {
       const res = await api.conversation.list.query({
         page,
-        size
-      })
-      return res
-    }
-  })
+        size,
+      });
+      return res;
+    },
+  });
 
   onInputSubmit = async (isRegenerate = false) => {
     try {
-      const userQuestion = _.cloneDeep(this.input)
-      this.clearCurrentMessageResult()
-      this.input = ""
-      this.isChatting = true
-      this.isAnswering = true
+      const userQuestion = _.cloneDeep(this.input);
+      this.clearCurrentMessageResult();
+      this.input = '';
+      this.isChatting = true;
+      this.isAnswering = true;
       if (this.currentConversationId == 0) {
         const conversation = await api.conversation.create.mutate({ title: '' });
-        this.currentConversationId = conversation.id
+        this.currentConversationId = conversation.id;
       }
 
       if (this.currentConversationId != 0) {
@@ -100,41 +100,40 @@ export class AiStore implements Store {
         }
 
         //update conversation message list
-        await this.currentConversation.call()
+        await this.currentConversation.call();
 
-        const filteredChatConversation = [
-          ...(this.currentConversation.value?.messages?.slice(0, -1) || [])
-        ];
-        const startTime = Date.now()
-        let isFristChunk = true
-        this.currentMessageResult.fristCharDelay = 0
-        const res = await streamApi.ai.completions.mutate({
-          question: userQuestion, conversations: filteredChatConversation,
-          withRAG: this.withRAG.value ?? false,
-          withTools: this.withTools.value ?? false,
-          withOnline: this.withOnline.value ?? false,
-        }, { signal: this.aiChatabortController.signal })
+        const filteredChatConversation = [...(this.currentConversation.value?.messages?.slice(0, -1) || [])];
+        const startTime = Date.now();
+        let isFristChunk = true;
+        this.currentMessageResult.fristCharDelay = 0;
+        const res = await streamApi.ai.completions.mutate(
+          {
+            question: userQuestion,
+            conversations: filteredChatConversation,
+            withRAG: this.withRAG.value ?? false,
+            withTools: this.withTools.value ?? false,
+            withOnline: this.withOnline.value ?? false,
+          },
+          { signal: this.aiChatabortController.signal },
+        );
 
         for await (const item of res) {
-          console.log(JSON.parse(JSON.stringify(item)))
+          console.log(JSON.parse(JSON.stringify(item)));
           if (item.chunk?.type == 'tool-call') {
-            this.currentMessageResult.toolcall.push(`正在调用${item.chunk.toolName}...`)
-          }
-          if (item.chunk?.type == 'tool-result') {
-            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}调用成功!`)
+            this.currentMessageResult.toolcall.push(`${item.chunk.toolName}`);
           }
           if (item.chunk?.type == 'finish') {
-            this.currentMessageResult.usage = item?.chunk?.usage
+            this.currentMessageResult.usage = item?.chunk?.usage;
           }
           if (item.notes) {
-            this.currentMessageResult.notes = item.notes
+            this.currentMessageResult.notes = item.notes;
           } else {
             if (item.chunk.type == 'text-delta') {
               if (isFristChunk) {
-                this.currentMessageResult.fristCharDelay = Date.now() - startTime
-                isFristChunk = false
+                this.currentMessageResult.fristCharDelay = Date.now() - startTime;
+                isFristChunk = false;
               }
-              this.currentMessageResult.content += item.chunk.textDelta
+              this.currentMessageResult.content += item.chunk.textDelta;
             }
           }
         }
@@ -145,55 +144,56 @@ export class AiStore implements Store {
           metadata: {
             notes: this.currentMessageResult.notes,
             usage: this.currentMessageResult.usage,
-            fristCharDelay: this.currentMessageResult.fristCharDelay
-          }
-        })
+            fristCharDelay: this.currentMessageResult.fristCharDelay,
+          },
+        });
         if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 4) {
           await api.ai.summarizeConversationTitle.mutate({
             conversations: this.currentConversation.value?.messages ?? [],
-            conversationId: this.currentConversationId
-          })
+            conversationId: this.currentConversationId,
+          });
         }
-        this.currentMessageResult.id = newAssisantMessage.id
+        this.currentMessageResult.id = newAssisantMessage.id;
         // await this.currentConversation.call()
-        this.isAnswering = false
+        this.isAnswering = false;
         // this.clearCurrentMessageResult()
       }
     } catch (error) {
       if (!error.message.includes('interrupted')) {
-        RootStore.Get(ToastPlugin).error(error.message)
+        RootStore.Get(ToastPlugin).error(error.message);
       }
-      this.isAnswering = false
+      this.isAnswering = false;
     }
-  }
+  };
 
   regenerate = async (messageId: number) => {
-    await api.message.delete.mutate({ id: messageId })
-    await this.currentConversation.call()
-    const lastMessage = this.currentConversation.value?.messages[this.currentConversation.value?.messages?.length - 1]
-    this.input = lastMessage?.content ?? ''
-    await this.onInputSubmit(true)
-  }
+    await api.message.delete.mutate({ id: messageId });
+    await this.currentConversation.call();
+    const lastMessage = this.currentConversation.value?.messages[this.currentConversation.value?.messages?.length - 1];
+    this.input = lastMessage?.content ?? '';
+    await this.onInputSubmit(true);
+  };
 
   newChat = () => {
-    this.currentConversationId = 0
-    this.input = ''
-    this.clearCurrentMessageResult()
-    this.isChatting = false
-  }
+    this.currentConversationId = 0;
+    this.input = '';
+    this.clearCurrentMessageResult();
+    this.isChatting = false;
+    this.currentConversation.call();
+  };
 
   newChatWithSuggestion = async (prompt: string) => {
-    this.isChatting = true
-    this.input = prompt
-    this.onInputSubmit()
-  }
+    this.isChatting = true;
+    this.input = prompt;
+    this.onInputSubmit();
+  };
 
   newRoleChat = async (prompt: string) => {
-    this.isChatting = true
+    this.isChatting = true;
 
     if (this.currentConversationId == 0) {
       const conversation = await api.conversation.create.mutate({ title: '' });
-      this.currentConversationId = conversation.id
+      this.currentConversationId = conversation.id;
     }
 
     if (this.currentConversationId != 0) {
@@ -202,264 +202,329 @@ export class AiStore implements Store {
         content: prompt,
         role: 'system',
       });
-      await this.currentConversation.call()
+      await this.currentConversation.call();
     }
-  }
+  };
 
+  modelProviderSelect: { label: string; value: GlobalConfig['aiModelProvider']; icon: React.ReactNode }[] = [
+    {
+      label: 'OpenAI',
+      value: 'OpenAI',
+      icon: (
+        <div className="bg-black w-[22x] h-[22px] rounded-full">
+          <Image src="/images/openai.svg" width={20} height={20} />
+        </div>
+      ),
+    },
+    {
+      label: 'AzureOpenAI',
+      value: 'AzureOpenAI',
+      icon: <Image src="/images/azure.png" width={20} height={20} />,
+    },
+    {
+      label: 'Ollama',
+      value: 'Ollama',
+      icon: <Image src="/images/ollama.png" width={20} height={20} />,
+    },
+    {
+      label: 'Grok',
+      value: 'Grok',
+      icon: (
+        <div className="bg-white w-[20x] h-[20px] rounded-full">
+          <Image src="/images/grok.svg" width={20} height={20} />
+        </div>
+      ),
+    },
+    {
+      label: 'Gemini',
+      value: 'Gemini',
+      icon: <Image src="/images/google.png" width={20} height={20} />,
+    },
+    {
+      label: 'DeepSeek',
+      value: 'DeepSeek',
+      icon: <Image src="/images/deepseek.svg" width={20} height={20} />,
+    },
+    {
+      label: 'Anthropic',
+      value: 'Anthropic',
+      icon: (
+        <div className="bg-white w-[20x] h-[20px] rounded-full">
+          <Image src="/images/anthropic.png" width={18} height={18} />
+        </div>
+      ),
+    },
+    {
+      label: 'OpenRouter',
+      value: 'OpenRouter',
+      icon: (
+        <div className="bg-white w-[20x] h-[20px] rounded-full">
+          <Image src="/images/openrouter.svg" width={18} height={18} />
+        </div>
+      ),
+    },
+  ];
 
-
-  modelProviderSelect: { label: string, value: GlobalConfig['aiModelProvider'], icon: React.ReactNode }[] = [
-    {
-      label: "OpenAI",
-      value: "OpenAI",
-      icon: <div className='bg-black w-[22x] h-[22px] rounded-full'>
-        <Image src="/images/openai.svg" width={20} height={20} />
-      </div>
-    },
-    {
-      label: "AzureOpenAI",
-      value: "AzureOpenAI",
-      icon: <Image src="/images/azure.png" width={20} height={20} />
-    },
-    {
-      label: "Ollama",
-      value: "Ollama",
-      icon: <Image src="/images/ollama.png" width={20} height={20} />
-    },
-    {
-      label: "Grok",
-      value: "Grok",
-      icon: <div className='bg-white w-[20x] h-[20px] rounded-full'>
-        <Image src="/images/grok.svg" width={20} height={20} />
-      </div>
-    },
-    {
-      label: "Gemini",
-      value: "Gemini",
-      icon: <Image src="/images/google.png" width={20} height={20} />
-    },
-    {
-      label: "DeepSeek",
-      value: "DeepSeek",
-      icon: <Image src="/images/deepseek.svg" width={20} height={20} />
-    },
-    {
-      label: "Anthropic",
-      value: "Anthropic",
-      icon: <Image src="/images/anthropic.svg" width={20} height={20} />
-    },
-
-  ]
-
-  modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string, value: string, maxTokens?: string, supportToolCall?: boolean }>> = {
+  modelSelect: Record<GlobalConfig['aiModelProvider'], Array<{ label: string; value: string; maxTokens?: string; supportToolCall?: boolean }>> = {
     OpenAI: [
       {
-        label: "gpt-3.5-turbo",
-        value: "gpt-3.5-turbo",
+        label: 'gpt-3.5-turbo',
+        value: 'gpt-3.5-turbo',
         maxTokens: '16K',
-        supportToolCall: true
+        supportToolCall: true,
       },
       {
-        label: "gpt-4",
-        value: "gpt-4",
+        label: 'gpt-4',
+        value: 'gpt-4',
         maxTokens: '8K',
-        supportToolCall: true
+        supportToolCall: true,
       },
       {
-        label: "gpt-4o",
-        value: "gpt-4o",
+        label: 'gpt-4o',
+        value: 'gpt-4o',
         maxTokens: '128K',
-        supportToolCall: true
+        supportToolCall: true,
       },
       {
-        label: "gpt-4o-mini",
-        value: "gpt-4o-mini",
+        label: 'gpt-4o-mini',
+        value: 'gpt-4o-mini',
         maxTokens: '128K',
-        supportToolCall: true
-      }
+        supportToolCall: true,
+      },
+    ],
+    OpenRouter: [
+      {
+        label: 'openai/gpt-3.5-turbo',
+        value: 'openai/gpt-3.5-turbo',
+        maxTokens: '16K',
+        supportToolCall: true,
+      },
+      {
+        label: 'openai/gpt-4',
+        value: 'openai/gpt-4',
+        maxTokens: '8K',
+        supportToolCall: true,
+      },
+      {
+        label: 'openai/gpt-4o',
+        value: 'openai/gpt-4o',
+        maxTokens: '128K',
+        supportToolCall: true,
+      },
+      {
+        label: 'anthropic/claude-3-5-sonnet',
+        value: 'anthropic/claude-3-5-sonnet',
+        maxTokens: '200K',
+        supportToolCall: true,
+      },
+      {
+        label: 'anthropic/claude-3-opus',
+        value: 'anthropic/claude-3-opus',
+        maxTokens: '200K',
+        supportToolCall: true,
+      },
     ],
     AzureOpenAI: [],
     Ollama: [
       {
-        label: "llama3.2",
-        value: "llama3.2"
-      }
+        label: 'llama3.2',
+        value: 'llama3.2',
+      },
     ],
     Grok: [
       {
-        label: "grok-3.5-sonnet",
-        value: "grok-3.5-sonnet"
-      }
+        label: 'grok-3.5-sonnet',
+        value: 'grok-3.5-sonnet',
+      },
     ],
     Gemini: [
       {
-        label: "gemini-1.5-flash",
-        value: "gemini-1.5-flash"
-      }
+        label: 'gemini-1.5-flash',
+        value: 'gemini-1.5-flash',
+      },
     ],
     DeepSeek: [
       {
-        label: "deepseek-v3",
-        value: "deepseek-v3"
-      }
+        label: 'deepseek-v3',
+        value: 'deepseek-v3',
+      },
     ],
     Anthropic: [
       {
-        label: "claude-3-5-sonnet",
-        value: "claude-3-5-sonnet"
-      }
-    ]
-  }
+        label: 'claude-3-5-sonnet',
+        value: 'claude-3-5-sonnet',
+      },
+    ],
+  };
 
-  embeddingSelect: Record<string, Array<{ label: string, value: string }>> = {
+  embeddingSelect: Record<string, Array<{ label: string; value: string }>> = {
     OpenAI: [
       {
-        label: "text-embedding-3-small",
-        value: "text-embedding-3-small"
+        label: 'text-embedding-3-small',
+        value: 'text-embedding-3-small',
       },
       {
-        label: "text-embedding-3-large",
-        value: "text-embedding-3-large"
+        label: 'text-embedding-3-large',
+        value: 'text-embedding-3-large',
       },
       {
-        label: "text-embedding-ada-002",
-        value: "text-embedding-ada-002"
-      }
+        label: 'text-embedding-ada-002',
+        value: 'text-embedding-ada-002',
+      },
     ],
     AzureOpenAI: [],
     Ollama: [
       {
-        label: "mxbai-embed-large",
-        value: "mxbai-embed-large"
+        label: 'mxbai-embed-large',
+        value: 'mxbai-embed-large',
       },
       {
-        label: "nomic-embed-text",
-        value: "nomic-embed-text"
+        label: 'nomic-embed-text',
+        value: 'nomic-embed-text',
       },
       {
-        label: "bge-large-en",
-        value: "bge-large-en"
-      }
-    ]
-  }
+        label: 'bge-large-en',
+        value: 'bge-large-en',
+      },
+    ],
+  };
 
   modelSelectUILabel = {
     OpenAI: {
       modelTitle: i18n.t('ai-model'),
       modelTooltip: i18n.t('ai-model-tooltip'),
       endpointTitle: i18n.t('api-endpoint'),
-      endpointTooltip: i18n.t('must-start-with-http-s-or-use-api-openai-as-default')
+      endpointTooltip: i18n.t('must-start-with-http-s-or-use-api-openai-as-default'),
+    },
+    OpenRouter: {
+      modelTitle: i18n.t('ai-model'),
+      modelTooltip: i18n.t('openrouter-ai-model-tooltip'),
+      endpointTitle: i18n.t('api-endpoint'),
+      endpointTooltip: i18n.t('openrouter-endpoint-is-https-openrouter-ai-api-v1'),
     },
     AzureOpenAI: {
       modelTitle: i18n.t('user-custom-azureopenai-api-deployment'),
       modelTooltip: i18n.t('user-custom-azureopenai-api-deployment-tooltip'),
       endpointTitle: i18n.t('user-custom-azureopenai-api-instance'),
-      endpointTooltip: i18n.t('your-azure-openai-instance-name') //Your Azure OpenAI instance name
+      endpointTooltip: i18n.t('your-azure-openai-instance-name'), //Your Azure OpenAI instance name
     },
     Ollama: {
       modelTitle: i18n.t('ai-model'),
       modelTooltip: i18n.t('ollama-ai-model-tooltip'),
       endpointTitle: i18n.t('api-endpoint'),
-      endpointTooltip: i18n.t('ollama-default-endpoint-is-http-localhost-11434')//Ollama default endpoint is http://localhost:11434
-    }
-  }
+      endpointTooltip: i18n.t('ollama-default-endpoint-is-http-localhost-11434'), //Ollama default endpoint is http://localhost:11434
+    },
+  };
 
-  scrollTicker = 0
-  chatHistory = new StorageListState<Chat>({ key: 'chatHistory' })
-  private aiChatabortController = new AbortController()
-  private aiWriteAbortController = new AbortController()
-  writingResponseText = ''
-  isWriting = false
+  scrollTicker = 0;
+  chatHistory = new StorageListState<Chat>({ key: 'chatHistory' });
+  private aiChatabortController = new AbortController();
+  private aiWriteAbortController = new AbortController();
+  writingResponseText = '';
+  isWriting = false;
 
-  writeQuestion = ''
-  currentWriteType: WriteType | undefined = undefined
-  isLoading = false
+  writeQuestion = '';
+  currentWriteType: WriteType | undefined = undefined;
+  isLoading = false;
 
   get blinko() {
-    return RootStore.Get(BlinkoStore)
+    return RootStore.Get(BlinkoStore);
   }
 
-  async writeStream(writeType: "expand" | "polish" | "custom" | undefined, content: string | undefined) {
+  async writeStream(writeType: 'expand' | 'polish' | 'custom' | undefined, content: string | undefined) {
     try {
-      this.currentWriteType = writeType
-      this.isLoading = true
-      this.scrollTicker++
-      this.isWriting = true
-      this.writingResponseText = ''
-      const res = await streamApi.ai.writing.mutate({
-        question: this.writeQuestion,
-        type: writeType,
-        content
-      }, { signal: this.aiWriteAbortController.signal })
+      this.currentWriteType = writeType;
+      this.isLoading = true;
+      this.scrollTicker++;
+      this.isWriting = true;
+      this.writingResponseText = '';
+      const res = await streamApi.ai.writing.mutate(
+        {
+          question: this.writeQuestion,
+          type: writeType,
+          content,
+        },
+        { signal: this.aiWriteAbortController.signal },
+      );
       for await (const item of res) {
         // console.log(item)
         if (item.type == 'text-delta') {
           //@ts-ignore
-          this.writingResponseText += item.textDelta
+          this.writingResponseText += item.textDelta;
         }
-        this.scrollTicker++
+        this.scrollTicker++;
       }
-      this.writeQuestion = ''
-      eventBus.emit('editor:focus')
-      this.isLoading = false
+      this.writeQuestion = '';
+      eventBus.emit('editor:focus');
+      this.isLoading = false;
     } catch (error) {
-      console.log('writeStream error', error)
-      this.isLoading = false
+      console.log('writeStream error', error);
+      this.isLoading = false;
     }
   }
 
   autoTag = new PromiseState({
     function: async (id: number, content: string) => {
       try {
-        RootStore.Get(ToastPlugin).loading(i18n.t('thinking'))
-        const res = await api.ai.autoTag.mutate({ content, tags: this.blinko.tagList?.value?.pathTags ?? [] })
-        RootStore.Get(ToastPlugin).remove()
+        RootStore.Get(ToastPlugin).loading(i18n.t('thinking'));
+        const res = await api.ai.autoTag.mutate({ content, tags: this.blinko.tagList?.value?.pathTags ?? [] });
+        RootStore.Get(ToastPlugin).remove();
         RootStore.Get(DialogStore).setData({
           isOpen: true,
           size: '2xl',
           title: i18n.t('ai-tag'),
-          content: <AiTag tags={res} onSelect={async (e, isInsertBefore) => {
-            let newContent
-            if (isInsertBefore) {
-              newContent = e.join(' ') + ' \n\n' + content
-            } else {
-              newContent = content + ' \n\n' + e.join(' ')
-            }
-            await PromiseCall(this.blinko.upsertNote.call({ id, content: newContent }))
-            RootStore.Get(DialogStore).close()
-          }} />
-        })
-        return res
+          content: (
+            <AiTag
+              tags={res}
+              onSelect={async (e, isInsertBefore) => {
+                let newContent;
+                if (isInsertBefore) {
+                  newContent = e.join(' ') + ' \n\n' + content;
+                } else {
+                  newContent = content + ' \n\n' + e.join(' ');
+                }
+                await PromiseCall(this.blinko.upsertNote.call({ id, content: newContent }));
+                RootStore.Get(DialogStore).close();
+              }}
+            />
+          ),
+        });
+        return res;
       } catch (error) {
-        RootStore.Get(ToastPlugin).remove()
-        RootStore.Get(ToastPlugin).error(error.message)
+        RootStore.Get(ToastPlugin).remove();
+        RootStore.Get(ToastPlugin).error(error.message);
       }
-    }
-  })
+    },
+  });
 
   autoEmoji = new PromiseState({
     function: async (id: number, content: string) => {
       try {
-        RootStore.Get(ToastPlugin).loading(i18n.t('thinking'))
-        const res = await api.ai.autoEmoji.mutate({ content })
-        RootStore.Get(ToastPlugin).remove()
-        console.log(res)
+        RootStore.Get(ToastPlugin).loading(i18n.t('thinking'));
+        const res = await api.ai.autoEmoji.mutate({ content });
+        RootStore.Get(ToastPlugin).remove();
+        console.log(res);
         RootStore.Get(DialogStore).setData({
           isOpen: true,
           size: 'xl',
           title: i18n.t('ai-emoji'),
-          content: <AiEmoji emojis={res} onSelect={async (e) => {
-            await PromiseCall(api.tags.updateTagIcon.mutate({ id, icon: e }))
-            RootStore.Get(DialogStore).close()
-          }} />
-        })
-        return res
+          content: (
+            <AiEmoji
+              emojis={res}
+              onSelect={async (e) => {
+                await PromiseCall(api.tags.updateTagIcon.mutate({ id, icon: e }));
+                RootStore.Get(DialogStore).close();
+              }}
+            />
+          ),
+        });
+        return res;
       } catch (error) {
-        RootStore.Get(ToastPlugin).remove()
-        RootStore.Get(ToastPlugin).error(error.message)
+        RootStore.Get(ToastPlugin).remove();
+        RootStore.Get(ToastPlugin).error(error.message);
       }
-    }
-  })
+    },
+  });
 
   clearCurrentMessageResult = () => {
     this.currentMessageResult = {
@@ -468,34 +533,34 @@ export class AiStore implements Store {
       toolcall: [],
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       fristCharDelay: 0,
-      id: 0
-    }
-  }
+      id: 0,
+    };
+  };
 
   abortAiWrite() {
-    this.aiWriteAbortController.abort()
-    this.aiWriteAbortController = new AbortController()
-    this.isWriting = false
+    this.aiWriteAbortController.abort();
+    this.aiWriteAbortController = new AbortController();
+    this.isWriting = false;
   }
 
   async abortAiChat() {
-    this.aiChatabortController.abort()
-    this.aiChatabortController = new AbortController()
-    this.isLoading = false
-    this.isAnswering = false
+    this.aiChatabortController.abort();
+    this.aiChatabortController = new AbortController();
+    this.isLoading = false;
+    this.isAnswering = false;
     if (this.currentMessageResult.content.trim() != '') {
       await api.message.create.mutate({
         conversationId: this.currentConversationId,
         content: this.currentMessageResult.content,
         role: 'assistant',
-        metadata: this.currentMessageResult.notes
-      })
+        metadata: this.currentMessageResult.notes,
+      });
     }
-    this.clearCurrentMessageResult()
-    await this.currentConversation.call()
+    this.clearCurrentMessageResult();
+    await this.currentConversation.call();
   }
 
   private clear() {
-    this.chatHistory.clear()
+    this.chatHistory.clear();
   }
 }

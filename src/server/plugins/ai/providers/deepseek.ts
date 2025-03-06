@@ -5,8 +5,7 @@ export class DeepSeekModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createDeepSeek({
-      apiKey: this.globalConfig.aiApiKey,
-      baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      apiKey: this.globalConfig.aiApiKey
     });
   }
 

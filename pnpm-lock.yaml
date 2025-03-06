@@ -91,14 +91,17 @@ importers:
         specifier: 0.5.0-pre.6
         version: 0.5.0-pre.6
       '@mastra/client-js':
-        specifier: ^0.1.1
-        version: 0.1.2(encoding@0.1.13)(react@18.3.1)
+        specifier: ^0.1.6
+        version: 0.1.6(encoding@0.1.13)(react@18.3.1)
       '@mastra/core':
-        specifier: ^0.3.0
-        version: 0.3.0(encoding@0.1.13)(react@18.3.1)
+        specifier: ^0.4.4
+        version: 0.4.4(encoding@0.1.13)(react@18.3.1)
       '@mastra/rag':
-        specifier: ^0.1.3
-        version: 0.1.3(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.750.0)(@huggingface/transformers@3.3.3)(ai@4.1.45(react@18.3.1)(zod@3.24.2))(cohere-ai@7.15.4(encoding@0.1.13))(encoding@0.1.13)(gpt-tokenizer@2.8.1)(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2))(pg-query-stream@4.7.1(pg@8.13.3))(pg@8.13.3)(react@18.3.1)(socks@2.8.4)(terser@5.39.0)(tree-sitter@0.22.1)(typescript@5.7.3)(web-tree-sitter@0.24.5)(ws@8.18.1)
+        specifier: ^0.1.7
+        version: 0.1.7(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.750.0)(@huggingface/transformers@3.3.3)(ai@4.1.45(react@18.3.1)(zod@3.24.2))(cohere-ai@7.15.4(encoding@0.1.13))(encoding@0.1.13)(gpt-tokenizer@2.8.1)(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2))(pg-query-stream@4.7.1(pg@8.13.3))(pg@8.13.3)(react@18.3.1)(socks@2.8.4)(terser@5.39.0)(tree-sitter@0.22.1)(typescript@5.7.3)(web-tree-sitter@0.24.5)(ws@8.18.1)
+      '@openrouter/ai-sdk-provider':
+        specifier: ^0.4.3
+        version: 0.4.3(zod@3.24.2)
       '@preact/compat':
         specifier: ^18.3.1
         version: 18.3.1(preact@10.26.2)
@@ -607,6 +610,15 @@ packages:
     peerDependencies:
       zod: ^3.0.0
 
+  '@ai-sdk/provider-utils@2.1.10':
+    resolution: {integrity: sha512-4GZ8GHjOFxePFzkl3q42AU0DQOtTQ5w09vmaWUf/pKFXJPizlnzKSUkF0f+VkapIUfDugyMqPMT1ge8XQzVI7Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
   '@ai-sdk/provider-utils@2.1.9':
     resolution: {integrity: sha512-NerKjTuuUUs6glJGaentaXEBH52jRM0pR+cRCzc7aWke/K5jYBD6Frv1JYBpcxS7gnnCqSQZR9woiyS+6jrdjw==}
     engines: {node: '>=18'}
@@ -618,6 +630,10 @@ packages:
 
   '@ai-sdk/provider@1.0.8':
     resolution: {integrity: sha512-f9jSYwKMdXvm44Dmab1vUBnfCDSFfI5rOtvV1W9oKB7WYHR5dGvCC6x68Mk3NUfrdmNoMVHGoh6JT9HCVMlMow==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@1.0.9':
+    resolution: {integrity: sha512-jie6ZJT2ZR0uVOVCDc9R2xCX5I/Dum/wEK28lx21PJx6ZnFAN9EzD2WsPhcDWfCgGx3OAZZ0GyM3CEobXpa9LA==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@1.1.17':
@@ -3250,19 +3266,15 @@ packages:
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
     hasBin: true
 
-  '@mastra/client-js@0.1.2':
-    resolution: {integrity: sha512-DUZitFx4FpV4zR9fu9VZPb+tsdhgy+RerKMXNPL6ZmZa8iatte00r3JylFRXNoFmTci/OLEh3CiYtNWeThdGOg==}
+  '@mastra/client-js@0.1.6':
+    resolution: {integrity: sha512-b1nrwN7OuQ2cDFy09KEQdgESVR93IDcngL4PdAc6p1qbUCs8E3HE42Yos2y9aQluQKr/23JgiyPiT4tr4MxCrQ==}
 
-  '@mastra/core@0.3.0':
-    resolution: {integrity: sha512-Uej+L2cKGar0WCrChke8WH4PrUZaKoc6ON7aXXgi/p4rIM4AceBs7hWXR+IHPk7Sc229ghZa8C/Jbc4YPC0oqg==}
+  '@mastra/core@0.4.4':
+    resolution: {integrity: sha512-FZWOzTFM5I0A/Iwf0U6uIAOO06sbn76ipRivWyJOGzlIGLqOilRNt4kaEc801NoXN/t1jrOKxnhkuwhQX3rkiQ==}
     engines: {node: '>=20'}
 
-  '@mastra/core@0.4.0':
-    resolution: {integrity: sha512-7d/dl5oh/FL/6Uew3E0nQrbiJubAoFux8Q++2XGD1myWgXHxlDPo1uIaw0EMokA60hHnYcUHug4nvvswVPVhMQ==}
-    engines: {node: '>=20'}
-
-  '@mastra/rag@0.1.3':
-    resolution: {integrity: sha512-NQa7IQrx1zckHXIF+2xBdPJje5OoPUOvtqgS3MqbMt3gUP3qUShtnc01U3ctlBL9VBvZVwn5CaDtJ8C0/d+EXA==}
+  '@mastra/rag@0.1.7':
+    resolution: {integrity: sha512-MGp6dEyTg0lU1hQA9/0AagsKPm+wCLKiwQewhZ9vSmkOZFRAbI8QZvzW1OxcF5fB9H5nwsqCrx6YJfSYtNQ3ZA==}
     peerDependencies:
       ai: ^4.0.0
 
@@ -3502,6 +3514,12 @@ packages:
 
   '@octokit/types@13.8.0':
     resolution: {integrity: sha512-x7DjTIbEpEWXK99DMd01QfWy0hd5h4EN+Q7shkdKds3otGQP+oWE/y0A76i1OvH9fygo4ddvNf7ZvF0t78P98A==}
+
+  '@openrouter/ai-sdk-provider@0.4.3':
+    resolution: {integrity: sha512-/MAUj5XFKs6IRZ3WwD8qFyUC6I+yhQ4TsemxvwDk+mbXNiVuJvP5Qc+yJ4fKTfIP4vRiV1sApA/t/La5MgA2FQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
 
   '@opentelemetry/api-logs@0.55.0':
     resolution: {integrity: sha512-3cpa+qI45VHYcA5c0bHM6VHo9gicv3p5mlLHNG3rLyjQU8b7e0st1rWtrUn3JbZ3DwwCfhKop4eQ9UuYlC6Pkg==}
@@ -13092,6 +13110,15 @@ snapshots:
       '@ai-sdk/provider-utils': 2.1.9(zod@3.24.2)
       zod: 3.24.2
 
+  '@ai-sdk/provider-utils@2.1.10(zod@3.24.2)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.9
+      eventsource-parser: 3.0.0
+      nanoid: 3.3.8
+      secure-json-parse: 2.7.0
+    optionalDependencies:
+      zod: 3.24.2
+
   '@ai-sdk/provider-utils@2.1.9(zod@3.24.2)':
     dependencies:
       '@ai-sdk/provider': 1.0.8
@@ -13102,6 +13129,10 @@ snapshots:
       zod: 3.24.2
 
   '@ai-sdk/provider@1.0.8':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@1.0.9':
     dependencies:
       json-schema: 0.4.0
 
@@ -17205,9 +17236,9 @@ snapshots:
       - supports-color
     optional: true
 
-  '@mastra/client-js@0.1.2(encoding@0.1.13)(react@18.3.1)':
+  '@mastra/client-js@0.1.6(encoding@0.1.13)(react@18.3.1)':
     dependencies:
-      '@mastra/core': 0.4.0(encoding@0.1.13)(react@18.3.1)
+      '@mastra/core': 0.4.4(encoding@0.1.13)(react@18.3.1)
       json-schema: 0.4.0
       zod: 3.24.2
       zod-to-json-schema: 3.24.3(zod@3.24.2)
@@ -17219,7 +17250,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@mastra/core@0.3.0(encoding@0.1.13)(react@18.3.1)':
+  '@mastra/core@0.4.4(encoding@0.1.13)(react@18.3.1)':
     dependencies:
       '@libsql/client': 0.14.0
       '@opentelemetry/api': 1.9.0
@@ -17255,47 +17286,11 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@mastra/core@0.4.0(encoding@0.1.13)(react@18.3.1)':
-    dependencies:
-      '@libsql/client': 0.14.0
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/auto-instrumentations-node': 0.53.0(@opentelemetry/api@1.9.0)(encoding@0.1.13)
-      '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-http': 0.55.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/otlp-exporter-base': 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/otlp-transformer': 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 1.30.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-metrics': 1.30.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-node': 0.55.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-node': 1.30.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.30.0
-      ai: 4.1.45(react@18.3.1)(zod@3.24.2)
-      cohere-ai: 7.15.4(encoding@0.1.13)
-      date-fns: 3.6.0
-      dotenv: 16.4.7
-      fastembed: 1.14.1
-      json-schema: 0.4.0
-      node_modules-path: 2.0.8
-      pino: 9.6.0
-      pino-pretty: 13.0.0
-      radash: 12.1.0
-      sift: 17.1.3
-      xstate: 5.19.2
-      zod: 3.24.2
-    transitivePeerDependencies:
-      - aws-crt
-      - bufferutil
-      - encoding
-      - react
-      - supports-color
-      - utf-8-validate
-
-  '@mastra/rag@0.1.3(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.750.0)(@huggingface/transformers@3.3.3)(ai@4.1.45(react@18.3.1)(zod@3.24.2))(cohere-ai@7.15.4(encoding@0.1.13))(encoding@0.1.13)(gpt-tokenizer@2.8.1)(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2))(pg-query-stream@4.7.1(pg@8.13.3))(pg@8.13.3)(react@18.3.1)(socks@2.8.4)(terser@5.39.0)(tree-sitter@0.22.1)(typescript@5.7.3)(web-tree-sitter@0.24.5)(ws@8.18.1)':
+  '@mastra/rag@0.1.7(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.750.0)(@huggingface/transformers@3.3.3)(ai@4.1.45(react@18.3.1)(zod@3.24.2))(cohere-ai@7.15.4(encoding@0.1.13))(encoding@0.1.13)(gpt-tokenizer@2.8.1)(openai@4.85.4(encoding@0.1.13)(ws@8.18.1)(zod@3.24.2))(pg-query-stream@4.7.1(pg@8.13.3))(pg@8.13.3)(react@18.3.1)(socks@2.8.4)(terser@5.39.0)(tree-sitter@0.22.1)(typescript@5.7.3)(web-tree-sitter@0.24.5)(ws@8.18.1)':
     dependencies:
       '@llamaindex/core': 0.4.23(@aws-crypto/sha256-js@5.2.0)(@huggingface/transformers@3.3.3)(gpt-tokenizer@2.8.1)(js-tiktoken@1.0.19)(pathe@2.0.3)
       '@llamaindex/env': 0.1.28(@aws-crypto/sha256-js@5.2.0)(@huggingface/transformers@3.3.3)(gpt-tokenizer@2.8.1)(js-tiktoken@1.0.19)(pathe@2.0.3)
-      '@mastra/core': 0.4.0(encoding@0.1.13)(react@18.3.1)
+      '@mastra/core': 0.4.4(encoding@0.1.13)(react@18.3.1)
       '@paralleldrive/cuid2': 2.2.2
       ai: 4.1.45(react@18.3.1)(zod@3.24.2)
       js-tiktoken: 1.0.19
@@ -17565,6 +17560,12 @@ snapshots:
   '@octokit/types@13.8.0':
     dependencies:
       '@octokit/openapi-types': 23.0.1
+
+  '@openrouter/ai-sdk-provider@0.4.3(zod@3.24.2)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.9
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.2)
+      zod: 3.24.2
 
   '@opentelemetry/api-logs@0.55.0':
     dependencies:

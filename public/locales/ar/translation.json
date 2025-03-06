@@ -540,5 +540,7 @@
   "stop-task": "إيقاف المهمة",
   "processing": "معالجة",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟",
-  "hide-blog-images": "إخفاء صور المدونة"
+  "hide-blog-images": "إخفاء صور المدونة",
+  "ai-prompt-translation-content": "تحقق من NO TAGS NOTES في اليومين الماضيين ووضع علامة عليها.",
+  "ai-prompt-delete-content": "ابحث عن ملاحظات مؤرشفة ، وتلخيصها وحفظها كملاحظات جديدة ، وحذف هاتين الملاحظات المؤرشفة"
 }

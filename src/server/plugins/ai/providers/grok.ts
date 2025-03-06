@@ -5,8 +5,7 @@ export class GrokModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createXai({
-      apiKey: this.globalConfig.aiApiKey,
-      baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      apiKey: this.globalConfig.aiApiKey
     });
   }
 

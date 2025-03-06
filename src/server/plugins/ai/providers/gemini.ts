@@ -5,8 +5,7 @@ export class GeminiModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createGoogleGenerativeAI({
-      apiKey: this.globalConfig.aiApiKey,
-      baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      apiKey: this.globalConfig.aiApiKey
     });
   }
 

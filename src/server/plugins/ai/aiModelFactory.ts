@@ -17,6 +17,7 @@ import { prisma } from "@/server/prisma"
 import { _ } from "@/lib/lodash"
 import { GeminiModelProvider } from "./providers/gemini"
 import { GrokModelProvider } from "./providers/grok"
+import { OpenRouterModelProvider } from "./providers/openRouter"
 import { webSearchTool } from "./tools/webSearch"
 import { webExtra } from './tools/webExtra'
 
@@ -228,6 +229,8 @@ export class AiModelFactory {
           return createProviderResult(new GrokModelProvider({ globalConfig }));
         case 'Gemini':
           return createProviderResult(new GeminiModelProvider({ globalConfig }));
+        case 'OpenRouter':
+          return createProviderResult(new OpenRouterModelProvider({ globalConfig }));
         default:
           throw new Error(`Unsupported AI model provider: ${globalConfig.aiModelProvider}`);
       }

@@ -5,8 +5,7 @@ export class VoyageModelProvider extends AiBaseModelPrivider {
   constructor({ globalConfig }) {
     super({ globalConfig });
     this.provider = createVoyage({
-      apiKey: this.globalConfig.aiApiKey,
-      baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      apiKey: this.globalConfig.aiApiKey
     });
   }
 
@@ -18,7 +17,6 @@ export class VoyageModelProvider extends AiBaseModelPrivider {
     try {
       if (this.globalConfig.embeddingApiKey) {
         let overrideProvider = createVoyage({
-          baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
           apiKey: this.globalConfig.embeddingApiKey,
         });
         return overrideProvider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'voyage-3-large')

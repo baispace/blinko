@@ -1,29 +1,29 @@
-import { cache } from "@/lib/cache"
-import { AzureOpenAIModelProvider } from "./providers/azureOpenAI"
-import { OpenAIModelProvider } from "./providers/openAI"
-import { getGlobalConfig } from "@/server/routers/config"
-import { OllamaModelProvider } from "./providers/ollama"
-import { AnthropicModelProvider } from "./providers/anthropic"
-import { Agent } from "@mastra/core/agent"
-import { createBlinkoTool } from "./tools/createBlinko"
-import { DefaultVectorDB } from "@mastra/core/vector/libsql"
-import { DeepSeekModelProvider } from "./providers/deepseek"
-import dayjs from "dayjs"
-import { createLogger, Mastra } from "@mastra/core"
-import { LanguageModelV1, EmbeddingModelV1 } from "@ai-sdk/provider"
-import { MarkdownTextSplitter, TokenTextSplitter } from "@langchain/textsplitters"
-import { embed } from "ai"
-import { prisma } from "@/server/prisma"
-import { _ } from "@/lib/lodash"
-import { GeminiModelProvider } from "./providers/gemini"
-import { GrokModelProvider } from "./providers/grok"
-import { webSearchTool } from "./tools/webSearch"
-import { webExtra } from './tools/webExtra'
+import { cache } from '@/lib/cache';
+import { AzureOpenAIModelProvider } from './providers/azureOpenAI';
+import { OpenAIModelProvider } from './providers/openAI';
+import { getGlobalConfig } from '@/server/routers/config';
+import { OllamaModelProvider } from './providers/ollama';
+import { AnthropicModelProvider } from './providers/anthropic';
+import { Agent } from '@mastra/core/agent';
+import { createBlinkoTool } from './tools/createBlinko';
+import { LibSQLVector } from '@mastra/core/vector/libsql';
+import { DeepSeekModelProvider } from './providers/deepseek';
+import dayjs from 'dayjs';
+import { createLogger, Mastra } from '@mastra/core';
+import { LanguageModelV1, EmbeddingModelV1 } from '@ai-sdk/provider';
+import { MarkdownTextSplitter, TokenTextSplitter } from '@langchain/textsplitters';
+import { embed } from 'ai';
+import { prisma } from '@/server/prisma';
+import { _ } from '@/lib/lodash';
+import { GeminiModelProvider } from './providers/gemini';
+import { GrokModelProvider } from './providers/grok';
+import { webSearchTool } from './tools/webSearch';
+import { webExtra } from './tools/webExtra';
 
 export class AiModelFactory {
   //metadata->>'id'
   static async queryAndDeleteVectorById(targetId: number) {
-    const { VectorStore } = await AiModelFactory.GetProvider()
+    const { VectorStore } = await AiModelFactory.GetProvider();
     try {
       const query = `
           WITH target_record AS (
@@ -38,7 +38,7 @@ export class AiModelFactory {
       //@ts-ignore
       const result = await VectorStore.turso.execute({
         sql: query,
-        args: [targetId]
+        args: [targetId],
       });
 
       if (result.rows.length === 0) {
@@ -47,82 +47,82 @@ export class AiModelFactory {
 
       return {
         success: true,
-        deletedData: result.rows[0]
+        deletedData: result.rows[0],
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'unknown error'
+        error: error instanceof Error ? error.message : 'unknown error',
       };
     }
   }
 
   static async queryVector(query: string, accountId: number) {
-    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider()
-    const config = await AiModelFactory.globalConfig()
-    const topK = config.embeddingTopK ?? 3
-    const embeddingMinScore = config.embeddingScore ?? 0.4
+    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
+    const config = await AiModelFactory.globalConfig();
+    const topK = config.embeddingTopK ?? 3;
+    const embeddingMinScore = config.embeddingScore ?? 0.4;
     const { embedding } = await embed({
       value: query,
       model: Embeddings,
     });
     const result = await VectorStore.query('blinko', embedding, topK);
-    const filteredResults = result
-      .filter(({ score }) => score > embeddingMinScore)
+    const filteredResults = result.filter(({ score }) => score > embeddingMinScore);
 
-    const notes = (await prisma.notes.findMany({
-      where: {
-        accountId: accountId,
-        id: {
-          in: _.uniqWith(filteredResults.map(i => Number(i.metadata?.id))).filter(i => !!i) as number[]
-        }
-      },
-      include: {
-        tags: { include: { tag: true } },
-        attachments: {
-          orderBy: [
-            { sortOrder: 'asc' },
-            { id: 'asc' }
-          ]
-        },
-        references: {
-          select: {
-            toNoteId: true,
-            toNote: {
+    const notes =
+      (
+        await prisma.notes.findMany({
+          where: {
+            accountId: accountId,
+            id: {
+              in: _.uniqWith(filteredResults.map((i) => Number(i.metadata?.id))).filter((i) => !!i) as number[],
+            },
+          },
+          include: {
+            tags: { include: { tag: true } },
+            attachments: {
+              orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+            },
+            references: {
               select: {
-                content: true,
-                createdAt: true,
-                updatedAt: true
-              }
-            }
-          }
-        },
-        referencedBy: {
-          select: {
-            fromNoteId: true,
-            fromNote: {
+                toNoteId: true,
+                toNote: {
+                  select: {
+                    content: true,
+                    createdAt: true,
+                    updatedAt: true,
+                  },
+                },
+              },
+            },
+            referencedBy: {
               select: {
-                content: true,
-                createdAt: true,
-                updatedAt: true
-              }
-            }
-          }
-        },
-        _count: {
-          select: {
-            comments: true
-          }
-        }
-      }
-    })).map(i => { return { ...i, score: filteredResults.find(t => Number(t.metadata?.id) == i.id)?.score ?? 0 } }) ?? [];
+                fromNoteId: true,
+                fromNote: {
+                  select: {
+                    content: true,
+                    createdAt: true,
+                    updatedAt: true,
+                  },
+                },
+              },
+            },
+            _count: {
+              select: {
+                comments: true,
+              },
+            },
+          },
+        })
+      ).map((i) => {
+        return { ...i, score: filteredResults.find((t) => Number(t.metadata?.id) == i.id)?.score ?? 0 };
+      }) ?? [];
 
-    let aiContext = filteredResults.filter(i => i.metadata?.isAttachment).map(i => i.metadata?.text + '\n') || ''
-    return { notes, aiContext: aiContext }
+    let aiContext = filteredResults.filter((i) => i.metadata?.isAttachment).map((i) => i.metadata?.text + '\n') || '';
+    return { notes, aiContext: aiContext };
   }
 
-  static async rebuildVectorIndex({ vectorStore, isDelete = false }: { vectorStore: DefaultVectorDB, isDelete?: boolean }) {
+  static async rebuildVectorIndex({ vectorStore, isDelete = false }: { vectorStore: LibSQLVector; isDelete?: boolean }) {
     try {
       if (isDelete) {
         await vectorStore.deleteIndex('blinko');
@@ -131,7 +131,7 @@ export class AiModelFactory {
       console.error('delete vector index failed:', error);
     }
 
-    const config = await AiModelFactory.globalConfig()
+    const config = await AiModelFactory.globalConfig();
     const model = config.embeddingModel.toLowerCase();
     let userConfigDimensions = config.embeddingDimensions;
     let dimensions: number = 0;
@@ -168,33 +168,38 @@ export class AiModelFactory {
         break;
       default:
         if (userConfigDimensions == 0 || userConfigDimensions == undefined || !userConfigDimensions) {
-          throw new Error("Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings")
+          throw new Error('Must set the embedding dimension in ai Settings > Embed Settings > Advanced Settings');
         }
     }
     if (userConfigDimensions != 0 && userConfigDimensions != undefined) {
       dimensions = userConfigDimensions;
     }
-    await vectorStore.createIndex('blinko', dimensions);
+    await vectorStore.createIndex('blinko', dimensions, 'cosine');
   }
 
   static async globalConfig() {
-    return cache.wrap('globalConfig', async () => {
-      return await getGlobalConfig({ useAdmin: true })
-    }, { ttl: 1000 })
+    return cache.wrap(
+      'globalConfig',
+      async () => {
+        return await getGlobalConfig({ useAdmin: true });
+      },
+      { ttl: 1000 },
+    );
   }
 
   static async ValidConfig() {
-    const globalConfig = await AiModelFactory.globalConfig()
+    const globalConfig = await AiModelFactory.globalConfig();
     if (!globalConfig.aiModelProvider || !globalConfig.isUseAI) {
-      throw new Error('model provider or apikey not configure!')
+      throw new Error('model provider or apikey not configure!');
     }
-    return await AiModelFactory.globalConfig()
+    return await AiModelFactory.globalConfig();
   }
 
   static async GetProvider() {
-    const globalConfig = await AiModelFactory.ValidConfig()
+    const globalConfig = await AiModelFactory.ValidConfig();
 
-    return cache.wrap(`GetProvider-
+    return cache.wrap(
+      `GetProvider-
       ${globalConfig.aiModelProvider}-
       ${globalConfig.aiApiKey}-
       ${globalConfig.embeddingModel}-
@@ -203,74 +208,77 @@ export class AiModelFactory {
       ${globalConfig.aiApiEndpoint}-
       ${globalConfig.embeddingTopK}-
       ${globalConfig.embeddingScore}
-      `, async () => {
+      `,
+      async () => {
+        const createProviderResult = async (provider: any) => ({
+          LLM: provider.LLM() as LanguageModelV1,
+          VectorStore: (await provider.VectorStore()) as LibSQLVector,
+          Embeddings: provider.Embeddings() as EmbeddingModelV1<string>,
+          MarkdownSplitter: provider.MarkdownSplitter() as MarkdownTextSplitter,
+          TokenTextSplitter: provider.TokenTextSplitter() as TokenTextSplitter,
+        });
 
-      const createProviderResult = async (provider: any) => ({
-        LLM: provider.LLM() as LanguageModelV1,
-        VectorStore: await provider.VectorStore() as DefaultVectorDB,
-        Embeddings: provider.Embeddings() as EmbeddingModelV1<string>,
-        MarkdownSplitter: provider.MarkdownSplitter() as MarkdownTextSplitter,
-        TokenTextSplitter: provider.TokenTextSplitter() as TokenTextSplitter,
-      });
-
-      switch (globalConfig.aiModelProvider) {
-        case 'OpenAI':
-          return createProviderResult(new OpenAIModelProvider({ globalConfig }));
-        case 'AzureOpenAI':
-          return createProviderResult(new AzureOpenAIModelProvider({ globalConfig }));
-        case 'Ollama':
-          return createProviderResult(new OllamaModelProvider({ globalConfig }));
-        case 'DeepSeek':
-          return createProviderResult(new DeepSeekModelProvider({ globalConfig }));
-        case 'Anthropic':
-          return createProviderResult(new AnthropicModelProvider({ globalConfig }));
-        case 'Grok':
-          return createProviderResult(new GrokModelProvider({ globalConfig }));
-        case 'Gemini':
-          return createProviderResult(new GeminiModelProvider({ globalConfig }));
-        default:
-          throw new Error(`Unsupported AI model provider: ${globalConfig.aiModelProvider}`);
-      }
-    }, { ttl: 24 * 60 * 60 * 1000 })
+        switch (globalConfig.aiModelProvider) {
+          case 'OpenAI':
+            return createProviderResult(new OpenAIModelProvider({ globalConfig }));
+          case 'AzureOpenAI':
+            return createProviderResult(new AzureOpenAIModelProvider({ globalConfig }));
+          case 'Ollama':
+            return createProviderResult(new OllamaModelProvider({ globalConfig }));
+          case 'DeepSeek':
+            return createProviderResult(new DeepSeekModelProvider({ globalConfig }));
+          case 'Anthropic':
+            return createProviderResult(new AnthropicModelProvider({ globalConfig }));
+          case 'Grok':
+            return createProviderResult(new GrokModelProvider({ globalConfig }));
+          case 'Gemini':
+            return createProviderResult(new GeminiModelProvider({ globalConfig }));
+          default:
+            throw new Error(`Unsupported AI model provider: ${globalConfig.aiModelProvider}`);
+        }
+      },
+      { ttl: 24 * 60 * 60 * 1000 },
+    );
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false }: { withTools?: boolean, withOnlineSearch?: boolean }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false }: { withTools?: boolean; withOnlineSearch?: boolean }) {
     //globel.model.name cache
-    const provider = await AiModelFactory.GetProvider()
-    let tools: Record<string, any> = {}
+    const provider = await AiModelFactory.GetProvider();
+    let tools: Record<string, any> = {};
     if (withTools) {
       tools = {
         tools: {
           createBlinkoTool,
-          webExtra
-        }
-      }
+          webExtra,
+        },
+      };
     }
     if (withOnlineSearch) {
       tools = {
-        tools: { ...tools?.tools, webSearchTool }
-      }
+        tools: { ...tools?.tools, webSearchTool },
+      };
     }
     const BlinkoAgent = new Agent({
       name: 'Blinko Chat Agent',
-      instructions: `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
-        "You are a versatile AI assistant who can:\n" +
-        "1. Answer questions and explain concepts\n" +
-        "2. Provide suggestions and analysis\n" +
-        "3. Help with planning and organizing ideas\n" +
-        "4. Assist with content creation and editing\n" +
-        "5. Perform basic calculations and reasoning\n\n" +
+      instructions:
+        `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
+        'You are a versatile AI assistant who can:\n' +
+        '1. Answer questions and explain concepts\n' +
+        '2. Provide suggestions and analysis\n' +
+        '3. Help with planning and organizing ideas\n' +
+        '4. Assist with content creation and editing\n' +
+        '5. Perform basic calculations and reasoning\n\n' +
         "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
         "Always respond in the user's language.\n" +
-        "Maintain a friendly and professional conversational tone.",
+        'Maintain a friendly and professional conversational tone.',
       model: provider?.LLM!,
-      ...tools
+      ...tools,
     });
 
     const mastra = new Mastra({
       agents: { BlinkoAgent },
       logger: createLogger({ name: 'Blinko', level: 'debug' }),
     });
-    return mastra.getAgent('BlinkoAgent')
+    return mastra.getAgent('BlinkoAgent');
   }
 
   static #createAgentFactory(
@@ -280,24 +288,22 @@ export class AiModelFactory {
     options?: {
       tools?: Record<string, any>;
       isWritingAgent?: boolean;
-    }
+    },
   ) {
     return async (type?: 'expand' | 'polish' | 'custom') => {
       const provider = await AiModelFactory.GetProvider();
-      const finalPrompt = typeof systemPrompt === 'function'
-        ? systemPrompt(type!)
-        : systemPrompt;
+      const finalPrompt = typeof systemPrompt === 'function' ? systemPrompt(type!) : systemPrompt;
 
       const agent = new Agent({
         name: options?.isWritingAgent ? `${name} - ${type}` : name,
         instructions: finalPrompt,
         model: provider?.LLM!,
-        ...(options?.tools || {})
+        ...(options?.tools || {}),
       });
 
       return new Mastra({
         agents: { agent },
-        logger: createLogger({ name: loggerName, level: 'info' })
+        logger: createLogger({ name: loggerName, level: 'info' }),
       }).getAgent('agent');
     };
   }
@@ -309,7 +315,7 @@ export class AiModelFactory {
      2. Create new tags in #category/subcategory format if needed
      3. Return comma-separated tags only
      4. Must start with #`,
-    'BlinkoTag'
+    'BlinkoTag',
   );
 
   static EmojiAgent = AiModelFactory.#createAgentFactory(
@@ -319,7 +325,7 @@ export class AiModelFactory {
      2. Return 4-10 comma-separated emojis
      3. Use '💻,🔧' for tech content, '😊,🎉' for emotional content
      4. Must be separated by comma like '💻,🔧'`,
-    'BlinkoEmoji'
+    'BlinkoEmoji',
   );
 
   static CommentAgent = AiModelFactory.#createAgentFactory(
@@ -330,7 +336,7 @@ export class AiModelFactory {
      3. Maintain professional tone
      4. Keep responses concise (50-150 words)
      5. Match user's language`,
-    'BlinkoComment'
+    'BlinkoComment',
   );
 
   static SummarizeAgent = AiModelFactory.#createAgentFactory(
@@ -341,7 +347,7 @@ export class AiModelFactory {
       3. Generate titles based on the user's language
       4. Do not return any punctuation marks in the result
       5. Keep it short and concise`,
-    'BlinkoSummary'
+    'BlinkoSummary',
   );
 
   static WritingAgent = AiModelFactory.#createAgentFactory(
@@ -384,14 +390,10 @@ export class AiModelFactory {
       return prompts[type || 'custom'];
     },
     'BlinkoWriting',
-    { isWritingAgent: true }
+    { isWritingAgent: true },
   );
 
-  static TestConnectAgent = AiModelFactory.#createAgentFactory(
-    'Blinko Test Connect Agent',
-    `Test the api is working,return 1 words`,
-    'BlinkoTestConnect'
-  );
+  static TestConnectAgent = AiModelFactory.#createAgentFactory('Blinko Test Connect Agent', `Test the api is working,return 1 words`, 'BlinkoTestConnect');
 
   // static async GetAudioLoader(audioPath: string) {
   //   const globalConfig = await AiModelFactory.ValidConfig()
@@ -402,5 +404,4 @@ export class AiModelFactory {
   //     throw new Error('not support other loader')
   //   }
   // }
-
 }

@@ -399,13 +399,13 @@ export const AiSetting = observer(() => {
                   }}
                   value={store.embeddingScore}
                   size="md"
-                  step={0.1}
+                  step={0.01}
                   color="foreground"
                   label={'value'}
                   showSteps={true}
                   maxValue={1.0}
-                  minValue={0.1}
-                  defaultValue={0.8}
+                  minValue={0.2}
+                  defaultValue={0.75}
                   className="w-full"
                 />
               </div>

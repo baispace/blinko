@@ -3,13 +3,13 @@ import { GlobalConfig } from "@/server/types";
 import { BufferLoader } from "langchain/document_loaders/fs/buffer";
 import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
 import { ProviderV1, LanguageModelV1 } from '@ai-sdk/provider';
-import { DefaultVectorDB } from '@mastra/core/storage';
 import { VECTOR_DB_FILE_PATH } from "@/lib/constant";
 import { AiModelFactory } from "../aiModelFactory";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createVoyage } from 'voyage-ai-provider';
+import { LibSQLVector } from "@mastra/core/vector/libsql"
 
-let vectorStore: DefaultVectorDB
+let vectorStore: LibSQLVector
 
 export abstract class AiBaseModelPrivider {
   globalConfig: GlobalConfig
@@ -58,7 +58,7 @@ export abstract class AiBaseModelPrivider {
 
   public async VectorStore() {
     if (!vectorStore) {
-      vectorStore = new DefaultVectorDB({
+      vectorStore = new LibSQLVector({
         connectionUrl: VECTOR_DB_FILE_PATH,
       });
       //!index must be created before use

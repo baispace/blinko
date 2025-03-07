@@ -151,8 +151,8 @@ export const ZConfigSchema = z.object({
   embeddingApiEndpoint: z.string().optional(),
   embeddingApiKey: z.string().optional(),
   isHiddenNotification: z.boolean().optional(),
-  tavilyApiKey: z.string().optional(),
-  tavilyMaxResult: z.number().optional(),
+  tavilyApiKey: z.any().optional(),
+  tavilyMaxResult: z.any().optional(),
   isHideBlogImages: z.boolean().optional()
 });
 

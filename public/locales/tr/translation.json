@@ -469,5 +469,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Devam eden bir yeniden yapılandırma görevi var, yeniden başlatmak ister misiniz?",
   "hide-blog-images": "Blog resimlerini gizle",
   "ai-prompt-translation-content": "Son iki gün içinde etiket yok notlarını kontrol edin ve etiketleyin.",
-  "ai-prompt-delete-content": "2 arşivlenmiş notu bulun, özetleyin ve yeni notlar olarak kaydedin ve bu iki arşivlenmiş notu silin"
+  "ai-prompt-delete-content": "2 arşivlenmiş notu bulun, özetleyin ve yeni notlar olarak kaydedin ve bu iki arşivlenmiş notu silin",
+  "older": "Daha yaşlı",
+  "newer": "Daha yeni",
+  "restore-this-version": "Bu sürümü geri yükle",
+  "Note History": "Not Geçmişi",
+  "View History Versions": "Geçmiş Sürümleri Görüntüle",
+  "history-note-only": "Dikkat: Bu geçmiş, dosya geçmişi değil, yalnızca metin içeriğini içerir"
 }

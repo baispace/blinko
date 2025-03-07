@@ -521,5 +521,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Hay una tarea de reconstrucción en progreso, ¿quieres reiniciar?",
   "hide-blog-images": "Ocultar imágenes de blog",
   "ai-prompt-translation-content": "Verifique las notas de no etiquetas en los últimos dos días y etiquétalas.",
-  "ai-prompt-delete-content": "Encuentre 2 notas archivadas, resume y guárdelas como nuevas notas, y elimine estas dos notas archivadas"
+  "ai-prompt-delete-content": "Encuentre 2 notas archivadas, resume y guárdelas como nuevas notas, y elimine estas dos notas archivadas",
+  "older": "Más viejo",
+  "newer": "Más nuevo",
+  "restore-this-version": "Restaurar esta versión",
+  "Note History": "Nota historia",
+  "View History Versions": "Ver versiones de historia",
+  "history-note-only": "Atención: este historial contiene solo contenido de texto, no historial de archivos"
 }

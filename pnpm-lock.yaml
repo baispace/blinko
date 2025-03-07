@@ -280,8 +280,8 @@ importers:
         specifier: ^11.13.1
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       music-metadata:
-        specifier: ^10.6.4
-        version: 10.9.1
+        specifier: 10.6.4
+        version: 10.6.4
       ncp:
         specifier: ^2.0.0
         version: 2.0.0
@@ -9589,9 +9589,9 @@ packages:
   murmurhash-js@1.0.0:
     resolution: {integrity: sha512-TvmkNhkv8yct0SVBSy+o8wYzXjE4Zz3PCesbfs8HiCXXdcTuocApFv11UWlNFWKYsP2okqrhb7JNlSm9InBhIw==}
 
-  music-metadata@10.9.1:
-    resolution: {integrity: sha512-9JcxgIlMPD1Mgzc2fTCaRtBR7GMQJ226gmh2iECzHwLRSrms1yPUxTivBbEiyUrshpmFnBv9baDkpkk9uxbfHw==}
-    engines: {node: '>=18'}
+  music-metadata@10.6.4:
+    resolution: {integrity: sha512-42ekQ5CRic4Pvw/85FfzMKegeRDHyWBpCjSSI1B9PTGqaevZ17ASA4v4W6MRq1ELC5THn5rD8S+82iPQ6gv6lw==}
+    engines: {node: '>=16.0.0'}
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
@@ -25339,7 +25339,7 @@ snapshots:
 
   murmurhash-js@1.0.0: {}
 
-  music-metadata@10.9.1:
+  music-metadata@10.6.4:
     dependencies:
       '@tokenizer/token': 0.3.0
       content-type: 1.0.5

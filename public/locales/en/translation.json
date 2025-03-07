@@ -546,5 +546,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "There is a rebuild task in progress, do you want to restart?",
   "hide-blog-images": "Hide blog images",
   "ai-prompt-translation-content": "Check the no tags notes in the past two days and tag them.",
-  "ai-prompt-delete-content": "Find 2 archived notes, summarize and save them as new notes, and delete these two archived notes"
+  "ai-prompt-delete-content": "Find 2 archived notes, summarize and save them as new notes, and delete these two archived notes",
+  "newer": "Newer",
+  "older": "Older",
+  "restore-this-version": "Restore this version",
+  "Note History": "Note History",
+  "View History Versions": "View History Versions",
+  "history-note-only": "Attention: This history contains only text content, not file history"
 }

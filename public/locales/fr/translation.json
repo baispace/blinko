@@ -517,5 +517,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Il y a une tâche de reconstruction en cours, voulez-vous redémarrer ?",
   "hide-blog-images": "Masquer les images du blog",
   "ai-prompt-translation-content": "Vérifiez les notes No Tags au cours des deux derniers jours et étiquetez-les.",
-  "ai-prompt-delete-content": "Trouvez 2 notes archivées, résumez-les et économisez en tant que nouvelles notes, et supprimez ces deux notes archivées"
+  "ai-prompt-delete-content": "Trouvez 2 notes archivées, résumez-les et économisez en tant que nouvelles notes, et supprimez ces deux notes archivées",
+  "older": "Plus vieux",
+  "newer": "Plus récent",
+  "restore-this-version": "Restaurer cette version",
+  "Note History": "Note historique",
+  "View History Versions": "Voir les versions de l'histoire",
+  "history-note-only": "Attention: cet historique ne contient que du contenu texte, pas de l'historique des fichiers"
 }

@@ -300,5 +300,18 @@ export const messageSchema = z.object({
 export type message = z.infer<typeof messageSchema>
 
 
+/////////////////////////////////////////
+// HISTORY SCHEMA
+/////////////////////////////////////////
 
+export const historySchema = z.object({
+  id: z.number().int(),
+  content: z.string(),
+  noteId: z.number().int(),
+  createdAt: z.coerce.date(),
+  version:  z.number().int().optional(),
+  accountId: z.number().int().nullable()
+})
+
+export type history = z.infer<typeof historySchema>
 

@@ -13,6 +13,7 @@ import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
 import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
+import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -88,6 +89,14 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, accoun
           <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
         )}
 
+        {/* History button for viewing note versions */}
+        {!isShareMode && !!blinkoItem._count?.histories && blinkoItem._count?.histories > 0 && (
+          <HistoryButton 
+            noteId={blinkoItem.id!} 
+            className={'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary text-desc mt-[1px]'}
+          />
+        )}
+
         {blinkoItem.isTop && (
           <Icon
             className={isIOSDevice ? 'ml-[10px] text-[#EFC646]' : "ml-auto group-hover/card:ml-2 text-[#EFC646]"}
@@ -140,4 +149,3 @@ const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, i
     </Tooltip>
   );
 });
-

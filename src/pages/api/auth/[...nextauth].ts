@@ -4,7 +4,6 @@ import { prisma } from '@/server/prisma';
 import { verifyPassword } from 'prisma/seed';
 import { authenticator } from 'otplib';
 import { getGlobalConfig } from '@/server/routers/config';
-import type { OAuthConfig } from 'next-auth/providers';
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
@@ -16,6 +15,7 @@ import SlackProvider from "next-auth/providers/slack";
 import TwitchProvider from "next-auth/providers/twitch";
 import LineProvider from "next-auth/providers/line";
 import { getNextAuthSecret } from '@/server/routers/helper';
+import { OAuthConfig } from 'next-auth/providers/oauth';
 
 async function verify2FACode(userId: string, userRole: string, userName: string, twoFactorCode: string) {
   const now = Math.floor(Date.now() / 1000);

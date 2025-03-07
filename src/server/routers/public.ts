@@ -12,6 +12,7 @@ import { SpotifyClient } from './helper/spotify';
 import { getGlobalConfig } from './config';
 import { Readable } from 'stream';
 import { prisma } from '../prisma';
+import * as fs from 'fs';
 
 const limit = pLimit(5);
 let refreshTicker = 0
@@ -137,10 +138,14 @@ export const publicRouter = router({
         throw new Error('Spotify client not initialized');
       }
       return cache.wrap(input.filePath, async () => {
-        let metadata: mm.IAudioMetadata | null = null;
+        let metadata: any = null;
         if (input.filePath.includes('/api/file/')) {
           const realFilePath = input.filePath.replace('/api/file', UPLOAD_FILE_PATH);
-          metadata = await mm.parseFile(realFilePath);
+          const fileBuffer = await fs.promises.readFile(realFilePath);
+          metadata = await mm.parseBuffer(new Uint8Array(fileBuffer), {
+            mimeType: 'audio/mpeg',
+            path: realFilePath
+          });
         } else if (input.filePath.includes('s3file')) {
           try {
             const response = await fetch(input.filePath);
@@ -155,12 +160,10 @@ export const publicRouter = router({
               throw new Error(`Failed to fetch file content: ${fileResponse.statusText}`);
             }
 
-            const nodeStream = Readable.fromWeb(fileResponse.body as any);
-
-            metadata = await mm.parseStream(
-              nodeStream,
-              { mimeType: 'audio/mpeg' }
-            );
+            const arrayBuffer = await fileResponse.arrayBuffer();
+            metadata = await mm.parseBuffer(new Uint8Array(arrayBuffer), { 
+              mimeType: 'audio/mpeg' 
+            });
 
           } catch (error) {
             console.error('Failed to get s3 file metadata:', error);
@@ -168,8 +171,8 @@ export const publicRouter = router({
           }
         }
 
-        const artistName = metadata?.common.artist?.trim();
-        const trackName = metadata?.common.title?.trim();
+        const artistName = metadata?.common?.artist?.trim();
+        const trackName = metadata?.common?.title?.trim();
 
         if (!artistName || !trackName) {
           // console.log('Missing artist or track name');
@@ -196,7 +199,7 @@ export const publicRouter = router({
           return {
             coverUrl,
             trackName: trackName,
-            albumName: metadata?.common.album || '',
+            albumName: metadata?.common?.album || '',
             artists: [artistName],
           };
         } catch (err) {
@@ -204,7 +207,7 @@ export const publicRouter = router({
           return {
             coverUrl: '',
             trackName: trackName,
-            albumName: metadata?.common.album || '',
+            albumName: metadata?.common?.album || '',
             artists: [artistName],
           };
         }

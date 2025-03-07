@@ -542,5 +542,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟",
   "hide-blog-images": "إخفاء صور المدونة",
   "ai-prompt-translation-content": "تحقق من NO TAGS NOTES في اليومين الماضيين ووضع علامة عليها.",
-  "ai-prompt-delete-content": "ابحث عن ملاحظات مؤرشفة ، وتلخيصها وحفظها كملاحظات جديدة ، وحذف هاتين الملاحظات المؤرشفة"
+  "ai-prompt-delete-content": "ابحث عن ملاحظات مؤرشفة ، وتلخيصها وحفظها كملاحظات جديدة ، وحذف هاتين الملاحظات المؤرشفة",
+  "older": "أقدم",
+  "newer": "أحدث",
+  "restore-this-version": "استعادة هذا الإصدار",
+  "Note History": "لاحظ التاريخ",
+  "View History Versions": "عرض إصدارات التاريخ",
+  "history-note-only": "الانتباه: يحتوي هذا السجل على محتوى نص فقط ، وليس سجل الملف"
 }

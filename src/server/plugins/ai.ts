@@ -17,7 +17,7 @@ import { CoreMessage } from '@mastra/core';
 import { MDocument } from '@mastra/rag';
 import { embed, embedMany } from 'ai';
 import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
-import { LibSQLVector } from '@mastra/core/dist/vector/libsql';
+import { LibSQLVector } from '@mastra/core/vector/libsql';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
@@ -222,6 +222,7 @@ export class AiService {
         _count: {
           select: {
             comments: true,
+            histories: true,
           },
         },
       },

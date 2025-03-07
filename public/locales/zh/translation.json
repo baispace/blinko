@@ -546,5 +546,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "正在进行重建任务，您是否想要重新开始？",
   "hide-blog-images": "隐藏博客图像",
   "ai-prompt-translation-content": "在过去两天中检查无标签笔记并标记它们。",
-  "ai-prompt-delete-content": "查找2个归档的笔记，总结并保存为新笔记，然后删除这两个存档的笔记"
+  "ai-prompt-delete-content": "查找2个归档的笔记，总结并保存为新笔记，然后删除这两个存档的笔记",
+  "older": "较旧",
+  "newer": "较新",
+  "restore-this-version": "还原此版本",
+  "Note History": "历史记录",
+  "View History Versions": "查看历史版本",
+  "history-note-only": "注意：该历史记录仅包含文本内容，不包含文件历史"
 }

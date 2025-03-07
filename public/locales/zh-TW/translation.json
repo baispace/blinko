@@ -556,5 +556,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "正在進行重建任務，您要重新啟動嗎？",
   "hide-blog-images": "隱藏博客圖像",
   "ai-prompt-translation-content": "在過去兩天中檢查無標籤筆記並標記它們。",
-  "ai-prompt-delete-content": "查找2個存檔的筆記，總結並保存為新筆記，然後刪除這兩個存檔的筆記"
+  "ai-prompt-delete-content": "查找2個存檔的筆記，總結並保存為新筆記，然後刪除這兩個存檔的筆記",
+  "older": "较旧",
+  "newer": "較新",
+  "restore-this-version": "還原此版本",
+  "Note History": "歷史記錄",
+  "View History Versions": "查看歷史版本",
+  "history-note-only": "注意：該歷史記錄僅包含文本內容，不包含文件歷史"
 }

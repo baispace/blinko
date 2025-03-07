@@ -523,5 +523,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "진행 중인 재구축 작업이 있습니다, 다시 시작하시겠습니까?",
   "hide-blog-images": "블로그 이미지를 숨기십시오",
   "ai-prompt-translation-content": "지난 이틀 동안 NO 태그 노트를 확인하고 태그를 붙입니다.",
-  "ai-prompt-delete-content": "보관 된 메모 2 개를 찾고 새 메모로 요약하고 저장 한 다음이 두 개의 보관 된 음표를 삭제하십시오."
+  "ai-prompt-delete-content": "보관 된 메모 2 개를 찾고 새 메모로 요약하고 저장 한 다음이 두 개의 보관 된 음표를 삭제하십시오.",
+  "older": "더 오래",
+  "newer": "최신",
+  "restore-this-version": "이 버전을 복원하십시오",
+  "Note History": "기록 히스토리",
+  "View History Versions": "히스토리 버전을보십시오",
+  "history-note-only": "주의 :이 역사에는 파일 기록이 아닌 텍스트 내용 만 포함됩니다."
 }

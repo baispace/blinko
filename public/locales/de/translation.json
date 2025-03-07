@@ -528,5 +528,11 @@
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "Läuft gerade eine Wiederherstellungsaufgabe, möchten Sie neu starten?",
   "hide-blog-images": "Blogbilder ausblenden",
   "ai-prompt-translation-content": "Überprüfen Sie die No -Tags -Notizen in den letzten zwei Tagen und markieren Sie sie.",
-  "ai-prompt-delete-content": "Finden Sie 2 archivierte Notizen, fassen Sie sie zusammen und speichern Sie sie als neue Notizen und löschen Sie diese beiden archivierten Notizen"
+  "ai-prompt-delete-content": "Finden Sie 2 archivierte Notizen, fassen Sie sie zusammen und speichern Sie sie als neue Notizen und löschen Sie diese beiden archivierten Notizen",
+  "older": "Älter",
+  "newer": "Neuer",
+  "restore-this-version": "Stellen Sie diese Version wieder her",
+  "Note History": "Beachten Sie die Geschichte",
+  "View History Versions": "Verlauf anzeigen",
+  "history-note-only": "ACHTUNG: Dieser Verlauf enthält nur Textinhalte, nicht Dateiverlauf"
 }

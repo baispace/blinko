@@ -1,3 +1,10 @@
+# [0.43.0](https://github.com/blinko-space/blinko/compare/v0.42.4...v0.43.0) (2025-03-07)
+
+
+### Features
+
+* support note history ([10043bc](https://github.com/blinko-space/blinko/commit/10043bc867b1f6bd84d9706766026543fca50d03))
+
 ## [0.42.4](https://github.com/blinko-space/blinko/compare/v0.42.3...v0.42.4) (2025-03-06)
 
 

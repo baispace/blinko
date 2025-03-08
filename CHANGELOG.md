@@ -1,3 +1,10 @@
+## [0.43.1](https://github.com/blinko-space/blinko/compare/v0.43.0...v0.43.1) (2025-03-07)
+
+
+### Bug Fixes
+
+* type error ([37b866e](https://github.com/blinko-space/blinko/commit/37b866eadad228d1b4da900cb3e41c4970f99861))
+
 # [0.43.0](https://github.com/blinko-space/blinko/compare/v0.42.4...v0.43.0) (2025-03-07)
 
 

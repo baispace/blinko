@@ -1,3 +1,10 @@
+## [0.43.2](https://github.com/blinko-space/blinko/compare/v0.43.1...v0.43.2) (2025-03-08)
+
+
+### Bug Fixes
+
+* update plugin api ([eaa126b](https://github.com/blinko-space/blinko/commit/eaa126bf3e3f2b5b86283abdb595ae149baa8227))
+
 ## [0.43.1](https://github.com/blinko-space/blinko/compare/v0.43.0...v0.43.1) (2025-03-07)
 
 

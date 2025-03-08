@@ -12,6 +12,7 @@ import { PromiseState } from "../standard/PromiseState";
 import { PromisePageState } from "../standard/PromiseState";
 import { PluginApiStore } from "./pluginApiStore";
 import copy from "copy-to-clipboard"
+import { UserStore } from "../user";
 
 declare global {
   interface Window {
@@ -30,6 +31,7 @@ declare global {
         baseStore: InstanceType<typeof BaseStore>;
         hubStore: InstanceType<typeof HubStore>;
         resourceStore: InstanceType<typeof ResourceStore>;
+        userStore: InstanceType<typeof UserStore>;
       };
       globalRefresh: () => void;
     } & InstanceType<typeof PluginApiStore>;

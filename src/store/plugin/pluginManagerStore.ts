@@ -17,6 +17,7 @@ import { BaseStore } from "../baseStore";
 import { ResourceStore } from "../resourceStore";
 import { HubStore } from "../hubStore";
 import copy from "copy-to-clipboard"
+import { UserStore } from "../user";
 
 export class PluginManagerStore implements Store {
   sid = 'pluginManagerStore';
@@ -138,6 +139,7 @@ export class PluginManagerStore implements Store {
       const baseStore = RootStore.Get(BaseStore);
       const hubStore = RootStore.Get(HubStore);
       const resourceStore = RootStore.Get(ResourceStore);
+      const userStore = RootStore.Get(UserStore);
       //@ts-ignore
       window.Blinko = {
         api,
@@ -155,6 +157,7 @@ export class PluginManagerStore implements Store {
           baseStore,
           hubStore,
           resourceStore,
+          userStore
         },
         globalRefresh: () => {
           blinkoStore.updateTicker++;

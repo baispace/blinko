@@ -1,3 +1,10 @@
+## [0.43.3](https://github.com/blinko-space/blinko/compare/v0.43.2...v0.43.3) (2025-03-09)
+
+
+### Bug Fixes
+
+* add user login endpoint with authentication and token generation ([e49ba58](https://github.com/blinko-space/blinko/commit/e49ba58125fae9303c5c048b9b30ec22ca97c13c))
+
 ## [0.43.2](https://github.com/blinko-space/blinko/compare/v0.43.1...v0.43.2) (2025-03-08)
 
 

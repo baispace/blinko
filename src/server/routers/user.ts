@@ -415,4 +415,70 @@ export const userRouter = router({
         return true
       })
     }),
+  login: publicProcedure
+    .meta({
+      openapi: {
+        method: 'POST', 
+        path: '/v1/user/login', 
+        summary: 'user login',
+        description: 'user login, return user basic info and token', 
+        tags: ['User']
+      }
+    })
+    .input(z.object({
+      name: z.string(),
+      password: z.string()
+    }))
+    .output(z.object({
+      id: z.number(),
+      name: z.string(),
+      nickname: z.string(),
+      role: z.string(),
+      token: z.string(),
+      image: z.string().nullable(),
+      loginType: z.string()
+    }))
+    .mutation(async ({ input }) => {
+      const { name, password } = input;
+      
+      const user = await prisma.accounts.findFirst({ 
+        where: { name } 
+      });
+      
+      if (!user) {
+        throw new TRPCError({ 
+          code: 'NOT_FOUND', 
+          message: 'user not found' 
+        });
+      }
+      
+      const isPasswordValid = await verifyPassword(password, user.password ?? '');
+      if (!isPasswordValid) {
+        throw new TRPCError({ 
+          code: 'UNAUTHORIZED', 
+          message: 'password is incorrect' 
+        });
+      }
+      
+      const token = await genToken({ 
+        id: user.id, 
+        name: user.name ?? '', 
+        role: user.role 
+      });
+      
+      await prisma.accounts.update({ 
+        where: { id: user.id }, 
+        data: { apiToken: token } 
+      });
+      
+      return {
+        id: user.id,
+        name: user.name ?? '',
+        nickname: user.nickname ?? '',
+        role: user.role,
+        token: token,
+        image: user.image,
+        loginType: user.loginType ?? ''
+      };
+    }),
 })

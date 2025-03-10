@@ -1,3 +1,11 @@
+## [0.43.5](https://github.com/blinko-space/blinko/compare/v0.43.4...v0.43.5) (2025-03-10)
+
+
+### Bug Fixes
+
+* Exclude tag content does not work  [#529](https://github.com/blinko-space/blinko/issues/529) ([c258055](https://github.com/blinko-space/blinko/commit/c258055449d7a3a114cb9cd4c9651526b42d216a))
+* RSS feed ([#531](https://github.com/blinko-space/blinko/issues/531)) ([6a7b5a9](https://github.com/blinko-space/blinko/commit/6a7b5a9844d7c0b7592d052a33db8619325ce5e7))
+
 ## [0.43.4](https://github.com/blinko-space/blinko/compare/v0.43.3...v0.43.4) (2025-03-10)
 
 

@@ -52,7 +52,8 @@ COPY --from=builder /app/resetpassword.js ./resetpassword.js
 COPY --from=builder /app/node_modules/@libsql/linux-arm64-gnu ./node_modules/@libsql/linux-arm64-gnu
 
 ENV NODE_ENV=production \
-    PORT=1111
+    PORT=1111 \
+    HOST=0.0.0.0
 
 EXPOSE 1111
 

@@ -1,3 +1,10 @@
+## [0.43.4](https://github.com/blinko-space/blinko/compare/v0.43.3...v0.43.4) (2025-03-10)
+
+
+### Bug Fixes
+
+* configure Docker container to listen on all network interfaces ([4a161be](https://github.com/blinko-space/blinko/commit/4a161be5987d0a60d30157f9b2689b40761f6bce))
+
 ## [0.43.3](https://github.com/blinko-space/blinko/compare/v0.43.2...v0.43.3) (2025-03-09)
 
 

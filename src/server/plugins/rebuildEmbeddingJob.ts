@@ -48,6 +48,11 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
         where: { name: this.taskName }
       });
 
+      if (task?.isRunning) {
+        console.log(`Task ${this.taskName} is already running, skipping duplicate execution`);
+        return false;
+      }
+      
       // Initialize default progress
       const initialProgress = {
         current: 0,
@@ -198,6 +203,8 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
       // Process notes in batches
       const BATCH_SIZE = 5;
 
+      console.log(`[${new Date().toISOString()}] 开始重建嵌入向量，共${notes.length}条笔记`);
+
       for (let i = 0; i < notes.length; i += BATCH_SIZE) {
         // Check if force stop flag is set
         if (this.forceStopFlag) {
@@ -256,6 +263,8 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
             
             return stoppedProgress;
           }
+          
+          console.log(`[${new Date().toISOString()}] 处理笔记 ${note.id}, 进度: ${current}/${total}`);
           
           try {
             current++;

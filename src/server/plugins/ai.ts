@@ -77,7 +77,7 @@ export class AiService {
         const tag = await prisma.tag.findUnique({ where: { id: config.excludeEmbeddingTagId } });
         if (tag && content.includes(tag.name)) {
           console.warn('this note is not allowed to be embedded:', tag.name);
-          return { ok: true, msg: 'tag is not allowed to be embedded' };
+          return { ok: false, msg: 'tag is not allowed to be embedded' };
         }
       }
 
@@ -92,9 +92,11 @@ export class AiService {
       });
 
       await VectorStore.upsert(
-        'blinko',
-        embeddings,
-        chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
+       {
+        indexName: 'blinko',
+        vectors: embeddings,
+        metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
+       }
       );
 
       try {
@@ -134,9 +136,12 @@ export class AiService {
       });
 
       await VectorStore.upsert(
-        'blinko',
-        embeddings,
-        chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, isAttachment: true, updatedAt })),
+        {
+          indexName: 'blinko',
+          vectors: embeddings,
+          metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, isAttachment: true, updatedAt })),
+
+        }
       );
 
       try {

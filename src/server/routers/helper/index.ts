@@ -1,13 +1,13 @@
-import axios from "axios"
+import axios from "axios";
 import { authenticator } from 'otplib';
 import crypto from 'crypto';
-import { getGlobalConfig } from "../config"
+import { getGlobalConfig } from "../config";
 import { prisma } from "@/server/prisma";
 import { Feed } from "feed";
 import { User } from "@/server/context";
 import { NextApiRequest } from "next";
 import { NextRequest } from "next/server";
-import { encode, getToken as getNextAuthToken } from 'next-auth/jwt';
+import { getToken as getNextAuthToken } from 'next-auth/jwt';
 
 export const SendWebhook = async (data: any, webhookType: string, ctx: { id: string }) => {
   try {
@@ -39,9 +39,13 @@ export function verifyTOTP(token: string, secret: string): boolean {
 
 
 export async function generateFeed(userId: number, origin: string, rows: number = 20) {
+  const hasAccountId: any = {}
+  if (userId != 0) {
+    hasAccountId.accountId = userId
+  }
   const notes = await prisma.notes.findMany({
     where: {
-      accountId: userId,
+      ...hasAccountId,
       isShare: true,
       sharePassword: "",
       OR: [

@@ -1,3 +1,11 @@
+## [0.43.6](https://github.com/blinko-space/blinko/compare/v0.43.5...v0.43.6) (2025-03-11)
+
+
+### Bug Fixes
+
+* build ([285d9d5](https://github.com/blinko-space/blinko/commit/285d9d57f885e2a39c7823aa540cbfcb8a2b03fc))
+* Railway requires to listen on 0.0.0.0 ([ec14861](https://github.com/blinko-space/blinko/commit/ec14861369dfa665ec5c3596f469669e0cca94f0))
+
 ## [0.43.5](https://github.com/blinko-space/blinko/compare/v0.43.4...v0.43.5) (2025-03-10)
 
 

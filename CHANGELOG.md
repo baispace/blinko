@@ -1,3 +1,10 @@
+## [0.43.7](https://github.com/blinko-space/blinko/compare/v0.43.6...v0.43.7) (2025-03-11)
+
+
+### Bug Fixes
+
+* **translations:** Update french translation ([06d3550](https://github.com/blinko-space/blinko/commit/06d3550bd70588d4be4d2f83847a817c64cfaac8))
+
 ## [0.43.6](https://github.com/blinko-space/blinko/compare/v0.43.5...v0.43.6) (2025-03-11)
 
 

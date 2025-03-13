@@ -219,7 +219,7 @@ export class PluginManagerStore implements Store {
       plugin.init();
       this.plugins.set(plugin.name, plugin);
       if (plugin.withSettingPanel) {
-        this.plugins[plugin.name].withSettingPanel = true;
+        this.plugins.get(plugin.name)!.withSettingPanel = true;
       }
       return plugin;
     } catch (error) {

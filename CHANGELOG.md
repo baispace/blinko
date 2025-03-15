@@ -1,3 +1,10 @@
+## [0.43.8](https://github.com/blinko-space/blinko/compare/v0.43.7...v0.43.8) (2025-03-15)
+
+
+### Bug Fixes
+
+* **plugin-manager:** correct plugin setting panel flag assignment ([0e84161](https://github.com/blinko-space/blinko/commit/0e841613878451124469c3cbef133a0e33de2d60))
+
 ## [0.43.7](https://github.com/blinko-space/blinko/compare/v0.43.6...v0.43.7) (2025-03-11)
 
 

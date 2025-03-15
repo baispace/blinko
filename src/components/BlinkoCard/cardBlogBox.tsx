@@ -47,6 +47,13 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
     };
   }, [blinkoItem.title]);
 
+  // Extract cover image from markdown content if no explicit cover is provided
+  const coverImage = useMemo(() => {
+    if (blinkoItem.blogCover) return blinkoItem.blogCover;
+    const coverMatch = blinkoItem.content?.match(/\!\[cover\]\(([^)]+)\)/);
+    return coverMatch ? coverMatch[1] : null;
+  }, [blinkoItem.blogCover, blinkoItem.content]);
+  
   useEffect(() => {
     const updateHeight = () => {
       if (contentRef.current) {
@@ -70,9 +77,9 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   return (
     <div className={`flex items-start gap-2 mt-4 w-full mb-4`}>
       {!isHideBlogImages ? (
-        blinkoItem.blogCover ? (
+        coverImage ? (
           <Image
-            src={blinkoItem.blogCover}
+            src={coverImage}
             alt='blog cover'
             isZoomed
             style={{
@@ -103,12 +110,12 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
           width: isHideBlogImages ? '100%' : 'calc(100% - 112px - 0.5rem)'
         }}
       >
-        {(isHideBlogImages || blinkoItem.blogCover) && (
+        {(isHideBlogImages || coverImage) && (
           <div className={`font-bold mb-1 line-clamp-2 ${isExpanded ? 'text-lg' : 'text-md'}`}>
             {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
           </div>
         )}
-        <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${!isHideBlogImages && blinkoItem.blogCover ?
+        <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${!isHideBlogImages && coverImage ?
           `${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-2' : 'line-clamp-3'}` :
           'line-clamp-4'}`}
         >

@@ -271,8 +271,8 @@ export const publicRouter = router({
       title: z.string(),
       url: z.string(),
       tags: z.array(z.string()).optional(),
-      site_description: z.string().optional(),
-      image: z.string().optional(),
+      site_description: z.string().nullable().optional(),
+      image: z.string().nullable().optional(),
       version: z.string().optional(),
     })))
     .query(async function ({ input }) {

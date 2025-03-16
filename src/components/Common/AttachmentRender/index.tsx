@@ -137,13 +137,13 @@ const ReferenceRender = observer(({ store }: { store: EditorStore }) => {
         return <Popover placement="bottom">
           <PopoverTrigger>
             <div className="flex items-center gap-1 blinko-tag cursor-pointer hover:opacity-80 group">
-              <Icon className="min-w-[24px] !text-primary" icon="uim:arrow-up-left" width="24" height="24" />
+              <Icon className="min-w-[20px] max-w-[20px] !text-primary" icon="uim:arrow-up-left" width="20" height="20" />
               <div className="truncate">{i.content}</div>
               <div onClick={(e) => {
                 e.stopPropagation()
                 store.noteListByIds.value = store.noteListByIds.value?.filter(t => i.id !== t.id)
                 store.deleteReference(i.id)
-              }} className={`group-hover:opacity-100 md:opacity-0 hover:opacity-100 cursor-pointer rounded-sm transition-al`}>
+              }} className={`group-hover:opacity-100 md:opacity-0 hover:opacity-100 cursor-pointer rounded-sm transition-al ml-auto`}>
                 <Icon icon="basil:cross-solid" width={20} height={20} />
               </div>
             </div>

@@ -286,14 +286,6 @@ export class EditorStore {
   }
 
 
-  private throttleSearch = _.throttle((searchText: string) => {
-    const blinko = RootStore.Get(BlinkoStore);
-    blinko.referenceSearchList.resetAndCall({ searchText });
-  }, 500, { trailing: true, leading: false });
-
-  handleSearch = (searchText: string) => {
-    this.throttleSearch(searchText);
-  }
   // ************************************* reference logic  end ************************************************************************************
 
   async handleSend() {

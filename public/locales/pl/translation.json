@@ -550,5 +550,6 @@
   "restore-this-version": "Przywróć tę wersję",
   "Note History": "Uwaga historia",
   "View History Versions": "Zobacz wersje historii",
-  "history-note-only": "Uwaga: ta historia zawiera tylko treść tekstową, a nie historię plików"
+  "history-note-only": "Uwaga: ta historia zawiera tylko treść tekstową, a nie historię plików",
+  "referenceResource": "Zasób referencyjny"
 }

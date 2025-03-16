@@ -562,5 +562,6 @@
   "restore-this-version": "還原此版本",
   "Note History": "歷史記錄",
   "View History Versions": "查看歷史版本",
-  "history-note-only": "注意：該歷史記錄僅包含文本內容，不包含文件歷史"
+  "history-note-only": "注意：該歷史記錄僅包含文本內容，不包含文件歷史",
+  "referenceResource": "參考資源"
 }

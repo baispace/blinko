@@ -15,7 +15,7 @@ import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { Button } from '@heroui/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { NoteType } from '@/server/types';
+import { NoteType, Attachment } from '@/server/types';
 import { BaseStore } from '@/store/baseStore';
 
 export class EditorStore {
@@ -286,14 +286,6 @@ export class EditorStore {
   }
 
 
-  private throttleSearch = _.throttle((searchText: string) => {
-    const blinko = RootStore.Get(BlinkoStore);
-    blinko.referenceSearchList.resetAndCall({ searchText });
-  }, 500, { trailing: true, leading: false });
-
-  handleSearch = (searchText: string) => {
-    this.throttleSearch(searchText);
-  }
   // ************************************* reference logic  end ************************************************************************************
 
   async handleSend() {

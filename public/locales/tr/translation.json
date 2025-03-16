@@ -552,5 +552,6 @@
   "restore-this-version": "Bu sürümü geri yükle",
   "Note History": "Not Geçmişi",
   "View History Versions": "Geçmiş Sürümleri Görüntüle",
-  "history-note-only": "Dikkat: Bu geçmiş yalnızca metin içeriğini içerir, dosya geçmişi dahil değildir"
+  "history-note-only": "Dikkat: Bu geçmiş yalnızca metin içeriğini içerir, dosya geçmişi dahil değildir",
+  "referenceResource": "Referans kaynağı"
 }

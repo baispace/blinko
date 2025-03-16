@@ -1280,6 +1280,7 @@ export async function deleteNotes(ids: number[], ctx: Context) {
   };
 
   await handleDeleteRelation();
+  await prisma.comments.deleteMany({ where: { noteId: { in: ids } } });
   await prisma.notes.deleteMany({ where: { id: { in: ids }, accountId: Number(ctx.id) } });
   await prisma.noteHistory.deleteMany({ where: { noteId: { in: ids }, accountId: Number(ctx.id) } });
   return { ok: true };

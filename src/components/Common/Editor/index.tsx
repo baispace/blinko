@@ -33,6 +33,7 @@ import { Icon } from "@iconify/react";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
+import { ResourceReferenceButton } from "./Toolbar/ResourceReferenceButton";
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -127,6 +128,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
               />
               <HashtagButton store={store} content={content} />
               <ReferenceButton store={store} />
+              <ResourceReferenceButton store={store} />
               <AIWriteButton store={store} content={content} />
               <UploadButtons
                 getInputProps={getInputProps}

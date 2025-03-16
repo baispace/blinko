@@ -22,18 +22,25 @@ export const BlinkoSelectNote = observer(({ iconButton, onSelect, blackList = []
   const [isOpen, setIsOpen] = useState(false);
 
   const defaultIconButton = <IconButton tooltip={tooltip} icon="ph:link" />;
-  
+
   const throttleSearch = useCallback(
-    throttle((searchText: string) => {
-      const blinko = RootStore.Get(BlinkoStore);
-      blinko.referenceSearchList.resetAndCall({ searchText });
-    }, 500, { trailing: true, leading: false }),
-    []
+    throttle(
+      (searchText: string) => {
+        const blinko = RootStore.Get(BlinkoStore);
+        blinko.referenceSearchList.resetAndCall({ searchText });
+      },
+      500,
+      { trailing: true, leading: false },
+    ),
+    [],
   );
 
-  const handleSearch = useCallback((searchText: string) => {
-    throttleSearch(searchText);
-  }, [throttleSearch]);
+  const handleSearch = useCallback(
+    (searchText: string) => {
+      throttleSearch(searchText);
+    },
+    [throttleSearch],
+  );
 
   return (
     <Popover
@@ -50,13 +57,13 @@ export const BlinkoSelectNote = observer(({ iconButton, onSelect, blackList = []
         <div>{iconButton || defaultIconButton}</div>
       </PopoverTrigger>
       <PopoverContent className="flex flex-col max-w-[300px]">
+        <Input onChange={(e) => handleSearch(e.target.value)} type="text" autoFocus className="w-full my-1 focus:outline-none focus:ring-0" placeholder="Search" size="sm" />
         <ScrollArea
           className="max-h-[400px] max-w-[290px] flex flex-col gap-1"
           onBottom={() => {
             blinko.referenceSearchList.callNextPage({});
           }}
         >
-          <Input onChange={(e) => handleSearch(e.target.value)} type="text" autoFocus className="w-full my-1 focus:outline-none focus:ring-0" placeholder="Search" size="sm" />
           {blinko.referenceSearchList?.value?.map((item) => (
             <div
               key={item.id}

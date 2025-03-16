@@ -73,10 +73,10 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] sm:w-[300px]">
-        <div className="p-2 w-full">
-          <Input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder={t('search')} className="mb-2" startContent={<Icon icon="mdi:magnify" width={20} height={20} />} />
+        <div className="p-1 w-full">
+          <Input size="sm" value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder={t('search')} className="mb-2" startContent={<Icon icon="mdi:magnify" width={20} height={20} />} />
           <ScrollArea
-            className="h-[300px] pr-2"
+            className="h-[300px] "
             onBottom={() => {
               blinko.resourceList.callNextPage({});
             }}

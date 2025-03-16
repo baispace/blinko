@@ -530,5 +530,10 @@
   "Note History": "기록 히스토리",
   "View History Versions": "히스토리 버전을보십시오",
   "history-note-only": "주의 :이 역사에는 파일 기록이 아닌 텍스트 내용 만 포함됩니다.",
-  "referenceResource": "참조 리소스"
+  "referenceResource": "참조 리소스",
+  "to-ask-ai": "AI에게 물어보십시오",
+  "press-enter-to-select-first-result": "Enter를 누르면 첫 번째 결과를 선택하십시오",
+  "ask-ai": "AI에게 물어보세요",
+  "ask-blinko-ai-about-this-query": "이 쿼리에 대해 Blinko AI에게 문의하십시오",
+  "search-or-ask-ai": "검색 메모, 설정 또는 ai ..."
 }

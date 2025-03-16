@@ -508,5 +508,10 @@
   "Note History": "履歴に注意してください",
   "View History Versions": "履歴バージョンを表示します",
   "history-note-only": "注意：この履歴には、ファイル履歴ではなく、テキストコンテンツのみが含まれています",
-  "referenceResource": "参照リソース"
+  "referenceResource": "参照リソース",
+  "to-ask-ai": "AIに尋ねる",
+  "press-enter-to-select-first-result": "Enterを押して、最初の結果を選択します",
+  "ask-ai": "aiに尋ねてください",
+  "ask-blinko-ai-about-this-query": "Blinko AIにこのクエリについて尋ねてください",
+  "search-or-ask-ai": "ノート、設定、またはAIに尋ねる..."
 }

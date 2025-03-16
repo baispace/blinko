@@ -553,5 +553,10 @@
   "Note History": "Not Geçmişi",
   "View History Versions": "Geçmiş Sürümleri Görüntüle",
   "history-note-only": "Dikkat: Bu geçmiş yalnızca metin içeriğini içerir, dosya geçmişi dahil değildir",
-  "referenceResource": "Referans kaynağı"
+  "referenceResource": "Referans kaynağı",
+  "to-ask-ai": "AI sormak için",
+  "press-enter-to-select-first-result": "İlk Sonucu seçmek için Enter tuşuna basın",
+  "ask-ai": "AI'ya sor",
+  "ask-blinko-ai-about-this-query": "Blinko Ai'ye bu sorgu hakkında sorun",
+  "search-or-ask-ai": "Arama notu, ayarlar veya AI sorun ..."
 }

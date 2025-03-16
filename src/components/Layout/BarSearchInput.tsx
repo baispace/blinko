@@ -1,13 +1,15 @@
-import React, { useRef, useState } from "react";
-import { Button, Input, Tooltip } from "@heroui/react";
-import { Icon } from "@iconify/react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { _ } from "@/lib/lodash";
-import { useRouter } from "next/router";
-import { RootStore } from "@/store";
-import { BlinkoStore } from "@/store/blinkoStore";
-import { observer } from "mobx-react-lite";
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Input, Tooltip } from '@heroui/react';
+import { Icon } from '@iconify/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { _ } from '@/lib/lodash';
+import { useRouter } from 'next/router';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
+import { observer } from 'mobx-react-lite';
+import { eventBus } from '@/lib/event';
+import { GlobalSearch } from './GlobalSearch';
 
 interface BarSearchInputProps {
   isPc: boolean;
@@ -15,112 +17,51 @@ interface BarSearchInputProps {
 
 export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   const { t } = useTranslation();
-  const router = useRouter();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const blinkoStore = RootStore.Get(BlinkoStore);
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
 
-  const throttleSearchRef = useRef(_.throttle(() => {
-    if (router.pathname == '/resources') {
-      return blinkoStore.resourceList.resetAndCall({ searchText: searchInputRef.current?.value })
-    }
-    blinkoStore.noteList.resetAndCall({})
-  }, 1000, { trailing: true, leading: false }));
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        eventBus.emit('open-global-search');
+      }
+    };
 
-  const handleClose = () => {
-    setShowSearchInput(false);
-    blinkoStore.searchText = '';
-    throttleSearchRef.current();
-  }
+    eventBus.on('open-global-search', () => {
+      setIsGlobalSearchOpen(true);
+    });
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleGlobalSearch = () => {
+    // Emit an event that will be caught by the CommonLayout to open the global search
+    eventBus.emit('open-global-search');
+  };
 
   return (
     <>
+      <GlobalSearch isOpen={isGlobalSearchOpen} onOpenChange={setIsGlobalSearchOpen} />
       {!isPc && !showSearchInput ? (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Button
-            isIconOnly
-            className="ml-auto"
-            size="sm"
-            variant="light"
-            onPress={() => setShowSearchInput(true)}
-          >
-            <Icon
-              className="text-default-600"
-              icon="lets-icons:search"
-              width="24"
-              height="24"
-            />
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
+          <Button isIconOnly className="ml-auto" size="sm" variant="light" onPress={() => handleGlobalSearch()}>
+            <Icon className="text-default-600" icon="lets-icons:search" width="24" height="24" />
           </Button>
         </motion.div>
       ) : (
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            className="w-full ml-4"
-          >
-            <Input
-              ref={searchInputRef}
-              size={isPc ? 'md' : 'sm'}
-              variant="flat"
-              autoFocus
-              aria-label="search"
-              className={`${blinkoStore.noteListFilterConfig.isUseAiQuery ? 'input-highlight' : ''} `}
-              classNames={{
-                base: "w-full",
-                inputWrapper: `bg-default-400/20 data-[hover=true]:bg-default-500/30 group-data-[focus=true]:bg-default-500/20 ${blinkoStore.noteListFilterConfig.isUseAiQuery ? 'border-2 border-primary' : ''
-                  }`,
-                input: "placeholder:text-default-600 group-data-[has-value=true]:text-foreground",
-              }}
-              labelPlacement="outside"
-              placeholder={router.pathname == '/settings' ? t('search-settings') : t('search')}
-              value={blinkoStore.searchText}
-              onChange={e => {
-                blinkoStore.searchText = e.target.value;
-                throttleSearchRef.current()
-              }}
-              startContent={
-                <>
-                  {
-                    router.pathname != '/settings' && (
-                      <Icon
-                        className={`text-default-600 [&>g]:stroke-[2px] ${!isPc ? 'cursor-pointer' : ''}`}
-                        icon={!isPc && showSearchInput ? "material-symbols:close" : "lets-icons:search"}
-                        width="24"
-                        height="24"
-                        onClick={() => !isPc && handleClose()}
-                      />
-                    )
-                  }
-                </>
-              }
-              endContent={router.pathname != '/resources' && router.pathname != '/settings' && (
-                <Tooltip content={t('ai-enhanced-search')}>
-                  <Icon
-                    className="text-default-600 [&>g]:stroke-[2px] cursor-pointer hover:text-primary transition-colors"
-                    icon="mingcute:ai-line"
-                    width="24"
-                    height="24"
-                    onClick={() => {
-                      searchInputRef.current?.focus()
-                      blinkoStore.noteListFilterConfig.isUseAiQuery = !blinkoStore.noteListFilterConfig.isUseAiQuery
-                      if (blinkoStore.searchText != '') {
-                        throttleSearchRef.current()
-                      }
-                    }}
-                  />
-                </Tooltip>
-              )}
-            />
-          </motion.div>
-        </AnimatePresence>
+        <Button size="sm" variant="light" onPress={() => setIsGlobalSearchOpen(true)} className="hidden md:flex items-center gap-1 px-3 border-2 border-desc">
+          <Icon className="text-default-500" icon="lets-icons:search" width="16" height="16" />
+          <span className="text-default-500">{t('search')}</span>
+          <div className="flex items-center gap-1 ml-2">
+            <kbd className="px-1.5 py-0.5 bg-default-100 rounded text-default-600 text-xs">Ctrl</kbd>
+            <span className="text-default-600">+</span>
+            <kbd className="px-1.5 py-0.5 bg-default-100 rounded text-default-600 text-xs">K</kbd>
+          </div>
+        </Button>
       )}
     </>
   );

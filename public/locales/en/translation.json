@@ -553,5 +553,10 @@
   "Note History": "Note History",
   "View History Versions": "View History Versions",
   "history-note-only": "Attention: This history contains only text content, not file history",
-  "referenceResource": "Reference Resource"
+  "referenceResource": "Reference Resource",
+  "to-ask-ai": "To ask ai",
+  "press-enter-to-select-first-result": "Press enter to select first result",
+  "ask-ai": "Ask AI",
+  "ask-blinko-ai-about-this-query": "Ask blinko ai about this query",
+  "search-or-ask-ai": "Search note,settings or ask ai ..."
 }

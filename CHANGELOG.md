@@ -1,3 +1,11 @@
+## [0.44.1](https://github.com/blinko-space/blinko/compare/v0.44.0...v0.44.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* refactor search input ([68e5e39](https://github.com/blinko-space/blinko/commit/68e5e39a25653fb1d000ad68ce8b8300d060a300))
+* ui improve ([4db5155](https://github.com/blinko-space/blinko/commit/4db5155376a027a659ced47dabb6578290424c8d))
+
 # [0.44.0](https://github.com/blinko-space/blinko/compare/v0.43.8...v0.44.0) (2025-03-16)
 
 

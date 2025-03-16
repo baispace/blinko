@@ -1,3 +1,16 @@
+# [0.44.0](https://github.com/blinko-space/blinko/compare/v0.43.8...v0.44.0) (2025-03-16)
+
+
+### Bug Fixes
+
+* deletion failed when notes contain comments [#548](https://github.com/blinko-space/blinko/issues/548) ([79f7b50](https://github.com/blinko-space/blinko/commit/79f7b502ed66e657c113508ceba89fa549e66dcb))
+* hub list ([cee4144](https://github.com/blinko-space/blinko/commit/cee4144972ac605c2413a9b259ad03be5e378bb4))
+
+
+### Features
+
+* support link resource item ([e59a100](https://github.com/blinko-space/blinko/commit/e59a10088236f11b216ddfb2777125b4b3e59469))
+
 ## [0.43.8](https://github.com/blinko-space/blinko/compare/v0.43.7...v0.43.8) (2025-03-15)
 
 

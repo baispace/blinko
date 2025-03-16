@@ -15,7 +15,7 @@ import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { Button } from '@heroui/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { NoteType } from '@/server/types';
+import { NoteType, Attachment } from '@/server/types';
 import { BaseStore } from '@/store/baseStore';
 
 export class EditorStore {

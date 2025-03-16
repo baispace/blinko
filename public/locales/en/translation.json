@@ -552,5 +552,6 @@
   "restore-this-version": "Restore this version",
   "Note History": "Note History",
   "View History Versions": "View History Versions",
-  "history-note-only": "Attention: This history contains only text content, not file history"
+  "history-note-only": "Attention: This history contains only text content, not file history",
+  "referenceResource": "Reference Resource"
 }

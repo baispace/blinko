@@ -548,5 +548,6 @@
   "restore-this-version": "استعادة هذا الإصدار",
   "Note History": "لاحظ التاريخ",
   "View History Versions": "عرض إصدارات التاريخ",
-  "history-note-only": "الانتباه: يحتوي هذا السجل على محتوى نص فقط ، وليس سجل الملف"
+  "history-note-only": "الانتباه: يحتوي هذا السجل على محتوى نص فقط ، وليس سجل الملف",
+  "referenceResource": "مورد مرجعي"
 }

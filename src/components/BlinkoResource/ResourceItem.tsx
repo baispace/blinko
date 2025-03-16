@@ -18,6 +18,92 @@ import { toJS } from "mobx";
 import { motion } from "framer-motion";
 import { ImageThumbnailRender } from "../Common/AttachmentRender/imageRender";
 
+// Reusable component for rendering resource preview
+export const ResourceItemPreview = ({ 
+  item, 
+  onClick, 
+  showExtraInfo = true, 
+  showAssociationIcon = true,
+  className = ""
+}: { 
+  item: ResourceType;
+  onClick?: () => void;
+  showExtraInfo?: boolean;
+  showAssociationIcon?: boolean;
+  className?: string;
+}) => {
+  const { t } = useTranslation();
+  const isImage = item.type?.startsWith('image/');
+  const isS3File = item.path?.includes('s3file');
+  
+  const fileNameAndExt = useMemo(() => {
+    const lastDotIndex = item.name.lastIndexOf('.');
+    if (lastDotIndex === -1) {
+      return { name: item.name, ext: '' };
+    }
+    return {
+      name: item.name.substring(0, lastDotIndex),
+      ext: item.name.substring(lastDotIndex + 1).toLowerCase()
+    };
+  }, [item.name]);
+
+  return (
+    <div 
+      className={`w-full flex items-center gap-2 p-2 rounded-md cursor-pointer group ${className}`}
+      onClick={onClick}
+    >
+      {isImage ? (
+        <PhotoView src={item.path}>
+          <div>
+            <ImageThumbnailRender
+              src={item.path}
+              className="!w-[28px] !h-[28px] object-cover rounded"
+            />
+          </div>
+        </PhotoView>
+      ) : (
+        <div className="w-[28px] h-[28px] flex items-center justify-center">
+          <FileIcons path={item.path} size={28} />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-sm flex items-center gap-2">
+          <span className='max-w-[100px] truncate md:max-w-[250px]'>{fileNameAndExt.name}</span>
+          {isS3File && showExtraInfo && (
+            <Tooltip content={t('cloud-file')}>
+              <Icon
+                icon="fluent-color:cloud-16"
+                className="w-4 h-4"
+              />
+            </Tooltip>
+          )}
+          {showAssociationIcon && !item.noteId && showExtraInfo && (
+            <Tooltip content={t('no-note-associated')}>
+              <Icon
+                icon="ic:twotone-no-backpack"
+                className="w-4 h-4 text-yellow-500"
+              />
+            </Tooltip>
+          )}
+        </div>
+        {showExtraInfo && (
+          <div className="text-xs text-gray-500 flex items-center gap-2 my-1">
+            <span className="rounded-md px-1.5 py-0.5 bg-default-100 text-default-600">
+              {fileNameAndExt.ext}
+            </span>
+            {filesize(Number(item.size))} · {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
+          </div>
+        )}
+        {!showExtraInfo && (
+          <div className="text-xs text-gray-500">
+            {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface ResourceItemProps {
   item: ResourceType;
   index: number;
@@ -104,49 +190,7 @@ const ResourceCard = observer(({
           onChange={() => onSelect(item.id!)}
           className="z-10"
         />
-        {isImage ? (
-            <PhotoView src={item.path}>
-              <div>
-                <ImageThumbnailRender
-                  src={item.path}
-                  className="!w-[28px] !h-[28px] object-cover rounded"
-                />
-              </div>
-            </PhotoView>
-        ) : (
-          <div className="w-[28px] h-[28px] flex items-center justify-center">
-            <FileIcons path={item.path} size={28} />
-          </div>
-        )}
-        <div className="flex-1">
-          <div className="font-medium text-sm flex items-center gap-2 ">
-            <span className='max-w-[100px] truncate md:max-w-[250px]'>{fileNameAndExt.name}</span>
-            {isS3File && (
-              <Tooltip content={t('cloud-file')}>
-                <Icon
-                  icon="fluent-color:cloud-16"
-                  className="w-4 h-4 "
-                />
-              </Tooltip>
-            )}
-            {
-              !item.noteId && (
-                <Tooltip content={t('no-note-associated')}>
-                  <Icon
-                    icon="ic:twotone-no-backpack"
-                    className="w-4 h-4 text-yellow-500"
-                  />
-                </Tooltip>
-              )
-            }
-          </div>
-          <div className="text-xs text-gray-500 flex items-center gap-2 my-1">
-            <span className="rounded-md px-1.5 py-0.5 bg-default-100 text-default-600">
-              {fileNameAndExt.ext}
-            </span>
-            {filesize(Number(item.size))} · {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
-          </div>
-        </div>
+        <ResourceItemPreview item={item} />
         <ResourceContextMenu onTrigger={handleContextMenu} />
       </div>
     </Card>

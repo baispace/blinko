@@ -534,5 +534,6 @@
   "restore-this-version": "Stellen Sie diese Version wieder her",
   "Note History": "Beachten Sie die Geschichte",
   "View History Versions": "Verlauf anzeigen",
-  "history-note-only": "ACHTUNG: Dieser Verlauf enthält nur Textinhalte, nicht Dateiverlauf"
+  "history-note-only": "ACHTUNG: Dieser Verlauf enthält nur Textinhalte, nicht Dateiverlauf",
+  "referenceResource": "Referenzressource"
 }

@@ -527,5 +527,6 @@
   "restore-this-version": "Restaurar esta versión",
   "Note History": "Nota historia",
   "View History Versions": "Ver versiones de historia",
-  "history-note-only": "Atención: este historial contiene solo contenido de texto, no historial de archivos"
+  "history-note-only": "Atención: este historial contiene solo contenido de texto, no historial de archivos",
+  "referenceResource": "Recurso de referencia"
 }

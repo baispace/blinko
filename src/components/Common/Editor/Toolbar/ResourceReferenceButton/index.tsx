@@ -14,6 +14,7 @@ import { PromiseState } from '@/store/standard/PromiseState';
 import { PhotoProvider } from 'react-photo-view';
 import { useTranslation } from 'react-i18next';
 import { ResourceItemPreview } from '@/components/BlinkoResource/ResourceItem';
+import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
 
 interface Props {
   store: EditorStore;
@@ -40,10 +41,10 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
   const handleSelect = async (attachment: ResourceType) => {
     // Check if this attachment is already in the files list
     if (store.files.some((file) => file.name === attachment.name)) return;
-    
+
     const extension = helper.getFileExtension(attachment.name) as string;
     const previewType = helper.getFileType(attachment.type as string, attachment.name);
-    
+
     // Create a FileType object from the attachment
     const file: FileType = {
       name: attachment.name,
@@ -65,54 +66,29 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
   };
 
   return (
-    <Popover 
-      isOpen={isOpen} 
-      onOpenChange={setIsOpen}
-      placement="bottom"
-    >
+    <Popover isOpen={isOpen} onOpenChange={setIsOpen} placement="bottom">
       <PopoverTrigger>
         <div className="hover:bg-default-100 rounded-md">
           <IconButton icon="hugeicons:file-link" tooltip={t('referenceResource')} />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] sm:w-[400px]">
+      <PopoverContent className="w-[300px] sm:w-[300px]">
         <div className="p-2 w-full">
-          <Input
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder={t('search')}
-            className="mb-2"
-            startContent={<Icon icon="mdi:magnify" width={20} height={20} />}
-          />
+          <Input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder={t('search')} className="mb-2" startContent={<Icon icon="mdi:magnify" width={20} height={20} />} />
           <ScrollArea
             className="h-[300px] pr-2"
             onBottom={() => {
               blinko.resourceList.callNextPage({});
             }}
           >
-            {blinko.resourceList.loading.value ? (
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10 rounded-md" />
+            <LoadingAndEmpty isLoading={blinko.resourceList.loading.value} isEmpty={blinko.resourceList.value?.length === 0} />
+            <PhotoProvider>
+              <div className="space-y-2 w-full">
+                {blinko.resourceList.value?.map((attachment) => (
+                  <ResourceItemPreview key={attachment.id} item={attachment} onClick={() => handleSelect(attachment)} showExtraInfo={true} showAssociationIcon={true} />
                 ))}
               </div>
-            ) : blinko.resourceList.value?.length === 0 ? (
-              <div className="text-center text-sm text-gray-500 py-4">{t('no-data')}</div>
-            ) : (
-              <PhotoProvider>
-                <div className="space-y-2 w-full">
-                  {blinko.resourceList.value?.map((attachment) => (
-                    <ResourceItemPreview 
-                      key={attachment.id} 
-                      item={attachment}
-                      onClick={() => handleSelect(attachment)}
-                      showExtraInfo={true}
-                      showAssociationIcon={true}
-                    />
-                  ))}
-                </div>
-              </PhotoProvider>
-            )}
+            </PhotoProvider>
           </ScrollArea>
         </div>
       </PopoverContent>

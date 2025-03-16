@@ -550,5 +550,10 @@
   "Note History": "შენიშვნა ისტორია",
   "View History Versions": "ისტორიის ვერსიების ნახვა",
   "history-note-only": "ყურადღება: ეს ისტორია შეიცავს მხოლოდ ტექსტურ შინაარსს და არა ფაილის ისტორიას",
-  "referenceResource": "საცნობარო რესურსი"
+  "referenceResource": "საცნობარო რესურსი",
+  "to-ask-ai": "აის ჰკითხოს",
+  "press-enter-to-select-first-result": "დააჭირეთ Enter- ს პირველი შედეგის შესარჩევად",
+  "ask-ai": "ჰკითხეთ აი",
+  "ask-blinko-ai-about-this-query": "ჰკითხეთ Blinko AI- ს ამ შეკითხვის შესახებ",
+  "search-or-ask-ai": "მოძებნეთ შენიშვნა, პარამეტრები ან ჰკითხეთ AI ..."
 }

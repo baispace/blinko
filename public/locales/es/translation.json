@@ -528,5 +528,10 @@
   "Note History": "Nota historia",
   "View History Versions": "Ver versiones de historia",
   "history-note-only": "Atención: este historial contiene solo contenido de texto, no historial de archivos",
-  "referenceResource": "Recurso de referencia"
+  "referenceResource": "Recurso de referencia",
+  "to-ask-ai": "Preguntarle a ai",
+  "press-enter-to-select-first-result": "Presione Entrar para seleccionar el primer resultado",
+  "ask-ai": "Pregúntale a AI",
+  "ask-blinko-ai-about-this-query": "Pregúntale a Blinko Ai sobre esta consulta",
+  "search-or-ask-ai": "Nota de búsqueda, configuración o preguntar Ai ..."
 }

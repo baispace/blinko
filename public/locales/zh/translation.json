@@ -553,5 +553,10 @@
   "Note History": "历史记录",
   "View History Versions": "查看历史版本",
   "history-note-only": "注意：该历史记录仅包含文本内容，不包含文件历史",
-  "referenceResource": "参考资源"
+  "referenceResource": "引用资源",
+  "to-ask-ai": "问AI",
+  "press-enter-to-select-first-result": "按Enter选择第一个结果",
+  "ask-ai": "问AI",
+  "ask-blinko-ai-about-this-query": "向Blinko AI询问此查询",
+  "search-or-ask-ai": "搜索说明，设置或询问AI ..."
 }

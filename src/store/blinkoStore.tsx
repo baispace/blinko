@@ -107,6 +107,17 @@ export class BlinkoStore implements Store {
   updateTicker = 0
   fullNoteList: Note[] = []
 
+  // For global search
+  globalSearchTerm: '';
+  // Will be set to true when the global search modal is opened
+  isGlobalSearchOpen: false;
+  // For search results presentation
+  searchResults = {
+    notes: [],
+    resources: [],
+    settings: []
+  };
+
   offlineNoteStorage = new StorageListState<OfflineNote>({ key: 'offlineNotes' });
 
   get offlineNotes(): OfflineNote[] {

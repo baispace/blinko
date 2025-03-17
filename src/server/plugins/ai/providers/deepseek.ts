@@ -1,20 +1,20 @@
-import { AiBaseModelPrivider } from '.';
+import { AiBaseModelProvider } from '.';
 import { createDeepSeek } from '@ai-sdk/deepseek';
+import { LanguageModelV1, ProviderV1 } from '@ai-sdk/provider';
 
-export class DeepSeekModelProvider extends AiBaseModelPrivider {
+export class DeepSeekModelProvider extends AiBaseModelProvider {
   constructor({ globalConfig }) {
     super({ globalConfig });
-    this.provider = createDeepSeek({
-      apiKey: this.globalConfig.aiApiKey
+  }
+
+  protected createProvider(): ProviderV1 {
+    return createDeepSeek({
+      apiKey: this.globalConfig.aiApiKey,
+      // fetch: this.proxiedFetch
     });
   }
 
-  LLM() {
-    try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'deepseek-v3')
-    } catch (error) {
-      throw error
-    }
+  protected getLLM(): LanguageModelV1 {
+    return this.provider.languageModel(this.globalConfig.aiModel ?? 'deepseek-v3');
   }
 }
-

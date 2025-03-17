@@ -5,7 +5,7 @@ export const i18nEditor = (t) => {
     alignRight: t('align-right'),
     alternateText: t('alternate-text'),
     bold: t('bold'),
-    both: t('both'),
+    both: t('editor-preview'),
     check: t('check'),
     close: t('close'),
     code: t('code'),

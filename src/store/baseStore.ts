@@ -7,70 +7,78 @@ import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoStore } from './blinkoStore';
 import { RootStore } from '.';
+import { T } from '@mastra/core/base-D90KQ4XI';
 
 export class BaseStore implements Store {
   sid = 'BaseStore';
   constructor() {
-    makeAutoObservable(this)
+    makeAutoObservable(this);
   }
   routerList = [
     {
-      title: "blinko",
+      title: 'blinko',
       href: '/',
       shallow: true,
-      icon: 'basil:lightning-outline'
+      icon: 'basil:lightning-outline',
     },
     {
-      title: "notes",
+      title: 'notes',
       shallow: true,
       href: '/?path=notes',
-      icon: 'hugeicons:note'
+      icon: 'hugeicons:note',
     },
     {
-      title: "analytics",
+      title: 'analytics',
       href: '/analytics',
       hiddenMobile: true,
-      icon: 'hugeicons:analytics-01'
+      icon: 'hugeicons:analytics-01',
     },
     {
-      title: "resources",
+      title: 'resources',
       href: '/resources',
       icon: 'solar:database-linear',
       hiddenMobile: true,
     },
     {
-      title: "archived",
+      title: 'archived',
       href: '/?path=archived',
       icon: 'solar:box-broken',
       hiddenMobile: true,
     },
     {
-      title: "trash",
+      title: 'trash',
       href: '/?path=trash',
       hiddenMobile: true,
       hiddenSidebar: true,
-      icon: 'formkit:trash'
+      icon: 'formkit:trash',
     },
     {
-      title: "settings",
+      title: 'plugin',
+      href: '/plugin',
+      hiddenSidebar: true,
+      hiddenMobile: false,
+      icon: 'mingcute:plugin-line',
+    },
+    {
+      title: 'settings',
       href: '/settings',
       hiddenSidebar: true,
       hiddenMobile: true,
-      icon: 'lsicon:setting-outline'
-    }
+      icon: 'lsicon:setting-outline',
+    },
   ];
-  currentRouter = this.routerList[0]
-  currentQuery = {}
-  currentTitle = ''
-  documentHeight = 0
+  currentRouter = this.routerList[0];
+  currentQuery = {};
+  currentTitle = '';
+  documentHeight = 0;
   isSideBarActive(router: any, currentRouter: any) {
     if (router.pathname == currentRouter.href && !router.query?.path) {
-      return true
+      return true;
     }
     if (router.query?.path == currentRouter.title) {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 
   locale = new StorageState({ key: 'language', default: 'en' });
@@ -92,26 +100,26 @@ export class BaseStore implements Store {
   ];
 
   changeLanugage(i18n, locale) {
-    i18n.changeLanguage(locale)
+    i18n.changeLanguage(locale);
     dayjs.locale(i18n.resolvedLanguage);
-    this.locale.save(locale)
+    this.locale.save(locale);
   }
 
   isOnline: boolean = typeof window !== 'undefined' ? window.navigator.onLine : true;
 
   setOnlineStatus = (status: boolean) => {
     this.isOnline = status;
-  }
+  };
 
   useInitApp(router) {
-    const isPc = useMediaQuery('(min-width: 768px)')
-    const { t, i18n } = useTranslation()
+    const isPc = useMediaQuery('(min-width: 768px)');
+    const { t, i18n } = useTranslation();
 
     const documentHeight = () => {
-      const doc = document.documentElement
-      this.documentHeight = window.innerHeight
-      doc.style.setProperty('--doc-height', `${window.innerHeight}px`)
-    }
+      const doc = document.documentElement;
+      this.documentHeight = window.innerHeight;
+      doc.style.setProperty('--doc-height', `${window.innerHeight}px`);
+    };
 
     useEffect(() => {
       const handleOnline = () => this.setOnlineStatus(true);
@@ -119,44 +127,46 @@ export class BaseStore implements Store {
 
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
-      documentHeight()
-      window.addEventListener('resize', documentHeight)
+      documentHeight();
+      window.addEventListener('resize', documentHeight);
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
-        window.removeEventListener('resize', documentHeight)
-      }
-    }, [router.isReady])
+        window.removeEventListener('resize', documentHeight);
+      };
+    }, [router.isReady]);
 
     useEffect(() => {
       if (router.pathname == '/review') {
-        this.currentTitle = 'daily-review'
+        this.currentTitle = 'daily-review';
       } else if (router.pathname == '/detail') {
-        this.currentTitle = 'detail'
+        this.currentTitle = 'detail';
       } else if (router.query?.path == 'all') {
-        this.currentTitle = t('total')
+        this.currentTitle = t('total');
       } else if (router.query?.path == 'notes') {
-        this.currentTitle = 'notes'
+        this.currentTitle = 'notes';
       } else if (router.query?.path == 'archived') {
-        this.currentTitle = 'archived'
+        this.currentTitle = 'archived';
       } else if (router.pathname == '/resources') {
-        this.currentTitle = 'resources'
+        this.currentTitle = 'resources';
       } else if (router.query?.path == 'trash') {
-        this.currentTitle = 'trash'
+        this.currentTitle = 'trash';
+      } else if (router.pathname == '/plugin') {
+        this.currentTitle = 'plugin';
       } else if (router.pathname == '/') {
-        this.currentTitle = 'blinko'
+        this.currentTitle = 'blinko';
       } else {
-        this.currentTitle = this.currentRouter?.title ?? ''
+        this.currentTitle = this.currentRouter?.title ?? '';
       }
-      
+
       if (this.currentRouter?.href != router.pathname) {
-        this.currentRouter = this.routerList.find(item => item.href == router.pathname)
+        this.currentRouter = this.routerList.find((item) => item.href == router.pathname);
       }
-    }, [this.currentRouter, router.pathname, router.query])
+    }, [this.currentRouter, router.pathname, router.query]);
 
     useEffect(() => {
-      this.currentQuery = router.query
-    }, [router.query])
+      this.currentQuery = router.query;
+    }, [router.query]);
   }
 
   sidebarWidth = new StorageState<number>({
@@ -166,12 +176,12 @@ export class BaseStore implements Store {
       if (value < 220) return 220;
       if (value > 400) return 400;
       return value;
-    }
+    },
   });
 
   sidebarCollapsed = new StorageState<boolean>({
     key: 'sidebar-collapsed',
-    default: false
+    default: false,
   });
 
   isResizing = false;
@@ -220,9 +230,9 @@ export class BaseStore implements Store {
   toggleSidebar = () => {
     const newCollapsed = !this.isSidebarCollapsed;
     this.sidebarCollapsed.save(newCollapsed);
-  }
+  };
 
   collapseSidebar = () => {
     this.sidebarCollapsed.save(false);
-  }
+  };
 }

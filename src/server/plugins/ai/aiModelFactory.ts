@@ -211,13 +211,18 @@ export class AiModelFactory {
       ${globalConfig.aiModel}-
       ${globalConfig.aiApiEndpoint}-
       ${globalConfig.embeddingTopK}-
-      ${globalConfig.embeddingScore}
+      ${globalConfig.embeddingScore}-
+      ${globalConfig.isUseHttpProxy}-
+      ${globalConfig.httpProxyHost}-
+      ${globalConfig.httpProxyPort}-
+      ${globalConfig.httpProxyPassword}-
+      ${globalConfig.httpProxyUsername}
       `,
       async () => {
         const createProviderResult = async (provider: any) => ({
-          LLM: provider.LLM() as LanguageModelV1,
+          LLM: (await provider.LLM()) as LanguageModelV1,
           VectorStore: (await provider.VectorStore()) as LibSQLVector,
-          Embeddings: provider.Embeddings() as EmbeddingModelV1<string>,
+          Embeddings: (await provider.Embeddings()) as EmbeddingModelV1<string>,
           MarkdownSplitter: provider.MarkdownSplitter() as MarkdownTextSplitter,
           TokenTextSplitter: provider.TokenTextSplitter() as TokenTextSplitter,
         });

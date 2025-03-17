@@ -1,20 +1,20 @@
-import { AiBaseModelPrivider } from '.';
+import { LanguageModelV1, ProviderV1 } from '@ai-sdk/provider';
+import { AiBaseModelProvider } from '.';
 import { createXai } from '@ai-sdk/xai';
 
-export class GrokModelProvider extends AiBaseModelPrivider {
+export class GrokModelProvider extends AiBaseModelProvider {
   constructor({ globalConfig }) {
     super({ globalConfig });
-    this.provider = createXai({
-      apiKey: this.globalConfig.aiApiKey
+  }
+  
+  protected createProvider(): ProviderV1 {
+    return createXai({
+      apiKey: this.globalConfig.aiApiKey,
+      // fetch: this.proxiedFetch
     });
   }
 
-  LLM() {
-    try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'grok-v1');
-    } catch (error) {
-      throw error;
-    }
+  protected getLLM(): LanguageModelV1 {
+    return this.provider.languageModel(this.globalConfig.aiModel ?? 'grok-v1');
   }
-
-}  
+}

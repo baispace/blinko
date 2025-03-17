@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Autocomplete, AutocompleteItem, Button, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider } from '@heroui/react';
+import { Autocomplete, AutocompleteItem, Button, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider, Textarea } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
@@ -16,15 +16,31 @@ import TagSelector from '@/components/Common/TagSelector';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
+import { StorageState } from '@/store/standard/StorageState';
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
   const ai = RootStore.Get(AiStore);
   const { t } = useTranslation();
   const isPc = useMediaQuery('(min-width: 768px)');
+  const embeddingModelsStorage = new StorageState({ key: 'embeddingModels' });
 
   const [rebuildProgress, setRebuildProgress] = useState<{ percentage: number; isRunning: boolean } | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [embeddingModels, setEmbeddingModels] = useState<Record<string, Array<{ label: string, value: string }>>>({});
+
+  // Load embedding models from localStorage when component mounts
+  useEffect(() => {
+    const savedEmbeddingModels = embeddingModelsStorage.load();
+    if (savedEmbeddingModels) {
+      setEmbeddingModels(savedEmbeddingModels);
+      
+      // Update AI store with the saved embedding models
+      if (blinko.config.value?.aiModelProvider && savedEmbeddingModels[blinko.config.value.aiModelProvider]) {
+        ai.embeddingSelect[blinko.config.value.aiModelProvider] = savedEmbeddingModels[blinko.config.value.aiModelProvider];
+      }
+    }
+  }, []);
 
   const fetchRebuildProgress = async () => {
     try {
@@ -76,6 +92,7 @@ export const AiSetting = observer(() => {
     apiKey: '',
     apiVersion: '',
     embeddingApiKey: '',
+    aiPostProcessingPrompt: '',
     embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
@@ -108,6 +125,7 @@ export const AiSetting = observer(() => {
     store.embeddingDimensions = blinko.config.value?.embeddingDimensions!;
     store.tavilyApiKey = blinko.config.value?.tavilyApiKey!;
     store.tavilyMaxResult = Number(blinko.config.value?.tavilyMaxResult!);
+    store.aiPostProcessingPrompt = blinko.config.value?.aiPostProcessingPrompt!;
   }, [blinko.config.value]);
 
   return (
@@ -184,34 +202,133 @@ export const AiSetting = observer(() => {
         <Item
           leftContent={<>{t('model')}</>}
           rightContent={
-            <Autocomplete
-              radius="lg"
-              allowsCustomValue={true}
-              selectedKey={store.aiModel ?? ''}
-              inputValue={store.aiModel ?? ''}
-              onInputChange={(e) => {
-                store.aiModel = e;
-              }}
-              onBlur={(e) => {
-                PromiseCall(
-                  api.config.update.mutate({
-                    key: 'aiModel',
-                    value: store.aiModel,
-                  }),
-                  { autoAlert: false },
-                );
-              }}
-              onSelectionChange={(key) => {
-                store.aiModel = key as string;
-              }}
-              size="sm"
-              className="w-[200px]"
-              label={t('select-model')}
-            >
-              {(ai.modelSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
-                <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
-              ))}
-            </Autocomplete>
+            <div className="flex items-center gap-2">
+              <Autocomplete
+                radius="lg"
+                allowsCustomValue={true}
+                selectedKey={store.aiModel ?? ''}
+                inputValue={store.aiModel ?? ''}
+                onInputChange={(e) => {
+                  store.aiModel = e;
+                }}
+                onBlur={(e) => {
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'aiModel',
+                      value: store.aiModel,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+                onSelectionChange={(key) => {
+                  store.aiModel = key as string;
+                }}
+                size="sm"
+                className="w-[200px] md:w-[300px]"
+                label={t('select-model')}
+              >
+                {(ai.modelSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
+                  <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+                ))}
+              </Autocomplete>
+              <Button 
+                size="sm"
+                color="primary"
+                variant='light'
+                isIconOnly
+                onPress={async () => {
+                  try {
+                    const endpoint = store.apiEndPoint || "https://api.openai.com";
+                    const url = `${endpoint}/models`;
+                    const token = store.apiKey;
+                    
+                    const response = await fetch(url, {
+                      method: 'GET',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data && data.data && Array.isArray(data.data)) {
+                      // Create a new array of models in the format expected by the app
+                      const modelsList = data.data.map(model => ({
+                        label: model.id,
+                        value: model.id
+                      }));
+                      
+                      // Update the model selection list for the current provider
+                      ai.modelSelect[blinko.config.value?.aiModelProvider!] = modelsList;
+                      
+                      // Fetch embedding models based on the provider
+                      try {
+                        let embeddingUrl = '';
+                        let embeddingModelsList = [];
+                        const provider = blinko.config.value?.aiModelProvider!;
+                        
+                        // Different endpoints/structures for different providers
+                        if (provider === 'OpenAI') {
+                          embeddingUrl = `${endpoint}/v1/models`;
+                          const embeddingResponse = await fetch(embeddingUrl, {
+                            method: 'GET',
+                            headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json'
+                            }
+                          });
+                          const embeddingData = await embeddingResponse.json();
+                          
+                          if (embeddingData && embeddingData.data && Array.isArray(embeddingData.data)) {
+                            // Filter models that contain 'embedding' in their ID
+                            embeddingModelsList = embeddingData.data
+                              .filter(model => model.id.toLowerCase().includes('embedding'))
+                              .map(model => ({
+                                label: model.id,
+                                value: model.id
+                              }));
+                          }
+                        } else if (provider === 'Ollama') {
+                          // Ollama specific implementation would go here
+                          // For now, we'll use the same models for embedding
+                          embeddingModelsList = modelsList;
+                        } else {
+                          // Generic fallback for other providers
+                          embeddingModelsList = modelsList;
+                        }
+                        
+                        if (embeddingModelsList.length > 0) {
+                          // Get current embedding models from storage
+                          const currentEmbeddingModels = embeddingModelsStorage.value || {};
+                          
+                          // Update with new models for the current provider
+                          currentEmbeddingModels[provider] = embeddingModelsList;
+                          
+                          // Save to localStorage
+                          embeddingModelsStorage.setValue(currentEmbeddingModels);
+                          
+                          // Update state and AI store's embedding models
+                          setEmbeddingModels(currentEmbeddingModels);
+                          ai.embeddingSelect[provider] = embeddingModelsList;
+                        }
+                      } catch (error) {
+                        console.error('Error fetching embedding models:', error);
+                      }
+                      
+                      RootStore.Get(ToastPlugin).success(t('model-list-updated'));
+                    } else {
+                      throw new Error('ERROR');
+                    }
+                  } catch (error) {
+                    console.error('Error fetching models:', error);
+                    RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+                  }
+                }}
+              >
+                <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
+              </Button>
+            </div>
           }
         />
 
@@ -219,15 +336,16 @@ export const AiSetting = observer(() => {
           type={isPc ? 'row' : 'col'}
           leftContent={
             <div className="flex items-center gap-2">
-              {' '}
-              <ItemWithTooltip
-                content={<>{t('embedding-model')}</>}
-                toolTipContent={
+              {t('embedding-model')}
+              <Tooltip
+                content={
                   <div className="w-[300px] flex flex-col gap-2">
                     <div>{t('embedding-model-description')}</div>
                   </div>
                 }
-              />{' '}
+              >
+                <Icon icon="proicons:info" width="18" height="18" />
+              </Tooltip>
               <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
                 Advanced
               </Chip>
@@ -259,7 +377,8 @@ export const AiSetting = observer(() => {
                 className={`${isPc ? 'w-[250px]' : 'w-full'}`}
                 label={t('embedding-model')}
               >
-                {(ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
+                {((embeddingModels[blinko.config.value?.aiModelProvider!]) || 
+                  ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
                   <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
                 ))}
               </Autocomplete>
@@ -674,6 +793,127 @@ export const AiSetting = observer(() => {
             </div>
           }
         />
+      </CollapsibleCard>
+
+      <CollapsibleCard className="mt-4" icon="tabler:robot" title={t('ai-post-processing')}>
+        <Item
+          leftContent={
+            <div className="flex items-center gap-2">
+              {t('enable-ai-post-processing')}
+              <Tooltip
+                content={
+                  <div className="w-[300px] flex flex-col gap-2">
+                    <div>
+                      {t('automatically-process-notes-after-creation-or-update')}
+                    </div>
+                    <div>
+                      {t('can-generate-summaries-tags-or-perform-analysis')}
+                    </div>
+                  </div>
+                }
+              >
+                <Icon icon="proicons:info" width="18" height="18" />
+              </Tooltip>
+            </div>
+          }
+          rightContent={
+            <Switch
+              isSelected={blinko.config.value?.isUseAiPostProcessing}
+              onChange={(e) => {
+                PromiseCall(
+                  api.config.update.mutate({
+                    key: 'isUseAiPostProcessing',
+                    value: e.target.checked,
+                  }),
+                  { autoAlert: false },
+                );
+              }}
+            />
+          }
+        />
+
+        {blinko.config.value?.isUseAiPostProcessing && (
+          <>
+            <Item
+              type={isPc ? 'row' : 'col'}
+              leftContent={
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    {t('ai-post-processing-prompt')}
+                    <Tooltip
+                      content={
+                        <div className="w-[300px] flex flex-col gap-2">
+                          <div>{t('define-custom-prompt-for-ai-to-process-notes')}</div>
+                        </div>
+                      }
+                    >
+                      <Icon icon="proicons:info" width="18" height="18" />
+                    </Tooltip>
+                  </div>
+                  <div className="text-[12px] text-default-400">{t('prompt-used-for-post-processing-notes')}</div>
+                </div>
+              }
+              rightContent={
+                <Textarea
+                  radius="lg"
+                  value={store.aiPostProcessingPrompt ?? t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
+                  onBlur={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'aiPostProcessingPrompt',
+                        value: e.target.value,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.aiPostProcessingPrompt = e.target.value;
+                  }}
+                  placeholder={t('enter-custom-prompt-for-post-processing')}
+                  className="w-full"
+                />
+              }
+            />
+
+            <Item
+              type={isPc ? 'row' : 'col'}
+              leftContent={
+                <div className="flex flex-col gap-1">
+                  <div>{t('ai-post-processing-mode')}</div>
+                  <div className="text-[12px] text-default-400">{t('choose-what-to-do-with-ai-results')}</div>
+                </div>
+              }
+              rightContent={
+                <Select
+                  radius="lg"
+                  selectedKeys={[blinko.config.value?.aiPostProcessingMode ?? 'comment']}
+                  onSelectionChange={(key) => {
+                    const value = Array.from(key)[0] as string;
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'aiPostProcessingMode',
+                        value: value,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  size="sm"
+                  className="w-[200px]"
+                >
+                  <SelectItem key="comment" startContent={<Icon icon="tabler:message" />}>
+                    {t('add-as-comment')}
+                  </SelectItem>
+                  <SelectItem key="tags" startContent={<Icon icon="tabler:tags" />}>
+                    {t('auto-add-tags')}
+                  </SelectItem>
+                  <SelectItem key="both" startContent={<Icon icon="tabler:analyze" />}>
+                    {t('both')}
+                  </SelectItem>
+                </Select>
+              }
+            />
+          </>
+        )}
       </CollapsibleCard>
 
       <CollapsibleCard icon="pajamas:issue-type-enhancement" title={t('ai-tools')} className="mt-4">

@@ -1,28 +1,25 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { AiBaseModelPrivider } from '.';
+import { AiBaseModelProvider } from '.';
+import { LanguageModelV1, ProviderV1 } from '@ai-sdk/provider';
 
-export class OpenRouterModelProvider extends AiBaseModelPrivider {
+export class OpenRouterModelProvider extends AiBaseModelProvider {
   constructor({ globalConfig }) {
     super({ globalConfig });
-    //@ts-ignore
-    this.provider = createOpenRouter({
-      apiKey: this.globalConfig.aiApiKey
+  }
+
+  protected createProvider(): any {
+    return createOpenRouter({
+      apiKey: this.globalConfig.aiApiKey, 
+      baseURL: this.globalConfig.aiApiEndpoint,
+      // fetch: this.proxiedFetch
     });
   }
 
-  LLM() {
-    try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'openai/gpt-3.5-turbo')
-    } catch (error) {
-      throw error
-    }
+  protected getLLM(): LanguageModelV1 {
+    return this.provider.languageModel(this.globalConfig.aiModel ?? 'openai/gpt-3.5-turbo');
   }
 
   Image() {
-    try {
-      return this.provider.imageModel?.('openai/dall-e-3')
-    } catch (error) {
-      throw error
-    }
+    return this.provider.imageModel?.('dall-e-3');
   }
 }

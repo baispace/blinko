@@ -1,22 +1,21 @@
-import { AiBaseModelPrivider } from '.';
+import { AiBaseModelProvider } from '.';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { LanguageModelV1, ProviderV1 } from '@ai-sdk/provider';
 
-
-export class AnthropicModelProvider extends AiBaseModelPrivider {
+export class AnthropicModelProvider extends AiBaseModelProvider {
   constructor({ globalConfig }) {
     super({ globalConfig });
-    this.provider = createAnthropic({
+  }
+
+  protected createProvider(): ProviderV1 {
+    return createAnthropic({
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      // fetch: this.proxiedFetch
     });
   }
 
-  LLM() {
-    try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'claude-3-5-sonnet-20241022')
-    } catch (error) {
-      throw error
-    }
+  protected getLLM(): LanguageModelV1 {
+    return this.provider.languageModel(this.globalConfig.aiModel ?? 'claude-3-5-sonnet-20241022');
   }
 }
-

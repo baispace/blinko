@@ -18,6 +18,7 @@ import { MDocument } from '@mastra/rag';
 import { embed, embedMany } from 'ai';
 import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
+import { userCaller } from '../routers/_app';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
@@ -91,13 +92,11 @@ export class AiService {
         model: Embeddings,
       });
 
-      await VectorStore.upsert(
-       {
+      await VectorStore.upsert({
         indexName: 'blinko',
         vectors: embeddings,
         metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
-       }
-      );
+      });
 
       try {
         await prisma.notes.update({
@@ -135,14 +134,11 @@ export class AiService {
         model: Embeddings,
       });
 
-      await VectorStore.upsert(
-        {
-          indexName: 'blinko',
-          vectors: embeddings,
-          metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, isAttachment: true, updatedAt })),
-
-        }
-      );
+      await VectorStore.upsert({
+        indexName: 'blinko',
+        vectors: embeddings,
+        metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, isAttachment: true, updatedAt })),
+      });
 
       try {
         await prisma.notes.update({
@@ -345,6 +341,112 @@ export class AiService {
     } catch (error) {
       console.log(error);
       throw new Error(error);
+    }
+  }
+
+  static async postProcessNote({ noteId, ctx }: { noteId: number; ctx: Context }) {
+    try {
+      const caller = userCaller(ctx);
+      // Get the configuration
+      const config = await AiModelFactory.globalConfig();
+
+      // Check if post-processing is enabled
+      if (!config.isUseAiPostProcessing) {
+        return { success: false, message: 'AI post-processing not enabled' };
+      }
+
+      // Fetch the note
+      const note = await prisma.notes.findUnique({
+        where: { id: noteId },
+        select: {
+          content: true,
+          accountId: true,
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+        },
+      });
+
+      if (!note) {
+        return { success: false, message: 'Note not found' };
+      }
+
+      // Get the custom prompt, or use default
+      const prompt = config.aiPostProcessingPrompt || 'Analyze the following note content. Extract key topics as tags and provide a brief summary of the main points.';
+
+      // Process with AI
+      const agent = await AiModelFactory.CommentAgent();
+      const result = await agent.generate([
+        {
+          role: 'user',
+          content: prompt,
+        },
+        {
+          role: 'user',
+          content: `Note content: ${note.content}`,
+        },
+      ]);
+
+      const processingMode = config.aiPostProcessingMode || 'comment';
+      const aiResponse = result.text.trim();
+
+      // Handle based on the processing mode
+      if (processingMode === 'comment' || processingMode === 'both') {
+        // Add comment
+        await prisma.comments.create({
+          data: {
+            content: aiResponse,
+            noteId,
+            guestName: 'Blinko AI',
+            guestIP: '',
+            guestUA: '',
+          },
+        });
+
+        await CreateNotification({
+          accountId: note.accountId ?? 0,
+          title: 'ai-post-processing-notification',
+          content: 'ai-processed-your-note',
+          type: NotificationType.COMMENT,
+        });
+      }
+
+      if (processingMode === 'tags' || processingMode === 'both') {
+        try {
+          // Extract tags from AI response
+          // Look for lines that have "tags:", "标签:" or similar indicators
+          const tagMatches = aiResponse.match(/(?:tags|标签|tag)[:\s]+(.*?)(?:\n|$)/i);
+          let suggestedTags: string[] = [];
+
+          if (tagMatches && tagMatches[1]) {
+            // Extract tags from format like "tags: tag1, tag2, tag3"
+            suggestedTags = tagMatches[1].split(',').map((tag) => tag.trim());
+          } else {
+            // If no clear tag format, process with an agent specialized for tag extraction
+            const agent = await AiModelFactory.TagAgent();
+            const result = await agent.generate(
+              `Existing tags list: [${note.tags.map((tag) => tag.tag.name).join(', ')}]\nPlease recommend appropriate tags for the following content:\n${note.content}`
+            )
+            suggestedTags = result.text.split(',').map((tag) => tag.trim());
+          }
+
+          // Filter out empty tags and limit to 5 tags max
+          suggestedTags = suggestedTags.filter(Boolean).slice(0, 5);
+          caller.notes.upsert({
+            id: noteId,
+            content: note.content + '\n' + suggestedTags.join(' '),
+          });
+        } catch (error) {
+          console.error('Error processing tags:', error);
+        }
+      }
+
+      return { success: true, message: 'Note processed successfully' };
+    } catch (error) {
+      console.error('Error in post-processing note:', error);
+      return { success: false, message: error.message || 'Unknown error' };
     }
   }
 }

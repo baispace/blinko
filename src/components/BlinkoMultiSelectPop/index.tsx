@@ -12,14 +12,15 @@ import { MultiSelectToolbar } from '../Common/MultiSelectToolbar';
 export const BlinkoMultiSelectPop = observer(() => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
+  const isArchivedView = blinko.noteListFilterConfig.isArchived;
 
   const actions = [
     {
-      icon: "eva:archive-outline",
-      text: t('archive'),
+      icon: isArchivedView ? "eva:archive-outline" : "eva:archive-outline",
+      text: isArchivedView ? t('recovery') : t('archive'),
       onClick: async () => {
         await RootStore.Get(ToastPlugin).promise(
-          api.notes.updateMany.mutate({ ids: blinko.curMultiSelectIds, isArchived: true }),
+          api.notes.updateMany.mutate({ ids: blinko.curMultiSelectIds, isArchived: !isArchivedView }),
           {
             loading: t('in-progress'),
             success: <b>{t('your-changes-have-been-saved')}</b>,

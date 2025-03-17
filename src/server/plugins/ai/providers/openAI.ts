@@ -1,30 +1,33 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { AiBaseModelPrivider } from '.';
+import { AiBaseModelProvider } from '.';
+import { LanguageModelV1, ProviderV1 } from '@ai-sdk/provider';
 
-
-export class OpenAIModelProvider extends AiBaseModelPrivider {
+export class OpenAIModelProvider extends AiBaseModelProvider {
   constructor({ globalConfig }) {
     super({ globalConfig });
-    this.provider = createOpenAI({
+  }
+
+  protected createProvider(): ProviderV1 {
+    return createOpenAI({
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
+      //override fetch on stream has some bug
+      // fetch: this.proxiedFetch
     });
   }
 
-  LLM() {
-    try {
-      return this.provider.languageModel(this.globalConfig.aiModel ?? 'gpt-3.5-turbo')
-    } catch (error) {
-      throw error
-    }
+  protected getLLM(): LanguageModelV1 {
+    return this.provider.languageModel(this.globalConfig.aiModel ?? 'gpt-3.5-turbo');
   }
 
-  Image() {
+  async Image() {
+    // Wait for initialization to complete
+    await this.ready;
+    
     try {
-      return this.provider.imageModel?.('dall-e-3')
+      return this.provider.imageModel?.('dall-e-3');
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 }
-

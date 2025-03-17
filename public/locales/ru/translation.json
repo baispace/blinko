@@ -473,5 +473,6 @@
   "press-enter-to-select-first-result": "Нажмите Enter, чтобы выбрать первый результат",
   "ask-ai": "Спросите AI",
   "ask-blinko-ai-about-this-query": "Спросите Blinko AI об этом запросе",
-  "search-or-ask-ai": "Поиск примечания, настройки или спросите AI ..."
+  "search-or-ask-ai": "Поиск примечания, настройки или спросите AI ...",
+  "plugin": "Плагин"
 }

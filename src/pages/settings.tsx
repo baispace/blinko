@@ -146,7 +146,17 @@ const Page = observer(() => {
 
     if (blinkoStore.searchText) {
       const lowerSearchText = blinkoStore.searchText.toLowerCase();
-      settings = settings.filter((setting) => setting.title.toLowerCase().includes(lowerSearchText) || setting.keywords?.some((keyword) => keyword.toLowerCase().includes(lowerSearchText)));
+      const filteredSettings = settings.filter((setting) => 
+        setting.title.toLowerCase().includes(lowerSearchText) || 
+        setting.keywords?.some((keyword) => keyword.toLowerCase().includes(lowerSearchText))
+      );
+      
+      // If no settings match the search criteria, return all settings instead of an empty list
+      if (filteredSettings.length === 0) {
+        return settings;
+      }
+      
+      return filteredSettings;
     }
 
     return settings;

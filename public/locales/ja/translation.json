@@ -513,5 +513,6 @@
   "press-enter-to-select-first-result": "Enterを押して、最初の結果を選択します",
   "ask-ai": "aiに尋ねてください",
   "ask-blinko-ai-about-this-query": "Blinko AIにこのクエリについて尋ねてください",
-  "search-or-ask-ai": "ノート、設定、またはAIに尋ねる..."
+  "search-or-ask-ai": "ノート、設定、またはAIに尋ねる...",
+  "plugin": "プラグイン"
 }

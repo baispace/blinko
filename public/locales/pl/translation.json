@@ -556,5 +556,6 @@
   "press-enter-to-select-first-result": "Naciśnij Enter, aby wybrać pierwszy wynik",
   "ask-ai": "Zapytaj AI",
   "ask-blinko-ai-about-this-query": "Zapytaj Blinko AI o to zapytanie",
-  "search-or-ask-ai": "Uwaga wyszukiwania, ustawienia lub zapytaj AI ..."
+  "search-or-ask-ai": "Uwaga wyszukiwania, ustawienia lub zapytaj AI ...",
+  "plugin": "Wtyczka"
 }

@@ -558,5 +558,6 @@
   "press-enter-to-select-first-result": "İlk Sonucu seçmek için Enter tuşuna basın",
   "ask-ai": "AI'ya sor",
   "ask-blinko-ai-about-this-query": "Blinko Ai'ye bu sorgu hakkında sorun",
-  "search-or-ask-ai": "Arama notu, ayarlar veya AI sorun ..."
+  "search-or-ask-ai": "Arama notu, ayarlar veya AI sorun ...",
+  "plugin": "Eklenti"
 }

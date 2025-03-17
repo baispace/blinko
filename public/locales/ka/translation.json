@@ -555,5 +555,6 @@
   "press-enter-to-select-first-result": "დააჭირეთ Enter- ს პირველი შედეგის შესარჩევად",
   "ask-ai": "ჰკითხეთ აი",
   "ask-blinko-ai-about-this-query": "ჰკითხეთ Blinko AI- ს ამ შეკითხვის შესახებ",
-  "search-or-ask-ai": "მოძებნეთ შენიშვნა, პარამეტრები ან ჰკითხეთ AI ..."
+  "search-or-ask-ai": "მოძებნეთ შენიშვნა, პარამეტრები ან ჰკითხეთ AI ...",
+  "plugin": "ჩასაშლელი"
 }

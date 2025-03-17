@@ -554,5 +554,6 @@
   "press-enter-to-select-first-result": "اضغط على Enter لتحديد النتيجة الأولى",
   "ask-ai": "اسأل الذكاء الاصطناعي",
   "ask-blinko-ai-about-this-query": "اسأل Blinko AI عن هذا الاستعلام",
-  "search-or-ask-ai": "بحث ، أو الإعدادات أو اسأل الذكاء الاصطناعي ..."
+  "search-or-ask-ai": "بحث ، أو الإعدادات أو اسأل الذكاء الاصطناعي ...",
+  "plugin": "البرنامج المساعد"
 }

@@ -535,5 +535,6 @@
   "press-enter-to-select-first-result": "Enter를 누르면 첫 번째 결과를 선택하십시오",
   "ask-ai": "AI에게 물어보세요",
   "ask-blinko-ai-about-this-query": "이 쿼리에 대해 Blinko AI에게 문의하십시오",
-  "search-or-ask-ai": "검색 메모, 설정 또는 ai ..."
+  "search-or-ask-ai": "검색 메모, 설정 또는 ai ...",
+  "plugin": "플러그인"
 }

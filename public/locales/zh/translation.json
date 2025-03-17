@@ -558,5 +558,6 @@
   "press-enter-to-select-first-result": "按Enter选择第一个结果",
   "ask-ai": "问AI",
   "ask-blinko-ai-about-this-query": "向Blinko AI询问此查询",
-  "search-or-ask-ai": "搜索说明，设置或询问AI ..."
+  "search-or-ask-ai": "搜索说明，设置或询问AI ...",
+  "plugin": "插件"
 }

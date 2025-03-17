@@ -536,5 +536,6 @@
   "press-enter-to-select-first-result": "Appuyez sur Entrée pour sélectionner le premier résultat",
   "ask-ai": "Demandez à l'AI",
   "ask-blinko-ai-about-this-query": "Demandez à Blinko Ai sur cette requête",
-  "search-or-ask-ai": "Note de recherche, paramètres ou demandez à l'IA ..."
+  "search-or-ask-ai": "Note de recherche, paramètres ou demandez à l'IA ...",
+  "plugin": "Plugin"
 }

@@ -52,6 +52,13 @@ export class BaseStore implements Store {
       icon: 'formkit:trash'
     },
     {
+      title: "plugin",
+      href: '/plugin',
+      hiddenSidebar: true,
+      hiddenMobile: false,
+      icon: 'mingcute:plugin-line'
+    },
+    {
       title: "settings",
       href: '/settings',
       hiddenSidebar: true,
@@ -143,6 +150,8 @@ export class BaseStore implements Store {
         this.currentTitle = 'resources'
       } else if (router.query?.path == 'trash') {
         this.currentTitle = 'trash'
+      } else if (router.pathname == '/plugin') {
+        this.currentTitle = 'plugin'
       } else if (router.pathname == '/') {
         this.currentTitle = 'blinko'
       } else {

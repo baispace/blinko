@@ -1,3 +1,20 @@
+# [0.45.0](https://github.com/blinko-space/blinko/compare/v0.44.1...v0.45.0) (2025-03-17)
+
+
+### Bug Fixes
+
+* ai fetch ([ff5ac83](https://github.com/blinko-space/blinko/commit/ff5ac838e0dd97589abb660a148dd9154e2312ad))
+* ai setting panel ([f0cd723](https://github.com/blinko-space/blinko/commit/f0cd723fffca4cbf75bf7fe5f250ce8d28dd22d5))
+* automated AI tagging [#552](https://github.com/blinko-space/blinko/issues/552) ([c76381e](https://github.com/blinko-space/blinko/commit/c76381e205a3288af29155fa547755bd54bc34cb))
+* plugin page & recovery ([0cb62d0](https://github.com/blinko-space/blinko/commit/0cb62d08227a893467e8093cf91120272956f28c))
+* search bar input ([39f5c27](https://github.com/blinko-space/blinko/commit/39f5c27e5033757e8b1f15628a19887c317e8a38))
+* support git model list ([750f5ef](https://github.com/blinko-space/blinko/commit/750f5ef284afc2054d8a2eae3b98097eae56633f))
+
+
+### Features
+
+* support http proxy ([8f25604](https://github.com/blinko-space/blinko/commit/8f25604ae857529662860809fd68119150a65dff))
+
 ## [0.44.1](https://github.com/blinko-space/blinko/compare/v0.44.0...v0.44.1) (2025-03-16)
 
 

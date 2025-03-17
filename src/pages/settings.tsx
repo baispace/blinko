@@ -13,6 +13,7 @@ import { StorageSetting } from '@/components/BlinkoSettings/StorageSetting';
 import { ExportSetting } from '@/components/BlinkoSettings/ExportSetting';
 import { MusicSetting } from '@/components/BlinkoSettings/MusicSetting';
 import { SSOSetting } from '@/components/BlinkoSettings/SSOSetting';
+import { HttpProxySetting } from '@/components/BlinkoSettings/HttpProxySetting';
 import { useTranslation } from 'react-i18next';
 import { JSX } from 'react';
 import { ScrollableTabs, TabItem } from '@/components/Common/ScrollableTabs';
@@ -69,6 +70,14 @@ export const allSettings: SettingItem[] = [
     component: <AiSetting />,
     requireAdmin: true,
     keywords: ['ai', 'artificial intelligence', '人工智能'],
+  },
+  {
+    key: 'httpproxy',
+    title: ('http-proxy'),
+    icon: 'mdi:connection',
+    component: <HttpProxySetting />,
+    requireAdmin: true,
+    keywords: ['proxy', 'http', 'connection', '代理', 'HTTP代理'],
   },
   {
     key: 'task',

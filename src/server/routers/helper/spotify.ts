@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getWithProxy, postWithProxy } from './proxy';
 
 interface SpotifyConfig {
   consumer: {
@@ -58,17 +59,16 @@ export class SpotifyClient {
     if (this.token) return this.token;
 
     const auth = Buffer.from(`${this.config.consumer.key}:${this.config.consumer.secret}`).toString('base64');
-    
+
     try {
-      const response = await axios.post('https://accounts.spotify.com/api/token', 
-        'grant_type=client_credentials',
-        {
+      const response = await postWithProxy('https://accounts.spotify.com/api/token', 'grant_type=client_credentials', {
+        config: {
           headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-      );
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      });
 
       this.token = response.data.access_token;
       return this.token;
@@ -109,7 +109,7 @@ export class SpotifyClient {
       const response = await this.search({
         type: 'track',
         query: `artist:"${artist}" track:"${title}"`,
-        limit: 10
+        limit: 10,
       });
 
       if (!response.tracks.items.length) {
@@ -118,10 +118,7 @@ export class SpotifyClient {
 
       // Find the best matching track
       const tracks = response.tracks.items;
-      const matchedTrack = tracks.find(track => 
-        track.name.toLowerCase() === title.toLowerCase() && 
-        track.artists?.some(a => a.name.toLowerCase() === artist.toLowerCase())
-      ) || tracks[0];
+      const matchedTrack = tracks.find((track) => track.name.toLowerCase() === title.toLowerCase() && track.artists?.some((a) => a.name.toLowerCase() === artist.toLowerCase())) || tracks[0];
 
       return matchedTrack?.album?.images?.[0]?.url || '';
     } catch (error) {
@@ -133,15 +130,17 @@ export class SpotifyClient {
   private async getArtistImage(artist: string): Promise<string> {
     try {
       const token = await this.getToken();
-      const response = await axios.get<SpotifyArtistSearchResponse>('https://api.spotify.com/v1/search', {
-        params: {
-          q: artist,
-          type: 'artist',
-          limit: 1
+      const response: { data: SpotifyArtistSearchResponse } = await getWithProxy('https://api.spotify.com/v1/search', {
+        config: {
+          params: {
+            q: artist,
+            type: 'artist',
+            limit: 1,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const artists = response.data.artists.items;
@@ -160,19 +159,21 @@ export class SpotifyClient {
     }
   }
 
-  private async search(params: { type: 'track' | 'artist', query: string, limit?: number }): Promise<SpotifySearchResponse> {
+  private async search(params: { type: 'track' | 'artist'; query: string; limit?: number }): Promise<SpotifySearchResponse> {
     const token = await this.getToken();
-    
+
     try {
-      const response = await axios.get('https://api.spotify.com/v1/search', {
-        params: {
-          q: params.query,
-          type: params.type,
-          limit: params.limit || 1
+      const response: { data: SpotifySearchResponse } = await getWithProxy('https://api.spotify.com/v1/search', {
+        config: {
+          params: {
+            q: params.query,
+            type: params.type,
+            limit: params.limit || 1,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       return response.data;

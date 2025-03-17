@@ -85,6 +85,11 @@ export const ZConfigKey = z.union([
   z.literal('isUseAiPostProcessing'),
   z.literal('aiPostProcessingPrompt'),
   z.literal('aiPostProcessingMode'),
+  z.literal('isUseHttpProxy'),
+  z.literal('httpProxyHost'),
+  z.literal('httpProxyPort'),
+  z.literal('httpProxyUsername'),
+  z.literal('httpProxyPassword'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -159,7 +164,12 @@ export const ZConfigSchema = z.object({
   isHideBlogImages: z.boolean().optional(),
   isUseAiPostProcessing: z.boolean().optional(),
   aiPostProcessingPrompt: z.string().optional(),
-  aiPostProcessingMode: z.string().optional()
+  aiPostProcessingMode: z.string().optional(),
+  isUseHttpProxy: z.boolean().optional(),
+  httpProxyHost: z.string().optional(),
+  httpProxyPort: z.number().optional(),
+  httpProxyUsername: z.string().optional(),
+  httpProxyPassword: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

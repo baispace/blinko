@@ -238,7 +238,7 @@ export const aiRouter = router({
         const result = await agent.generate([
           { role: 'user', content: 'test' }
         ]);
-        
+        console.log(result.text)
         return { success: !!result };
       } catch (error) {
         console.error("Connection test failed:", error);

@@ -10,6 +10,7 @@ import { pluginInfoSchema, installPluginSchema } from '../types';
 import { pluginSchema } from '@/lib/prismaZodType';
 import { cache } from '@/lib/cache';
 import { existsSync } from 'fs';
+import { getWithProxy } from './helper/proxy';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 const MAX_RETRIES = 3;
@@ -45,7 +46,7 @@ export const pluginRouter = router({
     .query(async () => {
       return cache.wrap('plugin-list', async () => {
         try {
-          const response = await axios.get('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
+          const response = await getWithProxy('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
           return response.data;
         } catch (error) {
           console.error('Failed to fetch plugin list:', error);

@@ -573,5 +573,6 @@
   "enable-ai-post-processing": "Enable ai post processing",
   "automatically-process-notes-after-creation-or-update": "Automatically process notes after creation",
   "can-generate-summaries-tags-or-perform-analysis": "Can generate summaries tags on perform analysis",
-  "ai-post-processing": "AI post processing"
+  "ai-post-processing": "AI post processing",
+  "model-list-updated": "Model list updated"
 }

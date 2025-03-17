@@ -16,15 +16,31 @@ import TagSelector from '@/components/Common/TagSelector';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
+import { StorageState } from '@/store/standard/StorageState';
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
   const ai = RootStore.Get(AiStore);
   const { t } = useTranslation();
   const isPc = useMediaQuery('(min-width: 768px)');
+  const embeddingModelsStorage = new StorageState({ key: 'embeddingModels' });
 
   const [rebuildProgress, setRebuildProgress] = useState<{ percentage: number; isRunning: boolean } | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [embeddingModels, setEmbeddingModels] = useState<Record<string, Array<{ label: string, value: string }>>>({});
+
+  // Load embedding models from localStorage when component mounts
+  useEffect(() => {
+    const savedEmbeddingModels = embeddingModelsStorage.load();
+    if (savedEmbeddingModels) {
+      setEmbeddingModels(savedEmbeddingModels);
+      
+      // Update AI store with the saved embedding models
+      if (blinko.config.value?.aiModelProvider && savedEmbeddingModels[blinko.config.value.aiModelProvider]) {
+        ai.embeddingSelect[blinko.config.value.aiModelProvider] = savedEmbeddingModels[blinko.config.value.aiModelProvider];
+      }
+    }
+  }, []);
 
   const fetchRebuildProgress = async () => {
     try {
@@ -186,34 +202,133 @@ export const AiSetting = observer(() => {
         <Item
           leftContent={<>{t('model')}</>}
           rightContent={
-            <Autocomplete
-              radius="lg"
-              allowsCustomValue={true}
-              selectedKey={store.aiModel ?? ''}
-              inputValue={store.aiModel ?? ''}
-              onInputChange={(e) => {
-                store.aiModel = e;
-              }}
-              onBlur={(e) => {
-                PromiseCall(
-                  api.config.update.mutate({
-                    key: 'aiModel',
-                    value: store.aiModel,
-                  }),
-                  { autoAlert: false },
-                );
-              }}
-              onSelectionChange={(key) => {
-                store.aiModel = key as string;
-              }}
-              size="sm"
-              className="w-[200px]"
-              label={t('select-model')}
-            >
-              {(ai.modelSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
-                <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
-              ))}
-            </Autocomplete>
+            <div className="flex items-center gap-2">
+              <Autocomplete
+                radius="lg"
+                allowsCustomValue={true}
+                selectedKey={store.aiModel ?? ''}
+                inputValue={store.aiModel ?? ''}
+                onInputChange={(e) => {
+                  store.aiModel = e;
+                }}
+                onBlur={(e) => {
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'aiModel',
+                      value: store.aiModel,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+                onSelectionChange={(key) => {
+                  store.aiModel = key as string;
+                }}
+                size="sm"
+                className="w-[200px] md:w-[300px]"
+                label={t('select-model')}
+              >
+                {(ai.modelSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
+                  <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+                ))}
+              </Autocomplete>
+              <Button 
+                size="sm"
+                color="primary"
+                variant='light'
+                isIconOnly
+                onPress={async () => {
+                  try {
+                    const endpoint = store.apiEndPoint || "https://api.openai.com";
+                    const url = `${endpoint}/models`;
+                    const token = store.apiKey;
+                    
+                    const response = await fetch(url, {
+                      method: 'GET',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data && data.data && Array.isArray(data.data)) {
+                      // Create a new array of models in the format expected by the app
+                      const modelsList = data.data.map(model => ({
+                        label: model.id,
+                        value: model.id
+                      }));
+                      
+                      // Update the model selection list for the current provider
+                      ai.modelSelect[blinko.config.value?.aiModelProvider!] = modelsList;
+                      
+                      // Fetch embedding models based on the provider
+                      try {
+                        let embeddingUrl = '';
+                        let embeddingModelsList = [];
+                        const provider = blinko.config.value?.aiModelProvider!;
+                        
+                        // Different endpoints/structures for different providers
+                        if (provider === 'OpenAI') {
+                          embeddingUrl = `${endpoint}/v1/models`;
+                          const embeddingResponse = await fetch(embeddingUrl, {
+                            method: 'GET',
+                            headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json'
+                            }
+                          });
+                          const embeddingData = await embeddingResponse.json();
+                          
+                          if (embeddingData && embeddingData.data && Array.isArray(embeddingData.data)) {
+                            // Filter models that contain 'embedding' in their ID
+                            embeddingModelsList = embeddingData.data
+                              .filter(model => model.id.toLowerCase().includes('embedding'))
+                              .map(model => ({
+                                label: model.id,
+                                value: model.id
+                              }));
+                          }
+                        } else if (provider === 'Ollama') {
+                          // Ollama specific implementation would go here
+                          // For now, we'll use the same models for embedding
+                          embeddingModelsList = modelsList;
+                        } else {
+                          // Generic fallback for other providers
+                          embeddingModelsList = modelsList;
+                        }
+                        
+                        if (embeddingModelsList.length > 0) {
+                          // Get current embedding models from storage
+                          const currentEmbeddingModels = embeddingModelsStorage.value || {};
+                          
+                          // Update with new models for the current provider
+                          currentEmbeddingModels[provider] = embeddingModelsList;
+                          
+                          // Save to localStorage
+                          embeddingModelsStorage.setValue(currentEmbeddingModels);
+                          
+                          // Update state and AI store's embedding models
+                          setEmbeddingModels(currentEmbeddingModels);
+                          ai.embeddingSelect[provider] = embeddingModelsList;
+                        }
+                      } catch (error) {
+                        console.error('Error fetching embedding models:', error);
+                      }
+                      
+                      RootStore.Get(ToastPlugin).success(t('model-list-updated'));
+                    } else {
+                      throw new Error('ERROR');
+                    }
+                  } catch (error) {
+                    console.error('Error fetching models:', error);
+                    RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+                  }
+                }}
+              >
+                <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
+              </Button>
+            </div>
           }
         />
 
@@ -221,15 +336,16 @@ export const AiSetting = observer(() => {
           type={isPc ? 'row' : 'col'}
           leftContent={
             <div className="flex items-center gap-2">
-              {' '}
-              <ItemWithTooltip
-                content={<>{t('embedding-model')}</>}
-                toolTipContent={
+              {t('embedding-model')}
+              <Tooltip
+                content={
                   <div className="w-[300px] flex flex-col gap-2">
                     <div>{t('embedding-model-description')}</div>
                   </div>
                 }
-              />{' '}
+              >
+                <Icon icon="proicons:info" width="18" height="18" />
+              </Tooltip>
               <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
                 Advanced
               </Chip>
@@ -261,7 +377,8 @@ export const AiSetting = observer(() => {
                 className={`${isPc ? 'w-[250px]' : 'w-full'}`}
                 label={t('embedding-model')}
               >
-                {(ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
+                {((embeddingModels[blinko.config.value?.aiModelProvider!]) || 
+                  ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
                   <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
                 ))}
               </Autocomplete>

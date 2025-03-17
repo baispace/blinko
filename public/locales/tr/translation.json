@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "AI sonrası işlemeyi etkinleştirin",
   "automatically-process-notes-after-creation-or-update": "Oluşturulduktan sonra notları otomatik olarak işleyin",
   "can-generate-summaries-tags-or-perform-analysis": "Analiz gerçekleştirmede özet etiketler oluşturabilir",
-  "ai-post-processing": "AI Post işleme"
+  "ai-post-processing": "AI Post işleme",
+  "model-list-updated": "Model Listesi Güncellendi"
 }

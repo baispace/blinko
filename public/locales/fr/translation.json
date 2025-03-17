@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "Activer la post-traitement de l'IA",
   "automatically-process-notes-after-creation-or-update": "Traiter automatiquement les notes après la création",
   "can-generate-summaries-tags-or-perform-analysis": "Peut générer des balises de résumé sur l'analyse de performance",
-  "ai-post-processing": "AI après traitement"
+  "ai-post-processing": "AI après traitement",
+  "model-list-updated": "Liste de modèle mise à jour"
 }

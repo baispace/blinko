@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "启用AI后处理",
   "automatically-process-notes-after-creation-or-update": "创建后自动处理笔记",
   "can-generate-summaries-tags-or-perform-analysis": "可以在性能分析上生成摘要标签",
-  "ai-post-processing": "AI后处理"
+  "ai-post-processing": "AI后处理",
+  "model-list-updated": "模型列表已更新"
 }

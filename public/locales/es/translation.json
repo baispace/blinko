@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "Habilitar el procesamiento posterior a la IA",
   "automatically-process-notes-after-creation-or-update": "Procesar automáticamente las notas después de la creación",
   "can-generate-summaries-tags-or-perform-analysis": "Puede generar etiquetas resúmenes en el análisis de rendimiento",
-  "ai-post-processing": "AI después del procesamiento"
+  "ai-post-processing": "AI después del procesamiento",
+  "model-list-updated": "Lista de modelos actualizada"
 }

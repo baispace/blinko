@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "Aktivieren Sie die KI -Postverarbeitung",
   "automatically-process-notes-after-creation-or-update": "Verarbeiten Sie die Notizen nach der Erstellung automatisch",
   "can-generate-summaries-tags-or-perform-analysis": "Können Zusammenfassungs -Tags für die Ausführungsanalyse generieren",
-  "ai-post-processing": "KI -Postverarbeitung"
+  "ai-post-processing": "KI -Postverarbeitung",
+  "model-list-updated": "Modellliste aktualisiert"
 }

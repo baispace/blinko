@@ -588,5 +588,6 @@
   "enable-ai-post-processing": "تمكين معالجة ما بعد الذكاء الاصطناعي",
   "automatically-process-notes-after-creation-or-update": "معالجة الملاحظات تلقائيًا بعد الإنشاء",
   "can-generate-summaries-tags-or-perform-analysis": "يمكن توليد علامات ملخصات على أداء التحليل",
-  "ai-post-processing": "معالجة ما بعد الذكاء الاصطناعي"
+  "ai-post-processing": "معالجة ما بعد الذكاء الاصطناعي",
+  "model-list-updated": "قائمة النماذج المحدثة"
 }

@@ -11,7 +11,7 @@ export class OpenRouterModelProvider extends AiBaseModelProvider {
     return createOpenRouter({
       apiKey: this.globalConfig.aiApiKey, 
       baseURL: this.globalConfig.aiApiEndpoint,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

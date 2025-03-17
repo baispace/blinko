@@ -10,7 +10,7 @@ export class GeminiModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createGoogleGenerativeAI({
       apiKey: this.globalConfig.aiApiKey,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

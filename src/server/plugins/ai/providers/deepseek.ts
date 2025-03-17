@@ -10,7 +10,7 @@ export class DeepSeekModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createDeepSeek({
       apiKey: this.globalConfig.aiApiKey,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

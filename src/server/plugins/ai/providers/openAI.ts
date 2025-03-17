@@ -11,7 +11,8 @@ export class OpenAIModelProvider extends AiBaseModelProvider {
     return createOpenAI({
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
-      fetch: this.proxiedFetch
+      //override fetch on stream has some bug
+      // fetch: this.proxiedFetch
     });
   }
 

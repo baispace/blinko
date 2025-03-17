@@ -10,7 +10,7 @@ export class VoyageModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createVoyage({
       apiKey: this.globalConfig.aiApiKey,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

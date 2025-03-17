@@ -12,7 +12,7 @@ export class AzureOpenAIModelProvider extends AiBaseModelProvider {
     return createAzure({
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

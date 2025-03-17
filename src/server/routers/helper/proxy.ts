@@ -55,8 +55,6 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
 
   // create axios instance with better defaults for proxied connections
   const axiosInstance = axios.create({
-    timeout: 30000, // 30 seconds default timeout
-    maxRedirects: 5,
     ...baseConfig,
   });
 
@@ -208,4 +206,10 @@ export async function getProxyUrl(options?: { ctx?: Context; useAdmin?: boolean 
   }
 
   return `${protocol}://${proxyHost}:${proxyPort}`;
+}
+
+export async function getHttpCacheKey(options?: { ctx?: Context; useAdmin?: boolean }): Promise<string> {
+  const { ctx, useAdmin = true } = options || {};
+  const globalConfig = await getGlobalConfig({ ctx, useAdmin });
+  return `${globalConfig.isUseHttpProxy}-${globalConfig.httpProxyHost}-${globalConfig.httpProxyPort}-${globalConfig.httpProxyUsername}-${globalConfig.httpProxyPassword}`;
 }

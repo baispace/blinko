@@ -11,7 +11,7 @@ export class OllamaModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createOllama({
       baseURL: this.globalConfig.aiApiEndpoint?.trim() || undefined,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     }) as ProviderV1;
   }
 

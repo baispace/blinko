@@ -11,7 +11,7 @@ export class AnthropicModelProvider extends AiBaseModelProvider {
     return createAnthropic({
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

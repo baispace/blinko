@@ -10,7 +10,7 @@ export class GrokModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createXai({
       apiKey: this.globalConfig.aiApiKey,
-      fetch: this.proxiedFetch
+      // fetch: this.proxiedFetch
     });
   }
 

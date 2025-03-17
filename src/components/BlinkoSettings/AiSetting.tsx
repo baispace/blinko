@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Autocomplete, AutocompleteItem, Button, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider } from '@heroui/react';
+import { Autocomplete, AutocompleteItem, Button, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider, Textarea } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
@@ -76,6 +76,7 @@ export const AiSetting = observer(() => {
     apiKey: '',
     apiVersion: '',
     embeddingApiKey: '',
+    aiPostProcessingPrompt: '',
     embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
@@ -108,6 +109,7 @@ export const AiSetting = observer(() => {
     store.embeddingDimensions = blinko.config.value?.embeddingDimensions!;
     store.tavilyApiKey = blinko.config.value?.tavilyApiKey!;
     store.tavilyMaxResult = Number(blinko.config.value?.tavilyMaxResult!);
+    store.aiPostProcessingPrompt = blinko.config.value?.aiPostProcessingPrompt!;
   }, [blinko.config.value]);
 
   return (
@@ -674,6 +676,127 @@ export const AiSetting = observer(() => {
             </div>
           }
         />
+      </CollapsibleCard>
+
+      <CollapsibleCard className="mt-4" icon="tabler:robot" title={t('ai-post-processing')}>
+        <Item
+          leftContent={
+            <div className="flex items-center gap-2">
+              {t('enable-ai-post-processing')}
+              <Tooltip
+                content={
+                  <div className="w-[300px] flex flex-col gap-2">
+                    <div>
+                      {t('automatically-process-notes-after-creation-or-update')}
+                    </div>
+                    <div>
+                      {t('can-generate-summaries-tags-or-perform-analysis')}
+                    </div>
+                  </div>
+                }
+              >
+                <Icon icon="proicons:info" width="18" height="18" />
+              </Tooltip>
+            </div>
+          }
+          rightContent={
+            <Switch
+              isSelected={blinko.config.value?.isUseAiPostProcessing}
+              onChange={(e) => {
+                PromiseCall(
+                  api.config.update.mutate({
+                    key: 'isUseAiPostProcessing',
+                    value: e.target.checked,
+                  }),
+                  { autoAlert: false },
+                );
+              }}
+            />
+          }
+        />
+
+        {blinko.config.value?.isUseAiPostProcessing && (
+          <>
+            <Item
+              type={isPc ? 'row' : 'col'}
+              leftContent={
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    {t('ai-post-processing-prompt')}
+                    <Tooltip
+                      content={
+                        <div className="w-[300px] flex flex-col gap-2">
+                          <div>{t('define-custom-prompt-for-ai-to-process-notes')}</div>
+                        </div>
+                      }
+                    >
+                      <Icon icon="proicons:info" width="18" height="18" />
+                    </Tooltip>
+                  </div>
+                  <div className="text-[12px] text-default-400">{t('prompt-used-for-post-processing-notes')}</div>
+                </div>
+              }
+              rightContent={
+                <Textarea
+                  radius="lg"
+                  value={store.aiPostProcessingPrompt ?? t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
+                  onBlur={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'aiPostProcessingPrompt',
+                        value: e.target.value,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.aiPostProcessingPrompt = e.target.value;
+                  }}
+                  placeholder={t('enter-custom-prompt-for-post-processing')}
+                  className="w-full"
+                />
+              }
+            />
+
+            <Item
+              type={isPc ? 'row' : 'col'}
+              leftContent={
+                <div className="flex flex-col gap-1">
+                  <div>{t('ai-post-processing-mode')}</div>
+                  <div className="text-[12px] text-default-400">{t('choose-what-to-do-with-ai-results')}</div>
+                </div>
+              }
+              rightContent={
+                <Select
+                  radius="lg"
+                  selectedKeys={[blinko.config.value?.aiPostProcessingMode ?? 'comment']}
+                  onSelectionChange={(key) => {
+                    const value = Array.from(key)[0] as string;
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'aiPostProcessingMode',
+                        value: value,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  size="sm"
+                  className="w-[200px]"
+                >
+                  <SelectItem key="comment" startContent={<Icon icon="tabler:message" />}>
+                    {t('add-as-comment')}
+                  </SelectItem>
+                  <SelectItem key="tags" startContent={<Icon icon="tabler:tags" />}>
+                    {t('auto-add-tags')}
+                  </SelectItem>
+                  <SelectItem key="both" startContent={<Icon icon="tabler:analyze" />}>
+                    {t('both')}
+                  </SelectItem>
+                </Select>
+              }
+            />
+          </>
+        )}
       </CollapsibleCard>
 
       <CollapsibleCard icon="pajamas:issue-type-enhancement" title={t('ai-tools')} className="mt-4">

@@ -82,6 +82,9 @@ export const ZConfigKey = z.union([
   z.literal('embeddingApiKey'),
   z.literal('tavilyApiKey'),
   z.literal('tavilyMaxResult'),
+  z.literal('isUseAiPostProcessing'),
+  z.literal('aiPostProcessingPrompt'),
+  z.literal('aiPostProcessingMode'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -153,7 +156,10 @@ export const ZConfigSchema = z.object({
   isHiddenNotification: z.boolean().optional(),
   tavilyApiKey: z.any().optional(),
   tavilyMaxResult: z.any().optional(),
-  isHideBlogImages: z.boolean().optional()
+  isHideBlogImages: z.boolean().optional(),
+  isUseAiPostProcessing: z.boolean().optional(),
+  aiPostProcessingPrompt: z.string().optional(),
+  aiPostProcessingMode: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

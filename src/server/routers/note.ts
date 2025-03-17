@@ -847,6 +847,7 @@ export const noteRouter = router({
             AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
           }
         }
+
         SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx);
         return note;
       } else {
@@ -872,14 +873,27 @@ export const noteRouter = router({
             });
           }
 
-          SendWebhook({ ...note, attachments }, 'create', ctx);
-
           if (config?.isUseAI) {
             AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt });
             for (const attachment of attachments) {
               AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
             }
           }
+
+          // Process with AI if post-processing is enabled
+          if (config?.isUseAiPostProcessing) {
+            try {
+              // Run post-processing asynchronously to not block the response
+              AiService.postProcessNote({ noteId: note.id, ctx }).catch((err) => {
+                console.error('Error in post-processing note:', err);
+              });
+            } catch (error) {
+              console.error('Failed to start post-processing:', error);
+            }
+          }
+
+          SendWebhook({ ...note, attachments }, 'create', ctx);
+
           return note;
         } catch (error) {
           console.log(error);

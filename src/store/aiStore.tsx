@@ -147,8 +147,9 @@ export class AiStore implements Store {
             fristCharDelay: this.currentMessageResult.fristCharDelay,
           },
         });
-        if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 4) {
-          await api.ai.summarizeConversationTitle.mutate({
+
+        if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 3) {
+          api.ai.summarizeConversationTitle.mutate({
             conversations: this.currentConversation.value?.messages ?? [],
             conversationId: this.currentConversationId,
           });

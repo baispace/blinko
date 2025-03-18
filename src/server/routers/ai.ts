@@ -139,7 +139,6 @@ export const aiRouter = router({
         null, 2
       );
       const result = await agent.generate(conversationString)
-      console.log(result)
       const conversation = await prisma.conversation.update({
         where: { id: conversationId },
         data: { title: result?.text }

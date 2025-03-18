@@ -1,3 +1,11 @@
+## [0.45.1](https://github.com/blinko-space/blinko/compare/v0.45.0...v0.45.1) (2025-03-18)
+
+
+### Bug Fixes
+
+* enhance plugin management with update functionality and loading state ([4ed2086](https://github.com/blinko-space/blinko/commit/4ed2086d346e03dffe333b47691e494994c423dd))
+* update conversation title logic in aiStore and remove debug log ([a72e2cd](https://github.com/blinko-space/blinko/commit/a72e2cd68d40d76284877fa459ff8fb209ddf773))
+
 # [0.45.0](https://github.com/blinko-space/blinko/compare/v0.44.1...v0.45.0) (2025-03-17)
 
 

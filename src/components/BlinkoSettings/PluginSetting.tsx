@@ -1,17 +1,14 @@
 import { observer } from "mobx-react-lite";
-import { Tabs, Tab, Card, Button, Chip, Modal, Input, Spinner, CardBody } from "@heroui/react";
+import { Tabs, Tab, Card, Button, Chip, Input, CardBody } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
-import { BlinkoStore } from "@/store/blinkoStore";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { Icon } from "@iconify/react";
-import { DialogStore } from "@/store/module/Dialog";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { useState, useEffect } from "react";
 import { PluginManagerStore } from "@/store/plugin/pluginManagerStore";
 import i18n from "@/lib/i18n";
 import { type PluginInfo } from "@/server/types";
-import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { LoadingAndEmpty } from "../Common/LoadingAndEmpty";
 import { PromiseCall } from "@/store/standard/PromiseState";
 import { I18nString } from "@/store/plugin";
@@ -96,15 +93,39 @@ const PluginCard = ({ name, version, displayName, description, author, downloads
 const InstalledPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
+  const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
+
+  // Load all plugins when component mounts
+  useEffect(() => {
+    pluginManager.loadAllPlugins();
+  }, []);
 
   const handleUninstall = async (id: number) => {
     await PromiseCall(pluginManager.uninstallPlugin(id));
   };
 
+  const handleUpdate = async (plugin: PluginInfo) => {
+    setLoadingPluginName(plugin.name);
+    try {
+      await PromiseCall(pluginManager.installPlugin(plugin), { autoAlert: true });
+      // Reload plugins after update
+      await Promise.all([
+        pluginManager.marketplacePlugins.call(),
+        pluginManager.installedPlugins.call()
+      ]);
+    } finally {
+      setLoadingPluginName(null);
+    }
+  };
+
+  // Get all available plugins for version comparison
+  const allPlugins = pluginManager.marketplacePlugins.value || [];
+  const installedPlugins = pluginManager.installedPlugins.value || [];
+
   return (
     <div className="space-y-2 ">
       <LoadingAndEmpty isAbsolute={false} className='mt-2' isLoading={pluginManager.installedPlugins.loading.value} isEmpty={pluginManager.installedPlugins.value?.length === 0} />
-      {pluginManager.installedPlugins.value?.map((plugin) => {
+      {installedPlugins.map((plugin) => {
         const metadata = plugin.metadata as {
           name: string;
           version: string;
@@ -112,18 +133,23 @@ const InstalledPlugins = observer(() => {
           description: { default: string; zh_CN: string };
           withSettingPanel?: boolean;
         };
-        console.log('metadata', metadata);
+
+        // Find the latest version from marketplace
+        const latestPlugin = allPlugins.find(p => p.name === metadata.name);
+        const hasUpdate = latestPlugin && latestPlugin.version !== metadata.version;
+        console.log('hasUpdate', allPlugins);
         return (
           <PluginCard
             key={plugin.id}
             {...metadata}
             actionButton={
               <div className="flex gap-2">
+
                 {pluginManager.isIntalledPluginWithSettingPanel(metadata.name) && (
                   <Button
                     size="sm"
-                    color="primary"
                     isIconOnly
+                    variant="flat"
                     startContent={<Icon icon="mdi:cog" width="16" height="16" />}
                     onPress={() => {
                       const pluginInstance = pluginManager.getPluginInstanceByName(metadata.name);
@@ -136,15 +162,23 @@ const InstalledPlugins = observer(() => {
                     }}
                   />
                 )}
+                {hasUpdate && (
+                  <Button
+                    size="sm"
+                    color="warning"
+                    isIconOnly
+                    isLoading={loadingPluginName === metadata.name}
+                    startContent={<Icon icon="material-symbols:upgrade-rounded" width="16" height="16" />}
+                    onPress={() => handleUpdate(latestPlugin)}
+                  />
+                )}
                 <Button
                   size="sm"
+                  isIconOnly
                   color="danger"
                   startContent={<Icon icon="mdi:trash-can" width="16" height="16" />}
-                  className="min-w-[80px]"
                   onPress={() => handleUninstall(plugin.id)}
-                >
-                  {t('uninstall')}
-                </Button>
+                />
               </div>
             }
           />
@@ -173,7 +207,7 @@ const AllPlugins = observer(() => {
     <div className="space-y-2 relative">
       <LoadingAndEmpty isAbsolute={false} isLoading={pluginManager.marketplacePlugins.loading.value} isEmpty={pluginManager.marketplacePlugins.value?.length === 0} />
 
-      {pluginManager.marketplacePlugins.value?.map((plugin) => (
+      {pluginManager.marketplacePlugins.value?.filter(plugin => !pluginManager.installedPlugins.value?.some(installedPlugin => installedPlugin.metadata.name === plugin.name)).map((plugin) => (
         <PluginCard
           key={plugin.name}
           {...plugin}

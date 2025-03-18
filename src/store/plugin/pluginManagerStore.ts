@@ -10,13 +10,13 @@ import { RootStore } from "../root";
 import { ToastPlugin } from "../module/Toast/Toast";
 import { makeAutoObservable } from "mobx";
 import { PromisePageState, PromiseState } from "../standard/PromiseState";
-import { type PluginInfo, type InstallPluginInput, InstalledPluginInfo } from "@/server/types";
+import { type PluginInfo } from "@/server/types";
 import { StorageState } from "../standard/StorageState";
 import { BlinkoStore } from "../blinkoStore";
 import { BaseStore } from "../baseStore";
 import { ResourceStore } from "../resourceStore";
 import { HubStore } from "../hubStore";
-import copy from "copy-to-clipboard"
+import copy from "copy-to-clipboard";
 import { UserStore } from "../user";
 
 export class PluginManagerStore implements Store {
@@ -48,9 +48,8 @@ export class PluginManagerStore implements Store {
 
   marketplacePlugins = new PromiseState({
     function: async () => {
-      const installedPlugins = await this.installedPlugins.getOrCall();
       const plugins = await api.plugin.getAllPlugins.query();
-      return plugins.filter(plugin => !installedPlugins?.some(installedPlugin => installedPlugin.metadata.name === plugin.name));
+      return plugins
     }
   })
 

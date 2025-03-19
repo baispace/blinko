@@ -1,3 +1,10 @@
+## [0.45.2](https://github.com/blinko-space/blinko/compare/v0.45.1...v0.45.2) (2025-03-19)
+
+
+### Bug Fixes
+
+* ai setting & hidden plugin icon on mobile ([8d8af0a](https://github.com/blinko-space/blinko/commit/8d8af0afaa527573d56dd31c282c6e891bf86dfc))
+
 ## [0.45.1](https://github.com/blinko-space/blinko/compare/v0.45.0...v0.45.1) (2025-03-18)
 
 

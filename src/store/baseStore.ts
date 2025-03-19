@@ -1,13 +1,10 @@
 import dayjs from 'dayjs';
 import { Store } from './standard/base';
 import { StorageState } from './standard/StorageState';
-import { makeAutoObservable, observable, action } from 'mobx';
+import { makeAutoObservable } from 'mobx';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
-import { BlinkoStore } from './blinkoStore';
-import { RootStore } from '.';
-import { T } from '@mastra/core/base-D90KQ4XI';
 
 export class BaseStore implements Store {
   sid = 'BaseStore';
@@ -56,7 +53,7 @@ export class BaseStore implements Store {
       title: 'plugin',
       href: '/plugin',
       hiddenSidebar: true,
-      hiddenMobile: false,
+      hiddenMobile: true,
       icon: 'mingcute:plugin-line',
     },
     {

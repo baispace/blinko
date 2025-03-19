@@ -238,13 +238,25 @@ export const AiSetting = observer(() => {
                 isIconOnly
                 onPress={async () => {
                   try {
-                    const endpoint = store.apiEndPoint || "https://api.openai.com";
-                    const url = `${endpoint}/models`;
-                    const token = store.apiKey;
+                    const provider = blinko.config.value?.aiModelProvider!;
+                    let endpoint = '';
+                    let url = '';
+                    let token = '';
+                    console.log(provider,'Ollama')
+                    if (provider === 'Ollama') {
+                      endpoint = store.apiEndPoint || "http://127.0.0.1:11434";
+                      url = `${endpoint}/tags`;
+                    } else {
+                      endpoint = store.apiEndPoint || "https://api.openai.com";
+                      url = `${endpoint}/models`;
+                      token = store.apiKey;
+                    }
                     
                     const response = await fetch(url, {
                       method: 'GET',
-                      headers: {
+                      headers: provider === 'Ollama' ? {
+                        'Content-Type': 'application/json'
+                      } : {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                       }
@@ -252,74 +264,56 @@ export const AiSetting = observer(() => {
                     
                     const data = await response.json();
                     
-                    if (data && data.data && Array.isArray(data.data)) {
-                      // Create a new array of models in the format expected by the app
-                      const modelsList = data.data.map(model => ({
-                        label: model.id,
-                        value: model.id
-                      }));
-                      
-                      // Update the model selection list for the current provider
-                      ai.modelSelect[blinko.config.value?.aiModelProvider!] = modelsList;
-                      
-                      // Fetch embedding models based on the provider
-                      try {
-                        let embeddingUrl = '';
-                        let embeddingModelsList = [];
-                        const provider = blinko.config.value?.aiModelProvider!;
+                    if (provider === 'Ollama') {
+                      if (data && data.models && Array.isArray(data.models)) {
+                        // Create a new array of models in the format expected by the app
+                        const modelsList = data.models.map(model => ({
+                          label: model.name,
+                          value: model.name
+                        }));
                         
-                        // Different endpoints/structures for different providers
-                        if (provider === 'OpenAI') {
-                          embeddingUrl = `${endpoint}/v1/models`;
-                          const embeddingResponse = await fetch(embeddingUrl, {
-                            method: 'GET',
-                            headers: {
-                              'Authorization': `Bearer ${token}`,
-                              'Content-Type': 'application/json'
-                            }
-                          });
-                          const embeddingData = await embeddingResponse.json();
-                          
-                          if (embeddingData && embeddingData.data && Array.isArray(embeddingData.data)) {
-                            // Filter models that contain 'embedding' in their ID
-                            embeddingModelsList = embeddingData.data
-                              .filter(model => model.id.toLowerCase().includes('embedding'))
-                              .map(model => ({
-                                label: model.id,
-                                value: model.id
-                              }));
-                          }
-                        } else if (provider === 'Ollama') {
-                          // Ollama specific implementation would go here
-                          // For now, we'll use the same models for embedding
-                          embeddingModelsList = modelsList;
-                        } else {
-                          // Generic fallback for other providers
-                          embeddingModelsList = modelsList;
+                        // Update the model selection list for the current provider
+                        ai.modelSelect[provider] = modelsList;
+                        
+                        // For Ollama, use the same models for embedding
+                        if (modelsList.length > 0) {
+                          const currentEmbeddingModels = embeddingModelsStorage.value || {};
+                          currentEmbeddingModels[provider] = modelsList;
+                          embeddingModelsStorage.setValue(currentEmbeddingModels);
+                          setEmbeddingModels(currentEmbeddingModels);
+                          ai.embeddingSelect[provider] = modelsList;
                         }
+                      }
+                    } else {
+                      if (data && data.data && Array.isArray(data.data)) {
+                        // Create a new array of models in the format expected by the app
+                        const modelsList = data.data.map(model => ({
+                          label: model.id,
+                          value: model.id
+                        }));
+                        
+                        // Update the model selection list for the current provider
+                        ai.modelSelect[provider] = modelsList;
+                        
+                        // For other providers, filter embedding models
+                        const embeddingModelsList = data.data
+                          .filter(model => model.id.toLowerCase().includes('embedding'))
+                          .map(model => ({
+                            label: model.id,
+                            value: model.id
+                          }));
                         
                         if (embeddingModelsList.length > 0) {
-                          // Get current embedding models from storage
                           const currentEmbeddingModels = embeddingModelsStorage.value || {};
-                          
-                          // Update with new models for the current provider
                           currentEmbeddingModels[provider] = embeddingModelsList;
-                          
-                          // Save to localStorage
                           embeddingModelsStorage.setValue(currentEmbeddingModels);
-                          
-                          // Update state and AI store's embedding models
                           setEmbeddingModels(currentEmbeddingModels);
                           ai.embeddingSelect[provider] = embeddingModelsList;
                         }
-                      } catch (error) {
-                        console.error('Error fetching embedding models:', error);
                       }
-                      
-                      RootStore.Get(ToastPlugin).success(t('model-list-updated'));
-                    } else {
-                      throw new Error('ERROR');
                     }
+                    
+                    RootStore.Get(ToastPlugin).success(t('model-list-updated'));
                   } catch (error) {
                     console.error('Error fetching models:', error);
                     RootStore.Get(ToastPlugin).error(error.message || 'ERROR');

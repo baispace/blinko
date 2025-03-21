@@ -20,7 +20,7 @@
 
 <div align="center">
 
-[Live Demo](https://blinko.koyeb.app/) •
+[Live Demo](https://demo.blinko.space) •
 [中文文档](README.zh-CN.md) •
 [Docs](https://docs.blinko.space/introduction) •
 [Telegram Chinese](https://t.me/blinkoChinese) •

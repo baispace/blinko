@@ -18,7 +18,7 @@
 <div align="center">
 
 [在线演示](https://blinko.koyeb.app/) •
-[文档](https://blinko.mintlify.app/introduction) •
+[文档](https://docs.blinko.space/introduction) •
 [中文 Telegram](https://t.me/blinkoChinese) •
 [英文 Telegram](https://t.me/blinkoEnglish)
 </div>

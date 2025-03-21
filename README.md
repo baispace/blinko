@@ -22,7 +22,7 @@
 
 [Live Demo](https://blinko.koyeb.app/) •
 [中文文档](README.zh-CN.md) •
-[Docs](https://blinko.mintlify.app/introduction) •
+[Docs](https://docs.blinko.space/introduction) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
 [Telegram English](https://t.me/blinkoEnglish)
 </div>

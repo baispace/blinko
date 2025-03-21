@@ -21,6 +21,7 @@
 <div align="center">
 
 [Live Demo](https://blinko.koyeb.app/) •
+[中文文档](README.zh-CN.md) •
 [Docs](https://blinko.mintlify.app/introduction) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
 [Telegram English](https://t.me/blinkoEnglish)
@@ -29,12 +30,11 @@
 
 > Live Demo: username:blinko password:blinko
 
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/InjVjN?referralCode=tZHs0g)
+[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
 
 Blinko is an innovative open-source project designed for individuals who want to quickly capture and organize their fleeting thoughts. Blinko allows users to seamlessly jot down ideas the moment they strike, ensuring that no spark of creativity is lost.
 
-<img style="border-radius:20px" src="./public/home.png" alt="Blinko" />
+<img style="border-radius:20px" src="./public/home.webp" alt="Blinko" />
 
 ## 🚀Main Features
 - 🤖**AI-Enhanced Note Retrieval** ：With Blinko's advanced AI-powered RAG (Retrieval-Augmented Generation), you can quickly search and access your notes using natural language queries, making it effortless to find exactly what you need.
@@ -57,9 +57,9 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 Contributions are the heart of what makes the open-source community so dynamic, creative, and full of learning opportunities. Your involvement helps drive innovation and growth. We deeply value any contribution you make, and we're excited to have you as part of our community. Thank you for your support! 🙌
 
 ## Sponsorship
-If you find Blinko valuable, consider supporting us! Your contribution will enable us to continue enhancing and maintaining the project for everyone. Thank you for helping us grow,Or use railway to support blinko
+If you find Blinko valuable, consider supporting us! Your contribution will enable us to continue enhancing and maintaining the project for everyone. Thank you for helping us grow,Or use PikaPods to support blinko
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/InjVjN?referralCode=tZHs0g)
+[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
 
 [https://ko-fi.com/blinkospace](https://ko-fi.com/blinkospace)
 

@@ -29,12 +29,96 @@ export const AiSetting = observer(() => {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [embeddingModels, setEmbeddingModels] = useState<Record<string, Array<{ label: string, value: string }>>>({});
 
+  const fetchModels = async (isEmbedding: boolean = false) => {
+    try {
+      const provider = blinko.config.value?.aiModelProvider!;
+      let endpoint = '';
+      let url = '';
+      let token = '';
+      
+      if (provider === 'Ollama') {
+        endpoint = isEmbedding ? 
+          (store.embeddingApiEndpoint || "http://127.0.0.1:11434") : 
+          (store.apiEndPoint || "http://127.0.0.1:11434");
+        url = `${endpoint}/tags`;
+        token = '';
+      } else {
+        endpoint = isEmbedding ? 
+          (store.embeddingApiEndpoint || "https://api.openai.com") : 
+          (store.apiEndPoint || "https://api.openai.com");
+        url = `${endpoint}/models`;
+        token = isEmbedding ? store.embeddingApiKey : store.apiKey;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: provider === 'Ollama' ? {
+          'Content-Type': 'application/json'
+        } : {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (provider === 'Ollama') {
+        if (data && data.models && Array.isArray(data.models)) {
+          const modelsList = data.models.map(model => ({
+            label: model.name,
+            value: model.name
+          }));
+          
+          if (!isEmbedding) {
+            ai.modelSelect[provider] = modelsList;
+          }
+          
+          const currentEmbeddingModels = embeddingModelsStorage.value || {};
+          currentEmbeddingModels[provider] = modelsList;
+          embeddingModelsStorage.setValue(currentEmbeddingModels);
+          setEmbeddingModels(currentEmbeddingModels);
+          ai.embeddingSelect[provider] = modelsList;
+        }
+      } else {
+        if (data && data.data && Array.isArray(data.data)) {
+          if (!isEmbedding) {
+            const modelsList = data.data.map(model => ({
+              label: model.id,
+              value: model.id
+            }));
+            ai.modelSelect[provider] = modelsList;
+          }
+          
+          const embeddingModelsList = data.data
+            .filter(model => model.id.toLowerCase().includes('embedding'))
+            .map(model => ({
+              label: model.id,
+              value: model.id
+            }));
+          
+          if (embeddingModelsList.length > 0) {
+            const currentEmbeddingModels = embeddingModelsStorage.value || {};
+            currentEmbeddingModels[provider] = embeddingModelsList;
+            embeddingModelsStorage.setValue(currentEmbeddingModels);
+            setEmbeddingModels(currentEmbeddingModels);
+            ai.embeddingSelect[provider] = embeddingModelsList;
+          }
+        }
+      }
+      
+      RootStore.Get(ToastPlugin).success(isEmbedding ? t('embedding-model-list-updated') : t('model-list-updated'));
+    } catch (error) {
+      console.error(`Error fetching ${isEmbedding ? 'embedding ' : ''}models:`, error);
+      RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+    }
+  };
+
   // Load embedding models from localStorage when component mounts
   useEffect(() => {
     const savedEmbeddingModels = embeddingModelsStorage.load();
     if (savedEmbeddingModels) {
       setEmbeddingModels(savedEmbeddingModels);
-      
+
       // Update AI store with the saved embedding models
       if (blinko.config.value?.aiModelProvider && savedEmbeddingModels[blinko.config.value.aiModelProvider]) {
         ai.embeddingSelect[blinko.config.value.aiModelProvider] = savedEmbeddingModels[blinko.config.value.aiModelProvider];
@@ -231,94 +315,12 @@ export const AiSetting = observer(() => {
                   <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
                 ))}
               </Autocomplete>
-              <Button 
+              <Button
                 size="sm"
                 color="primary"
                 variant='light'
                 isIconOnly
-                onPress={async () => {
-                  try {
-                    const provider = blinko.config.value?.aiModelProvider!;
-                    let endpoint = '';
-                    let url = '';
-                    let token = '';
-                    console.log(provider,'Ollama')
-                    if (provider === 'Ollama') {
-                      endpoint = store.apiEndPoint || "http://127.0.0.1:11434";
-                      url = `${endpoint}/tags`;
-                    } else {
-                      endpoint = store.apiEndPoint || "https://api.openai.com";
-                      url = `${endpoint}/models`;
-                      token = store.apiKey;
-                    }
-                    
-                    const response = await fetch(url, {
-                      method: 'GET',
-                      headers: provider === 'Ollama' ? {
-                        'Content-Type': 'application/json'
-                      } : {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                      }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (provider === 'Ollama') {
-                      if (data && data.models && Array.isArray(data.models)) {
-                        // Create a new array of models in the format expected by the app
-                        const modelsList = data.models.map(model => ({
-                          label: model.name,
-                          value: model.name
-                        }));
-                        
-                        // Update the model selection list for the current provider
-                        ai.modelSelect[provider] = modelsList;
-                        
-                        // For Ollama, use the same models for embedding
-                        if (modelsList.length > 0) {
-                          const currentEmbeddingModels = embeddingModelsStorage.value || {};
-                          currentEmbeddingModels[provider] = modelsList;
-                          embeddingModelsStorage.setValue(currentEmbeddingModels);
-                          setEmbeddingModels(currentEmbeddingModels);
-                          ai.embeddingSelect[provider] = modelsList;
-                        }
-                      }
-                    } else {
-                      if (data && data.data && Array.isArray(data.data)) {
-                        // Create a new array of models in the format expected by the app
-                        const modelsList = data.data.map(model => ({
-                          label: model.id,
-                          value: model.id
-                        }));
-                        
-                        // Update the model selection list for the current provider
-                        ai.modelSelect[provider] = modelsList;
-                        
-                        // For other providers, filter embedding models
-                        const embeddingModelsList = data.data
-                          .filter(model => model.id.toLowerCase().includes('embedding'))
-                          .map(model => ({
-                            label: model.id,
-                            value: model.id
-                          }));
-                        
-                        if (embeddingModelsList.length > 0) {
-                          const currentEmbeddingModels = embeddingModelsStorage.value || {};
-                          currentEmbeddingModels[provider] = embeddingModelsList;
-                          embeddingModelsStorage.setValue(currentEmbeddingModels);
-                          setEmbeddingModels(currentEmbeddingModels);
-                          ai.embeddingSelect[provider] = embeddingModelsList;
-                        }
-                      }
-                    }
-                    
-                    RootStore.Get(ToastPlugin).success(t('model-list-updated'));
-                  } catch (error) {
-                    console.error('Error fetching models:', error);
-                    RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
-                  }
-                }}
+                onPress={() => fetchModels(false)}
               >
                 <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
               </Button>
@@ -371,10 +373,10 @@ export const AiSetting = observer(() => {
                 className={`${isPc ? 'w-[250px]' : 'w-full'}`}
                 label={t('embedding-model')}
               >
-                {((embeddingModels[blinko.config.value?.aiModelProvider!]) || 
+                {((embeddingModels[blinko.config.value?.aiModelProvider!]) ||
                   ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
-                  <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
-                ))}
+                    <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+                  ))}
               </Autocomplete>
             </div>
           }
@@ -386,7 +388,7 @@ export const AiSetting = observer(() => {
             type={isPc ? 'row' : 'col'}
             leftContent={<>{t('embedding-api-endpoint')}</>}
             rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+              <div className="flex md:w-[300px] w-full ml-auto justify-start items-center">
                 <Input
                   size="sm"
                   label={t('api-endpoint')}
@@ -407,6 +409,15 @@ export const AiSetting = observer(() => {
                     );
                   }}
                 />
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant='light'
+                  isIconOnly
+                  onPress={() => fetchModels(true)}
+                >
+                  <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
+                </Button>
               </div>
             }
           />

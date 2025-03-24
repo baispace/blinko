@@ -468,7 +468,7 @@ export class AiStore implements Store {
     function: async (id: number, content: string) => {
       try {
         RootStore.Get(ToastPlugin).loading(i18n.t('thinking'));
-        const res = await api.ai.autoTag.mutate({ content, tags: this.blinko.tagList?.value?.pathTags ?? [] });
+        const res = await api.ai.autoTag.mutate({ content });
         RootStore.Get(ToastPlugin).remove();
         RootStore.Get(DialogStore).setData({
           isOpen: true,

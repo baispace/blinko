@@ -6,6 +6,7 @@ import { TRPCError } from '@trpc/server';
 import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '../plugins/ai/aiModelFactory';
 import { RebuildEmbeddingJob } from '../plugins/rebuildEmbeddingJob';
+import { getAllPathTags } from './helper';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -171,14 +172,14 @@ export const aiRouter = router({
     }),
   autoTag: authProcedure
     .input(z.object({
-      content: z.string(),
-      tags: z.array(z.string())
+      content: z.string()
     }))
     .mutation(async function ({ input }) {
-      const { content, tags } = input
+      const { content } = input
       const agent = await AiModelFactory.TagAgent()
+      const tags = await getAllPathTags();
       const result = await agent.generate(
-        `Existing tags list: [${tags.join(', ')}]\nPlease recommend appropriate tags for the following content:\n${content}`
+        `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}`
       )
       return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
     }),

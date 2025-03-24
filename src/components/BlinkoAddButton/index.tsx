@@ -126,8 +126,8 @@ export const BlinkoAddButton = observer(() => {
     width: BUTTON_SIZE.CENTER,
     height: BUTTON_SIZE.CENTER,
     position: 'fixed',
-    right: 50,
-    bottom: 130,
+    right: 40,
+    bottom: 110,
     zIndex: 50
   }}>
     {/* Writing icon button (Top) */}

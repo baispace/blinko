@@ -3,11 +3,10 @@ import { PromiseState } from '@/store/standard/PromiseState';
 import { helper } from '@/lib/helper';
 import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { _ } from '@/lib/lodash';
 import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
 import { getEditorElements, type ViewMode } from './editorUtils';
-import { makeAutoObservable, observable, action } from 'mobx';
+import { makeAutoObservable } from 'mobx';
 import Vditor from 'vditor';
 import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
@@ -15,8 +14,7 @@ import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { Button } from '@heroui/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { NoteType, Attachment } from '@/server/types';
-import { BaseStore } from '@/store/baseStore';
+import { NoteType } from '@/server/types';
 
 export class EditorStore {
   files: FileType[] = []
@@ -36,6 +34,7 @@ export class EditorStore {
   isFullscreen: boolean = false;
   noteType: NoteType;
   currentTagLabel: string = ''
+  metadata: any = {};
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -300,7 +299,8 @@ export class EditorStore {
         content: this.vditor?.getValue() ?? '',
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
         noteType: this.noteType,
-        references: this.references
+        references: this.references,
+        metadata: this.metadata
       });
       this.clearEditor();
       RootStore.Get(AiStore).isWriting = false;
@@ -313,7 +313,7 @@ export class EditorStore {
     this.vditor?.setValue('')
     this.files = [];
     this.references = []
-    this.noteListByIds.value = []
+    this.metadata = {};
   }
 
   constructor() {

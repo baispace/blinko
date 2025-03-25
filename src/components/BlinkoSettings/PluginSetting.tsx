@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Tabs, Tab, Card, Button, Chip, Input, CardBody } from "@heroui/react";
+import { Tabs, Tab, Card, Button, Chip, Input, CardBody, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
@@ -13,6 +13,8 @@ import { LoadingAndEmpty } from "../Common/LoadingAndEmpty";
 import { PromiseCall } from "@/store/standard/PromiseState";
 import { I18nString } from "@/store/plugin";
 import { PluginRender } from "@/store/plugin/pluginRender";
+import { compareVersions } from "@/lib/utils/versionUtils";
+import { api } from "@/lib/trpc";
 
 interface PluginCardProps {
   name: string;
@@ -94,10 +96,23 @@ const InstalledPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
   const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
+  const [currentAppVersion, setCurrentAppVersion] = useState<string>('0.0.0');
+  const [upgradeModal, setUpgradeModal] = useState<{isOpen: boolean, plugin?: PluginInfo}>({isOpen: false});
 
-  // Load all plugins when component mounts
+  // Load all plugins and fetch app version when component mounts
   useEffect(() => {
     pluginManager.loadAllPlugins();
+    
+    async function fetchAppVersion() {
+      try {
+        const version = await api.public.version.query();
+        setCurrentAppVersion(version);
+      } catch (error) {
+        console.error('Failed to fetch app version:', error);
+      }
+    }
+    
+    fetchAppVersion();
   }, []);
 
   const handleUninstall = async (id: number) => {
@@ -118,6 +133,29 @@ const InstalledPlugins = observer(() => {
     }
   };
 
+  // Open Blinko official website to upgrade app
+  const handleUpgrade = () => {
+    window.open('https://github.com/blinko-space/blinko/releases', '_blank');
+    setUpgradeModal({isOpen: false});
+  };
+
+  // Show upgrade modal with plugin details
+  const showUpgradeModal = (plugin: PluginInfo) => {
+    setUpgradeModal({isOpen: true, plugin});
+  };
+
+  // Check if plugin requires newer app version
+  const needsAppUpgrade = (plugin: PluginInfo): boolean => {
+    if (!plugin.minAppVersion) return false;
+    
+    try {
+      return compareVersions(plugin.minAppVersion, currentAppVersion) > 0;
+    } catch (error) {
+      console.error('Version comparison error:', error);
+      return false;
+    }
+  };
+
   // Get all available plugins for version comparison
   const allPlugins = pluginManager.marketplacePlugins.value || [];
   const installedPlugins = pluginManager.installedPlugins.value || [];
@@ -132,19 +170,22 @@ const InstalledPlugins = observer(() => {
           displayName: { default: string; zh_CN: string };
           description: { default: string; zh_CN: string };
           withSettingPanel?: boolean;
+          minAppVersion?: string;
         };
 
         // Find the latest version from marketplace
         const latestPlugin = allPlugins.find(p => p.name === metadata.name);
         const hasUpdate = latestPlugin && latestPlugin.version !== metadata.version;
-        console.log('hasUpdate', allPlugins);
+        
+        // Check if we need app upgrade for the latest version of the plugin
+        const updateRequiresAppUpgrade = latestPlugin && needsAppUpgrade(latestPlugin);
+
         return (
           <PluginCard
             key={plugin.id}
             {...metadata}
             actionButton={
               <div className="flex gap-2">
-
                 {pluginManager.isIntalledPluginWithSettingPanel(metadata.name) && (
                   <Button
                     size="sm"
@@ -163,14 +204,25 @@ const InstalledPlugins = observer(() => {
                   />
                 )}
                 {hasUpdate && (
-                  <Button
-                    size="sm"
-                    color="warning"
-                    isIconOnly
-                    isLoading={loadingPluginName === metadata.name}
-                    startContent={<Icon icon="material-symbols:upgrade-rounded" width="16" height="16" />}
-                    onPress={() => handleUpdate(latestPlugin)}
-                  />
+                  updateRequiresAppUpgrade ? (
+                    <Button
+                      size="sm"
+                      color="warning"
+                      isIconOnly
+                      startContent={<Icon icon="material-symbols:upgrade-rounded" width="16" height="16" />}
+                      onPress={() => showUpgradeModal(latestPlugin)}
+                      title={t('plugin-requires-app-upgrade')}
+                    />
+                  ) : (
+                    <Button
+                      size="sm"
+                      color="warning"
+                      isIconOnly
+                      isLoading={loadingPluginName === metadata.name}
+                      startContent={<Icon icon="material-symbols:upgrade-rounded" width="16" height="16" />}
+                      onPress={() => handleUpdate(latestPlugin)}
+                    />
+                  )
                 )}
                 <Button
                   size="sm"
@@ -184,6 +236,41 @@ const InstalledPlugins = observer(() => {
           />
         );
       })}
+
+      {/* App upgrade modal */}
+      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({isOpen: false})}>
+        <ModalContent>
+          <ModalHeader>{t('app-upgrade-required')}</ModalHeader>
+          <ModalBody>
+            <div className="flex flex-col gap-4">
+              {upgradeModal.plugin && (
+                <div className="flex flex-col gap-2 p-3 bg-default-50 dark:bg-default-100/10 rounded-md">
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('name')}:</span>
+                    <span className="font-medium">{upgradeModal.plugin.displayName?.[i18n.language] || upgradeModal.plugin.displayName?.default}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('current-app-version')}:</span>
+                    <span className="font-medium">{currentAppVersion}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('required-app-version')}:</span>
+                    <span className="font-medium text-warning">{upgradeModal.plugin.minAppVersion}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="default" variant="light" onPress={() => setUpgradeModal({isOpen: false})}>
+              {t('cancel')}
+            </Button>
+            <Button color="primary" onPress={handleUpgrade}>
+              {t('upgrade')}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 });
@@ -192,6 +279,22 @@ const AllPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
   const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
+  const [currentAppVersion, setCurrentAppVersion] = useState<string>('0.0.0');
+  const [upgradeModal, setUpgradeModal] = useState<{isOpen: boolean, plugin?: PluginInfo}>({isOpen: false});
+
+  // Fetch the current app version when component mounts
+  useEffect(() => {
+    async function fetchAppVersion() {
+      try {
+        const version = await api.public.version.query();
+        setCurrentAppVersion(version);
+      } catch (error) {
+        console.error('Failed to fetch app version:', error);
+      }
+    }
+    
+    fetchAppVersion();
+  }, []);
 
   const handleInstall = async (plugin: PluginInfo) => {
     setLoadingPluginName(plugin.name);
@@ -200,6 +303,29 @@ const AllPlugins = observer(() => {
       pluginManager.loadAllPlugins();
     } finally {
       setLoadingPluginName(null);
+    }
+  };
+
+  // Open Blinko official website to upgrade app
+  const handleUpgrade = () => {
+    window.open('https://github.com/blinko-space/blinko/releases', '_blank');
+    setUpgradeModal({isOpen: false});
+  };
+
+  // Show upgrade modal with plugin details
+  const showUpgradeModal = (plugin: PluginInfo) => {
+    setUpgradeModal({isOpen: true, plugin});
+  };
+
+  // Check if plugin requires newer app version
+  const needsAppUpgrade = (plugin: PluginInfo): boolean => {
+    if (!plugin.minAppVersion) return false;
+    
+    try {
+      return compareVersions(plugin.minAppVersion, currentAppVersion) > 0;
+    } catch (error) {
+      console.error('Version comparison error:', error);
+      return false;
     }
   };
 
@@ -212,19 +338,66 @@ const AllPlugins = observer(() => {
           key={plugin.name}
           {...plugin}
           actionButton={
-            <Button
-              size="sm"
-              color="primary"
-              isLoading={loadingPluginName === plugin.name}
-              className="min-w-[80px]"
-              startContent={<Icon icon="mdi:download" width="16" height="16" />}
-              onPress={() => handleInstall(plugin)}
-            >
-              {t('install')}
-            </Button>
+            needsAppUpgrade(plugin) ? (
+              <Button
+                size="sm"
+                color="warning"
+                className="min-w-[80px]"
+                startContent={<Icon icon="mdi:arrow-up-bold" width="16" height="16" />}
+                onPress={() => showUpgradeModal(plugin)}
+              >
+                {t('upgrade')}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                color="primary"
+                isLoading={loadingPluginName === plugin.name}
+                className="min-w-[80px]"
+                startContent={<Icon icon="mdi:download" width="16" height="16" />}
+                onPress={() => handleInstall(plugin)}
+              >
+                {t('install')}
+              </Button>
+            )
           }
         />
       ))}
+
+      {/* App upgrade modal */}
+      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({isOpen: false})}>
+        <ModalContent>
+          <ModalHeader>{t('app-upgrade-required')}</ModalHeader>
+          <ModalBody>
+            <div className="flex flex-col gap-4">
+              {upgradeModal.plugin && (
+                <div className="flex flex-col gap-2 p-3 bg-default-50 dark:bg-default-100/10 rounded-md">
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('name')}:</span>
+                    <span className="font-medium">{upgradeModal.plugin.displayName?.[i18n.language] || upgradeModal.plugin.displayName?.default}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('current-app-version')}:</span>
+                    <span className="font-medium">{currentAppVersion}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-default-500">{t('required-app-version')}:</span>
+                    <span className="font-medium text-warning">{upgradeModal.plugin.minAppVersion}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="default" variant="light" onPress={() => setUpgradeModal({isOpen: false})}>
+              {t('cancel')}
+            </Button>
+            <Button color="primary" onPress={handleUpgrade}>
+              {t('upgrade')}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 });

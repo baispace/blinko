@@ -1,18 +1,30 @@
-import React, { useRef } from 'react';
+import { observer } from 'mobx-react-lite';
+import React, { useEffect, useRef } from 'react';
 
 interface PluginRenderProps {
-  content: () => HTMLElement;
+  content: (data?: any) => HTMLElement;
+  data?: any;
 }
 
-export const PluginRender: React.FC<PluginRenderProps> = ({ content }) => {
-  const contentRef = useRef<HTMLElement | null>(null);
+export const PluginRender: React.FC<PluginRenderProps> = observer(({ content, data }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  return (
-    <div id={`plugin-${content}`} ref={(el) => {
-      if (el && !contentRef.current) {
-        contentRef.current = content();
-        el.appendChild(contentRef.current);
+  useEffect(() => {
+    if (containerRef.current) {
+      // Clear previous content
+      containerRef.current.innerHTML = '';
+      // Add new content with data
+      const contentElement = content(data);
+      containerRef.current.appendChild(contentElement);
+    }
+    
+    // Clean up on unmount or before re-render
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
       }
-    }} />
-  );
-}; 
+    };
+  }, [content, data]);
+
+  return <div ref={containerRef} />;
+})

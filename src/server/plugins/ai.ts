@@ -100,10 +100,16 @@ export class AiService {
       });
 
       try {
+        const note = await prisma.notes.findUnique({
+          where: { id },
+          select: { metadata: true }
+        });
         await prisma.notes.update({
           where: { id },
           data: {
             metadata: {
+              //@ts-ignore
+              ...(note?.metadata || {}),
               isIndexed: true,
             },
             updatedAt,
@@ -142,10 +148,16 @@ export class AiService {
       });
 
       try {
+        const note = await prisma.notes.findUnique({
+          where: { id },
+          select: { metadata: true }
+        });
         await prisma.notes.update({
           where: { id },
           data: {
             metadata: {
+              //@ts-ignore
+              ...(note?.metadata || {}),
               isIndexed: true,
               isAttachmentsIndexed: true,
             },

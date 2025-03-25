@@ -665,6 +665,7 @@ export const noteRouter = router({
         references: z.array(z.number()).optional(),
         createdAt: z.date().optional(),
         updatedAt: z.date().optional(),
+        metadata: z.any().optional(),
       }),
     )
     .output(z.any())
@@ -701,6 +702,7 @@ export const noteRouter = router({
         }
       };
 
+
       const update: Prisma.notesUpdateInput = {
         ...(type !== -1 && { type }),
         ...(isArchived !== null && { isArchived }),
@@ -711,6 +713,21 @@ export const noteRouter = router({
         ...(input.createdAt && { createdAt: input.createdAt }),
         ...(input.updatedAt && { updatedAt: input.updatedAt }),
       };
+      
+      if (input.metadata && id) {
+        const existingNote = await prisma.notes.findUnique({
+          where: { id, accountId: Number(ctx.id) },
+          select: { metadata: true }
+        });
+        
+        update.metadata = {
+          //@ts-ignore
+          ...(existingNote?.metadata || {}),
+          ...input.metadata
+        };
+      } else if (input.metadata) {
+        update.metadata = input.metadata;
+      }
 
       if (id) {
         const existingNote = await prisma.notes.findUnique({
@@ -861,6 +878,7 @@ export const noteRouter = router({
               isTop: isTop ? true : false,
               ...(input.createdAt && { createdAt: input.createdAt }),
               ...(input.updatedAt && { updatedAt: input.updatedAt }),
+              ...(input.metadata && { metadata: input.metadata }),
             },
           });
           await handleAddTags(tagTree, undefined, note.id);

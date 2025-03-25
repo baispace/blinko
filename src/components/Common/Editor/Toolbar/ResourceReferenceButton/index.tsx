@@ -9,7 +9,6 @@ import { EditorStore } from '../../editorStore';
 import { useEffect, useState } from 'react';
 import { helper } from '@/lib/helper';
 import { ResourceType } from '@/server/types';
-import { FileType } from '../../type';
 import { PromiseState } from '@/store/standard/PromiseState';
 import { PhotoProvider } from 'react-photo-view';
 import { useTranslation } from 'react-i18next';
@@ -47,7 +46,7 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
 
     // Create a FileType object from the attachment
     console.log('attachment', attachment);
-    const file: FileType & { uploadPath: string } = {
+    const file: any = {
       name: attachment.name,
       size: Number(attachment.size),
       previewType,

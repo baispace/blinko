@@ -138,6 +138,7 @@ module.exports = withBundleAnalyzer(withPWA({
         net: false,
         fs: false,
         path: false,
+        process: false,
       };
     }
     config.module.rules.push({

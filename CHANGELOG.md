@@ -1,3 +1,15 @@
+## [0.45.3](https://github.com/blinko-space/blinko/compare/v0.45.2...v0.45.3) (2025-03-25)
+
+
+### Bug Fixes
+
+* add tag search functionality in GlobalSearch component ([ed167ca](https://github.com/blinko-space/blinko/commit/ed167cade180c01d6935985d41a4e4e50b644619))
+* adjust BlinkoAddButton position and update SendButton height ([8a0249e](https://github.com/blinko-space/blinko/commit/8a0249e05a5ad8b8fc70d1e3a9243df34aaa2757))
+* cannot reuse uploaded image in new note — attachments[0].path becomes null [#570](https://github.com/blinko-space/blinko/issues/570) ([70f00d0](https://github.com/blinko-space/blinko/commit/70f00d034608a9d202f675bbb534a47bb4218d29))
+* embedding endpoint add get model button ([68b1767](https://github.com/blinko-space/blinko/commit/68b1767459beffd1b6c41df507bb4901fbed0644))
+* enhance tag generation logic and integrate path tags retrieval ([5de3bcc](https://github.com/blinko-space/blinko/commit/5de3bcca014764b581c574c24bdb6bc174608328))
+* update app version and add upgrade prompts in translations ([88f6639](https://github.com/blinko-space/blinko/commit/88f6639d426e299822adb112d581e4e822728656))
+
 ## [0.45.2](https://github.com/blinko-space/blinko/compare/v0.45.1...v0.45.2) (2025-03-19)
 
 

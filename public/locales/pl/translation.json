@@ -580,5 +580,10 @@
   "months-ago": "",
   "prompt-used-for-post-processing-notes": "Poniższy używany do notatek po przetwarzaniu",
   "weeks-ago": "",
-  "years-ago": ""
+  "years-ago": "",
+  "to-search-tags": "Szukać tagów",
+  "app-upgrade-required": "Wymagana aktualizacja aplikacji",
+  "current-app-version": "Aktualna wersja aplikacji",
+  "required-app-version": "Wymagana wersja aplikacji",
+  "upgrade": "Aktualizacja"
 }

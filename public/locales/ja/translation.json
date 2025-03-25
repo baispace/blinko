@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "作成後にメモを自動的に処理します",
   "can-generate-summaries-tags-or-perform-analysis": "パフォーマンス分析で概要タグを生成できます",
   "ai-post-processing": "AI後処理",
-  "model-list-updated": "モデルリストが更新されました"
+  "model-list-updated": "モデルリストが更新されました",
+  "to-search-tags": "タグを検索する",
+  "app-upgrade-required": "アプリのアップグレードが必要です",
+  "current-app-version": "現在のAPPバージョン",
+  "required-app-version": "要求されるアプリのバージョン",
+  "upgrade": "アップグレード"
 }

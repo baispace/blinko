@@ -1,5 +1,4 @@
-"use client"
-import { _ } from '@/lib/lodash';
+"use client";
 import { useEffect } from 'react';
 import { PromisePageState, PromiseState } from './standard/PromiseState';
 import { Store } from './standard/base';
@@ -51,6 +50,8 @@ interface UpsertNoteParams {
   createdAt?: Date;
   /** Last update time */
   updatedAt?: Date;
+  /** Metadata */
+  metadata?: any;
 }
 
 interface OfflineNote extends Omit<Note, 'id' | 'references'> {
@@ -140,6 +141,7 @@ export class BlinkoStore implements Store {
   }
 
   upsertNote = new PromiseState({
+    eventKey: 'upsertNote',
     function: async (params: UpsertNoteParams) => {
       console.log("upsertNote", params)
       const {
@@ -155,7 +157,8 @@ export class BlinkoStore implements Store {
         showToast = true,
         references = [],
         createdAt: inputCreatedAt,
-        updatedAt: inputUpdatedAt
+        updatedAt: inputUpdatedAt,
+        metadata
       } = params;
 
       if (!this.isOnline && !id) {
@@ -174,7 +177,8 @@ export class BlinkoStore implements Store {
           updatedAt: now,
           isOffline: true,
           pendingSync: true,
-          tags: []
+          tags: [],
+          metadata: metadata || {}
         };
 
         this.saveOfflineNote(offlineNote);
@@ -193,7 +197,8 @@ export class BlinkoStore implements Store {
         isShare,
         references,
         createdAt: inputCreatedAt ? new Date(inputCreatedAt) : undefined,
-        updatedAt: inputUpdatedAt ? new Date(inputUpdatedAt) : undefined
+        updatedAt: inputUpdatedAt ? new Date(inputUpdatedAt) : undefined,
+        metadata
       });
       eventBus.emit('editor:clear')
       showToast && RootStore.Get(ToastPlugin).success(id ? i18n.t("update-successfully") : i18n.t("create-successfully"))
@@ -316,7 +321,7 @@ export class BlinkoStore implements Store {
     function: async () => {
       try {
         if (RootStore.Get(UserStore).role == 'superadmin') {
-          return await api.task.list.query() ?? []
+          return (await api.task.list.query()) ?? [];
         }
         return []
       } catch (error) {

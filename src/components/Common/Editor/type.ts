@@ -6,6 +6,7 @@ export type OnSendContentType = {
   files: (FileType & { uploadPath: string })[]
   noteType: NoteType;
   references: number[]
+  metadata?: any;
 }
 
 export type FileType = {

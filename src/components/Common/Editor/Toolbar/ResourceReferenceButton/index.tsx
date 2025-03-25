@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import { Input, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@heroui/react';
+import { Input, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { observer } from 'mobx-react-lite';
 import { IconButton } from '../IconButton';
 import { ScrollArea } from '../../../ScrollArea';
@@ -9,7 +9,6 @@ import { EditorStore } from '../../editorStore';
 import { useEffect, useState } from 'react';
 import { helper } from '@/lib/helper';
 import { ResourceType } from '@/server/types';
-import { FileType } from '../../type';
 import { PromiseState } from '@/store/standard/PromiseState';
 import { PhotoProvider } from 'react-photo-view';
 import { useTranslation } from 'react-i18next';
@@ -46,7 +45,8 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
     const previewType = helper.getFileType(attachment.type as string, attachment.name);
 
     // Create a FileType object from the attachment
-    const file: FileType = {
+    console.log('attachment', attachment);
+    const file: any = {
       name: attachment.name,
       size: Number(attachment.size),
       previewType,
@@ -59,7 +59,7 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
       preview: attachment.path,
       type: attachment.type!,
     };
-
+    await file.uploadPromise.call();
     // Add to files array
     store.files.push(file);
     setIsOpen(false);

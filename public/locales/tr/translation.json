@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "Oluşturulduktan sonra notları otomatik olarak işleyin",
   "can-generate-summaries-tags-or-perform-analysis": "Analiz gerçekleştirmede özet etiketler oluşturabilir",
   "ai-post-processing": "AI Post işleme",
-  "model-list-updated": "Model Listesi Güncellendi"
+  "model-list-updated": "Model Listesi Güncellendi",
+  "to-search-tags": "Etiketleri aramak",
+  "app-upgrade-required": "Uygulama güncellemesi gerekiyor",
+  "current-app-version": "Mevcut APP sürümü",
+  "required-app-version": "Gerekli APP sürümü",
+  "upgrade": "Yükseltme"
 }

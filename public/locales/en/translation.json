@@ -596,5 +596,10 @@
   "error-code": "Error Code",
   "error-details": "Error Details",
   "check-proxy-settings-and-ensure-server-is-accessible": "Check your proxy settings and ensure the server is accessible",
-  "do-not-include-http-or-https-prefix": "Do not include http:// or https:// prefix"
+  "do-not-include-http-or-https-prefix": "Do not include http:// or https:// prefix",
+  "to-search-tags": "To search tags",
+  "app-upgrade-required": "App upgrade required",
+  "current-app-version": "Current APP version",
+  "required-app-version": "Required APP version",
+  "upgrade": "Upgrade"
 }

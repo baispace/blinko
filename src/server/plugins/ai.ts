@@ -19,6 +19,7 @@ import { embed, embedMany } from 'ai';
 import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
 import { userCaller } from '../routers/_app';
+import { getAllPathTags } from '../routers/helper';
 //https://js.langchain.com/docs/introduction/
 //https://smith.langchain.com/onboarding
 //https://js.langchain.com/docs/tutorials/qa_chat_history
@@ -99,10 +100,16 @@ export class AiService {
       });
 
       try {
+        const note = await prisma.notes.findUnique({
+          where: { id },
+          select: { metadata: true }
+        });
         await prisma.notes.update({
           where: { id },
           data: {
             metadata: {
+              //@ts-ignore
+              ...(note?.metadata || {}),
               isIndexed: true,
             },
             updatedAt,
@@ -141,10 +148,16 @@ export class AiService {
       });
 
       try {
+        const note = await prisma.notes.findUnique({
+          where: { id },
+          select: { metadata: true }
+        });
         await prisma.notes.update({
           where: { id },
           data: {
             metadata: {
+              //@ts-ignore
+              ...(note?.metadata || {}),
               isIndexed: true,
               isAttachmentsIndexed: true,
             },
@@ -210,7 +223,7 @@ export class AiService {
         score,
       }));
 
-    console.log(filteredResultsWithScore, 'filteredResultsWithScore');
+    // console.log(filteredResultsWithScore, 'filteredResultsWithScore');
 
     const notes = await prisma.notes.findMany({
       where: {
@@ -426,8 +439,9 @@ export class AiService {
           } else {
             // If no clear tag format, process with an agent specialized for tag extraction
             const agent = await AiModelFactory.TagAgent();
+            const tags = await getAllPathTags();
             const result = await agent.generate(
-              `Existing tags list: [${note.tags.map((tag) => tag.tag.name).join(', ')}]\nPlease recommend appropriate tags for the following content:\n${note.content}`
+              `Existing tags list:  [${tags.join(', ')}]\n Note content:\n${note.content}`
             )
             suggestedTags = result.text.split(',').map((tag) => tag.trim());
           }

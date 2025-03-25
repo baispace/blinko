@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Modal, ModalContent, ModalBody, Input, Button, Chip, Divider, Tooltip } from '@heroui/react';
+import { Modal, ModalContent, ModalBody, Input, Button, Divider } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
@@ -9,7 +9,7 @@ import { AiStore } from '@/store/aiStore';
 import { observer } from 'mobx-react-lite';
 import { _ } from '@/lib/lodash';
 import { cn } from '@/lib/utils';
-import { Note, ResourceType } from '@/server/types';
+import { Note, ResourceType, Tag } from '@/server/types';
 import { ScrollArea } from '../Common/ScrollArea';
 import { ResourceItemPreview } from '@/components/BlinkoResource/ResourceItem';
 import { allSettings } from '@/pages/settings';
@@ -36,11 +36,13 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const store = RootStore.Local(() => ({
     searchQuery: '',
     isAiQuestion: false,
+    isTagSearch: false,
     isSearching: false,
     searchResults: {
       notes: [] as Note[],
       resources: [] as ResourceType[],
       settings: [] as any[],
+      tags: [] as Tag[],
     },
 
     // Methods
@@ -50,16 +52,26 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
       // Auto-detect @AI syntax
       if (value.startsWith('@') && !this.isAiQuestion) {
         this.isAiQuestion = true;
-      } else if (!value.startsWith('@') && this.isAiQuestion) {
+        this.isTagSearch = false;
+      } else if (value.startsWith('#') && !this.isTagSearch) {
+        this.isTagSearch = true;
         this.isAiQuestion = false;
+      } else if (!value.startsWith('@') && !value.startsWith('#')) {
+        this.isAiQuestion = false;
+        this.isTagSearch = false;
       }
 
       // Trigger search with loading state
       if (value) {
         this.isSearching = true;
-        debouncedSearch.current(value);
+        if (this.isTagSearch) {
+          // Perform local tag search without debounce
+          this.performTagSearch(value.substring(1));
+        } else {
+          debouncedSearch.current(value);
+        }
       } else if (!value) {
-        this.searchResults = { notes: [], resources: [], settings: [] };
+        this.searchResults = { notes: [], resources: [], settings: [], tags: [] };
         // Reset blinkoStore search text and reset list calls
         blinkoStore.searchText = '';
         blinkoStore.globalSearchTerm = '';
@@ -74,9 +86,34 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
       }
     },
 
+    performTagSearch(query: string) {
+      // Filter tags from the blinkoStore.tagList
+      const matchingTags = blinkoStore.tagList.value?.listTags
+        .filter(tag => tag.name.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10); // Limit to top 10 results
+      
+      this.searchResults = { 
+        notes: [], 
+        resources: [], 
+        settings: [], 
+        tags: matchingTags 
+      };
+      this.isSearching = false;
+    },
+
     toggleAiQuestion() {
       this.isAiQuestion = !this.isAiQuestion;
-      this.searchQuery = this.isAiQuestion ? '@' + this.searchQuery : this.searchQuery.replace('@', '');
+      this.isTagSearch = false;
+      this.searchQuery = this.isAiQuestion ? '@' + this.searchQuery.replace('#', '') : this.searchQuery.replace('@', '');
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    },
+
+    toggleTagSearch() {
+      this.isTagSearch = !this.isTagSearch;
+      this.isAiQuestion = false;
+      this.searchQuery = this.isTagSearch ? '#' + this.searchQuery.replace('@', '') : this.searchQuery.replace('#', '');
       if (searchInputRef.current) {
         searchInputRef.current.focus();
       }
@@ -84,7 +121,12 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
 
     // Computed properties
     get hasResults() {
-      return this.searchResults.notes.length > 0 || this.searchResults.resources.length > 0 || this.searchResults.settings.length > 0;
+      return (
+        this.searchResults.notes.length > 0 || 
+        this.searchResults.resources.length > 0 || 
+        this.searchResults.settings.length > 0 ||
+        this.searchResults.tags.length > 0
+      );
     },
   }));
 
@@ -106,7 +148,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const debouncedSearch = useRef(
     _.debounce(async (query) => {
       if (!query) {
-        store.searchResults = { notes: [], resources: [], settings: [] };
+        store.searchResults = { notes: [], resources: [], settings: [], tags: [] };
         store.isSearching = false;
         return;
       }
@@ -141,6 +183,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
           notes: notes || [],
           resources: resources || [],
           settings: matchingSettings,
+          tags: [],
         };
       } catch (error) {
         console.error('Search error:', error);
@@ -155,11 +198,14 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
     if (e.key === 'Enter') {
       if (store.isAiQuestion) {
         handleAiQuestion();
+      } else if (store.isTagSearch && store.searchResults.tags.length > 0) {
+        navigateToTag(store.searchResults.tags?.[0]?.name || '');
       } else if (store.searchQuery) {
         // Navigate to the first result
         if (store.searchResults.notes.length > 0) {
           navigateToNote(store.searchResults.notes?.[0] as any);
         } else if (store.searchResults.resources.length > 0) {
+          navigateToResource(store.searchResults.resources?.[0] as any);
         } else if (store.searchResults.settings.length > 0) {
           navigateToSetting(store.searchResults.settings?.[0].key);
         }
@@ -195,6 +241,12 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
     // Start a new AI chat with the question
     aiStore.newChatWithSuggestion(aiPrompt);
     router.push('/ai');
+    onOpenChange(false);
+  };
+
+  // Add a new navigation method for tags
+  const navigateToTag = (tagName: string) => {
+    router.push(`/?path=all&searchText=%23${encodeURIComponent(tagName)}`);
     onOpenChange(false);
   };
 
@@ -238,6 +290,15 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
     </div>
   );
 
+  // Render tag item
+  const renderTagItem = (tag: Tag) => (
+    <div key={tag.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => navigateToTag(tag.name)}>
+      <div className="text-xs flex items-center gap-2">
+        <span className="text-primary">#{tag.name}</span>
+      </div>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
@@ -268,7 +329,10 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
             <Input
               ref={searchInputRef}
               aria-label="global-search"
-              className={`mt-4 ${store.isAiQuestion ? 'input-highlight' : ''}`}
+              className={cn("mt-4", {
+                'input-highlight': store.isAiQuestion,
+                'input-tag-highlight': store.isTagSearch
+              })}
               placeholder={t('search-or-ask-ai')}
               value={store.searchQuery}
               onChange={(e) => {
@@ -277,7 +341,20 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
               }}
               autoFocus
               onKeyDown={handleKeyDown}
-              startContent={<Icon className="" icon={store.isAiQuestion ? 'mingcute:ai-line' : 'lets-icons:search'} width="24" height="24" />}
+              startContent={
+                <Icon 
+                  className="" 
+                  icon={
+                    store.isAiQuestion 
+                      ? 'mingcute:ai-line' 
+                      : store.isTagSearch 
+                        ? 'mingcute:hashtag-line' 
+                        : 'lets-icons:search'
+                  } 
+                  width="24" 
+                  height="24" 
+                />
+              }
               endContent={
                 <div className="flex items-center gap-1">
                   {store.searchQuery && (
@@ -310,29 +387,38 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                 <LoadingAndEmpty isLoading={store.isSearching} isEmpty={!store.hasResults} />
                 <ScrollArea className="max-h-[600px] md:max-h-[400px]" onBottom={() => {}}>
                   <div className="flex flex-col gap-3 px-1">
-                    {/* Actions section */}
-                    <div className="flex flex-col gap-1 mb-2">
-                      <div className="flex items-center">
-                        <Icon icon="mingcute:lightning-line" className="mr-2 text-primary" />
-                        <h3 className="text-sm font-medium text-default-700">{t('action')}</h3>
+                    {/* Tag section - only shown when in tag search mode */}
+                    {store.isTagSearch && store.searchResults.tags.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex flex-col">{store.searchResults.tags.map(renderTagItem)}</div>
                       </div>
-                      <div className="flex flex-col">
-                        <div className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => handleAiQuestion()}>
-                          <div className="p-2 rounded-md bg-primary-50">
-                            <Icon icon="mingcute:ai-line" className="text-primary" />
-                          </div>
-                          <div className="flex-1 overflow-hidden">
-                            <div className="font-medium text-sm truncate">
-                              {t('ask-ai')} "{store.searchQuery}"
+                    )}
+                    
+                    {/* Actions section - only show if not in tag search mode */}
+                    {!store.isTagSearch && (
+                      <div className="flex flex-col gap-1 mb-2">
+                        <div className="flex items-center">
+                          <Icon icon="mingcute:lightning-line" className="mr-2 text-primary" />
+                          <h3 className="text-sm font-medium text-default-700">{t('action')}</h3>
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => handleAiQuestion()}>
+                            <div className="p-2 rounded-md bg-primary-50">
+                              <Icon icon="mingcute:ai-line" className="text-primary" />
                             </div>
-                            <div className="text-xs text-default-500 truncate">{t('ask-blinko-ai-about-this-query')}</div>
+                            <div className="flex-1 overflow-hidden">
+                              <div className="font-medium text-sm truncate">
+                                {t('ask-ai')} "{store.searchQuery}"
+                              </div>
+                              <div className="text-xs text-default-500 truncate">{t('ask-blinko-ai-about-this-query')}</div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Notes section */}
-                    {store.searchResults.notes.length > 0 && (
+                    {/* Notes section - only show if not in tag search mode */}
+                    {!store.isTagSearch && store.searchResults.notes.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -344,8 +430,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                       </div>
                     )}
 
-                    {/* Resources section */}
-                    {store.searchResults.resources.length > 0 && (
+                    {/* Resources section - only show if not in tag search mode */}
+                    {!store.isTagSearch && store.searchResults.resources.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <Divider className="my-2" />
                         <div className="flex items-center justify-between">
@@ -358,8 +444,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                       </div>
                     )}
 
-                    {/* Settings section */}
-                    {store.searchResults.settings.length > 0 && (
+                    {/* Settings section - only show if not in tag search mode */}
+                    {!store.isTagSearch && store.searchResults.settings.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <Divider className="my-2" />
                         <div className="flex items-center justify-between">
@@ -380,9 +466,11 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
               <div>
                 {store.isAiQuestion ? (
                   t('to-ask-ai')
+                ) : store.isTagSearch ? (
+                  t('to-search-tags')
                 ) : (
                   <>
-                    {t('press-enter-to-select-first-result')} • <span className="text-primary">@</span> {t('to-ask-ai')}
+                    {t('press-enter-to-select-first-result')} • <span className="text-primary">@</span> {t('to-ask-ai')} • <span className="text-primary">#</span> {t('to-search-tags')}
                   </>
                 )}
               </div>

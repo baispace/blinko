@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "創建後自動處理筆記",
   "can-generate-summaries-tags-or-perform-analysis": "可以在性能分析上生成摘要標籤",
   "ai-post-processing": "AI後處理",
-  "model-list-updated": "模型列表已更新"
+  "model-list-updated": "模型列表已更新",
+  "to-search-tags": "搜尋標籤",
+  "app-upgrade-required": "需要升級應用程式",
+  "current-app-version": "當前APP版本",
+  "required-app-version": "需要的APP版本",
+  "upgrade": "升級"
 }

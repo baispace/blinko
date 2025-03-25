@@ -584,5 +584,10 @@
   "user": "",
   "weeks-ago": "",
   "wysiwyg": "Wysiwyg",
-  "years-ago": ""
+  "years-ago": "",
+  "to-search-tags": "Искать теги",
+  "app-upgrade-required": "Требуется обновление приложения",
+  "current-app-version": "Текущая версия приложения",
+  "required-app-version": "Требуемая версия приложения",
+  "upgrade": "Обновление"
 }

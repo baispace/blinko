@@ -145,3 +145,52 @@ export const getToken = async (req: NextApiRequest | NextRequest) => {
   const secret = await getNextAuthSecret();
   return await getNextAuthToken({ req, secret }) as User;
 }
+
+export const getAllPathTags = async () => {
+  const flattenTags = await prisma.tag.findMany();
+  
+  const buildHashTagTreeFromDb = (tags: any[]) => {
+    const tagMap = new Map();
+    const rootNodes: any[] = [];
+
+    tags.forEach(tag => {
+      tagMap.set(tag.id, { ...tag, children: [] });
+    });
+
+    tags.forEach(tag => {
+      if (tag.parentId) {
+        const parentNode = tagMap.get(tag.parentId);
+        if (parentNode) {
+          parentNode.children.push(tagMap.get(tag.id));
+        }
+      } else {
+        rootNodes.push(tagMap.get(tag.id));
+      }
+    });
+
+    return rootNodes;
+  };
+
+  const generateTagPaths = (node: any, parentPath = '') => {
+    const currentPath = parentPath ? `${parentPath}/${node.name}` : `#${node.name}`;
+    const paths = [currentPath];
+
+    if (node.children && node.children.length > 0) {
+      node.children.forEach((child: any) => {
+        const childPaths = generateTagPaths(child, currentPath);
+        paths.push(...childPaths);
+      });
+    }
+
+    return paths;
+  };
+
+  const listTags = buildHashTagTreeFromDb(flattenTags);
+  let pathTags: string[] = [];
+  
+  listTags.forEach(node => {
+    pathTags = pathTags.concat(generateTagPaths(node));
+  });
+
+  return pathTags;
+};

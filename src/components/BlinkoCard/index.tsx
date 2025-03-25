@@ -7,7 +7,7 @@ import { Note } from '@/server/types';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ExpandableContainer } from "./expandContainer";
 import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
@@ -18,6 +18,8 @@ import { useHistoryBack } from "@/lib/hooks";
 import { useRouter } from "next/router";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { AvatarAccount } from "./commentButton";
+import { PluginApiStore } from "@/store/plugin/pluginApiStore";
+import { PluginRender } from "@/store/plugin/pluginRender";
 
 export type BlinkoItem = Note & {
   isBlog?: boolean;
@@ -40,6 +42,7 @@ interface BlinkoCardProps {
 export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false, className }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
+  const pluginApi = RootStore.Get(PluginApiStore);
   const [isExpanded, setIsExpanded] = useState(false);
   const { pathname } = useRouter();
 
@@ -119,6 +122,30 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                 )}
 
                 {(!blinkoItem.isBlog || isExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
+
+                {/* Custom Footer Slots */}
+                {pluginApi.customCardFooterSlots
+                  .filter(slot => {
+                    if (slot.isHidden) return false;
+                    if (slot.showCondition && !slot.showCondition(blinkoItem)) return false;
+                    if (slot.hideCondition && slot.hideCondition(blinkoItem)) return false;
+                    return true;
+                  })
+                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map((slot) => (
+                    <div
+                      key={slot.name}
+                      className={`mt-4 ${slot.className || ''}`}
+                      style={slot.style}
+                      onClick={slot.onClick}
+                      onMouseEnter={slot.onHover}
+                      onMouseLeave={slot.onLeave}
+                    >
+                      <div style={{ maxWidth: slot.maxWidth }}>
+                        <PluginRender content={slot.content} data={blinkoItem} />
+                      </div>
+                    </div>
+                  ))}
 
                 <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
 

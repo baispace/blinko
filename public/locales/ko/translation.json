@@ -584,5 +584,10 @@
   "user-list": "사용자 목록",
   "weeks-ago": "",
   "wysiwyg": "Wysiwyg",
-  "years-ago": ""
+  "years-ago": "",
+  "to-search-tags": "태그 검색",
+  "app-upgrade-required": "앱 업그레이드가 필요합니다",
+  "current-app-version": "현재 APP 버전",
+  "required-app-version": "필요한 APP 버전",
+  "upgrade": "업그레이드"
 }

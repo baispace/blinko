@@ -584,5 +584,10 @@
   "user": "",
   "weeks-ago": "",
   "wysiwyg": "Wysiwyg",
-  "years-ago": ""
+  "years-ago": "",
+  "to-search-tags": "Para pesquisar tags",
+  "app-upgrade-required": "Atualização do aplicativo necessária",
+  "current-app-version": "Versão atual do APP",
+  "required-app-version": "Versão do APP necessária",
+  "upgrade": "Atualização"
 }

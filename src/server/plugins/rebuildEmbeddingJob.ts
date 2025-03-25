@@ -203,7 +203,7 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
       // Process notes in batches
       const BATCH_SIZE = 5;
 
-      console.log(`[${new Date().toISOString()}] 开始重建嵌入向量，共${notes.length}条笔记`);
+      console.log(`[${new Date().toISOString()}] start rebuild embedding, ${notes.length} notes`);
 
       for (let i = 0; i < notes.length; i += BATCH_SIZE) {
         // Check if force stop flag is set
@@ -264,7 +264,7 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
             return stoppedProgress;
           }
           
-          console.log(`[${new Date().toISOString()}] 处理笔记 ${note.id}, 进度: ${current}/${total}`);
+          console.log(`[${new Date().toISOString()}] processing note ${note.id}, progress: ${current}/${total}`);
           
           try {
             current++;
@@ -365,6 +365,7 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
             });
 
           } catch (error) {
+            console.error(`[${new Date().toISOString()}] error processing note ${note.id}:`, error);
             // Record error but continue processing
             results.push({
               type: 'error',

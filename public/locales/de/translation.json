@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "Verarbeiten Sie die Notizen nach der Erstellung automatisch",
   "can-generate-summaries-tags-or-perform-analysis": "Können Zusammenfassungs -Tags für die Ausführungsanalyse generieren",
   "ai-post-processing": "KI -Postverarbeitung",
-  "model-list-updated": "Modellliste aktualisiert"
+  "model-list-updated": "Modellliste aktualisiert",
+  "to-search-tags": "Tags suchen",
+  "app-upgrade-required": "App-Upgrade erforderlich",
+  "current-app-version": "Aktuelle APP-Version",
+  "required-app-version": "Benötigte APP-Version",
+  "upgrade": "Aktualisierung"
 }

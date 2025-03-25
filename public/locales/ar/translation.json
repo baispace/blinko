@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "معالجة الملاحظات تلقائيًا بعد الإنشاء",
   "can-generate-summaries-tags-or-perform-analysis": "يمكن توليد علامات ملخصات على أداء التحليل",
   "ai-post-processing": "معالجة ما بعد الذكاء الاصطناعي",
-  "model-list-updated": "قائمة النماذج المحدثة"
+  "model-list-updated": "قائمة النماذج المحدثة",
+  "to-search-tags": "للبحث عن العلامات",
+  "app-upgrade-required": "مطلوب ترقية التطبيق",
+  "current-app-version": "النسخة الحالية من التطبيق",
+  "required-app-version": "النسخة المطلوبة من التطبيق",
+  "upgrade": "ترقية"
 }

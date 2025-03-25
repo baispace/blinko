@@ -1,8 +1,6 @@
-import { EventEmitter } from "events";
-import { makeAutoObservable, makeObservable } from "mobx";
+import { makeAutoObservable } from "mobx";
 import { RootStore } from "../root";
 import { BaseState, BooleanState, NumberState } from "./base";
-import { useEffect } from "react";
 import { ToastPlugin } from "../module/Toast/Toast";
 import { eventBus } from "@/lib/event";
 import { BlinkoStore } from "../blinkoStore";
@@ -51,6 +49,7 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   successMsg: string = "";
   errMsg: string = "";
   loadingLock = true;
+  eventKey?: string;
   currentIndex: BaseState = new NumberState({ value: 0 });
   get current() {
     if (Array.isArray(this.value) && this.value.length > 0 && !this.value[this.currentIndex.value]) {
@@ -113,9 +112,6 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   async call(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
     const toast = RootStore.Get(ToastPlugin);
     const base = RootStore.Get(BaseStore);
-
-
-
     try {
       if (this.loadingLock && this.loading.value == true) return;
       this.loading.setValue(true);
@@ -140,6 +136,9 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
       }
     } finally {
       this.loading.setValue(false);
+      if (this.eventKey) {
+        eventBus.emit(this.eventKey, this.value);
+      }
     }
   }
 }

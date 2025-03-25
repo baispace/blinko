@@ -6,7 +6,6 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@/server/types"
 import { useRouter } from "next/router"
-import { HandleFileType } from "../Common/Editor/editorUtils"
 type IProps = {
   mode: 'create' | 'edit',
   onSended?: () => void,
@@ -100,17 +99,24 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }}
       onHeightChange={() => {
         onHeightChange?.(editorRef.current?.clientHeight ?? 75)
+        if (editorRef.current) {
+          const editorElement = document.getElementById('global-editor');
+          if (editorElement && editorElement.children[0]) {
+            //@ts-ignore
+            editorElement.__storeInstance = editorElement.children[0].__storeInstance;
+          }
+        }
       }}
       isSendLoading={blinko.upsertNote.loading.value}
       bottomSlot={
         isCreateMode ? <div className='text-xs text-ignore ml-2'>Drop to upload files</div> :
           <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote!.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div>
       }
-      onSend={async ({ files, references, noteType }) => {
+      onSend={async ({ files, references, noteType, metadata }) => {
         if (isCreateMode) {
-          console.log("createMode", files, references, noteType)
+          console.log("createMode", files, references, noteType, metadata)
           //@ts-ignore
-          await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }) })
+          await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }), metadata })
           blinko.createAttachmentsStorage.clear()
           blinko.createContentStorage.clear()
           if (blinko.noteTypeDefault == NoteType.NOTE && router.query?.path != 'notes') {
@@ -130,7 +136,8 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
             content: blinko.curSelectedNote.content,
             //@ts-ignore
             attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }),
-            references
+            references,
+            metadata
           })
           try {
             const index = blinko.editAttachmentsStorage.list.findIndex(i => i.id == blinko.curSelectedNote!.id)

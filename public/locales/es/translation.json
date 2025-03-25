@@ -589,5 +589,10 @@
   "automatically-process-notes-after-creation-or-update": "Procesar automáticamente las notas después de la creación",
   "can-generate-summaries-tags-or-perform-analysis": "Puede generar etiquetas resúmenes en el análisis de rendimiento",
   "ai-post-processing": "AI después del procesamiento",
-  "model-list-updated": "Lista de modelos actualizada"
+  "model-list-updated": "Lista de modelos actualizada",
+  "to-search-tags": "Para buscar etiquetas",
+  "app-upgrade-required": "Actualización de la aplicación requerida",
+  "current-app-version": "Versión actual de la APP",
+  "required-app-version": "Versión de APP requerida",
+  "upgrade": "Actualización"
 }

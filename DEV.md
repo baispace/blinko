@@ -6,8 +6,8 @@ docker-compose -f docker-compose.prod.yml up -d
 ## build docker with dockerfile locally
 ```
 docker build -t blinko .
-docker run --name blinko-website -d -p 1111:1111 blinko
-```
+docker run --name blinko-website -d -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\koray\Desktop\testblinko:/app/.blinko" blinko
+``` 
 
 ## build docker image & run with docker-compose locally
 ```

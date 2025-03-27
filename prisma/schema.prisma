@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
 }
 
 // generator zod {
@@ -33,7 +33,6 @@ model accounts {
   follows       follows[]
   notifications notifications[]
   conversations conversation[]
-  
 }
 
 model attachments {
@@ -202,42 +201,42 @@ model plugin {
 }
 
 model conversation {
-  id          Int       @id @default(autoincrement())
-  title       String    @default("") @db.VarChar(255)
-  accountId   Int
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
-  messages    message[]
+  id        Int       @id @default(autoincrement())
+  title     String    @default("") @db.VarChar(255)
+  accountId Int
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  messages  message[]
 
-  account     accounts  @relation(fields: [accountId], references: [id])
+  account accounts @relation(fields: [accountId], references: [id])
 
   @@index([accountId])
 }
 
 model message {
-  id             Int         @id @default(autoincrement())
-  content        String      @db.Text
-  role           String      @db.VarChar(50) // user or assistant
+  id             Int      @id @default(autoincrement())
+  content        String   @db.Text
+  role           String   @db.VarChar(50) // user or assistant
   conversationId Int
-  createdAt      DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime    @updatedAt @db.Timestamptz(6)
-  metadata       Json?       @db.Json
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  metadata       Json?    @db.Json
 
-  conversation   conversation @relation(fields: [conversationId], references: [id])
+  conversation conversation @relation(fields: [conversationId], references: [id])
 
   @@index([conversationId])
 }
 
 model noteHistory {
-  id          Int       @id @default(autoincrement())
-  noteId      Int    
-  content     String    @db.Text 
-  metadata    Json?     @db.Json 
-  version     Int      
-  accountId   Int?      
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-  
-  note        notes     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  content   String   @db.Text
+  metadata  Json?    @db.Json
+  version   Int
+  accountId Int?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
 
   @@index([noteId])
   @@index([accountId])

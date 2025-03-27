@@ -12,6 +12,8 @@ import { getToken } from "@/server/routers/helper";
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
 const ONE_YEAR_IN_SECONDS = 31536000;
 
+let activeStreams = 0;
+
 export const GET = async (req: NextRequest, { params }: any) => {
   const fullPath = decodeURIComponent((await params).filename.join('/'));
   const token = await getToken(req);
@@ -104,6 +106,12 @@ export const GET = async (req: NextRequest, { params }: any) => {
     const range = req.headers.get("range");
 
     if (stats.size > STREAM_THRESHOLD) {
+      const abortController = new AbortController();
+      const { signal } = abortController;
+      
+      activeStreams++;
+      console.log(`[File Stream] Active streams: ${activeStreams}, Path: ${fullPath}`);
+      
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0]!, 10);
@@ -113,10 +121,50 @@ export const GET = async (req: NextRequest, { params }: any) => {
         const stream = createReadStream(filePath, { start, end });
         const readableStream = new ReadableStream({
           start(controller) {
+            const timeout = setTimeout(() => {
+              console.log(`[File Stream] Timeout for ${fullPath}`);
+              stream.destroy();
+              controller.error(new Error('Stream timeout'));
+              activeStreams--;
+            }, 300000); 
+            
             stream.on('data', (chunk) => controller.enqueue(chunk));
-            stream.on('end', () => controller.close());
-            stream.on('error', (error) => controller.error(error));
+            
+            stream.on('end', () => {
+              clearTimeout(timeout);
+              controller.close();
+              activeStreams--;
+              console.log(`[File Stream] Stream ended normally. Active streams: ${activeStreams}`);
+            });
+            
+            stream.on('error', (error) => {
+              clearTimeout(timeout);
+              console.error(`[File Stream] Stream error: ${error.message}`);
+              controller.error(error);
+              stream.destroy();
+              activeStreams--;
+              console.log(`[File Stream] Stream errored. Active streams: ${activeStreams}`);
+            });
+            
+            signal.addEventListener('abort', () => {
+              clearTimeout(timeout);
+              console.log(`[File Stream] Connection aborted for ${fullPath}`);
+              stream.destroy();
+              controller.close();
+              activeStreams--;
+              console.log(`[File Stream] Stream aborted. Active streams: ${activeStreams}`);
+            });
           },
+          cancel() {
+            console.log(`[File Stream] Stream cancelled for ${fullPath}`);
+            stream.destroy(); 
+            activeStreams--;
+            console.log(`[File Stream] Stream cancelled. Active streams: ${activeStreams}`);
+          }
+        });
+
+        req.signal.addEventListener('abort', () => {
+          abortController.abort();
         });
 
         return new Response(readableStream, {
@@ -132,10 +180,50 @@ export const GET = async (req: NextRequest, { params }: any) => {
         const stream = createReadStream(filePath);
         const readableStream = new ReadableStream({
           start(controller) {
+            const timeout = setTimeout(() => {
+              console.log(`[File Stream] Timeout for ${fullPath}`);
+              stream.destroy();
+              controller.error(new Error('Stream timeout'));
+              activeStreams--;
+            }, 300000); 
+            
             stream.on('data', (chunk) => controller.enqueue(chunk));
-            stream.on('end', () => controller.close());
-            stream.on('error', (error) => controller.error(error));
+            
+            stream.on('end', () => {
+              clearTimeout(timeout);
+              controller.close();
+              activeStreams--;
+              console.log(`[File Stream] Stream ended normally. Active streams: ${activeStreams}`);
+            });
+            
+            stream.on('error', (error) => {
+              clearTimeout(timeout);
+              console.error(`[File Stream] Stream error: ${error.message}`);
+              controller.error(error);
+              stream.destroy();
+              activeStreams--;
+              console.log(`[File Stream] Stream errored. Active streams: ${activeStreams}`);
+            });
+            
+            signal.addEventListener('abort', () => {
+              clearTimeout(timeout);
+              console.log(`[File Stream] Connection aborted for ${fullPath}`);
+              stream.destroy();
+              controller.close();
+              activeStreams--;
+              console.log(`[File Stream] Stream aborted. Active streams: ${activeStreams}`);
+            });
           },
+          cancel() {
+            console.log(`[File Stream] Stream cancelled for ${fullPath}`);
+            stream.destroy();
+            activeStreams--;
+            console.log(`[File Stream] Stream cancelled. Active streams: ${activeStreams}`);
+          }
+        });
+
+        req.signal.addEventListener('abort', () => {
+          abortController.abort();
         });
 
         return new Response(readableStream, {

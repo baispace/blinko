@@ -76,7 +76,6 @@ COPY --from=builder /app/seed.js ./seed.js
 COPY --from=builder /app/init.js ./init.js
 
 # Copy Prisma related files
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma

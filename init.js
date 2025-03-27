@@ -30,7 +30,7 @@ try {
     console.log("\nExecuting data seeding...");
     try {
       // Execute seed.js using node directly
-      const seedOutput = execSync(`node seed.js`, { encoding: "utf8" });
+      const seedOutput = execSync(`/usr/bin/node seed.js`, { encoding: "utf8" });
       console.log("Seed output:", seedOutput.trim());
       console.log("Data seeding completed successfully");
     } catch (seedError) {
@@ -44,7 +44,7 @@ try {
   console.log("\nStarting application server...");
   try {
     // Execute server.js using node directly
-    execSync(`node server.js`, { stdio: 'inherit' });
+    execSync(`/usr/bin/node server.js`, { stdio: 'inherit' });
   } catch (serverError) {
     console.error("Server failed to start:", serverError.message);
     process.exit(1);

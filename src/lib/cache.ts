@@ -5,7 +5,7 @@ export class memoryCache {
 
   constructor(options = {}) {
     this.cache = new LRUCache({
-      maxSize: 100 * 1024 * 1024,
+      maxSize: 30 * 1024 * 1024,
       max: 10000,
       sizeCalculation: (value, key) => {
         return JSON.stringify(value).length

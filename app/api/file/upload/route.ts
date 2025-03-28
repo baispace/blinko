@@ -37,7 +37,7 @@ export const POST = async (req: NextRequest) => {
       size: number
     } | null = null;
     
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
       busboy.on('file', (fieldname, stream, info) => {
         if (fieldname === 'file') {
           const passThrough = new PassThrough();

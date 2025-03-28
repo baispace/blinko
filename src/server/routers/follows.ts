@@ -5,7 +5,6 @@ import { prisma } from '../prisma';
 import axios from "axios";
 import { followsSchema, NotificationType } from "@/lib/prismaZodType";
 import { CreateNotification } from "./notification";
-import { cache } from "@/lib/cache";
 import { RecommandJob, recommandListSchema, RecommandListType } from "../plugins/recommandJob";
 
 
@@ -193,8 +192,7 @@ export const followsRouter = router({
         input.siteUrl = new URL(input.siteUrl).origin;
         input.mySiteUrl = new URL(input.mySiteUrl).origin;
         const followerId = ctx.id;
-        const siteInfo = await axios.get(input.siteUrl + '/api/v1/public/site-info');
-
+        
         await tx.follows.deleteMany({
           where: {
             siteUrl: input.siteUrl,
@@ -202,15 +200,28 @@ export const followsRouter = router({
             accountId: Number(followerId),
           },
         });
-
-        await axios.post(input.siteUrl + '/api/v1/follows/unfollow-from', {
-          mySiteAccountId: siteInfo?.data?.id,
-          siteUrl: input.mySiteUrl,
-        });
-
-        RecommandJob.RunTask()
         
-        return true
+        try {
+          const siteInfo = await axios.get(input.siteUrl + '/api/v1/public/site-info', {
+            timeout: 5000
+          });
+          
+          axios.post(input.siteUrl + '/api/v1/follows/unfollow-from', {
+            mySiteAccountId: siteInfo?.data?.id,
+            siteUrl: input.mySiteUrl,
+          })
+          .catch(error => {
+            console.error(`Failed to notify site ${input.siteUrl} about unfollowing:`, error.message);
+          });
+        } catch (error) {
+          console.error(`Failed to get info from site ${input.siteUrl}:`, error.message);
+        }
+
+        RecommandJob.RunTask().catch(err => {
+          console.error('Failed to run recommand job:', err);
+        });
+        
+        return true;
       });
     }),
 

@@ -6,7 +6,7 @@ import { OllamaModelProvider } from './providers/ollama';
 import { AnthropicModelProvider } from './providers/anthropic';
 import { Agent } from '@mastra/core/agent';
 import { upsertBlinkoTool } from './tools/createBlinko';
-import { LibSQLVector } from '@mastra/core/vector/libsql';
+import { LibSQLVector } from './vector';
 import { DeepSeekModelProvider } from './providers/deepseek';
 import dayjs from 'dayjs';
 import { createLogger, Mastra } from '@mastra/core';
@@ -70,7 +70,11 @@ export class AiModelFactory {
       value: query,
       model: Embeddings,
     });
-    const result = await VectorStore.query('blinko', embedding, topK);
+    const result = await VectorStore.query({
+      indexName: 'blinko',
+      queryVector: embedding,
+      topK: topK,
+    });
     const filteredResults = result.filter(({ score }) => score > embeddingMinScore);
 
     const notes =

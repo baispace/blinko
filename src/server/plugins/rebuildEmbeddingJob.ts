@@ -48,10 +48,10 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
         where: { name: this.taskName }
       });
 
-      if (task?.isRunning) {
-        console.log(`Task ${this.taskName} is already running, skipping duplicate execution`);
-        return false;
-      }
+      // if (task?.isRunning) {
+      //   console.log(`Task ${this.taskName} is already running, skipping duplicate execution`);
+      //   return false;
+      // }
       
       // Initialize default progress
       const initialProgress = {

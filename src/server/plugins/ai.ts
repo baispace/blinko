@@ -17,9 +17,9 @@ import { CoreMessage } from '@mastra/core';
 import { MDocument } from '@mastra/rag';
 import { embed, embedMany } from 'ai';
 import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
-import { LibSQLVector } from '@mastra/core/vector/libsql';
 import { userCaller } from '../routers/_app';
 import { getAllPathTags } from '../routers/helper';
+import { LibSQLVector } from './ai/vector';
 
 
 export function isImage(filePath: string): boolean {

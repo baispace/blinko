@@ -117,6 +117,7 @@
     "libsql": "^0.5.3",
     "lodash": "^4.17.21",
     "lottie-react": "^2.4.0",
+    "lru-cache": "^11.1.0",
     "lucide-react": "^0.468.0",
     "mammoth": "^1.8.0",
     "mantine-datatable": "^7.12.4",

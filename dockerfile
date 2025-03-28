@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 RUN apk add --no-cache \
     python3 \
     python3-dev \
-    python3-setuptools \
+    py3-setuptools \
     make \
     g++ \
     gcc \

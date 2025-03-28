@@ -164,7 +164,6 @@ module.exports = withBundleAnalyzer(withPWA({
     return config;
   },
   reactStrictMode: isProduction? true : false,
-  swcMinify: true,
   eslint: {
     ignoreDuringBuilds: true,
   },

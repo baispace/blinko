@@ -3,39 +3,29 @@
  */
 import { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { router, t } from '../trpc';
-import { aiRouter } from './ai';
-import { attachmentsRouter } from './attachment';
-import { noteRouter } from './note';
-import { tagRouter } from './tag';
-import { userRouter } from './user';
-import { configRouter } from './config';
-import { publicRouter } from './public';
-import { taskRouter } from './task';
 import { Context } from '../context';
-import { analyticsRouter } from './analytics';
-import { commentRouter } from './comment';
+import { lazy } from '@trpc/server';
+import { noteRouter } from './note';
+import { configRouter } from './config';
 import { followsRouter } from './follows';
 import { notificationRouter } from './notification';
-import { pluginRouter } from './plugin';
-import { conversationRouter } from './conversation';
-import { messageRouter } from './message';
 
 export const appRouter = router({
-  ai: aiRouter,
+  ai: lazy(() => import('./ai')),
   notes: noteRouter,
-  tags: tagRouter,
-  users: userRouter,
-  attachments: attachmentsRouter,
+  tags: lazy(() => import('./tag')),
+  users: lazy(() => import('./user')),
+  attachments: lazy(() => import('./attachment')),
   config: configRouter,
-  public: publicRouter,
-  task: taskRouter,
-  analytics: analyticsRouter,
-  comments: commentRouter,
+  public: lazy(() => import('./public')),
+  task: lazy(() => import('./task')),
+  analytics: lazy(() => import('./analytics')),
+  comments: lazy(() => import('./comment')),
   follows: followsRouter,
   notifications: notificationRouter,
-  plugin: pluginRouter,
-  conversation: conversationRouter,
-  message: messageRouter,
+  plugin: lazy(() => import('./plugin')),
+  conversation: lazy(() => import('./conversation')),
+  message: lazy(() => import('./message')),
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

@@ -61,34 +61,6 @@ const AudioRecorder: (props: Props) => ReactElement = ({
     stopRecording();
   };
 
-  // const convertToDownloadFileExtension = async (
-  //   webmBlob: Blob
-  // ): Promise<Blob> => {
-  //   const FFmpeg = await import("@ffmpeg/ffmpeg");
-  //   //@ts-ignore
-  //   const ffmpeg = FFmpeg.createFFmpeg({ log: false });
-  //   await ffmpeg.load();
-
-  //   const inputName = "input.mp3";
-  //   const outputName = `output.${downloadFileExtension}`;
-
-  //   ffmpeg.FS(
-  //     "writeFile",
-  //     inputName,
-  //     new Uint8Array(await webmBlob.arrayBuffer())
-  //   );
-
-  //   await ffmpeg.run("-i", inputName, outputName);
-
-  //   const outputData = ffmpeg.FS("readFile", outputName);
-  //   const outputBlob = new Blob([outputData.buffer], {
-  //     type: `audio/${downloadFileExtension}`,
-  //   });
-
-  //   return outputBlob;
-  // };
-
-
   useEffect(() => {
     if (
       (shouldSave || recorderControls) &&

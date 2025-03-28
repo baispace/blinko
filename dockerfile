@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     gcc \
     git \
     openssl-dev \
+    openssl \
     build-base
 
 WORKDIR /app

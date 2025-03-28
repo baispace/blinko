@@ -20,9 +20,7 @@ import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
 import { userCaller } from '../routers/_app';
 import { getAllPathTags } from '../routers/helper';
-//https://js.langchain.com/docs/introduction/
-//https://smith.langchain.com/onboarding
-//https://js.langchain.com/docs/tutorials/qa_chat_history
+
 
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;

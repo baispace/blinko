@@ -1,73 +1,70 @@
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 
-RUN if [ "$USE_MIRROR" = "true" ]; then \
-      echo "Using mirror for apt..." && \
-      sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
-      sed -i 's/security.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list; \
-    fi && \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
     python3 \
-    python3-distutils \      
     python3-dev \
     make \
     g++ \
     gcc \
     git \
-    libssl-dev \           
-    build-essential \
-    curl \
-    tzdata \
-    openssl
+    openssl-dev \
+    build-base
 
 WORKDIR /app
 
-ENV NEXT_PRIVATE_STANDALONE true
+ENV NEXT_PRIVATE_STANDALONE=true
 
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./
 
-RUN npm install -g pnpm@9.12.2 prisma && \
+RUN npm install -g pnpm@9.12.2 && \
     if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using mirror registry..." && \
         npm install -g nrm && \
         nrm use taobao; \
     fi && \
-    pnpm install
+    pnpm install --frozen-lockfile 
 
 COPY . .
 RUN pnpm build
 RUN pnpm build-seed
+# remove onnxruntime-node
+RUN find /app -type d -name "onnxruntime-node*" -exec rm -rf {} +
 
-RUN prisma generate
+FROM node:22-alpine AS runner
 
-RUN echo 'const { execSync } = require("child_process"); \
-try { \
-  console.log("Running database migrations..."); \
-  require("./node_modules/.bin/prisma").migrate.deploy(); \
-  console.log("Running seed script..."); \
-  require("./seed.js"); \
-} catch (error) { \
-  console.error("Error during initialization:", error); \
-} \
-console.log("Starting server..."); \
-require("./server.js");' > /app/startup.js
+RUN apk add --no-cache \
+    curl \
+    tzdata \
+    openssl
 
-FROM gcr.io/distroless/nodejs22-debian12:latest AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json ./
 COPY --from=builder /app/seed.js ./seed.js
 COPY --from=builder /app/resetpassword.js ./resetpassword.js
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# copy .pnpm files
+RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \
+    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*"); do \
+        target_dir="./node_modules/.pnpm/$(basename "$dir")"; \
+        if [ ! -d "$target_dir" ]; then \
+            mkdir -p "$target_dir"; \
+            echo "Copying $dir to $target_dir"; \
+            cp -r "$dir"/* "$target_dir"/; \
+        else \
+            echo "Skipping $dir, already exists"; \
+        fi; \
+    done
+
 COPY --from=builder /app/node_modules/@libsql ./node_modules/@libsql
-COPY --from=builder /app/startup.js ./startup.js
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 ENV NODE_ENV=production \
     PORT=1111 \
@@ -75,5 +72,4 @@ ENV NODE_ENV=production \
 
 EXPOSE 1111
 
-# 使用新创建的启动脚本
-CMD ["startup.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node seed.js && node server.js"]

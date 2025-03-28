@@ -88,8 +88,11 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       '@libsql/linux-arm64-gnu':
-        specifier: 0.5.0-pre.6
-        version: 0.5.0-pre.6
+        specifier: ^0.5.3
+        version: 0.5.3
+      '@libsql/linux-x64-musl':
+        specifier: ^0.5.3
+        version: 0.5.3
       '@mastra/client-js':
         specifier: ^0.1.6
         version: 0.1.6(encoding@0.1.13)(react@18.3.1)
@@ -108,6 +111,9 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@prisma/engines':
+        specifier: ^6.5.0
+        version: 6.5.0
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -330,6 +336,9 @@ importers:
       preact:
         specifier: ^10.26.1
         version: 10.26.2
+      prisma:
+        specifier: ^5.21.1
+        version: 5.22.0
       proxy-agent:
         specifier: ^6.5.0
         version: 6.5.0
@@ -490,9 +499,6 @@ importers:
       '@next/bundle-analyzer':
         specifier: ^14.2.24
         version: 14.2.24
-      '@prisma/engines':
-        specifier: ^6.5.0
-        version: 6.5.0
       '@semantic-release/changelog':
         specifier: ^6.0.3
         version: 6.0.3(semantic-release@24.2.3(typescript@5.7.3))
@@ -556,9 +562,6 @@ importers:
       postcss-nesting:
         specifier: ^12.0.0
         version: 12.1.5(postcss@8.5.3)
-      prisma:
-        specifier: ^5.21.1
-        version: 5.22.0
       raw-loader:
         specifier: ^4.0.2
         version: 4.0.2(webpack@5.98.0)
@@ -3130,8 +3133,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@libsql/linux-arm64-gnu@0.5.0-pre.6':
-    resolution: {integrity: sha512-HDQH42ZxzhPMcFdcARV2I7oH7LK/jk2eqhODtIbnVn0kiklHY98F4wk1rbqFIzJljMuzq9HSycJtntUyubpnWg==}
+  '@libsql/linux-arm64-gnu@0.5.3':
+    resolution: {integrity: sha512-20qUC4O16qhGl1GPIBABgroytzLoML5hhVYrM5jaYhRHg2kFN9PytKV+M75vlyLiJk7CJwkRUxD4Xwo4OODRVg==}
     os: [linux]
 
   '@libsql/linux-arm64-musl@0.4.7':
@@ -3147,6 +3150,10 @@ packages:
   '@libsql/linux-x64-musl@0.4.7':
     resolution: {integrity: sha512-nI6tpS1t6WzGAt1Kx1n1HsvtBbZ+jHn0m7ogNNT6pQHZQj7AFFTIMeDQw/i/Nt5H38np1GVRNsFe99eSIMs9XA==}
     cpu: [x64]
+    os: [linux]
+
+  '@libsql/linux-x64-musl@0.5.3':
+    resolution: {integrity: sha512-g/JIAmLJcsmhubfDtw5K4ipVx89Kr7V1cuoTFc/jDtBQNpfLVDOtNii3TTxvLg/yH+HRipE5Cus8hJdtysJXcw==}
     os: [linux]
 
   '@libsql/win32-x64-msvc@0.4.7':
@@ -17265,7 +17272,7 @@ snapshots:
   '@libsql/linux-arm64-gnu@0.4.7':
     optional: true
 
-  '@libsql/linux-arm64-gnu@0.5.0-pre.6': {}
+  '@libsql/linux-arm64-gnu@0.5.3': {}
 
   '@libsql/linux-arm64-musl@0.4.7':
     optional: true
@@ -17275,6 +17282,8 @@ snapshots:
 
   '@libsql/linux-x64-musl@0.4.7':
     optional: true
+
+  '@libsql/linux-x64-musl@0.5.3': {}
 
   '@libsql/win32-x64-msvc@0.4.7':
     optional: true

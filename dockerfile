@@ -23,7 +23,7 @@ RUN npm install -g pnpm@9.12.2 && \
         npm install -g nrm && \
         nrm use taobao; \
     fi && \
-    pnpm install --frozen-lockfile 
+    pnpm install
 
 COPY . .
 RUN pnpm build

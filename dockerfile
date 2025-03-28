@@ -16,7 +16,6 @@ WORKDIR /app
 ENV NEXT_PRIVATE_STANDALONE=true
 
 COPY package.json pnpm-lock.yaml ./
-COPY prisma ./
 
 RUN npm install -g pnpm@9.12.2 && \
     if [ "$USE_MIRROR" = "true" ]; then \
@@ -25,6 +24,9 @@ RUN npm install -g pnpm@9.12.2 && \
         nrm use taobao; \
     fi && \
     pnpm install --ignore-scripts=tree-sitter
+
+COPY prisma ./prisma
+RUN npx prisma generate
 
 COPY . .
 RUN pnpm build
@@ -48,6 +50,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/seed.js ./seed.js
 COPY --from=builder /app/resetpassword.js ./resetpassword.js
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # copy .pnpm files
 RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \

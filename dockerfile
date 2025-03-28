@@ -10,7 +10,8 @@ RUN apk add --no-cache \
     git \
     openssl-dev \
     openssl \
-    build-base
+    build-base \
+    sqlite-dev
 
 WORKDIR /app
 
@@ -54,7 +55,7 @@ COPY --from=builder /app/resetpassword.js ./resetpassword.js
 
 # copy .pnpm files
 RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \
-    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*"); do \
+    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*" -o -name "sqlite3@*"); do \
         target_dir="./node_modules/.pnpm/$(basename "$dir")"; \
         if [ ! -d "$target_dir" ]; then \
             mkdir -p "$target_dir"; \
@@ -69,6 +70,7 @@ COPY --from=builder /app/node_modules/@libsql ./node_modules/@libsql
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/sqlite3 ./node_modules/sqlite3
 
 ENV NODE_ENV=production \
     PORT=1111 \

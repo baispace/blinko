@@ -106,7 +106,7 @@ export const AiSetting = observer(() => {
         }
       }
 
-      RootStore.Get(ToastPlugin).success(isEmbedding ? t('embedding-model-list-updated') : t('model-list-updated'));
+      RootStore.Get(ToastPlugin).success(isEmbedding ? t('model-list-updated') : t('model-list-updated'));
     } catch (error) {
       console.error(`Error fetching ${isEmbedding ? 'embedding ' : ''}models:`, error);
       RootStore.Get(ToastPlugin).error(error.message || 'ERROR');

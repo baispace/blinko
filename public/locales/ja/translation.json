@@ -599,5 +599,7 @@
   "smart-edit": "スマートエディット",
   "function-call-required": "関数呼び出しが必要です",
   "smart-edit-prompt": "スマート編集プロンプト",
-  "define-instructions-for-ai-to-edit-your-notes": "メモを操作するためにプロンプトを使用できます。たとえば、メモにリンクが含まれている場合は、元のメモの下にリンク内容を要約してラベルを生成します。"
+  "define-instructions-for-ai-to-edit-your-notes": "メモを操作するためにプロンプトを使用できます。たとえば、メモにリンクが含まれている場合は、元のメモの下にリンク内容を要約してラベルを生成します。",
+  "rebuild-started": "再構築が開始されました",
+  "rebuild-stopped-by-user": "ユーザーによる再構築停止"
 }

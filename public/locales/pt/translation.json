@@ -594,5 +594,7 @@
   "smart-edit": "Edição Inteligente",
   "function-call-required": "Chamada de Função Necessária",
   "smart-edit-prompt": "Prompt de Edição Inteligente",
-  "define-instructions-for-ai-to-edit-your-notes": "Você pode usar prompts para manipular notas, por exemplo: Se uma nota contiver um link, resuma o conteúdo do link abaixo da nota original e gere um rótulo."
+  "define-instructions-for-ai-to-edit-your-notes": "Você pode usar prompts para manipular notas, por exemplo: Se uma nota contiver um link, resuma o conteúdo do link abaixo da nota original e gere um rótulo.",
+  "rebuild-started": "Reconstrução Iniciada",
+  "rebuild-stopped-by-user": "Reconstrução interrompida pelo usuário"
 }

@@ -590,5 +590,7 @@
   "smart-edit": "Inteligentna Edycja",
   "function-call-required": "Wymagane Wywołanie Funkcji",
   "smart-edit-prompt": "Inteligentna Zachęta do Edycji",
-  "define-instructions-for-ai-to-edit-your-notes": "Możesz używać poleceń do manipulowania notatkami, na przykład: Jeśli notatka zawiera link, podsumuj zawartość linku poniżej oryginalnej notatki i wygeneruj etykietę."
+  "define-instructions-for-ai-to-edit-your-notes": "Możesz używać poleceń do manipulowania notatkami, na przykład: Jeśli notatka zawiera link, podsumuj zawartość linku poniżej oryginalnej notatki i wygeneruj etykietę.",
+  "rebuild-started": "Rozpoczęto Odbudowę",
+  "rebuild-stopped-by-user": "Odbudowa zatrzymana przez użytkownika"
 }

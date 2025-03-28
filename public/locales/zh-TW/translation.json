@@ -599,5 +599,6 @@
   "smart-edit": "智能編輯",
   "function-call-required": "需要調用函數",
   "smart-edit-prompt": "智能編輯提示",
-  "define-instructions-for-ai-to-edit-your-notes": "您可以使用提示來操作筆記，例如：如果答案中包含連接網址，將連結內容摘要放在原始答案下方並產生標籤。"
+  "define-instructions-for-ai-to-edit-your-notes": "您可以使用提示來操作筆記，例如：如果答案中包含連接網址，將連結內容摘要放在原始答案下方並產生標籤。",
+  "rebuild-started": "重建開始"
 }

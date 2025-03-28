@@ -621,5 +621,6 @@
   "smart-edit": "智能编辑",
   "function-call-required": "需要函数调用",
   "smart-edit-prompt": "智能编辑提示",
-  "define-instructions-for-ai-to-edit-your-notes": "可以使用提示词操作笔记，例如：如果笔记中包含链接请在原笔记下方总结链接内容，并生成标签。"
+  "define-instructions-for-ai-to-edit-your-notes": "可以使用提示词操作笔记，例如：如果笔记中包含链接请在原笔记下方总结链接内容，并生成标签。",
+  "rebuild-started": "重建已开始"
 }

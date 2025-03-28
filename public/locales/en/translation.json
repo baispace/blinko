@@ -606,5 +606,7 @@
   "smart-edit": "Smart Edit",
   "function-call-required": "Function Call Required",
   "smart-edit-prompt": "Smart Edit Prompt",
-  "define-instructions-for-ai-to-edit-your-notes": "You can use prompts to manipulate notes, for example: If a note contains a link, summarize the link content below the original note and generate a label."
+  "define-instructions-for-ai-to-edit-your-notes": "You can use prompts to manipulate notes, for example: If a note contains a link, summarize the link content below the original note and generate a label.",
+  "rebuild-started": "Rebuild Started",
+  "rebuild-stopped-by-user": "Rebuild stopped by user"
 }

@@ -599,5 +599,7 @@
   "smart-edit": "Édition Intelligente",
   "function-call-required": "Appel de fonction requis",
   "smart-edit-prompt": "Édition intelligente",
-  "define-instructions-for-ai-to-edit-your-notes": "Vous pouvez utiliser des invites pour manipuler les notes, par exemple : si une note contient un lien, résumez le contenu du lien sous la note originale et générez une étiquette."
+  "define-instructions-for-ai-to-edit-your-notes": "Vous pouvez utiliser des invites pour manipuler les notes, par exemple : si une note contient un lien, résumez le contenu du lien sous la note originale et générez une étiquette.",
+  "rebuild-started": "La reconstruction a commencé",
+  "rebuild-stopped-by-user": "Reconstruction arrêtée par l'utilisateur"
 }

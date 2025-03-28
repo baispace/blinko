@@ -599,5 +599,7 @@
   "smart-edit": "Intelligente Bearbeitung",
   "function-call-required": "Funktionsaufruf erforderlich",
   "smart-edit-prompt": "Intelligente Bearbeitungsanweisung",
-  "define-instructions-for-ai-to-edit-your-notes": "Sie können Aufforderungen verwenden, um Notizen zu manipulieren. Zum Beispiel: Wenn eine Notiz einen Link enthält, fassen Sie den Inhalt des Links unter der ursprünglichen Notiz zusammen und erzeugen Sie ein Etikett."
+  "define-instructions-for-ai-to-edit-your-notes": "Sie können Aufforderungen verwenden, um Notizen zu manipulieren. Zum Beispiel: Wenn eine Notiz einen Link enthält, fassen Sie den Inhalt des Links unter der ursprünglichen Notiz zusammen und erzeugen Sie ein Etikett.",
+  "rebuild-started": "Wiederaufbau Gestartet",
+  "rebuild-stopped-by-user": "Wiederaufbau vom Benutzer gestoppt"
 }

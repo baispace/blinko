@@ -1,3 +1,21 @@
+# [0.46.0](https://github.com/blinko-space/blinko/compare/v0.45.3...v0.46.0) (2025-03-28)
+
+
+### Bug Fixes
+
+* change editor to ir mode ([19446c0](https://github.com/blinko-space/blinko/commit/19446c08d9137e0225892b69bf75b307211ae0ff))
+* clean up RecommandJob and update logging ([757b1de](https://github.com/blinko-space/blinko/commit/757b1dea575cd30420bf19a32e438d43929db7ad))
+* improve RecommandJob initialization and batch processing ([c2e65aa](https://github.com/blinko-space/blinko/commit/c2e65aaee6cb270246ac5b31da7f8eff5a4f913e))
+* remove unused dependencies and update configuration ([9781629](https://github.com/blinko-space/blinko/commit/9781629cded5ea0787e447b4fefc9210fa11e223))
+* update i18n ([0b2c757](https://github.com/blinko-space/blinko/commit/0b2c757ff7306cd9bef502697e56bc13347652ff))
+* update lru cache maxSize ([2474d77](https://github.com/blinko-space/blinko/commit/2474d772438ab08e5085b1e02602864285effc47))
+
+
+### Features
+
+* add AI post-processing features and update configurations ([1d12409](https://github.com/blinko-space/blinko/commit/1d12409e10e016f9ab7ec6b0cc749c59a6b195c5))
+* add babel-loader dependency ([5f21fa2](https://github.com/blinko-space/blinko/commit/5f21fa25488465efa85d28f4557ad618c8903842))
+
 ## [0.45.3](https://github.com/blinko-space/blinko/compare/v0.45.2...v0.45.3) (2025-03-25)
 
 

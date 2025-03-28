@@ -73,7 +73,7 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           context: ./
-          file: Dockerfile
+          file: dockerfile
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=blinkospace/blinko,push-by-digest=true,name-canonical=true,push=true
 

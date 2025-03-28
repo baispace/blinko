@@ -3,6 +3,7 @@ FROM node:22-alpine AS builder
 RUN apk add --no-cache \
     python3 \
     python3-dev \
+    python3-setuptools \
     make \
     g++ \
     gcc \
@@ -23,7 +24,7 @@ RUN npm install -g pnpm@9.12.2 && \
         npm install -g nrm && \
         nrm use taobao; \
     fi && \
-    pnpm install
+    pnpm install --ignore-scripts=tree-sitter
 
 COPY . .
 RUN pnpm build

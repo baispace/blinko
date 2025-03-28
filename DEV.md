@@ -11,9 +11,8 @@ docker run --name blinko-website -d -p 1111:1111 -e "DATABASE_URL=postgresql://p
 
 ## test mutli platform build
 ```
-docker buildx build --platform linux/amd64,linux/arm64 \
-  -t test/myimage:test \
-  --output "type=image,push=false" .
+docker buildx build --platform linux/amd64,linux/arm64 -t test/myimage:test  --output "type=image,push=false" .
+docker buildx build --platform linux/arm64 -t test/myimage:test  --output "type=image,push=false" .
 ```
 
 ## build docker image & run with docker-compose locally

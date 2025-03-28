@@ -18,6 +18,7 @@ WORKDIR /app
 ENV NEXT_PRIVATE_STANDALONE=true
 
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
 
 RUN npm install -g pnpm@9.12.2 && \
     if [ "$USE_MIRROR" = "true" ]; then \
@@ -27,7 +28,7 @@ RUN npm install -g pnpm@9.12.2 && \
     fi && \
     pnpm install
 
-COPY prisma ./prisma
+
 RUN npx prisma generate
 
 COPY . .
@@ -55,7 +56,7 @@ COPY --from=builder /app/resetpassword.js ./resetpassword.js
 
 # copy .pnpm files
 RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \
-    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*" -o -name "sqlite3@*"); do \
+    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*" -o -name "sqlite3*"); do \
         target_dir="./node_modules/.pnpm/$(basename "$dir")"; \
         if [ ! -d "$target_dir" ]; then \
             mkdir -p "$target_dir"; \

@@ -116,7 +116,6 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
       try {
         await api.ai.rebuildEmbeddingStop.mutate();
         
-        // 停止任务后立即更新状态
         const result = await api.ai.rebuildEmbeddingProgress.query();
         if (result) {
           store.progress = result.current || 0;
@@ -130,7 +129,6 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
         });
         
         blinko.updateTicker++;
-        // 停止轮询
         store.stopPolling();
         RootStore.Get(DialogStandaloneStore).close()
       } catch (err) {

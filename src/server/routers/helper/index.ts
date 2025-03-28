@@ -148,49 +148,74 @@ export const getToken = async (req: NextApiRequest | NextRequest) => {
 
 export const getAllPathTags = async () => {
   const flattenTags = await prisma.tag.findMany();
-  
-  const buildHashTagTreeFromDb = (tags: any[]) => {
-    const tagMap = new Map();
-    const rootNodes: any[] = [];
+  const hasHierarchy = flattenTags.some(tag => tag.parent != null);
+  if (hasHierarchy) {
+    const buildHashTagTreeFromDb = (tags: any[]) => {
+      const tagMap = new Map();
+      const rootNodes: any[] = [];
+      tags.forEach(tag => {
+        tagMap.set(tag.id, { ...tag, children: [] });
+      });
+      tags.forEach(tag => {
+        if (tag.parent) {
+          const parentNode = tagMap.get(tag.parent);
+          if (parentNode) {
+            parentNode.children.push(tagMap.get(tag.id));
+          } else {
+            rootNodes.push(tagMap.get(tag.id));
+          }
+        } else {
+          rootNodes.push(tagMap.get(tag.id));
+        }
+      });
 
-    tags.forEach(tag => {
-      tagMap.set(tag.id, { ...tag, children: [] });
+      return rootNodes;
+    };
+
+    const generateTagPaths = (node: any, parentPath = '') => {
+      const currentPath = parentPath ? `${parentPath}/${node.name}` : `#${node.name}`;
+      const paths = [currentPath];
+
+      if (node.children && node.children.length > 0) {
+        node.children.forEach((child: any) => {
+          const childPaths = generateTagPaths(child, currentPath);
+          paths.push(...childPaths);
+        });
+      }
+
+      return paths;
+    };
+
+    const listTags = buildHashTagTreeFromDb(flattenTags);
+    let pathTags: string[] = [];
+    
+    listTags.forEach(node => {
+      pathTags = pathTags.concat(generateTagPaths(node));
     });
 
-    tags.forEach(tag => {
-      if (tag.parentId) {
-        const parentNode = tagMap.get(tag.parentId);
-        if (parentNode) {
-          parentNode.children.push(tagMap.get(tag.id));
+    return pathTags;
+  } else {
+    const tagPathMap = new Map();
+    const tagSet = new Set<string>();
+    flattenTags.forEach(tag => {
+      const tagName = tag.name.startsWith('#') ? tag.name.substring(1) : tag.name;
+      tagSet.add(tagName);
+      tagPathMap.set(tagName, `#${tagName}`);
+    });
+    const pathTags: string[] = [];
+    tagSet.forEach((tag: string) => {
+      pathTags.push(`#${tag}`);
+      if (tag.includes('/')) {
+        const parts = tag.split('/');
+        let currentPath = '#' + parts[0];
+        pathTags.push(currentPath);
+        
+        for (let i = 1; i < parts.length; i++) {
+          currentPath += '/' + parts[i];
+          pathTags.push(currentPath);
         }
-      } else {
-        rootNodes.push(tagMap.get(tag.id));
       }
     });
-
-    return rootNodes;
-  };
-
-  const generateTagPaths = (node: any, parentPath = '') => {
-    const currentPath = parentPath ? `${parentPath}/${node.name}` : `#${node.name}`;
-    const paths = [currentPath];
-
-    if (node.children && node.children.length > 0) {
-      node.children.forEach((child: any) => {
-        const childPaths = generateTagPaths(child, currentPath);
-        paths.push(...childPaths);
-      });
-    }
-
-    return paths;
-  };
-
-  const listTags = buildHashTagTreeFromDb(flattenTags);
-  let pathTags: string[] = [];
-  
-  listTags.forEach(node => {
-    pathTags = pathTags.concat(generateTagPaths(node));
-  });
-
-  return pathTags;
+    return [...new Set(pathTags)];
+  }
 };

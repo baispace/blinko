@@ -561,7 +561,7 @@
   "add-as-comment": "أضف كتعليق",
   "choose-what-to-do-with-ai-results": "اختر ما يجب فعله بنتائج الذكاء الاصطناعي",
   "ai-post-processing-mode": "وضع معالجة ما بعد الذكاء الاصطناعي",
-  "ai-post-processing-prompt": "موجه معالجة ما بعد الذكاء الاصطناعي",
+  "ai-post-processing-prompt": "تعليق تحرير لاحق بواسطة الذكاء الاصطناعي",
   "align-center": "مركز",
   "align-left": "غادر",
   "align-right": "يمين",
@@ -573,7 +573,7 @@
   "column": "عمود",
   "content-generated-by-ai": "المحتوى الناتج عن الذكاء الاصطناعي",
   "content-theme": "معاينة موضوع المحتوى",
-  "define-custom-prompt-for-ai-to-process-notes": "تحديد موجه مخصص للذكور لمعالجة الملاحظات",
+  "define-custom-prompt-for-ai-to-process-notes": "قم بتشغيل الذكاء الصناعي للتعليق على الملاحظة الحالية. على سبيل المثال: يرجى تلخيص محتوى الملاحظة. إذا كان محتوى الملاحظة أقل من 10 كلمات، فيرجى صقلها لي.",
   "enter-custom-prompt-for-post-processing": "أدخل مطالبة مخصصة للمعالجة بعد",
   "enter-spotify-consumer-key": "أدخل مفتاح Spotify API",
   "enter-spotify-consumer-secret": "أدخل Spotify Consumer Secret",
@@ -594,5 +594,12 @@
   "app-upgrade-required": "مطلوب ترقية التطبيق",
   "current-app-version": "النسخة الحالية من التطبيق",
   "required-app-version": "النسخة المطلوبة من التطبيق",
-  "upgrade": "ترقية"
+  "upgrade": "ترقية",
+  "online-search": "البحث على الإنترنت",
+  "smart-edit": "تحرير ذكي",
+  "function-call-required": "مطلوب استدعاء الوظيفة",
+  "smart-edit-prompt": "تحرير ذكي",
+  "define-instructions-for-ai-to-edit-your-notes": "يمكنك استخدام التوجيهات للتلاعب بالملاحظات، على سبيل المثال: إذا احتوت ملاحظة على رابط، قم بتلخيص محتوى الرابط أدناه من الملاحظة الأصلية وولِّد تسمية.",
+  "rebuild-started": "بدأت عملية الإعادة البناء",
+  "rebuild-stopped-by-user": "إعادة البناء توقفت بواسطة المستخدم"
 }

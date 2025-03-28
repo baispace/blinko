@@ -473,7 +473,7 @@
   "add-as-comment": "Adicione como comentário",
   "choose-what-to-do-with-ai-results": "Escolha o que fazer com os resultados da IA",
   "ai-post-processing-mode": "Modo de pós -processamento da IA",
-  "ai-post-processing-prompt": "Prompt de pós -processamento da IA",
+  "ai-post-processing-prompt": "Comentário de pós-processamento de IA",
   "2fa-setup-successful": "2FA Configuração bem -sucedida",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
@@ -496,7 +496,7 @@
   "dark-mode": "Modo escuro",
   "date-range": "",
   "days-ago": "",
-  "define-custom-prompt-for-ai-to-process-notes": "Defina o prompt personalizado para a IA processar as notas",
+  "define-custom-prompt-for-ai-to-process-notes": "Opere o AI para comentar sobre a nota atual. Por exemplo: Por favor, resuma o conteúdo da nota. Se o conteúdo da nota for menor do que 10 palavras, por favor, refine para mim.",
   "delete-column": "Exclua linha",
   "delete-row": "Excluir coluna",
   "devtools": "Devtools",
@@ -589,5 +589,12 @@
   "app-upgrade-required": "Atualização do aplicativo necessária",
   "current-app-version": "Versão atual do APP",
   "required-app-version": "Versão do APP necessária",
-  "upgrade": "Atualização"
+  "upgrade": "Atualização",
+  "online-search": "Pesquisa Online",
+  "smart-edit": "Edição Inteligente",
+  "function-call-required": "Chamada de Função Necessária",
+  "smart-edit-prompt": "Prompt de Edição Inteligente",
+  "define-instructions-for-ai-to-edit-your-notes": "Você pode usar prompts para manipular notas, por exemplo: Se uma nota contiver um link, resuma o conteúdo do link abaixo da nota original e gere um rótulo.",
+  "rebuild-started": "Reconstrução Iniciada",
+  "rebuild-stopped-by-user": "Reconstrução interrompida pelo usuário"
 }

@@ -57,7 +57,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
               <Button
                 key={item.id}
                 size="sm"
-                className="w-fit"
+                className="w-fit max-w-[400px] text-truncate"
                 onPress={async () => {
                   RootStore.Get(DialogStandaloneStore).setData({
                     isOpen: true,
@@ -69,7 +69,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
                 }}
                 endContent={<Icon icon="hugeicons:arrow-right-02" className='ml-auto' width="16" height="16" />}
               >
-                <div className="text-xs font-bold ml-1 select-none line-clamp-1 ">{!!item.content ? item.content : i18n.t('no-title')}</div>
+                <div className="text-xs font-bold ml-1 select-none line-clamp-1 text-truncate">{!!item.content ? item.content : i18n.t('no-title')}</div>
               </Button>
             ))
           }

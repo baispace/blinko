@@ -81,16 +81,11 @@ async function downloadWithRetry(url: string, filePath: string, retries = MAX_RE
   }
 }
 
-/**
- * 获取插件目录路径
- */
+
 const getPluginDir = (pluginName: string) => {
   return path.join('.blinko', 'plugins', pluginName);
 };
 
-/**
- * 清理插件目录
- */
 const cleanPluginDir = async (pluginName: string) => {
   const pluginDir = getPluginDir(pluginName);
   try {

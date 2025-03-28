@@ -178,8 +178,9 @@ export const aiRouter = router({
       const { content } = input
       const agent = await AiModelFactory.TagAgent()
       const tags = await getAllPathTags();
+      const flattenTags = await prisma.tag.findMany();
       const result = await agent.generate(
-        `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}`
+        `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}\nPlease suggest appropriate tags for this content. Include full hierarchical paths for tags like #Parent/Child instead of just #Child.`
       )
       return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
     }),

@@ -1,12 +1,23 @@
+import { LRUCache } from 'lru-cache'
 
 export class memoryCache {
-  cache: Map<string, { value: any, expiration: number }> = new Map()
-  constructor() {
-    this.cache = new Map()
+  cache: LRUCache<string, { value: any, expiration: number }>
+
+  constructor(options = {}) {
+    this.cache = new LRUCache({
+      maxSize: 30 * 1024 * 1024,
+      max: 10000,
+      sizeCalculation: (value, key) => {
+        return JSON.stringify(value).length
+      },
+      ...options
+    })
   }
+
   get(key: string) {
     return this.cache.get(key)
   }
+
   set(key: string, value: any) {
     this.cache.set(key, value)
   }
@@ -28,8 +39,6 @@ export class memoryCache {
           console.error(err)
         })
       } else {
-        //@ts-ignore
-        // data = null;
         this.set(key, {
           value: null,
         })
@@ -45,6 +54,6 @@ export class memoryCache {
     }
     return data.value
   }
-
 }
+
 export const cache = new memoryCache()

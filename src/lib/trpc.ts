@@ -1,4 +1,4 @@
-import { createTRPCClient, httpBatchLink, httpLink, splitLink, unstable_httpBatchStreamLink } from '@trpc/client';
+import { createTRPCClient, httpBatchLink, httpLink, splitLink, httpBatchStreamLink } from '@trpc/client';
 import type { AppRouter } from '@/server/routers/_app';
 import superjson from 'superjson';
 
@@ -23,7 +23,7 @@ export const api = createTRPCClient<AppRouter>({
 
 export const streamApi = createTRPCClient<AppRouter>({
   links: [
-    unstable_httpBatchStreamLink({
+    httpBatchStreamLink({
       url: `/api/trpc`,
       transformer: superjson
     })

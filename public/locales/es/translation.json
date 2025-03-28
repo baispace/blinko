@@ -541,7 +541,7 @@
   "add-as-comment": "Agregar como comentario",
   "choose-what-to-do-with-ai-results": "Elija qué hacer con los resultados de IA",
   "ai-post-processing-mode": "Modo de procesamiento posterior a AI",
-  "ai-post-processing-prompt": "IA Post Processing Actual",
+  "ai-post-processing-prompt": "Comentario de solicitud de procesamiento posterior de IA",
   "2fa-setup-successful": "Configuración de 2FA exitosa",
   "align-center": "Centro",
   "align-left": "Izquierda",
@@ -552,7 +552,7 @@
   "content-generated-by-ai": "Contenido generado por AI",
   "copied": "Copiado",
   "dark-mode": "Modo oscuro",
-  "define-custom-prompt-for-ai-to-process-notes": "Definir un indicador personalizado para que AI procese las notas",
+  "define-custom-prompt-for-ai-to-process-notes": "Opera la IA para comentar sobre la nota actual. Por ejemplo: Por favor, resume el contenido de la nota. Si el contenido de la nota es menos de 10 palabras, por favor corrígelo para mí.",
   "delete-column": "Eliminar la fila",
   "enter-custom-prompt-for-post-processing": "Ingrese el indicador personalizado para el procesamiento posterior",
   "enter-spotify-consumer-key": "Ingrese la tecla API de Spotify",
@@ -594,5 +594,12 @@
   "app-upgrade-required": "Actualización de la aplicación requerida",
   "current-app-version": "Versión actual de la APP",
   "required-app-version": "Versión de APP requerida",
-  "upgrade": "Actualización"
+  "upgrade": "Actualización",
+  "online-search": "Búsqueda en línea",
+  "smart-edit": "Edición Inteligente",
+  "function-call-required": "Se Requiere Llamada de Función",
+  "smart-edit-prompt": "Indicación de Edición Inteligente",
+  "define-instructions-for-ai-to-edit-your-notes": "Puede usar indicaciones para manipular notas, por ejemplo: si una nota contiene un enlace, resume el contenido del enlace debajo de la nota original y genere una etiqueta.",
+  "rebuild-started": "Reconstrucción Iniciada",
+  "rebuild-stopped-by-user": "Reconstrucción detenida por el usuario"
 }

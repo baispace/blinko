@@ -543,7 +543,7 @@
   "add-as-comment": "Ajouter comme commentaire",
   "choose-what-to-do-with-ai-results": "Choisissez quoi faire avec les résultats de l'IA",
   "ai-post-processing-mode": "Mode post-traitement de l'IA",
-  "ai-post-processing-prompt": "Invite de post-traitement de l'IA",
+  "ai-post-processing-prompt": "invite de commentaire pour le post-traitement IA",
   "2fa-setup-successful": "2fa Configuration réussie",
   "align-left": "Gauche",
   "align-right": "Droite",
@@ -553,7 +553,7 @@
   "column": "Colonne",
   "content-generated-by-ai": "Contenu généré par l'IA",
   "copied": "Copié",
-  "define-custom-prompt-for-ai-to-process-notes": "Définir l'invite personnalisée pour que l'IA traite les notes",
+  "define-custom-prompt-for-ai-to-process-notes": "Faites fonctionner l'IA pour commenter la note actuelle. Par exemple : Veuillez résumer le contenu de la note. Si le contenu de la note est inférieur à 10 mots, veuillez le peaufiner pour moi.",
   "down": "Vers le bas",
   "enter-custom-prompt-for-post-processing": "Entrez l'invite personnalisée pour le post-traitement",
   "ordered-list": "Liste de commandes",
@@ -594,5 +594,12 @@
   "app-upgrade-required": "Mise à jour de l'application requise",
   "current-app-version": "Version actuelle de l'APP",
   "required-app-version": "Version de l'APP requise",
-  "upgrade": "Mise à niveau"
+  "upgrade": "Mise à niveau",
+  "online-search": "Recherche en ligne",
+  "smart-edit": "Édition Intelligente",
+  "function-call-required": "Appel de fonction requis",
+  "smart-edit-prompt": "Édition intelligente",
+  "define-instructions-for-ai-to-edit-your-notes": "Vous pouvez utiliser des invites pour manipuler les notes, par exemple : si une note contient un lien, résumez le contenu du lien sous la note originale et générez une étiquette.",
+  "rebuild-started": "La reconstruction a commencé",
+  "rebuild-stopped-by-user": "Reconstruction arrêtée par l'utilisateur"
 }

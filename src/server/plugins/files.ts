@@ -195,74 +195,116 @@ export class FileService {
     const timestamp = Date.now();
     const timestampedFileName = `${baseName}_${timestamp}${extension}`;
 
-    if (config.objectStorage === 's3') {
-      const { s3ClientInstance } = await this.getS3Client();
+    try {
+      if (config.objectStorage === 's3') {
+        const { s3ClientInstance } = await this.getS3Client();
 
-      let customPath = config.s3CustomPath || '';
-      if (customPath) {
-        customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
-        customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+        let customPath = config.s3CustomPath || '';
+        if (customPath) {
+          customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+          customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+        }
+
+        const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+
+        const passThrough = new PassThrough();
+        const nodeReadable = Readable.fromWeb(stream as any);
+        
+        // Setup proper error handling
+        nodeReadable.on('error', (err) => {
+          passThrough.destroy(err);
+        });
+
+        nodeReadable.pipe(passThrough);
+
+        const upload = new Upload({
+          client: s3ClientInstance,
+          params: {
+            Bucket: config.s3Bucket,
+            Key: s3Key,
+            Body: passThrough,
+          },
+        });
+
+        try {
+          await upload.done();
+        } catch (error) {
+          // Ensure streams are destroyed on error
+          passThrough.destroy();
+          nodeReadable.destroy();
+          throw error;
+        }
+        
+        // Explicitly destroy streams after upload completes
+        passThrough.destroy();
+        nodeReadable.destroy();
+        
+        const s3Url = `/api/s3file/${s3Key}`;
+
+        await FileService.createAttachment({
+          path: s3Url,
+          name: timestampedFileName,
+          size: fileSize,
+          type,
+          accountId
+        });
+        return { filePath: s3Url, fileName: timestampedFileName };
+
+      } else {
+        let customPath = config.localCustomPath || '';
+        if (customPath) {
+          customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
+          customPath = customPath.endsWith('/') ? customPath : customPath + '/';
+        }
+
+        const fullPath = path.join(UPLOAD_FILE_PATH, customPath, timestampedFileName);
+        await fs.mkdir(path.dirname(fullPath), { recursive: true });
+
+        const writeStream = createWriteStream(fullPath);
+        const nodeReadable = Readable.fromWeb(stream as any);
+
+        // Setup proper error handling
+        nodeReadable.on('error', (err) => {
+          writeStream.destroy(err);
+        });
+        
+        writeStream.on('error', (err) => {
+          nodeReadable.destroy();
+          throw err;
+        });
+
+        await new Promise((resolve, reject) => {
+          nodeReadable.pipe(writeStream)
+            .on('finish', () => {
+              // Ensure writeStream is properly closed
+              writeStream.end();
+              resolve(null);
+            })
+            .on('error', (err) => {
+              // Clean up both streams on error
+              writeStream.destroy();
+              nodeReadable.destroy();
+              reject(err);
+            });
+        });
+
+        const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+        await FileService.createAttachment({
+          path: `/api/file/${relativePath}`,
+          name: timestampedFileName,
+          size: fileSize,
+          type,
+          noteId: null,
+          accountId
+        });
+        return {
+          filePath: `/api/file/${relativePath}`,
+          fileName: timestampedFileName
+        };
       }
-
-      const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
-
-      const passThrough = new PassThrough();
-      const nodeReadable = Readable.fromWeb(stream as any);
-      nodeReadable.pipe(passThrough);
-
-      const upload = new Upload({
-        client: s3ClientInstance,
-        params: {
-          Bucket: config.s3Bucket,
-          Key: s3Key,
-          Body: passThrough,
-        },
-      });
-
-      await upload.done();
-      const s3Url = `/api/s3file/${s3Key}`;
-
-      await FileService.createAttachment({
-        path: s3Url,
-        name: timestampedFileName,
-        size: fileSize,
-        type,
-        accountId
-      });
-      return { filePath: s3Url, fileName: timestampedFileName };
-
-    } else {
-      let customPath = config.localCustomPath || '';
-      if (customPath) {
-        customPath = customPath.startsWith('/') ? customPath : '/' + customPath;
-        customPath = customPath.endsWith('/') ? customPath : customPath + '/';
-      }
-
-      const fullPath = path.join(UPLOAD_FILE_PATH, customPath, timestampedFileName);
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
-
-      const writeStream = createWriteStream(fullPath);
-      const nodeReadable = Readable.fromWeb(stream as any);
-
-      await new Promise((resolve, reject) => {
-        nodeReadable.pipe(writeStream)
-          .on('finish', resolve)
-          .on('error', reject);
-      });
-
-      const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
-      await FileService.createAttachment({
-        path: `/api/file/${relativePath}`,
-        name: timestampedFileName,
-        size: fileSize,
-        type,
-        noteId: null,
-        accountId
-      });
-      return {
-        filePath: `/api/file/${relativePath}`,
-        fileName: timestampedFileName
-      };
+    } catch (error) {
+      console.error('Failed to upload file stream:', error);
+      throw error;
     }
   }
 

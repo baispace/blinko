@@ -547,7 +547,7 @@
   "add-as-comment": "Fügen Sie als Kommentar hinzu",
   "choose-what-to-do-with-ai-results": "Wählen Sie, was mit KI -Ergebnissen zu tun ist",
   "ai-post-processing-mode": "KI -Postverarbeitungsmodus",
-  "ai-post-processing-prompt": "KI -Post -Verarbeitungsaufforderung",
+  "ai-post-processing-prompt": "KI-Nachbearbeitungskommentaraufforderung",
   "2fa-setup-successful": "2FA Setup erfolgreich",
   "align-center": "Center",
   "align-left": "Links",
@@ -560,7 +560,7 @@
   "content-generated-by-ai": "Inhalt von KI erzeugt",
   "copied": "Kopiert",
   "custom-path": "Benutzerdefinierte Pfad",
-  "define-custom-prompt-for-ai-to-process-notes": "Definieren Sie die benutzerdefinierte Eingabeaufforderung für KI, Notizen zu verarbeiten",
+  "define-custom-prompt-for-ai-to-process-notes": "Bedienen Sie die KI, um den aktuellen Hinweis zu kommentieren. Zum Beispiel: Bitte fassen Sie den Inhalt des Hinweises zusammen. Wenn der Inhalt des Hinweises weniger als 10 Wörter enthält, bitte polieren Sie ihn für mich auf.",
   "devtools": "Devtools",
   "enter-custom-prompt-for-post-processing": "Geben Sie die benutzerdefinierte Eingabeaufforderung für die Nachbearbeitung ein",
   "enter-spotify-consumer-key": "Geben Sie den Spotify -API -Schlüssel ein",
@@ -594,5 +594,12 @@
   "app-upgrade-required": "App-Upgrade erforderlich",
   "current-app-version": "Aktuelle APP-Version",
   "required-app-version": "Benötigte APP-Version",
-  "upgrade": "Aktualisierung"
+  "upgrade": "Aktualisierung",
+  "online-search": "Online-Suche",
+  "smart-edit": "Intelligente Bearbeitung",
+  "function-call-required": "Funktionsaufruf erforderlich",
+  "smart-edit-prompt": "Intelligente Bearbeitungsanweisung",
+  "define-instructions-for-ai-to-edit-your-notes": "Sie können Aufforderungen verwenden, um Notizen zu manipulieren. Zum Beispiel: Wenn eine Notiz einen Link enthält, fassen Sie den Inhalt des Links unter der ursprünglichen Notiz zusammen und erzeugen Sie ein Etikett.",
+  "rebuild-started": "Wiederaufbau Gestartet",
+  "rebuild-stopped-by-user": "Wiederaufbau vom Benutzer gestoppt"
 }

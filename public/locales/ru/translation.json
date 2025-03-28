@@ -481,7 +481,7 @@
   "add-as-comment": "Добавить как комментарий",
   "choose-what-to-do-with-ai-results": "Выберите, что делать с результатами ИИ",
   "ai-post-processing-mode": "Режим обработки пост -обработки ИИ",
-  "ai-post-processing-prompt": "Пост -обработка AI",
+  "ai-post-processing-prompt": "Комментарий к заданию постобработки ИИ",
   "2fa-setup-successful": "2FA установка успешно",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
@@ -503,7 +503,7 @@
   "dark-mode": "Темный режим",
   "date-range": "",
   "days-ago": "",
-  "define-custom-prompt-for-ai-to-process-notes": "Определите пользовательскую подсказку для ИИ для обработки заметок",
+  "define-custom-prompt-for-ai-to-process-notes": "Управляйте ИИ для комментирования текущей заметки. Например: Пожалуйста, кратко изложите содержание заметки. Если содержание заметки составляет менее 10 слов, пожалуйста, отредактируйте его для меня.",
   "delete-column": "Удалить ряд",
   "delete-row": "Удалить столбец",
   "devtools": "Devtools",
@@ -589,5 +589,12 @@
   "app-upgrade-required": "Требуется обновление приложения",
   "current-app-version": "Текущая версия приложения",
   "required-app-version": "Требуемая версия приложения",
-  "upgrade": "Обновление"
+  "upgrade": "Обновление",
+  "online-search": "Онлайн поиск",
+  "smart-edit": "Умное Редактирование",
+  "function-call-required": "Требуется вызов функции",
+  "smart-edit-prompt": "Умный Редактор Подсказок",
+  "define-instructions-for-ai-to-edit-your-notes": "Вы можете использовать подсказки для управления записями, например: Если запись содержит ссылку, кратко изложите содержание ссылки ниже исходной записи и сгенерируйте метку.",
+  "rebuild-started": "Начато Восстановление",
+  "rebuild-stopped-by-user": "Восстановление остановлено пользователем"
 }

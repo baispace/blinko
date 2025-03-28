@@ -138,6 +138,9 @@ importers:
       axios:
         specifier: ^1.7.7
         version: 1.7.9(debug@4.4.0)
+      babel-loader:
+        specifier: ^10.0.0
+        version: 10.0.0(@babel/core@7.26.9)(webpack@5.98.0)
       boring-avatars:
         specifier: ^1.11.2
         version: 1.11.2
@@ -6003,6 +6006,13 @@ packages:
 
   b4a@1.6.7:
     resolution: {integrity: sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==}
+
+  babel-loader@10.0.0:
+    resolution: {integrity: sha512-z8jt+EdS61AMw22nSfoNJAZ0vrtmhPRVi6ghL3rCeRZI8cdNYFiV5xeV3HbE7rlZZNmGH8BVccwWt8/ED0QOHA==}
+    engines: {node: ^18.20.0 || ^20.10.0 || >=22.0.0}
+    peerDependencies:
+      '@babel/core': ^7.12.0
+      webpack: '>=5.61.0'
 
   babel-loader@8.4.1:
     resolution: {integrity: sha512-nXzRChX+Z1GoE6yWavBQg6jDslyFF3SDjl2paADuoQtQW10JqShJt62R6eJQ5m/pjJFDT8xgKIWSP85OY8eXeA==}
@@ -20747,6 +20757,12 @@ snapshots:
       - debug
 
   b4a@1.6.7: {}
+
+  babel-loader@10.0.0(@babel/core@7.26.9)(webpack@5.98.0):
+    dependencies:
+      '@babel/core': 7.26.9
+      find-up: 5.0.0
+      webpack: 5.98.0
 
   babel-loader@8.4.1(@babel/core@7.26.9)(webpack@5.98.0):
     dependencies:

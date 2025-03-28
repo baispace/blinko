@@ -25,7 +25,7 @@ RUN npm install -g pnpm@9.12.2 && \
         npm install -g nrm && \
         nrm use taobao; \
     fi && \
-    pnpm install --ignore-scripts=tree-sitter
+    pnpm install
 
 COPY prisma ./prisma
 RUN npx prisma generate

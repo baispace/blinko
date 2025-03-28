@@ -48,11 +48,11 @@ export class RecommandJob extends BaseScheduleJob {
           followType: 'following'
         }
       });
-      
+
       if (followCount > 0) {
         console.log(`Found ${followCount} followings, scheduling RecommandJob`);
         this.autoStart("0 */6 * * *");
-        
+
         this.RunTask().catch(err => {
           console.error('Initial RecommandJob execution failed:', err);
         });
@@ -68,26 +68,25 @@ export class RecommandJob extends BaseScheduleJob {
     batchSize: number = 5
   ): Promise<R[]> {
     const results: R[] = [];
-    
+
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
       const batchResults = await Promise.all(batch.map(processFn));
       results.push(...batchResults);
-      
+
       if (i + batchSize < items.length) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-    
+
     return results;
   }
 
   static async RunTask() {
     let cachedList: { [key: string]: RecommandListType } = {};
-    
+
     try {
       console.log('Running Cache Recommand List at', new Date().toISOString());
-      
       const follows = await prisma.follows.findMany({
         where: {
           followType: 'following'
@@ -97,45 +96,48 @@ export class RecommandJob extends BaseScheduleJob {
           siteUrl: true
         }
       });
-      
+
       if (follows.length === 0) {
         console.log('No follows found, skipping task');
+        await prisma.cache.delete({
+          where: { key: 'recommand_list' },
+        });
         return;
       }
-      
+
       await this.batchProcess(follows, async (follow) => {
         try {
           const url = new URL(follow.siteUrl);
           const response = await axios.post<RecommandListType>(
-            `${url.origin}/api/v1/note/public-list`, 
+            `${url.origin}/api/v1/note/public-list`,
             { page: 1, size: 30 },
             { timeout: 10000 }
           );
-          
+
           const processedData = response.data.map(item => {
             const newItem = { ...item, originURL: url.origin };
-            
+
             if (newItem.attachments) {
               newItem.attachments = newItem.attachments.map(a => ({
                 ...a,
                 path: `${url.origin}${a.path}`
               }));
             }
-            
+
             return newItem;
           });
-          
+
           if (!cachedList[follow.accountId]) {
             cachedList[follow.accountId] = [];
           }
-          
+
           const accountId = follow.accountId || '0';
           if (cachedList[accountId]) {
             cachedList[accountId] = cachedList[accountId].concat(processedData);
           } else {
             cachedList[accountId] = processedData;
           }
-          
+
         } catch (error) {
           console.error(`Error fetching data for ${follow.siteUrl}:`, error.message);
           return [];
@@ -146,7 +148,9 @@ export class RecommandJob extends BaseScheduleJob {
         where: { key: 'recommand_list' },
         select: { id: true }
       });
-      
+
+      console.log('hasCache', cachedList);
+
       if (hasCache) {
         await prisma.cache.update({
           where: { id: hasCache.id },
@@ -155,23 +159,23 @@ export class RecommandJob extends BaseScheduleJob {
         });
       } else {
         // @ts-ignore
-        await prisma.cache.create({ 
-          data: { 
-            key: 'recommand_list', 
+        await prisma.cache.create({
+          data: {
+            key: 'recommand_list',
             // @ts-ignore
-            value: cachedList 
-          } 
+            value: cachedList
+          }
         });
       }
-      
+
       console.log('Successfully updated recommand_list cache');
-      
+
     } catch (error) {
       console.error('RecommandJob failed:', error);
       throw error;
     } finally {
       cachedList = {};
-      
+
       if (global.gc) {
         try {
           global.gc();

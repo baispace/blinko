@@ -594,5 +594,6 @@
   "app-upgrade-required": "Uygulama güncellemesi gerekiyor",
   "current-app-version": "Mevcut APP sürümü",
   "required-app-version": "Gerekli APP sürümü",
-  "upgrade": "Yükseltme"
+  "upgrade": "Yükseltme",
+  "online-search": "Çevrimiçi Arama"
 }

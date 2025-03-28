@@ -23,7 +23,7 @@ export class EditorStore {
   lastEndOffset: number = 0
   lastRangeText: string = ''
   lastRect: DOMRect | null = null
-  viewMode: ViewMode = "wysiwyg"
+  viewMode: ViewMode = "ir"
   lastSelection: Selection | null = null
   vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null
@@ -323,10 +323,10 @@ export class EditorStore {
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
     //remove listener on pc
-    const wysiwyg = document.querySelector('.vditor-wysiwyg .vditor-reset')
-    if (wysiwyg) {
-      wysiwyg.addEventListener('ondragstart', (e) => {
-        if (wysiwyg.contains(e.target as Node)) {
+    const ir = document.querySelector('.vditor-ir .vditor-reset')
+    if (ir) {
+      ir.addEventListener('ondragstart', (e) => {
+        if (ir.contains(e.target as Node)) {
           e.stopImmediatePropagation();
           e.preventDefault();
         }

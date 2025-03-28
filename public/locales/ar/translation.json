@@ -594,5 +594,6 @@
   "app-upgrade-required": "مطلوب ترقية التطبيق",
   "current-app-version": "النسخة الحالية من التطبيق",
   "required-app-version": "النسخة المطلوبة من التطبيق",
-  "upgrade": "ترقية"
+  "upgrade": "ترقية",
+  "online-search": "البحث على الإنترنت"
 }

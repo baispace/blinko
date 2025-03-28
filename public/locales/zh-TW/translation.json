@@ -594,5 +594,6 @@
   "app-upgrade-required": "需要升級應用程式",
   "current-app-version": "當前APP版本",
   "required-app-version": "需要的APP版本",
-  "upgrade": "升級"
+  "upgrade": "升級",
+  "online-search": "線上搜尋"
 }

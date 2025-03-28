@@ -16,7 +16,7 @@ export const ViewModeButton = ({ viewMode }: Props) => {
     if (!isPc) {
       return viewMode === 'sv' ? 'ir' : 'sv';
     } else {
-      return viewMode === 'wysiwyg' ? 'sv' : 'wysiwyg';
+      return viewMode === 'ir' ? 'sv' : 'ir';
     }
   };
 
@@ -24,7 +24,7 @@ export const ViewModeButton = ({ viewMode }: Props) => {
     if (!isPc) {
       return viewMode === 'sv' ? 'tabler:source-code' : 'grommet-icons:form-view';
     } else {
-      return viewMode === 'wysiwyg' ? 'grommet-icons:form-view' : 'tabler:source-code';
+      return viewMode === 'ir' ? 'grommet-icons:form-view' : 'tabler:source-code';
     }
   };
 
@@ -32,7 +32,7 @@ export const ViewModeButton = ({ viewMode }: Props) => {
     if (!isPc) {
       return viewMode === 'sv' ? t('preview-mode') : t('source-code');
     } else {
-      return viewMode === 'wysiwyg' ? t('preview-mode') : t('source-code');
+      return viewMode === 'ir' ? t('preview-mode') : t('source-code');
     }
   };
 

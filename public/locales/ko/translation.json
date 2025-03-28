@@ -589,5 +589,6 @@
   "app-upgrade-required": "앱 업그레이드가 필요합니다",
   "current-app-version": "현재 APP 버전",
   "required-app-version": "필요한 APP 버전",
-  "upgrade": "업그레이드"
+  "upgrade": "업그레이드",
+  "online-search": "온라인 검색"
 }

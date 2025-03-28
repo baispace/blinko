@@ -616,5 +616,6 @@
   "app-upgrade-required": "需要升级",
   "current-app-version": "当前APP版本",
   "required-app-version": "需要的APP版本",
-  "upgrade": "升级"
+  "upgrade": "升级",
+  "online-search": "在线搜索"
 }

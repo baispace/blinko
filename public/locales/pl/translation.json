@@ -585,5 +585,6 @@
   "app-upgrade-required": "Wymagana aktualizacja aplikacji",
   "current-app-version": "Aktualna wersja aplikacji",
   "required-app-version": "Wymagana wersja aplikacji",
-  "upgrade": "Aktualizacja"
+  "upgrade": "Aktualizacja",
+  "online-search": "Wyszukiwanie online"
 }

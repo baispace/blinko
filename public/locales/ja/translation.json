@@ -594,5 +594,6 @@
   "app-upgrade-required": "アプリのアップグレードが必要です",
   "current-app-version": "現在のAPPバージョン",
   "required-app-version": "要求されるアプリのバージョン",
-  "upgrade": "アップグレード"
+  "upgrade": "アップグレード",
+  "online-search": "オンライン検索"
 }

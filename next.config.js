@@ -163,6 +163,9 @@ module.exports = withBundleAnalyzer(withPWA({
     })
     return config;
   },
+  experimental: {
+    serverComponentsExternalPackages: ['busboy'],
+  },
   reactStrictMode: isProduction? true : false,
   eslint: {
     ignoreDuringBuilds: true,

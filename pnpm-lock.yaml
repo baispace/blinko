@@ -439,6 +439,9 @@ importers:
       '@semantic-release/release-notes-generator':
         specifier: ^14.0.3
         version: 14.0.3(semantic-release@24.2.3(typescript@5.7.3))
+      '@types/busboy':
+        specifier: ^1.5.4
+        version: 1.5.4
       '@types/lodash':
         specifier: ^4.14.195
         version: 4.17.15
@@ -5359,6 +5362,9 @@ packages:
 
   '@types/bunyan@1.8.11':
     resolution: {integrity: sha512-758fRH7umIMk5qt5ELmRMff4mLDlN+xyYzC+dkPTdKwbSkJFvz6xwyScrytPU0QIBbRRwbiE8/BIg8bpajerNQ==}
+
+  '@types/busboy@1.5.4':
+    resolution: {integrity: sha512-kG7WrUuAKK0NoyxfQHsVE6j1m01s6kMma64E+OZenQABMQyTJop1DumUWcLwAQ2JzpefU7PDYoRDKl8uZosFjw==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -20039,6 +20045,10 @@ snapshots:
   '@types/aws-lambda@8.10.147': {}
 
   '@types/bunyan@1.8.11':
+    dependencies:
+      '@types/node': 20.2.5
+
+  '@types/busboy@1.5.4':
     dependencies:
       '@types/node': 20.2.5
 

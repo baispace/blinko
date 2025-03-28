@@ -9,11 +9,11 @@ export const updateBlinkoTool = createTool({
   //@ts-ignore
   inputSchema: z.object({
     notes: z.array(z.object({
-      id: z.number(),
-      content: z.string(),
-      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
-      isArchived: z.union([z.boolean(), z.null()]).default(null),
-      isTop: z.union([z.boolean(), z.null()]).default(null),
+      id: z.number().describe('the note ID'),
+      content: z.string().describe('note content'),
+      type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1).describe('note type'),
+      isArchived: z.union([z.boolean(), z.null()]).default(null).describe('is archived'),
+      isTop: z.union([z.boolean(), z.null()]).default(null).describe('is top'),
       isShare: z.union([z.boolean(), z.null()]).default(null),
       isRecycle: z.union([z.boolean(), z.null()]).default(null),
     })),

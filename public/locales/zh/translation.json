@@ -565,7 +565,7 @@
   "add-as-comment": "添加为评论",
   "choose-what-to-do-with-ai-results": "选择如何使用AI结果",
   "ai-post-processing-mode": "AI后处理模式",
-  "ai-post-processing-prompt": "AI后处理提示",
+  "ai-post-processing-prompt": "AI后期处理评论提示",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "分析以下笔记内容，推荐合适的标签并提供简短摘要",
   "enter-custom-prompt-for-post-processing": "输入用于后处理的自定义提示",
   "enable-ai-post-processing": "启用AI后处理",
@@ -586,7 +586,7 @@
   "api-key": "",
   "content-generated-by-ai": "AI产生的内容",
   "days-ago": "",
-  "define-custom-prompt-for-ai-to-process-notes": "定义自定义提示，以使AI处理注释",
+  "define-custom-prompt-for-ai-to-process-notes": "操作AI评论当前笔记。例如：请总结笔记内容。如果笔记内容少于10个字则帮我润色一下。",
   "enter-your-api-key": "",
   "hours-ago": "",
   "impoort-from-bko": "",
@@ -617,5 +617,9 @@
   "current-app-version": "当前APP版本",
   "required-app-version": "需要的APP版本",
   "upgrade": "升级",
-  "online-search": "在线搜索"
+  "online-search": "在线搜索",
+  "smart-edit": "智能编辑",
+  "function-call-required": "需要函数调用",
+  "smart-edit-prompt": "智能编辑提示",
+  "define-instructions-for-ai-to-edit-your-notes": "可以使用提示词操作笔记，例如：如果笔记中包含链接请在原笔记下方总结链接内容，并生成标签。"
 }

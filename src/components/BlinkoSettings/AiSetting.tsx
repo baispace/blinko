@@ -35,16 +35,16 @@ export const AiSetting = observer(() => {
       let endpoint = '';
       let url = '';
       let token = '';
-      
+
       if (provider === 'Ollama') {
-        endpoint = isEmbedding ? 
-          (store.embeddingApiEndpoint || "http://127.0.0.1:11434") : 
+        endpoint = isEmbedding ?
+          (store.embeddingApiEndpoint || "http://127.0.0.1:11434") :
           (store.apiEndPoint || "http://127.0.0.1:11434");
         url = `${endpoint}/tags`;
         token = '';
       } else {
-        endpoint = isEmbedding ? 
-          (store.embeddingApiEndpoint || "https://api.openai.com") : 
+        endpoint = isEmbedding ?
+          (store.embeddingApiEndpoint || "https://api.openai.com") :
           (store.apiEndPoint || "https://api.openai.com");
         url = `${endpoint}/models`;
         token = isEmbedding ? store.embeddingApiKey : store.apiKey;
@@ -68,11 +68,11 @@ export const AiSetting = observer(() => {
             label: model.name,
             value: model.name
           }));
-          
+
           if (!isEmbedding) {
             ai.modelSelect[provider] = modelsList;
           }
-          
+
           const currentEmbeddingModels = embeddingModelsStorage.value || {};
           currentEmbeddingModels[provider] = modelsList;
           embeddingModelsStorage.setValue(currentEmbeddingModels);
@@ -88,14 +88,14 @@ export const AiSetting = observer(() => {
             }));
             ai.modelSelect[provider] = modelsList;
           }
-          
+
           const embeddingModelsList = data.data
             .filter(model => model.id.toLowerCase().includes('embedding'))
             .map(model => ({
               label: model.id,
               value: model.id
             }));
-          
+
           if (embeddingModelsList.length > 0) {
             const currentEmbeddingModels = embeddingModelsStorage.value || {};
             currentEmbeddingModels[provider] = embeddingModelsList;
@@ -105,7 +105,7 @@ export const AiSetting = observer(() => {
           }
         }
       }
-      
+
       RootStore.Get(ToastPlugin).success(isEmbedding ? t('embedding-model-list-updated') : t('model-list-updated'));
     } catch (error) {
       console.error(`Error fetching ${isEmbedding ? 'embedding ' : ''}models:`, error);
@@ -176,7 +176,7 @@ export const AiSetting = observer(() => {
     apiKey: '',
     apiVersion: '',
     embeddingApiKey: '',
-    aiPostProcessingPrompt: '',
+    aiCommentPrompt: '',
     embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
@@ -189,6 +189,7 @@ export const AiSetting = observer(() => {
     tavilyMaxResult: 5,
     showEmeddingAdvancedSetting: false,
     excludeEmbeddingTagId: null as number | null,
+    aiSmartEditPrompt: '',
     setIsOpen(open: boolean) {
       this.isOpen = open;
     },
@@ -209,7 +210,8 @@ export const AiSetting = observer(() => {
     store.embeddingDimensions = blinko.config.value?.embeddingDimensions!;
     store.tavilyApiKey = blinko.config.value?.tavilyApiKey!;
     store.tavilyMaxResult = Number(blinko.config.value?.tavilyMaxResult!);
-    store.aiPostProcessingPrompt = blinko.config.value?.aiPostProcessingPrompt!;
+    store.aiCommentPrompt = blinko.config.value?.aiCommentPrompt!;
+    store.aiSmartEditPrompt = blinko.config.value?.aiSmartEditPrompt!;
   }, [blinko.config.value]);
 
   return (
@@ -839,46 +841,94 @@ export const AiSetting = observer(() => {
 
         {blinko.config.value?.isUseAiPostProcessing && (
           <>
-            <Item
-              type={isPc ? 'row' : 'col'}
-              leftContent={
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    {t('ai-post-processing-prompt')}
-                    <Tooltip
-                      content={
-                        <div className="w-[300px] flex flex-col gap-2">
-                          <div>{t('define-custom-prompt-for-ai-to-process-notes')}</div>
-                        </div>
-                      }
-                    >
-                      <Icon icon="proicons:info" width="18" height="18" />
-                    </Tooltip>
+            {blinko.config.value?.aiPostProcessingMode === 'comment' && (
+              <Item
+                type={isPc ? 'row' : 'col'}
+                leftContent={
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {t('ai-post-processing-prompt')}
+                      <Tooltip
+                        content={
+                          <div className="w-[300px] flex flex-col gap-2">
+                            <div>{t('define-custom-prompt-for-ai-to-process-notes')}</div>
+                          </div>
+                        }
+                      >
+                        <Icon icon="proicons:info" width="18" height="18" />
+                      </Tooltip>
+                    </div>
+                    <div className="text-[12px] text-default-400">{t('prompt-used-for-post-processing-notes')}</div>
                   </div>
-                  <div className="text-[12px] text-default-400">{t('prompt-used-for-post-processing-notes')}</div>
-                </div>
-              }
-              rightContent={
-                <Textarea
-                  radius="lg"
-                  value={store.aiPostProcessingPrompt ?? t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
-                  onBlur={(e) => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'aiPostProcessingPrompt',
-                        value: e.target.value,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                  onChange={(e) => {
-                    store.aiPostProcessingPrompt = e.target.value;
-                  }}
-                  placeholder={t('enter-custom-prompt-for-post-processing')}
-                  className="w-full"
-                />
-              }
-            />
+                }
+                rightContent={
+                  <Textarea
+                    radius="lg"
+                    value={store.aiCommentPrompt ?? t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
+                    onBlur={(e) => {
+                      PromiseCall(
+                        api.config.update.mutate({
+                          key: 'aiCommentPrompt',
+                          value: e.target.value,
+                        }),
+                        { autoAlert: false },
+                      );
+                    }}
+                    onChange={(e) => {
+                      store.aiCommentPrompt = e.target.value;
+                    }}
+                    placeholder={t('enter-custom-prompt-for-post-processing')}
+                    className="w-full"
+                  />
+                }
+              />
+            )}
+
+            {blinko.config.value?.aiPostProcessingMode === 'smartEdit' && (
+              <Item
+                type={isPc ? 'row' : 'col'}
+                leftContent={
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {t('smart-edit-prompt')}
+                      <Tooltip
+                        content={
+                          <div className="w-[300px] flex flex-col gap-2">
+                            <div>{t('define-instructions-for-ai-to-edit-your-notes')}</div>
+                          </div>
+                        }
+                      >
+                        <Icon icon="proicons:info" width="18" height="18" />
+                      </Tooltip>
+                    </div>
+                    <div><Chip size="sm" color="warning" className="ml-2">{t('function-call-required')}</Chip></div>
+                  </div>
+                }
+                rightContent={
+                  <Textarea
+                    radius="lg"
+                    value={store?.aiSmartEditPrompt}
+                    onBlur={(e) => {
+                      PromiseCall(
+                        api.config.update.mutate({
+                          key: 'aiSmartEditPrompt',
+                          value: e.target.value,
+                        }),
+                        { autoAlert: false },
+                      );
+                    }}
+                    onChange={(e) => {
+                      if (!store.aiSmartEditPrompt) {
+                        store.aiSmartEditPrompt = e.target.value;
+                      } else {
+                        store.aiSmartEditPrompt = e.target.value;
+                      }
+                    }}
+                    className="w-full"
+                  />
+                }
+              />
+            )}
 
             <Item
               type={isPc ? 'row' : 'col'}
@@ -910,6 +960,10 @@ export const AiSetting = observer(() => {
                   </SelectItem>
                   <SelectItem key="tags" startContent={<Icon icon="tabler:tags" />}>
                     {t('auto-add-tags')}
+                  </SelectItem>
+                  <SelectItem key="smartEdit" startContent={<Icon icon="tabler:robot" />}>
+                    {t('smart-edit')}
+
                   </SelectItem>
                   <SelectItem key="both" startContent={<Icon icon="tabler:analyze" />}>
                     {t('both')}

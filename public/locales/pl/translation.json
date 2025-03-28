@@ -563,7 +563,7 @@
   "add-as-comment": "Dodaj jako komentarz",
   "choose-what-to-do-with-ai-results": "Wybierz, co zrobić z wynikami AI",
   "ai-post-processing-mode": "AI Tryb przetwarzania końcowego",
-  "ai-post-processing-prompt": "AI POST PROTWACJA",
+  "ai-post-processing-prompt": "Komentarz zachęcający do post-processingu AI",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "Przeanalizuj następującą zawartość notatki i zasugeruj odpowiednie znaczniki i podaj krótkie podsumowanie",
@@ -571,7 +571,7 @@
   "content-generated-by-ai": "Treść generowana przez AI",
   "date-range": "",
   "days-ago": "",
-  "define-custom-prompt-for-ai-to-process-notes": "Zdefiniuj niestandardowe monit o sztuczną inteligencję do przetwarzania banknotów",
+  "define-custom-prompt-for-ai-to-process-notes": "Obsługuj AI, aby skomentować aktualną notatkę. Na przykład: Podsumuj zawartość notatki. Jeśli zawartość notatki ma mniej niż 10 słów, proszę ją dla mnie poprawić.",
   "enter-custom-prompt-for-post-processing": "Wprowadź niestandardową monit o przetwarzanie końcowe",
   "enter-your-api-key": "",
   "hours-ago": "",
@@ -586,5 +586,9 @@
   "current-app-version": "Aktualna wersja aplikacji",
   "required-app-version": "Wymagana wersja aplikacji",
   "upgrade": "Aktualizacja",
-  "online-search": "Wyszukiwanie online"
+  "online-search": "Wyszukiwanie online",
+  "smart-edit": "Inteligentna Edycja",
+  "function-call-required": "Wymagane Wywołanie Funkcji",
+  "smart-edit-prompt": "Inteligentna Zachęta do Edycji",
+  "define-instructions-for-ai-to-edit-your-notes": "Możesz używać poleceń do manipulowania notatkami, na przykład: Jeśli notatka zawiera link, podsumuj zawartość linku poniżej oryginalnej notatki i wygeneruj etykietę."
 }

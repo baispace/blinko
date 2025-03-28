@@ -520,11 +520,11 @@
   "add-as-comment": "コメントとして追加します",
   "choose-what-to-do-with-ai-results": "AIの結果をどうするかを選択します",
   "ai-post-processing-mode": "AI後処理モード",
-  "ai-post-processing-prompt": "AI後処理プロンプト",
+  "ai-post-processing-prompt": "AIポスト処理コメントプロンプト",
   "2fa-setup-successful": "2FAセットアップが成功しました",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "次のメモコンテンツを分析し、適切なタグを提案し、簡単な要約を提供します",
   "content-generated-by-ai": "AIによって生成されたコンテンツ",
-  "define-custom-prompt-for-ai-to-process-notes": "AIがノートを処理するためのカスタムプロンプトを定義します",
+  "define-custom-prompt-for-ai-to-process-notes": "AIを操作して、現在のノートへのコメントを行ってください。例えば：ノートの内容を要約してください。もしノートの内容が10語未満であれば、私に対してそれを磨いてください。",
   "enter-custom-prompt-for-post-processing": "ポストプロセッシングのカスタムプロンプトを入力します",
   "enter-spotify-consumer-key": "Spotify APIキーを入力します",
   "enter-spotify-consumer-secret": "Spotify Consumer Secretを入力してください",
@@ -595,5 +595,9 @@
   "current-app-version": "現在のAPPバージョン",
   "required-app-version": "要求されるアプリのバージョン",
   "upgrade": "アップグレード",
-  "online-search": "オンライン検索"
+  "online-search": "オンライン検索",
+  "smart-edit": "スマートエディット",
+  "function-call-required": "関数呼び出しが必要です",
+  "smart-edit-prompt": "スマート編集プロンプト",
+  "define-instructions-for-ai-to-edit-your-notes": "メモを操作するためにプロンプトを使用できます。たとえば、メモにリンクが含まれている場合は、元のメモの下にリンク内容を要約してラベルを生成します。"
 }

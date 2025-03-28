@@ -575,10 +575,10 @@
   "add-as-comment": "添加為評論",
   "choose-what-to-do-with-ai-results": "選擇如何使用AI結果",
   "ai-post-processing-mode": "AI後處理模式",
-  "ai-post-processing-prompt": "AI後處理提示",
+  "ai-post-processing-prompt": "AI 後處理評論提示",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "分析以下註釋內容並建議適當的標籤，並提供簡短的摘要",
   "content-generated-by-ai": "AI產生的內容",
-  "define-custom-prompt-for-ai-to-process-notes": "定義自定義提示，以使AI處理註釋",
+  "define-custom-prompt-for-ai-to-process-notes": "操作AI對當前筆記進行評論。例如：請總結筆記的內容。如果筆記內容少於10個字，請替我改寫一下。",
   "enter-custom-prompt-for-post-processing": "輸入自定義提示進行發布處理",
   "prompt-used-for-post-processing-notes": "用於後處理筆記的提示词",
   "rebuild-in-progress": "重建正在進行中",
@@ -595,5 +595,9 @@
   "current-app-version": "當前APP版本",
   "required-app-version": "需要的APP版本",
   "upgrade": "升級",
-  "online-search": "線上搜尋"
+  "online-search": "線上搜尋",
+  "smart-edit": "智能編輯",
+  "function-call-required": "需要調用函數",
+  "smart-edit-prompt": "智能編輯提示",
+  "define-instructions-for-ai-to-edit-your-notes": "您可以使用提示來操作筆記，例如：如果答案中包含連接網址，將連結內容摘要放在原始答案下方並產生標籤。"
 }

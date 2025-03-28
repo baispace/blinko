@@ -385,7 +385,7 @@ export class AiService {
       }
 
       // Get the custom prompt, or use default
-      const prompt = config.aiPostProcessingPrompt || 'Analyze the following note content. Extract key topics as tags and provide a brief summary of the main points.';
+      const prompt = config.aiCommentPrompt || 'Analyze the following note content. Extract key topics as tags and provide a brief summary of the main points.';
 
       // Process with AI
       const agent = await AiModelFactory.CommentAgent();
@@ -452,6 +452,43 @@ export class AiService {
           });
         } catch (error) {
           console.error('Error processing tags:', error);
+        }
+      }
+
+      if (processingMode === 'smartEdit' || processingMode === 'both') {
+        try {
+          const smartEditPrompt = config.aiSmartEditPrompt || 'Improve this note by organizing content, adding headers, and enhancing readability.';
+          const agent = await AiModelFactory.BaseChatAgent({ withTools: true });
+          const result = await agent.generate([
+            {
+              role: 'system',
+              content: `You are an AI assistant that helps to improve notes. You'll be provided with a note content, and your task is to enhance it according to instructions. You have access to tools that can help you modify the note. Use these tools to make the requested improvements.`
+            },
+            {
+              role: 'user',
+              content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${smartEditPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
+            }
+          ]);
+          await prisma.comments.create({
+            data: {
+              content: result.text,
+              noteId,
+              guestName: 'Blinko AI',
+              guestIP: '',
+              guestUA: '',
+            },
+          });
+        } catch (error) {
+          console.error('Error during smart edit:', error);
+          await prisma.comments.create({
+            data: {
+              content: `⚠️ **Smart Edit Error**\n\nI encountered an error while trying to edit this note. This may happen if the AI model doesn't support function calling or if there was an issue with the edit process.\n\nError details: ${error.message}`,
+              noteId,
+              guestName: 'Blinko AI',
+              guestIP: '',
+              guestUA: '',
+            },
+          });
         }
       }
 

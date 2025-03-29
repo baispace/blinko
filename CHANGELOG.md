@@ -1,3 +1,10 @@
+## [0.46.3](https://github.com/blinko-space/blinko/compare/v0.46.2...v0.46.3) (2025-03-29)
+
+
+### Bug Fixes
+
+* update session and jwt maxAge to extend duration to 10 years ([46b3b58](https://github.com/blinko-space/blinko/commit/46b3b5884a6d261df4981e4555a7be507415cccf))
+
 ## [0.46.2](https://github.com/blinko-space/blinko/compare/v0.46.1...v0.46.2) (2025-03-29)
 
 

@@ -1,3 +1,10 @@
+## [0.46.2](https://github.com/blinko-space/blinko/compare/v0.46.1...v0.46.2) (2025-03-29)
+
+
+### Bug Fixes
+
+* update startDate and endDate types to include string in note router ([cc0ab9a](https://github.com/blinko-space/blinko/commit/cc0ab9aba5387a504f406211bce555d19862b97b))
+
 ## [0.46.1](https://github.com/blinko-space/blinko/compare/v0.46.0...v0.46.1) (2025-03-29)
 
 

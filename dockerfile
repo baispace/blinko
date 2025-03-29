@@ -44,6 +44,7 @@ RUN apk add --no-cache \
     tzdata \
     openssl
 
+RUN npm install -g prisma
 
 WORKDIR /app
 
@@ -79,4 +80,4 @@ ENV NODE_ENV=production \
 
 EXPOSE 1111
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node seed.js && node server.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node seed.js && node server.js"]

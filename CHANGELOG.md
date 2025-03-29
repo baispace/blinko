@@ -1,3 +1,10 @@
+## [0.46.4](https://github.com/blinko-space/blinko/compare/v0.46.3...v0.46.4) (2025-03-29)
+
+
+### Bug Fixes
+
+* remove react-audio-visualize dependency and update related components for audio handling ([f3b49f6](https://github.com/blinko-space/blinko/commit/f3b49f6dc581e0f42991423dd722b130d6cf9207))
+
 ## [0.46.3](https://github.com/blinko-space/blinko/compare/v0.46.2...v0.46.3) (2025-03-29)
 
 

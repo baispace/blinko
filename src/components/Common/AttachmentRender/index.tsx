@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileIcons } from './FileIcon';
 import { observer } from 'mobx-react-lite';
 import { helper } from '@/lib/helper';
@@ -10,9 +10,7 @@ import { HandleFileType } from '../Editor/editorUtils';
 import { Icon } from '@iconify/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@heroui/popover';
 import { BlinkoCard } from '@/components/BlinkoCard';
-import { api } from '@/lib/trpc';
 import { EditorStore } from '../Editor/editorStore';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd-next';
 import { DraggableFileGrid } from './DraggableFileGrid';
 import { AudioRender } from './audioRender';
 
@@ -29,11 +27,11 @@ const AttachmentsRender = observer((props: IProps) => {
   const { files, preview = false, columns = 3 } = props
 
   const gridClassName = preview 
-    ? `grid grid-cols-${(columns - 1) < 1 ? 1 : (columns - 1)} md:grid-cols-${columns} gap-2 mt-3` 
-    : 'flex flex-row gap-2 overflow-x-auto pb-2 mt-3';
+    ? `grid grid-cols-${(columns - 1) < 1 ? 1 : (columns - 1)} md:grid-cols-${columns} gap-2` 
+    : 'flex flex-row gap-2 overflow-x-auto pb-2';
 
   return (
-    <div>
+    <div className='flex flex-col gap-[4px]'>
       {/* image render */}
       <ImageRender {...props} />
 
@@ -72,7 +70,7 @@ const AttachmentsRender = observer((props: IProps) => {
         onReorder={props.onReorder}
         renderItem={(file) => (
           <div 
-            className={`relative flex p-2 items-center gap-2 cursor-pointer 
+            className={`relative mt-2 flex p-2 items-center gap-2 cursor-pointer 
               bg-sencondbackground hover:bg-hover transition-all rounded-md group
               ${!preview ? 'min-w-[200px] flex-shrink-0' : 'w-full'}`}
             onClick={() => {
@@ -82,7 +80,7 @@ const AttachmentsRender = observer((props: IProps) => {
             }}
           >
             <FileIcons path={file.name} isLoading={file.uploadPromise?.loading?.value} />
-            <div className='truncate text-sm font-bold'>{file.name}</div>
+            <div className='truncate text-xs md:text-sm font-bold'>{file.name}</div>
             {!file.uploadPromise?.loading?.value && !preview &&
               <DeleteIcon className='ml-auto group-hover:opacity-100 opacity-0' files={files} file={file} />
             }

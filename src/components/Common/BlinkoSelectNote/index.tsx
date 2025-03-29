@@ -1,4 +1,3 @@
-import { Icon } from '@iconify/react';
 import { Input, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { observer } from 'mobx-react-lite';
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -8,6 +7,7 @@ import { IconButton } from '../Editor/Toolbar/IconButton';
 import { useState, useCallback } from 'react';
 import { getDisplayTime } from '@/lib/helper';
 import { throttle } from 'lodash';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   iconButton?: React.ReactNode;
@@ -20,8 +20,9 @@ interface Props {
 export const BlinkoSelectNote = observer(({ iconButton, onSelect, blackList = [], tooltip = 'reference', autoClose = true }: Props) => {
   const blinko = RootStore.Get(BlinkoStore);
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
-  const defaultIconButton = <IconButton tooltip={tooltip} icon="ph:link" />;
+  const defaultIconButton = <IconButton tooltip={t(tooltip)} icon="ph:link" />;
 
   const throttleSearch = useCallback(
     throttle(

@@ -149,6 +149,13 @@ menu {
   scroll-behavior: auto !important;
 }
 
+@media (max-width: 768px) {
+  .markdown-body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
 .markdown-body .octicon {
   display: inline-block;
   fill: currentColor;

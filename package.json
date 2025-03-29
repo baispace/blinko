@@ -131,7 +131,6 @@
     "rctx-contextmenu": "^1.4.1",
     "react": "^18.2.0",
     "react-accessible-treeview": "^2.9.1",
-    "react-audio-visualize": "^1.2.0",
     "react-beautiful-dnd-next": "^11.0.5",
     "react-burger-menu": "^3.0.9",
     "react-dev-inspector": "^2.0.1",

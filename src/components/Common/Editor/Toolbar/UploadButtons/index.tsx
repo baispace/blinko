@@ -1,9 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from 'usehooks-ts';
-import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown } from '@heroui/react';
-import { FileUploadIcon } from '../../../Icons';
 import { IconButton } from '../IconButton';
-import { ShowCamera } from '../../../CameraDialog';
 import { ShowAudioDialog } from '../../../AudioDialog';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store';
@@ -41,12 +37,12 @@ export const UploadButtons = ({ getInputProps, open, onFileUpload }: Props) => {
       onClick: () => ShowAudioDialog((file) => onFileUpload([file])),
       showCondition: blinko.showAi,
     },
-    {
-      key: 'camera',
-      icon: 'hugeicons:camera-lens',
-      title: t('camera'),
-      onClick: () => ShowCamera((file) => onFileUpload([file])),
-    },
+    // {
+    //   key: 'camera',
+    //   icon: 'hugeicons:camera-lens',
+    //   title: t('camera'),
+    //   onClick: () => ShowCamera((file) => onFileUpload([file])),
+    // },
   ];
 
   return (

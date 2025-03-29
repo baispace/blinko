@@ -104,7 +104,11 @@ export class MusicManagerStore implements Store {
   };
 
   private handleLoadedMetadata = () => {
-    this.duration = this.audioElement?.duration || 0;
+    if (this.audioElement && !isNaN(this.audioElement.duration) && isFinite(this.audioElement.duration)) {
+      this.duration = this.audioElement.duration;
+    } else {
+      this.duration = 0;
+    }
   };
 
   private handleError = (e: Event) => {
@@ -208,12 +212,38 @@ export class MusicManagerStore implements Store {
     
     this.audioElement.pause();
     this.isPlaying = false;
+    this.duration = 0;
+    this.currentTime = 0;
     
     this._currentTrackName = trackName;
     
     if (track.file.preview) {
       try {
         this.audioElement.src = track.file.preview;
+        
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+              resolve();
+            }, 2000);
+            
+            this.audioElement!.addEventListener('loadedmetadata', () => {
+              clearTimeout(timeoutId);
+              if (this.audioElement && !isNaN(this.audioElement.duration) && isFinite(this.audioElement.duration)) {
+                this.duration = this.audioElement.duration;
+              }
+              resolve();
+            }, { once: true });
+            
+            this.audioElement!.addEventListener('error', (e) => {
+              clearTimeout(timeoutId);
+              reject(e);
+            }, { once: true });
+          });
+        } catch (error) {
+          console.error('Failed to load audio metadata:', error);
+        }
+        
         await this.audioElement.play();
         this.isPlaying = true;
         this.showMiniPlayer = true;

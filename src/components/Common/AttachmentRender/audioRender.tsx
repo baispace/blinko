@@ -3,8 +3,8 @@ import { api } from '@/lib/trpc';
 import { FileType } from '../Editor/type';
 import { DeleteIcon, DownloadIcon } from './icons';
 import { Icon } from '@iconify/react';
-import { RootStore, useStore } from '@/store';
-import { MusicManagerStore } from '@/store/musicManagerStore'
+import { RootStore } from '@/store';
+import { MusicManagerStore } from '@/store/musicManagerStore';
 import { observer } from 'mobx-react-lite';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@heroui/react';
@@ -52,6 +52,14 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
   useEffect(() => {
     files?.filter(i => i.previewType === 'audio').forEach(file => {
       getMetadata(file);
+      
+      // Set initial duration for recordings with audioDuration property
+      if (file.name.startsWith('my_recording_') && (file as any).audioDuration) {
+        setDuration(prev => ({
+          ...prev,
+          [file.name]: (file as any).audioDuration
+        }));
+      }
     });
   }, [files]);
 
@@ -72,7 +80,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
     }
 
     musicManager.addToPlaylist(file, audioMetadata[fileName], true);
-    
+
     const otherFiles = audioFiles.filter(f => f.name !== fileName);
     otherFiles.forEach(f => {
       musicManager.addToPlaylist(f, audioMetadata[f.name], false);
@@ -80,6 +88,10 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
   };
 
   const formatTime = (seconds: number): string => {
+    // Handle invalid input
+    if (!isFinite(seconds) || isNaN(seconds)) {
+      return "0:00";
+    }
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -95,7 +107,10 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
       const progress = progressRefs.current[fileName];
       if (!progress) return;
 
-      const percentage = (musicManager.currentTime / musicManager.duration) * 100;
+      // Avoid division by zero or NaN values
+      const percentage = musicManager.duration > 0 
+        ? (musicManager.currentTime / musicManager.duration) * 100 
+        : 0;
       progress.style.width = `${percentage}%`;
 
       setCurrentTime(prev => ({
@@ -104,10 +119,13 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
       }));
 
       if (musicManager.duration) {
-        setDuration(prev => ({
-          ...prev,
-          [fileName]: formatTime(musicManager.duration)
-        }));
+        // Check for valid duration before setting
+        if (!isNaN(musicManager.duration) && isFinite(musicManager.duration)) {
+          setDuration(prev => ({
+            ...prev,
+            [fileName]: formatTime(musicManager.duration)
+          }));
+        }
       }
     };
 
@@ -179,12 +197,12 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
                 initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                 animate={{ opacity: 1, height: "auto", marginBottom: 8 }}
                 exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                transition={{ 
+                transition={{
                   duration: 0.2,
                   ease: "easeInOut"
                 }}
               >
-                <div className={`group relative flex items-center gap-3 p-3 cursor-pointer transition-all rounded-xl ${getBackgroundStyle(metadata?.coverUrl)}`}>
+                <div className={`group relative flex items-center gap-3 p-2 md:p-3 cursor-pointer transition-all rounded-xl ${getBackgroundStyle(metadata?.coverUrl)}`}>
                   {metadata?.coverUrl && (
                     <>
                       <div
@@ -197,7 +215,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
                   <div className="relative flex items-center gap-3 w-full z-10">
                     <div
-                      className="relative min-w-[50px] h-[50px] cursor-pointer"
+                      className="relative min-w-[40px] md:min-w-[50px] h-[40px] md:h-[50px] cursor-pointer"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -224,8 +242,12 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <div className={`font-medium truncate max-w-[200px] ${metadata?.coverUrl ? 'text-white' : ''}`}>
-                          {metadata?.trackName || file.name}
+                        <div className={`font-medium truncate max-w-[90%] ${metadata?.coverUrl ? 'text-white' : ''}`}>
+                          {file.name.startsWith('my_recording_')
+                            ? ((duration[file.name] || (file as any).audioDuration)
+                              ? `${t('recording')} (${duration[file.name] || (file as any).audioDuration})`
+                              : t('recording'))
+                            : (metadata?.trackName || file.name)}
                         </div>
                         <AnimatePresence>
                           {isCurrentPlaying(file.name) && (
@@ -236,7 +258,7 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
                               exit={{ opacity: 0, x: -10 }}
                               transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
-                              {currentTime[file.name]} / {duration[file.name]}
+                              {currentTime[file.name]} / {duration[file.name] || (file as any).audioDuration}
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -244,6 +266,12 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
                       {metadata?.artists && metadata.artists.length > 0 && (
                         <div className={`text-sm truncate ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-500'}`}>
                           {metadata.artists.join(', ')}
+                        </div>
+                      )}
+
+                      {file.name.startsWith('my_recording_') && !isCurrentPlaying(file.name) && !metadata?.artists && (
+                        <div className={`text-sm ${metadata?.coverUrl ? 'text-white/80' : 'text-gray-500'}`}>
+                          {duration?.[file.name] || (file as any).audioDuration || t('recording')}
                         </div>
                       )}
 

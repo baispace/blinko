@@ -20,7 +20,7 @@ import { OAuthConfig } from 'next-auth/providers/oauth';
 async function verify2FACode(userId: string, userRole: string, userName: string, twoFactorCode: string) {
   const now = Math.floor(Date.now() / 1000);
   const thirtyDays = 30 * 24 * 60 * 60;
-  
+
   const config = await getGlobalConfig({
     ctx: {
       id: userId,
@@ -47,7 +47,7 @@ async function verify2FACode(userId: string, userRole: string, userName: string,
 async function getUserConfig(userId: string, userRole: string, userName: string) {
   const now = Math.floor(Date.now() / 1000);
   const thirtyDays = 30 * 24 * 60 * 60;
-  
+
   return await getGlobalConfig({
     ctx: {
       id: userId,
@@ -170,7 +170,7 @@ async function getProviderConfigList() {
 export default async function auth(req: any, res: any) {
   const providers = await getProviderConfigList()
   const secret = await getNextAuthSecret();
-  
+
   return await NextAuth(req, res, {
     providers: [
       ...providers,
@@ -419,10 +419,10 @@ export default async function auth(req: any, res: any) {
     },
     session: {
       strategy: "jwt",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 60 * 60 * 24 * 365 * 10,
     },
     jwt: {
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 60 * 60 * 24 * 365 * 10,
     },
   });
 }

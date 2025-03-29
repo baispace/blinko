@@ -1,3 +1,10 @@
+## [0.46.1](https://github.com/blinko-space/blinko/compare/v0.46.0...v0.46.1) (2025-03-29)
+
+
+### Bug Fixes
+
+* add global prisma installation and update CMD in Dockerfile ([2ba56a2](https://github.com/blinko-space/blinko/commit/2ba56a2b9e6b421766bb4a06a95c4f279d476883))
+
 # [0.46.0](https://github.com/blinko-space/blinko/compare/v0.45.3...v0.46.0) (2025-03-28)
 
 

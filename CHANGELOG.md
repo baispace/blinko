@@ -1,3 +1,10 @@
+## [0.47.1](https://github.com/blinko-space/blinko/compare/v0.47.0...v0.47.1) (2025-03-30)
+
+
+### Bug Fixes
+
+* add rerank model settings and update translations ([005eb97](https://github.com/blinko-space/blinko/commit/005eb97f63da6be48b741d7e7ba1f9e85f6d6e01))
+
 # [0.47.0](https://github.com/blinko-space/blinko/compare/v0.46.6...v0.47.0) (2025-03-30)
 
 

@@ -1,12 +1,12 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Input, Switch, Tooltip } from '@heroui/react';
+import { Button, Input, Switch } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from '@/lib/trpc';
 import { useTranslation } from 'react-i18next';
-import { Item } from './Item';
+import { Item, ItemWithTooltip } from './Item';
 import { useEffect, useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
@@ -67,12 +67,12 @@ export const HttpProxySetting = observer(() => {
     <CollapsibleCard icon="mdi:connection" title={t('http-proxy')}>
       <Item
         leftContent={
-          <div className="flex items-center gap-2">
-            {t('use-http-proxy')}
-            <Tooltip content={<div className="w-[300px]">{t('enable-http-proxy-for-accessing-github-or-ai-api-endpoints')}</div>}>
-              <Icon icon="proicons:info" width="18" height="18" />
-            </Tooltip>
-          </div>
+          <ItemWithTooltip
+          content={<>{t('use-http-proxy')}</>}
+          toolTipContent={
+            <div className="w-[300px]">{t('enable-http-proxy-for-accessing-github-or-ai-api-endpoints')}</div>
+          }
+          />
         }
         rightContent={
           <Switch
@@ -243,16 +243,14 @@ export const HttpProxySetting = observer(() => {
             leftContent={
               <div className="flex flex-col gap-1 w-full">
                 <div className="flex items-center gap-2">
-                  {t('test-proxy-connection')}
-                  <Tooltip
-                    content={
+                  <ItemWithTooltip
+                    content={<>{t('test-proxy-connection')}</>}
+                    toolTipContent={
                       <div className="w-[300px]">
                         {t('test-if-the-proxy-is-working-correctly')}
                       </div>
                     }
-                  >
-                    <Icon icon="proicons:info" width="18" height="18" />
-                  </Tooltip>
+                  />
                 </div>
                 <div className="flex flex-col gap-3 mt-2 w-full">
                   <div className="flex gap-2 w-full">

@@ -219,25 +219,21 @@ export const AiSetting = observer(() => {
       <CollapsibleCard icon="mingcute:ai-line" title="AI">
         <Item
           leftContent={
-            <div className="flex items-center gap-2">
-              {t('use-ai')}
-              <Tooltip
-                content={
-                  <div className="w-[300px] flex flex-col gap-2">
-                    <div>
-                      {t('in-addition-to-the-gpt-model-there-is-a-need-to-ensure-that-it-is-possible-to-invoke-the')}
-                      <Code color="primary">text-embedding</Code>
-                    </div>
-                    <div>
-                      {t('speech-recognition-requires-the-use-of')}
-                      <Code color="primary">whisper</Code>
-                    </div>
+            <ItemWithTooltip
+              content={<>{t('use-ai')}</>}
+              toolTipContent={
+                <div className="w-[300px] flex flex-col gap-2">
+                  <div>
+                    {t('in-addition-to-the-gpt-model-there-is-a-need-to-ensure-that-it-is-possible-to-invoke-the')}
+                    <Code color="primary">text-embedding</Code>
                   </div>
-                }
-              >
-                <Icon icon="proicons:info" width="18" height="18" />
-              </Tooltip>
-            </div>
+                  <div>
+                    {t('speech-recognition-requires-the-use-of')}
+                    <Code color="primary">whisper</Code>
+                  </div>
+                </div>
+              }
+            />
           }
           rightContent={
             <Switch
@@ -334,16 +330,14 @@ export const AiSetting = observer(() => {
           type={isPc ? 'row' : 'col'}
           leftContent={
             <div className="flex items-center gap-2">
-              {t('embedding-model')}
-              <Tooltip
-                content={
-                  <div className="w-[300px] flex flex-col gap-2">
+              <ItemWithTooltip
+                content={<>{t('embedding-model')}</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
                     <div>{t('embedding-model-description')}</div>
                   </div>
                 }
-              >
-                <Icon icon="proicons:info" width="18" height="18" />
-              </Tooltip>
+              />
               <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
                 Advanced
               </Chip>
@@ -805,23 +799,19 @@ export const AiSetting = observer(() => {
       <CollapsibleCard className="mt-4" icon="tabler:robot" title={t('ai-post-processing')}>
         <Item
           leftContent={
-            <div className="flex items-center gap-2">
-              {t('enable-ai-post-processing')}
-              <Tooltip
-                content={
-                  <div className="w-[300px] flex flex-col gap-2">
-                    <div>
-                      {t('automatically-process-notes-after-creation-or-update')}
-                    </div>
-                    <div>
-                      {t('can-generate-summaries-tags-or-perform-analysis')}
-                    </div>
+            <ItemWithTooltip
+              content={<>{t('enable-ai-post-processing')}</>}
+              toolTipContent={
+                <div className="w-[300px] flex flex-col gap-2">
+                  <div>
+                    {t('automatically-process-notes-after-creation-or-update')}
                   </div>
-                }
-              >
-                <Icon icon="proicons:info" width="18" height="18" />
-              </Tooltip>
-            </div>
+                  <div>
+                    {t('can-generate-summaries-tags-or-perform-analysis')}
+                  </div>
+                </div>
+              }
+            />
           }
           rightContent={
             <Switch

@@ -48,9 +48,9 @@ export class StorageListState<T = any> {
     if (idx !== -1) this.remove(idx);
   }
 
-  save(list: T[]) {
+  save(list?: T[]) {
     try {
-      this.list = list
+      this.list = list ?? this.list
       localStorage.setItem(this.key, JSON.stringify(list));
     } catch (error) {
     }

@@ -108,9 +108,11 @@ export abstract class AiBaseModelProvider {
           baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
         };
         if (this.globalConfig.embeddingApiKey) {
+          console.log(this.globalConfig.rerankModel, 'rerankModel');
           return createOpenAI(config).languageModel(this.globalConfig.rerankModel);
         }
       }
+      console.log(this.globalConfig.rerankModel, 'rerankModel');
       return this.provider.languageModel(this.globalConfig.rerankModel);
     } catch (error) {
       console.log(error, 'ERROR Create Rerank model');

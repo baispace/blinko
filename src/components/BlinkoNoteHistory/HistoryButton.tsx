@@ -1,7 +1,6 @@
-import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { Icon } from '@iconify/react';
-import { Button, Tooltip } from '@heroui/react';
+import { Icon } from '@/components/Common/Iconify/icons';
+import { Tooltip } from '@heroui/react';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
 import NoteHistoryModal from './NoteHistoryModal';

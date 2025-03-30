@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
 import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { SideBarItem } from "../Layout";
-import { Popover, PopoverTrigger, PopoverContent, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Chip, Button } from "@heroui/react";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Button } from "@heroui/react";
 import EmojiPicker, { EmojiStyle, Theme } from 'emoji-picker-react';
 import { useTheme } from "next-themes";
 import { useRouter } from "next/router";
-import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { ShowUpdateTagDialog } from "./UpdateTagPop";
 import { api } from "@/lib/trpc";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -31,7 +30,7 @@ const Emoji = ({ icon }: { icon: string }) => {
             <Icon icon={icon} width="22" height="22" /> :
             icon
         }
-      </> : <Icon icon="mdi:hashtag" width="22" height="22" />
+      </> : <Icon icon="mingcute:hashtag-line" width="20" height="20" />
     }
   </>
 }
@@ -131,8 +130,8 @@ export const TagListPanel = observer(() => {
                   </div>
                   <div className="group-hover:opacity-0 opacity-100 w-[24px] group-hover:w-0 transition-all">
                     {
-                      element.metadata?.icon ? <Emoji icon={element.metadata?.icon  as string} />
-                        : <Icon icon="mdi:hashtag" width="20" height="20" />
+                      element.metadata?.icon ? <Emoji icon={element.metadata?.icon as string} />
+                        : <Icon icon="mingcute:hashtag-line" width="20" height="20" />
                     }
                   </div>
                 </div>
@@ -150,7 +149,9 @@ export const TagListPanel = observer(() => {
               </div>
               <Dropdown>
                 <DropdownTrigger>
-                  <Icon className="ml-auto group-hover:opacity-100 opacity-0 transition-all group-hover:translate-x-0 translate-x-2" icon="ri:more-fill" width="20" height="20" />
+                  <div className="ml-auto group-hover:opacity-100 opacity-0 transition-all group-hover:translate-x-0 translate-x-2">
+                    <Icon icon="ri:more-fill" width="20" height="20" />
+                  </div>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Static Actions">
                   {
@@ -225,7 +226,7 @@ export const TagListPanel = observer(() => {
                       }
                       return null;
                     };
-                    
+
                     const siblings = findSiblings(blinko.tagList.value?.listTags || [], element.id as number);
                     if (siblings) {
                       const currentIndex = siblings.findIndex(t => t.id === element.id);
@@ -260,7 +261,7 @@ export const TagListPanel = observer(() => {
                       }
                       return null;
                     };
-                    
+
                     const siblings = findSiblings(blinko.tagList.value?.listTags || [], element.id as number);
                     if (siblings) {
                       const currentIndex = siblings.findIndex(t => t.id === element.id);

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Input, Link } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useRouter } from "next/router";
 import { RootStore } from "@/store/root";
 import { ToastPlugin } from "@/store/module/Toast/Toast";

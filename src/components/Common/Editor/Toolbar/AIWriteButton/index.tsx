@@ -10,7 +10,7 @@ import { RootStore } from '@/store/root';
 import { AiStore } from '@/store/aiStore';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { SendIcon } from '@/components/Common/Icons';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
 import { eventBus } from '@/lib/event';

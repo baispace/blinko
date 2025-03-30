@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/trpc';
 import { FileType } from '../Editor/type';
 import { DeleteIcon, DownloadIcon } from './icons';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { RootStore } from '@/store';
 import { MusicManagerStore } from '@/store/musicManagerStore';
 import { observer } from 'mobx-react-lite';

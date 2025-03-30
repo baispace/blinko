@@ -1,5 +1,5 @@
 import { Button } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
 

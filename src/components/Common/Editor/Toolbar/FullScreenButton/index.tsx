@@ -1,4 +1,3 @@
-import { Icon } from '@iconify/react';
 import { useMediaQuery } from 'usehooks-ts';
 import { IconButton } from '../IconButton';
 import { useTranslation } from 'react-i18next';

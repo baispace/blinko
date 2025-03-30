@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Icon } from '@iconify/react';
-import { Button, Slider, Card, Divider } from '@heroui/react';
+import { Icon } from '@/components/Common/Iconify/icons';
+import { Button, Slider } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import dayjs from '@/lib/dayjs';

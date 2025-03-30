@@ -1,5 +1,5 @@
 import { helper } from '@/lib/helper';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { FileIcon, defaultStyles } from 'react-file-icon';
 import { useMediaQuery } from 'usehooks-ts';

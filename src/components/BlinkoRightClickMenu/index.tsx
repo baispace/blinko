@@ -1,10 +1,9 @@
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@heroui/react';
-import { _ } from '@/lib/lodash';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { ContextMenu, ContextMenuItem } from '@/components/Common/ContextMenu';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { api } from '@/lib/trpc';
 import { RootStore } from "@/store";
@@ -349,7 +348,9 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
 
   return <Dropdown onOpenChange={e => onTrigger()}>
     <DropdownTrigger >
-      <Icon onClick={onTrigger} className={`${className} text-desc hover:text-primary cursor-pointer hover:scale-1.3 transition-all`} icon="fluent:more-vertical-16-regular" width="16" height="16" />
+      <div onClick={onTrigger} className={`${className} text-desc hover:text-primary cursor-pointer hover:scale-1.3 transition-all`}>
+        <Icon icon="fluent:more-vertical-16-regular" width="16" height="16" />
+      </div>
     </DropdownTrigger>
     <DropdownMenu aria-label="Static Actions" disabledKeys={disabledKeys}>
       <DropdownItem key="EditItem" onPress={() => handleEdit(isDetailPage)}><EditItem /></DropdownItem>

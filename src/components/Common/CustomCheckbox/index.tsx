@@ -1,5 +1,4 @@
-import { Icon } from "@iconify/react";
-import {useCheckbox, Chip, VisuallyHidden, tv} from "@heroui/react";
+import { useCheckbox, Chip, VisuallyHidden, tv } from "@heroui/react";
 
 const checkbox = tv({
   slots: {

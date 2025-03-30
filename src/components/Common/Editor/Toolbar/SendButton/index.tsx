@@ -1,4 +1,4 @@
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { SendIcon } from '../../../Icons';
 import { EditorStore } from '../../editorStore';
 import { observer } from 'mobx-react-lite';

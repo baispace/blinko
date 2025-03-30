@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Modal, ModalContent, ModalBody, Input, Button, Divider } from '@heroui/react';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
 import { RootStore } from '@/store';

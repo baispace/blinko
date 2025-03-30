@@ -1,9 +1,9 @@
 import { RootStore } from "@/store";
 import { ResourceStore } from "@/store/resourceStore";
 import { observer } from "mobx-react-lite";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { ScrollArea } from "@/components/Common/ScrollArea";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
 import { DragDropContext, Droppable } from 'react-beautiful-dnd-next';
 import { toJS } from "mobx";

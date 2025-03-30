@@ -4,7 +4,7 @@ import { RootStore } from "@/store"
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
 import { BlinkoCard } from "./index"
 import { getDisplayTime } from "@/lib/helper"
-import { Icon } from "@iconify/react"
+import { Icon } from '@/components/Common/Iconify/icons'
 import { cn } from "@heroui/theme"
 import { Tooltip } from "@heroui/react"
 import { useTranslation } from "react-i18next"

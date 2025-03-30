@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Badge } from '@heroui/react';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { UserStore } from '@/store/user';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { BaseStore } from '@/store/baseStore';
 import { ScrollArea } from '../Common/ScrollArea';
@@ -26,7 +25,6 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { BarSearchInput } from './BarSearchInput';
 import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
-import { GlobalSearch } from './GlobalSearch';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl transition-all';
 

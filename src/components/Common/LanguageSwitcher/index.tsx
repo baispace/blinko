@@ -8,7 +8,7 @@ import { Button } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
 import { useTranslation } from 'react-i18next';
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 
 interface LanguageSwitcherProps {
   value?: string;

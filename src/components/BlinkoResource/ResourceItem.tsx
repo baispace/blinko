@@ -1,15 +1,14 @@
-import { Card, Image, Checkbox, Chip, Tooltip } from '@heroui/react';
-import { Icon } from '@iconify/react';
+import { Card, Checkbox, Tooltip } from '@heroui/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { filesize } from 'filesize';
 import dayjs from '@/lib/dayjs';
 import { FileIcons } from '@/components/Common/AttachmentRender/FileIcon';
-import { memo, useState, useEffect, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Draggable, Droppable } from 'react-beautiful-dnd-next';
 import { useTranslation } from 'react-i18next';
 import { type ResourceType } from '@/server/types';
 import { ResourceContextMenu } from './ResourceContextMenu';
-import { ContextMenuTrigger } from '@/components/Common/ContextMenu';
 import { RootStore } from '@/store';
 import { ResourceStore } from '@/store/resourceStore';
 import { _ } from '@/lib/lodash';

@@ -1,25 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide, } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-cards";
 import { EffectCards, Virtual } from 'swiper/modules';
 import 'swiper/css/virtual';
-import '../styles/swiper-cards.css'
+import '../styles/swiper-cards.css';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
 import dayjs from '@/lib/dayjs';
 import { Note, NoteType } from '@/server/types';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from '@heroui/react';
 import { LightningIcon, NotesIcon } from '@/components/Common/Icons';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { api } from '@/lib/trpc';
 import { showTipsDialog } from '@/components/Common/TipsDialog';
-import { DialogStore } from '@/store/module/Dialog';
-import confetti from 'canvas-confetti'
+import confetti from 'canvas-confetti';
 import { useMediaQuery } from 'usehooks-ts';
 import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';

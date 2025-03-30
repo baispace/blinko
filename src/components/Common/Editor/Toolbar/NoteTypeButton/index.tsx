@@ -1,8 +1,6 @@
 import { IconButton } from '../IconButton';
 import { useTranslation } from 'react-i18next';
 import { NoteType } from '@/server/types';
-import { BlinkoStore } from '@/store/blinkoStore';
-import { RootStore } from '@/store';
 import { Div } from '@/components/Common/Div';
 import { useEffect, useState } from 'react';
 
@@ -27,7 +25,7 @@ export const NoteTypeButton = ({ noteType, setNoteType}: {
       <IconButton
         icon={type == NoteType.BLINKO ? 'basil:lightning-solid' : 'solar:notes-minimalistic-bold-duotone'}
         classNames={{
-          icon: type == NoteType.BLINKO ? 'text-[#FFD700]' : 'text-[#3B82F6]'
+          icon: type == NoteType.BLINKO ? '!text-[#FFD700]' : '!text-[#3B82F6]'
         }}
         tooltip={type == NoteType.BLINKO ? t('blinko') : t('note')}
       />

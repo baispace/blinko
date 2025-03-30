@@ -1,5 +1,5 @@
 import { Card, Button } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { motion, AnimatePresence } from "motion/react";
 import { useState, ReactNode, useEffect } from "react";
 

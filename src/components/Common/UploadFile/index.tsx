@@ -1,7 +1,6 @@
 import { useDropzone } from "react-dropzone";
-import { FileUploadIcon } from "../Icons";
 import { Button } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";

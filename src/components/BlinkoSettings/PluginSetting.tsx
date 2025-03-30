@@ -3,7 +3,7 @@ import { Tabs, Tab, Card, Button, Chip, Input, CardBody, Modal, ModalContent, Mo
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { useState, useEffect } from "react";
 import { PluginManagerStore } from "@/store/plugin/pluginManagerStore";

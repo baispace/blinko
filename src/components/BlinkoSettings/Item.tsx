@@ -1,8 +1,7 @@
-import { Icon } from "@iconify/react"
-import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown, Tooltip } from "@heroui/react"
-import { Code } from "@heroui/react"
-import { useTranslation } from "react-i18next"
-import { observer } from "mobx-react-lite"
+import { Icon } from '@/components/Common/Iconify/icons';
+import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown, Tooltip } from "@heroui/react";
+import { useTranslation } from "react-i18next";
+import { observer } from "mobx-react-lite";
 
 type IProps = {
   leftContent?: any

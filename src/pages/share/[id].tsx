@@ -1,5 +1,4 @@
 import { BlinkoCard } from "@/components/BlinkoCard";
-import { ScrollArea } from "@/components/Common/ScrollArea";
 import { api } from "@/lib/trpc";
 import { RootStore } from "@/store";
 import { PromiseState } from "@/store/standard/PromiseState";
@@ -10,7 +9,7 @@ import { useMediaQuery } from "usehooks-ts";
 import VanillaTilt from 'vanilla-tilt';
 import dynamic from "next/dynamic";
 import { Card, InputOtp, Button } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
 
 const GradientBackground = dynamic(

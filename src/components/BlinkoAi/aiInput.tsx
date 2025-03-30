@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Textarea } from '@heroui/react';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from 'usehooks-ts';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Popover, PopoverTrigger, PopoverContent, Button, Badge } from "@heroui/react";
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from '@/lib/trpc';
 import dayjs from '@/lib/dayjs';
 import { useTranslation } from 'react-i18next';

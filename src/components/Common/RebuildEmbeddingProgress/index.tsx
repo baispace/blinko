@@ -7,7 +7,7 @@ import { ToastPlugin } from '@/store/module/Toast/Toast'
 import { observer } from 'mobx-react-lite'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Icon } from '@iconify/react'
+import { Icon } from '@/components/Common/Iconify/icons'
 import { Progress } from "@heroui/react"
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone'
 

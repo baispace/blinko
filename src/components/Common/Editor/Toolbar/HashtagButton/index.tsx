@@ -56,7 +56,7 @@ export const HashtagButton = observer(({ store, content }: Props) => {
           }}>
           <IconButton
             tooltip={t('insert-hashtag')}
-            icon="mdi:hashtag"
+            icon="mingcute:hashtag-line"
           />
         </div>
       </PopoverTrigger>

@@ -1,11 +1,11 @@
 // blinko.public.value?.version
 
 import { observer } from "mobx-react-lite";
-import { Card, Tooltip, Link, Image, Chip } from "@heroui/react";
+import { Link, Image, Chip } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseState } from "@/store/standard/PromiseState";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from "@/lib/trpc";
 import { AiStore } from "@/store/aiStore";
 import { useTranslation } from "react-i18next";

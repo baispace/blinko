@@ -1,4 +1,4 @@
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Button, Tooltip } from '@heroui/react';
 import { Copy } from "../Common/Copy";
 import { LeftCickMenu } from "../BlinkoRightClickMenu";

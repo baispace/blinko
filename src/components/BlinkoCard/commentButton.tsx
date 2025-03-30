@@ -4,14 +4,13 @@ import { api } from '@/lib/trpc';
 import { UserStore } from '@/store/user';
 import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
 import { type Comment } from '@/server/types';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Button, Tooltip, Chip, Image } from '@heroui/react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note } from '@/server/types';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
 import { useTranslation } from 'react-i18next';
-import { _ } from '@/lib/lodash';
 import { useIsIOS } from '@/lib/hooks';
 import { DialogStore } from '@/store/module/Dialog';
 import { observer } from 'mobx-react-lite';
@@ -355,7 +354,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
           height="15"
           className={`cursor-pointer ml-2 ${isIOSDevice
             ? 'opacity-100'
-            : `${alwaysShow ? 'text-ignore' : 'text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}`
+            : `${alwaysShow ? '!text-ignore' : '!text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}`
             }`}
           onClick={handleClick}
         />

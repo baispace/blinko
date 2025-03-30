@@ -1,14 +1,12 @@
-import React, { useEffect } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
-import { observer, useLocalStore } from "mobx-react-lite";
+import { observer } from "mobx-react-lite";
 import { DialogStandaloneStore } from ".";
 import { RootStore } from "@/store/root";
 import { useHistoryBack, useIsIOS } from "@/lib/hooks";
 import { useMediaQuery } from "usehooks-ts";
 import { motion } from "motion/react";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { CancelIcon } from "@/components/Common/Icons";
-import { createPortal } from "react-dom";
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
   <div

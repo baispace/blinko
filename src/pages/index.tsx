@@ -1,10 +1,8 @@
 import { BlinkoStore } from '@/store/blinkoStore';
-import { _ } from '@/lib/lodash';
 import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
-import { Icon } from '@iconify/react';
 import { useRouter } from 'next/router';
 import { BlinkoEditor } from '@/components/BlinkoEditor';
 import { ScrollArea } from '@/components/Common/ScrollArea';

@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { MusicManagerStore } from '@/store/musicManagerStore';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaQuery } from 'usehooks-ts';

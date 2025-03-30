@@ -1,11 +1,9 @@
-import { RootStore } from "@/store"
-import { DialogStore } from "@/store/module/Dialog"
-import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
-import { Icon } from "@iconify/react"
-import { Button } from "@heroui/react"
-import { observer } from "mobx-react-lite"
-import { useCallback, useEffect, useRef, useState } from "react"
-import Webcam from "react-webcam"
+import { RootStore } from "@/store";
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { Icon } from '@/components/Common/Iconify/icons';
+import { Button } from "@heroui/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Webcam from "react-webcam";
 
 interface MyCameraProps {
   onComplete?: (file: File) => void;

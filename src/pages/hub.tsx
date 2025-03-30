@@ -1,8 +1,8 @@
 import { BlinkoCard } from "@/components/BlinkoCard";
 import { ScrollArea } from "@/components/Common/ScrollArea";
 import { RootStore } from "@/store";
-import { Icon } from "@iconify/react";
-import { Button, Tabs, Tab } from "@heroui/react";
+import { Icon } from '@/components/Common/Iconify/icons';
+import { Button } from "@heroui/react";
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";

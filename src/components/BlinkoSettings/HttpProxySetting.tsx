@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Input, Spinner, Switch, Tooltip } from '@heroui/react';
+import { Button, Input, Switch, Tooltip } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from '@/lib/trpc';
 import { useTranslation } from 'react-i18next';
 import { Item } from './Item';

@@ -1,10 +1,9 @@
-import { RootStore } from "@/store"
-import { DialogStore } from "@/store/module/Dialog"
-import { Icon } from "@iconify/react"
-import { observer } from "mobx-react-lite"
-import { useTranslation } from "react-i18next"
+import { RootStore } from "@/store";
+import { Icon } from '@/components/Common/Iconify/icons';
+import { observer } from "mobx-react-lite";
+import { useTranslation } from "react-i18next";
 import { Popover, PopoverTrigger, PopoverContent, Button } from "@heroui/react";
-import { DialogStandaloneStore } from "@/store/module/DialogStandalone"
+import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 const TipsDialog = observer(({ content, onConfirm, onCancel, buttonSlot }: any) => {
   const { t } = useTranslation()

@@ -1,7 +1,7 @@
 import { RootStore } from "@/store";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import useAudioRecorder from "../AudioRecorder/hook";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
 interface MyAudioRecorderProps {

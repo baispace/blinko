@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Card, Input, Button } from '@heroui/react';
+import { Input, Button } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { eventBus } from '@/lib/event';
 import PopoverFloat from '.';
 import { RootStore } from '@/store';
 import { AiStore } from '@/store/aiStore';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { SendIcon } from '../Icons';
 import { MarkdownRender } from '../MarkdownRender';
 import { ScrollArea, ScrollAreaHandles } from '../ScrollArea';

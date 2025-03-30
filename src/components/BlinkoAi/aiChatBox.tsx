@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from "mobx-react-lite";
 import { Button } from "@heroui/react";
 import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";

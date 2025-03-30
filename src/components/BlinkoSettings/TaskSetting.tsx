@@ -17,7 +17,7 @@ import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
 import { helper } from "@/lib/helper";
 import dayjs from "@/lib/dayjs";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from "@/lib/trpc";
 import { Item } from "./Item";
 import { useTranslation } from "react-i18next";

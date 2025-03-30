@@ -1,7 +1,7 @@
 // ... existing imports ...
 import { useState, useRef, TouchEvent } from 'react';
 import { motion } from 'motion/react';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';

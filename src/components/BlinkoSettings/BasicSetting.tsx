@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
-import { Button, Card, Input, Switch, Tooltip, Select, SelectItem } from "@heroui/react";
+import { Button, Input, Switch, Tooltip } from "@heroui/react";
 import { RootStore } from "@/store";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { UserStore } from "@/store/user";
 import { useTranslation } from "react-i18next";
 import { DialogStore } from "@/store/module/Dialog";
@@ -14,7 +14,7 @@ import { MarkdownRender } from "../Common/MarkdownRender";
 import { PromiseCall, PromiseState } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
 import { BlinkoStore } from "@/store/blinkoStore";
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShowGen2FATokenModal } from "../Common/TwoFactorModal/gen2FATokenModal";
 import { CollapsibleCard } from "../Common/CollapsibleCard";

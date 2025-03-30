@@ -6,7 +6,7 @@ import { BlinkoStore } from "@/store/blinkoStore"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { api } from "@/lib/trpc"
 import { Alert, Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
-import { Icon } from "@iconify/react"
+import { Icon } from '@/components/Common/Iconify/icons'
 import { DialogStore } from "@/store/module/Dialog"
 import { CollapsibleCard } from "../Common/CollapsibleCard"
 import { showTipsDialog } from "../Common/TipsDialog"

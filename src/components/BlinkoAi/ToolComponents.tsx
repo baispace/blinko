@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { motion } from "framer-motion";
 
 // Tool icons mapping for different tools

@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FileType } from '../Editor/type';
 import { Image } from '@heroui/react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { DeleteIcon, DownloadIcon, InsertConextButton } from './icons';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';

@@ -1,6 +1,6 @@
-import { Icon } from "@iconify/react"
-import copy from "copy-to-clipboard"
-import { useState } from "react"
+import { Icon } from '@/components/Common/Iconify/icons';
+import copy from "copy-to-clipboard";
+import { useState } from "react";
 type IProps = { content: string, size: number, className?: string }
 
 export const Copy = ({ content, size = 20, className }: IProps) => {

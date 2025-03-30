@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from "@heroui/react";
 import { motion } from "motion/react";
 import { observer } from "mobx-react-lite";

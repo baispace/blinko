@@ -1,15 +1,9 @@
-import { Icon } from '@iconify/react'
-import { Input, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@heroui/react'
 import { observer } from 'mobx-react-lite'
-import dayjs from 'dayjs'
-import { IconButton } from '../IconButton'
-import { ScrollArea } from '../../../ScrollArea'
 import { BlinkoStore } from '@/store/blinkoStore'
 import { RootStore } from '@/store'
 import { EditorStore } from '../../editorStore'
 import { useEffect } from 'react'
-import { getDisplayTime } from '@/lib/helper'
-import { BlinkoSelectNote } from '../../../BlinkoSelectNote'
+import { BlinkoSelectNote } from '@/components/Common/BlinkoSelectNote'
 
 interface Props {
   store: EditorStore

@@ -1,7 +1,7 @@
 import { Button } from '@heroui/react';
 import { useRef, useState, useEffect } from 'react';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useMediaQuery } from 'usehooks-ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AiStore } from '@/store/aiStore';

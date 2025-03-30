@@ -1,10 +1,8 @@
-import { Icon } from '@iconify/react';
-import React from 'react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { TipsPopover } from '@/components/Common/TipsDialog';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { DialogStore } from '@/store/module/Dialog';
 import { useTranslation } from 'react-i18next';
 import { PromiseState } from '@/store/standard/PromiseState';
 import { BlinkoStore } from '@/store/blinkoStore';

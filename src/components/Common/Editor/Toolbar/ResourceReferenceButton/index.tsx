@@ -1,4 +1,4 @@
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Input, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { observer } from 'mobx-react-lite';
 import { IconButton } from '../IconButton';

@@ -1,4 +1,4 @@
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 
 interface LoadingAndEmptyProps {

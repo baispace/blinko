@@ -7,7 +7,7 @@ import { FileType } from '../Editor/type';
 import { DeleteIcon, DownloadIcon } from './icons';
 import { ImageRender } from './imageRender';
 import { HandleFileType } from '../Editor/editorUtils';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@heroui/popover';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { EditorStore } from '../Editor/editorStore';

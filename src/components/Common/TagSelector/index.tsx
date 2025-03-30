@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
@@ -35,11 +35,11 @@ export default function TagSelector({
             return tag?.icon ? (
               <div>{tag.icon}</div>
             ) : (
-              <Icon icon="mdi:hashtag" width="20" height="20" />
+              <Icon icon="mingcute:hashtag-line" width="20" height="20" />
             );
           })()
         ) : (
-          <Icon icon="mdi:hashtag" width="20" height="20" />
+          <Icon icon="mingcute:hashtag-line" width="20" height="20" />
         )
       }
       onSelectionChange={(key) => onSelectionChange(key as string)}
@@ -50,7 +50,7 @@ export default function TagSelector({
             {tag.icon ? (
               <div>{tag.icon}</div>
             ) : (
-              <Icon icon="mdi:hashtag" width="20" height="20" />
+              <Icon icon="mingcute:hashtag-line" width="20" height="20" />
             )}
             <span className="text-small">{tag.name}</span>
           </div>

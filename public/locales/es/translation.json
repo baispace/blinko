@@ -601,5 +601,8 @@
   "smart-edit-prompt": "Indicación de Edición Inteligente",
   "define-instructions-for-ai-to-edit-your-notes": "Puede usar indicaciones para manipular notas, por ejemplo: si una nota contiene un enlace, resume el contenido del enlace debajo de la nota original y genere una etiqueta.",
   "rebuild-started": "Reconstrucción Iniciada",
-  "rebuild-stopped-by-user": "Reconstrucción detenida por el usuario"
+  "rebuild-stopped-by-user": "Reconstrucción detenida por el usuario",
+  "random-mode": "Caminata Aleatoria",
+  "related-notes": "Notas relacionadas",
+  "no-related-notes-found": "No se encontraron notas relacionadas"
 }

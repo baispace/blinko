@@ -149,7 +149,7 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
   return (
     <li className={`${className} !list-none`}>
       <div 
-        className='flex items-start gap-1 -ml-[15px] cursor-pointer'
+        className='flex items-start gap-1 -ml-[15px] cursor-pointer justify-center'
         onClick={handleToggle}
       >
         <div className='w-[20px] h-[20px] flex-shrink-0 mt-[3px] hover:opacity-80 transition-all'>
@@ -161,7 +161,7 @@ export const ListItem: React.FC<ListItemProps> = ({ children, content, onChange,
           />
         </div>
         <div
-          className={`${getTextStyle()} break-all flex-1 min-w-0`}
+          className={`${getTextStyle()} break-all flex-1 min-w-0 md:mt-0 mt-[2px]`}
           onClick={e => e.stopPropagation()}
         >
           {textContent}

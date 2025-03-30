@@ -623,5 +623,8 @@
   "smart-edit-prompt": "智能编辑提示",
   "define-instructions-for-ai-to-edit-your-notes": "可以使用提示词操作笔记，例如：如果笔记中包含链接请在原笔记下方总结链接内容，并生成标签。",
   "rebuild-started": "重建已开始",
-  "rebuild-stopped-by-user": "用户已停止重建"
+  "rebuild-stopped-by-user": "用户已停止重建",
+  "random-mode": "随机漫步",
+  "related-notes": "相关笔记",
+  "no-related-notes-found": "没有找到相关笔记"
 }

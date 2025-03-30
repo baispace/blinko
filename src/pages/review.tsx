@@ -10,7 +10,7 @@ import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
 import dayjs from '@/lib/dayjs';
-import { Note, NoteType } from '@/server/types';
+import { NoteType } from '@/server/types';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from '@heroui/react';
@@ -22,6 +22,7 @@ import confetti from 'canvas-confetti';
 import { useMediaQuery } from 'usehooks-ts';
 import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
+import { BlinkoCard } from '@/components/BlinkoCard';
 const App = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   const swiperRef = useRef(null);
@@ -29,31 +30,57 @@ const App = observer(() => {
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = RootStore.Local(() => ({
     currentIndex: 0,
-    currentNote: null as Note | null,
+    get currentNote() {
+      return store.isRandomReviewMode
+        ? blinko.randomReviewNoteList.value?.[store.currentIndex] ?? null
+        : blinko.dailyReviewNoteList.value?.[store.currentIndex] ?? null
+    },
     handleSlideChange: async (_swiper) => {
       store.currentIndex = _swiper.activeIndex
     },
+    isRandomReviewMode: false,
     get isBlinko() {
       return store.currentNote?.type == NoteType.BLINKO
     }
   }))
 
   useEffect(() => {
-    store.currentNote = blinko.dailyReviewNoteList.value?.[store.currentIndex] ?? null
-    if (blinko.dailyReviewNoteList.value?.length == 0) {
+    if (!store.isRandomReviewMode && blinko.dailyReviewNoteList.value?.length == 0) {
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6, x: isPc ? 0.6 : 0.5 }
       });
     }
-  }, [blinko.dailyReviewNoteList.value])
+  }, [blinko.dailyReviewNoteList.value, blinko.randomReviewNoteList.value, store.isRandomReviewMode])
+
+  const reviewNotes = store.isRandomReviewMode
+    ? blinko.randomReviewNoteList.value ?? []
+    : blinko.dailyReviewNoteList.value ?? []
 
   return (
     <div className="App h-full overflow-hidden">
+      <div className="flex justify-center mb-2">
+        <Button
+          color={store.isRandomReviewMode ? "primary" : "default"}
+          variant={store.isRandomReviewMode ? "solid" : "flat"}
+          className="text-sm"
+          startContent={<Icon icon="tabler:cards" width="16" height="16" />}
+          onPress={() => {
+            store.isRandomReviewMode = !store.isRandomReviewMode
+            if (store.isRandomReviewMode) {
+              blinko.randomReviewNoteList.call({ limit: 30 })
+            } else {
+              blinko.dailyReviewNoteList.call()
+            }
+          }}
+        >
+          {t('random-mode')}
+        </Button>
+      </div>
 
       {
-        blinko.dailyReviewNoteList.value?.length != 0 && <>
+        reviewNotes.length != 0 && <>
           <Swiper
             onSwiper={(swiper) => {
               //@ts-ignore
@@ -72,14 +99,14 @@ const App = observer(() => {
             centeredSlides={true}
             virtual={{
               enabled: true,
-              slides: blinko.dailyReviewNoteList.value ?? [],
+              slides: reviewNotes,
               cache: true,
               addSlidesBefore: 1,
               addSlidesAfter: 1,
             }}
           >
             {
-              blinko.dailyReviewNoteList.value?.map((i, index) => (
+              reviewNotes.map((i, index) => (
                 <SwiperSlide key={i.id} virtualIndex={index} data-id={i.id} className='bg-background shadow-lg p-4 w-full overflow-hidden h-full'>
                   <div className='bg-background p-0 w-full overflow-y-scroll h-full'>
                     <div className='flex items-center gap-2 mb-2'>
@@ -110,13 +137,15 @@ const App = observer(() => {
           </Swiper>
 
           <div className="mt-8 flex items-center justify-center px-6 gap-4">
-            <Tooltip content={t('reviewed')}>
-              <Button onPress={async e => {
-                if (!store.currentNote) return
-                PromiseCall(api.notes.reviewNote.mutate({ id: store.currentNote!.id! }))
-              }} isIconOnly color='primary' startContent={<Icon icon="ci:check-all" width="24" height="24" />} />
-            </Tooltip>
-
+            {
+              !store.isRandomReviewMode &&
+              <Tooltip content={t('reviewed')}>
+                <Button onPress={async e => {
+                  if (!store.currentNote) return
+                  PromiseCall(api.notes.reviewNote.mutate({ id: store.currentNote!.id! }))
+                }} isIconOnly color='primary' startContent={<Icon icon="ci:check-all" width="24" height="24" />} />
+              </Tooltip>
+            }
             <Tooltip content={store.isBlinko ? t('convert-to-note') : t('convert-to-blinko')}>
               <Button isIconOnly onPress={async e => {
                 if (!store.currentNote) return
@@ -124,17 +153,32 @@ const App = observer(() => {
                 await api.notes.reviewNote.mutate({ id: store.currentNote!.id! })
                 await blinko.dailyReviewNoteList.call()
               }}
-                color='primary'
+                color='default'
                 startContent={store.isBlinko ? <NotesIcon /> : <LightningIcon />}>
               </Button>
             </Tooltip>
+
+            <Tooltip content={t('edit')} >
+              <Button onPress={async e => {
+                if (!store.currentNote) return
+                const note = await api.notes.detail.mutate({ id:  store.currentNote.id! })
+                RootStore.Get(DialogStandaloneStore).setData({
+                  isOpen: true,
+                  onlyContent: true,
+                  showOnlyContentCloseButton: true,
+                  size: '4xl',
+                  content: <BlinkoCard blinkoItem={note!} withoutHoverAnimation />
+                })
+              }} isIconOnly color='default' startContent={<Icon icon="tabler:edit" width="20" height="20" />}></Button>
+            </Tooltip>
+
 
             <Tooltip content={t('archive')} >
               <Button onPress={async e => {
                 if (!store.currentNote) return
                 await blinko.upsertNote.call({ id: store.currentNote.id, isArchived: true })
                 await blinko.dailyReviewNoteList.call()
-              }} isIconOnly color='primary' startContent={<Icon icon="eva:archive-outline" width="20" height="20" />}></Button>
+              }} isIconOnly color='default' startContent={<Icon icon="eva:archive-outline" width="20" height="20" />}></Button>
             </Tooltip>
 
             <Button
@@ -154,7 +198,7 @@ const App = observer(() => {
         </>
       }
 
-      {blinko.dailyReviewNoteList.value?.length == 0 && <div className='select-none text-ignore flex items-center justify-center gap-2 w-full mt-2 md:mt-10'>
+      {reviewNotes.length == 0 && <div className='select-none text-ignore flex items-center justify-center gap-2 w-full mt-2 md:mt-10'>
         <Icon icon="line-md:coffee-half-empty-twotone-loop" width="24" height="24" />
         <div className='text-md text-ignore font-bold'>{t('congratulations-youve-reviewed-everything-today')}</div>
       </div>}

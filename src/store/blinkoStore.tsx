@@ -289,6 +289,12 @@ export class BlinkoStore implements Store {
     }
   })
 
+  randomReviewNoteList = new PromiseState({
+    function: async ({ limit = 30 }) => {
+      return await api.notes.randomNoteList.query({ limit })
+    }
+  })
+
   resourceList = new PromisePageState({
     function: async ({ page, size, searchText, folder }) => {
       return await api.attachments.list.query({ page, size, searchText, folder })
@@ -389,6 +395,7 @@ export class BlinkoStore implements Store {
     this.dailyReviewNoteList.call()
     this.task.call()
   }
+
 
   async refreshData() {
     this.tagList.call()

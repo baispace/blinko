@@ -596,5 +596,8 @@
   "smart-edit-prompt": "Prompt de Edição Inteligente",
   "define-instructions-for-ai-to-edit-your-notes": "Você pode usar prompts para manipular notas, por exemplo: Se uma nota contiver um link, resuma o conteúdo do link abaixo da nota original e gere um rótulo.",
   "rebuild-started": "Reconstrução Iniciada",
-  "rebuild-stopped-by-user": "Reconstrução interrompida pelo usuário"
+  "rebuild-stopped-by-user": "Reconstrução interrompida pelo usuário",
+  "random-mode": "Passeio Aleatório",
+  "related-notes": "Notas relacionadas",
+  "no-related-notes-found": "Nenhuma nota relacionada encontrada"
 }

@@ -601,5 +601,8 @@
   "smart-edit-prompt": "Akıllı Düzenleme İsteği",
   "define-instructions-for-ai-to-edit-your-notes": "Notlarda değişiklik yapmak için komutları kullanabilirsiniz, örneğin: Bir not içinde bir bağlantı varsa, orijinal notun altına bağlantı içeriğini özetleyin ve bir etiket oluşturun.",
   "rebuild-started": "Yeniden İnşa Başladı",
-  "rebuild-stopped-by-user": "Kullanıcı tarafından yeniden yapılandırma durduruldu."
+  "rebuild-stopped-by-user": "Kullanıcı tarafından yeniden yapılandırma durduruldu.",
+  "random-mode": "Rastgele Yürüyüş",
+  "related-notes": "İlgili notlar",
+  "no-related-notes-found": "Hiç ilgili not bulunamadı"
 }

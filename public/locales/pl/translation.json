@@ -592,5 +592,8 @@
   "smart-edit-prompt": "Inteligentna Zachęta do Edycji",
   "define-instructions-for-ai-to-edit-your-notes": "Możesz używać poleceń do manipulowania notatkami, na przykład: Jeśli notatka zawiera link, podsumuj zawartość linku poniżej oryginalnej notatki i wygeneruj etykietę.",
   "rebuild-started": "Rozpoczęto Odbudowę",
-  "rebuild-stopped-by-user": "Odbudowa zatrzymana przez użytkownika"
+  "rebuild-stopped-by-user": "Odbudowa zatrzymana przez użytkownika",
+  "random-mode": "Losowy Spacer",
+  "related-notes": "Powiązane notatki",
+  "no-related-notes-found": "Nie znaleziono powiązanych notatek"
 }

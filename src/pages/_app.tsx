@@ -3,9 +3,9 @@ import '../styles/nprogress.css';
 import '../styles/github-markdown.css';
 import "swagger-ui-react/swagger-ui.css";
 import 'react-photo-view/dist/react-photo-view.css';
-import '@/lib/i18n'
+import '@/lib/i18n';
 import NProgress from 'nprogress';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from 'next-auth/react';
 import { HeroUIProvider } from '@heroui/react';
@@ -41,11 +41,11 @@ const MyApp = ({ Component, pageProps }) => {
   return (
     <>
       <Inspector
-        keys={['control', 'shift', 'c']}
+        keys={['control','alt', 'x']}
         onClickElement={({ codeInfo }: InspectParams) => {
           if (!codeInfo?.absolutePath) return
           const { absolutePath, lineNumber, columnNumber } = codeInfo
-          window.open(`vscode://file/${absolutePath}:${lineNumber}:${columnNumber}`)
+          window.open(`cursor://file/${absolutePath}:${lineNumber}:${columnNumber}`)
         }}
       />
       <SessionProvider session={pageProps.session}>

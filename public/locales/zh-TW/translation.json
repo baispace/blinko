@@ -600,5 +600,8 @@
   "function-call-required": "需要調用函數",
   "smart-edit-prompt": "智能編輯提示",
   "define-instructions-for-ai-to-edit-your-notes": "您可以使用提示來操作筆記，例如：如果答案中包含連接網址，將連結內容摘要放在原始答案下方並產生標籤。",
-  "rebuild-started": "重建開始"
+  "rebuild-started": "重建開始",
+  "random-mode": "隨機漫步",
+  "related-notes": "相關筆記",
+  "no-related-notes-found": "未找到相關筆記"
 }

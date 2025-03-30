@@ -19,6 +19,9 @@ import i18n from "@/lib/i18n";
 import { BlinkoShareDialog } from "../BlinkoShareDialog";
 import { BaseStore } from "@/store/baseStore";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { Note } from "@/server/types";
+import { BlinkoCard } from "../BlinkoCard";
 
 export const ShowEditTimeModel = () => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -171,6 +174,44 @@ const handleDelete = async () => {
   api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! })
 }
 
+const handleRelatedNotes = async () => {
+  const blinko = RootStore.Get(BlinkoStore);
+  const dialog = RootStore.Get(DialogStore);
+  const toast = RootStore.Get(ToastPlugin);
+
+  try {
+    const noteId = blinko.curSelectedNote?.id;
+    if (!noteId) return;
+    toast.loading(i18n.t('loading'));
+    const relatedNotes = await api.notes.relatedNotes.query({ id: noteId });
+    toast.dismiss();
+    if (relatedNotes.length === 0) {
+      toast.error(i18n.t('no-related-notes-found'));
+      return;
+    }
+
+    dialog.setData({
+      size: 'lg' as any,
+      isOpen: true,
+      title: i18n.t('related-notes'),
+      isDismissable: true,
+      content: () => {
+        return (
+          <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
+            {relatedNotes.map((note: Note) => (
+              <BlinkoCard key={note.id} blinkoItem={note} withoutHoverAnimation/>
+            ))}
+          </div>
+        );
+      }
+    });
+  } catch (error) {
+    toast.dismiss();
+    toast.error(i18n.t('operation-failed'));
+    console.error("Failed to fetch related notes:", error);
+  }
+};
+
 export const EditItem = observer(() => {
   const { t } = useTranslation();
   return <div className="flex items-start gap-2">
@@ -238,6 +279,16 @@ export const AITagItem = observer(() => {
     <div className="flex items-start gap-2">
       <Icon icon="majesticons:tag-line" width="20" height="20" />
       <div>{t('ai-tag')}</div>
+    </div>
+  );
+});
+
+export const RelatedNotesItem = observer(() => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-2">
+      <Icon icon="mdi:note-search-outline" width="20" height="20" />
+      <div>{t('related-notes')}</div>
     </div>
   );
 });
@@ -311,6 +362,12 @@ export const BlinkoRightClickMenu = observer(() => {
       </ContextMenuItem>
     ) : <></>}
 
+    {blinko.config.value?.isUseAI ? (
+      <ContextMenuItem onClick={handleRelatedNotes}>
+        <RelatedNotesItem />
+      </ContextMenuItem>
+    ) : <></>}
+
     {pluginApi.customRightClickMenus.map((menu) => (
       <ContextMenuItem key={menu.name} onClick={() => menu.onClick(blinko.curSelectedNote!)} disabled={menu.disabled}>
         <div className="flex items-start gap-2">
@@ -368,6 +425,12 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       {blinko.config.value?.isUseAI ? (
         <DropdownItem key="AITagItem" onPress={handleAITag}>
           <AITagItem />
+        </DropdownItem>
+      ) : <></>}
+
+      {blinko.config.value?.isUseAI ? (
+        <DropdownItem key="RelatedNotesItem" onPress={handleRelatedNotes}>
+          <RelatedNotesItem />
         </DropdownItem>
       ) : <></>}
 

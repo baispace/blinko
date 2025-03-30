@@ -61,10 +61,10 @@ export class AiModelFactory {
     }
   }
 
-  static async queryVector(query: string, accountId: number) {
+  static async queryVector(query: string, accountId: number, _topK?: number) {
     const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
     const config = await AiModelFactory.globalConfig();
-    const topK = config.embeddingTopK ?? 3;
+    const topK = _topK ?? config.embeddingTopK ?? 3;
     const embeddingMinScore = config.embeddingScore ?? 0.4;
     const { embedding } = await embed({
       value: query,
@@ -118,6 +118,7 @@ export class AiModelFactory {
             _count: {
               select: {
                 comments: true,
+                histories: true,
               },
             },
           },
@@ -348,6 +349,24 @@ export class AiModelFactory {
      3. Use '💻,🔧' for tech content, '😊,🎉' for emotional content
      4. Must be separated by comma like '💻,🔧'`,
     'BlinkoEmoji',
+  );
+
+  static RelatedNotesAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Related Notes Agent',
+    `You are a keyword extraction expert. Your task is to extract the most representative keywords from the provided note content.
+
+    Rules:
+    1. Analyze note content to identify core themes, concepts, and key information
+    2. Extract 5-8 keywords or phrases that accurately summarize the content
+    3. Ensure the extracted keywords are specific and can be used to find related notes
+    4. Sort the extracted keywords by importance from high to low
+    5. Return a comma-separated list of keywords without any additional formatting or explanation
+    6. Keywords should accurately express the content theme, not too broad or specific
+    7. If the note content includes professional terms or technical content, please ensure that the keywords include these terms
+
+    Example output:
+    machine learning, neural network, deep learning, TensorFlow, image recognition`,
+    'BlinkoRelatedNotes',
   );
 
   static CommentAgent = AiModelFactory.#createAgentFactory(

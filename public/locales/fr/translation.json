@@ -601,5 +601,8 @@
   "smart-edit-prompt": "Édition intelligente",
   "define-instructions-for-ai-to-edit-your-notes": "Vous pouvez utiliser des invites pour manipuler les notes, par exemple : si une note contient un lien, résumez le contenu du lien sous la note originale et générez une étiquette.",
   "rebuild-started": "La reconstruction a commencé",
-  "rebuild-stopped-by-user": "Reconstruction arrêtée par l'utilisateur"
+  "rebuild-stopped-by-user": "Reconstruction arrêtée par l'utilisateur",
+  "random-mode": "Marche aléatoire",
+  "related-notes": "Notes associées",
+  "no-related-notes-found": "Aucune note liée trouvée"
 }

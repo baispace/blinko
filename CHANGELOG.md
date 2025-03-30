@@ -1,3 +1,10 @@
+## [0.47.2](https://github.com/blinko-space/blinko/compare/v0.47.1...v0.47.2) (2025-03-30)
+
+
+### Bug Fixes
+
+* decode filename from binary to UTF-8 in file upload ([53c9e1f](https://github.com/blinko-space/blinko/commit/53c9e1fdc00dd9155d69691192dee120502db76e))
+
 ## [0.47.1](https://github.com/blinko-space/blinko/compare/v0.47.0...v0.47.1) (2025-03-30)
 
 

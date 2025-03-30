@@ -26,6 +26,10 @@ export abstract class AiBaseModelProvider {
     });
   }
 
+  async languageModel(modelId: string): Promise<LanguageModelV1> {
+    await this.ready;
+    return this.provider.languageModel(modelId);
+  }
   /**
    * Initialize the provider - this is called automatically by the constructor
    * Child classes should implement createProvider() to create their specific provider
@@ -74,21 +78,42 @@ export abstract class AiBaseModelProvider {
 
     // Default implementation
     try {
+      const config = {
+        apiKey: this.globalConfig.embeddingApiKey,
+        baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+      };
+      if (this.globalConfig.embeddingModel?.includes('voyage')) {
+        return createVoyage(config).textEmbeddingModel(this.globalConfig.embeddingModel);
+      }
       if (this.globalConfig.embeddingApiKey) {
-        const config = {
-          apiKey: this.globalConfig.embeddingApiKey,
-          baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
-        };
-        console.log(this.globalConfig.embeddingModel, 'this.globalConfig.embeddingModel');
-        if (this.globalConfig.embeddingModel?.includes('voyage')) {
-          return createVoyage(config).textEmbeddingModel(this.globalConfig.embeddingModel);
-        } else {
-          return createOpenAI(config).textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small');
-        }
+        return createOpenAI(config).textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small');
       }
       return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small');
     } catch (error) {
       console.log(error, 'ERROR Create Embedding model');
+      throw error;
+    }
+  }
+
+  async rerankModel(): Promise<LanguageModelV1 | null> {
+    await this.ready;
+    try {
+      if (!this.globalConfig.rerankModel) {
+        return null;
+      }
+      console.log(this.globalConfig.rerankModel, 'rerankModel');
+      if (this.globalConfig.rerankUseEembbingEndpoint) {
+        const config = {
+          apiKey: this.globalConfig.embeddingApiKey,
+          baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+        };
+        if (this.globalConfig.embeddingApiKey) {
+          return createOpenAI(config).languageModel(this.globalConfig.rerankModel);
+        }
+      }
+      return this.provider.languageModel(this.globalConfig.rerankModel);
+    } catch (error) {
+      console.log(error, 'ERROR Create Rerank model');
       throw error;
     }
   }

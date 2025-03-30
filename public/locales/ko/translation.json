@@ -599,5 +599,12 @@
   "rebuild-stopped-by-user": "사용자에 의해 재구축이 중단되었습니다.",
   "random-mode": "무작위 보행",
   "related-notes": "관련 노트",
-  "no-related-notes-found": "관련된 노트를 찾을 수 없습니다."
+  "no-related-notes-found": "관련된 노트를 찾을 수 없습니다.",
+  "advanced": "고급",
+  "rerank-model-description": "검색 정확도를 향상시키기 위해 벡터 결과 재정렬을 위한 모델을 지정하십시오.",
+  "rerank-model": "모델 재순위",
+  "rerank": "재순위 매기기",
+  "use-custom-rerank-endpoint-description": "활성화되면, 내장된 모델의 엔드포인트와 API 키가 재정렬됩니다.",
+  "use-embedding-endpoint": "임베딩 엔드포인트 사용",
+  "rerank-score-description": "재정렬 모델을 위한 점수 임계값을 설정하십시오. 이 값 미만의 결과는 필터링됩니다."
 }

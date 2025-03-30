@@ -604,5 +604,12 @@
   "rebuild-stopped-by-user": "ユーザーによる再構築停止",
   "random-mode": "ランダム・ウォーク",
   "related-notes": "関連ノート",
-  "no-related-notes-found": "関連するノートが見つかりませんでした"
+  "no-related-notes-found": "関連するノートが見つかりませんでした",
+  "advanced": "高度な",
+  "rerank-model-description": "検索精度を向上させるためのベクトル結果の並べ替えモデルを指定する",
+  "rerank-model": "モデルの再ランク付け",
+  "rerank": "再ランク付け",
+  "use-custom-rerank-endpoint-description": "有効にすると、組み込まれたモデルのエンドポイントとAPIキーが再配置されます。",
+  "use-embedding-endpoint": "エンベディングエンドポイントを使用する",
+  "rerank-score-description": "並べ替えモデルのためのスコアしきい値を設定し、それ以下の結果はフィルタリングされます。"
 }

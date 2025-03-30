@@ -603,5 +603,12 @@
   "rebuild-started": "重建開始",
   "random-mode": "隨機漫步",
   "related-notes": "相關筆記",
-  "no-related-notes-found": "未找到相關筆記"
+  "no-related-notes-found": "未找到相關筆記",
+  "advanced": "先進",
+  "rerank-model-description": "指定一个模型以重新排序向量结果，以提高搜索精度",
+  "rerank-model": "Rerank模型",
+  "rerank": "重新排名",
+  "use-custom-rerank-endpoint-description": "啟用後，嵌入式模型的端點和API密鑰將會被重新排序。",
+  "use-embedding-endpoint": "使用嵌入端點",
+  "rerank-score-description": "為重新排序模型設定一個分數門檻，低於此門檻的結果將被過濾。"
 }

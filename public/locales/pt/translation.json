@@ -599,5 +599,12 @@
   "rebuild-stopped-by-user": "Reconstrução interrompida pelo usuário",
   "random-mode": "Passeio Aleatório",
   "related-notes": "Notas relacionadas",
-  "no-related-notes-found": "Nenhuma nota relacionada encontrada"
+  "no-related-notes-found": "Nenhuma nota relacionada encontrada",
+  "advanced": "Avançado",
+  "rerank-model-description": "Especificar um modelo para reorganizar os resultados do vetor a fim de melhorar a precisão da pesquisa",
+  "rerank-model": "Modelo de reclassificação",
+  "rerank": "Reclassificar",
+  "use-custom-rerank-endpoint-description": "Quando ativado, os endpoints e as chaves de API do modelo incorporado serão reordenados.",
+  "use-embedding-endpoint": "Usar ponto de extremidade de incorporação",
+  "rerank-score-description": "Defina um limiar de pontuação para o modelo de reorganização, abaixo do qual os resultados serão filtrados."
 }

@@ -23,6 +23,8 @@ import { webExtra } from './tools/webExtra';
 import { searchBlinkoTool } from './tools/searchBlinko';
 import { updateBlinkoTool } from './tools/updateBlinko';
 import { deleteBlinkoTool } from './tools/deleteBlinko';
+import { rerank } from '@mastra/rag';
+import { AiBaseModelProvider } from './providers';
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -62,7 +64,8 @@ export class AiModelFactory {
   }
 
   static async queryVector(query: string, accountId: number, _topK?: number) {
-    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
+    const { VectorStore, Embeddings, provider } = await AiModelFactory.GetProvider();
+
     const config = await AiModelFactory.globalConfig();
     const topK = _topK ?? config.embeddingTopK ?? 3;
     const embeddingMinScore = config.embeddingScore ?? 0.4;
@@ -70,12 +73,29 @@ export class AiModelFactory {
       value: query,
       model: Embeddings,
     });
+
     const result = await VectorStore.query({
       indexName: 'blinko',
       queryVector: embedding,
       topK: topK,
     });
-    const filteredResults = result.filter(({ score }) => score > embeddingMinScore);
+
+    let filteredResults = result.filter(({ score }) => score >= embeddingMinScore);
+
+    if (config.rerankModel) {
+      const rerankmodel = (await provider.rerankModel())!;
+      const rerankScore = config.rerankScore ?? 0.5;
+      const rerankedResults = await rerank(
+        result,
+        query,
+        rerankmodel,
+        {
+          topK: config.rerankTopK ?? 3
+        }
+      );
+      // console.log(rerankedResults, 'rerankedResults');
+      filteredResults = rerankedResults.filter((i) => i.score >= rerankScore).map((i) => i.result);
+    }
 
     const notes =
       (
@@ -230,6 +250,7 @@ export class AiModelFactory {
           Embeddings: (await provider.Embeddings()) as EmbeddingModelV1<string>,
           MarkdownSplitter: provider.MarkdownSplitter() as MarkdownTextSplitter,
           TokenTextSplitter: provider.TokenTextSplitter() as TokenTextSplitter,
+          provider: provider as AiBaseModelProvider
         });
 
         switch (globalConfig.aiModelProvider) {

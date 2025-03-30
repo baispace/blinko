@@ -16,7 +16,6 @@ export class OllamaModelProvider extends AiBaseModelProvider {
   }
 
   protected getLLM(): LanguageModelV1 {
-    console.log(this.globalConfig.aiModel);
     const provider = this.provider as OllamaProvider;
     return provider.languageModel(this.globalConfig.aiModel ?? 'llama3');
   }

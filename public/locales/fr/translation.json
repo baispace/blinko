@@ -604,5 +604,12 @@
   "rebuild-stopped-by-user": "Reconstruction arrêtée par l'utilisateur",
   "random-mode": "Marche aléatoire",
   "related-notes": "Notes associées",
-  "no-related-notes-found": "Aucune note liée trouvée"
+  "no-related-notes-found": "Aucune note liée trouvée",
+  "advanced": "Avancé",
+  "rerank-model-description": "Spécifiez un modèle pour réorganiser les résultats de vecteur afin d'améliorer la précision de la recherche",
+  "rerank-model": "Modèle de réévaluation",
+  "rerank": "Réorganiser",
+  "use-custom-rerank-endpoint-description": "Lorsqu'elle est activée, les points de terminaison et les clés API du modèle intégré seront réorganisés.",
+  "use-embedding-endpoint": "Utiliser le point de terminaison d'intégration",
+  "rerank-score-description": "Définissez un seuil de score pour le modèle de réorganisation, en dessous duquel les résultats seront filtrés."
 }

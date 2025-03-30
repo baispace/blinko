@@ -626,5 +626,12 @@
   "rebuild-stopped-by-user": "用户已停止重建",
   "random-mode": "随机漫步",
   "related-notes": "相关笔记",
-  "no-related-notes-found": "没有找到相关笔记"
+  "no-related-notes-found": "没有找到相关笔记",
+  "advanced": "高级",
+  "rerank-model-description": "指定一个模型来重新排序向量结果以提高搜索精度",
+  "rerank-model": "重新排名模型",
+  "rerank": "重新排名",
+  "use-custom-rerank-endpoint-description": "启用后将使用嵌入模型的端点和API密钥进行重排序",
+  "use-embedding-endpoint": "使用嵌入端点",
+  "rerank-score-description": "设置重排序模型的分数阈值，低于此值的结果将被过滤"
 }

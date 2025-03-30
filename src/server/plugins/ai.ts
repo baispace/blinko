@@ -15,7 +15,7 @@ import { CreateNotification } from '../routers/notification';
 import { NotificationType } from '@/lib/prismaZodType';
 import { CoreMessage } from '@mastra/core';
 import { MDocument } from '@mastra/rag';
-import { embed, embedMany } from 'ai';
+import { embedMany } from 'ai';
 import { RebuildEmbeddingJob } from './rebuildEmbeddingJob';
 import { userCaller } from '../routers/_app';
 import { getAllPathTags } from '../routers/helper';
@@ -201,51 +201,13 @@ export class AiService {
   }
 
   static async enhanceQuery({ query, ctx }: { query: string; ctx: Context }) {
-    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
-    const config = await AiModelFactory.globalConfig();
-
-    const { embedding } = await embed({
-      value: query,
-      model: Embeddings,
-    });
-
-    const results = await VectorStore.query('blinko', embedding, 20);
-
-    const DISTANCE_THRESHOLD = config.embeddingScore ?? 0.3;
-
-    const filteredResultsWithScore = results
-      .filter(({ score }) => score > DISTANCE_THRESHOLD)
-      .sort((a, b) => b.score - a.score)
-      .map(({ metadata, score }) => ({
-        metadata,
-        score,
-      }));
-
-    // console.log(filteredResultsWithScore, 'filteredResultsWithScore');
-
-    const notes = await prisma.notes.findMany({
-      where: {
-        id: { in: filteredResultsWithScore.map((i) => i.metadata?.id).filter((i) => !!i) },
-        accountId: Number(ctx.id),
-      },
-      include: {
-        tags: { include: { tag: true } },
-        attachments: true,
-        _count: {
-          select: {
-            comments: true,
-            histories: true,
-          },
-        },
-      },
-    });
-    const sortedNotes = notes.sort((a, b) => {
-      const scoreA = filteredResultsWithScore.find((r) => r.metadata?.id === a.id)?.score ?? Infinity;
-      const scoreB = filteredResultsWithScore.find((r) => r.metadata?.id === b.id)?.score ?? Infinity;
-      return scoreB - scoreA;
-    });
-    console.log(sortedNotes, 'sortedNotes');
-    return sortedNotes;
+    try {
+      const { notes } = await AiModelFactory.queryVector(query, Number(ctx.id));
+      return notes;
+    } catch (error) {
+      console.error('Error in enhanceQuery:', error);
+      return [];
+    }
   }
 
   static async completions({

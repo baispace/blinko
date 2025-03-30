@@ -604,5 +604,12 @@
   "rebuild-stopped-by-user": "Kullanıcı tarafından yeniden yapılandırma durduruldu.",
   "random-mode": "Rastgele Yürüyüş",
   "related-notes": "İlgili notlar",
-  "no-related-notes-found": "Hiç ilgili not bulunamadı"
+  "no-related-notes-found": "Hiç ilgili not bulunamadı",
+  "advanced": "İleri",
+  "rerank-model-description": "Arama doğruluğunu artırmak için vektör sonuçlarını yeniden sıralamak için bir model belirtin.",
+  "rerank-model": "Yeniden sıralama modeli",
+  "rerank": "Yeniden sırala",
+  "use-custom-rerank-endpoint-description": "Etkinleştirildiğinde, gömülü modelin uç noktaları ve API anahtarları yeniden sıralanacaktır.",
+  "use-embedding-endpoint": "Katıştırma uç noktasını kullanın",
+  "rerank-score-description": "Yeniden sıralama modeli için bir puan eşiği belirleyin, bunun altındaki sonuçlar filtrelenecektir."
 }

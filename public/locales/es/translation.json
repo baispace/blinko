@@ -604,5 +604,12 @@
   "rebuild-stopped-by-user": "Reconstrucción detenida por el usuario",
   "random-mode": "Caminata Aleatoria",
   "related-notes": "Notas relacionadas",
-  "no-related-notes-found": "No se encontraron notas relacionadas"
+  "no-related-notes-found": "No se encontraron notas relacionadas",
+  "advanced": "Avanzado",
+  "rerank-model-description": "Especificar un modelo para reordenar resultados de vectores para mejorar la precisión de búsqueda",
+  "rerank-model": "Modelo de reordenamiento",
+  "rerank": "Reordenar",
+  "use-custom-rerank-endpoint-description": "Cuando está habilitado, los puntos finales y las claves de API del modelo integrado serán reorganizados.",
+  "use-embedding-endpoint": "Usa el punto final de incrustación",
+  "rerank-score-description": "Establezca un umbral de puntuación para el modelo de reordenamiento, por debajo del cual se filtrarán los resultados."
 }

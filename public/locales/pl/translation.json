@@ -595,5 +595,12 @@
   "rebuild-stopped-by-user": "Odbudowa zatrzymana przez użytkownika",
   "random-mode": "Losowy Spacer",
   "related-notes": "Powiązane notatki",
-  "no-related-notes-found": "Nie znaleziono powiązanych notatek"
+  "no-related-notes-found": "Nie znaleziono powiązanych notatek",
+  "advanced": "Zaawansowany",
+  "rerank-model-description": "Określ model do zmiany kolejności wyników wektorowych w celu poprawy dokładności wyszukiwania",
+  "rerank-model": "Model przesortowania",
+  "rerank": "Przegrupuj",
+  "use-custom-rerank-endpoint-description": "Gdy włączone, punkty końcowe i klucze API wbudowanego modelu zostaną przeporządkowane.",
+  "use-embedding-endpoint": "Użyj punktu końcowego osadzania",
+  "rerank-score-description": "Ustaw próg punktacji dla modelu przestawień, poniżej którego wyniki będą filtrowane."
 }

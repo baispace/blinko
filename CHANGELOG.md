@@ -1,3 +1,10 @@
+## [0.46.6](https://github.com/blinko-space/blinko/compare/v0.46.5...v0.46.6) (2025-03-30)
+
+
+### Bug Fixes
+
+* delete tags and botes button undelete tags Issue ([6712234](https://github.com/blinko-space/blinko/commit/6712234ebfd33aeaa11b6a350427ea6f91fd463b))
+
 ## [0.46.5](https://github.com/blinko-space/blinko/compare/v0.46.4...v0.46.5) (2025-03-30)
 
 

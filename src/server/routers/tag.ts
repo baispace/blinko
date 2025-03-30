@@ -218,6 +218,7 @@ export const tagRouter = router({
       const tag = await prisma.tag.findFirst({ where: { id, accountId: Number(ctx.id) }, include: { tagsToNote: true } })
       const allNotesId = tag?.tagsToNote.map(i => i.noteId) ?? []
       await userCaller(ctx).notes.trashMany({ ids: allNotesId })
+      await userCaller(ctx).tags.deleteOnlyTag({ id })
       return true
     }),
   updateTagOrder: authProcedure

@@ -90,6 +90,9 @@ importers:
       '@libsql/linux-arm64-gnu':
         specifier: ^0.5.3
         version: 0.5.3
+      '@libsql/linux-arm64-musl':
+        specifier: ^0.5.3
+        version: 0.5.3
       '@libsql/linux-x64-musl':
         specifier: ^0.5.3
         version: 0.5.3
@@ -16312,8 +16315,7 @@ snapshots:
   '@libsql/linux-arm64-musl@0.4.7':
     optional: true
 
-  '@libsql/linux-arm64-musl@0.5.3':
-    optional: true
+  '@libsql/linux-arm64-musl@0.5.3': {}
 
   '@libsql/linux-x64-gnu@0.4.7':
     optional: true

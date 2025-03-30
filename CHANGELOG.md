@@ -1,3 +1,15 @@
+# [0.47.0](https://github.com/blinko-space/blinko/compare/v0.46.6...v0.47.0) (2025-03-30)
+
+
+### Bug Fixes
+
+* Tooltip component display problems ([c6d2039](https://github.com/blinko-space/blinko/commit/c6d20394fb2be332301465a99c4dc41b107806f0))
+
+
+### Features
+
+* add related notes feature and random mode ([54bf6e8](https://github.com/blinko-space/blinko/commit/54bf6e8295e5f65ee5108ba43d32fc9e7fde9826))
+
 ## [0.46.6](https://github.com/blinko-space/blinko/compare/v0.46.5...v0.46.6) (2025-03-30)
 
 

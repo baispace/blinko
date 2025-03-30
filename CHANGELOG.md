@@ -1,3 +1,10 @@
+## [0.46.5](https://github.com/blinko-space/blinko/compare/v0.46.4...v0.46.5) (2025-03-30)
+
+
+### Bug Fixes
+
+* update Icon imports and add new build script for icon generation ([7d66542](https://github.com/blinko-space/blinko/commit/7d66542560620e8516fb158876d8432500ed5239))
+
 ## [0.46.4](https://github.com/blinko-space/blinko/compare/v0.46.3...v0.46.4) (2025-03-29)
 
 

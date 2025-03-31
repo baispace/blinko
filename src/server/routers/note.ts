@@ -88,6 +88,14 @@ export const noteRouter = router({
               comments: z.number(),
               histories: z.number(),
             }),
+            owner: z.object({
+              id: z.number(),
+              name: z.string(),
+              nickname: z.string(),
+              image: z.string(),
+            }).nullable().optional(),
+            isSharedNote: z.boolean().optional(),
+            canEdit: z.boolean().optional(),
           }),
         ),
       ),
@@ -101,14 +109,35 @@ export const noteRouter = router({
           return [];
         }
       }
+
       let where: Prisma.notesWhereInput = {
-        accountId: Number(ctx.id),
+        OR: [
+          { accountId: Number(ctx.id) },
+          { internalShares: { some: { accountId: Number(ctx.id) } } }
+        ],
+        isRecycle: isRecycle
       };
 
       if (searchText != '') {
         where = {
-          ...where,
-          OR: [{ content: { contains: searchText, mode: 'insensitive' } }, { attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } } }],
+          OR: [
+            {
+              accountId: Number(ctx.id),
+              content: { contains: searchText, mode: 'insensitive' }
+            },
+            {
+              accountId: Number(ctx.id),
+              attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } }
+            },
+            {
+              internalShares: { some: { accountId: Number(ctx.id) } },
+              content: { contains: searchText, mode: 'insensitive' }
+            },
+            {
+              internalShares: { some: { accountId: Number(ctx.id) } },
+              attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } }
+            }
+          ],
         };
       } else {
         where.isRecycle = isRecycle;
@@ -149,6 +178,7 @@ export const noteRouter = router({
       }
       const config = await getGlobalConfig({ ctx });
       let timeOrderBy = config?.isOrderByCreateTime ? { createdAt: orderBy } : { updatedAt: orderBy };
+
       return await prisma.notes.findMany({
         where,
         orderBy: [{ isTop: 'desc' }, timeOrderBy],
@@ -564,7 +594,13 @@ export const noteRouter = router({
     .mutation(async function ({ input, ctx }) {
       const { id } = input;
       return await prisma.notes.findFirst({
-        where: { id, accountId: Number(ctx.id) },
+        where: {
+          id,
+          OR: [
+            { accountId: Number(ctx.id) },
+            { internalShares: { some: { accountId: Number(ctx.id) } } }
+          ]
+        },
         include: {
           tags: {
             include: {
@@ -799,6 +835,41 @@ export const noteRouter = router({
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
       let { id, isArchived, isRecycle, type, attachments, content, isTop, isShare, references } = input;
+
+      // Check for internal sharing permission if updating an existing note
+      let isSharedEditor = false;
+      if (id) {
+        const notePermission = await prisma.notes.findFirst({
+          where: {
+            id,
+            OR: [
+              { accountId: Number(ctx.id) }, // Note owner
+              { internalShares: { some: { accountId: Number(ctx.id), canEdit: true } } } // Shared with edit permission
+            ]
+          },
+          include: {
+            internalShares: {
+              where: { accountId: Number(ctx.id) },
+              select: { canEdit: true }
+            }
+          }
+        });
+
+        if (!notePermission) {
+          throw new Error('Note not found or you do not have edit permission');
+        }
+
+        // If user is not the owner but has edit permission, restrict certain operations
+        if (notePermission.accountId !== Number(ctx.id)) {
+          isSharedEditor = true;
+          // Prevent shared users from changing archive status, top status, or share status
+          isArchived = null;
+          isTop = null;
+          isShare = null;
+          isRecycle = null;
+        }
+      }
+
       const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '));
       let newTags: Prisma.tagCreateManyInput[] = [];
       const config = await getGlobalConfig({ ctx });
@@ -830,7 +901,6 @@ export const noteRouter = router({
         }
       };
 
-
       const update: Prisma.notesUpdateInput = {
         ...(type !== -1 && { type }),
         ...(isArchived !== null && { isArchived }),
@@ -859,7 +929,16 @@ export const noteRouter = router({
 
       if (id) {
         const existingNote = await prisma.notes.findUnique({
-          where: { id, accountId: Number(ctx.id) },
+          where: { id },
+          select: {
+            content: true,
+            accountId: true,
+            type: true,
+            isArchived: true,
+            isTop: true,
+            isShare: true,
+            isRecycle: true
+          }
         });
 
         if (existingNote && content != null && content !== existingNote.content) {
@@ -886,7 +965,12 @@ export const noteRouter = router({
           });
         }
 
-        const note = await prisma.notes.update({ where: { id, accountId: Number(ctx.id) }, data: update });
+        // For shared editors, we need to use a different where clause
+        const whereClause = isSharedEditor
+          ? { id }  // Only filter by ID for shared editors
+          : { id, accountId: Number(ctx.id) }; // Filter by ID and accountId for owners
+
+        const note = await prisma.notes.update({ where: whereClause, data: update });
         if (content == null) return;
         const oldTagsInThisNote = await prisma.tagsToNote.findMany({ where: { noteId: note.id }, include: { tag: true } });
         await handleAddTags(tagTree, undefined, note.id);
@@ -1143,7 +1227,21 @@ export const noteRouter = router({
     )
     .output(z.any())
     .mutation(async function ({ input, ctx }) {
-      return await deleteNotes(input.ids, ctx);
+      // Verify user owns all notes (internally shared users cannot delete)
+      const notes = await prisma.notes.findMany({
+        where: {
+          id: { in: input.ids },
+          accountId: Number(ctx.id) // Only allow deleting if user is the owner
+        },
+      });
+
+      const allowedNoteIds = notes.map(note => note.id);
+
+      if (allowedNoteIds.length !== input.ids.length) {
+        throw new Error('Some notes cannot be deleted as you are not the owner');
+      }
+
+      return await deleteNotes(allowedNoteIds, ctx);
     }),
   addReference: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/add-reference', summary: 'Add note reference', protect: true, tags: ['Note'] } })
@@ -1366,6 +1464,223 @@ export const noteRouter = router({
         version: latestVersion.version,
         createdAt: latestVersion.createdAt,
       };
+    }),
+  internalShareNote: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/internal-share', summary: 'Share note internally', protect: true, tags: ['Note'] } })
+    .input(
+      z.object({
+        id: z.number(),
+        accountIds: z.array(z.number()),
+        isCancel: z.boolean().default(false),
+      }),
+    )
+    .output(z.object({
+      success: z.boolean(),
+      message: z.string().optional(),
+    }))
+    .mutation(async function ({ input, ctx }) {
+      const { id, accountIds, isCancel } = input;
+
+      const note = await prisma.notes.findFirst({
+        where: {
+          id,
+          accountId: Number(ctx.id),
+        },
+      });
+
+      if (!note) {
+        return {
+          success: false,
+          message: 'Note not found'
+        };
+      }
+
+      if (isCancel) {
+        await prisma.noteInternalShare.deleteMany({
+          where: {
+            noteId: id,
+            accountId: { in: accountIds }
+          },
+        });
+
+        return {
+          success: true,
+          message: 'Internal sharing cancelled'
+        };
+      } else {
+        // Filter out any accountIds that match the note owner
+        const filteredAccountIds = accountIds.filter(accId => accId !== Number(ctx.id));
+
+        // Check if the accounts exist
+        const existingAccounts = await prisma.accounts.findMany({
+          where: { id: { in: filteredAccountIds } },
+          select: { id: true }
+        });
+
+        const validAccountIds = existingAccounts.map(acc => acc.id);
+
+        // Delete any existing shares that are not in the new list
+        await prisma.noteInternalShare.deleteMany({
+          where: {
+            noteId: id,
+            NOT: { accountId: { in: validAccountIds } }
+          },
+        });
+
+        // Create new shares
+        for (const accountId of validAccountIds) {
+          await prisma.noteInternalShare.upsert({
+            where: {
+              noteId_accountId: {
+                noteId: id,
+                accountId: accountId
+              }
+            },
+            update: {}, // No need to update if exists
+            create: {
+              noteId: id,
+              accountId: accountId,
+              canEdit: true
+            }
+          });
+        }
+
+        return {
+          success: true,
+          message: 'Note shared internally'
+        };
+      }
+    }),
+
+  getInternalSharedUsers: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/internal-shared-users', summary: 'Get users with internal access to note', protect: true, tags: ['Note'] } })
+    .input(
+      z.object({
+        id: z.number(),
+      }),
+    )
+    .output(z.array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        nickname: z.string(),
+        image: z.string(),
+        loginType: z.string(),
+        canEdit: z.boolean(),
+      })
+    ))
+    .mutation(async function ({ input, ctx }) {
+      const { id } = input;
+      // Get users with internal access
+      const sharedUsers = await prisma.noteInternalShare.findMany({
+        where: { noteId: id },
+        include: {
+          account: {
+            select: {
+              id: true,
+              name: true,
+              nickname: true,
+              image: true,
+              loginType: true,
+            }
+          }
+        }
+      });
+      return sharedUsers.map(share => ({
+        id: share.account.id,
+        name: share.account.name,
+        nickname: share.account.nickname,
+        image: share.account.image,
+        canEdit: share.canEdit,
+        loginType: share.account.loginType,
+      }));
+    }),
+
+  internalSharedWithMe: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/shared-with-me', summary: 'Get notes shared with me', protect: true, tags: ['Note'] } })
+    .input(
+      z.object({
+        page: z.number().default(1),
+        size: z.number().default(30),
+        orderBy: z.enum(['asc', 'desc']).default('desc'),
+      }),
+    )
+    .output(
+      z.array(
+        notesSchema.merge(
+          z.object({
+            attachments: z.array(attachmentsSchema),
+            tags: z.array(
+              tagsToNoteSchema.merge(
+                z.object({
+                  tag: tagSchema,
+                }),
+              ),
+            ),
+            owner: z.object({
+              id: z.number(),
+              name: z.string(),
+              nickname: z.string(),
+              image: z.string(),
+            }).nullable(),
+            canEdit: z.boolean(),
+            _count: z.object({
+              comments: z.number(),
+              histories: z.number(),
+            }),
+          }),
+        ),
+      ),
+    )
+    .mutation(async function ({ input, ctx }) {
+      const { page, size, orderBy } = input;
+
+      return await prisma.notes.findMany({
+        where: {
+          isRecycle: false,
+          internalShares: {
+            some: {
+              accountId: Number(ctx.id)
+            }
+          }
+        },
+        orderBy: [{ updatedAt: orderBy }],
+        skip: (page - 1) * size,
+        take: size,
+        include: {
+          tags: { include: { tag: true } },
+          attachments: {
+            orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+          },
+          account: {
+            select: {
+              id: true,
+              name: true,
+              nickname: true,
+              image: true,
+            }
+          },
+          internalShares: {
+            where: {
+              accountId: Number(ctx.id)
+            },
+            select: {
+              canEdit: true
+            }
+          },
+          _count: {
+            select: {
+              comments: true,
+              histories: true,
+            },
+          },
+        },
+      }).then(notes => notes.map(note => ({
+        ...note,
+        owner: note.account,
+        canEdit: note.internalShares[0]?.canEdit || false,
+        internalShares: undefined, // Remove this field from the response
+      })));
     }),
 });
 

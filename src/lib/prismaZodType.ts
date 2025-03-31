@@ -315,3 +315,17 @@ export const historySchema = z.object({
 
 export type history = z.infer<typeof historySchema>
 
+
+/////////////////////////////////////////
+// Note Internal Share
+/////////////////////////////////////////
+
+export const noteInternalShareSchema = z.object({
+  id: z.number().int(),
+  noteId: z.number().int(),
+  accountId: z.number().int(),
+  canEdit: z.boolean(),
+})
+
+export type noteInternalShare = z.infer<typeof noteInternalShareSchema>
+

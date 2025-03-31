@@ -611,5 +611,9 @@
   "rerank": "Réorganiser",
   "use-custom-rerank-endpoint-description": "Lorsqu'elle est activée, les points de terminaison et les clés API du modèle intégré seront réorganisés.",
   "use-embedding-endpoint": "Utiliser le point de terminaison d'intégration",
-  "rerank-score-description": "Définissez un seuil de score pour le modèle de réorganisation, en dessous duquel les résultats seront filtrés."
+  "rerank-score-description": "Définissez un seuil de score pour le modèle de réorganisation, en dessous duquel les résultats seront filtrés.",
+  "public-share": "Partage Public",
+  "internal-share": "Partage Interne",
+  "no-team-members-found": "Aucun membre de l'équipe trouvé",
+  "selected-users": "Utilisateurs sélectionnés"
 }

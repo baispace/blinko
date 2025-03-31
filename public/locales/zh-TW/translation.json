@@ -610,5 +610,9 @@
   "rerank": "重新排名",
   "use-custom-rerank-endpoint-description": "啟用後，嵌入式模型的端點和API密鑰將會被重新排序。",
   "use-embedding-endpoint": "使用嵌入端點",
-  "rerank-score-description": "為重新排序模型設定一個分數門檻，低於此門檻的結果將被過濾。"
+  "rerank-score-description": "為重新排序模型設定一個分數門檻，低於此門檻的結果將被過濾。",
+  "public-share": "公開分享",
+  "internal-share": "內部分享",
+  "no-team-members-found": "找不到團隊成員",
+  "selected-users": "選定的使用者"
 }

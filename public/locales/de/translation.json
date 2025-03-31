@@ -611,5 +611,9 @@
   "rerank": "Neu ordnen",
   "use-custom-rerank-endpoint-description": "Wenn aktiviert, werden die Endpunkte und API-Schlüssel des eingebetteten Modells neu geordnet",
   "use-embedding-endpoint": "Verwenden Sie den Einbettungs-Endpunkt",
-  "rerank-score-description": "Legen Sie eine Punktschwelle für das Neuordnungsmodell fest, unterhalb derer Ergebnisse gefiltert werden."
+  "rerank-score-description": "Legen Sie eine Punktschwelle für das Neuordnungsmodell fest, unterhalb derer Ergebnisse gefiltert werden.",
+  "public-share": "Öffentlicher Anteil",
+  "internal-share": "Interner Anteil",
+  "no-team-members-found": "Keine Teammitglieder gefunden",
+  "selected-users": "Ausgewählte Benutzer"
 }

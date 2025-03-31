@@ -4,6 +4,7 @@ import { userCaller } from '../routers/_app';
 import { FileService } from './files';
 import { getGlobalConfig } from '../routers/config';
 import { Context } from '../context';
+import { resetSequences } from '../routers/helper';
 type Memo = {
   id: number;
   creator_id: number;
@@ -145,6 +146,23 @@ export class Memos {
         };
       }
     }
+
+    try {
+      await resetSequences();
+      yield {
+        type: 'success',
+        content: 'Sequences reset successfully',
+        progress: { current: total, total }
+      };
+    } catch (error) {
+      console.error('reset sequences error->', error);
+      yield {
+        type: 'error',
+        content: `Failed to reset sequences: ${error.message}`,
+        error,
+        progress: { current: total, total }
+      };
+    }
   }
 
   async *importFiles(ctx: Context): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {
@@ -258,6 +276,23 @@ export class Memos {
           progress: { current: i + 1, total }
         };
       }
+    }
+
+    try {
+      await resetSequences();
+      yield {
+        type: 'success',
+        content: 'Sequences reset successfully',
+        progress: { current: total, total }
+      };
+    } catch (error) {
+      console.error('reset sequences error->', error);
+      yield {
+        type: 'error',
+        content: `Failed to reset sequences: ${error.message}`,
+        error,
+        progress: { current: total, total }
+      };
     }
   }
 }

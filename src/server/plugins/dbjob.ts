@@ -17,6 +17,7 @@ import yauzl from 'yauzl-promise';
 import { FileService } from "./files";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routers/config";
+import { resetSequences } from '../routers/helper';
 
 export type RestoreResult = {
   type: 'success' | 'skip' | 'error';
@@ -380,6 +381,23 @@ export class DBJob extends BaseScheduleJob {
         type: 'error',
         error,
         content: `extract failed: ${error.message}`,
+        progress: { current: 0, total: 0 }
+      };
+    }
+
+    // Reset sequences after restore
+    try {
+      await resetSequences();
+      yield {
+        type: 'success',
+        content: 'Sequences reset successfully',
+        progress: { current: 0, total: 0 }
+      };
+    } catch (error) {
+      yield {
+        type: 'error',
+        error,
+        content: `Failed to reset sequences: ${error.message}`,
         progress: { current: 0, total: 0 }
       };
     }

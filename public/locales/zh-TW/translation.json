@@ -582,7 +582,7 @@
   "enter-custom-prompt-for-post-processing": "輸入自定義提示進行發布處理",
   "prompt-used-for-post-processing-notes": "用於後處理筆記的提示词",
   "rebuild-in-progress": "重建正在進行中",
-  "rest-user-info": "休息用戶信息",
+  "rest-user-info": "修改用戶信息",
   "setting": "",
   "spotify-consumer-key": "Spotify API密鑰",
   "enable-ai-post-processing": "啟用AI後處理",

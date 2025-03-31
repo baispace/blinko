@@ -1571,22 +1571,6 @@ export const noteRouter = router({
     ))
     .mutation(async function ({ input, ctx }) {
       const { id } = input;
-
-      // Check if user is owner or has access to the note
-      const note = await prisma.notes.findFirst({
-        where: {
-          id,
-          OR: [
-            { accountId: Number(ctx.id) },
-            { internalShares: { some: { accountId: Number(ctx.id) } } }
-          ]
-        },
-      });
-
-      if (!note) {
-        throw new Error('Note not found or access denied');
-      }
-
       // Get users with internal access
       const sharedUsers = await prisma.noteInternalShare.findMany({
         where: { noteId: id },
@@ -1602,7 +1586,6 @@ export const noteRouter = router({
           }
         }
       });
-
       return sharedUsers.map(share => ({
         id: share.account.id,
         name: share.account.name,

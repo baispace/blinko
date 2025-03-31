@@ -15,6 +15,7 @@ import {
   Avatar,
   AvatarGroup,
   Checkbox,
+  Chip,
 } from "@heroui/react";
 import { today, getLocalTimeZone, parseDate } from "@internationalized/date";
 import dayjs from "@/lib/dayjs";
@@ -67,9 +68,7 @@ const generateRandomPassword = () => {
 export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps) => {
   const { t } = useTranslation();
 
-  // 使用RootStore.Local创建一个本地Store
   const store = RootStore.Local(() => ({
-    // 状态
     settings: (() => {
       const initialPassword = defaultSettings.shareUrl ? defaultSettings.password : generateRandomPassword();
       return {
@@ -213,14 +212,12 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
       try {
         const users = await api.users.publicUserList.query();
         this.setTeamMembers(users.filter(user => user.id !== RootStore.Get(UserStore).userInfo.value?.id));
-
-        if (RootStore.Get(BlinkoStore).curSelectedNote?.id && this.isShare) {
-          const sharedUsers = await RootStore.Get(BlinkoStore).getInternalSharedUsers.call(
-            RootStore.Get(BlinkoStore).curSelectedNote!.id!
-          );
-          if (sharedUsers) {
-            this.setSelectedUserIds(sharedUsers.map(user => user.id));
-          }
+        const sharedUsers = await RootStore.Get(BlinkoStore).getInternalSharedUsers.call(
+          RootStore.Get(BlinkoStore).curSelectedNote!.id!
+        );
+        console.log(sharedUsers, 'sharedUsers')
+        if (sharedUsers) {
+          this.setSelectedUserIds(sharedUsers.map(user => user.id));
         }
       } catch (error) {
         this.setTeamMembers([]);
@@ -231,35 +228,33 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
   }));
 
   useEffect(() => {
-    store.loadTeamMembers();
-  }, [store.isShare]);
+    if (store.selectedTab === "internal") {
+      store.loadTeamMembers();
+    }
+  }, [store.selectedTab]);
 
   return (
     <Card shadow="none" className="flex flex-col gap-2 p-2">
-      <div className="border-b w-full mb-2">
-        <div className="flex">
-          <button
-            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 ${
-              store.selectedTab === "public"
-                ? "text-primary border-b-2 border-primary"
-                : "text-default-500 hover:text-default-900"
-            }`}
-            onClick={() => store.setSelectedTab("public")}
+      <div className="w-full mb-2">
+        <div className="flex p-1 gap-2">
+          <Button
+            variant={store.selectedTab === "public" ? "solid" : "light"}
+            color={store.selectedTab === "public" ? "primary" : "default"}
+            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 rounded-lg transition-colors`}
+            onPress={() => store.setSelectedTab("public")}
           >
             <Icon icon="mdi:public" width="20" height="20" />
             {t("public-share")}
-          </button>
-          <button
-            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 ${
-              store.selectedTab === "internal"
-                ? "text-primary border-b-2 border-primary"
-                : "text-default-500 hover:text-default-900"
-            }`}
-            onClick={() => store.setSelectedTab("internal")}
+          </Button>
+          <Button
+            variant={store.selectedTab === "internal" ? "solid" : "light"}
+            color={store.selectedTab === "internal" ? "primary" : "default"}
+            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 rounded-lg transition-colors`}
+            onPress={() => store.setSelectedTab("internal")}
           >
             <Icon icon="material-symbols:public-off" width="20" height="20" />
             {t("internal-share")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -414,15 +409,22 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
               ) : (
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {store.teamMembers.map(user => (
-                    <div key={user.id} className="flex items-center p-2 hover:bg-default-100 rounded-md">
+                    <div key={user.id} className="cursor-pointer flex items-center p-2 hover:bg-default-100 rounded-md" onClick={() => store.handleUserToggle(user.id)}>
                       <Checkbox
                         isSelected={store.selectedUserIds.includes(user.id)}
                         onValueChange={() => store.handleUserToggle(user.id)}
                       />
-                      <Avatar key={user.id} src={user.image ?? undefined} name={user.nickname || user.name} />
+                      <Avatar
+                        key={user.id}
+                        src={user.image ?? undefined}
+                        name={user.nickname || user.name}
+                      />
                       <div className="ml-3">
-                        <p className="text-sm font-medium">{user.nickname.toUpperCase() || user.name.toUpperCase()}</p>
+                        <p className="text-sm font-bold">{user.nickname.toUpperCase() || user.name.toUpperCase()}</p>
                       </div>
+                      <Chip variant="bordered" color="warning" className="ml-auto">
+                        {user.role}
+                      </Chip>
                     </div>
                   ))}
                 </div>
@@ -437,7 +439,11 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
                 {store.teamMembers
                   .filter(user => store.selectedUserIds.includes(user.id))
                   .map(user => (
-                    <Avatar key={user.id} src={user.image ?? undefined} name={user.nickname || user.name} />
+                    <Avatar
+                      key={user.id}
+                      src={user.image ?? undefined}
+                      name={user.nickname || user.name}
+                    />
                   ))
                 }
               </AvatarGroup>

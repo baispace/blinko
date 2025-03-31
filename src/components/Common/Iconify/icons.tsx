@@ -1239,7 +1239,7 @@ const getIconData = (iconName: string) => {
   const collection = collections[collectionKey];
   
   if (!collection || !collection.icons || !collection.icons[name]) {
-    console.warn(`Icon "${name}" not found in "${prefix}" collection`);
+    // console.warn(`Icon "${name}" not found in "${prefix}" collection`);
     return null;
   }
   
@@ -1268,7 +1268,7 @@ export const Icon: React.FC<IconProps> = ({
   
   // If local icon not found, use Iconify as fallback
   if (!iconData) {
-    console.warn(`Local icon not found: ${icon}, using Iconify fallback`);
+    // console.warn(`Local icon not found: ${icon}, using Iconify fallback`);
     return <IconifyIcon 
       icon={icon}
       width={width}

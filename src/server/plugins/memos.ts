@@ -123,6 +123,7 @@ export class Memos {
           }
 
           const note = await userCaller(ctx).notes.upsert({
+            type: 0,
             content: row.content,
             createdAt: new Date(row.created_ts * 1000),
             updatedAt: new Date(row.updated_ts * 1000),

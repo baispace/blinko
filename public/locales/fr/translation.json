@@ -181,6 +181,7 @@
   "update-tag-name": "Mise à jour du nom de l'étiquette",
   "thinking": "Réflexion...",
   "select-all": "Sélectionner tout",
+  "deselect-all": "Tout désélectionner",
   "insert-before": "Insérer avant",
   "insert-after": "Insérer après",
   "update-name": "Nom de la mise à jour",

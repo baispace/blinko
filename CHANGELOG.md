@@ -1,3 +1,10 @@
+## [0.47.3](https://github.com/blinko-space/blinko/compare/v0.47.2...v0.47.3) (2025-03-31)
+
+
+### Bug Fixes
+
+* editor error ([1f8702c](https://github.com/blinko-space/blinko/commit/1f8702c94f69611d0361171f2e8fc7d6956c1132))
+
 ## [0.47.2](https://github.com/blinko-space/blinko/compare/v0.47.1...v0.47.2) (2025-03-30)
 
 

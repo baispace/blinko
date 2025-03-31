@@ -50,8 +50,12 @@ export class StorageListState<T = any> {
 
   save(list?: T[]) {
     try {
-      this.list = list ?? this.list
-      localStorage.setItem(this.key, JSON.stringify(list));
+      if (list) {
+        this.list = list
+        localStorage.setItem(this.key, JSON.stringify(list));
+      } else {
+        localStorage.setItem(this.key, JSON.stringify(this.list));
+      }
     } catch (error) {
     }
   }

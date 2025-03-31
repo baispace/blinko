@@ -160,7 +160,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                       size="sm"
                       variant="light"
                     >
-                      <Icon className="cursor-pointer" icon="mingcute:message-1-line" width="24" height="24" />
+                      <Icon className="cursor-pointer" icon="tabler:bulb" width="24" height="24" />
                     </Button>
                   </Link>
                 </Badge>

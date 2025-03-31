@@ -80,9 +80,6 @@ export const mingcute: IconCollection = {
     },
     "folder-line": {
       "body": "<g fill=\"none\" fill-rule=\"evenodd\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M2 5a2 2 0 0 1 2-2h5.52a2 2 0 0 1 1.561.75l1.4 1.75H20a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm7.52 0H4v14h16V7.5h-7.52a2 2 0 0 1-1.561-.75z\"/></g>"
-    },
-    "message-1-line": {
-      "body": "<g fill=\"none\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M19 3a3 3 0 0 1 2.995 2.824L22 6v10a3 3 0 0 1-2.824 2.995L19 19h-3.697l-2.61 1.74a1.25 1.25 0 0 1-1.257.075l-.13-.075L8.698 19H5a3 3 0 0 1-2.995-2.824L2 16V6a3 3 0 0 1 2.824-2.995L5 3zm0 2H5a1 1 0 0 0-.993.883L4 6v10a1 1 0 0 0 .883.993L5 17h3.697a2 2 0 0 1 .965.248l.145.088L12 18.798l2.193-1.462a2 2 0 0 1 .941-.329l.169-.007H19a1 1 0 0 0 .993-.883L20 16V6a1 1 0 0 0-.883-.993zM8.5 10a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3m7 0a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3\"/></g>"
     }
   },
   "width": 24,
@@ -462,6 +459,12 @@ export const tabler: IconCollection = {
     "upload": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 9l5-5l5 5m-5-5v12\"/>"
     },
+    "bulb": {
+      "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 12h1m8-9v1m8 8h1M5.6 5.6l.7.7m12.1-.7l-.7.7M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0-1 3a2 2 0 0 1-4 0a3.5 3.5 0 0 0-1-3m.7 1h4.6\"/>"
+    },
+    "cards": {
+      "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m3.604 7.197l7.138-3.109a.96.96 0 0 1 1.27.527l4.924 11.902a1 1 0 0 1-.514 1.304L9.285 20.93a.96.96 0 0 1-1.271-.527L3.09 8.5a1 1 0 0 1 .514-1.304zM15 4h1a1 1 0 0 1 1 1v3.5M20 6q.396.168.768.315a1 1 0 0 1 .53 1.311L19 13\"/>"
+    },
     "tool": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 10h3V7L6.5 3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8z\"/>"
     },
@@ -670,6 +673,9 @@ export const mdi: IconCollection = {
     "dots-vertical": {
       "body": "<path fill=\"currentColor\" d=\"M12 16a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2m0-6a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2m0-6a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2\"/>"
     },
+    "note-search-outline": {
+      "body": "<path fill=\"currentColor\" d=\"M15 3H5c-1.11 0-2 .89-2 2v5.82A6.4 6.4 0 0 1 5 9.5V5h7v5.82c.03.03.07.05.1.08c.34.34.63.71.87 1.1H19v7h-6.03c-.24.39-.53.76-.87 1.1c-.36.35-.75.64-1.16.9H19c1.11 0 2-.89 2-2V9zm-1 7V4.5l5.5 5.5zm-6.5 1C5 11 3 13 3 15.5c0 .88.25 1.71.69 2.4L.61 21L2 22.39l3.12-3.07c.69.43 1.51.68 2.38.68c2.5 0 4.5-2 4.5-4.5S10 11 7.5 11m0 7a2.5 2.5 0 0 1 0-5a2.5 2.5 0 0 1 0 5\"/>"
+    },
     "clock-edit-outline": {
       "body": "<path fill=\"currentColor\" d=\"M21 13.1c-.1 0-.3.1-.4.2l-1 1l2.1 2.1l1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8l-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4l-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3c-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8c0 4.1 3.1 7.5 7.1 7.9l-.1.2z\"/>"
     },
@@ -862,24 +868,6 @@ export const majesticons: IconCollection = {
   "height": 24
 };
 
-// proicons icon collection
-export const proicons: IconCollection = {
-  "prefix": "proicons",
-  "icons": {
-    "info": {
-      "body": "<g fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"9.25\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" d=\"M12 11.813v5\"/><circle cx=\"12\" cy=\"8.438\" r=\"1.25\" fill=\"currentColor\"/></g>"
-    },
-    "phone": {
-      "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"><rect width=\"12.5\" height=\"18.5\" x=\"5.75\" y=\"2.75\" rx=\"3\"/><path d=\"M11 17.75h2\"/></g>"
-    },
-    "text-expand": {
-      "body": "<g fill=\"none\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M7.125 4.5h14.5m-14.5 15h14.5m-7.5-10h7.5m-7.5 5h7.5\"/><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M6.875 16.5a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9m0-7a.5.5 0 0 1 .5.5v1.5h1.5a.5.5 0 1 1 0 1h-1.5V14a.5.5 0 1 1-1 0v-1.5h-1.5a.5.5 0 0 1 0-1h1.5V10a.5.5 0 0 1 .5-.5\" clip-rule=\"evenodd\"/></g>"
-    }
-  },
-  "width": 24,
-  "height": 24
-};
-
 // line-md icon collection
 export const line_md: IconCollection = {
   "prefix": "line-md",
@@ -901,6 +889,24 @@ export const line_md: IconCollection = {
     },
     "sun-rising-loop": {
       "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\"><circle cx=\"12\" cy=\"32\" r=\"6\"><animate fill=\"freeze\" attributeName=\"cy\" dur=\"0.6s\" values=\"32;12\"/></circle><g><path stroke-dasharray=\"2\" stroke-dashoffset=\"2\" d=\"M12 19v1M19 12h1M12 5v-1M5 12h-1\"><animate fill=\"freeze\" attributeName=\"d\" begin=\"0.7s\" dur=\"0.2s\" values=\"M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1M3 12h-1\"/><animate fill=\"freeze\" attributeName=\"stroke-dashoffset\" begin=\"0.7s\" dur=\"0.2s\" values=\"2;0\"/></path><path stroke-dasharray=\"2\" stroke-dashoffset=\"2\" d=\"M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5\"><animate fill=\"freeze\" attributeName=\"d\" begin=\"0.9s\" dur=\"0.2s\" values=\"M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5\"/><animate fill=\"freeze\" attributeName=\"stroke-dashoffset\" begin=\"0.9s\" dur=\"0.2s\" values=\"2;0\"/></path><animateTransform attributeName=\"transform\" dur=\"30s\" repeatCount=\"indefinite\" type=\"rotate\" values=\"0 12 12;360 12 12\"/></g></g>"
+    }
+  },
+  "width": 24,
+  "height": 24
+};
+
+// proicons icon collection
+export const proicons: IconCollection = {
+  "prefix": "proicons",
+  "icons": {
+    "info": {
+      "body": "<g fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"9.25\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" d=\"M12 11.813v5\"/><circle cx=\"12\" cy=\"8.438\" r=\"1.25\" fill=\"currentColor\"/></g>"
+    },
+    "phone": {
+      "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"><rect width=\"12.5\" height=\"18.5\" x=\"5.75\" y=\"2.75\" rx=\"3\"/><path d=\"M11 17.75h2\"/></g>"
+    },
+    "text-expand": {
+      "body": "<g fill=\"none\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M7.125 4.5h14.5m-14.5 15h14.5m-7.5-10h7.5m-7.5 5h7.5\"/><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M6.875 16.5a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9m0-7a.5.5 0 0 1 .5.5v1.5h1.5a.5.5 0 1 1 0 1h-1.5V14a.5.5 0 1 1-1 0v-1.5h-1.5a.5.5 0 0 1 0-1h1.5V10a.5.5 0 0 1 .5-.5\" clip-rule=\"evenodd\"/></g>"
     }
   },
   "width": 24,
@@ -1208,8 +1214,8 @@ const getIconData = (iconName: string) => {
     lets_icons,
     eva,
     majesticons,
-    proicons,
     line_md,
+    proicons,
     lsicon,
     system_uicons,
     skill_icons,

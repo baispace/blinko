@@ -77,9 +77,6 @@ export const mingcute: IconCollection = {
     },
     "folder-line": {
       "body": "<g fill=\"none\" fill-rule=\"evenodd\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M2 5a2 2 0 0 1 2-2h5.52a2 2 0 0 1 1.561.75l1.4 1.75H20a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm7.52 0H4v14h16V7.5h-7.52a2 2 0 0 1-1.561-.75z\"/></g>"
-    },
-    "message-1-line": {
-      "body": "<g fill=\"none\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M19 3a3 3 0 0 1 2.995 2.824L22 6v10a3 3 0 0 1-2.824 2.995L19 19h-3.697l-2.61 1.74a1.25 1.25 0 0 1-1.257.075l-.13-.075L8.698 19H5a3 3 0 0 1-2.995-2.824L2 16V6a3 3 0 0 1 2.824-2.995L5 3zm0 2H5a1 1 0 0 0-.993.883L4 6v10a1 1 0 0 0 .883.993L5 17h3.697a2 2 0 0 1 .965.248l.145.088L12 18.798l2.193-1.462a2 2 0 0 1 .941-.329l.169-.007H19a1 1 0 0 0 .993-.883L20 16V6a1 1 0 0 0-.883-.993zM8.5 10a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3m7 0a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3\"/></g>"
     }
   },
   "width": 24,
@@ -1216,7 +1213,7 @@ const getIconData = (iconName: string) => {
   const collection = collections[collectionKey];
   
   if (!collection || !collection.icons || !collection.icons[name]) {
-    console.warn(`Icon "${name}" not found in "${prefix}" collection`);
+    // console.warn(`Icon "${name}" not found in "${prefix}" collection`);
     return null;
   }
   
@@ -1245,7 +1242,7 @@ export const Icon: React.FC<IconProps> = ({
   
   // If local icon not found, use Iconify as fallback
   if (!iconData) {
-    console.warn(`Local icon not found: ${icon}, using Iconify fallback`);
+    // console.warn(`Local icon not found: ${icon}, using Iconify fallback`);
     return <IconifyIcon 
       icon={icon}
       width={width}

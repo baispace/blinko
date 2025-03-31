@@ -611,5 +611,9 @@
   "rerank": "再ランク付け",
   "use-custom-rerank-endpoint-description": "有効にすると、組み込まれたモデルのエンドポイントとAPIキーが再配置されます。",
   "use-embedding-endpoint": "エンベディングエンドポイントを使用する",
-  "rerank-score-description": "並べ替えモデルのためのスコアしきい値を設定し、それ以下の結果はフィルタリングされます。"
+  "rerank-score-description": "並べ替えモデルのためのスコアしきい値を設定し、それ以下の結果はフィルタリングされます。",
+  "public-share": "公開シェア",
+  "internal-share": "内部共有",
+  "no-team-members-found": "チームメンバーが見つかりませんでした",
+  "selected-users": "選ばれたユーザー"
 }

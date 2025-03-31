@@ -602,5 +602,9 @@
   "rerank": "Przegrupuj",
   "use-custom-rerank-endpoint-description": "Gdy włączone, punkty końcowe i klucze API wbudowanego modelu zostaną przeporządkowane.",
   "use-embedding-endpoint": "Użyj punktu końcowego osadzania",
-  "rerank-score-description": "Ustaw próg punktacji dla modelu przestawień, poniżej którego wyniki będą filtrowane."
+  "rerank-score-description": "Ustaw próg punktacji dla modelu przestawień, poniżej którego wyniki będą filtrowane.",
+  "public-share": "Udział publiczny",
+  "internal-share": "Udział wewnętrzny",
+  "no-team-members-found": "Nie znaleziono członków zespołu",
+  "selected-users": "Wybrani użytkownicy"
 }

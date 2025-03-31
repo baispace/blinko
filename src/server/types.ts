@@ -15,6 +15,7 @@ export enum NoteType {
   'BLINKO',
   'NOTE'
 }
+export type PublicUser = NonNullable<RouterOutput['users']['publicUserList']>[0]
 export function toNoteTypeEnum(v?: number, fallback: NoteType = NoteType.BLINKO): NoteType {
   switch (v) {
     case 0:

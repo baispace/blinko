@@ -633,5 +633,9 @@
   "rerank": "重新排名",
   "use-custom-rerank-endpoint-description": "启用后将使用嵌入模型的端点和API密钥进行重排序",
   "use-embedding-endpoint": "使用嵌入端点",
-  "rerank-score-description": "设置重排序模型的分数阈值，低于此值的结果将被过滤"
+  "rerank-score-description": "设置重排序模型的分数阈值，低于此值的结果将被过滤",
+  "public-share": "公共分享",
+  "internal-share": "内部分享",
+  "no-team-members-found": "找不到团队成员",
+  "selected-users": "选定的用户"
 }

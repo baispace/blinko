@@ -611,5 +611,9 @@
   "rerank": "إعادة ترتيب",
   "use-custom-rerank-endpoint-description": "عند التمكين، سيتم إعادة ترتيب نقاط النهاية ومفاتيح API للنموذج المضمن",
   "use-embedding-endpoint": "استخدم نقطة انتهاء التضمين",
-  "rerank-score-description": "حدد عتبة درجة لنموذج إعادة الترتيب، سيتم تصفية النتائج دونها."
+  "rerank-score-description": "حدد عتبة درجة لنموذج إعادة الترتيب، سيتم تصفية النتائج دونها.",
+  "public-share": "المشاركة العامة",
+  "internal-share": "المشاركة الداخلية",
+  "no-team-members-found": "لم يتم العثور على أعضاء في الفريق",
+  "selected-users": "المستخدمين المحددين"
 }

@@ -77,6 +77,18 @@ const App = observer(() => {
         >
           {t('random-mode')}
         </Button>
+        
+        {store.isRandomReviewMode && (
+          <Button
+            className="ml-2 text-sm"
+            isIconOnly
+            onPress={() => {
+              blinko.randomReviewNoteList.call({ limit: 30 });
+            }}
+          >
+            <Icon icon="fluent:arrow-sync-24-filled" width="16" height="16" className="hover:rotate-180 transition-all" />
+          </Button>
+        )}
       </div>
 
       {
@@ -90,7 +102,7 @@ const App = observer(() => {
             effect={"cards"}
             grabCursor={true}
             modules={[EffectCards, Virtual]}
-            className="mt-10 md:mt-4 w-[300px] h-[380px] md:w-[350px] md:h-[520px]"
+            className="mt-5 md:mt-4 w-[300px] h-[calc(100vh_-_300px)] md:w-[550px] "
             allowSlideNext={true}
             allowSlidePrev={true}
             touchRatio={1}

@@ -34,6 +34,7 @@ model accounts {
   follows       follows[]
   notifications notifications[]
   conversations conversation[]
+  sharedNotes   noteInternalShare[]
 }
 
 model attachments {
@@ -89,6 +90,7 @@ model notes {
   references        noteReference[] @relation("ReferencingNote")
   comments          comments[]      @relation("NoteComments")
   histories         noteHistory[]
+  internalShares    noteInternalShare[]
 }
 
 model comments {
@@ -239,6 +241,22 @@ model noteHistory {
 
   note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
 
+  @@index([noteId])
+  @@index([accountId])
+}
+
+model noteInternalShare {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  accountId Int
+  canEdit   Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  note    notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  account accounts @relation(fields: [accountId], references: [id])
+
+  @@unique([noteId, accountId])
   @@index([noteId])
   @@index([accountId])
 }

@@ -606,5 +606,9 @@
   "rerank": "재순위 매기기",
   "use-custom-rerank-endpoint-description": "활성화되면, 내장된 모델의 엔드포인트와 API 키가 재정렬됩니다.",
   "use-embedding-endpoint": "임베딩 엔드포인트 사용",
-  "rerank-score-description": "재정렬 모델을 위한 점수 임계값을 설정하십시오. 이 값 미만의 결과는 필터링됩니다."
+  "rerank-score-description": "재정렬 모델을 위한 점수 임계값을 설정하십시오. 이 값 미만의 결과는 필터링됩니다.",
+  "public-share": "공유 공개",
+  "internal-share": "내부 공유",
+  "no-team-members-found": "팀 멤버가 발견되지 않았습니다.",
+  "selected-users": "선택된 사용자들"
 }

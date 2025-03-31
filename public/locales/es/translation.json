@@ -611,5 +611,9 @@
   "rerank": "Reordenar",
   "use-custom-rerank-endpoint-description": "Cuando está habilitado, los puntos finales y las claves de API del modelo integrado serán reorganizados.",
   "use-embedding-endpoint": "Usa el punto final de incrustación",
-  "rerank-score-description": "Establezca un umbral de puntuación para el modelo de reordenamiento, por debajo del cual se filtrarán los resultados."
+  "rerank-score-description": "Establezca un umbral de puntuación para el modelo de reordenamiento, por debajo del cual se filtrarán los resultados.",
+  "public-share": "Acción Pública",
+  "internal-share": "Compartir Interno",
+  "no-team-members-found": "No se encontraron miembros del equipo",
+  "selected-users": "Usuarios seleccionados"
 }

@@ -1,3 +1,10 @@
+## [0.48.1](https://github.com/blinko-space/blinko/compare/v0.48.0...v0.48.1) (2025-03-31)
+
+
+### Bug Fixes
+
+* icon issues ([62c9748](https://github.com/blinko-space/blinko/commit/62c974828c1bcdfb6396306d3a2b2f956257db6c))
+
 # [0.48.0](https://github.com/blinko-space/blinko/compare/v0.47.3...v0.48.0) (2025-03-31)
 
 

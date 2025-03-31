@@ -42,10 +42,6 @@ export const useEditorInit = (
       "toolbar": isPc ? ToolbarPC : ToolbarMobile,
       mode: isPc ? store.viewMode : (store.viewMode == 'ir' ? 'ir' : store.viewMode),
       theme,
-      counter: {
-        enable: true,
-        type: 'markdown',
-      },
       hint: {
         extend: mode != 'comment' ? Extend : AIExtend
       },
@@ -277,7 +273,7 @@ export const useEditorFiles = (
 ) => {
   useEffect(() => {
     if (originFiles?.length) {
-      console.log({originFiles})
+      console.log({ originFiles })
       store.files = HandleFileType(originFiles);
     }
   }, [originFiles]);

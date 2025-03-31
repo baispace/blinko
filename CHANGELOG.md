@@ -1,3 +1,10 @@
+## [0.48.2](https://github.com/blinko-space/blinko/compare/v0.48.1...v0.48.2) (2025-03-31)
+
+
+### Bug Fixes
+
+* update translation and implement sequence reset functionality ([2e4d101](https://github.com/blinko-space/blinko/commit/2e4d101fe4f0c32ed0b8a9aefa88a8908bd7ec05))
+
 ## [0.48.1](https://github.com/blinko-space/blinko/compare/v0.48.0...v0.48.1) (2025-03-31)
 
 

@@ -12,6 +12,7 @@ const ALWAYS_INCLUDE_ICONS = [
   'lets-icons:check-fill',
   'ci:radio-unchecked',
   'ri:indeterminate-circle-line',
+  'hugeicons:ai-chemistry-02',
   // Icons from baseStore.ts
   'basil:lightning-outline',
   'basil:expand-outline',
@@ -21,9 +22,9 @@ const ALWAYS_INCLUDE_ICONS = [
   'hugeicons:analytics-01',
   'solar:database-linear',
   'solar:box-broken',
-  'formkit:trash',
-  'mingcute:plugin-line',
-  'lsicon:setting-outline',
+  'hugeicons:delete-02',
+  'hugeicons:plug-socket',
+  'hugeicons:settings-01',
   'mingcute:hashtag-line'
 ];
 

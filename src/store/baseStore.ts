@@ -47,21 +47,21 @@ export class BaseStore implements Store {
       href: '/?path=trash',
       hiddenMobile: true,
       hiddenSidebar: true,
-      icon: 'formkit:trash',
+      icon: 'hugeicons:delete-02',
     },
     {
       title: 'plugin',
       href: '/plugin',
       hiddenSidebar: true,
       hiddenMobile: true,
-      icon: 'mingcute:plugin-line',
+      icon: 'hugeicons:plug-socket',
     },
     {
       title: 'settings',
       href: '/settings',
       hiddenSidebar: true,
       hiddenMobile: true,
-      icon: 'lsicon:setting-outline',
+      icon: 'hugeicons:settings-01',
     },
   ];
   currentRouter = this.routerList[0];

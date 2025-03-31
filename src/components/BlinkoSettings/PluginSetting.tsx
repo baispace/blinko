@@ -543,7 +543,7 @@ export const PluginSetting = observer(() => {
   }, []);
   return (
     <CollapsibleCard
-      icon="mingcute:plugin-line"
+      icon="hugeicons:plug-socket"
       title={t('plugin-settings')}
     >
       <Tabs aria-label="Plugin settings tabs">

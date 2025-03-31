@@ -1119,7 +1119,7 @@ export const AiSetting = observer(() => {
         )}
       </CollapsibleCard>
 
-      <CollapsibleCard icon="pajamas:issue-type-enhancement" title={t('ai-tools')} className="mt-4">
+      <CollapsibleCard icon="hugeicons:ai-chemistry-02" title={t('ai-tools')} className="mt-4">
         <Item
           leftContent={<>{t('tavily-api-key')}</>}
           rightContent={

@@ -60,9 +60,6 @@ export const mingcute: IconCollection = {
     "time-line": {
       "body": "<g fill=\"none\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2m0 2a8 8 0 1 0 0 16a8 8 0 0 0 0-16m0 2a1 1 0 0 1 .993.883L13 7v4.586l2.707 2.707a1 1 0 0 1-1.32 1.497l-.094-.083l-3-3a1 1 0 0 1-.284-.576L11 12V7a1 1 0 0 1 1-1\"/></g>"
     },
-    "plugin-line": {
-      "body": "<g fill=\"none\" fill-rule=\"evenodd\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"currentColor\" d=\"M15 20a1 1 0 0 1 .117 1.993L15 22H9a1 1 0 0 1-.117-1.993L9 20zm0-18a1 1 0 0 1 .993.883L16 3v3h2a2 2 0 0 1 1.995 1.85L20 8v5a6 6 0 0 1-5.775 5.996L14 19h-4a6 6 0 0 1-5.996-5.775L4 13V8a2 2 0 0 1 1.85-1.995L6 6h2V3a1 1 0 0 1 1.993-.117L10 3v3h4V3a1 1 0 0 1 1-1m3 6H6v5a4 4 0 0 0 3.8 3.995L10 17h4a4 4 0 0 0 3.995-3.8L18 13z\"/></g>"
-    },
     "loading-line": {
       "body": "<defs><linearGradient id=\"mingcuteLoadingLine0\" x1=\"50%\" x2=\"50%\" y1=\"5.271%\" y2=\"91.793%\"><stop offset=\"0%\" stop-color=\"currentColor\"/><stop offset=\"100%\" stop-color=\"currentColor\" stop-opacity=\".55\"/></linearGradient><linearGradient id=\"mingcuteLoadingLine1\" x1=\"50%\" x2=\"50%\" y1=\"8.877%\" y2=\"90.415%\"><stop offset=\"0%\" stop-color=\"currentColor\" stop-opacity=\"0\"/><stop offset=\"100%\" stop-color=\"currentColor\" stop-opacity=\".55\"/></linearGradient></defs><g fill=\"none\"><path d=\"m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z\"/><path fill=\"url(#mingcuteLoadingLine0)\" d=\"M8.886.006a1 1 0 0 1 .22 1.988A8.001 8.001 0 0 0 10 17.944v2c-5.523 0-10-4.476-10-10C0 4.838 3.848.566 8.886.007Z\" transform=\"translate(2 2.055)\"/><path fill=\"url(#mingcuteLoadingLine1)\" d=\"M14.322 1.985a1 1 0 0 1 1.392-.248A9.99 9.99 0 0 1 20 9.945c0 5.523-4.477 10-10 10v-2a8 8 0 0 0 4.57-14.567a1 1 0 0 1-.248-1.393\" transform=\"translate(2 2.055)\"/></g>"
     },
@@ -180,6 +177,9 @@ export const hugeicons: IconCollection = {
     "global-search": {
       "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" color=\"currentColor\"><path d=\"M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10\"/><path d=\"M20 5.699c-.935.067-2.132.43-2.962 1.504c-1.5 1.94-2.999 2.103-3.999 1.456c-1.5-.97-.239-2.543-1.999-3.397C9.893 4.705 9.733 3.19 10.372 2M2 11c.763.662 1.83 1.268 3.089 1.268c2.6 0 3.12.497 3.12 2.484s0 1.987.52 3.477c.338.97.456 1.938-.218 2.771m11.388-1.071L22 22m-.892-4.954a4.05 4.05 0 0 1-4.054 4.046A4.05 4.05 0 0 1 13 17.046A4.05 4.05 0 0 1 17.054 13a4.05 4.05 0 0 1 4.054 4.046\"/></g>"
     },
+    "ai-chemistry-02": {
+      "body": "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M5.406 23.526h8.57c.41 0 .75-.34.75-.75s-.34-.75-.75-.75h-8.59c-.92 0-1.66-.75-1.66-1.66c0-.27.07-.53.19-.77l3.443-6.57h7.252l.215.41c.19.37.64.51 1.01.32s.51-.64.32-1.01l-1.91-3.66v-5.56h.75c.41 0 .75-.34.75-.75s-.34-.75-.75-.75H13.62a1 1 0 0 0-.123-.01h-5a1 1 0 0 0-.122.01H6.996c-.41 0-.75.34-.75.75s.34.75.75.75h.75v5.56l-5.14 9.81a3.167 3.167 0 0 0 2.8 4.63m3.74-13.91l-1.001 1.91h5.681l-1-1.91a.73.73 0 0 1-.09-.35v-5.74h-3.5v5.74c0 .12-.03.24-.09.35m7.65 13.42c.11.29.39.49.7.49v.01c.31 0 .59-.2.7-.49l.26-.7c.32-.86.46-1.22.67-1.43s.57-.35 1.44-.67l.7-.26c.29-.11.49-.39.49-.7s-.2-.59-.49-.7l-.7-.26c-.86-.32-1.22-.46-1.43-.67s-.35-.57-.67-1.44l-.26-.7a.76.76 0 0 0-.7-.49c-.31 0-.59.2-.7.49l-.26.7c-.32.86-.46 1.22-.67 1.43s-.57.35-1.44.67l-.7.26c-.29.11-.49.39-.49.7s.2.59.49.7l.7.26c.86.32 1.22.46 1.43.67c.21.2.35.56.67 1.43zm.13-3.18c-.24-.24-.5-.41-.85-.57c.34-.16.61-.33.85-.57s.41-.51.57-.85c.16.34.33.61.57.85s.51.41.85.57c-.35.16-.61.33-.85.57s-.41.51-.57.85c-.16-.35-.33-.61-.57-.85\" color=\"currentColor\"/>"
+    },
     "delete-01": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"m19.5 5.5l-.62 10.025c-.158 2.561-.237 3.842-.88 4.763a4 4 0 0 1-1.2 1.128c-.957.584-2.24.584-4.806.584c-2.57 0-3.855 0-4.814-.585a4 4 0 0 1-1.2-1.13c-.642-.922-.72-2.205-.874-4.77L4.5 5.5M3 5.5h18m-4.944 0l-.683-1.408c-.453-.936-.68-1.403-1.071-1.695a2 2 0 0 0-.275-.172C13.594 2 13.074 2 12.035 2c-1.066 0-1.599 0-2.04.234a2 2 0 0 0-.278.18c-.395.303-.616.788-1.058 1.757L8.053 5.5\" color=\"currentColor\"/>"
     },
@@ -188,6 +188,9 @@ export const hugeicons: IconCollection = {
     },
     "logout-05": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M6 6.5C4.159 8.148 3 10.334 3 13a9 9 0 1 0 18 0c0-2.666-1.159-4.852-3-6.5M12 2v9m0-9c-.7 0-2.008 1.994-2.5 2.5M12 2c.7 0 2.008 1.994 2.5 2.5\" color=\"currentColor\"/>"
+    },
+    "plug-socket": {
+      "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M17.854 12.16c-.383.45-1.09.454-1.537.007l-4.484-4.483c-.447-.447-.444-1.155.007-1.538l1.231-1.047a6.5 6.5 0 0 1 3.133-1.448l.725-.122c.685-.116 1.405.123 1.919.637l.986.987c.514.513.753 1.233.637 1.918l-.122.725a6.5 6.5 0 0 1-1.448 3.133zM19.5 4.5l2-2m-19 19l2-2m1.646-7.66c.383-.45 1.09-.454 1.538-.007l4.483 4.484c.447.446.444 1.154-.007 1.537l-1.231 1.047a6.5 6.5 0 0 1-3.133 1.448l-.725.122c-.685.116-1.405-.123-1.918-.637l-.987-.986c-.514-.514-.753-1.234-.637-1.919l.122-.725a6.5 6.5 0 0 1 1.448-3.133zm2.354.66l2-2m1 5l2-2\" color=\"currentColor\"/>"
     },
     "quill-write-01": {
       "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" color=\"currentColor\"><path d=\"M5.076 17C4.089 4.545 12.912 1.012 19.973 2.224c.286 4.128-1.734 5.673-5.58 6.387c.742.776 2.055 1.753 1.913 2.974c-.1.868-.69 1.295-1.87 2.147C11.85 15.6 8.854 16.78 5.076 17\"/><path d=\"M4 22c0-6.5 3.848-9.818 6.5-12\"/></g>"
@@ -218,6 +221,9 @@ export const hugeicons: IconCollection = {
     },
     "analytics-01": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M7 17v-4m5 4V7m5 10v-6M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12\" color=\"currentColor\"/>"
+    },
+    "settings-01": {
+      "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" color=\"currentColor\"><path d=\"m21.318 7.141l-.494-.856c-.373-.648-.56-.972-.878-1.101c-.317-.13-.676-.027-1.395.176l-1.22.344c-.459.106-.94.046-1.358-.17l-.337-.194a2 2 0 0 1-.788-.967l-.334-.998c-.22-.66-.33-.99-.591-1.178c-.261-.19-.609-.19-1.303-.19h-1.115c-.694 0-1.041 0-1.303.19c-.261.188-.37.518-.59 1.178l-.334.998a2 2 0 0 1-.789.967l-.337.195c-.418.215-.9.275-1.358.17l-1.22-.345c-.719-.203-1.078-.305-1.395-.176c-.318.129-.505.453-.878 1.1l-.493.857c-.35.608-.525.911-.491 1.234c.034.324.268.584.736 1.105l1.031 1.153c.252.319.431.875.431 1.375s-.179 1.056-.43 1.375l-1.032 1.152c-.468.521-.702.782-.736 1.105s.14.627.49 1.234l.494.857c.373.647.56.971.878 1.1s.676.028 1.395-.176l1.22-.344a2 2 0 0 1 1.359.17l.336.194c.36.23.636.57.788.968l.334.997c.22.66.33.99.591 1.18c.262.188.609.188 1.303.188h1.115c.694 0 1.042 0 1.303-.189s.371-.519.59-1.179l.335-.997c.152-.399.428-.738.788-.968l.336-.194c.42-.215.9-.276 1.36-.17l1.22.344c.718.204 1.077.306 1.394.177c.318-.13.505-.454.878-1.101l.493-.857c.35-.607.525-.91.491-1.234s-.268-.584-.736-1.105l-1.031-1.152c-.252-.32-.431-.875-.431-1.375s.179-1.056.43-1.375l1.032-1.153c.468-.52.702-.781.736-1.105s-.14-.626-.49-1.234\"/><path d=\"M15.52 12a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0\"/></g>"
     }
   },
   "width": 24,
@@ -329,18 +335,6 @@ export const uil: IconCollection = {
     },
     "arrow-up": {
       "body": "<path fill=\"currentColor\" d=\"m17.71 11.29l-5-5a1 1 0 0 0-.33-.21a1 1 0 0 0-.76 0a1 1 0 0 0-.33.21l-5 5a1 1 0 0 0 1.42 1.42L11 9.41V17a1 1 0 0 0 2 0V9.41l3.29 3.3a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42\"/>"
-    }
-  },
-  "width": 24,
-  "height": 24
-};
-
-// pajamas icon collection
-export const pajamas: IconCollection = {
-  "prefix": "pajamas",
-  "icons": {
-    "issue-type-enhancement": {
-      "body": "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M9.75.75a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0zm4.03 2.53a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 1 0 1.06 1.06zM8.293 4.646a1 1 0 0 1 1.414 0l1.647 1.647a1 1 0 0 1 0 1.414l-7.99 7.99a1 1 0 0 1-1.415 0L.303 14.051a1 1 0 0 1 0-1.414l7.99-7.99ZM9 6.061L7.06 8l.94.94L9.94 7L9 6.06Zm-7.283 7.283L6 9.06l.94.939l-4.284 4.283l-.94-.94ZM13 7a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 13 7m.78 4.78a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0m-9.56-8.5a.75.75 0 0 1 1.06-1.06l1.5 1.5a.75.75 0 0 1-1.06 1.06z\" clip-rule=\"evenodd\"/>"
     }
   },
   "width": 24,
@@ -461,6 +455,9 @@ export const tabler: IconCollection = {
     },
     "upload": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 9l5-5l5 5m-5-5v12\"/>"
+    },
+    "cards": {
+      "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m3.604 7.197l7.138-3.109a.96.96 0 0 1 1.27.527l4.924 11.902a1 1 0 0 1-.514 1.304L9.285 20.93a.96.96 0 0 1-1.271-.527L3.09 8.5a1 1 0 0 1 .514-1.304zM15 4h1a1 1 0 0 1 1 1v3.5M20 6q.396.168.768.315a1 1 0 0 1 .53 1.311L19 13\"/>"
     },
     "tool": {
       "body": "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 10h3V7L6.5 3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8z\"/>"
@@ -670,6 +667,9 @@ export const mdi: IconCollection = {
     "dots-vertical": {
       "body": "<path fill=\"currentColor\" d=\"M12 16a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2m0-6a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2m0-6a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2\"/>"
     },
+    "note-search-outline": {
+      "body": "<path fill=\"currentColor\" d=\"M15 3H5c-1.11 0-2 .89-2 2v5.82A6.4 6.4 0 0 1 5 9.5V5h7v5.82c.03.03.07.05.1.08c.34.34.63.71.87 1.1H19v7h-6.03c-.24.39-.53.76-.87 1.1c-.36.35-.75.64-1.16.9H19c1.11 0 2-.89 2-2V9zm-1 7V4.5l5.5 5.5zm-6.5 1C5 11 3 13 3 15.5c0 .88.25 1.71.69 2.4L.61 21L2 22.39l3.12-3.07c.69.43 1.51.68 2.38.68c2.5 0 4.5-2 4.5-4.5S10 11 7.5 11m0 7a2.5 2.5 0 0 1 0-5a2.5 2.5 0 0 1 0 5\"/>"
+    },
     "clock-edit-outline": {
       "body": "<path fill=\"currentColor\" d=\"M21 13.1c-.1 0-.3.1-.4.2l-1 1l2.1 2.1l1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8l-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4l-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3c-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8c0 4.1 3.1 7.5 7.1 7.9l-.1.2z\"/>"
     },
@@ -862,24 +862,6 @@ export const majesticons: IconCollection = {
   "height": 24
 };
 
-// proicons icon collection
-export const proicons: IconCollection = {
-  "prefix": "proicons",
-  "icons": {
-    "info": {
-      "body": "<g fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"9.25\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" d=\"M12 11.813v5\"/><circle cx=\"12\" cy=\"8.438\" r=\"1.25\" fill=\"currentColor\"/></g>"
-    },
-    "phone": {
-      "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"><rect width=\"12.5\" height=\"18.5\" x=\"5.75\" y=\"2.75\" rx=\"3\"/><path d=\"M11 17.75h2\"/></g>"
-    },
-    "text-expand": {
-      "body": "<g fill=\"none\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M7.125 4.5h14.5m-14.5 15h14.5m-7.5-10h7.5m-7.5 5h7.5\"/><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M6.875 16.5a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9m0-7a.5.5 0 0 1 .5.5v1.5h1.5a.5.5 0 1 1 0 1h-1.5V14a.5.5 0 1 1-1 0v-1.5h-1.5a.5.5 0 0 1 0-1h1.5V10a.5.5 0 0 1 .5-.5\" clip-rule=\"evenodd\"/></g>"
-    }
-  },
-  "width": 24,
-  "height": 24
-};
-
 // line-md icon collection
 export const line_md: IconCollection = {
   "prefix": "line-md",
@@ -907,15 +889,30 @@ export const line_md: IconCollection = {
   "height": 24
 };
 
+// proicons icon collection
+export const proicons: IconCollection = {
+  "prefix": "proicons",
+  "icons": {
+    "info": {
+      "body": "<g fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"9.25\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" d=\"M12 11.813v5\"/><circle cx=\"12\" cy=\"8.438\" r=\"1.25\" fill=\"currentColor\"/></g>"
+    },
+    "phone": {
+      "body": "<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"><rect width=\"12.5\" height=\"18.5\" x=\"5.75\" y=\"2.75\" rx=\"3\"/><path d=\"M11 17.75h2\"/></g>"
+    },
+    "text-expand": {
+      "body": "<g fill=\"none\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M7.125 4.5h14.5m-14.5 15h14.5m-7.5-10h7.5m-7.5 5h7.5\"/><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M6.875 16.5a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9m0-7a.5.5 0 0 1 .5.5v1.5h1.5a.5.5 0 1 1 0 1h-1.5V14a.5.5 0 1 1-1 0v-1.5h-1.5a.5.5 0 0 1 0-1h1.5V10a.5.5 0 0 1 .5-.5\" clip-rule=\"evenodd\"/></g>"
+    }
+  },
+  "width": 24,
+  "height": 24
+};
+
 // lsicon icon collection
 export const lsicon: IconCollection = {
   "prefix": "lsicon",
   "icons": {
     "unlink-filled": {
       "body": "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M7 2v2H6V2zm2.297.98a2.625 2.625 0 0 1 3.712 3.712l-1.561 1.562l-.707-.707l1.561-1.562a1.625 1.625 0 0 0-2.298-2.298L8.443 5.25l-.707-.707zM3.44 2.732l1.415 1.414l-.708.708l-1.414-1.415zM2 6h2v1H2zm3.379 2.313L3.817 9.874a1.625 1.625 0 0 0 2.298 2.298l1.562-1.561l.707.707l-1.562 1.562A2.625 2.625 0 0 1 3.11 9.167l1.562-1.561zM14 10h-2V9h2zm-2.146 1.146l1.414 1.415l-.707.707l-1.415-1.415zM9 14v-2h1v2z\" clip-rule=\"evenodd\"/>"
-    },
-    "setting-outline": {
-      "body": "<g fill=\"none\" stroke=\"currentColor\"><path d=\"m13.258 8.354l.904.805a.91.91 0 0 1 .196 1.169l-1.09 1.862a.94.94 0 0 1-.35.341a1 1 0 0 1-.478.125a1 1 0 0 1-.306-.046l-1.157-.382q-.304.195-.632.349l-.243 1.173a.93.93 0 0 1-.339.544a.97.97 0 0 1-.618.206H6.888a.97.97 0 0 1-.618-.206a.93.93 0 0 1-.338-.544l-.244-1.173a6 6 0 0 1-.627-.35L3.9 12.61a1 1 0 0 1-.306.046a1 1 0 0 1-.477-.125a.94.94 0 0 1-.35-.34l-1.129-1.863a.91.91 0 0 1 .196-1.187L2.737 8v-.354l-.904-.805a.91.91 0 0 1-.196-1.169L2.766 3.81a.94.94 0 0 1 .35-.341a1 1 0 0 1 .477-.125a1 1 0 0 1 .306.028l1.138.4q.305-.195.632-.349l.244-1.173a.93.93 0 0 1 .338-.544a.97.97 0 0 1 .618-.206h2.238a.97.97 0 0 1 .618.206c.175.137.295.33.338.544l.244 1.173q.325.155.627.35l1.162-.382a.98.98 0 0 1 .784.078c.145.082.265.2.35.34l1.128 1.863a.91.91 0 0 1-.182 1.187l-.918.782z\"/><path d=\"M10.5 8a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z\"/></g>"
     }
   },
   "width": 24,
@@ -1130,18 +1127,6 @@ export const ci: IconCollection = {
   "height": 24
 };
 
-// formkit icon collection
-export const formkit: IconCollection = {
-  "prefix": "formkit",
-  "icons": {
-    "trash": {
-      "body": "<path fill=\"currentColor\" d=\"M14.5 4h-13c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h13c.28 0 .5.22.5.5s-.22.5-.5.5\"/><path fill=\"currentColor\" d=\"m11.02 3.81l-.44-1.46a.5.5 0 0 0-.48-.36H5.9a.5.5 0 0 0-.48.36l-.44 1.46l-.96-.29l.44-1.46C4.65 1.42 5.23.99 5.9.99h4.2c.67 0 1.24.43 1.44 1.07l.44 1.46z\"/><path fill=\"currentColor\" d=\"M11.53 15H4.47c-.81 0-1.47-.64-1.5-1.45l-.34-9.87l1-.03l.34 9.87c0 .27.23.48.5.48h7.07c.27 0 .49-.21.5-.48l.34-9.87l1 .03l-.34 9.87c-.03.81-.69 1.45-1.5 1.45Z\"/><path fill=\"currentColor\" d=\"M6.5 11.62c-.28 0-.5-.22-.5-.5v-4c0-.28.22-.5.5-.5s.5.22.5.5v4c0 .28-.22.5-.5.5m3 0c-.28 0-.5-.22-.5-.5v-4c0-.28.22-.5.5-.5s.5.22.5.5v4c0 .28-.22.5-.5.5\"/>"
-    }
-  },
-  "width": 24,
-  "height": 24
-};
-
 // grommet-icons icon collection
 export const grommet_icons: IconCollection = {
   "prefix": "grommet-icons",
@@ -1189,7 +1174,6 @@ const getIconData = (iconName: string) => {
     solar,
     eos_icons,
     uil,
-    pajamas,
     ri,
     tabler,
     prime,
@@ -1208,8 +1192,8 @@ const getIconData = (iconName: string) => {
     lets_icons,
     eva,
     majesticons,
-    proicons,
     line_md,
+    proicons,
     lsicon,
     system_uicons,
     skill_icons,
@@ -1226,7 +1210,6 @@ const getIconData = (iconName: string) => {
     iconoir,
     cil,
     ci,
-    formkit,
     grommet_icons,
   };
   

@@ -1,3 +1,12 @@
+# [0.48.0](https://github.com/blinko-space/blinko/compare/v0.47.3...v0.48.0) (2025-03-31)
+
+
+### Features
+
+* enhance BlinkoShareDialog and editorStore functionality ([3f9053d](https://github.com/blinko-space/blinko/commit/3f9053da7b47320d312b2d3401e4d089bd48adf5))
+* support mutli eidtor ([494c24e](https://github.com/blinko-space/blinko/commit/494c24ec6c2cf746ab21ff97b56e2d7537eab6c4))
+* update icon collections and layout adjustments ([afbc1c6](https://github.com/blinko-space/blinko/commit/afbc1c66f567529268d05e5eeb262eefb64ca6f1))
+
 ## [0.47.3](https://github.com/blinko-space/blinko/compare/v0.47.2...v0.47.3) (2025-03-31)
 
 

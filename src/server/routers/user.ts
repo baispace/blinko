@@ -37,6 +37,42 @@ export const userRouter = router({
     .query(async () => {
       return await prisma.accounts.findMany()
     }),
+  publicUserList: publicProcedure
+    .meta({
+      openapi: {
+        method: 'GET', path: '/v1/user/public-user-list', summary: 'Find public user list',
+        description: 'Find public user list without admin permission', tags: ['User']
+      }
+    })
+    .input(z.void())
+    .output(z.array(z.object({
+      id: z.number().int(),
+      name: z.string(),
+      nickname: z.string(),
+      role: z.string(),
+      image: z.string().nullable(),
+      loginType: z.string(),
+      createdAt: z.coerce.date(),
+      updatedAt: z.coerce.date(),
+      description: z.string().nullable(),
+      linkAccountId: z.number().int().nullable()
+    })))
+    .query(async () => {
+      return await prisma.accounts.findMany({
+        where: { loginType: '' }, select: {
+          id: true,
+          name: true,
+          nickname: true,
+          role: true,
+          image: true,
+          loginType: true,
+          createdAt: true,
+          updatedAt: true,
+          description: true,
+          linkAccountId: true,
+        }
+      })
+    }),
   nativeAccountList: authProcedure
     .meta({
       openapi: {
@@ -213,9 +249,9 @@ export const userRouter = router({
           } else {
             const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
             if (hasSameUser) {
-              throw new TRPCError({ 
-                code: 'CONFLICT', 
-                message: 'Username already exists' 
+              throw new TRPCError({
+                code: 'CONFLICT',
+                message: 'Username already exists'
               });
             }
             const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } })
@@ -307,9 +343,9 @@ export const userRouter = router({
         const update: Prisma.accountsUpdateInput = {}
         const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
         if (hasSameUser) {
-          throw new TRPCError({ 
-            code: 'CONFLICT', 
-            message: 'Username already exists' 
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Username already exists'
           });
         }
         if (id) {
@@ -418,10 +454,10 @@ export const userRouter = router({
   login: publicProcedure
     .meta({
       openapi: {
-        method: 'POST', 
-        path: '/v1/user/login', 
+        method: 'POST',
+        path: '/v1/user/login',
         summary: 'user login',
-        description: 'user login, return user basic info and token', 
+        description: 'user login, return user basic info and token',
         tags: ['User']
       }
     })
@@ -440,37 +476,37 @@ export const userRouter = router({
     }))
     .mutation(async ({ input }) => {
       const { name, password } = input;
-      
-      const user = await prisma.accounts.findFirst({ 
-        where: { name } 
+
+      const user = await prisma.accounts.findFirst({
+        where: { name }
       });
-      
+
       if (!user) {
-        throw new TRPCError({ 
-          code: 'NOT_FOUND', 
-          message: 'user not found' 
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'user not found'
         });
       }
-      
+
       const isPasswordValid = await verifyPassword(password, user.password ?? '');
       if (!isPasswordValid) {
-        throw new TRPCError({ 
-          code: 'UNAUTHORIZED', 
-          message: 'password is incorrect' 
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'password is incorrect'
         });
       }
-      
-      const token = await genToken({ 
-        id: user.id, 
-        name: user.name ?? '', 
-        role: user.role 
+
+      const token = await genToken({
+        id: user.id,
+        name: user.name ?? '',
+        role: user.role
       });
-      
-      await prisma.accounts.update({ 
-        where: { id: user.id }, 
-        data: { apiToken: token } 
+
+      await prisma.accounts.update({
+        where: { id: user.id },
+        data: { apiToken: token }
       });
-      
+
       return {
         id: user.id,
         name: user.name ?? '',

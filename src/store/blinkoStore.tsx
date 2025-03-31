@@ -216,6 +216,21 @@ export class BlinkoStore implements Store {
     }
   })
 
+  internalShareNote = new PromiseState({
+    function: async (params: { id: number, accountIds: number[], isCancel: boolean }) => {
+      const res = await api.notes.internalShareNote.mutate(params)
+      RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
+      this.updateTicker++
+      return res
+    }
+  })
+
+  getInternalSharedUsers = new PromiseState({
+    function: async (id: number) => {
+      return await api.notes.getInternalSharedUsers.mutate({ id })
+    }
+  })
+
   async syncOfflineNotes() {
     if (!this.isOnline) return;
 

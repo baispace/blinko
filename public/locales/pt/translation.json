@@ -606,5 +606,9 @@
   "rerank": "Reclassificar",
   "use-custom-rerank-endpoint-description": "Quando ativado, os endpoints e as chaves de API do modelo incorporado serão reordenados.",
   "use-embedding-endpoint": "Usar ponto de extremidade de incorporação",
-  "rerank-score-description": "Defina um limiar de pontuação para o modelo de reorganização, abaixo do qual os resultados serão filtrados."
+  "rerank-score-description": "Defina um limiar de pontuação para o modelo de reorganização, abaixo do qual os resultados serão filtrados.",
+  "public-share": "Compartilhamento público",
+  "internal-share": "Compartilhamento Interno",
+  "no-team-members-found": "Nenhum membro da equipe encontrado",
+  "selected-users": "Usuários selecionados"
 }

@@ -611,5 +611,9 @@
   "rerank": "Yeniden sırala",
   "use-custom-rerank-endpoint-description": "Etkinleştirildiğinde, gömülü modelin uç noktaları ve API anahtarları yeniden sıralanacaktır.",
   "use-embedding-endpoint": "Katıştırma uç noktasını kullanın",
-  "rerank-score-description": "Yeniden sıralama modeli için bir puan eşiği belirleyin, bunun altındaki sonuçlar filtrelenecektir."
+  "rerank-score-description": "Yeniden sıralama modeli için bir puan eşiği belirleyin, bunun altındaki sonuçlar filtrelenecektir.",
+  "public-share": "Halka Açık Pay",
+  "internal-share": "İç Paylaşım",
+  "no-team-members-found": "Takım üyesi bulunamadı",
+  "selected-users": "Seçilen kullanıcılar"
 }

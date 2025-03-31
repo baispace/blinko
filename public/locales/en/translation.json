@@ -618,5 +618,9 @@
   "rerank": "Rerank",
   "use-custom-rerank-endpoint-description": "When enabled, the endpoints and API keys of the embedded model will be reordered",
   "use-embedding-endpoint": "Use embedding endpoint",
-  "rerank-score-description": "Set a score threshold for the reordering model, below which results will be filtered."
+  "rerank-score-description": "Set a score threshold for the reordering model, below which results will be filtered.",
+  "public-share": "Public Share",
+  "internal-share": "Internal Share",
+  "no-team-members-found": "No team members found",
+  "selected-users": "Selected users"
 }

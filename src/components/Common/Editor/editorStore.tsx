@@ -39,7 +39,7 @@ export class EditorStore {
   get showIsEditText() {
     if (this.mode == 'edit') {
       try {
-        const local = this.blinko.editContentStorage.list.find(i => Number(i.id) == Number(this.blinko.curSelectedNote?.id))
+        const local = this.blinko.editContentStorage.list?.find(i => Number(i.id) == Number(this.blinko.curSelectedNote?.id))
         if (local && local?.content?.length > 0) {
           return true
         } else {
@@ -54,7 +54,7 @@ export class EditorStore {
 
   reuseServerContent = () => {
     if (this.mode == 'edit') {
-      const local = this.blinko.editContentStorage.list.find(i => Number(i.id) == Number(this.blinko.curSelectedNote!.id))
+      const local = this.blinko.editContentStorage.list?.find(i => Number(i.id) == Number(this.blinko.curSelectedNote!.id))
       if (local) {
         this.vditor?.setValue(local.content)
       }

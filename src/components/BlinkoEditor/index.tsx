@@ -32,7 +32,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         }
       } else {
         try {
-          const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+          const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
           const blinkoContent = blinko.curSelectedNote?.content ?? ''
           return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
         } catch (error) {
@@ -51,7 +51,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       } else {
         try {
           blinko.curSelectedNote!.content = v
-          const hasLocal = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+          const hasLocal = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
           if (hasLocal) {
             hasLocal.content = v
             blinko.editContentStorage.save()
@@ -96,7 +96,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     } else {
       document.documentElement.style.setProperty('--min-editor-height', `unset`)
       try {
-        const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
         if (local && local?.content != '') {
           blinko.curSelectedNote!.content = local!.content
         }
@@ -160,7 +160,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
             metadata
           })
           try {
-            const index = blinko.editAttachmentsStorage.list.findIndex(i => i.id == blinko.curSelectedNote!.id)
+            const index = blinko.editAttachmentsStorage.list?.findIndex(i => i.id == blinko.curSelectedNote!.id)
             if (index != -1) {
               blinko.editAttachmentsStorage.remove(index)
               blinko.editContentStorage.remove(index)

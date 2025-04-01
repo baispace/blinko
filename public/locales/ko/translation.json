@@ -179,6 +179,7 @@
   "update-tag-name": "태그 이름 업데이트",
   "thinking": "생각...",
   "select-all": "모두 선택",
+  "deselect-all": "모두 선택 해제",
   "insert-before": "앞에 삽입",
   "insert-after": "다음에 삽입",
   "update-name": "업데이트 이름",

@@ -178,6 +178,7 @@
   "update-tag-name": "Переименовать тег",
   "thinking": "Думать...",
   "select-all": "Выбрать все",
+  "deselect-all": "Снять выделение",
   "insert-before": "Вставить перед",
   "insert-after": "Вставить после",
   "update-name": "Переименовать",

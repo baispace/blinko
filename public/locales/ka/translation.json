@@ -153,6 +153,8 @@
   "small-device-card-columns": "პატარა მოწყობილობის ბარათის სვეტები",
   "medium-device-card-columns": "საშუალო მოწყობილობის ბარათის სვეტები",
   "large-device-card-columns": "დიდი მოწყობილობის ბარათის სვეტები",
+  "device-card-columns": "მოწყობილობის ბარათის სვეტები",
+  "enter-custom-prompt-for-post-processing": "შეიყვანეთ პერსონალური მოთხოვნა პოსტის დამუშავებისთვის",
   "columns-for-different-devices": "სვეტები სხვადასხვა მოწყობილობებისთვის",
   "mobile": "მობილური",
   "tablet": "ტაბლეტი",
@@ -177,6 +179,7 @@
   "update-tag-name": "თეგის სახელის განახლება",
   "thinking": "ფიქრობს...",
   "select-all": "ყველას არჩევა",
+  "deselect-all": "ყველას გაუქმება",
   "ai-emoji": "AI ემოჯი",
   "custom-icon": "მორგებული ხატულა",
   "ai-enhanced-search": "AI გაძლიერებული ძიება",
@@ -573,8 +576,4 @@
   "impoort-from-bko": "",
   "minutes-ago": "",
   "months-ago": ""
-}
-�ეთ AI– ს ნოტების დასამუშავებლად",
-  "device-card-columns": "მოწყობილობის ბარათის სვეტები",
-  "enter-custom-prompt-for-post-processing": "შეიყვანეთ პერსონალური მოთხოვნა პოსტის დამუშავებისთვის"
 }

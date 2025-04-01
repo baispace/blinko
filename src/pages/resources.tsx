@@ -128,10 +128,25 @@ const Page = observer(() => {
                 <Button
                   size="sm"
                   variant="bordered"
-                  onPress={() => resourceStore.selectAllFiles(resources)}
-                  startContent={<Icon icon="material-symbols:select-all" className="w-5 h-5" />}
+                  onPress={() => {
+                    if (selectedItems.size === resources.length) {
+                      resourceStore.clearSelection();
+                    } else {
+                      resourceStore.selectAllFiles(resources);
+                    }
+                  }}
+                  startContent={
+                    <Icon
+                      icon={
+                        selectedItems.size === resources.length
+                          ? "material-symbols:deselect"
+                          : "material-symbols:select-all"
+                      }
+                      className="w-5 h-5"
+                    />
+                  }
                 >
-                  {t('select-all')}
+                  {selectedItems.size === resources.length ? t('deselect-all') : t('select-all')}
                 </Button>
               </motion.div>
 

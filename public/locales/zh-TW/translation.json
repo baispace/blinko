@@ -177,6 +177,7 @@
   "update-tag-name": "更新标签名称",
   "thinking": "思考中...",
   "select-all": "全部选择",
+  "deselect-all": "取消全选",
   "insert-before": "插入前",
   "insert-after": "插入内容后",
   "update-name": "更新名称",

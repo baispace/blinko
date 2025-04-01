@@ -1,3 +1,16 @@
+# [0.49.0](https://github.com/blinko-space/blinko/compare/v0.48.2...v0.49.0) (2025-04-01)
+
+
+### Bug Fixes
+
+* content in the trash doesn't show a public item ([ee7e70d](https://github.com/blinko-space/blinko/commit/ee7e70de8fd69802a6721403ca1d0c2a799073c7))
+* **memos:** add missing type field in notes upsert, set default value as 0, which is type of flash. close issue [#551](https://github.com/blinko-space/blinko/issues/551) ([4e76f30](https://github.com/blinko-space/blinko/commit/4e76f30a39940e5c11cf70190a8aa792a27cf9f1))
+
+
+### Features
+
+* add 'deselect-all' functionality and update translations ([d4d7eb6](https://github.com/blinko-space/blinko/commit/d4d7eb680d1f6557d28774b78637fd0188981750))
+
 ## [0.48.2](https://github.com/blinko-space/blinko/compare/v0.48.1...v0.48.2) (2025-03-31)
 
 

@@ -1,8 +1,5 @@
 import { makeAutoObservable } from "mobx";
 
-import { helper } from "../../lib/helper";
-import { _ } from "../../lib/lodash";
-
 export class StorageListState<T = any> {
   key: string;
   list: T[] = [];
@@ -38,12 +35,12 @@ export class StorageListState<T = any> {
 
   push(value: T) {
     this.list.push(value);
-    this.save();
+    this.save(this.list);
   }
 
   remove(index: number) {
     this.list.splice(index, 1);
-    this.save();
+    this.save(this.list);
   }
 
   removeByFind(predicate: (value: T, index: number, obj: T[]) => unknown) {
@@ -51,9 +48,14 @@ export class StorageListState<T = any> {
     if (idx !== -1) this.remove(idx);
   }
 
-  save() {
+  save(list?: T[]) {
     try {
-      localStorage.setItem(this.key, JSON.stringify(this.list));
+      if (list) {
+        this.list = list
+        localStorage.setItem(this.key, JSON.stringify(list));
+      } else {
+        localStorage.setItem(this.key, JSON.stringify(this.list));
+      }
     } catch (error) {
     }
   }

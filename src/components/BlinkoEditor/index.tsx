@@ -23,27 +23,43 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
   const store = RootStore.Local(() => ({
     get noteContent() {
       if (isCreateMode) {
-        const local = blinko.createContentStorage.value
-        const blinkoContent = blinko.noteContent
-        return local?.content != '' ? local?.content : blinkoContent
+        try {
+          const local = blinko.createContentStorage.value
+          const blinkoContent = blinko.noteContent
+          return local?.content != '' ? local?.content : blinkoContent
+        } catch (error) {
+          return ''
+        }
       } else {
-        const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
-        const blinkoContent = blinko.curSelectedNote?.content ?? ''
-        return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
+        try {
+          const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+          const blinkoContent = blinko.curSelectedNote?.content ?? ''
+          return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
+        } catch (error) {
+          return ''
+        }
       }
     },
     set noteContent(v: string) {
       if (isCreateMode) {
-        blinko.noteContent = v
-        blinko.createContentStorage.save({ content: v })
+        try {
+          blinko.noteContent = v
+          blinko.createContentStorage.save({ content: v })
+        } catch (error) {
+          console.error(error)
+        }
       } else {
-        blinko.curSelectedNote!.content = v
-        const hasLocal = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
-        if (hasLocal) {
-          hasLocal.content = v
-          blinko.editContentStorage.save()
-        } else {
-          blinko.editContentStorage.push({ content: v, id: Number(blinko.curSelectedNote!.id) })
+        try {
+          blinko.curSelectedNote!.content = v
+          const hasLocal = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+          if (hasLocal) {
+            hasLocal.content = v
+            blinko.editContentStorage.save()
+          } else {
+            blinko.editContentStorage.push({ content: v, id: Number(blinko.curSelectedNote!.id) })
+          }
+        } catch (error) {
+          console.error(error)
         }
       }
     },
@@ -79,9 +95,13 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }
     } else {
       document.documentElement.style.setProperty('--min-editor-height', `unset`)
-      const local = blinko.editContentStorage.list.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
-      if (local && local?.content != '') {
-        blinko.curSelectedNote!.content = local!.content
+      try {
+        const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
+        if (local && local?.content != '') {
+          blinko.curSelectedNote!.content = local!.content
+        }
+      } catch (error) {
+        console.error(error)
       }
     }
   }, [mode])
@@ -140,7 +160,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
             metadata
           })
           try {
-            const index = blinko.editAttachmentsStorage.list.findIndex(i => i.id == blinko.curSelectedNote!.id)
+            const index = blinko.editAttachmentsStorage.list?.findIndex(i => i.id == blinko.curSelectedNote!.id)
             if (index != -1) {
               blinko.editAttachmentsStorage.remove(index)
               blinko.editContentStorage.remove(index)

@@ -74,7 +74,7 @@ const cardIcons = [
   },
   {
     tooltip: <div className="w-[200px]">{i18n.t('add-tools-to-model')}</div>,
-    icon: 'pajamas:issue-type-enhancement',
+    icon: 'hugeicons:ai-chemistry-02',
     size: 20,
     containerSize: 30,
     onClick: () => {

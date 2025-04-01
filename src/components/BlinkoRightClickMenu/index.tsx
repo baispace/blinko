@@ -348,13 +348,15 @@ export const BlinkoRightClickMenu = observer(() => {
       <TopItem />
     </ContextMenuItem>
 
-    <ContextMenuItem onClick={handlePublic}>
-      <PublicItem />
-    </ContextMenuItem>
-
     <ContextMenuItem onClick={handleArchived}>
       <ArchivedItem />
     </ContextMenuItem>
+
+    {!blinko.curSelectedNote?.isRecycle ? (
+      <ContextMenuItem onClick={handlePublic}>
+      <PublicItem />
+    </ContextMenuItem>
+    ) : <></>}
 
     {blinko.config.value?.isUseAI ? (
       <ContextMenuItem onClick={handleAITag}>
@@ -417,10 +419,15 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>
-      <DropdownItem key="ShareItem" onPress={handlePublic}> <PublicItem />  </DropdownItem>
       <DropdownItem key="ArchivedItem" onPress={handleArchived}>
         <ArchivedItem />
       </DropdownItem>
+
+      {!blinko.curSelectedNote?.isRecycle ? (
+        <DropdownItem key="ShareItem" onPress={handlePublic}> 
+          <PublicItem />  
+        </DropdownItem>
+      ) : <></>}
 
       {blinko.config.value?.isUseAI ? (
         <DropdownItem key="AITagItem" onPress={handleAITag}>

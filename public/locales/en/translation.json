@@ -178,6 +178,7 @@
   "update-tag-name": "Update Tag Name",
   "thinking": "Thinking...",
   "select-all": "Select All",
+  "deselect-all": "Deselect All",
   "ai-emoji": "Ai Emoji",
   "custom-icon": "Custom Icon",
   "ai-enhanced-search": "AI Enhanced Search",
@@ -611,5 +612,16 @@
   "rebuild-stopped-by-user": "Rebuild stopped by user",
   "random-mode": "Random Walk",
   "related-notes": "Related notes",
-  "no-related-notes-found": "No related notes found"
+  "no-related-notes-found": "No related notes found",
+  "advanced": "Advanced",
+  "rerank-model-description": "Specify a model for reordering vector results to improve search accuracy",
+  "rerank-model": "Rerank model",
+  "rerank": "Rerank",
+  "use-custom-rerank-endpoint-description": "When enabled, the endpoints and API keys of the embedded model will be reordered",
+  "use-embedding-endpoint": "Use embedding endpoint",
+  "rerank-score-description": "Set a score threshold for the reordering model, below which results will be filtered.",
+  "public-share": "Public Share",
+  "internal-share": "Internal Share",
+  "no-team-members-found": "No team members found",
+  "selected-users": "Selected users"
 }

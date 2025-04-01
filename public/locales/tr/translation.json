@@ -178,6 +178,7 @@
   "update-tag-name": "Etiket İsmini Güncelle",
   "thinking": "Düşünüyor...",
   "select-all": "Tümünü Seç",
+  "deselect-all": "Hiçbirini Seçme",
   "ai-emoji": "Yapay Zeka Emojisi",
   "custom-icon": "Özel Simge",
   "ai-enhanced-search": "Yapay Zeka ile Geliştirilmiş Arama",
@@ -604,5 +605,16 @@
   "rebuild-stopped-by-user": "Kullanıcı tarafından yeniden yapılandırma durduruldu.",
   "random-mode": "Rastgele Yürüyüş",
   "related-notes": "İlgili notlar",
-  "no-related-notes-found": "Hiç ilgili not bulunamadı"
+  "no-related-notes-found": "Hiç ilgili not bulunamadı",
+  "advanced": "İleri",
+  "rerank-model-description": "Arama doğruluğunu artırmak için vektör sonuçlarını yeniden sıralamak için bir model belirtin.",
+  "rerank-model": "Yeniden sıralama modeli",
+  "rerank": "Yeniden sırala",
+  "use-custom-rerank-endpoint-description": "Etkinleştirildiğinde, gömülü modelin uç noktaları ve API anahtarları yeniden sıralanacaktır.",
+  "use-embedding-endpoint": "Katıştırma uç noktasını kullanın",
+  "rerank-score-description": "Yeniden sıralama modeli için bir puan eşiği belirleyin, bunun altındaki sonuçlar filtrelenecektir.",
+  "public-share": "Halka Açık Pay",
+  "internal-share": "İç Paylaşım",
+  "no-team-members-found": "Takım üyesi bulunamadı",
+  "selected-users": "Seçilen kullanıcılar"
 }

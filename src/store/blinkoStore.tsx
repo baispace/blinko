@@ -134,7 +134,7 @@ export class BlinkoStore implements Store {
   }
 
   private removeOfflineNote(id: number) {
-    const index = this.offlineNoteStorage.list.findIndex(note => note.id === id);
+    const index = this.offlineNoteStorage.list?.findIndex(note => note.id === id);
     if (index !== -1) {
       this.offlineNoteStorage.remove(index);
     }
@@ -213,6 +213,21 @@ export class BlinkoStore implements Store {
       RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
       this.updateTicker++
       return res
+    }
+  })
+
+  internalShareNote = new PromiseState({
+    function: async (params: { id: number, accountIds: number[], isCancel: boolean }) => {
+      const res = await api.notes.internalShareNote.mutate(params)
+      RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
+      this.updateTicker++
+      return res
+    }
+  })
+
+  getInternalSharedUsers = new PromiseState({
+    function: async (id: number) => {
+      return await api.notes.getInternalSharedUsers.mutate({ id })
     }
   })
 

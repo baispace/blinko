@@ -42,6 +42,7 @@ export const POST = async (req: NextRequest) => {
         if (fieldname === 'file') {
           const passThrough = new PassThrough();
           let fileSize = 0;
+          const decodedFilename = Buffer.from(info.filename, 'binary').toString('utf-8');
           
           stream.on('data', (chunk) => {
             fileSize += chunk.length;
@@ -52,7 +53,7 @@ export const POST = async (req: NextRequest) => {
             passThrough.end();
             fileInfo = {
               stream: passThrough,
-              filename: info.filename.replaceAll(" ", "_"),
+              filename: decodedFilename.replaceAll(" ", "_"),
               mimeType: info.mimeType,
               size: fileSize
             };

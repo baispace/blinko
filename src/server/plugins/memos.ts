@@ -4,6 +4,7 @@ import { userCaller } from '../routers/_app';
 import { FileService } from './files';
 import { getGlobalConfig } from '../routers/config';
 import { Context } from '../context';
+import { resetSequences } from '../routers/helper';
 type Memo = {
   id: number;
   creator_id: number;
@@ -122,6 +123,7 @@ export class Memos {
           }
 
           const note = await userCaller(ctx).notes.upsert({
+            type: 0,
             content: row.content,
             createdAt: new Date(row.created_ts * 1000),
             updatedAt: new Date(row.updated_ts * 1000),
@@ -144,6 +146,23 @@ export class Memos {
           progress: { current: i + 1, total }
         };
       }
+    }
+
+    try {
+      await resetSequences();
+      yield {
+        type: 'success',
+        content: 'Sequences reset successfully',
+        progress: { current: total, total }
+      };
+    } catch (error) {
+      console.error('reset sequences error->', error);
+      yield {
+        type: 'error',
+        content: `Failed to reset sequences: ${error.message}`,
+        error,
+        progress: { current: total, total }
+      };
     }
   }
 
@@ -258,6 +277,23 @@ export class Memos {
           progress: { current: i + 1, total }
         };
       }
+    }
+
+    try {
+      await resetSequences();
+      yield {
+        type: 'success',
+        content: 'Sequences reset successfully',
+        progress: { current: total, total }
+      };
+    } catch (error) {
+      console.error('reset sequences error->', error);
+      yield {
+        type: 'error',
+        content: `Failed to reset sequences: ${error.message}`,
+        error,
+        progress: { current: total, total }
+      };
     }
   }
 }

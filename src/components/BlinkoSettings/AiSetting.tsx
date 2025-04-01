@@ -15,116 +15,17 @@ import { showTipsDialog } from '../Common/TipsDialog';
 import TagSelector from '@/components/Common/TagSelector';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
+import axios from 'axios';
+import { StorageListState } from '@/store/standard/StorageListState';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
-import { StorageState } from '@/store/standard/StorageState';
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
   const ai = RootStore.Get(AiStore);
   const { t } = useTranslation();
   const isPc = useMediaQuery('(min-width: 768px)');
-  const embeddingModelsStorage = new StorageState({ key: 'embeddingModels' });
-
   const [rebuildProgress, setRebuildProgress] = useState<{ percentage: number; isRunning: boolean } | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [embeddingModels, setEmbeddingModels] = useState<Record<string, Array<{ label: string, value: string }>>>({});
-
-  const fetchModels = async (isEmbedding: boolean = false) => {
-    try {
-      const provider = blinko.config.value?.aiModelProvider!;
-      let endpoint = '';
-      let url = '';
-      let token = '';
-
-      if (provider === 'Ollama') {
-        endpoint = isEmbedding ?
-          (store.embeddingApiEndpoint || "http://127.0.0.1:11434") :
-          (store.apiEndPoint || "http://127.0.0.1:11434");
-        url = `${endpoint}/tags`;
-        token = '';
-      } else {
-        endpoint = isEmbedding ?
-          (store.embeddingApiEndpoint || "https://api.openai.com") :
-          (store.apiEndPoint || "https://api.openai.com");
-        url = `${endpoint}/models`;
-        token = isEmbedding ? store.embeddingApiKey : store.apiKey;
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: provider === 'Ollama' ? {
-          'Content-Type': 'application/json'
-        } : {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-
-      if (provider === 'Ollama') {
-        if (data && data.models && Array.isArray(data.models)) {
-          const modelsList = data.models.map(model => ({
-            label: model.name,
-            value: model.name
-          }));
-
-          if (!isEmbedding) {
-            ai.modelSelect[provider] = modelsList;
-          }
-
-          const currentEmbeddingModels = embeddingModelsStorage.value || {};
-          currentEmbeddingModels[provider] = modelsList;
-          embeddingModelsStorage.setValue(currentEmbeddingModels);
-          setEmbeddingModels(currentEmbeddingModels);
-          ai.embeddingSelect[provider] = modelsList;
-        }
-      } else {
-        if (data && data.data && Array.isArray(data.data)) {
-          if (!isEmbedding) {
-            const modelsList = data.data.map(model => ({
-              label: model.id,
-              value: model.id
-            }));
-            ai.modelSelect[provider] = modelsList;
-          }
-
-          const embeddingModelsList = data.data
-            .filter(model => model.id.toLowerCase().includes('embedding'))
-            .map(model => ({
-              label: model.id,
-              value: model.id
-            }));
-
-          if (embeddingModelsList.length > 0) {
-            const currentEmbeddingModels = embeddingModelsStorage.value || {};
-            currentEmbeddingModels[provider] = embeddingModelsList;
-            embeddingModelsStorage.setValue(currentEmbeddingModels);
-            setEmbeddingModels(currentEmbeddingModels);
-            ai.embeddingSelect[provider] = embeddingModelsList;
-          }
-        }
-      }
-
-      RootStore.Get(ToastPlugin).success(isEmbedding ? t('model-list-updated') : t('model-list-updated'));
-    } catch (error) {
-      console.error(`Error fetching ${isEmbedding ? 'embedding ' : ''}models:`, error);
-      RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
-    }
-  };
-
-  // Load embedding models from localStorage when component mounts
-  useEffect(() => {
-    const savedEmbeddingModels = embeddingModelsStorage.load();
-    if (savedEmbeddingModels) {
-      setEmbeddingModels(savedEmbeddingModels);
-
-      // Update AI store with the saved embedding models
-      if (blinko.config.value?.aiModelProvider && savedEmbeddingModels[blinko.config.value.aiModelProvider]) {
-        ai.embeddingSelect[blinko.config.value.aiModelProvider] = savedEmbeddingModels[blinko.config.value.aiModelProvider];
-      }
-    }
-  }, []);
 
   const fetchRebuildProgress = async () => {
     try {
@@ -164,7 +65,6 @@ export const AiSetting = observer(() => {
 
   useEffect(() => {
     fetchRebuildProgress();
-
     return () => {
       stopPolling();
     };
@@ -186,13 +86,73 @@ export const AiSetting = observer(() => {
     embeddingTopK: 2,
     embeddingScore: 1.5,
     embeddingLambda: 0.5,
+    rerankModel: '',
+    rerankTopK: 2,
+    rerankScore: 0.75,
+    rerankUseEembbingEndpoint: false,
     tavilyMaxResult: 5,
     showEmeddingAdvancedSetting: false,
+    showRerankAdvancedSetting: false,
     excludeEmbeddingTagId: null as number | null,
     aiSmartEditPrompt: '',
+    aiModelSelect: new StorageListState({ key: 'aiModelSelect' }),
+    embeddingModelSelect: new StorageListState({ key: 'embeddingModelSelect' }),
+    rerankModelSelect: new StorageListState({ key: 'rerankModelSelect' }),
     setIsOpen(open: boolean) {
       this.isOpen = open;
     },
+    async fetchModels() {
+      try {
+        const provider = blinko.config.value?.aiModelProvider!;
+        let modelList: any = [];
+        if (provider === 'Ollama') {
+          console.log(blinko.config.value?.aiApiEndpoint);
+          let { data } = await axios.get(`${!!blinko.config.value?.aiApiEndpoint ? blinko.config.value?.aiApiEndpoint : 'http://127.0.0.1:11434/api'}/tags`);
+          modelList = data.models.map(model => ({
+            label: model.name,
+            value: model.name
+          }));
+          this.aiModelSelect.save(modelList);
+          this.embeddingModelSelect.save(modelList);
+          this.rerankModelSelect.save(modelList);
+        } else {
+          let { data } = await axios.get(`${!!blinko.config.value?.aiApiEndpoint ? blinko.config.value?.aiApiEndpoint : 'https://api.openai.com'}/models`, {
+            headers: {
+              'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
+            }
+          });
+          modelList = data.data.map(model => ({
+            label: model.id,
+            value: model.id
+          }));
+          this.aiModelSelect.save(modelList);
+          this.embeddingModelSelect.save(modelList);
+          this.rerankModelSelect.save(modelList);
+        }
+
+        if (blinko.config.value?.embeddingApiEndpoint) {
+          let { data } = await axios.get(`${!!blinko.config.value?.embeddingApiEndpoint ? blinko.config.value?.embeddingApiEndpoint : 'https://api.openai.com'}/models`, {
+            headers: {
+              'Authorization': `Bearer ${blinko.config.value?.embeddingApiKey}`
+            }
+          });
+          this.embeddingModelSelect.save(data.data.map(model => ({
+            label: model.id,
+            value: model.id
+          })));
+          if (this.rerankUseEembbingEndpoint) {
+            this.rerankModelSelect.save(data.data.map(model => ({
+              label: model.id,
+              value: model.id
+            })));
+          }
+        }
+        RootStore.Get(ToastPlugin).success(t('model-list-updated'));
+      } catch (error) {
+        console.log(error);
+        RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+      }
+    }
   }));
 
   useEffect(() => {
@@ -212,6 +172,10 @@ export const AiSetting = observer(() => {
     store.tavilyMaxResult = Number(blinko.config.value?.tavilyMaxResult!);
     store.aiCommentPrompt = blinko.config.value?.aiCommentPrompt!;
     store.aiSmartEditPrompt = blinko.config.value?.aiSmartEditPrompt!;
+    store.rerankModel = blinko.config.value?.rerankModel!;
+    store.rerankTopK = blinko.config.value?.rerankTopK || 2;
+    store.rerankScore = blinko.config.value?.rerankScore || 0.75;
+    store.rerankUseEembbingEndpoint = blinko.config.value?.rerankUseEembbingEndpoint || false;
   }, [blinko.config.value]);
 
   return (
@@ -281,13 +245,19 @@ export const AiSetting = observer(() => {
           }
         />
 
+        <div style={{ display: 'none' }}>
+          <input type="text" autoComplete="true" />
+        </div>
+
         <Item
           leftContent={<>{t('model')}</>}
           rightContent={
             <div className="flex items-center gap-2">
               <Autocomplete
+                name={`embedding-model-${Math.random()}`}
                 radius="lg"
                 allowsCustomValue={true}
+                isClearable={false}
                 selectedKey={store.aiModel ?? ''}
                 inputValue={store.aiModel ?? ''}
                 onInputChange={(e) => {
@@ -309,7 +279,7 @@ export const AiSetting = observer(() => {
                 className="w-[200px] md:w-[300px]"
                 label={t('select-model')}
               >
-                {(ai.modelSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
+                {store.aiModelSelect.list.map((item) => (
                   <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
                 ))}
               </Autocomplete>
@@ -318,374 +288,13 @@ export const AiSetting = observer(() => {
                 color="primary"
                 variant='light'
                 isIconOnly
-                onPress={() => fetchModels(false)}
+                onPress={() => store.fetchModels()}
               >
                 <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
               </Button>
             </div>
           }
         />
-
-        <Item
-          type={isPc ? 'row' : 'col'}
-          leftContent={
-            <div className="flex items-center gap-2">
-              <ItemWithTooltip
-                content={<>{t('embedding-model')}</>}
-                toolTipContent={
-                  <div className="md:w-[300px] flex flex-col gap-2">
-                    <div>{t('embedding-model-description')}</div>
-                  </div>
-                }
-              />
-              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
-                Advanced
-              </Chip>
-            </div>
-          }
-          rightContent={
-            <div className="flex w-full ml-auto justify-start">
-              <Autocomplete
-                radius="lg"
-                allowsCustomValue={true}
-                inputValue={store.embeddingModel ?? ''}
-                selectedKey={store.embeddingModel ?? ''}
-                onInputChange={(e) => {
-                  store.embeddingModel = e;
-                }}
-                onBlur={(e) => {
-                  PromiseCall(
-                    api.config.update.mutate({
-                      key: 'embeddingModel',
-                      value: store.embeddingModel,
-                    }),
-                    { autoAlert: false },
-                  );
-                }}
-                onSelectionChange={(key) => {
-                  store.embeddingModel = key as string;
-                }}
-                size="sm"
-                className={`${isPc ? 'w-[250px]' : 'w-full'}`}
-                label={t('embedding-model')}
-              >
-                {((embeddingModels[blinko.config.value?.aiModelProvider!]) ||
-                  ai.embeddingSelect[blinko.config.value?.aiModelProvider!] || []).map((item) => (
-                    <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
-                  ))}
-              </Autocomplete>
-            </div>
-          }
-        />
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={<>{t('embedding-api-endpoint')}</>}
-            rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start items-center">
-                <Input
-                  size="sm"
-                  label={t('api-endpoint')}
-                  variant="bordered"
-                  className="w-full"
-                  placeholder="https://api.openapi.com/v1/"
-                  value={store.embeddingApiEndpoint}
-                  onChange={(e) => {
-                    store.embeddingApiEndpoint = e.target.value;
-                  }}
-                  onBlur={() => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'embeddingApiEndpoint',
-                        value: store.embeddingApiEndpoint,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                />
-                <Button
-                  size="sm"
-                  color="primary"
-                  variant='light'
-                  isIconOnly
-                  onPress={() => fetchModels(true)}
-                >
-                  <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
-                </Button>
-              </div>
-            }
-          />
-        )}
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={<>{t('embedding-api-key')}</>}
-            rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start">
-                <Input
-                  size="sm"
-                  label="API key"
-                  variant="bordered"
-                  className="w-full"
-                  placeholder="Enter your embedding api key"
-                  value={store.embeddingApiKey}
-                  onChange={(e) => {
-                    store.embeddingApiKey = e.target.value;
-                  }}
-                  onBlur={() => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'embeddingApiKey',
-                        value: store.embeddingApiKey,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                  endContent={
-                    <button className="focus:outline-none" type="button" onClick={(e) => (store.isEmbeddingKeyVisible = !store.isEmbeddingKeyVisible)}>
-                      {store.isEmbeddingKeyVisible ? <Icon icon="mdi:eye-off" width="20" height="20" /> : <Icon icon="mdi:eye" width="20" height="20" />}
-                    </button>
-                  }
-                  type={store.isEmbeddingKeyVisible ? 'text' : 'password'}
-                />
-              </div>
-            }
-          />
-        )}
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <ItemWithTooltip
-                content={<>{t('embedding-dimensions')}</>}
-                toolTipContent={
-                  <div className="md:w-[300px] flex flex-col gap-2">
-                    <div>{t('embedding-dimensions-description')}</div>
-                  </div>
-                }
-              />
-            }
-            rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start">
-                <Input
-                  type="number"
-                  size="sm"
-                  variant="bordered"
-                  //@ts-ignore
-                  value={store.embeddingDimensions}
-                  onChange={(e) => {
-                    store.embeddingDimensions = Number(e.target.value);
-                  }}
-                  onBlur={() => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'embeddingDimensions',
-                        value: store.embeddingDimensions,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                />
-              </div>
-            }
-          />
-        )}
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <ItemWithTooltip
-                content={<>Top K</>}
-                toolTipContent={
-                  <div className="md:w-[300px] flex flex-col gap-2">
-                    <div>{t('top-k-description')}</div>
-                  </div>
-                }
-              />
-            }
-            rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start">
-                <Slider
-                  onChangeEnd={(e) => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'embeddingTopK',
-                        value: store.embeddingTopK,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                  onChange={(e) => {
-                    store.embeddingTopK = Number(e);
-                  }}
-                  value={store.embeddingTopK}
-                  size="md"
-                  step={1}
-                  color="foreground"
-                  label={'value'}
-                  showSteps={true}
-                  maxValue={10}
-                  minValue={1}
-                  defaultValue={2}
-                  className="w-full"
-                />
-              </div>
-            }
-          />
-        )}
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <ItemWithTooltip
-                content={<>Score</>}
-                toolTipContent={
-                  <div className="md:w-[300px] flex flex-col gap-2">
-                    <div>{t('embedding-score-description')}</div>
-                  </div>
-                }
-              />
-            }
-            rightContent={
-              <div className="flex md:w-[300px] w-full ml-auto justify-start">
-                <Slider
-                  onChangeEnd={(e) => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'embeddingScore',
-                        value: store.embeddingScore,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                  onChange={(e) => {
-                    store.embeddingScore = Number(e);
-                  }}
-                  value={store.embeddingScore}
-                  size="md"
-                  step={0.01}
-                  color="foreground"
-                  label={'value'}
-                  showSteps={true}
-                  maxValue={1.0}
-                  minValue={0.2}
-                  defaultValue={0.75}
-                  className="w-full"
-                />
-              </div>
-            }
-          />
-        )}
-
-        {store.showEmeddingAdvancedSetting && (
-          <Item
-            className="ml-6"
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <div className="flex flex-col gap-1">
-                <ItemWithTooltip content={<>{t('exclude-tag-from-embedding')}</>} toolTipContent={t('exclude-tag-from-embedding-tip')} />
-                <div className="text-desc text-xs">{t('exclude-tag-from-embedding-desc')}</div>
-              </div>
-            }
-            rightContent={
-              <TagSelector
-                selectedTag={store.excludeEmbeddingTagId?.toString() || null}
-                onSelectionChange={(key) => {
-                  store.excludeEmbeddingTagId = key ? Number(key) : null;
-                  PromiseCall(
-                    api.config.update.mutate({
-                      key: 'excludeEmbeddingTagId',
-                      value: key ? Number(key) : null,
-                    }),
-                    { autoAlert: false },
-                  );
-                }}
-              />
-            }
-          />
-        )}
-
-        {blinko.config.value?.aiModelProvider != 'Ollama' && !process.env.NEXT_PUBLIC_IS_DEMO && (
-          <Item
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <div className="flex flex-col ga-1">
-                <div>API Key</div>
-                <div className="text-desc text-xs">{t('user-custom-openai-api-key')}</div>
-              </div>
-            }
-            rightContent={
-              <Input
-                size="sm"
-                label="API key"
-                variant="bordered"
-                className="w-full md:w-[300px]"
-                placeholder="Enter your api key"
-                value={store.apiKey}
-                onChange={(e) => {
-                  store.apiKey = e.target.value;
-                }}
-                onBlur={(e) => {
-                  PromiseCall(
-                    api.config.update.mutate({
-                      key: 'aiApiKey',
-                      value: store.apiKey.trim(),
-                    }),
-                    { autoAlert: false },
-                  );
-                }}
-                endContent={
-                  <button className="focus:outline-none" type="button" onClick={(e) => (store.isVisible = !store.isVisible)} aria-label="toggle password visibility">
-                    {store.isVisible ? <Icon icon="mdi:eye-off" width="20" height="20" /> : <Icon icon="mdi:eye" width="20" height="20" />}
-                  </button>
-                }
-                type={store.isVisible ? 'text' : 'password'}
-              />
-            }
-          />
-        )}
-
-        {blinko.config.value?.aiModelProvider == 'AzureOpenAI' && (
-          <Item
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <div className="flex flex-col ga-1">
-                <>{t('user-custom-azureopenai-api-version')}</>
-              </div>
-            }
-            rightContent={
-              <Input
-                variant="bordered"
-                className="w-full md:w-[300px]"
-                placeholder="Enter API version"
-                value={store.apiVersion}
-                onChange={(e) => {
-                  store.apiVersion = e.target.value;
-                }}
-                onBlur={(e) => {
-                  PromiseCall(
-                    api.config.update.mutate({
-                      key: 'aiApiVersion',
-                      value: store.apiVersion,
-                    }),
-                    { autoAlert: false },
-                  );
-                }}
-                type="text"
-              />
-            }
-          />
-        )}
 
         {(blinko.config.value?.aiModelProvider == 'OpenAI' || blinko.config.value?.aiModelProvider == 'Ollama') && (
           <Item
@@ -734,6 +343,70 @@ export const AiSetting = observer(() => {
             }
           />
         )}
+
+
+        {
+          blinko.config.value?.aiModelProvider != 'Ollama' && !process.env.NEXT_PUBLIC_IS_DEMO &&
+          <Item
+            type={isPc ? 'row' : 'col'}
+            leftContent={<div className="flex flex-col ga-1">
+              <div>API Key</div>
+              <div className="text-desc text-xs">{t('user-custom-openai-api-key')}</div>
+            </div>}
+            rightContent={
+              <Input
+                size='sm'
+                label="API key"
+                variant="bordered"
+                className="w-full md:w-[300px]"
+                placeholder="Enter your api key"
+                value={store.apiKey}
+                onChange={e => { store.apiKey = e.target.value }}
+                onBlur={e => {
+                  PromiseCall(api.config.update.mutate({
+                    key: 'aiApiKey',
+                    value: store.apiKey.trim()
+                  }), { autoAlert: false })
+                }}
+                endContent={
+                  <button className="focus:outline-none" type="button" onClick={e => store.isVisible = !store.isVisible} aria-label="toggle password visibility">
+                    {store.isVisible ? (
+                      <Icon icon="mdi:eye-off" width="20" height="20" />
+                    ) : (
+                      <Icon icon="mdi:eye" width="20" height="20" />
+                    )}
+                  </button>
+                }
+                type={store.isVisible ? "text" : "password"}
+              />
+            } />
+        }
+
+        {
+          blinko.config.value?.aiModelProvider == 'AzureOpenAI' &&
+          <Item
+            type={isPc ? 'row' : 'col'}
+            leftContent={<div className="flex flex-col ga-1">
+              <>{t('user-custom-azureopenai-api-version')}</>
+            </div>}
+            rightContent={
+              <Input
+                variant="bordered"
+                className="w-full md:w-[300px]"
+                placeholder="Enter API version"
+                value={store.apiVersion}
+                onChange={e => { store.apiVersion = e.target.value }}
+                onBlur={e => {
+                  PromiseCall(api.config.update.mutate({
+                    key: 'aiApiVersion',
+                    value: store.apiVersion
+                  }), { autoAlert: false })
+                }}
+                type="text"
+              />
+            } />
+        }
+
 
         <Item
           type={isPc ? 'row' : 'col'}
@@ -795,6 +468,487 @@ export const AiSetting = observer(() => {
           }
         />
       </CollapsibleCard>
+
+
+      <CollapsibleCard icon="mingcute:vector-line" title={t('embedding-model')} className="mt-4">
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={
+            <div className="flex items-center gap-2">
+              <ItemWithTooltip
+                content={<>{t('embedding-model')}</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('embedding-model-description')}</div>
+                  </div>
+                }
+              />
+              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
+                {t('advanced')}
+              </Chip>
+            </div>
+          }
+          rightContent={
+            <div className="flex w-full ml-auto justify-start">
+              <Autocomplete
+                radius="lg"
+                isClearable={false}
+                allowsCustomValue={true}
+                inputValue={store.embeddingModel ?? ''}
+                selectedKey={store.embeddingModel ?? ''}
+                autoComplete="off"
+                onInputChange={(e) => {
+                  store.embeddingModel = e;
+                }}
+                onBlur={(e) => {
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'embeddingModel',
+                      value: store.embeddingModel,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+                onSelectionChange={(key) => {
+                  store.embeddingModel = key as string;
+                }}
+                size="sm"
+                className={`${isPc ? 'w-[250px]' : 'w-full'}`}
+                label={t('embedding-model')}
+              >
+                {store.embeddingModelSelect.list.map((item) => (
+                  <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+                ))}
+              </Autocomplete>
+              {
+                store.embeddingApiEndpoint &&
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant='light'
+                  isIconOnly
+                  onPress={() => store.fetchModels()}
+                >
+                  <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
+                </Button>
+              }
+            </div>
+          }
+        />
+
+{store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={<>{t('embedding-api-endpoint')}</>}
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start items-center">
+                <Input
+                  size="sm"
+                  label={t('api-endpoint')}
+                  variant="bordered"
+                  autoComplete="off"
+                  className="w-full"
+                  placeholder="https://api.openapi.com/v1/"
+                  value={store.embeddingApiEndpoint}
+                  onChange={(e) => {
+                    store.embeddingApiEndpoint = e.target.value;
+                  }}
+                  onBlur={() => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'embeddingApiEndpoint',
+                        value: store.embeddingApiEndpoint,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={<>{t('embedding-api-key')}</>}
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+                <Input
+                  size="sm"
+                  label="API key"
+                  variant="bordered"
+                  className="w-full"
+                  placeholder="Enter your embedding api key"
+                  value={store.embeddingApiKey}
+                  onChange={(e) => {
+                    store.embeddingApiKey = e.target.value;
+                  }}
+                  onBlur={() => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'embeddingApiKey',
+                        value: store.embeddingApiKey,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  endContent={
+                    <button className="focus:outline-none" type="button" onClick={(e) => (store.isEmbeddingKeyVisible = !store.isEmbeddingKeyVisible)}>
+                      {store.isEmbeddingKeyVisible ? <Icon icon="mdi:eye-off" width="20" height="20" /> : <Icon icon="mdi:eye" width="20" height="20" />}
+                    </button>
+                  }
+                  type={store.isEmbeddingKeyVisible ? 'text' : 'password'}
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <ItemWithTooltip
+                content={<>{t('embedding-dimensions')}</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('embedding-dimensions-description')}</div>
+                  </div>
+                }
+              />
+            }
+            rightContent={
+              <div className="flex md:w-[100px] w-full ml-auto justify-start">
+                <Input
+                  type="number"
+                  size="sm"
+                  variant="bordered"
+                  //@ts-ignore
+                  value={store.embeddingDimensions}
+                  onChange={(e) => {
+                    store.embeddingDimensions = Number(e.target.value);
+                  }}
+                  onBlur={() => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'embeddingDimensions',
+                        value: store.embeddingDimensions,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <ItemWithTooltip
+                content={<>Top K</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('top-k-description')}</div>
+                  </div>
+                }
+              />
+            }
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+                <Slider
+                  onChangeEnd={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'embeddingTopK',
+                        value: store.embeddingTopK,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.embeddingTopK = Number(e);
+                  }}
+                  value={store.embeddingTopK}
+                  size="md"
+                  step={1}
+                  color="foreground"
+                  label={'value'}
+                  showSteps={false}
+                  maxValue={50}
+                  minValue={1}
+                  defaultValue={2}
+                  className="w-full"
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <ItemWithTooltip
+                content={<>Score</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('embedding-score-description')}</div>
+                  </div>
+                }
+              />
+            }
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+                <Slider
+                  onChangeEnd={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'embeddingScore',
+                        value: store.embeddingScore,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.embeddingScore = Number(e);
+                  }}
+                  value={store.embeddingScore}
+                  size="md"
+                  step={0.01}
+                  color="foreground"
+                  label={'value'}
+                  showSteps={false}
+                  maxValue={1.0}
+                  minValue={0.2}
+                  defaultValue={0.75}
+                  className="w-full"
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showEmeddingAdvancedSetting && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <div className="flex flex-col gap-1">
+                <ItemWithTooltip content={<>{t('exclude-tag-from-embedding')}</>} toolTipContent={t('exclude-tag-from-embedding-tip')} />
+                <div className="text-desc text-xs">{t('exclude-tag-from-embedding-desc')}</div>
+              </div>
+            }
+            rightContent={
+              <TagSelector
+                selectedTag={store.excludeEmbeddingTagId?.toString() || null}
+                onSelectionChange={(key) => {
+                  store.excludeEmbeddingTagId = key ? Number(key) : null;
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'excludeEmbeddingTagId',
+                      value: key ? Number(key) : null,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+              />
+            }
+          />
+        )}
+
+
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={
+            <div className="flex items-center gap-2">
+              <ItemWithTooltip
+                content={<>{t('rerank-model')}</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('rerank-model-description')}</div>
+                  </div>
+                }
+              />
+              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showRerankAdvancedSetting = !store.showRerankAdvancedSetting)}>
+                {t('advanced')}
+              </Chip>
+            </div>
+          }
+          rightContent={
+            <div className="flex md:w-[300px] w-full ml-auto justify-start items-center gap-2">
+              <Autocomplete
+                key={'rerank-model'}
+                name={`rerank-model-${Math.random()}`}
+                radius="lg"
+                allowsCustomValue={true}
+                inputValue={store.rerankModel ?? ''}
+                selectedKey={store.rerankModel ?? ''}
+                onInputChange={(e) => {
+                  store.rerankModel = e;
+                }}
+                isClearable={false}
+                autoComplete="off"
+                onBlur={(e) => {
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'rerankModel',
+                      value: store.rerankModel,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+                onSelectionChange={(key) => {
+                  store.rerankModel = key as string;
+                }}
+                size="sm"
+                className="w-full"
+                label={t('rerank-model')}
+                placeholder="cohere/rerank-english-v2.0"
+              >
+                {store.rerankModelSelect.list.map((item) => (
+                  <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+                ))}
+              </Autocomplete>
+              <Button
+                size="sm"
+                color="primary"
+                variant='light'
+                isIconOnly
+                onPress={() => store.fetchModels()}
+              >
+                <Icon className='hover:rotate-180 transition-all' icon="fluent:arrow-sync-12-filled" width={18} height={18} />
+              </Button>
+            </div>
+          }
+        />
+
+        {store.showRerankAdvancedSetting && store.rerankModel && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <ItemWithTooltip
+                content={<>{t('use-embedding-endpoint')}</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('use-custom-rerank-endpoint-description')}</div>
+                  </div>
+                }
+              />
+            }
+            rightContent={
+              <Switch
+                size="sm"
+                isSelected={store.rerankUseEembbingEndpoint}
+                onChange={(e) => {
+                  store.rerankUseEembbingEndpoint = e.target.checked;
+                  PromiseCall(
+                    api.config.update.mutate({
+                      key: 'rerankUseEembbingEndpoint',
+                      value: e.target.checked,
+                    }),
+                    { autoAlert: false },
+                  );
+                }}
+              />
+            }
+          />
+        )}
+
+        {store.showRerankAdvancedSetting && store.rerankModel && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={<>{t('rerank')} Top K</>
+            }
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+                <Slider
+                  onChangeEnd={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'rerankTopK',
+                        value: store.rerankTopK,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.rerankTopK = Number(e);
+                  }}
+                  value={store.rerankTopK}
+                  size="md"
+                  step={1}
+                  color="foreground"
+                  label={'value'}
+                  showSteps={false}
+                  maxValue={20}
+                  minValue={1}
+                  defaultValue={2}
+                  className="w-full"
+                />
+              </div>
+            }
+          />
+        )}
+
+        {store.showRerankAdvancedSetting && store.rerankModel && (
+          <Item
+            className="ml-6"
+            type={isPc ? 'row' : 'col'}
+            leftContent={
+              <ItemWithTooltip
+                content={<>{t('rerank')} Score</>}
+                toolTipContent={
+                  <div className="md:w-[300px] flex flex-col gap-2">
+                    <div>{t('rerank-score-description')}</div>
+                  </div>
+                }
+              />
+            }
+            rightContent={
+              <div className="flex md:w-[300px] w-full ml-auto justify-start">
+                <Slider
+                  onChangeEnd={(e) => {
+                    PromiseCall(
+                      api.config.update.mutate({
+                        key: 'rerankScore',
+                        value: store.rerankScore,
+                      }),
+                      { autoAlert: false },
+                    );
+                  }}
+                  onChange={(e) => {
+                    store.rerankScore = Number(e);
+                  }}
+                  value={store.rerankScore}
+                  size="md"
+                  step={0.01}
+                  color="foreground"
+                  label={'value'}
+                  showSteps={false}
+                  maxValue={1.0}
+                  minValue={0.2}
+                  defaultValue={0.75}
+                  className="w-full"
+                />
+              </div>
+            }
+          />
+        )}
+
+
+      </CollapsibleCard>
+
 
       <CollapsibleCard className="mt-4" icon="tabler:robot" title={t('ai-post-processing')}>
         <Item
@@ -965,7 +1119,7 @@ export const AiSetting = observer(() => {
         )}
       </CollapsibleCard>
 
-      <CollapsibleCard icon="pajamas:issue-type-enhancement" title={t('ai-tools')} className="mt-4">
+      <CollapsibleCard icon="hugeicons:ai-chemistry-02" title={t('ai-tools')} className="mt-4">
         <Item
           leftContent={<>{t('tavily-api-key')}</>}
           rightContent={

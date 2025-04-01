@@ -118,6 +118,15 @@ module.exports = withBundleAnalyzer(withPWA({
             value: 'public, max-age=31536000, immutable',
           },
         ],
+        source: '/dist/js/lute/lute.min.js',
+      },
+      {
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
         source: '/logo-light.png',
       },
       {

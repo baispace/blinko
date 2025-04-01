@@ -604,5 +604,16 @@
   "rebuild-stopped-by-user": "إعادة البناء توقفت بواسطة المستخدم",
   "random-mode": "جولة عشوائية",
   "related-notes": "ملاحظات ذات صلة",
-  "no-related-notes-found": "لم يتم العثور على ملاحظات ذات صلة"
+  "no-related-notes-found": "لم يتم العثور على ملاحظات ذات صلة",
+  "advanced": "متقدم",
+  "rerank-model-description": "حدد نموذجًا لإعادة ترتيب نتائج الفيكتور لتحسين دقة البحث",
+  "rerank-model": "نموذج إعادة الترتيب",
+  "rerank": "إعادة ترتيب",
+  "use-custom-rerank-endpoint-description": "عند التمكين، سيتم إعادة ترتيب نقاط النهاية ومفاتيح API للنموذج المضمن",
+  "use-embedding-endpoint": "استخدم نقطة انتهاء التضمين",
+  "rerank-score-description": "حدد عتبة درجة لنموذج إعادة الترتيب، سيتم تصفية النتائج دونها.",
+  "public-share": "المشاركة العامة",
+  "internal-share": "المشاركة الداخلية",
+  "no-team-members-found": "لم يتم العثور على أعضاء في الفريق",
+  "selected-users": "المستخدمين المحددين"
 }

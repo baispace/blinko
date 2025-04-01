@@ -178,6 +178,7 @@
   "update-tag-name": "Tag-Name aktualisieren",
   "thinking": "Denke...",
   "select-all": "Alle auswählen",
+  "deselect-all": "Alle abwählen",
   "insert-before": "Einfügen vor",
   "insert-after": "Einfügen nach",
   "update-name": "Name aktualisieren",
@@ -604,5 +605,16 @@
   "rebuild-stopped-by-user": "Wiederaufbau vom Benutzer gestoppt",
   "random-mode": "Zufallsweg",
   "related-notes": "Verwandte Notizen",
-  "no-related-notes-found": "Keine zugehörigen Notizen gefunden"
+  "no-related-notes-found": "Keine zugehörigen Notizen gefunden",
+  "advanced": "Fortgeschritten",
+  "rerank-model-description": "Geben Sie ein Modell zur Neuordnung von Vektorenergebnissen an, um die Suchgenauigkeit zu verbessern.",
+  "rerank-model": "Neubewertungsmodell",
+  "rerank": "Neu ordnen",
+  "use-custom-rerank-endpoint-description": "Wenn aktiviert, werden die Endpunkte und API-Schlüssel des eingebetteten Modells neu geordnet",
+  "use-embedding-endpoint": "Verwenden Sie den Einbettungs-Endpunkt",
+  "rerank-score-description": "Legen Sie eine Punktschwelle für das Neuordnungsmodell fest, unterhalb derer Ergebnisse gefiltert werden.",
+  "public-share": "Öffentlicher Anteil",
+  "internal-share": "Interner Anteil",
+  "no-team-members-found": "Keine Teammitglieder gefunden",
+  "selected-users": "Ausgewählte Benutzer"
 }

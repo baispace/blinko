@@ -67,21 +67,55 @@ export const configRouter = router({
       const { key, value } = input
       const isUserPreferConfig = ZUserPerferConfigKey.safeParse(key).success;
       if (isUserPreferConfig) {
-        const hasKey = await prisma.config.findFirst({ where: { userId, key } })
-        if (hasKey) {
-          return await prisma.config.update({ where: { id: hasKey.id }, data: { config: { type: typeof value, value } } })
+        const matchedConfigs = await prisma.config.findMany({ where: { userId, key } });
+        
+        if (matchedConfigs.length > 0) {
+          const configToKeep = matchedConfigs[0];
+          const updateResult = await prisma.config.update({ 
+            where: { id: configToKeep?.id }, 
+            data: { config: { type: typeof value, value } } 
+          });
+          
+          if (matchedConfigs.length > 1) {
+            await prisma.config.deleteMany({
+              where: {
+                userId,
+                key,
+                id: { notIn: [configToKeep!.id!] }
+              }
+            });
+          }
+          
+          return updateResult;
         }
-        return await prisma.config.create({ data: { userId, key, config: { type: typeof value, value } } })
+        
+        return await prisma.config.create({ data: { userId, key, config: { type: typeof value, value } } });
       } else {
         if (ctx.role !== 'superadmin') {
           throw new Error('You are not allowed to update global config')
         }
-        // global config
-        const hasKey = await prisma.config.findFirst({ where: { key } })
-        if (hasKey) {
-          return await prisma.config.update({ where: { id: hasKey.id }, data: { config: { type: typeof value, value } } })
+        const matchedConfigs = await prisma.config.findMany({ where: { key } });
+        
+        if (matchedConfigs.length > 0) {
+          const configToKeep = matchedConfigs[0];
+          const updateResult = await prisma.config.update({ 
+            where: { id: configToKeep?.id }, 
+            data: { config: { type: typeof value, value } } 
+          });
+          
+          if (matchedConfigs.length > 1) {
+            await prisma.config.deleteMany({
+              where: {
+                key,
+                id: { notIn: [configToKeep!.id!] }
+              }
+            });
+          }
+          
+          return updateResult;
         }
-        return await prisma.config.create({ data: { key, config: { type: typeof value, value } } })
+        
+        return await prisma.config.create({ data: { key, config: { type: typeof value, value } } });
       }
     }),
 

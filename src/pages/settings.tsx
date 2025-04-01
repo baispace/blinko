@@ -20,7 +20,6 @@ import { ScrollableTabs, TabItem } from '@/components/Common/ScrollableTabs';
 import { useState } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PluginSetting } from '@/components/BlinkoSettings/PluginSetting';
-import i18n from '@/lib/i18n';
 
 type SettingItem = {
   key: string;
@@ -130,7 +129,7 @@ export const allSettings: SettingItem[] = [
   {
     key: 'plugin',
     title: ('plugin-settings'),
-    icon: 'mingcute:plugin-line',
+    icon: 'hugeicons:plug-socket',
     component: <PluginSetting />,
     requireAdmin: true,
     keywords: ['plugin', 'plugins', '插件', '插件设置'],

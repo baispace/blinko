@@ -612,7 +612,7 @@
     "random-mode": "Willekeurige wandeling",
     "related-notes": "Gerelateerde notities",
     "no-related-notes-found": "Geen gerelateerde notities gevonden",
-    "advanced": "Gevanceerd",
+    "advanced": "Geavanceerd",
     "rerank-model-description": "Specificeer een model voor het herordenen van vectorresultaten om de zoeknauwkeurigheid te verbeteren",
     "rerank-model": "Herordening model",
     "rerank": "Herordenen",

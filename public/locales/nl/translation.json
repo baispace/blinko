@@ -611,5 +611,16 @@
     "rebuild-stopped-by-user": "Herbouwen gestopt door gebruiker",
     "random-mode": "Willekeurige wandeling",
     "related-notes": "Gerelateerde notities",
-    "no-related-notes-found": "Geen gerelateerde notities gevonden"
+    "no-related-notes-found": "Geen gerelateerde notities gevonden",
+    "advanced": "Gevanceerd",
+    "rerank-model-description": "Specificeer een model voor het herordenen van vectorresultaten om de zoeknauwkeurigheid te verbeteren",
+    "rerank-model": "Herordening model",
+    "rerank": "Herordenen",
+    "use-custom-rerank-endpoint-description": "Indien ingeschakeld, worden de eindpunten en API-sleutels van het ingebedde model herordend",
+    "use-embedding-endpoint": "Gebruik ingebed eindpunt",
+    "rerank-score-description": "Stel een score drempel in voor het herordeningsmodel, waaronder resultaten worden gefilterd.",
+    "public-share": "Openbaar delen",
+    "internal-share": "Intern delen",
+    "no-team-members-found": "Geen teamleden gevonden",
+    "selected-users": "Geselecteerde gebruikers"
 }

@@ -94,6 +94,7 @@ export class BaseStore implements Store {
     { value: 'ru', label: 'Русский' },
     { value: 'ko', label: '한국어' },
     { value: 'ja', label: '日本語' },
+    { value: 'nl', label: 'Nederlands' },
   ];
 
   changeLanugage(i18n, locale) {

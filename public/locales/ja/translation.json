@@ -176,6 +176,7 @@
   "update-tag-name": "タグ名の更新",
   "thinking": "考える...",
   "select-all": "すべて選択",
+  "deselect-all": "すべての選択を解除",
   "insert-before": "前に挿入",
   "insert-after": "の後に挿入する。",
   "update-name": "更新名",

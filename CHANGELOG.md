@@ -1,3 +1,10 @@
+## [0.49.1](https://github.com/blinko-space/blinko/compare/v0.49.0...v0.49.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* add optional chaining to prevent errors when accessing editContentStorage ([3c044c6](https://github.com/blinko-space/blinko/commit/3c044c681cfe568725ddb042935ccc1fcef9a425))
+
 # [0.49.0](https://github.com/blinko-space/blinko/compare/v0.48.2...v0.49.0) (2025-04-01)
 
 

@@ -134,7 +134,7 @@ export class BlinkoStore implements Store {
   }
 
   private removeOfflineNote(id: number) {
-    const index = this.offlineNoteStorage.list.findIndex(note => note.id === id);
+    const index = this.offlineNoteStorage.list?.findIndex(note => note.id === id);
     if (index !== -1) {
       this.offlineNoteStorage.remove(index);
     }

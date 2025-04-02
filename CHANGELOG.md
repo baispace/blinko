@@ -1,3 +1,30 @@
+## [0.49.2](https://github.com/blinko-space/blinko/compare/v0.49.1...v0.49.2) (2025-04-02)
+
+
+### Bug Fixes
+
+* **memos:** reimport memos notes, If the notes have not been modified, can fix the problem that the historical notes are not displayed, which note's type is -1. related issue: [#551](https://github.com/blinko-space/blinko/issues/551) ([c1fb5b6](https://github.com/blinko-space/blinko/commit/c1fb5b658f0dfa38be27c42b373a77b6d80aab2b))
+
+## [0.49.1](https://github.com/blinko-space/blinko/compare/v0.49.0...v0.49.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* add optional chaining to prevent errors when accessing editContentStorage ([3c044c6](https://github.com/blinko-space/blinko/commit/3c044c681cfe568725ddb042935ccc1fcef9a425))
+
+# [0.49.0](https://github.com/blinko-space/blinko/compare/v0.48.2...v0.49.0) (2025-04-01)
+
+
+### Bug Fixes
+
+* content in the trash doesn't show a public item ([ee7e70d](https://github.com/blinko-space/blinko/commit/ee7e70de8fd69802a6721403ca1d0c2a799073c7))
+* **memos:** add missing type field in notes upsert, set default value as 0, which is type of flash. close issue [#551](https://github.com/blinko-space/blinko/issues/551) ([4e76f30](https://github.com/blinko-space/blinko/commit/4e76f30a39940e5c11cf70190a8aa792a27cf9f1))
+
+
+### Features
+
+* add 'deselect-all' functionality and update translations ([d4d7eb6](https://github.com/blinko-space/blinko/commit/d4d7eb680d1f6557d28774b78637fd0188981750))
+
 ## [0.48.2](https://github.com/blinko-space/blinko/compare/v0.48.1...v0.48.2) (2025-03-31)
 
 

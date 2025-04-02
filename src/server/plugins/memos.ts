@@ -117,12 +117,13 @@ export class Memos {
           }
         } else {
           const blinkoNote = await prisma.notes.findFirst({ where: { content: row.content } });
-          if (blinkoNote) {
+          if (blinkoNote && blinkoNote.type !== -1) {
             yield { type: 'skip', content: row?.content, progress: { current: i + 1, total } };
             continue;
           }
 
           const note = await userCaller(ctx).notes.upsert({
+            id: blinkoNote?.id,
             type: 0,
             content: row.content,
             createdAt: new Date(row.created_ts * 1000),

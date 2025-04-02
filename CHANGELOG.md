@@ -1,3 +1,10 @@
+## [0.49.2](https://github.com/blinko-space/blinko/compare/v0.49.1...v0.49.2) (2025-04-02)
+
+
+### Bug Fixes
+
+* **memos:** reimport memos notes, If the notes have not been modified, can fix the problem that the historical notes are not displayed, which note's type is -1. related issue: [#551](https://github.com/blinko-space/blinko/issues/551) ([c1fb5b6](https://github.com/blinko-space/blinko/commit/c1fb5b658f0dfa38be27c42b373a77b6d80aab2b))
+
 ## [0.49.1](https://github.com/blinko-space/blinko/compare/v0.49.0...v0.49.1) (2025-04-01)
 
 

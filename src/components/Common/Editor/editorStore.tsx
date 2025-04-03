@@ -15,6 +15,7 @@ import { Button } from '@heroui/react';
 import axios from 'axios';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { NoteType } from '@/server/types';
+import { eventBus } from '@/lib/event';
 
 export class EditorStore {
   files: FileType[] = []
@@ -308,6 +309,7 @@ export class EditorStore {
       });
       this.clearEditor();
       RootStore.Get(AiStore).isWriting = false;
+      eventBus.emit('editor:setFullScreen', false);
     } catch (error) {
       console.error('Failed to send content:', error);
     }

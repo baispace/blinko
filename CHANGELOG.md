@@ -1,3 +1,10 @@
+## [0.49.3](https://github.com/blinko-space/blinko/compare/v0.49.2...v0.49.3) (2025-04-03)
+
+
+### Bug Fixes
+
+* emit event to exit full screen mode after send.related issue: [#501](https://github.com/blinko-space/blinko/issues/501) ([22c64ab](https://github.com/blinko-space/blinko/commit/22c64ab6d244eee3cd4c29a13f133ca73e5e0c63))
+
 ## [0.49.2](https://github.com/blinko-space/blinko/compare/v0.49.1...v0.49.2) (2025-04-02)
 
 

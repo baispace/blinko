@@ -151,7 +151,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
               <div className="flex items-center justify-center gap-2 md:gap-4 w-auto ">
                 <BarSearchInput isPc={isPc} />
                 <FilterPop />
-                <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
+                {!blinkoStore.config.value?.isCloseDailyReview && <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
                   <Link href="/review" passHref legacyBehavior>
                     <Button
                       as="a"
@@ -163,7 +163,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                       <Icon className="cursor-pointer" icon="tabler:bulb" width="24" height="24" />
                     </Button>
                   </Link>
-                </Badge>
+                </Badge>}
                 <BlinkoNotification />
               </div>
             </div>

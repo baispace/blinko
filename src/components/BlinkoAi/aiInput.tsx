@@ -128,7 +128,10 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
           autoFocus
           value={aiStore.input}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            // Handle Enter key press to submit input, but ignore if user is composing text (e.g. using IME)
+            const isComposing = Boolean(e.isComposing || (e.nativeEvent && e.nativeEvent.isComposing));
+
+            if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
               e.preventDefault();
               aiStore.onInputSubmit();
             }

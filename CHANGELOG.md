@@ -1,3 +1,11 @@
+## [0.49.4](https://github.com/blinko-space/blinko/compare/v0.49.3...v0.49.4) (2025-04-04)
+
+
+### Bug Fixes
+
+* **/ai:** Behavior of the Enter key when using Chinese input method ([317aa04](https://github.com/blinko-space/blinko/commit/317aa0406314111ab8dc73658a5c2476b0927a52))
+* conditionally render button based on daily review configuration ([a7a16a8](https://github.com/blinko-space/blinko/commit/a7a16a8aca1b092241c46c6ee824ebe66e22d2d3))
+
 ## [0.49.3](https://github.com/blinko-space/blinko/compare/v0.49.2...v0.49.3) (2025-04-03)
 
 

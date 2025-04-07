@@ -1,3 +1,10 @@
+# [0.50.0](https://github.com/blinko-space/blinko/compare/v0.49.4...v0.50.0) (2025-04-07)
+
+
+### Features
+
+* cards show internal sharing icons ([482e889](https://github.com/blinko-space/blinko/commit/482e88952bb03f17a5f935a2bbac97e0e03c8de1))
+
 ## [0.49.4](https://github.com/blinko-space/blinko/compare/v0.49.3...v0.49.4) (2025-04-04)
 
 

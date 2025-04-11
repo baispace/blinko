@@ -2,7 +2,6 @@
 import { useState, useRef, TouchEvent } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { useSwiper } from "@/lib/hooks";
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';
@@ -25,12 +24,14 @@ export const BlinkoAddButton = observer(() => {
   };
 
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
-  const [showActions, setShowActions] = useState(false);
+
+  // fix #619 Temporarily hide the top and bottom icons
+  // const [showActions, setShowActions] = useState(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const [activeButton, setActiveButton] = useState<'none' | 'top' | 'bottom'>('none');
   const isPc = useMediaQuery('(min-width: 768px)');
   const router = useRouter()
-  const isVisible = useSwiper()
 
   // Add touch-related states
   const touchStartRef = useRef({ x: 0, y: 0 });
@@ -70,12 +71,12 @@ export const BlinkoAddButton = observer(() => {
 
     // Detect if the touch is in the top button area
     if (deltaY < -30) {
-      setShowActions(true);
       newActiveButton = 'top';
     } else if (deltaY > 30) {
-      setShowActions(true);
       newActiveButton = 'bottom';
     }
+    // fix #619 Temporarily hide the top and bottom icons
+    // setShowActions(true);
 
     // Vibrate when sliding to a new button area
     if (newActiveButton !== 'none' && newActiveButton !== lastActiveButton) {
@@ -89,14 +90,16 @@ export const BlinkoAddButton = observer(() => {
   // Handle AI action
   const handleAiAction = () => {
     router.push('/ai')
-    setShowActions(false);
+    // fix #619 Temporarily hide the top and bottom icons
+    // setShowActions(false);
   };
 
   // Handle write action
   const handleWriteAction = () => {
     ShowEditBlinkoModel('2xl', 'create')
     FocusEditorFixMobile()
-    setShowActions(false);
+    // fix #619 Temporarily hide the top and bottom icons
+    // setShowActions(false);
   };
 
   // Handle touch end
@@ -104,36 +107,43 @@ export const BlinkoAddButton = observer(() => {
     isDraggingRef.current = false;
     setIsDragging(false);
 
-    if (activeButton === 'top') {
-      handleWriteAction();
-    } else if (activeButton === 'bottom') {
-      handleAiAction();
-    } else if (activeButton !== 'none') {
-      setShowActions(false);
+    // fix #619 Temporarily hide the top and bottom icons
+    // When clicking the button, open the writing dialog
+    // When holding and sliding up or down, open the AI dialog
+    switch (activeButton) {
+      case 'top':
+      case 'bottom':
+        handleAiAction();
+        break;
+      default:
+        handleWriteAction();
+        break;
     }
-
     setActiveButton('none');
     setLastActiveButton('none');
   };
 
+  // temporarily hide the top and bottom icons
   // Handle click event
-  const handleClick = () => {
-    // Only toggle showActions if not dragging
-    if (!isDragging) {
-      setShowActions(prev => !prev);
-    }
-  };
+  // const handleClick = () => {
+  //   // Only toggle showActions if not dragging
+  //   if (!isDragging) {
+  //     setShowActions(prev => !prev);
+  //   }
+  // };
 
   return (<div style={{
     width: BUTTON_SIZE.CENTER,
     height: BUTTON_SIZE.CENTER,
     position: 'fixed',
     right: 40,
-    bottom: isVisible ? 140 : 110,
+    bottom: 110,
     zIndex: 50
   }}>
+
+    {/* fix #619 Temporarily hide the top and bottom icons */}
     {/* Writing icon button (Top) */}
-    <motion.div
+    {/* <motion.div
       onClick={handleWriteAction}
       initial={{ y: 0, opacity: 0 }}
       animate={{
@@ -151,10 +161,9 @@ export const BlinkoAddButton = observer(() => {
       className="bg-foreground rounded-full flex items-center justify-center cursor-pointer text-background box-shadow-[0_0_10px_2px_rgba(255,204,0,0.5)]"
     >
       <Icon icon="icon-park-outline:write" width={ICON_SIZE.ACTION} height={ICON_SIZE.ACTION} />
-    </motion.div>
-
+    </motion.div> */}
     {/* AI icon button (Bottom) */}
-    <motion.div
+    {/* <motion.div
       onClick={handleAiAction}
       initial={{ y: 0, opacity: 0 }}
       animate={{
@@ -172,16 +181,18 @@ export const BlinkoAddButton = observer(() => {
       className="bg-foreground rounded-full flex items-center justify-center cursor-pointer text-background box-shadow-[0_0_10px_2px_rgba(255,204,0,0.5)]"
     >
       <Icon icon="mingcute:ai-line" width={ICON_SIZE.ACTION} height={ICON_SIZE.ACTION} />
-    </motion.div>
+    </motion.div> */}
 
     {/* Center add button */}
     <motion.div
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onClick={handleClick}
+      // fix #619 Temporarily hide the top and bottom icons
+      // onClick={handleClick}
       animate={{
-        rotate: showActions ? 45 : 0,
+        // This animation is not necessary for now
+        // rotate: showActions ? 45 : 0,
         scale: isDragging ? 1.1 : 1,
       }}
       transition={{

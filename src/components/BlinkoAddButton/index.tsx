@@ -2,6 +2,7 @@
 import { useState, useRef, TouchEvent } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { useSwiper } from "@/lib/hooks";
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';
@@ -29,6 +30,7 @@ export const BlinkoAddButton = observer(() => {
   const [activeButton, setActiveButton] = useState<'none' | 'top' | 'bottom'>('none');
   const isPc = useMediaQuery('(min-width: 768px)');
   const router = useRouter()
+  const isVisible = useSwiper()
 
   // Add touch-related states
   const touchStartRef = useRef({ x: 0, y: 0 });
@@ -127,7 +129,7 @@ export const BlinkoAddButton = observer(() => {
     height: BUTTON_SIZE.CENTER,
     position: 'fixed',
     right: 40,
-    bottom: 110,
+    bottom: isVisible ? 140 : 110,
     zIndex: 50
   }}>
     {/* Writing icon button (Top) */}

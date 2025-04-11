@@ -1,3 +1,10 @@
+# [0.51.0](https://github.com/blinko-space/blinko/compare/v0.50.0...v0.51.0) (2025-04-11)
+
+
+### Features
+
+* **BlinkoAddButton:** 当H5 底部 bar 出来时，让 bottom 往上挪一点，避免被遮挡。When the H5 bottom bar appears, move the bottom up slightly to avoid being obscured. ([7a319a4](https://github.com/blinko-space/blinko/commit/7a319a45dcb9e76adcf56d3091c2e7a0485e3a4b))
+
 # [0.50.0](https://github.com/blinko-space/blinko/compare/v0.49.4...v0.50.0) (2025-04-07)
 
 

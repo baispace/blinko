@@ -30,7 +30,6 @@ export const authProcedure = t.procedure.use(async ({ ctx, next, path }) => {
       message: 'Unauthorized'
     })
   }
-  console.log(path, 'xxx!!!222222222!', ctx.permissions)
   if (ctx.permissions && Array.isArray(ctx.permissions)) {
     const hasPermission = ctx.permissions.some(perm => path?.includes(perm));
     if (!hasPermission) {

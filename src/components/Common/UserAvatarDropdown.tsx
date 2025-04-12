@@ -7,6 +7,7 @@ import { BaseStore } from '@/store/baseStore';
 import { UserStore } from '@/store/user';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
+import { signOut } from 'next-auth/react';
 
 interface UserAvatarDropdownProps {
   onItemClick?: () => void;
@@ -36,22 +37,36 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
         </div>
       </DropdownTrigger>
       <DropdownMenu aria-label="User Actions">
-        {base.routerList
-          .filter((i) => i.hiddenSidebar)
-          .map((i) => (
-            <DropdownItem
-              key={i.title}
-              className='font-bold'
-              startContent={<Icon icon={i.icon} width="20" height="20" />}
-              onPress={() => {
-                router.push(i.href);
-                base.currentRouter = i;
-                onItemClick?.();
-              }}
-            >
-              {t(i.title)}
-            </DropdownItem>
-          ))}
+        <>
+          {base.routerList
+            .filter((i) => i.hiddenSidebar)
+            .map((i) => (
+              <DropdownItem
+                key={i.title}
+                className='font-bold'
+                startContent={<Icon icon={i.icon} width="20" height="20" />}
+                onPress={() => {
+                  router.push(i.href);
+                  base.currentRouter = i;
+                  onItemClick?.();
+                }}
+              >
+                {t(i.title)}
+              </DropdownItem>
+            ))}
+
+          <DropdownItem
+            key="logout"
+            className="font-bold text-danger"
+            startContent={<Icon icon="hugeicons:logout-05" width="20" height="20" />}
+            onPress={() => {
+              signOut({ callbackUrl: '/' });
+              onItemClick?.();
+            }}
+          >
+            {t('logout')}
+          </DropdownItem>
+        </>
       </DropdownMenu>
     </Dropdown>
   );

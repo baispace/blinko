@@ -341,13 +341,17 @@ export const userRouter = router({
         const { id, nickname, name, password } = input
 
         const update: Prisma.accountsUpdateInput = {}
-        const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
-        if (hasSameUser) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Username already exists'
-          });
+        
+        if (name && (!id || (id && (await prisma.accounts.findUnique({ where: { id } }))?.name !== name))) {
+          const hasSameUser = await prisma.accounts.findFirst({ where: { name } });
+          if (hasSameUser) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Username already exists'
+            });
+          }
         }
+        
         if (id) {
           if (name) update.name = name
           if (password) {

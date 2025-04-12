@@ -388,24 +388,20 @@ export class AiService {
 
       if (processingMode === 'tags' || processingMode === 'both') {
         try {
-          // Extract tags from AI response
-          // Look for lines that have "tags:", "标签:" or similar indicators
-          const tagMatches = aiResponse.match(/(?:tags|标签|tag)[:\s]+(.*?)(?:\n|$)/i);
           let suggestedTags: string[] = [];
-
-          if (tagMatches && tagMatches[1]) {
-            // Extract tags from format like "tags: tag1, tag2, tag3"
-            suggestedTags = tagMatches[1].split(',').map((tag) => tag.trim());
+          // If no clear tag format, process with an agent specialized for tag extraction
+          const aiTagsPrompt = config.aiTagsPrompt
+          let tagAgent: any;
+          if (aiTagsPrompt != '') {
+            tagAgent = await AiModelFactory.TagAgent(aiTagsPrompt);
           } else {
-            // If no clear tag format, process with an agent specialized for tag extraction
-            const agent = await AiModelFactory.TagAgent();
-            const tags = await getAllPathTags();
-            const result = await agent.generate(
-              `Existing tags list:  [${tags.join(', ')}]\n Note content:\n${note.content}`
-            )
-            suggestedTags = result.text.split(',').map((tag) => tag.trim());
+            tagAgent = await AiModelFactory.TagAgent();
           }
-
+          const tags = await getAllPathTags();
+          const result = await tagAgent.generate(
+            `Existing tags list:  [${tags.join(', ')}]\n Note content:\n${note.content}`
+          )
+          suggestedTags = result.text.split(',').map((tag) => tag.trim());
           // Filter out empty tags and limit to 5 tags max
           suggestedTags = suggestedTags.filter(Boolean).slice(0, 5);
           caller.notes.upsert({

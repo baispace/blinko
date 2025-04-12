@@ -22,7 +22,7 @@ export const t = initTRPC.context<Context>().meta<OpenApiMeta>().create({
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
-export const authProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const authProcedure = t.procedure.use(async ({ ctx, next, path }) => {
   //@ts-ignore
   if (!ctx?.name || ctx?.requiresTwoFactor) {
     throw new TRPCError({
@@ -30,6 +30,16 @@ export const authProcedure = t.procedure.use(async ({ ctx, next }) => {
       message: 'Unauthorized'
     })
   }
+  if (ctx.permissions && Array.isArray(ctx.permissions)) {
+    const hasPermission = ctx.permissions.some(perm => path?.includes(perm));
+    if (!hasPermission) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: 'This token does not have permission to access this endpoint'
+      });
+    }
+  }
+
   return next({
     ctx,
     ...{ id: ctx.sub }

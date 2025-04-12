@@ -15,15 +15,20 @@ import { showTipsDialog } from "../Common/TipsDialog";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
-const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: string, password: string }) => {
+const UpdateUserInfo = observer(({ id, name, password, nickname, loginType }: { id?: number, name: string, password: string, nickname?: string, loginType?: string }) => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore)
   const store = RootStore.Local(() => ({
     username: name,
     password,
+    nickname: nickname || name,
     upsertUser: new PromiseState({
       function: async () => {
-        const upsertItem: { name: string; password: string; id?: number } = { name: store.username, password: store.password }
+        const upsertItem: { name: string; password: string; nickname?: string; id?: number } = { 
+          name: store.username, 
+          password: store.password,
+          nickname: store.nickname
+        }
         if (id) upsertItem.id = id
         await PromiseCall(api.users.upsertUserByAdmin.mutate(upsertItem))
         RootStore.Get(DialogStore).close()
@@ -31,6 +36,8 @@ const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: st
       }
     })
   }))
+
+  const isOauth = loginType === 'oauth'
 
   return <>
     <Input
@@ -40,6 +47,16 @@ const UpdateUserInfo = observer(({ id, name, password }: { id?: number, name: st
       variant="bordered"
       value={store.username}
       onChange={e => { store.username = e.target.value }}
+      isDisabled={isOauth}
+    />
+    <Input
+      label={t('nickname')}
+      placeholder={t('nickname')}
+      labelPlacement="outside"
+      variant="bordered"
+      value={store.nickname}
+      onChange={e => { store.nickname = e.target.value }}
+      className="mt-2"
     />
     <PasswordInput placeholder={t('password')} label={t('password')} value={store.password} onChange={e => { store.password = e.target.value }} />
     <div className="flex w-full mt-2">
@@ -101,7 +118,7 @@ export const UserSetting = observer(() => {
                         RootStore.Get(DialogStore).setData({
                           isOpen: true,
                           title: t('edit-user'),
-                          content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} />
+                          content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} nickname={i.nickname} loginType={i.loginType} />
                         })
                       }}>
                       </Button>

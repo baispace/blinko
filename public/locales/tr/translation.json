@@ -617,5 +617,11 @@
   "public-share": "Halka Açık Pay",
   "internal-share": "İç Paylaşım",
   "no-team-members-found": "Takım üyesi bulunamadı",
-  "selected-users": "Seçilen kullanıcılar"
+  "selected-users": "Seçilen kullanıcılar",
+  "tags-prompt": "Etiketler İstemi",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Otomatik etiket oluşturmak için kullanılan komut. Eğer boş bırakılırsa, varsayılan komut kullanılacaktır.",
+  "generate-low-permission-token": "Düşük İzinli Token Oluştur",
+  "low-permission-token-desc": "Düşük izinli belirteçler​ sadece ​upsertNote uç noktasına​ ve ​AI sohbet uç noktasına​ erişebilir. Hesap bilgilerinize veya diğer notlara ​erişemezler. Bu, ​Telegram botları​ veya ​WeChat botları gibi durumlar için idealdir, burada onların başka hiçbir notlara ​erişememesini garanti etmek istersiniz.",
+  "this-token-is-only-displayed-once-please-save-it-properly": "Bu belirteç sadece bir kez görüntülenir, lütfen düzgün bir şekilde kaydedin."
 }

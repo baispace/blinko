@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Input, Switch, Tooltip } from "@heroui/react";
+import { Alert, Button, Input, Switch, Tooltip } from "@heroui/react";
 import { RootStore } from "@/store";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { UserStore } from "@/store/user";
@@ -40,6 +40,8 @@ export const BasicSetting = observer(() => {
     showQRCode: false,
     totpSecret: '',
     qrCodeUrl: '',
+    showLowPermToken: false,
+    lowPermToken: '',
     setShowToken(value: boolean) {
       this.showToken = value;
     },
@@ -52,12 +54,24 @@ export const BasicSetting = observer(() => {
     setQrCodeUrl(value: string) {
       this.qrCodeUrl = value;
     },
+    setShowLowPermToken(value: boolean) {
+      this.showLowPermToken = value;
+    },
+    setLowPermToken(value: string) {
+      this.lowPermToken = value;
+    },
     setRigster: new PromiseState({
       function: async (value: boolean) => {
         return await PromiseCall(api.config.update.mutate({
           key: 'isAllowRegister',
           value
         }))
+      }
+    }),
+    genLowPermToken: new PromiseState({
+      function: async () => {
+        const response = await PromiseCall(api.users.genLowPermToken.mutate());
+        return response;
       }
     }),
   }))
@@ -104,7 +118,7 @@ export const BasicSetting = observer(() => {
                 )}
               </UploadFileWrapper>
             </div>
-            
+
             <Button variant="flat" isIconOnly startContent={<Icon icon="tabler:edit" width="20" height="20" />} size='sm'
               onPress={e => {
                 RootStore.Get(DialogStore).setData({
@@ -156,24 +170,59 @@ export const BasicSetting = observer(() => {
       />
 
       <Item
-        hidden={!user.isSuperAdmin}
-        leftContent={<div className="flex items-center gap-2">
-          <div>{t('access-token')}</div>
-          <Button
-            isIconOnly
-            variant="flat"
-            size="sm"
-            onPress={() => {
-              store.setShowToken(!store.showToken)
-            }}
-          >
-            <Icon
-              icon={store.showToken ? "mdi:eye-off" : "mdi:eye"}
-              width="20"
-              height="20"
-            />
-          </Button>
-        </div>}
+        leftContent={
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <div>{t('access-token')}</div>
+              <Button
+                isIconOnly
+                variant="flat"
+                size="sm"
+                onPress={() => {
+                  store.setShowToken(!store.showToken)
+                }}
+              >
+                <Icon
+                  icon={store.showToken ? "mdi:eye-off" : "mdi:eye"}
+                  width="20"
+                  height="20"
+                />
+              </Button>
+            </div>
+            <Tooltip content={<div className="text-sm text-desc max-w-[300px]">{t('low-permission-token-desc')}</div>}>
+              <div
+                className="text-xs text-yellow-500 cursor-pointer"
+                onClick={async () => {
+                  const response = await store.genLowPermToken.call();
+                  if (response?.token) {
+                    RootStore.Get(DialogStore).setData({
+                      isOpen: true,
+                      title: t('generate-low-permission-token'),
+                      content: (
+                        <div className="flex flex-col gap-4">
+                          <Alert
+                            color="warning"
+                            description={t('low-permission-token-desc')}
+                            title={t('this-token-is-only-displayed-once-please-save-it-properly')}
+                            variant="faded"
+                          />
+                          <Input
+                            readOnly
+                            className="w-full"
+                            value={response.token}
+                            endContent={<Copy size={20} content={response.token} />}
+                          />
+                        </div>
+                      )
+                    });
+                  }
+                }}
+              >
+                {t('generate-low-permission-token')}
+              </div>
+            </Tooltip>
+          </div>
+        }
         rightContent={
           <div className="flex gap-2 items-center">
             <Input
@@ -235,7 +284,6 @@ export const BasicSetting = observer(() => {
           )}
         </AnimatePresence>
       }
-
 
       {
         user.role == 'superadmin' &&

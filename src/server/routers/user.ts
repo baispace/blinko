@@ -10,7 +10,7 @@ import { generateTOTP, generateTOTPQRCode, getNextAuthSecret, verifyTOTP } from 
 import { deleteNotes } from './note';
 import { createSeed } from 'prisma/seedData';
 
-const genToken = async ({ id, name, role }: { id: number, name: string, role: string }) => {
+const genToken = async ({ id, name, role, permissions }: { id: number, name: string, role: string, permissions?: string[] }) => {
   const secret = await getNextAuthSecret();
   return await encode({
     token: {
@@ -18,7 +18,8 @@ const genToken = async ({ id, name, role }: { id: number, name: string, role: st
       name,
       sub: id.toString(),
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 100),
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
+      permissions
     },
     secret
   })
@@ -274,6 +275,27 @@ export const userRouter = router({
         return false
       }
     }),
+  genLowPermToken: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/user/gen-low-perm-token', summary: 'Generate low permission token', tags: ['User'] } })
+    .input(z.void())
+    .output(z.object({
+      token: z.string()
+    }))
+    .mutation(async ({ ctx }) => {
+      const user = await prisma.accounts.findFirst({ where: { id: Number(ctx.id) } });
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+      
+      const token = await genToken({ 
+        id: user.id, 
+        name: user.name ?? '', 
+        role: user.role,
+        permissions: ['notes.upsert','ai.completions']
+      });
+      
+      return { token };
+    }),
   upsertUser: authProcedure.use(demoAuthMiddleware)
     .meta({
       openapi: {
@@ -341,13 +363,17 @@ export const userRouter = router({
         const { id, nickname, name, password } = input
 
         const update: Prisma.accountsUpdateInput = {}
-        const hasSameUser = await prisma.accounts.findFirst({ where: { name } })
-        if (hasSameUser) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Username already exists'
-          });
+        
+        if (name && (!id || (id && (await prisma.accounts.findUnique({ where: { id } }))?.name !== name))) {
+          const hasSameUser = await prisma.accounts.findFirst({ where: { name } });
+          if (hasSameUser) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Username already exists'
+            });
+          }
         }
+        
         if (id) {
           if (name) update.name = name
           if (password) {
@@ -410,8 +436,6 @@ export const userRouter = router({
         const userToDelete = await prisma.accounts.findFirst({
           where: { id }
         })
-
-
 
         if (!userToDelete) {
           throw new TRPCError({

@@ -1,3 +1,20 @@
+# [0.52.0](https://github.com/blinko-space/blinko/compare/v0.51.1...v0.52.0) (2025-04-12)
+
+
+### Bug Fixes
+
+*  change the AI ​​post-processed propt to the previous custom input [#623](https://github.com/blinko-space/blinko/issues/623) ([951d010](https://github.com/blinko-space/blinko/commit/951d010bdf20ea307f07ba80811922ef5cea7337))
+* add a new API route to map '/v1/chat/completions' to '/api/completions', and remove the old completions metadata and output definitions. ([142f443](https://github.com/blinko-space/blinko/commit/142f4435a7197e51584d38d02efba9c13f4eaa56))
+* Add a nickname field in user settings and update relevant logic; add a logout function in the user avatar dropdown menu; update package.json to support pnpm 9.12.2. ([747ffdd](https://github.com/blinko-space/blinko/commit/747ffddcec19ea0d0d19d6445f6faab85870be15))
+* add the log-in type parameter in user settings and disable the user name input box according to the log-in type ([6caf40b](https://github.com/blinko-space/blinko/commit/6caf40bb152fa03ea5b54167455904d628f7ddbd))
+* deactivate "AI Write" button when no AI is used ([580f381](https://github.com/blinko-space/blinko/commit/580f3817c96961fc327b82f3351e13c727feb7e0))
+* remove console ([284076f](https://github.com/blinko-space/blinko/commit/284076fc2804c584b3752ee1ea2bedfaf4f466ae))
+
+
+### Features
+
+* add a low-privilege token generation function to allow users to generate tokens that can only access specific endpoints, and update the relevant description information. ([37efb5e](https://github.com/blinko-space/blinko/commit/37efb5e5e1f7d6822e766dfdfeeb51919697f7ab))
+
 ## [0.51.1](https://github.com/blinko-space/blinko/compare/v0.51.0...v0.51.1) (2025-04-12)
 
 

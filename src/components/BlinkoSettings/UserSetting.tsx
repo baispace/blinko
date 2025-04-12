@@ -15,7 +15,7 @@ import { showTipsDialog } from "../Common/TipsDialog";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 
-const UpdateUserInfo = observer(({ id, name, password, nickname }: { id?: number, name: string, password: string, nickname?: string }) => {
+const UpdateUserInfo = observer(({ id, name, password, nickname, loginType }: { id?: number, name: string, password: string, nickname?: string, loginType?: string }) => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore)
   const store = RootStore.Local(() => ({
@@ -37,6 +37,8 @@ const UpdateUserInfo = observer(({ id, name, password, nickname }: { id?: number
     })
   }))
 
+  const isOauth = loginType === 'oauth'
+
   return <>
     <Input
       label={t('username')}
@@ -45,6 +47,7 @@ const UpdateUserInfo = observer(({ id, name, password, nickname }: { id?: number
       variant="bordered"
       value={store.username}
       onChange={e => { store.username = e.target.value }}
+      isDisabled={isOauth}
     />
     <Input
       label={t('nickname')}
@@ -115,7 +118,7 @@ export const UserSetting = observer(() => {
                         RootStore.Get(DialogStore).setData({
                           isOpen: true,
                           title: t('edit-user'),
-                          content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} nickname={i.nickname} />
+                          content: <UpdateUserInfo id={i.id} name={i.name} password={i.password} nickname={i.nickname} loginType={i.loginType} />
                         })
                       }}>
                       </Button>

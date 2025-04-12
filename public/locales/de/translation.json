@@ -617,5 +617,8 @@
   "public-share": "Öffentlicher Anteil",
   "internal-share": "Interner Anteil",
   "no-team-members-found": "Keine Teammitglieder gefunden",
-  "selected-users": "Ausgewählte Benutzer"
+  "selected-users": "Ausgewählte Benutzer",
+  "tags-prompt": "Markierungsaufforderung",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Aufforderung, die für die automatische Generierung von Tags verwendet wird. Wenn leer eingestellt, wird der Standardaufforderung verwendet."
 }

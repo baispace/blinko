@@ -576,5 +576,8 @@
   "hours-ago": "",
   "impoort-from-bko": "",
   "minutes-ago": "",
-  "months-ago": ""
+  "months-ago": "",
+  "tags-prompt": "თეგები პრომპტ",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "თეგების ავტო-გენერირებო 34a_;L;_prompt. 34A_A;L;_empty, the default prompt will be used."
 }

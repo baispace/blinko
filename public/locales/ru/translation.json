@@ -612,5 +612,8 @@
   "public-share": "Публичная акция",
   "internal-share": "Внутренняя доля",
   "no-team-members-found": "Не найдено участников команды",
-  "selected-users": "Выбранные пользователи"
+  "selected-users": "Выбранные пользователи",
+  "tags-prompt": "Теги Подсказка",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Текст, используемый для автоматической генерации тегов. Если оставить пустым, будет использован текст по умолчанию."
 }

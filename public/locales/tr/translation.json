@@ -617,5 +617,8 @@
   "public-share": "Halka Açık Pay",
   "internal-share": "İç Paylaşım",
   "no-team-members-found": "Takım üyesi bulunamadı",
-  "selected-users": "Seçilen kullanıcılar"
+  "selected-users": "Seçilen kullanıcılar",
+  "tags-prompt": "Etiketler İstemi",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Otomatik etiket oluşturmak için kullanılan komut. Eğer boş bırakılırsa, varsayılan komut kullanılacaktır."
 }

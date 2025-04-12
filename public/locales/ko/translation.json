@@ -612,5 +612,8 @@
   "public-share": "공유 공개",
   "internal-share": "내부 공유",
   "no-team-members-found": "팀 멤버가 발견되지 않았습니다.",
-  "selected-users": "선택된 사용자들"
+  "selected-users": "선택된 사용자들",
+  "tags-prompt": "태그 프롬프트",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "자동으로 태그를 생성하는 데 사용되는 프롬프트입니다. 비어 있게 설정하면 기본 프롬프트가 사용됩니다."
 }

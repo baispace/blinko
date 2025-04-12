@@ -617,5 +617,8 @@
   "public-share": "公開シェア",
   "internal-share": "内部共有",
   "no-team-members-found": "チームメンバーが見つかりませんでした",
-  "selected-users": "選ばれたユーザー"
+  "selected-users": "選ばれたユーザー",
+  "tags-prompt": "タグプロンプト",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "自動生成タグ用のプロンプト。空に設定すると、デフォルトのプロンプトが使用されます。"
 }

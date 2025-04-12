@@ -608,5 +608,8 @@
   "public-share": "Udział publiczny",
   "internal-share": "Udział wewnętrzny",
   "no-team-members-found": "Nie znaleziono członków zespołu",
-  "selected-users": "Wybrani użytkownicy"
+  "selected-users": "Wybrani użytkownicy",
+  "tags-prompt": "Tagi Wskazówka",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Komunikat używany do automatycznego generowania tagów. Jeśli zostawiony pusty, zostanie użyty domyślny komunikat."
 }

@@ -77,6 +77,7 @@ export const AiSetting = observer(() => {
     apiVersion: '',
     embeddingApiKey: '',
     aiCommentPrompt: '',
+    aiTagsPrompt: '',
     embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
@@ -171,6 +172,7 @@ export const AiSetting = observer(() => {
     store.tavilyApiKey = blinko.config.value?.tavilyApiKey!;
     store.tavilyMaxResult = Number(blinko.config.value?.tavilyMaxResult!);
     store.aiCommentPrompt = blinko.config.value?.aiCommentPrompt!;
+    store.aiTagsPrompt = blinko.config.value?.aiTagsPrompt!;
     store.aiSmartEditPrompt = blinko.config.value?.aiSmartEditPrompt!;
     store.rerankModel = blinko.config.value?.rerankModel!;
     store.rerankTopK = blinko.config.value?.rerankTopK || 2;
@@ -536,7 +538,7 @@ export const AiSetting = observer(() => {
           }
         />
 
-{store.showEmeddingAdvancedSetting && (
+        {store.showEmeddingAdvancedSetting && (
           <Item
             className="ml-6"
             type={isPc ? 'row' : 'col'}
@@ -1028,6 +1030,47 @@ export const AiSetting = observer(() => {
               />
             )}
 
+            {blinko.config.value?.aiPostProcessingMode === 'tags' && (
+              <Item
+                type={isPc ? 'row' : 'col'}
+                leftContent={
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {t('tags-prompt')}
+                    </div>
+                    <div className="text-[12px] text-default-400">{t('greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used')}</div>
+                  </div>
+                }
+                rightContent={
+                  <Textarea
+                    radius="lg"
+                    value={store.aiTagsPrompt || `You are a precise label classification expert, and you will generate precisely matched content labels based on the content. Rules:
+      1. **Core Selection Principle**: Select 5 to 8 tags from the existing tag list that are most relevant to the content theme. Carefully compare the key information, technical types, application scenarios, and other elements of the content to ensure that the selected tags accurately reflect the main idea of the content.
+      2. **Language Matching Strategy**: If the language of the existing tags does not match the language of the content, give priority to using the language of the existing tags to maintain the consistency of the language style of the tag system.
+      3. **Tag Structure Requirements**: When using existing tags, it is necessary to construct a parent-child hierarchical structure. For example, place programming language tags under parent tags such as #Code or #Programming, like #Code/JavaScript, #Programming/Python. When adding new tags, try to classify them under appropriate existing parent tags as well.
+      4. **New Tag Generation Rules**: If there are no tags in the existing list that match the content, create new tags based on the key technologies, business fields, functional features, etc. of the content. The language of the new tags should be consistent with that of the content.
+      5. **Response Format Specification**: Only return tags separated by commas. There should be no spaces between tags, and no formatting or code blocks should be used. Each tag should start with #, such as #JavaScript.
+      6. **Example**: For JavaScript content related to web development, a reference response could be #Programming/Languages, #Web/Development, #Code/JavaScript, #Front-End Development/Frameworks (if applicable), #Browser Compatibility. It is strictly prohibited to respond in formats such as code blocks, JSON, or Markdown. Just provide the tags directly. 
+         `}
+                    onBlur={(e) => {
+                      PromiseCall(
+                        api.config.update.mutate({
+                          key: 'aiTagsPrompt',
+                          value: e.target.value,
+                        }),
+                        { autoAlert: false },
+                      );
+                    }}
+                    onChange={(e) => {
+                      store.aiTagsPrompt = e.target.value;
+                    }}
+                    placeholder="Enter custom prompt for auto-generating tags"
+                    className="w-full md:w-[400px]"
+                  />
+                }
+              />
+            )}
+
             {blinko.config.value?.aiPostProcessingMode === 'smartEdit' && (
               <Item
                 type={isPc ? 'row' : 'col'}
@@ -1072,6 +1115,91 @@ export const AiSetting = observer(() => {
                   />
                 }
               />
+            )}
+
+            {blinko.config.value?.aiPostProcessingMode === 'both' && (
+              <>
+                <Item
+                  type={isPc ? 'row' : 'col'}
+                  leftContent={
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        {t('ai-post-processing-prompt')}
+                        <Tooltip
+                          content={
+                            <div className="w-[300px] flex flex-col gap-2">
+                              <div>{t('define-custom-prompt-for-ai-to-process-notes')}</div>
+                            </div>
+                          }
+                        >
+                          <Icon icon="proicons:info" width="18" height="18" />
+                        </Tooltip>
+                      </div>
+                      <div className="text-[12px] text-default-400">{t('prompt-used-for-post-processing-notes')}</div>
+                    </div>
+                  }
+                  rightContent={
+                    <Textarea
+                      radius="lg"
+                      value={store.aiCommentPrompt ?? t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
+                      onBlur={(e) => {
+                        PromiseCall(
+                          api.config.update.mutate({
+                            key: 'aiCommentPrompt',
+                            value: e.target.value,
+                          }),
+                          { autoAlert: false },
+                        );
+                      }}
+                      onChange={(e) => {
+                        store.aiCommentPrompt = e.target.value;
+                      }}
+                      placeholder={t('enter-custom-prompt-for-post-processing')}
+                      className="w-full"
+                    />
+                  }
+                />
+                <Item
+                  type={isPc ? 'row' : 'col'}
+                  leftContent={
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        Tags Prompt
+                        <Tooltip
+                          content={
+                            <div className="w-[300px] flex flex-col gap-2">
+                              <div>Define custom prompt for AI to generate tags</div>
+                            </div>
+                          }
+                        >
+                          <Icon icon="proicons:info" width="18" height="18" />
+                        </Tooltip>
+                      </div>
+                      <div className="text-[12px] text-default-400">Prompt used for auto-generating tags</div>
+                    </div>
+                  }
+                  rightContent={
+                    <Textarea
+                      radius="lg"
+                      value={store.aiTagsPrompt ?? 'Analyze the following note content and suggest appropriate tags for classification. Return tags in format: tag1, tag2, tag3'}
+                      onBlur={(e) => {
+                        PromiseCall(
+                          api.config.update.mutate({
+                            key: 'aiTagsPrompt',
+                            value: e.target.value,
+                          }),
+                          { autoAlert: false },
+                        );
+                      }}
+                      onChange={(e) => {
+                        store.aiTagsPrompt = e.target.value;
+                      }}
+                      placeholder="Enter custom prompt for auto-generating tags"
+                      className="w-full"
+                    />
+                  }
+                />
+              </>
             )}
 
             <Item

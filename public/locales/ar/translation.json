@@ -616,5 +616,8 @@
   "public-share": "المشاركة العامة",
   "internal-share": "المشاركة الداخلية",
   "no-team-members-found": "لم يتم العثور على أعضاء في الفريق",
-  "selected-users": "المستخدمين المحددين"
+  "selected-users": "المستخدمين المحددين",
+  "tags-prompt": "علامات موجه",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "المحفز المستخدم لتوليد العلامات تلقائيًا. إذا تُرك فارغًا، سيتم استخدام المحفز الافتراضي."
 }

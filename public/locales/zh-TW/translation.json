@@ -616,5 +616,8 @@
   "public-share": "公開分享",
   "internal-share": "內部分享",
   "no-team-members-found": "找不到團隊成員",
-  "selected-users": "選定的使用者"
+  "selected-users": "選定的使用者",
+  "tags-prompt": "標籤提示",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "用於自動生成標籤的提示。如果設置為空，將使用預設的提示。"
 }

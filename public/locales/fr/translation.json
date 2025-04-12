@@ -617,5 +617,8 @@
   "public-share": "Partage Public",
   "internal-share": "Partage Interne",
   "no-team-members-found": "Aucun membre de l'équipe trouvé",
-  "selected-users": "Utilisateurs sélectionnés"
+  "selected-users": "Utilisateurs sélectionnés",
+  "tags-prompt": "Balises d'invite",
+  "ai-tag-prompt-default": "",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Invitation utilisée pour la génération automatique de balises. Si elle est définie comme vide, l'invitation par défaut sera utilisée."
 }

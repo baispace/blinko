@@ -612,5 +612,7 @@
   "public-share": "Compartilhamento público",
   "internal-share": "Compartilhamento Interno",
   "no-team-members-found": "Nenhum membro da equipe encontrado",
-  "selected-users": "Usuários selecionados"
+  "selected-users": "Usuários selecionados",
+  "tags-prompt": "Tags de Solicitação",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Texto utilizado para geração automática de etiquetas. Se deixado em branco, o texto padrão será utilizado."
 }

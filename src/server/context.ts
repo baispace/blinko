@@ -2,16 +2,18 @@ import type * as trpcNext from '@trpc/server/adapters/next';
 import requestIp from 'request-ip';
 import Bowser from 'bowser';
 import { getToken } from "@/server/routers/helper";
+import { JWT } from "next-auth/jwt";
 
-export type User = {
-  name: string,
-  sub: string,
-  role: string,
-  id: string,
-  exp: number,
-  iat: number,
-  ip?: string,
-  userAgent?: Bowser.Parser.ParsedResult
+export interface User extends JWT {
+  name: string;
+  sub: string;
+  role: string;
+  id: string;
+  exp: number;
+  iat: number;
+  ip?: string;
+  userAgent?: any;
+  permissions?: string[];
 }
 
 export async function createContext(

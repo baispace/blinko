@@ -58,6 +58,16 @@ export const aiRouter = router({
     }),
 
   completions: authProcedure
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/ai/completions',
+        summary: 'Completions',
+        description: 'Completions',
+        tags: ['AI'],
+        protect: true
+      }
+    })
     .input(z.object({
       question: z.string(),
       withTools: z.boolean().optional(),
@@ -66,6 +76,7 @@ export const aiRouter = router({
       conversations: z.array(z.object({ role: z.string(), content: z.string() })),
       systemPrompt: z.string().optional()
     }))
+    .output(z.union([z.object({}), z.unknown()]))
     .mutation(async function* ({ input, ctx }) {
       try {
         const { question, conversations, withTools = false, withOnline = false, withRAG = true, systemPrompt } = input

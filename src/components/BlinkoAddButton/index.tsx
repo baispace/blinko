@@ -1,6 +1,8 @@
 // ... existing imports ...
 import { useState, useRef, TouchEvent } from 'react';
 import { motion } from 'motion/react';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
@@ -106,14 +108,14 @@ export const BlinkoAddButton = observer(() => {
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
     setIsDragging(false);
-
     // fix #619 Temporarily hide the top and bottom icons
     // When clicking the button, open the writing dialog
     // When holding and sliding up or down, open the AI dialog
     switch (activeButton) {
       case 'top':
       case 'bottom':
-        handleAiAction();
+        const blinko = RootStore.Get(BlinkoStore)
+        blinko.config.value?.isUseAI && handleAiAction();
         break;
       default:
         handleWriteAction();

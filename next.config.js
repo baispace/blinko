@@ -182,6 +182,10 @@ module.exports = withBundleAnalyzer(withPWA({
         source: '/plugins/:path*',
         destination: '/api/serve-plugin/:path*',
       },
+      {
+        source: '/v1/chat/completions',
+        destination: '/api/completions',
+      }
     ]
   }
   

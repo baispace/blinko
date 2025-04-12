@@ -1,3 +1,10 @@
+## [0.51.1](https://github.com/blinko-space/blinko/compare/v0.51.0...v0.51.1) (2025-04-12)
+
+
+### Bug Fixes
+
+* **BlinktoAddButton:** [#619](https://github.com/blinko-space/blinko/issues/619),Hide the previous editing and AI buttons, temporarily keep them, in case they will be expanded for use later. ([f90aa5b](https://github.com/blinko-space/blinko/commit/f90aa5bb6b46b4958325fd8b838b6044f01d74ae))
+
 # [0.51.0](https://github.com/blinko-space/blinko/compare/v0.50.0...v0.51.0) (2025-04-11)
 
 

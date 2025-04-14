@@ -9,23 +9,33 @@ import { noteRouter } from './note';
 import { configRouter } from './config';
 import { followsRouter } from './follows';
 import { notificationRouter } from './notification';
+import { aiRouter } from './ai';
+import { tagRouter } from './tag';
+import { userRouter } from './user';
+import { commentRouter } from './comment';
+import { pluginRouter } from './plugin';
+import { conversationRouter } from './conversation';
+import { attachmentsRouter } from './attachment';
+import { publicRouter } from './public';
+import { analyticsRouter } from './analytics';
+import { messageRouter } from './message';
 
 export const appRouter = router({
-  ai: lazy(() => import('./ai')),
+  ai: aiRouter,
   notes: noteRouter,
-  tags: lazy(() => import('./tag')),
-  users: lazy(() => import('./user')),
-  attachments: lazy(() => import('./attachment')),
+  tags: tagRouter,
+  users: userRouter,
+  attachments: attachmentsRouter,
   config: configRouter,
-  public: lazy(() => import('./public')),
+  public: publicRouter,
   task: lazy(() => import('./task')),
-  analytics: lazy(() => import('./analytics')),
-  comments: lazy(() => import('./comment')),
+  analytics: analyticsRouter,
+  comments: commentRouter,
   follows: followsRouter,
   notifications: notificationRouter,
-  plugin: lazy(() => import('./plugin')),
-  conversation: lazy(() => import('./conversation')),
-  message: lazy(() => import('./message')),
+  plugin: pluginRouter,
+  conversation: conversationRouter,
+  message: messageRouter,
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

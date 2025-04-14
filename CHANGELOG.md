@@ -1,3 +1,10 @@
+## [0.52.1](https://github.com/blinko-space/blinko/compare/v0.52.0...v0.52.1) (2025-04-12)
+
+
+### Bug Fixes
+
+* **H5 Add Button:** can not jump to AI when no AI is used ([3197a82](https://github.com/blinko-space/blinko/commit/3197a82be0db4f454488c84a17a3f1e16f9e2ee9))
+
 # [0.52.0](https://github.com/blinko-space/blinko/compare/v0.51.1...v0.52.0) (2025-04-12)
 
 

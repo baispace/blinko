@@ -990,8 +990,27 @@ export const noteRouter = router({
         // handle references
         const oldReferences = await prisma.noteReference.findMany({ where: { fromNoteId: note.id } });
         const oldReferencesIds = oldReferences.map((ref) => ref.toNoteId);
-        const needToBeAddedReferences = _.difference(references || [], oldReferencesIds);
-        const needToBeDeletedReferences = _.difference(oldReferencesIds, references || []);
+        if (references !== undefined) {
+          const needToBeAddedReferences = _.difference(references || [], oldReferencesIds);
+          const needToBeDeletedReferences = _.difference(oldReferencesIds, references || []);
+
+          // references delete old references
+          if (needToBeDeletedReferences.length != 0) {
+            await prisma.noteReference.deleteMany({
+              where: {
+                fromNoteId: note.id,
+                toNoteId: { in: needToBeDeletedReferences },
+              },
+            });
+          }
+
+          // add new references
+          if (needToBeAddedReferences.length != 0) {
+            await prisma.noteReference.createMany({
+              data: needToBeAddedReferences.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
+            });
+          }
+        }
 
         if (needToBeDeletedRelationTags.length != 0) {
           await prisma.tagsToNote.deleteMany({
@@ -1029,23 +1048,6 @@ export const noteRouter = router({
               }
             }
           }
-        }
-
-        // add new references
-        if (needToBeAddedReferences.length != 0) {
-          await prisma.noteReference.createMany({
-            data: needToBeAddedReferences.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
-          });
-        }
-
-        // references delete old references
-        if (needToBeDeletedReferences.length != 0) {
-          await prisma.noteReference.deleteMany({
-            where: {
-              fromNoteId: note.id,
-              toNoteId: { in: needToBeDeletedReferences },
-            },
-          });
         }
 
         // delete unused tags

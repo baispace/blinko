@@ -1,3 +1,10 @@
+## [0.52.3](https://github.com/blinko-space/blinko/compare/v0.52.2...v0.52.3) (2025-04-14)
+
+
+### Bug Fixes
+
+* update _app ([006b718](https://github.com/blinko-space/blinko/commit/006b7181424b06600c19fba5afc35acf8675ba30))
+
 ## [0.52.2](https://github.com/blinko-space/blinko/compare/v0.52.1...v0.52.2) (2025-04-14)
 
 

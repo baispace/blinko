@@ -1,3 +1,10 @@
+## [0.52.4](https://github.com/blinko-space/blinko/compare/v0.52.3...v0.52.4) (2025-04-17)
+
+
+### Bug Fixes
+
+* 解决AI添加标签, 无法使用自定义提示器 ([2f12249](https://github.com/blinko-space/blinko/commit/2f12249016b389d63b1601590545226f94d1b974))
+
 ## [0.52.3](https://github.com/blinko-space/blinko/compare/v0.52.2...v0.52.3) (2025-04-14)
 
 

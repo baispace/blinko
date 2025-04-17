@@ -56,6 +56,8 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 ## 👨🏼‍💻Contribution
 Contributions are the heart of what makes the open-source community so dynamic, creative, and full of learning opportunities. Your involvement helps drive innovation and growth. We deeply value any contribution you make, and we're excited to have you as part of our community. Thank you for your support! 🙌
 
+[![Contributors](https://contrib.rocks/image?repo=blinko-space/blinko)]([...](https://github.com/blinko-space/blinko/graphs/contributors))
+
 ## Sponsorship
 If you find Blinko valuable, consider supporting us! Your contribution will enable us to continue enhancing and maintaining the project for everyone. Thank you for helping us grow,Or use PikaPods to support blinko
 

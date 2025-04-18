@@ -130,7 +130,7 @@ export const BasicSetting = observer(() => {
             <Button variant="flat" isIconOnly startContent={<Icon icon="material-symbols:password" width="20" height="20" />} size='sm'
               onPress={e => {
                 RootStore.Get(DialogStore).setData({
-                  title: t('rest-user-info'),
+                  title: t('rest-user-password'),
                   isOpen: true,
                   content: <UpdateUserPassword />
                 })

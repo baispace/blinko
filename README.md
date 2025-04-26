@@ -43,7 +43,7 @@ Blinko is an innovative open-source project designed for individuals who want to
 
 - 🚀**Efficient and Fast** :Capture ideas instantly and store them as plain text for easy access, with full Markdown support for quick formatting and seamless sharing.
 
-- 💡**Lightweight Architecture with Heavy Lifting** :Built on Next.js, Blinko offers a sleek, lightweight architecture that delivers robust performance without sacrificing speed or efficiency.
+- 💡**Lightweight Architecture with Heavy Lifting** :Built with Tauri, Blinko offers a sleek, lightweight architecture that delivers robust performance while maintaining exceptional speed and efficiency.
 
 - 🔓**Open for Collaboration** :As an open-source project, Blinko invites contributions from the community. All code is transparent and available on GitHub, fostering a spirit of collaboration and constant improvement.
 

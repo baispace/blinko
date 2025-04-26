@@ -29,7 +29,7 @@
 
 Blinko 是一个创新的开源项目，专为那些想要快速捕捉和组织灵感的人设计。它允许用户在灵感闪现的瞬间无缝记录想法，确保不错过任何创意火花。
 
-<img style="border-radius:20px" src="./public/home.webp" alt="Blinko" />
+<img style="border-radius:20px" src="./app/public/home.webp" alt="Blinko" />
 
 ## 🚀主要特性
 - 🤖**AI 增强笔记检索**：通过 Blinko 的先进 AI 驱动的 RAG（检索增强生成）技术，你可以使用自然语言查询快速搜索和访问笔记，轻松找到所需内容。支持 OpenAI、Azure OpenAI 和 Ollama。
@@ -38,7 +38,7 @@ Blinko 是一个创新的开源项目，专为那些想要快速捕捉和组织�
 
 - 🚀**高效快速**：即时捕捉想法并以纯文本形式存储以便于访问，完全支持 Markdown 格式，便于快速排版和分享。
 
-- 💡**轻量架构，强大功能**：基于 Next.js 构建，Blinko 提供了一个轻量级的架构，在不牺牲速度和效率的同时提供强大的性能。
+- 💡**轻量架构，多端支持**：基于 Tauri 构建的 Blinko 采用简洁轻量的架构，在保持卓越速度和效率的同时，并且支持Macos,Windows,Android,Linux等多平台。
 
 - 🔓**开放协作**：作为开源项目，Blinko 欢迎社区贡献。所有代码都在 GitHub 上公开透明，培养协作和持续改进的精神。
 

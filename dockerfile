@@ -1,83 +1,108 @@
-FROM node:22-alpine AS builder
+# Build Stage
+FROM oven/bun:latest AS builder
 
-RUN apk add --no-cache \
-    python3 \
-    python3-dev \
-    py3-setuptools \
-    make \
-    g++ \
-    gcc \
-    git \
-    openssl-dev \
-    openssl \
-    build-base \
-    sqlite-dev
+# Add Build Arguments
+ARG USE_MIRROR=false
 
 WORKDIR /app
 
-ENV NEXT_PRIVATE_STANDALONE=true
+# Set Sharp environment variables to speed up ARM installation
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
+ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma
-
-RUN npm install -g pnpm@9.12.2 && \
-    if [ "$USE_MIRROR" = "true" ]; then \
-        echo "Using mirror registry..." && \
-        npm install -g nrm && \
-        nrm use taobao; \
-    fi && \
-    pnpm install
-
-
-RUN npx prisma generate
-
+# Copy Project Files
 COPY . .
-RUN pnpm build
-RUN pnpm build-seed
-# remove onnxruntime-node
-RUN find /app -type d -name "onnxruntime-node*" -exec rm -rf {} +
 
-FROM node:22-alpine AS runner
+# Configure Mirror Based on USE_MIRROR Parameter
+RUN if [ "$USE_MIRROR" = "true" ]; then \
+        echo "Using Taobao Mirror to Install Dependencies" && \
+        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json; \
+    else \
+        echo "Using Default Mirror to Install Dependencies"; \
+    fi
 
-RUN apk add --no-cache \
-    curl \
-    tzdata \
-    openssl
+# Pre-install Sharp for ARM architecture
+RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
+        echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
+        mkdir -p /tmp/sharp-cache && \
+        export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
+        bun install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+        bun install --force @img/sharp-linux-arm64 --no-save; \
+    fi
 
-RUN npm install -g prisma
+# Install Dependencies and Build App
+RUN bun install --unsafe-perm
+RUN bun run build:web
+RUN bun run build:seed
+
+# Runtime Stage - Using Smaller Base Image
+FROM oven/bun:slim AS runner
+
+# Add Build Arguments
+ARG USE_MIRROR=false
 
 WORKDIR /app
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Environment Variables
+ENV NODE_ENV=production
+# If there is a proxy or load balancer behind HTTPS, you may need to disable secure cookies
+ENV DISABLE_SECURE_COOKIE=false
+# Set Trust Proxy
+ENV TRUST_PROXY=1
+# Set Sharp environment variables
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
+ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
+
+# Install OpenSSL Dependencies and libvips
+RUN apt-get update -y && apt-get install -y openssl libvips-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy Build Artifacts and Necessary Files
+COPY --from=builder /app/dist ./server
+COPY --from=builder /app/server/package.json ./package.json
+COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/seed.js ./seed.js
-COPY --from=builder /app/resetpassword.js ./resetpassword.js
 
-# copy .pnpm files
-RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \
-    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-musl*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*" -o -name "sqlite3*"); do \
-        target_dir="./node_modules/.pnpm/$(basename "$dir")"; \
-        if [ ! -d "$target_dir" ]; then \
-            mkdir -p "$target_dir"; \
-            echo "Copying $dir to $target_dir"; \
-            cp -r "$dir"/* "$target_dir"/; \
-        else \
-            echo "Skipping $dir, already exists"; \
-        fi; \
-    done
+# Prepare Sharp cache directory
+RUN mkdir -p /tmp/sharp-cache
 
-COPY --from=builder /app/node_modules/@libsql ./node_modules/@libsql
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/sqlite3 ./node_modules/sqlite3
+# Configure Mirror Based on USE_MIRROR Parameter
+RUN if [ "$USE_MIRROR" = "true" ]; then \
+        echo "Using Taobao Mirror to Install Dependencies" && \
+        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json; \
+    else \
+        echo "Using Default Mirror to Install Dependencies"; \
+    fi
 
-ENV NODE_ENV=production \
-    PORT=1111 \
-    HOSTNAME=0.0.0.0
+# Pre-install Sharp for ARM architecture
+RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
+        echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
+        mkdir -p /tmp/sharp-cache && \
+        export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
+        bun install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+        bun install --force @img/sharp-linux-arm64 --no-save; \
+    fi
 
+# Install Production Dependencies
+RUN bun install --production --unsafe-perm
+RUN bun install prisma@5.21.1
+RUN ./node_modules/.bin/prisma generate
+
+# Remove onnxruntime-node
+RUN find / -type d -name "onnxruntime-*" -exec rm -rf {} + || true
+
+# Expose Port (Adjust According to Actual Application)
 EXPOSE 1111
 
-CMD ["sh", "-c", "prisma migrate deploy && node seed.js && node server.js"]
+# Create Startup Script
+RUN echo '#!/bin/sh\n\
+echo "Current Environment: $NODE_ENV"\n\
+./node_modules/.bin/prisma migrate deploy\n\
+bun server/seed.js\n\
+bun server/index.js' > ./start.sh && chmod +x ./start.sh
+
+# Startup Command
+CMD ["./start.sh"]

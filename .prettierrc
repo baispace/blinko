@@ -1,8 +1,0 @@
-{
-  "printWidth": 500,
-  "htmlWhitespaceSensitivity": "ignore",
-  "singleQuote": true,
-  "jsxSingleQuote": true,
-  "bracketSameLine": true,
-  "proseWrap": "never"
-}

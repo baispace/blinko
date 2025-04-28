@@ -17,6 +17,7 @@ import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@shared/lib/types";
 import { ToolUsageChip } from "./ToolComponents";
+import { useMediaQuery } from "usehooks-ts";
 
 const UserMessage = ({ content, time }: { content: string; time: string }) => (
   <motion.div
@@ -26,7 +27,7 @@ const UserMessage = ({ content, time }: { content: string; time: string }) => (
     transition={{ duration: 0.3 }}
   >
     <div className="text-center text-desc mt-2 text-xs">{time}</div>
-    <div className="ml-auto max-w-[80%] mb-2 bg-primary text-primary-foreground p-2 rounded-xl">
+    <div className="ml-auto max-w-[100%] mb-2 bg-primary text-primary-foreground p-2 rounded-xl">
       {content}
     </div>
   </motion.div>
@@ -36,7 +37,10 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
   {
     content: string, withoutAnimation?: boolean, withStreamAnimation?: boolean, id?: number,
     metadata?: AssisantMessageMetadata
-  }) => (
+  }) => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  return (
   <motion.div
     className="group"
     initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
@@ -44,7 +48,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
     animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
     transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
   >
-    <div className="max-w-[80%] bg-sencondbackground px-2 py-1 rounded-xl">
+    <div className="max-w-[100%] bg-sencondbackground px-2 py-1 rounded-xl">
       <MarkdownRender content={content} />
     </div>
     <>
@@ -77,8 +81,8 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
       }
     </>
 
-    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-4">
-      <div className="flex gap-2 bg-background/50 backdrop-blur-sm rounded-full p-1 items-center">
+    <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>
+      <div className="flex gap-2  backdrop-blur-sm rounded-full p-1 items-center">
         <IconButton
           tooltip={i18n.t('add-to-blinko')}
           icon="basil:lightning-solid"
@@ -141,7 +145,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
       </div>
     </div>
   </motion.div>
-);
+)};
 
 export const BlinkoChatBox = observer(() => {
   const aiStore = RootStore.Get(AiStore)

@@ -114,9 +114,7 @@ async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: s
 router.get(/.*/, async (req: Request, res: Response) => {
   try {
     const { s3ClientInstance, config } = await FileService.getS3Client();
-    console.log(req.path)
     const fullPath = decodeURIComponent(req.path.substring(1));
-    console.log('fullPath', fullPath);
     const needThumbnail = req.query.thumbnail === 'true';
 
     if (isImage(fullPath) && needThumbnail) {

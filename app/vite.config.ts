@@ -5,13 +5,17 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 const host = process.env.TAURI_DEV_HOST || '0.0.0.0';
 const EXPRESS_PORT = 1111;
-console.log(process.env.TAURI_DEV_HOST)
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
     VitePWA({
+      devOptions: {
+        enabled: true
+      },
+      injectRegister: 'auto',
+      disable: process.env.NODE_ENV === 'development',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo.png', 'logo.svg'],
       manifest: false,
@@ -96,4 +100,3 @@ export default defineConfig({
     hmrPartialAccept: true
   }
 });
-

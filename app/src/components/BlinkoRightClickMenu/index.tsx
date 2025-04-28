@@ -22,6 +22,8 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { Note } from "@shared/lib/types";
 import { BlinkoCard } from "../BlinkoCard";
 import { useLocation } from "react-router-dom";
+import { ShowCommentDialog } from "../BlinkoCard/commentButton";
+import { useMediaQuery } from "usehooks-ts";
 
 export const ShowEditTimeModel = () => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -212,6 +214,13 @@ const handleRelatedNotes = async () => {
   }
 };
 
+const handleComment = () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  if (blinko.curSelectedNote?.id) {
+    ShowCommentDialog(blinko.curSelectedNote.id)
+  }
+}
+
 export const EditItem = observer(() => {
   const { t } = useTranslation();
   return <div className="flex items-start gap-2">
@@ -293,6 +302,14 @@ export const RelatedNotesItem = observer(() => {
   );
 });
 
+export const CommentItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="akar-icons:comment" width="20" height="20" />
+    <div>{t('comment')}</div>
+  </div>
+})
+
 export const TrashItem = observer(() => {
   const { t } = useTranslation();
   return <div className="flex items-start gap-2 text-red-500">
@@ -323,6 +340,7 @@ export const BlinkoRightClickMenu = observer(() => {
   
   const blinko = RootStore.Get(BlinkoStore)
   const pluginApi = RootStore.Get(PluginApiStore)
+  const isPc = useMediaQuery('(min-width: 768px)')
 
   useEffect(() => {
     setIsDetailPage(location.pathname.includes('/detail'))
@@ -357,6 +375,12 @@ export const BlinkoRightClickMenu = observer(() => {
       <ContextMenuItem onClick={handlePublic}>
       <PublicItem />
     </ContextMenuItem>
+    ) : <></>}
+
+    {!isPc ? (
+      <ContextMenuItem onClick={handleComment}>
+        <CommentItem />
+      </ContextMenuItem>
     ) : <></>}
 
     {blinko.config.value?.isUseAI ? (
@@ -399,6 +423,7 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
   const blinko = RootStore.Get(BlinkoStore)
   const pluginApi = RootStore.Get(PluginApiStore)
   const location = useLocation()
+  const isPc = useMediaQuery('(min-width: 768px)')
 
   useEffect(() => {
     setIsDetailPage(location.pathname.includes('/detail'))
@@ -427,6 +452,12 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       {!blinko.curSelectedNote?.isRecycle ? (
         <DropdownItem key="ShareItem" onPress={handlePublic}> 
           <PublicItem />  
+        </DropdownItem>
+      ) : <></>}
+
+      {!isPc ? (
+        <DropdownItem key="CommentItem" onPress={handleComment}>
+          <CommentItem />
         </DropdownItem>
       ) : <></>}
 

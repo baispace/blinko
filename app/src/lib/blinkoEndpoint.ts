@@ -1,9 +1,7 @@
 export function getBlinkoEndpoint(path: string = ''): string {
     try {
         const blinkoEndpoint = window.localStorage.getItem('blinkoEndpoint')
-        console.log('blinkoEndpointfrom localStorage', blinkoEndpoint);
         const isTauri = !!(window as any).__TAURI__;
-        console.log('isTauri', isTauri);
         if (isTauri && blinkoEndpoint) {
             try {
                 const url = new URL(path, blinkoEndpoint.replace(/"/g, ''));

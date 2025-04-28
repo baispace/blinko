@@ -9,12 +9,15 @@ import { ScrollArea } from "../Common/ScrollArea"
 import { api } from "@/lib/trpc"
 import { PromiseCall } from "@/store/standard/PromiseState"
 import { useTranslation } from "react-i18next"
+import { useMediaQuery } from "usehooks-ts"
 
 export const AiConversactionList = observer(() => {
   const aiStore = RootStore.Get(AiStore)
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const { t } = useTranslation()
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  
   useEffect(() => {
     aiStore.conversactionList.resetAndCall({})
   }, [])
@@ -76,7 +79,7 @@ export const AiConversactionList = observer(() => {
             </div>
           )}
 
-          <div className="hidden group-hover:flex items-center gap-1 absolute right-2 top-1/2 -translate-y-1/2 bg-hover px-2 rounded">
+          <div className={`${isMobile ? 'flex' : 'hidden group-hover:flex'} items-center gap-1 absolute right-2 top-1/2 -translate-y-1/2 px-2 rounded`}>
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();

@@ -1,4 +1,5 @@
 use tauri::Manager;
+#[cfg(target_os = "windows")]
 use tauri_plugin_decorum::WebviewWindowExt;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -9,38 +10,46 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_blinko::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_decorum::init())
+        .plugin(tauri_plugin_opener::init());
+
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder.plugin(tauri_plugin_decorum::init());
+    }
+
+    builder
         .invoke_handler(tauri::generate_handler![greet])
         .setup(|app| {
-			// Create a custom titlebar for main window
-			// On Windows this hides decoration and creates custom window controls
-			// On macOS it needs hiddenTitle: true and titleBarStyle: overlay
-			let main_window = app.get_webview_window("main").unwrap();
-			main_window.create_overlay_titlebar().unwrap();
-
-			// Some macOS-specific helpers
-			#[cfg(target_os = "macos")] {
-				// Set a custom inset to the traffic lights
-				main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
-
-				// Make window transparent without privateApi
-				main_window.make_transparent().unwrap();
-
-				// Set window level
-				// NSWindowLevel: https://developer.apple.com/documentation/appkit/nswindowlevel
-				main_window.set_window_level(25).unwrap();
-			}
-
-			Ok(())
-		})
+            let main_window = app.get_webview_window("main").unwrap();
+            
+            // Set platform-specific window decorations
+            #[cfg(target_os = "macos")]
+            {
+                // On macOS, use native decorations
+                main_window.set_decorations(true).unwrap();
+            }
+            
+            #[cfg(any(target_os = "windows", target_os = "linux"))]
+            {
+                // On Windows and Linux, hide decorations
+                main_window.set_decorations(false).unwrap();
+            }
+            
+            // Apply Windows-specific titlebar
+            #[cfg(target_os = "windows")]
+            {
+                main_window.create_overlay_titlebar().unwrap();
+            }
+            
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

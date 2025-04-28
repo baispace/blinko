@@ -9,7 +9,7 @@
     "icon": "bun run tauri icon",
     "build:iconify:icons": "bun run src/components/Common/Iconify/buildIcons.js",
     "build:web": "vite build",
-    "tauri:dev": "tauri dev",
+    "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
     "tauri:android:dev": "tauri android dev --host",
     "tauri:android:build": "tauri android build",
     "tauri:desktop:build": "tauri build"

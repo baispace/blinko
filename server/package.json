@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e ../.env -- bun --watch index.ts",
+    "dev": "bun --env-file ../.env --watch index.ts",
     "build:web": "tsup index.ts --external=@node-rs/crc32 --external=lightningcss --external=zod-openapi --format=esm --target=node16 --clean --outDir=../dist",
     "start": "cp ../dist/public ./public && NODE_ENV=production dotenv -e ../.env -- bun ../dist/index.js"
   },

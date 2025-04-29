@@ -11,6 +11,10 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
+# Set Prisma environment variables to optimize installation
+ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
+
 # Copy Project Files
 COPY . .
 
@@ -33,11 +37,15 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 
 # Install Dependencies and Build App
 RUN bun install --unsafe-perm
+RUN bunx prisma generate
 RUN bun run build:web
 RUN bun run build:seed
 
-# Runtime Stage - Using Smaller Base Image
-FROM node:20-slim AS runner
+RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
+    chmod +x start.sh
+
+# Runtime Stage - Using Alpine as required
+FROM node:20-alpine AS runner
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -55,54 +63,37 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-# Install OpenSSL Dependencies and libvips
-RUN apt-get update -y && apt-get install -y openssl libvips-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy Build Artifacts and Necessary Files
-COPY --from=builder /app/dist ./server
-COPY --from=builder /app/server/package.json ./package.json
-COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
-COPY --from=builder /app/prisma ./prisma
-
-# Prepare Sharp cache directory
-RUN mkdir -p /tmp/sharp-cache
-
-# Configure Mirror Based on USE_MIRROR Parameter
-RUN if [ "$USE_MIRROR" = "true" ]; then \
+RUN apk add --no-cache openssl vips-dev && \
+    if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
         npm config set registry https://registry.npmmirror.com; \
     else \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
 
-# Pre-install Sharp for ARM architecture
+# Copy Build Artifacts and Necessary Files
+COPY --from=builder /app/dist ./server
+COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/start.sh ./
+
+RUN chmod +x ./start.sh && \
+    ls -la start.sh
+
 RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
         npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
         npm install --force @img/sharp-linux-arm64 --no-save; \
-    fi
-
-# Install Production Dependencies
-RUN npm install --production
-RUN npm install prisma@5.21.1
-RUN npx prisma generate
-
-# Remove onnxruntime-node
-RUN find / -type d -name "onnxruntime-*" -exec rm -rf {} + || true
+    fi && \
+    npm install --no-package-lock --production @node-rs/crc32 lightningcss llamaindex @libsql/core @libsql/client @langchain/community sharp sqlite3 prisma@5.21.1 && \
+    npx prisma generate && \
+    find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
+    npm cache clean --force && \
+    rm -rf /tmp/*
 
 # Expose Port (Adjust According to Actual Application)
 EXPOSE 1111
 
-# Create Startup Script
-RUN echo '#!/bin/sh\n\
-echo "Current Environment: $NODE_ENV"\n\
-npx prisma migrate deploy\n\
-node server/seed.js\n\
-node server/index.js' > ./start.sh && chmod +x ./start.sh
-
-# Startup Command
-CMD ["./start.sh"]
+CMD ["/app/start.sh"]

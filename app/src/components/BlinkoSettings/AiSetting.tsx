@@ -106,7 +106,7 @@ export const AiSetting = observer(() => {
         const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
         if (provider === 'Ollama') {
           console.log(blinko.config.value?.aiApiEndpoint);
-          let { data } = await axios.get(`${!!endpoint ? endpoint.origin : 'http://127.0.0.1:11434/api'}/tags`);
+          let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
           modelList = data.models.map(model => ({
             label: model.name,
             value: model.name

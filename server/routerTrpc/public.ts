@@ -28,7 +28,7 @@ export const publicRouter = router({
         async () => {
           return packageJson.version;
         },
-        { ttl: 60 * 60 * 1000 },
+        { ttl: 10 * 1000 },
       );
     }),
   oauthProviders: publicProcedure

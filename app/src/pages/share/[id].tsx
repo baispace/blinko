@@ -9,7 +9,7 @@ import VanillaTilt from 'vanilla-tilt';
 import { Card, InputOtp, Button } from "@heroui/react";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams, useParams } from 'react-router-dom';
 import { GradientBackground } from '@/components/Common/GradientBackground';
 
 
@@ -22,6 +22,7 @@ const Page: React.FC = observer(() => {
   const [isExpired, setIsExpired] = useState(false);
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { id } = useParams();
 
   const store = RootStore.Local(() => ({
     shareNote: new PromiseState({
@@ -46,15 +47,15 @@ const Page: React.FC = observer(() => {
   }))
 
   useEffect(() => {
-    if (!searchParams.get('id')) return
+    if (!id) return
     const urlPassword = searchParams.get('password') as string;
     if (urlPassword) {
       setPassword(urlPassword);
-      store.shareNote.call(searchParams.get('id') as string, urlPassword);
+      store.shareNote.call(id, urlPassword);
     } else {
-      store.shareNote.call(searchParams.get('id') as string);
+      store.shareNote.call(id);
     }
-  }, [location.pathname, searchParams.get('id'), searchParams.get('password'), store.shareNote])
+  }, [location.pathname, id, searchParams.get('password')])
 
   useEffect(() => {
     if (!isPc) return
@@ -69,7 +70,7 @@ const Page: React.FC = observer(() => {
 
   const handleVerify = () => {
     setError(false);
-    store.shareNote.call(searchParams.get('id') as string, password);
+    store.shareNote.call(id as string, password);
   };
 
   if (isExpired) {

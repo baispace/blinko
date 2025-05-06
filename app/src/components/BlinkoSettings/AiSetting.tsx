@@ -309,7 +309,19 @@ export const AiSetting = observer(() => {
               <div className="flex flex-col gap-1">
                 <>{t('endpoint')}</>
                 {blinko.config.value?.aiModelProvider == 'Ollama' ? <div className="text-desc text-xs">http://127.0.0.1:11434/api</div>
-                  : <div className="text-desc text-xs">{new URL(!!store.apiEndPoint ? store.apiEndPoint : 'https://api.openai.com').href + 'chat/completions'}</div>}
+                  : <div className="text-desc text-xs">{
+                    (() => {
+                      try {
+                        const baseUrl = store.apiEndPoint?.trim() ? store.apiEndPoint : 'https://api.openai.com';
+                        const urlWithProtocol = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') 
+                          ? baseUrl 
+                          : `https://${baseUrl}`;
+                        return new URL('/chat/completions', urlWithProtocol).href;
+                      } catch (e) {
+                        return 'https://api.openai.com/chat/completions';
+                      }
+                    })()
+                  }</div>}
               </div>
             }
             rightContent={

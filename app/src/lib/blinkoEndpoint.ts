@@ -8,14 +8,14 @@ export function getBlinkoEndpoint(path: string = ''): string {
                 return url.toString();
             } catch (error) {
                 console.error(error);
-                return path;
+                return new URL(path, window.location.origin).toString();
             }
         }
 
-        return path;
+        return new URL(path, window.location.origin).toString();
     } catch (error) {
         console.error(error);
-        return path;
+        return new URL(path, window.location.origin).toString();
     }
 }
 

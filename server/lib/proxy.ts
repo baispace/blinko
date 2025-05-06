@@ -56,11 +56,9 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
   // create axios instance with better defaults for proxied connections
   const axiosInstance = axios.create({
     ...baseConfig,
-    // 添加默认超时
     timeout: baseConfig.timeout || 30000,
-    // 禁止自动错误转换
     validateStatus: function (status) {
-      return true; // 永远不拒绝响应
+      return true; 
     }
   });
 

@@ -1,7 +1,7 @@
 import { MarkdownTextSplitter, TokenTextSplitter } from '@langchain/textsplitters';
 import { GlobalConfig } from '@shared/lib/types';
 import { BufferLoader } from 'langchain/document_loaders/fs/buffer';
-import { OpenAIWhisperAudio } from '@langchain/community/document_loaders/fs/openai_whisper_audio';
+// import { OpenAIWhisperAudio } from '@langchain/community/document_loaders/fs/openai_whisper_audio';
 import { ProviderV1, LanguageModelV1, EmbeddingModelV1 } from '@ai-sdk/provider';
 import { VECTOR_DB_FILE_PATH } from '@shared/lib/sharedConstant';
 import { AiModelFactory } from '../aiModelFactory';
@@ -91,7 +91,8 @@ export abstract class AiBaseModelProvider {
       return this.provider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'text-embedding-3-small');
     } catch (error) {
       console.log(error, 'ERROR Create Embedding model');
-      throw error;
+      // throw error;
+      return null as unknown as EmbeddingModelV1<string>;
     }
   }
 
@@ -155,12 +156,12 @@ export abstract class AiBaseModelProvider {
   public AudioLoader(audioPath): BufferLoader {
     //todo: loader from user config
     if (this.globalConfig.aiModelProvider == 'OpenAI') {
-      return new OpenAIWhisperAudio(audioPath, {
-        clientOptions: {
-          apiKey: this.globalConfig.aiApiKey,
-          baseURL: this.globalConfig.aiApiEndpoint || null,
-        },
-      });
+      // return new OpenAIWhisperAudio(audioPath, {
+      //   clientOptions: {
+      //     apiKey: this.globalConfig.aiApiKey,
+      //     baseURL: this.globalConfig.aiApiEndpoint || null,
+      //   },
+      // });
     }
     return null as unknown as BufferLoader;
   }

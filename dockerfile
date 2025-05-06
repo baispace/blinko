@@ -80,6 +80,12 @@ COPY --from=builder /app/start.sh ./
 RUN chmod +x ./start.sh && \
     ls -la start.sh
 
+# Update Prisma schema binaryTargets for Alpine on ARM
+RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
+        echo "Detected ARM architecture, updating Prisma schema..." && \
+        sed -i 's/generator client {/generator client {\n  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]/' ./prisma/schema.prisma; \
+    fi
+
 RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
@@ -88,6 +94,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         npm install --force @img/sharp-linux-arm64 --no-save; \
     fi && \
     npm install --no-package-lock --production @node-rs/crc32 lightningcss llamaindex @libsql/core @libsql/client @langchain/community sharp sqlite3 prisma@5.21.1 && \
+    echo "Generating Prisma client..." && \
     npx prisma generate && \
     find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
     npm cache clean --force && \

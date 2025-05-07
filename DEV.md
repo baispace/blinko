@@ -9,10 +9,10 @@ docker build --build-arg USE_MIRROR=true -t blinko .
 docker run --name blinko-website -d -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" blinko
 ``` 
 
-## test mutli platform build
+## build docker with dockerfile locally on arm64
 ```
-docker buildx build --platform linux/amd64,linux/arm64 -t test/myimage:test  --output "type=image,push=false" .
-docker buildx build --platform linux/arm64 -t test/myimage:test  --output "type=image,push=false" .
+docker buildx build --platform linux/arm64 -t blinko-arm .
+docker run --platform linux/arm64 --rm blinko-arm uname -m -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" blinko-arm
 ```
 
 ## build docker image & run with docker-compose locally

@@ -23,7 +23,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  update-version:
+    name: Update Project Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Git User
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Get Version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.version }}" != "" ]]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          fi
+          echo "Trigger app version release: ${{ env.VERSION }}"
+          echo "Version value: ${{ env.VERSION }}"
+
+      - name: Update package.json Version
+        run: |
+          # Update version using jq
+          jq '.version = "${{ env.VERSION }}"' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          
+          # Commit changes
+          git add package.json
+          git commit -m "chore: Update version to ${{ env.VERSION }}"
+          git push origin HEAD:${GITHUB_REF}
+
   build:
+    needs: update-version
     strategy:
       matrix:
         include:
@@ -182,45 +221,6 @@ jobs:
         run: |
           docker buildx imagetools inspect blinkospace/blinko:${{ env.VERSION }}
           docker buildx imagetools inspect ghcr.io/blinko-space/blinko:${{ env.VERSION }}
-
-  update-version:
-    name: Update Project Version
-    needs: merge
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set Git User
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-
-      - name: Get Version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.version }}" != "" ]]; then
-            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-          else
-            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-          fi
-          echo "Trigger app version release: ${{ env.VERSION }}"
-          echo "Version value: ${{ env.VERSION }}"
-
-      - name: Update package.json Version
-        run: |
-          # Update version using jq
-          jq '.version = "${{ env.VERSION }}"' package.json > package.json.tmp
-          mv package.json.tmp package.json
-          
-          # Commit changes
-          git add package.json
-          git commit -m "chore: Update version to ${{ env.VERSION }}"
-          git push origin HEAD:${GITHUB_REF}
 
   trigger-app-release:
     name: Trigger App Build Release

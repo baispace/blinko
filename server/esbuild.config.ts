@@ -25,18 +25,19 @@ async function build() {
       packages: 'bundle',
       external: [
         'buffer', 'crypto', 'events', 'fs', 'http', 'https', 'net', 
-        'os', 'path', 'querystring', 'stream', 'string_decoder', 
-        'url', 'util', 'zlib',
+        'os', 'path', 'querystring', 'stream', 'util', 'zlib',
         '@node-rs/crc32',
         'lightningcss',
         'llamaindex',
         'onnxruntime-node',
         'onnxruntime-web',
-        '@libsql/core',
-        '@libsql/client',
         '@langchain/community',
         'sharp',
-        'sqlite3'
+        'sqlite3',
+        '@libsql/linux-x64-musl',
+        '@libsql/linux-x64-gnu',
+        '@libsql/linux-arm64-musl',
+        '@libsql/linux-arm64-gnu'
       ],
       define: {
         'process.env.NODE_ENV': '"production"',

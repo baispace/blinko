@@ -12,7 +12,9 @@ docker run --name blinko-website -d -p 1111:1111 -e "DATABASE_URL=postgresql://p
 ## build docker with dockerfile locally on arm64
 ```
 docker buildx build --platform linux/arm64 -t blinko-arm .
-docker run --platform linux/arm64 --rm blinko-arm uname -m -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" blinko-arm
+docker run --name blinko-website --platform linux/arm64 -d -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" dlhtx/blinko:latest
+
+docker run -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" dlhtx/blinko:latest
 ```
 
 ## build docker image & run with docker-compose locally

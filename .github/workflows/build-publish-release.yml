@@ -63,6 +63,7 @@ jobs:
           # Commit changes
           git add package.json
           git commit -m "chore: Update version to ${{ env.VERSION }}"
+          git pull --rebase origin ${GITHUB_REF}
           git push origin HEAD:${GITHUB_REF}
 
   build:

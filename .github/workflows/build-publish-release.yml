@@ -56,15 +56,23 @@ jobs:
 
       - name: Update package.json Version
         run: |
-          # Update version using jq
-          jq '.version = "${{ env.VERSION }}"' package.json > package.json.tmp
-          mv package.json.tmp package.json
+          # Get current version from package.json
+          CURRENT_VERSION=$(jq -r '.version' package.json)
           
-          # Commit changes
-          git add package.json
-          git commit -m "chore: Update version to ${{ env.VERSION }}"
-          git pull --rebase origin ${GITHUB_REF}
-          git push origin HEAD:${GITHUB_REF}
+          # Only update if versions are different
+          if [ "$CURRENT_VERSION" != "${{ env.VERSION }}" ]; then
+            # Update version using jq
+            jq '.version = "${{ env.VERSION }}"' package.json > package.json.tmp
+            mv package.json.tmp package.json
+            
+            # Commit changes
+            git add package.json
+            git commit -m "chore: Update version to ${{ env.VERSION }}"
+            git pull --rebase origin ${GITHUB_REF}
+            git push origin HEAD:${GITHUB_REF}
+          else
+            echo "Version ${{ env.VERSION }} already set in package.json, skipping update"
+          fi
 
   build:
     needs: update-version

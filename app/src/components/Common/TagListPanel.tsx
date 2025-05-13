@@ -114,11 +114,11 @@ export const TagListPanel = observer(() => {
         }) => (
           <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) + 6 }} >
             <div className={`${SideBarItem} mb-1 relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : ''}`}
-              onClick={async e => {
+              onClick={e => {
                 //@ts-ignore
                 base.currentRouter = blinko.allTagRouter
+                blinko.updateTagFilter(Number(element.id))
                 navigate('/?path=all&tagId=' + element.id, { replace: true })
-                blinko.forceQuery++
               }}
             >
               {isBranch ? (

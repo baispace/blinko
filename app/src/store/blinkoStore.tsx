@@ -444,9 +444,20 @@ export class BlinkoStore implements Store {
   useQuery() {
     const [searchParams] = useSearchParams();
     const location = useLocation();
-
+    
+    // 追踪上一次的tagId，避免重复请求
+    const lastTagIdRef = { current: null };
+    
     useEffect(() => {
       const tagId = searchParams.get('tagId');
+      console.log(tagId, 'tagIdxxx')
+      
+      // 如果是通过updateTagFilter方法设置的tagId，跳过请求
+      if (tagId && Number(tagId) === this.noteListFilterConfig.tagId) {
+        console.log("跳过重复请求", tagId);
+        return;
+      }
+      
       const withoutTag = searchParams.get('withoutTag');
       const withFile = searchParams.get('withFile');
       const withLink = searchParams.get('withLink');
@@ -525,5 +536,10 @@ export class BlinkoStore implements Store {
   removeCreateAttachments(file: { name: string, }) {
     this.createAttachmentsStorage.removeByFind(f => f.name === file.name);
     this.updateTicker++;
+  }
+
+  updateTagFilter(tagId: number) {
+    this.noteListFilterConfig.tagId = tagId;
+    this.noteList.resetAndCall({});
   }
 }

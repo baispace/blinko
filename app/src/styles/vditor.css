@@ -20,7 +20,9 @@
   background-color: var(--background);
   color: var(--foreground);
 }
-
+.vditor-ir__node--expand .vditor-ir__preview {
+  display: none;
+}
 .vditor-toolbar {
   padding: 0;
   padding-left: 4px !important;

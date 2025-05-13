@@ -98,6 +98,7 @@ export const useEditorInit = (
       },
       preview: {
         hljs: {
+          enable: true,
           style: theme === 'dark' ? 'github-dark' : 'github',
           lineNumber: true,
         },

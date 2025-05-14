@@ -18,7 +18,7 @@ jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     outputs:
-      changelog: ${{ steps.changelog.outputs.changelog }}
+      changelog: ${{ steps.changelog.outputs.changes }}
       version: ${{ steps.set_version.outputs.version }}
     steps:
       - name: Checkout code
@@ -53,6 +53,7 @@ jobs:
           
           echo "Current working tag: $CURRENT_TAG"
           echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
+          echo "CURRENT_TAG_WITH_V=$CURRENT_TAG_WITH_V" >> $GITHUB_ENV
           
           # Get all tags sorted by creation date
           ALL_TAGS=$(git tag --sort=-creatordate)
@@ -123,57 +124,12 @@ jobs:
       
       - name: Generate Changelog
         id: changelog
-        run: |
-          echo "Previous tag: ${{ env.PREVIOUS_TAG }}"
-          echo "Current tag: ${{ env.CURRENT_TAG }}"
-          
-          # Normalize tags (handle v prefix)
-          CURRENT_TAG="${{ env.CURRENT_TAG }}"
-          CURRENT_TAG_WITH_V="v${{ env.CURRENT_TAG }}"
-          CURRENT_TAG_NO_V="${CURRENT_TAG#v}"
-          
-          PREVIOUS_TAG="${{ env.PREVIOUS_TAG }}"
-          PREVIOUS_TAG_NO_V="${PREVIOUS_TAG#v}"
-          
-          # Check which tag format exists in Git
-          if git show-ref --quiet --verify -- "refs/tags/$CURRENT_TAG"; then
-            CURRENT_TAG_REF="$CURRENT_TAG"
-          elif git show-ref --quiet --verify -- "refs/tags/$CURRENT_TAG_WITH_V"; then
-            CURRENT_TAG_REF="$CURRENT_TAG_WITH_V"
-          else
-            echo "WARNING: Current tag formats $CURRENT_TAG and $CURRENT_TAG_WITH_V don't exist in Git, using HEAD"
-            CURRENT_TAG_REF="HEAD"
-          fi
-          
-          # Check which previous tag format exists
-          if git show-ref --quiet --verify -- "refs/tags/$PREVIOUS_TAG"; then
-            PREVIOUS_TAG_REF="$PREVIOUS_TAG"
-          elif [[ "$PREVIOUS_TAG" == "v$PREVIOUS_TAG_NO_V" ]] && git show-ref --quiet --verify -- "refs/tags/$PREVIOUS_TAG_NO_V"; then
-            PREVIOUS_TAG_REF="$PREVIOUS_TAG_NO_V"
-          elif git show-ref --quiet --verify -- "refs/tags/v$PREVIOUS_TAG"; then
-            PREVIOUS_TAG_REF="v$PREVIOUS_TAG"
-          else
-            # Try to use the tag as is, it might be a commit hash
-            PREVIOUS_TAG_REF="$PREVIOUS_TAG"
-          fi
-          
-          # Set the changelog range
-          echo "CHANGELOG_RANGE=$PREVIOUS_TAG_REF..$CURRENT_TAG_REF" >> $GITHUB_ENV
-          echo "Generating changelog from range: $PREVIOUS_TAG_REF..$CURRENT_TAG_REF"
-          
-          # Generate the changelog
-          CHANGELOG=$(git log --pretty=format:"- %s (%h) by %an" $PREVIOUS_TAG_REF..$CURRENT_TAG_REF | sort)
-          
-          # If no commit records, use default message
-          if [ -z "$CHANGELOG" ]; then
-            echo "No commits found in range, using default message"
-            CHANGELOG="- First release or no new commits"
-          fi
-          
-          # Output log (multiline variable)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fromTag: ${{ env.CURRENT_TAG_WITH_V }}
+          toTag: ${{ env.PREVIOUS_TAG }}
+          writeToFile: false
 
   # Update Tauri Config Version
   update-version:

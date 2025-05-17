@@ -18,7 +18,7 @@ jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     outputs:
-      changelog: ${{ steps.changelog.outputs.changes }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
       version: ${{ steps.set_version.outputs.version }}
     steps:
       - name: Checkout code
@@ -59,16 +59,12 @@ jobs:
       
       - name: Generate Changelog
         id: changelog
-        uses: requarks/changelog-action@v1
+        uses: mikepenz/release-changelog-builder-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          toTag: ${{ github.ref_name }}
-          writeToFile: false
-          excludeTypes: build,docs,other,style
-          changelogFilePath: CHANGELOG.md
-          includeRefIssues: true
-          useGitmojis: true
-          includeInvalidCommits: false
+          configuration: ""
+          ignorePreReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Update Tauri Config Version
   update-version:

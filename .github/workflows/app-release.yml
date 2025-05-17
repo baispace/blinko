@@ -62,6 +62,7 @@ jobs:
         uses: requarks/changelog-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          toTag: ${{ github.ref_name }}
           writeToFile: false
           excludeTypes: build,docs,other,style
           changelogFilePath: CHANGELOG.md

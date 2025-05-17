@@ -116,6 +116,13 @@ async function setupApiRoutes(app: express.Application) {
     });
     res.sendFile(path.resolve(__dirname, './lute.min.js'));
   });
+  app.use('/dist/js/icons/ant.js', (req, res) => {
+    res.set({
+      'Cache-Control': 'public, max-age=604800, immutable',
+      'Expires': new Date(Date.now() + 604800000).toUTCString()
+    });
+    res.sendFile(path.resolve(__dirname, './lute.min.js'));
+  });
   app.use('/plugins', pluginRouter);
 
   // Other API endpoints

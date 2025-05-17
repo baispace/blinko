@@ -127,9 +127,15 @@ jobs:
         uses: requarks/changelog-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fromTag: ${{ env.CURRENT_TAG_WITH_V }}
-          toTag: ${{ env.PREVIOUS_TAG }}
+          fromTag: ${{ env.PREVIOUS_TAG }}
+          toTag: ${{ env.CURRENT_TAG_WITH_V }}
           writeToFile: false
+          excludeTypes: build,docs,other,style
+          changelogFilePath: CHANGELOG.md
+          includeRefIssues: true
+          useGitmojis: true
+          includeInvalidCommits: false
+          reverseOrder: false
 
   # Update Tauri Config Version
   update-version:

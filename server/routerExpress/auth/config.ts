@@ -206,7 +206,7 @@ const initOAuthStrategies = async () => {
   try {
     const config = await getGlobalConfig({ useAdmin: true });
     const providers = config.oauth2Providers || [];
-
+    console.log('initOAuthStrategies', providers);
     for (const provider of providers) {
       const callbackURL = `/api/auth/callback/${provider.id}`;
       switch (provider.id) {
@@ -325,28 +325,78 @@ const initOAuthStrategies = async () => {
           break;
 
         default:
+          console.log('handle custom oauth provider', provider);
           // Custom OAuth provider configuration
           if (provider.wellKnown || (provider.authorizationUrl && provider.tokenUrl)) {
             console.log(`Custom OAuth provider ${provider.id} needs additional configuration`);
             try {
               const { Strategy: OAuth2Strategy } = require('passport-oauth2');
 
-              const oauthConfig = {
-                authorizationURL: provider.authorizationUrl || provider.wellKnown + '/authorize',
-                tokenURL: provider.tokenUrl || provider.wellKnown + '/token',
-                clientID: provider.clientId,
-                clientSecret: provider.clientSecret,
-                callbackURL: callbackURL,
-                scope: provider.scope?.split(' ') || ['profile', 'email'],
-                passReqToCallback: true
-              };
+              let oauthConfig;
+              
+              if (provider.wellKnown) {
+                const wellKnownResponse = await fetch(provider.wellKnown);
+                if (!wellKnownResponse.ok) {
+                  throw new Error(`Failed to fetch well-known configuration from ${provider.wellKnown}`);
+                }
+                const wellKnownConfig = await wellKnownResponse.json();
+                
+                console.log(`Well-known configuration for ${provider.id}:`, wellKnownConfig);
+                
+                oauthConfig = {
+                  authorizationURL: wellKnownConfig.authorization_endpoint,
+                  tokenURL: wellKnownConfig.token_endpoint,
+                  clientID: provider.clientId,
+                  clientSecret: provider.clientSecret,
+                  callbackURL: callbackURL,
+                  scope: provider.scope?.split(' ') || wellKnownConfig.scopes_supported || ['openid', 'profile', 'email'],
+                  passReqToCallback: true
+                };
+              } else {
+                oauthConfig = {
+                  authorizationURL: provider.authorizationUrl,
+                  tokenURL: provider.tokenUrl,
+                  clientID: provider.clientId,
+                  clientSecret: provider.clientSecret,
+                  callbackURL: callbackURL,
+                  scope: provider.scope?.split(' ') || ['profile', 'email'],
+                  passReqToCallback: true
+                };
+              }
 
               passport.use(provider.id, new OAuth2Strategy(oauthConfig,
-                (req, accessToken, refreshToken, profile, done) => {
-                  if (provider.userinfoUrl) {
-                    handleOAuthCallback(accessToken, refreshToken, profile, done);
-                  } else {
-                    handleOAuthCallback(accessToken, refreshToken, profile, done);
+                async (req, accessToken, refreshToken, profile, done) => {
+                  try {
+                    if (provider.wellKnown) {
+                      const wellKnownResponse = await fetch(provider.wellKnown);
+                      const wellKnownConfig = await wellKnownResponse.json();
+                      
+                      const userInfoResponse = await fetch(wellKnownConfig.userinfo_endpoint, {
+                        headers: {
+                          'Authorization': `Bearer ${accessToken}`
+                        }
+                      });
+                      
+                      if (!userInfoResponse.ok) {
+                        throw new Error('Failed to fetch user info from OpenID Connect provider');
+                      }
+
+                      const userInfo = await userInfoResponse.json();
+                      
+                      profile = {
+                        id: userInfo.sub,
+                        username: userInfo.preferred_username || userInfo.name,
+                        displayName: userInfo.name,
+                        photos: userInfo.picture ? [{ value: userInfo.picture }] : [],
+                        emails: userInfo.email ? [{ value: userInfo.email }] : [],
+                        provider: provider.id
+                      };
+                    }
+
+                    return handleOAuthCallback(accessToken, refreshToken, profile, done);
+                  } catch (error) {
+                    console.error(`${provider.id} OAuth error:`, error);
+                    return done(error);
                   }
                 }
               ));

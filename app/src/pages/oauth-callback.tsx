@@ -17,26 +17,26 @@ export default function OAuthCallback() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userStore = RootStore.Get(UserStore);
-  
+
   const handleTwoFactorAuth = async (code: string) => {
     try {
       const params = new URLSearchParams(location.search);
       const userId = params.get('userId') || userStore.id;
-      
+
       if (!userId) {
         RootStore.Get(ToastPlugin).error(t('verification-failed'));
         return { ok: false, error: 'Missing user ID' };
       }
-      
-      console.log('OAuth callback 处理两因素验证, userId:', userId);
-      
+
+      console.log('OAuth callback, userId:', userId);
+
       const res = await signIn('oauth-2fa', {
         userId: userId,
         twoFactorCode: code,
         callbackUrl: '/',
         redirect: false,
       });
-      
+
       if (res && res.ok) {
         eventBus.emit('user:twoFactorResult', { success: true });
         const tokenData = await getTokenData();
@@ -52,7 +52,7 @@ export default function OAuthCallback() {
         });
         RootStore.Get(ToastPlugin).error(res?.error || t('invalid-2fa-code'));
       }
-      
+
       return res;
     } catch (error) {
       RootStore.Get(ToastPlugin).error(t('verification-failed'));
@@ -61,6 +61,7 @@ export default function OAuthCallback() {
   };
 
   useEffect(() => {
+    console.log('OAuth callback, useEffect');
     const checkAuthStatus = async () => {
       try {
         const params = new URLSearchParams(location.search);
@@ -69,7 +70,7 @@ export default function OAuthCallback() {
         const requiresTwoFactor = params.get('requiresTwoFactor');
         const userId = params.get('userId');
         const token = params.get('token');
-        
+
         if (errorMsg) {
           setError(errorMsg);
           RootStore.Get(ToastPlugin).error(`${t('login-failed')}: ${errorMsg}`);
@@ -78,7 +79,7 @@ export default function OAuthCallback() {
           }, 3000);
           return;
         }
-        
+
         if (requiresTwoFactor === 'true' && userId) {
           userStore.tokenData.save({
             ...userStore.tokenData.value,
@@ -88,12 +89,12 @@ export default function OAuthCallback() {
               id: userId
             }
           });
-          
+
           ShowTwoFactorModal(handleTwoFactorAuth, false);
           setIsLoading(false);
           return;
         }
-        
+        console.log('OAuth callback, success:', success, token);
         if (success === 'true') {
           if (token) {
             try {
@@ -104,13 +105,14 @@ export default function OAuthCallback() {
                 token: token
               };
               eventBus.emit('user:token', tokenData);
-              
+
               const userData = await getTokenData();
               if (userData && userData.user && userData.user.id) {
                 navigate('/');
               } else {
               }
             } catch (err) {
+              console.log('OAuth callback, error:', err);
               RootStore.Get(ToastPlugin).error(t('login-failed'));
               navigate('/signin');
             }
@@ -126,9 +128,9 @@ export default function OAuthCallback() {
             return;
           }
         }
-        
+
         const tokenData = await getTokenData();
-        
+
         if (tokenData?.requiresTwoFactor) {
           ShowTwoFactorModal(handleTwoFactorAuth, false);
         } else if (tokenData?.user) {
@@ -137,7 +139,7 @@ export default function OAuthCallback() {
           RootStore.Get(ToastPlugin).error(t('login-failed'));
           navigate('/signin');
         }
-        
+
         setIsLoading(false);
       } catch (error) {
         setError('handle oauth callback error');
@@ -151,11 +153,11 @@ export default function OAuthCallback() {
     const handleTwoFactorSubmit = (code: string) => {
       handleTwoFactorAuth(code);
     };
-    
+
     eventBus.on('user:twoFactorSubmit', handleTwoFactorSubmit);
-    
+
     checkAuthStatus();
-    
+
     return () => {
       eventBus.off('user:twoFactorSubmit', handleTwoFactorSubmit);
     };

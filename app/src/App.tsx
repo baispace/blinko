@@ -45,11 +45,10 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const publicRoutes = ['/signin', '/signup', '/share', '/_offline'];
+      const publicRoutes = ['/signin', '/signup', '/share', '/_offline','/oauth-callback'];
       const isPublicRoute = publicRoutes.some(route =>
         location.pathname === route || location.pathname.startsWith('/share/')
       );
-
       if (!userStore.isLogin && !isPublicRoute) {
         const tokenData = await getTokenData();
         console.log('tokenData', tokenData);

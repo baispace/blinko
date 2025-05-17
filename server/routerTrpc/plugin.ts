@@ -1,4 +1,4 @@
-import { router, authProcedure } from '../middleware';
+import { router, authProcedure, publicProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import fs from 'fs/promises';
@@ -289,7 +289,7 @@ export const pluginRouter = router({
     }
   }),
 
-  getInstalledPlugins: authProcedure.output(z.array(pluginSchema)).query(async () => {
+  getInstalledPlugins: publicProcedure.output(z.array(pluginSchema)).query(async () => {
     const plugins = await prisma.plugin.findMany();
     return plugins;
   }),

@@ -47,6 +47,7 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   context: any = undefined;
   autoInit = false;
   autoClean = false;
+  autoAuthRedirect = true;
   successMsg: string = "";
   errMsg: string = "";
   loadingLock = true;
@@ -127,7 +128,9 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
         const message = error.message;
         if (message.includes("Unauthorized")) {
           toast.dismiss();
-          eventBus.emit('user:signout')
+          if (this.autoAuthRedirect) {
+            eventBus.emit('user:signout')
+          }
         } else {
           this.errMsg = message;
           if (isTauriAndEndpointUndefined()) {
@@ -156,6 +159,7 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
   key?: string;
   loading = new BooleanState();
   isLoadAll: boolean = false;
+  autoAuthRedirect: boolean = true;
   get isEmpty() {
     if (this.loading.value) return false
     if (this.value == null) return true
@@ -257,7 +261,9 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
         const message = error.message;
         if (message.includes("Unauthorized")) {
           toast.dismiss();
-          eventBus.emit('user:signout')
+          if (this.autoAuthRedirect) {
+            eventBus.emit('user:signout')
+          }
         } else {
           this.errMsg = message;
           if (isTauriAndEndpointUndefined()) {

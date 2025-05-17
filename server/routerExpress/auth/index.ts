@@ -57,6 +57,7 @@ router.get('/twitter', logOAuthRequest('Twitter'), passport.authenticate('twitte
 
 router.get('/discord', logOAuthRequest('Discord'), passport.authenticate('discord', { scope: ['identify', 'email'] }));
 
+
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', async (err, user, info) => {
     if (err) {
@@ -193,6 +194,21 @@ router.get('/profile', async (req: any, res) => {
     return res.status(401).json({ error: 'Authentication failed' });
   }
 });
+
+router.get('/:providerId', logOAuthRequest('Custom'), (req, res, next) => {
+  const providerId = req.params.providerId;
+  console.log(`Custom OAuth provider ${providerId} authentication route accessed`);
+  
+  const predefinedProviders = ['github', 'google', 'facebook', 'twitter', 'discord'];
+  if (predefinedProviders.includes(providerId.toLowerCase())) {
+    return next();
+  }
+  
+  passport.authenticate(providerId, {
+    scope: ['openid', 'profile', 'email']
+  })(req, res, next);
+});
+
 
 router.post('/logout', (req: any, res) => {
   res.json({ message: 'Logout successful' });

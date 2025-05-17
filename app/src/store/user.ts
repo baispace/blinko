@@ -411,6 +411,7 @@ export class UserStore implements Store {
 
     useEffect(() => {
       const handleSignout = () => {
+        console.log('user:signout');
         const pathname = location.pathname;
         if (pathname === '/signup' || pathname.includes('/share')) {
           return

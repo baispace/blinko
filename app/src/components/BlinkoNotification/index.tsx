@@ -11,11 +11,13 @@ import { ScrollArea } from '../Common/ScrollArea';
 import { Notifications, NotificationType } from '@/lib/prismaZodType';
 import { ShowCommentDialog } from '../BlinkoCard/commentButton';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { UserStore } from '@/store/user';
 
 
 export const BlinkoNotification = observer(() => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore)
+  const user = RootStore.Get(UserStore)
   const store = RootStore.Local(() => ({
     isOpen: false,
     setIsOpen(open: boolean) {
@@ -25,12 +27,14 @@ export const BlinkoNotification = observer(() => {
       }
     },
     notificationList: new PromisePageState({
+      autoAuthRedirect: false,
       function: async ({ page, size }) => {
         return await api.notifications.list.query({ page, size });
       }
     }),
     unreadCount: new PromiseState({
       value: 0,
+      autoAuthRedirect: false,
       function: async () => {
         return await api.notifications.unreadCount.query();
       },
@@ -54,13 +58,17 @@ export const BlinkoNotification = observer(() => {
   }));
 
   useEffect(() => {
-    store.unreadCount.call();
-    store.notificationList.resetAndCall({});
+    if (user.isLogin) {
+      store.unreadCount.call();
+      store.notificationList.resetAndCall({});
+    }
   }, []);
 
   useEffect(() => {
-    store.unreadCount.call();
-    store.notificationList.resetAndCall({});
+    if (user.isLogin) {
+      store.unreadCount.call();
+      store.notificationList.resetAndCall({});
+    }
   }, [blinko.updateTicker]);
 
   if (store.unreadCount.value === 0 || blinko.config.value?.isHiddenNotification) {

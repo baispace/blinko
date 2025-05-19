@@ -105,6 +105,16 @@ const handleMultiSelect = () => {
   blinko.onMultiSelectNote(blinko.curSelectedNote?.id!)
 }
 
+const handleSelectAll = () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  blinko.isMultiSelectMode = true
+  blinko.noteList.value?.forEach(note => {
+    if (note.id) {
+      blinko.onMultiSelectNote(note.id)
+    }
+  })
+}
+
 const handleTop = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.upsertNote.call({
@@ -237,6 +247,14 @@ export const MutiSelectItem = observer(() => {
   </div>
 })
 
+export const SelectAllItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="mingcute:multiselect-fill" width="20" height="20" />
+    <div>{t('select-all')}</div>
+  </div>
+})
+
 export const ConvertItemFunction = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.upsertNote.call({
@@ -351,9 +369,16 @@ export const BlinkoRightClickMenu = observer(() => {
       <EditItem />
     </ContextMenuItem>
 
-    {!isDetailPage ? <ContextMenuItem onClick={() => handleMultiSelect()}>
-      <MutiSelectItem />
-    </ContextMenuItem> : <></>}
+    {!isDetailPage ? (
+      <>
+        <ContextMenuItem onClick={() => handleMultiSelect()}>
+          <MutiSelectItem />
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => handleSelectAll()}>
+          <SelectAllItem />
+        </ContextMenuItem>
+      </>
+    ) : <></>}
 
     <ContextMenuItem onClick={() => ShowEditTimeModel()}>
       <EditTimeItem />
@@ -439,9 +464,16 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
     </DropdownTrigger>
     <DropdownMenu aria-label="Static Actions" disabledKeys={disabledKeys}>
       <DropdownItem key="EditItem" onPress={() => handleEdit(isDetailPage)}><EditItem /></DropdownItem>
-      <DropdownItem key="MutiSelectItem" onPress={() => {
-        handleMultiSelect()
-      }}><MutiSelectItem /></DropdownItem>
+      {!isDetailPage ? (
+        <>
+          <DropdownItem key="MutiSelectItem" onPress={() => handleMultiSelect()}>
+            <MutiSelectItem />
+          </DropdownItem>
+          <DropdownItem key="SelectAllItem" onPress={() => handleSelectAll()}>
+            <SelectAllItem />
+          </DropdownItem>
+        </>
+      ) : null}
       <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>

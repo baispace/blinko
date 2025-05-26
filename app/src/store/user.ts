@@ -47,7 +47,7 @@ export class UserStore implements Store {
   }
 
   get image(): string {
-    return this.tokenData.value?.user?.image || '';
+    return this.userInfo.value?.image || '';
   }
 
   get role(): string {

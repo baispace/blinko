@@ -355,6 +355,7 @@ export class UserStore implements Store {
 
     useEffect(() => {
       this.initializeSettings(setTheme, i18n);
+
     }, []);
 
     useEffect(() => {
@@ -410,8 +411,11 @@ export class UserStore implements Store {
     }, []);
 
     useEffect(() => {
+      this.userInfo.call(Number(this.id));
+    }, [this.id]);
+
+    useEffect(() => {
       const handleSignout = () => {
-        console.log('user:signout');
         const pathname = location.pathname;
         if (pathname === '/signup' || pathname.includes('/share')) {
           return

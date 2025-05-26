@@ -12,6 +12,7 @@ import { unlink } from 'fs/promises';
 import { FileService } from '../lib/files';
 import path from 'path';
 import fs from 'fs';
+import { MarkdownImporter } from '../jobs/markdownJob';
 
 
 export const taskRouter = router({
@@ -87,6 +88,32 @@ export const taskRouter = router({
         }
       } catch (error) {
         throw new Error(error)
+      }
+    }),
+
+  importFromMarkdown: authProcedure.use(demoAuthMiddleware)
+    .input(z.object({
+      filePath: z.string() // Path to .md file or .zip containing md files
+    }))
+    .mutation(async function* ({ input, ctx }) {
+      try {
+        const localFilePath = await FileService.getFile(input.filePath);
+        const markdownImporter = new MarkdownImporter();
+        
+        for await (const result of markdownImporter.importMarkdown(localFilePath, ctx)) {
+          yield result;
+        }
+        
+        // Clean up the file after import
+        try {
+          await unlink(localFilePath);
+          await FileService.deleteFile(input.filePath);
+        } catch (error) {
+          console.error("Failed to clean up files after markdown import:", error);
+        }
+      } catch (error) {
+        console.error("Error in importFromMarkdown:", error);
+        throw new Error(error);
       }
     }),
 

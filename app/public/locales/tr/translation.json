@@ -633,5 +633,8 @@
   "download-success": "İndirme başarılı",
   "download-failed": "İndirme başarısız oldu",
   "downloading": "İndiriliyor",
-  "hide-pc-editor": "Gizli PC tarafı düzenleyicisi"
+  "hide-pc-editor": "Gizli PC tarafı düzenleyicisi",
+  "import-from-markdown": "Markdown dosyasından içe aktar",
+  "import-from-markdown-tip": ".md dosyasından veya .md dosyalarını içeren .zip arşivinden içe aktar",
+  "not-a-markdown-or-zip-file": "Markdown veya zip dosyası değil. Lütfen .md veya .zip dosyalarını seçin."
 }

@@ -639,5 +639,8 @@
   "download-success": "Download geslaagd",
   "download-failed": "Download mislukt",
   "downloading": "Aan het downloaden",
-  "hide-pc-editor": "Verberg PC-editor"
+  "hide-pc-editor": "Verberg PC-editor",
+  "import-from-markdown": "Importeren vanuit Markdown-bestand",
+  "import-from-markdown-tip": "Importeer uit een enkel .md-bestand of een .zip-archief dat .md-bestanden bevat.",
+  "not-a-markdown-or-zip-file": "Het is geen Markdown- of zip-bestand. Kies een .md- of .zip-bestand."
 }

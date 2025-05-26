@@ -633,5 +633,8 @@
   "download-success": "Téléchargement réussi",
   "download-failed": "Échec du téléchargement",
   "downloading": "En téléchargement",
-  "hide-pc-editor": "Masquer l'éditeur sur le PC."
+  "hide-pc-editor": "Masquer l'éditeur sur le PC.",
+  "import-from-markdown": "Importer à partir d'un fichier Markdown",
+  "import-from-markdown-tip": "Importer à partir d'un simple fichier .md ou d'une archive .zip contenant des fichiers .md",
+  "not-a-markdown-or-zip-file": "Ce n'est pas un fichier Markdown ou zip. Veuillez sélectionner un fichier .md ou .zip."
 }

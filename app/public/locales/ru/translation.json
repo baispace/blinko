@@ -627,5 +627,7 @@
   "verification-failed": "Аутентификация не удалась",
   "download-success": "Успешно загружено",
   "download-failed": "Загрузка не удалась",
-  "hide-pc-editor": "скрыть редактор для ПК."
+  "hide-pc-editor": "скрыть редактор для ПК.",
+  "import-from-markdown": "从Markdown文件导入 -> Импорт из файла Markdown",
+  "not-a-markdown-or-zip-file": "这不是Markdown或zip文件。请选择.md或.zip文件。\n\nЭто не файл Markdown или zip. Пожалуйста, выберите файл .md или .zip."
 }

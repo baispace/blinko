@@ -631,5 +631,8 @@
   "verification-failed": "認證失敗",
   "download-failed": "下載失敗",
   "downloading": "下載中",
-  "hide-pc-editor": "隱藏PC端編輯器"
+  "hide-pc-editor": "隱藏PC端編輯器",
+  "import-from-markdown": "從Markdown文件導入",
+  "import-from-markdown-tip": "從單一.md 文件或包含 .md 文件的 .zip 存檔匯入",
+  "not-a-markdown-or-zip-file": "不是Markdown或zip檔案。請選擇.md或.zip檔案。"
 }

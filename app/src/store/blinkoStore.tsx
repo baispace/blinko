@@ -437,6 +437,7 @@ export class BlinkoStore implements Store {
 
     useEffect(() => {
       if (this.updateTicker == 0) return
+      console.log('updateTicker', this.updateTicker)
       this.refreshData()
     }, [this.updateTicker])
   }

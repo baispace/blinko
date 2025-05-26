@@ -103,6 +103,7 @@ export const AiSetting = observer(() => {
       try {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
+        console.log(blinko.config.value?.aiApiEndpoint,'xxx')
         const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
         if (provider === 'Ollama') {
           console.log(blinko.config.value?.aiApiEndpoint);
@@ -206,8 +207,8 @@ export const AiSetting = observer(() => {
           rightContent={
             <Switch
               isSelected={blinko.config.value?.isUseAI}
-              onChange={(e) => {
-                PromiseCall(
+              onChange={async (e) => {
+                await PromiseCall(
                   api.config.update.mutate({
                     key: 'isUseAI',
                     value: e.target.checked,

@@ -632,5 +632,8 @@
   "download-success": "تم التنزيل بنجاح",
   "download-failed": "تحميل فاشل",
   "downloading": "جاري التحميل",
-  "hide-pc-editor": "隐藏PC端编辑器  \nإخفاء محرر جهاز الكمبيوتر"
+  "hide-pc-editor": "隐藏PC端编辑器  \nإخفاء محرر جهاز الكمبيوتر",
+  "import-from-markdown": "استيراد من ملف Markdown",
+  "import-from-markdown-tip": "استيراد من ملف .md أو أرشيف .zip يحتوي على ملفات .md",
+  "not-a-markdown-or-zip-file": "ليس ملف Markdown أو zip. الرجاء اختيار ملف .md أو .zip."
 }

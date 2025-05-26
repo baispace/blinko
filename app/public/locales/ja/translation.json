@@ -633,5 +633,8 @@
   "download-success": "ダウンロード成功",
   "download-failed": "ダウンロード失敗",
   "downloading": "ダウンロード中",
-  "hide-pc-editor": "PCエディターを非表示にする"
+  "hide-pc-editor": "PCエディターを非表示にする",
+  "import-from-markdown": "Markdownファイルからインポート",
+  "import-from-markdown-tip": "単一の .md ファイルまたは .md ファイルを含む .zip アーカイブからインポート",
+  "not-a-markdown-or-zip-file": "Markdownまたはzipファイルではありません。.mdまたは.zipファイルを選択してください。"
 }

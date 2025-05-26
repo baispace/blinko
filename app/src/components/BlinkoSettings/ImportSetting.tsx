@@ -7,6 +7,7 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { useMediaQuery } from "usehooks-ts";
 import { ShowMemosProgressDialog } from "../Common/ImportMemosProgress";
 import { ShowBlinkoProgressDialog } from "../Common/ImportBlinkoProgress";
+import { ShowMarkdownProgressDialog } from "../Common/ImportMarkdownProgress";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 
@@ -42,6 +43,22 @@ export const ImportSetting = observer(() => {
             return RootStore.Get(ToastPlugin).error('Not a Memos database file')
           }
           ShowMemosProgressDialog(filePath)
+        }}>
+        </UploadFileWrapper>
+      </div>} />
+
+    <Item
+      type={isPc ? 'row' : 'col'}
+      leftContent={<div className="flex flex-col gap-2">
+        <div>{t('import-from-markdown')}</div>
+        <div className="text-desc text-xs">{t('import-from-markdown-tip')}</div>
+      </div>}
+      rightContent={<div className="flex w-full ml-auto justify-end">
+        <UploadFileWrapper onUpload={async ({ filePath, fileName }) => {
+          if (!fileName.toLowerCase().endsWith('.md') && !fileName.toLowerCase().endsWith('.zip')) {
+            return RootStore.Get(ToastPlugin).error(t('not-a-markdown-or-zip-file'))
+          }
+          ShowMarkdownProgressDialog(filePath)
         }}>
         </UploadFileWrapper>
       </div>} />

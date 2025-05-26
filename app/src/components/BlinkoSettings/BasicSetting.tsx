@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Alert, Button, Input, Switch, Tooltip } from "@heroui/react";
+import { Alert, Button, Input, Switch, Tooltip, Image } from "@heroui/react";
 import { RootStore } from "@/store";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { UserStore } from "@/store/user";
@@ -98,22 +98,19 @@ export const BasicSetting = observer(() => {
                     id: user.userInfo.value?.id,
                     image: filePath
                   }));
-                  user.userInfo.call(Number(user.id))
+                  await user.userInfo.call(Number(user.id))
+                  await signOut({ callbackUrl: '/signin' })
+                  eventBus.emit('user:signout')
                 }}
               >
                 {user.userInfo.value?.image ? (
                   <img
-                    src={user.userInfo.value.image}
+                    src={getBlinkoEndpoint(user.userInfo.value.image)}
                     alt="avatar"
                     className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 ) : (
-                  <Avatar
-                    size={30}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                    name={user.nickname ?? user.name}
-                    variant="beam"
-                  />
+                  <Image src="/icons/icon-128x128.png" width={30} />
                 )}
               </UploadFileWrapper>
             </div>

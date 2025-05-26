@@ -592,5 +592,8 @@
   "download-success": "ჩამოტვირთვა წარმოი.",
   "download-failed": "ჩამოტვირთვი  წარ",
   "downloading": "ჩამოტვირთვა",
-  "hide-pc-editor": "ლუპავთ PC პლატფორმის რედაქტორს"
+  "hide-pc-editor": "ლუპავთ PC პლატფორმის რედაქტორს",
+  "import-from-markdown": "Markdown ფაილებიდან იმპორტი",
+  "import-from-markdown-tip": ".md ფაილის ან .md ფაილ(ო) អំگčើä .zip ᴀ৳ķ\\xEE\\tỏờịছ \\tг\\u05E2াalu.",
+  "not-a-markdown-or-zip-file": "არ არის Markdown ან zip ფაილი. გთხოვთ, აირჩიოთ .md ან .zip ფაილები."
 }

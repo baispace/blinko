@@ -656,5 +656,8 @@
   "download-success": "下载成功",
   "download-failed": "下载失败",
   "downloading": "下载中",
-  "hide-pc-editor": "隐藏PC端编辑器"
+  "hide-pc-editor": "隐藏PC端编辑器",
+  "import-from-markdown": "从Markdown文件导入",
+  "import-from-markdown-tip": "从单个 .md 文件或包含 .md 文件的 .zip 存档导入",
+  "not-a-markdown-or-zip-file": "不是Markdown或zip文件。请选择.md或.zip文件。"
 }

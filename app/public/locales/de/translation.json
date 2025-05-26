@@ -632,5 +632,8 @@
   "download-success": "Download erfolgreich",
   "download-failed": "Download fehlgeschlagen",
   "downloading": "Herunterladen",
-  "hide-pc-editor": "Versteckter PC-Editor"
+  "hide-pc-editor": "Versteckter PC-Editor",
+  "import-from-markdown": "Aus Markdown-Datei importieren",
+  "import-from-markdown-tip": "Importieren Sie aus einer einzelnen .md-Datei oder einem .zip-Archiv, das .md-Dateien enthält.",
+  "not-a-markdown-or-zip-file": "Keine Markdown- oder Zip-Datei. Bitte wählen Sie eine .md- oder .zip-Datei aus."
 }

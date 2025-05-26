@@ -626,5 +626,6 @@
   "verification-failed": "Falha na autenticação",
   "download-success": "Download bem sucedido",
   "download-failed": "Falha no download",
-  "downloading": "Baixando"
+  "downloading": "Baixando",
+  "hide-pc-editor": "Ocultar o editor da versão para PC."
 }

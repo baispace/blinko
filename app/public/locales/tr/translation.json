@@ -632,5 +632,6 @@
   "verification-failed": "Kimlik Doğrulama Başarısız",
   "download-success": "İndirme başarılı",
   "download-failed": "İndirme başarısız oldu",
-  "downloading": "İndiriliyor"
+  "downloading": "İndiriliyor",
+  "hide-pc-editor": "Gizli PC tarafı düzenleyicisi"
 }

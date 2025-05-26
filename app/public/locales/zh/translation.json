@@ -655,5 +655,6 @@
   "verification-failed": "认证失败",
   "download-success": "下载成功",
   "download-failed": "下载失败",
-  "downloading": "下载中"
+  "downloading": "下载中",
+  "hide-pc-editor": "隐藏PC端编辑器"
 }

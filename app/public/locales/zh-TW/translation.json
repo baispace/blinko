@@ -630,5 +630,6 @@
   "login-failed": "登入失敗",
   "verification-failed": "認證失敗",
   "download-failed": "下載失敗",
-  "downloading": "下載中"
+  "downloading": "下載中",
+  "hide-pc-editor": "隱藏PC端編輯器"
 }

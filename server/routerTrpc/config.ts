@@ -22,6 +22,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'themeForegroundColor'
       || item.key == 'maxHomePageWidth'
       || item.key == 'customBackgroundUrl'
+      || item.key == 'hidePcEditor'
     ) {
       //if user not login, then use frist find config
       if (!userId) {

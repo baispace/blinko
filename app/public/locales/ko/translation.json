@@ -627,5 +627,6 @@
   "verification-failed": "인증 실패",
   "download-success": "다운로드 성공",
   "download-failed": "다운로드 실패",
-  "downloading": "다운로드 중"
+  "downloading": "다운로드 중",
+  "hide-pc-editor": "PC 버전 편집기 숨기기"
 }

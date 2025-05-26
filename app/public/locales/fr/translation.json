@@ -632,5 +632,6 @@
   "verification-failed": "Échec de l'authentification",
   "download-success": "Téléchargement réussi",
   "download-failed": "Échec du téléchargement",
-  "downloading": "En téléchargement"
+  "downloading": "En téléchargement",
+  "hide-pc-editor": "Masquer l'éditeur sur le PC."
 }

@@ -626,5 +626,6 @@
   "login-failed": "Ошибка входа",
   "verification-failed": "Аутентификация не удалась",
   "download-success": "Успешно загружено",
-  "download-failed": "Загрузка не удалась"
+  "download-failed": "Загрузка не удалась",
+  "hide-pc-editor": "скрыть редактор для ПК."
 }

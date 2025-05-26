@@ -319,6 +319,25 @@ export const BasicSetting = observer(() => {
             />
           </>} />
       }
+
+      <Item
+        leftContent={<>{t('hide-pc-editor')}</>}
+        rightContent={
+          <div className="flex gap-2 items-center">
+            <Switch
+              isSelected={blinko.config.value?.hidePcEditor ?? false}
+              onChange={async (e) => {
+                await PromiseCall(api.config.update.mutate({
+                  key: 'hidePcEditor',
+                  value: e.target.checked
+                }));
+                blinko.config.call();
+              }}
+            />
+          </div>
+        }
+      />
+
       <Item
         leftContent={<>{t('two-factor-authentication')}</>}
         rightContent={
@@ -348,7 +367,6 @@ export const BasicSetting = observer(() => {
           </div>
         }
       />
-
 
       <Item
         leftContent={<></>}

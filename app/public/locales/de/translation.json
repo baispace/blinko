@@ -631,5 +631,6 @@
   "verification-failed": "Authentifizierung fehlgeschlagen",
   "download-success": "Download erfolgreich",
   "download-failed": "Download fehlgeschlagen",
-  "downloading": "Herunterladen"
+  "downloading": "Herunterladen",
+  "hide-pc-editor": "Versteckter PC-Editor"
 }

@@ -591,5 +591,6 @@
   "verification-failed": "დამოწმების ჩაშორებа",
   "download-success": "ჩამოტვირთვა წარმოი.",
   "download-failed": "ჩამოტვირთვი  წარ",
-  "downloading": "ჩამოტვირთვა"
+  "downloading": "ჩამოტვირთვა",
+  "hide-pc-editor": "ლუპავთ PC პლატფორმის რედაქტორს"
 }

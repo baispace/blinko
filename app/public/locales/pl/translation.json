@@ -623,5 +623,6 @@
   "verification-failed": "uwierzytelnianie nie powiodło się",
   "download-success": "Pobieranie udane",
   "download-failed": "Pobieranie nie powiodło się",
-  "downloading": "Pobieranie"
+  "downloading": "Pobieranie",
+  "hide-pc-editor": "Ukryj edytor na PC."
 }

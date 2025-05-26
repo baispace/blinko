@@ -109,7 +109,7 @@ const ImageRender = observer((props: IProps) => {
     if (!preview) {
       return 'h-[160px] w-[160px]'
     }
-    return 'md:h-[180px] md:w-[180px] h-[120px] w-[120px] object-cover'
+    return 'md:h-[180px] md:w-[180px] h-[100px] w-[100px] object-cover'
   }, [preview, columns])
 
   const renderImage = (file: FileType) => (

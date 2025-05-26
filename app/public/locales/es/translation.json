@@ -632,5 +632,6 @@
   "verification-failed": "Certificación fallida",
   "download-success": "Descarga exitosa",
   "download-failed": "Descarga fallida",
-  "downloading": "Descargando"
+  "downloading": "Descargando",
+  "hide-pc-editor": "Ocultar el editor de PC"
 }

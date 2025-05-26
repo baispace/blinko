@@ -639,5 +639,6 @@
   "verification-failed": "Authentication failed",
   "download-success": "Download successful",
   "download-failed": "Download failed",
-  "downloading": "Downloading"
+  "downloading": "Downloading",
+  "hide-pc-editor": "Hide PC-side editor"
 }

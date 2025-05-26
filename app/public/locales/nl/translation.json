@@ -638,5 +638,6 @@
   "verification-failed": "Authenticatiefout",
   "download-success": "Download geslaagd",
   "download-failed": "Download mislukt",
-  "downloading": "Aan het downloaden"
+  "downloading": "Aan het downloaden",
+  "hide-pc-editor": "Verberg PC-editor"
 }

@@ -47,7 +47,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('maxHomePageWidth'),
   z.literal('isUseBlinkoHub'),
   z.literal('isHiddenNotification'),
-  z.literal('isHideBlogImages')
+  z.literal('isHideBlogImages'),
+  z.literal('hidePcEditor'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -183,6 +184,7 @@ export const ZConfigSchema = z.object({
   rerankTopK: z.number().optional(),
   rerankScore: z.number().optional(),
   rerankUseEembbingEndpoint: z.boolean().optional(),
+  hidePcEditor: z.boolean().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

@@ -35,13 +35,13 @@ const Home = observer(() => {
       }}
       className={`md:p-0 relative h-full flex flex-col-reverse md:flex-col mx-auto w-full`}>
 
-      {store.showEditor && isPc && <div className='px-2 md:px-6' >
+      {store.showEditor && isPc && !blinko.config.value?.hidePcEditor && <div className='px-2 md:px-6' >
         <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
           if (!isPc) return
           store.editorHeight = height
         }} />
       </div>}
-      {!isPc && <BlinkoAddButton />}
+      {(!isPc || blinko.config.value?.hidePcEditor) && <BlinkoAddButton />}
 
       <LoadingAndEmpty
         isLoading={blinko.noteList.isLoading}
@@ -52,7 +52,7 @@ const Home = observer(() => {
         !blinko.noteList.isEmpty && <ScrollArea
           onBottom={() => blinko.onBottom()}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? store.editorHeight : 0)}px)` : '100%' }}
-          className={`px-2 mt-0 md:mt-4 md:px-6 w-full h-full !transition-all scroll-area`}>
+          className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
           <Masonry
             breakpointCols={{
               default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,

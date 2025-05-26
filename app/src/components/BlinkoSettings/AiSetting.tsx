@@ -206,14 +206,15 @@ export const AiSetting = observer(() => {
           rightContent={
             <Switch
               isSelected={blinko.config.value?.isUseAI}
-              onChange={(e) => {
-                PromiseCall(
+              onChange={async (e) => {
+                await PromiseCall(
                   api.config.update.mutate({
                     key: 'isUseAI',
                     value: e.target.checked,
                   }),
                   { autoAlert: false },
                 );
+                await blinko.config.call()
                 window.location.reload();
               }}
             />

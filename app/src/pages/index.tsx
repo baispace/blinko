@@ -14,7 +14,7 @@ const Home = observer(() => {
   const { t } = useTranslation();
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
-  
+  blinko.use()
   blinko.useQuery();
   
   const store = RootStore.Local(() => ({

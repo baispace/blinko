@@ -103,6 +103,7 @@ export const AiSetting = observer(() => {
       try {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
+        console.log(blinko.config.value?.aiApiEndpoint,'xxx')
         const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
         if (provider === 'Ollama') {
           console.log(blinko.config.value?.aiApiEndpoint);
@@ -214,7 +215,6 @@ export const AiSetting = observer(() => {
                   }),
                   { autoAlert: false },
                 );
-                await blinko.config.call()
                 window.location.reload();
               }}
             />

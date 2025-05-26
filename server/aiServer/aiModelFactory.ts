@@ -78,7 +78,6 @@ export class AiModelFactory {
       queryVector: embedding,
       topK: topK,
     });
-
     let filteredResults = result.filter(({ score }) => score >= embeddingMinScore);
 
     if (config.rerankModel) {
@@ -146,7 +145,7 @@ export class AiModelFactory {
         return { ...i, score: filteredResults.find((t) => Number(t.metadata?.id) == i.id)?.score ?? 0 };
       }) ?? [];
 
-    let aiContext = filteredResults.filter((i) => i.metadata?.isAttachment).map((i) => i.metadata?.text + '\n') || '';
+    let aiContext = notes.map((i) => i.content + '\n') || '';
     return { notes, aiContext: aiContext };
   }
 

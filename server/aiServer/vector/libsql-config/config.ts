@@ -123,7 +123,6 @@ export function expandConfig(
       ? ""
       : `?${connectionQueryParams.join("&")}`;
   const path = uri.path + connectionQueryParamsString;
-  console.log('path', path, 'pathxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
   let scheme: string;
   if (originalUriScheme === "libsql") {
     if (tls === false) {

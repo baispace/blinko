@@ -78,7 +78,7 @@ const Hub = observer(({ className }: { className?: string }) => {
                       {t('join-hub')}
                     </Button>
                   }
-                  {user.isLogin && user.userInfo.value?.id == store.siteInfo.value?.id &&
+                  {user.isLogin &&
                     (
                       <Button
                         onPress={() => {

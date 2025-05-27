@@ -41,3 +41,12 @@ docker run -d \
 ```
 pnpm add @mastra/rag --ignore-scripts
 ```
+
+
+# act-cli
+choco install act-cli
+
+act -W .github/workflows/debug-changelog.yml
+
+## runnung job
+act -j debug-changelog -W .github/workflows/debug-changelog.yml

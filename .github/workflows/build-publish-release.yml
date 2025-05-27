@@ -254,9 +254,10 @@ jobs:
           echo "Trigger app version release: ${{ env.VERSION }}"
 
       - name: Trigger App Release Workflow
+        id: dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.WORKFLOW_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           event-type: trigger-app-release
           client-payload: |
             {
@@ -264,3 +265,11 @@ jobs:
               "version": "${{ env.VERSION }}",
               "sha": "${{ github.sha }}"
             }
+        continue-on-error: true
+
+      - name: Check Dispatch Result
+        if: steps.dispatch.outcome == 'failure'
+        run: |
+          echo "::warning::Failed to trigger app release workflow. This might be due to permission issues."
+          echo "::warning::Please ensure the GITHUB_TOKEN has 'workflow' permission enabled in repository settings."
+          echo "::warning::Alternatively, you can manually trigger the app-release workflow with version: ${{ env.VERSION }}"

@@ -14,11 +14,10 @@ on:
         type: string
 
 jobs:
-  # Generate changelog
-  generate-changelog:
+  # Set version first
+  set-version:
     runs-on: ubuntu-latest
     outputs:
-      changelog: ${{ steps.changelog.outputs.changelog }}
       version: ${{ steps.set_version.outputs.version }}
     steps:
       - name: Checkout code
@@ -56,20 +55,13 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Set version: $VERSION"
-      
-      - name: Generate Changelog
-        id: changelog
-        uses: mikepenz/release-changelog-builder-action@v4
-        with:
-          configuration: ""
-          ignorePreReleases: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Update Tauri Config Version
   update-version:
     runs-on: ubuntu-latest
-    needs: generate-changelog
+    needs: set-version
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -78,11 +70,24 @@ jobs:
       
       - name: Update Tauri Config Version
         run: |
-          echo "Current version: ${{ needs.generate-changelog.outputs.version }}"
+          echo "Current version: ${{ needs.set-version.outputs.version }}"
           # Update version using jq
-          jq '.version = "${{ needs.generate-changelog.outputs.version }}"' app/src-tauri/tauri.conf.json > tmp.json && mv tmp.json app/src-tauri/tauri.conf.json
+          jq '.version = "${{ needs.set-version.outputs.version }}"' app/src-tauri/tauri.conf.json > tmp.json && mv tmp.json app/src-tauri/tauri.conf.json
           echo "Updated tauri.conf.json:"
           cat app/src-tauri/tauri.conf.json
+      
+      - name: Commit and Push Updated Version
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add app/src-tauri/tauri.conf.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "[ci skip] Update version to ${{ needs.set-version.outputs.version }}"
+            git push
+            echo "Pushed version update to repository"
+          fi
       
       - name: Upload tauri.conf.json as artifact
         uses: actions/upload-artifact@v4
@@ -92,7 +97,7 @@ jobs:
 
   # Desktop Platform Build Task
   publish-desktop:
-    needs: [generate-changelog, update-version]
+    needs: [set-version, update-version]
     permissions:
       contents: write
     strategy:
@@ -190,15 +195,15 @@ jobs:
           projectPath: 'app'
           tauriScript: '../node_modules/.bin/tauri'
           args: ${{ matrix.args }}
-          tagName: ${{ needs.generate-changelog.outputs.version }}
-          releaseName: Blinko ${{ needs.generate-changelog.outputs.version }}
-          releaseBody: ${{ needs.generate-changelog.outputs.changelog }}
-          releaseDraft: false
+          tagName: ${{ needs.set-version.outputs.version }}
+          releaseName: Blinko ${{ needs.set-version.outputs.version }}
+          releaseBody: "Under construction, full changelog will be updated after build completion..."
+          releaseDraft: true
           prerelease: false
 
   # Android Platform Build Task
   publish-android:
-    needs: [generate-changelog, update-version]
+    needs: [set-version, update-version]
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -300,7 +305,7 @@ jobs:
       - name: Rename Android App File
         run: |
           cd app/src-tauri/gen/android/app/build/outputs/apk/universal/release
-          VERSION="${{ needs.generate-changelog.outputs.version }}"
+          VERSION="${{ needs.set-version.outputs.version }}"
           echo "Original APK file:"
           ls -la
           # Rename APK file
@@ -311,8 +316,139 @@ jobs:
       - name: Publish Android App
         uses: softprops/action-gh-release@v1
         with:
-          files: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.generate-changelog.outputs.version }}_universal.apk
-          tag_name: ${{ needs.generate-changelog.outputs.version }}
+          files: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
+          tag_name: ${{ needs.set-version.outputs.version }}
+          body: "Under construction, full changelog will be updated after build completion..."
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Generate changelog after all builds are complete
+  generate-changelog:
+    runs-on: ubuntu-latest
+    needs: [set-version, publish-desktop, publish-android]
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get Previous Tag
+        id: previoustag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          echo "Previous tag or initial commit: $PREVIOUS_TAG"
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+      # Generate detailed changelog using Git commands as backup
+      - name: Generate Detailed Git Changelog
+        id: git_changelog
+        run: |
+          echo "## Commit List" > git-changelog.md
+          echo "" >> git-changelog.md
+          
+          # Feature commits
+          echo "### 🚀 Features" >> git-changelog.md
+          git log ${{ steps.previoustag.outputs.previous_tag }}..HEAD --grep="^feat" --pretty=format:"- %s (%h)" >> git-changelog.md
+          echo "" >> git-changelog.md
+          
+          # Fix commits
+          echo "" >> git-changelog.md
+          echo "### 🐛 Fixes" >> git-changelog.md
+          git log ${{ steps.previoustag.outputs.previous_tag }}..HEAD --grep="^fix" --pretty=format:"- %s (%h)" >> git-changelog.md
+          echo "" >> git-changelog.md
+          
+          # Documentation commits
+          echo "" >> git-changelog.md
+          echo "### 📝 Documentation" >> git-changelog.md
+          git log ${{ steps.previoustag.outputs.previous_tag }}..HEAD --grep="^docs" --pretty=format:"- %s (%h)" >> git-changelog.md
+          echo "" >> git-changelog.md
+          
+          # Refactor commits
+          echo "" >> git-changelog.md
+          echo "### 🔄 Refactors" >> git-changelog.md
+          git log ${{ steps.previoustag.outputs.previous_tag }}..HEAD --grep="^refactor" --pretty=format:"- %s (%h)" >> git-changelog.md
+          echo "" >> git-changelog.md
+          
+          # Other commits
+          echo "" >> git-changelog.md
+          echo "### ⚙️ Other Changes" >> git-changelog.md
+          git log ${{ steps.previoustag.outputs.previous_tag }}..HEAD --grep="^feat\|^fix\|^docs\|^refactor" --invert-grep --pretty=format:"- %s (%h)" >> git-changelog.md
+
+      - name: Create Changelog Config
+        run: |
+          cat > changelog-config.json << 'EOF'
+          {
+            "categories": [
+              {
+                "title": "## 🚀 Features",
+                "labels": ["feature", "enhancement"]
+              },
+              {
+                "title": "## 🐛 Fixes",
+                "labels": ["fix", "bug"]
+              },
+              {
+                "title": "## 📝 Documentation",
+                "labels": ["documentation"]
+              },
+              {
+                "title": "## 🔄 Other Changes",
+                "labels": []
+              }
+            ],
+            "ignore_labels": ["ignore"],
+            "sort": "ASC",
+            "template": "${{CHANGELOG}}\n\n## All Commits\n\n${{COMMITS}}",
+            "pr_template": "- ${{TITLE}} (#${{NUMBER}})",
+            "commit_template": "- ${{COMMIT_SUBJECT}} (${{COMMIT_HASH8}})",
+            "empty_template": "- No notable changes in this release",
+            "max_tags_to_fetch": 200,
+            "max_pull_requests": 200,
+            "max_back_track_time_days": 365
+          }
+          EOF
+      
+      - name: Generate Changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: "changelog-config.json"
+          ignorePreReleases: false
+          failOnError: false
+          fromTag: ${{ steps.previoustag.outputs.previous_tag }}
+          toTag: HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Backup Changelog if Main Generation Fails
+        if: steps.changelog.outputs.changelog == ''
+        run: |
+          echo "Using Git-generated changelog as backup"
+          echo "changelog=$(cat git-changelog.md)" >> $GITHUB_OUTPUT
+
+      - name: Upload Changelog as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: |
+            git-changelog.md
+            changelog-config.json
+
+  # Update release with final changelog
+  update-release:
+    runs-on: ubuntu-latest
+    needs: [set-version, generate-changelog]
+    permissions:
+      contents: write
+    steps:
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.set-version.outputs.version }}
           body: ${{ needs.generate-changelog.outputs.changelog }}
           draft: false
           prerelease: false

@@ -541,6 +541,7 @@ export class BlinkoStore implements Store {
 
   updateTagFilter(tagId: number) {
     this.noteListFilterConfig.tagId = tagId;
+    this.noteListFilterConfig.type = -1
     this.noteList.resetAndCall({});
   }
 }

@@ -659,5 +659,9 @@
   "hide-pc-editor": "隐藏PC端编辑器",
   "import-from-markdown": "从Markdown文件导入",
   "import-from-markdown-tip": "从单个 .md 文件或包含 .md 文件的 .zip 存档导入",
-  "not-a-markdown-or-zip-file": "不是Markdown或zip文件。请选择.md或.zip文件。"
+  "not-a-markdown-or-zip-file": "不是Markdown或zip文件。请选择.md或.zip文件。",
+  "server": "服务器",
+  "client": "客户端",
+  "new-server-version-available": "服务器有新版本可用",
+  "new-client-version-available": "客户端有新版本可用"
 }

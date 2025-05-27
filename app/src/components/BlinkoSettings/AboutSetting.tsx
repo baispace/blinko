@@ -10,25 +10,32 @@ import { useTranslation } from "react-i18next";
 import { Item } from "./Item";
 import { useEffect } from "react";
 import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
+import packageJson from '../../../src-tauri/tauri.conf.json';
 
 export const AboutSetting = observer(() => {
   const { t } = useTranslation()
   const store = RootStore.Local(() => ({
-    version: new PromiseState({
+    serverVersion: new PromiseState({
       function: async () => {
-        return await api.public.version.query()
+        return await api.public.serverVersion.query()
       }
     }),
-    latestVersion: new PromiseState({
+    latestServerVersion: new PromiseState({
       function: async () => {
-        return await api.public.latestVersion.query()
+        return await api.public.latestServerVersion.query()
+      }
+    }),
+    latestClientVersion: new PromiseState({
+      function: async () => {
+        return await api.public.latestClientVersion.query()
       }
     })
   }))
 
   useEffect(() => {
-    store.version.call()
-    store.latestVersion.call()
+    store.serverVersion.call()
+    store.latestServerVersion.call()
+    store.latestClientVersion.call()
   }, [])
 
   return (
@@ -40,34 +47,59 @@ export const AboutSetting = observer(() => {
         <Image src="/logo.svg" alt="Blinko" className="w-16 h-16 rounded-xl" />
         <div>
           <h2 className="text-xl font-semibold">Blinko</h2>
-          <div className="flex items-center gap-2 mt-1">
-            {/* <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-md text-xs">
-              v{store.version.value}
-            </span> */}
-            <Chip
-              color="warning"
-              variant="flat"
-              size="sm"
-              className="text-xs"
-              startContent={<Icon icon="mingcute:version-fill" width="16" height="16" />}
-            >
-              v{store.version.value}
-            </Chip>
-            {store.latestVersion.value != '' && store.latestVersion.value != store.version.value && (
+          <div className="flex flex-col gap-2 mt-1">
+            <div className="flex items-center gap-2">
               <Chip
-                classNames={{
-                  base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-                  content: "drop-shadow shadow-black text-white",
-                }}
+                color="warning"
+                variant="flat"
                 size="sm"
-                className="cursor-pointer"
-                onClick={() => {
-                  window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
-                }}
+                className="text-xs"
+                startContent={<Icon icon="mingcute:version-fill" width="16" height="16" />}
               >
-                {t('new-version-available')}: v{store.latestVersion.value}
+                {t('server')}: v{store.serverVersion.value}
               </Chip>
-            )}
+              {store.latestServerVersion.value != '' && store.latestServerVersion.value != store.serverVersion.value && (
+                <Chip
+                  classNames={{
+                    base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
+                    content: "drop-shadow shadow-black text-white",
+                  }}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    window.open(`https://hub.docker.com/r/blinkospace/blinko/tags`, '_blank')
+                  }}
+                >
+                  {t('new-server-version-available')}: v{store.latestServerVersion.value}
+                </Chip>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Chip
+                color="primary"
+                variant="flat"
+                size="sm"
+                className="text-xs"
+                startContent={<Icon icon="mingcute:version-fill" width="16" height="16" />}
+              >
+                {t('client')}: v{packageJson.version}
+              </Chip>
+              {store.latestClientVersion.value != '' && store.latestClientVersion.value != packageJson.version && (
+                <Chip
+                  classNames={{
+                    base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
+                    content: "drop-shadow shadow-black text-white",
+                  }}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
+                  }}
+                >
+                  {t('new-client-version-available')}: v{store.latestClientVersion.value}
+                </Chip>
+              )}
+            </div>
           </div>
         </div>
       </div>

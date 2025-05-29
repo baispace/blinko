@@ -10,6 +10,7 @@ export const upsertBlinkoTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("Tag is start with #"),
     accountId: z.number(),
+    type: z.nativeEnum(NoteType).default(NoteType.BLINKO).describe('The types of notes include 0:blinko, 1:note, 2:todo, with blinko being the default.'),
   }),
   execute: async ({ context }) => {
     console.log(`create note:${context.content}`);
@@ -24,7 +25,7 @@ export const upsertBlinkoTool = createTool({
       })
       const note = await caller.notes.upsert({
         content: context.content,
-        type: NoteType.BLINKO,
+        type: context.type,
       })
       console.log(note)
       return true

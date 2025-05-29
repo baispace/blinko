@@ -25,6 +25,12 @@ export class BaseStore implements Store {
       icon: 'hugeicons:note',
     },
     {
+      title: 'todo',
+      shallow: true,
+      href: '/?path=todo',
+      icon: 'solar:bill-check-linear',
+    },
+    {
       title: 'analytics',
       href: '/analytics',
       hiddenMobile: true,
@@ -149,6 +155,8 @@ export class BaseStore implements Store {
         this.currentTitle = t('total');
       } else if (searchParams.get('path') == 'notes') {
         this.currentTitle = 'notes';
+      } else if (searchParams.get('path') == 'todo') {
+        this.currentTitle = 'todo';
       } else if (searchParams.get('path') == 'archived') {
         this.currentTitle = 'archived';
       } else if (location.pathname == '/resources') {

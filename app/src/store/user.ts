@@ -206,7 +206,7 @@ export class UserStore implements Store {
       if (currentValue) {
         if (!this[stateFlag]) {
           if (routeIndex === -1) {
-            base.routerList.splice(2, 0, routeConfig);
+            base.routerList.splice(3, 0, routeConfig);
           }
           this[stateFlag] = true;
         }

@@ -647,5 +647,10 @@
   "download-success": "Download successful",
   "download-failed": "Download failed",
   "downloading": "Downloading",
-  "hide-pc-editor": "Hide PC-side editor"
+  "hide-pc-editor": "Hide PC-side editor",
+  "todo": "TODO",
+  "restore": "Recover",
+  "complete": "Complete",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }

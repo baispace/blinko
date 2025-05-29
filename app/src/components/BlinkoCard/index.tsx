@@ -7,7 +7,7 @@ import { Note } from '@shared/lib/types';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExpandableContainer } from "./expandContainer";
 import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
@@ -39,11 +39,11 @@ interface BlinkoCardProps {
   withoutHoverAnimation?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false, className }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false, className, defaultExpanded = false }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { pathname } = useLocation();
 
   useHistoryBack({
@@ -51,6 +51,13 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     onStateChange: () => setIsExpanded(false),
     historyState: 'expanded'
   });
+
+  useEffect(() => {
+    if (defaultExpanded) {
+      setIsExpanded(true);
+    }
+  }, [defaultExpanded]);
+
   if (forceBlog) {
     blinkoItem.isBlog = true
   } else {

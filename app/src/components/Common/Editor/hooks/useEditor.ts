@@ -137,6 +137,8 @@ export const useEditorInit = (
     if (mode == 'create') {
       if (searchParams.get('path') == 'notes') {
         store.noteType = NoteType.NOTE
+      } else if (searchParams.get('path') == 'todo') {
+        store.noteType = NoteType.TODO
       } else {
         store.noteType = NoteType.BLINKO
       }

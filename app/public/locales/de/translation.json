@@ -635,5 +635,10 @@
   "hide-pc-editor": "Versteckter PC-Editor",
   "import-from-markdown": "Aus Markdown-Datei importieren",
   "import-from-markdown-tip": "Importieren Sie aus einer einzelnen .md-Datei oder einem .zip-Archiv, das .md-Dateien enthält.",
-  "not-a-markdown-or-zip-file": "Keine Markdown- oder Zip-Datei. Bitte wählen Sie eine .md- oder .zip-Datei aus."
+  "not-a-markdown-or-zip-file": "Keine Markdown- oder Zip-Datei. Bitte wählen Sie eine .md- oder .zip-Datei aus.",
+  "todo": "Vertretung",
+  "restore": "Wiederherstellung",
+  "complete": "Fertigstellung",
+  "today": "Heute",
+  "yesterday": "Gestern"
 }

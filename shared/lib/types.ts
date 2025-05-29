@@ -13,7 +13,8 @@ export type Conversation = NonNullable<RouterOutput['conversation']['list']>[0]
 export type Message = NonNullable<RouterOutput['message']['list']>[0]
 export enum NoteType {
   'BLINKO',
-  'NOTE'
+  'NOTE',
+  'TODO'
 }
 export type PublicUser = NonNullable<RouterOutput['users']['publicUserList']>[0]
 export function toNoteTypeEnum(v?: number, fallback: NoteType = NoteType.BLINKO): NoteType {
@@ -22,6 +23,8 @@ export function toNoteTypeEnum(v?: number, fallback: NoteType = NoteType.BLINKO)
       return NoteType.BLINKO;
     case 1:
       return NoteType.NOTE;
+    case 2:
+      return NoteType.TODO;
     default:
       return fallback;
   }

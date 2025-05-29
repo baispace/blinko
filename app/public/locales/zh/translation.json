@@ -663,5 +663,10 @@
   "server": "服务器",
   "client": "客户端",
   "new-server-version-available": "服务器有新版本可用",
-  "new-client-version-available": "客户端有新版本可用"
+  "new-client-version-available": "客户端有新版本可用",
+  "todo": "代办",
+  "restore": "恢复",
+  "complete": "完成",
+  "today": "今天",
+  "yesterday": "昨天"
 }

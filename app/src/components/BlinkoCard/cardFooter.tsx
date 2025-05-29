@@ -60,6 +60,22 @@ export const ConvertTypeButton = ({
     );
   }
 
+  if (blinkoItem.type === NoteType.TODO) {
+    return (
+      <Tooltip placement={tooltipPlacement} classNames={toolTipClassNames} content={tooltip ?? t('convert-to') + ' Blinko'} delay={1000}>
+        <div className="flex items-center justify-start cursor-pointer" onClick={handleClick}>
+          <Icon className="text-green-500" icon="solar:folder-check-bold" width="12" height="12" />
+          <div className="text-desc text-xs font-bold ml-1 select-none">
+            {t('todo')}
+            {blinkoItem.isBlog ? ` · ${t('article')}` : ''}
+            {blinkoItem.isArchived ? ` · ${t('archived')}` : ''}
+            {blinkoItem.isOffline ? ` · ${t('offline')}` : ''}
+          </div>
+        </div>
+      </Tooltip>
+    );
+  }
+
   return (
     <Tooltip content={t('convert-to') + ' Blinko'} delay={1000}>
       <div className="flex items-center justify-start cursor-pointer" onClick={handleClick}>

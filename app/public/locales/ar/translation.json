@@ -635,5 +635,10 @@
   "hide-pc-editor": "隐藏PC端编辑器  \nإخفاء محرر جهاز الكمبيوتر",
   "import-from-markdown": "استيراد من ملف Markdown",
   "import-from-markdown-tip": "استيراد من ملف .md أو أرشيف .zip يحتوي على ملفات .md",
-  "not-a-markdown-or-zip-file": "ليس ملف Markdown أو zip. الرجاء اختيار ملف .md أو .zip."
+  "not-a-markdown-or-zip-file": "ليس ملف Markdown أو zip. الرجاء اختيار ملف .md أو .zip.",
+  "todo": "الوكيل",
+  "restore": "استعادة",
+  "complete": "完成  \nإكمال",
+  "today": "اليوم",
+  "yesterday": "البارحة"
 }

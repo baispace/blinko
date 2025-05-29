@@ -15,21 +15,73 @@ export const NoteTypeButton = ({ noteType, setNoteType}: {
     setType(noteType);
   }, [noteType]);
   
+  const getNextNoteType = (currentType: NoteType) => {
+    switch (currentType) {
+      case NoteType.BLINKO:
+        return NoteType.NOTE;
+      case NoteType.NOTE:
+        return NoteType.TODO;
+      case NoteType.TODO:
+        return NoteType.BLINKO;
+      default:
+        return NoteType.BLINKO;
+    }
+  };
+
+  const getIconForType = (noteType: NoteType) => {
+    switch (noteType) {
+      case NoteType.BLINKO:
+        return 'basil:lightning-solid';
+      case NoteType.NOTE:
+        return 'solar:notes-minimalistic-bold-duotone';
+      case NoteType.TODO:
+        return 'solar:folder-check-bold';
+      default:
+        return 'basil:lightning-solid';
+    }
+  };
+
+  const getColorForType = (noteType: NoteType) => {
+    switch (noteType) {
+      case NoteType.BLINKO:
+        return '!text-[#FFD700]';
+      case NoteType.NOTE:
+        return '!text-[#3B82F6]';
+      case NoteType.TODO:
+        return '!text-[#10B981]';
+      default:
+        return '!text-[#FFD700]';
+    }
+  };
+
+  const getLabelForType = (noteType: NoteType) => {
+    switch (noteType) {
+      case NoteType.BLINKO:
+        return t('blinko');
+      case NoteType.NOTE:
+        return t('note');
+      case NoteType.TODO:
+        return t('todo');
+      default:
+        return t('blinko');
+    }
+  };
+  
   return (
     <Div
+      className='mr-[-2px]'
       onTap={() => {
-        const newType = type == NoteType.BLINKO ? NoteType.NOTE : NoteType.BLINKO;
+        const newType = getNextNoteType(type);
         setType(newType);
         setNoteType(newType);
       }}>
       <IconButton
-        icon={type == NoteType.BLINKO ? 'basil:lightning-solid' : 'solar:notes-minimalistic-bold-duotone'}
+        icon={getIconForType(type)}
         classNames={{
-          icon: type == NoteType.BLINKO ? '!text-[#FFD700]' : '!text-[#3B82F6]'
+          icon: getColorForType(type)
         }}
-        tooltip={type == NoteType.BLINKO ? t('blinko') : t('note')}
+        tooltip={getLabelForType(type)}
       />
     </Div>
-
   );
 }; 

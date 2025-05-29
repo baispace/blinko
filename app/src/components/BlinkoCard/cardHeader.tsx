@@ -3,7 +3,7 @@ import { Button, Tooltip } from '@heroui/react';
 import { Copy } from "../Common/Copy";
 import { LeftCickMenu } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Note } from '@shared/lib/types';
+import { Note, NoteType } from '@shared/lib/types';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,8 @@ import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
 import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
 import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
+import { api } from '@/lib/trpc';
+import { PromiseCall } from '@/store/standard/PromiseState';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -23,10 +25,29 @@ interface CardHeaderProps {
   account?: AvatarAccount;
 }
 
-export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, account }: CardHeaderProps) => {
+export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpanded, account }: CardHeaderProps) => {
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
+
+  const handleTodoToggle = async (e) => {
+    e.stopPropagation();
+
+    try {
+      if (blinkoItem.isRecycle) {
+        await blinko.upsertNote.call({
+          id: blinkoItem.id,
+          isRecycle: false,
+          isArchived: false
+        });
+        blinko.updateTicker++
+      } else {
+        await PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] }));
+      }
+    } catch (error) {
+      console.error('Error toggling TODO status:', error);
+    }
+  };
 
   return (
     <div className={`flex items-center select-none ${isExpanded ? 'mb-4' : 'mb-1'}`}>
@@ -74,6 +95,23 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, accoun
         {isShareMode && account && (
           <UserAvatar account={account} blinkoItem={blinkoItem} />
         )}
+
+        {blinkoItem.type === NoteType.TODO && (
+          <Tooltip content={blinkoItem.isRecycle ? t('restore') : t('complete')}>
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={handleTodoToggle}
+            >
+              <Icon
+                icon={blinkoItem.isRecycle ? "solar:refresh-circle-bold" : "mdi:circle-outline"}
+                className={`${blinkoItem.isRecycle ? 'text-blue-500' : 'text-green-500'} hover:opacity-80`}
+                width="16"
+                height="16"
+              />
+            </div>
+          </Tooltip>
+        )}
+
         <div className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc`}>
           {blinko.config.value?.timeFormat == 'relative'
             ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
@@ -108,8 +146,8 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, accoun
 
         {/* History button for viewing note versions */}
         {!isShareMode && !!blinkoItem._count?.histories && blinkoItem._count?.histories > 0 && (
-          <HistoryButton 
-            noteId={blinkoItem.id!} 
+          <HistoryButton
+            noteId={blinkoItem.id!}
             className={'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary text-desc mt-[1px]'}
           />
         )}
@@ -132,7 +170,7 @@ export const CardHeader = ({ blinkoItem, blinko, isShareMode, isExpanded, accoun
       </div>
     </div>
   );
-};
+});
 
 const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, isIOSDevice: boolean }) => {
   const { t } = useTranslation()
@@ -167,4 +205,4 @@ const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, i
       </div>
     </Tooltip>
   );
-});
+})

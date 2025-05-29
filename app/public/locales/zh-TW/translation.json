@@ -638,5 +638,10 @@
   "server": "伺服器",
   "client": "客戶端",
   "new-server-version-available": "伺服器有新版本可用",
-  "new-client-version-available": "客戶端有新版本可用"
+  "new-client-version-available": "客戶端有新版本可用",
+  "todo": "代辦",
+  "restore": "恢復",
+  "complete": "完成",
+  "today": "今天",
+  "yesterday": "昨天"
 }

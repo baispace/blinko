@@ -640,5 +640,8 @@
   "restore": "استعادة",
   "complete": "完成  \nإكمال",
   "today": "اليوم",
-  "yesterday": "البارحة"
+  "yesterday": "البارحة",
+  "common.refreshing": "جارٍ التحديث",
+  "common.releaseToRefresh": "أطلق للتحديث",
+  "common.pullToRefresh": "السحب لأسفل للتحديث"
 }

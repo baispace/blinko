@@ -640,5 +640,8 @@
   "restore": "Wiederherstellung",
   "complete": "Fertigstellung",
   "today": "Heute",
-  "yesterday": "Gestern"
+  "yesterday": "Gestern",
+  "common.refreshing": "Aktualisierung läuft",
+  "common.releaseToRefresh": "Zum Aktualisieren loslassen",
+  "common.pullToRefresh": "Nach unten ziehen zum Aktualisieren"
 }

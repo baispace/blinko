@@ -636,5 +636,8 @@
   "restore": "복구",
   "complete": "완료",
   "today": "오늘",
-  "yesterday": "어제"
+  "yesterday": "어제",
+  "common.refreshing": "새로 고침 중",
+  "common.releaseToRefresh": "새로 고침을 위해 놓으십시오",
+  "common.pullToRefresh": "드롭 다운으로 새로 고침"
 }

@@ -647,5 +647,8 @@
   "restore": "Herstellen",
   "complete": "Voltooid",
   "today": "Vandaag",
-  "yesterday": "Gisteren"
+  "yesterday": "Gisteren",
+  "common.refreshing": "Bezig met vernieuwen",
+  "common.releaseToRefresh": "Laat los om te vernieuwen",
+  "common.pullToRefresh": "Trek naar beneden om te vernieuwen"
 }

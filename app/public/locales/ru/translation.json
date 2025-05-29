@@ -634,5 +634,8 @@
   "restore": "恢复 - восстановление",
   "complete": "完成 - Завершить",
   "today": "сегодня",
-  "yesterday": "Вчера"
+  "yesterday": "Вчера",
+  "common.refreshing": "Обновление",
+  "common.releaseToRefresh": "Отпустите для обновления",
+  "common.pullToRefresh": "Обновить, потянув вниз"
 }

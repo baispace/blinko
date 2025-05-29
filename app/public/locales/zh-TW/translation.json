@@ -643,5 +643,8 @@
   "restore": "恢復",
   "complete": "完成",
   "today": "今天",
-  "yesterday": "昨天"
+  "yesterday": "昨天",
+  "common.refreshing": "正在更新中",
+  "common.releaseToRefresh": "鬆開以更新",
+  "common.pullToRefresh": "下拉更新"
 }

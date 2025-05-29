@@ -632,5 +632,8 @@
   "restore": "Przywrócić",
   "complete": "Zakończone",
   "today": "Dziś",
-  "yesterday": "Wczoraj"
+  "yesterday": "Wczoraj",
+  "common.refreshing": "Odświeżanie",
+  "common.releaseToRefresh": "Zwolnij, aby odświeżyć",
+  "common.pullToRefresh": "Przeciągnij do odświeżenia"
 }

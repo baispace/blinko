@@ -641,5 +641,8 @@
   "restore": "回復",
   "complete": "完了",
   "today": "今日",
-  "yesterday": "昨日"
+  "yesterday": "昨日",
+  "common.refreshing": "更新中",
+  "common.releaseToRefresh": "リフレッシュのために開放します",
+  "common.pullToRefresh": "下に引っ張って更新"
 }

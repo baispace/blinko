@@ -600,5 +600,8 @@
   "restore": "აღდგომა",
   "complete": "დასრულება",
   "today": "დღეს",
-  "yesterday": "გუშინ"
+  "yesterday": "გუშინ",
+  "common.refreshing": "განახლებიς შოಠო",
+  "common.releaseToRefresh": "გაუშვი განახო refresh",
+  "common.pullToRefresh": "ჩამოიყოლე განა Refresh"
 }

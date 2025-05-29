@@ -641,5 +641,8 @@
   "restore": "Recuperar",
   "complete": "Completado",
   "today": "Hoy",
-  "yesterday": "Ayer"
+  "yesterday": "Ayer",
+  "common.refreshing": "Actualizando",
+  "common.releaseToRefresh": "Soltar para actualizar",
+  "common.pullToRefresh": "Deslizar hacia abajo para actualizar"
 }

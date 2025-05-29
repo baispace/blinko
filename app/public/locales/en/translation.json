@@ -652,5 +652,8 @@
   "restore": "Recover",
   "complete": "Complete",
   "today": "Today",
-  "yesterday": "Yesterday"
+  "yesterday": "Yesterday",
+  "common.refreshing": "Refreshing",
+  "common.releaseToRefresh": "Release to refresh",
+  "common.pullToRefresh": "Pull down to refresh"
 }

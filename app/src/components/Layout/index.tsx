@@ -128,7 +128,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                   </div>
                   {searchParams.get('path') != 'trash' ? (
                     <Icon
-                      className="cursor-pointer hover:rotate-180 !transition-all"
+                      className="cursor-pointer hover:rotate-180 !transition-all hidden md:block"
                       onClick={() => {
                         blinkoStore.refreshData();
                         blinkoStore.updateTicker++;

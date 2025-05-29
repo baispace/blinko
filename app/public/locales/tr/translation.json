@@ -641,5 +641,10 @@
   "restore": "Kurtarma",
   "complete": "完成 - Tamamlama",
   "today": "bugün",
-  "yesterday": "dün"
+  "yesterday": "dün",
+  "common.refreshing": "Yenileniyor",
+  "common.releaseToRefresh": "Yenilemek için bırakın",
+  "common.pullToRefresh": "Aşağı çekerek yenile",
+  "edit-message-warning": "Bu mesajı düzenlemek, tüm sonraki sohbet kayıtlarını temizleyecek ve AI yanıtlarını yeniden oluşturacaktır.",
+  "enter-your-message": "Mesajınızı girin"
 }

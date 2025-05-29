@@ -55,8 +55,8 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
             onItemClick?.();
           }}
         >
-          <Icon className={`text-center`} icon={i.icon} width="20" height="20" />
-          <div className="text-center text-[10px] mt-[-4px]">{t(i.title)}</div>
+          {/* <Icon className={`text-center`} icon={i.icon} width="20" height="20" /> */}
+          <div className="text-center font-bold text-md mt-[-4px]">{t(i.title)}</div>
         </Link>
       ))}
     </motion.div>

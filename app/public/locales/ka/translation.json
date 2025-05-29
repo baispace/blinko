@@ -600,5 +600,10 @@
   "restore": "აღდგომა",
   "complete": "დასრულება",
   "today": "დღეს",
-  "yesterday": "გუშინ"
+  "yesterday": "გუშინ",
+  "common.refreshing": "განახლებიς შოಠო",
+  "common.releaseToRefresh": "გაუშვი განახო refresh",
+  "common.pullToRefresh": "ჩამოიყოლე განა Refresh",
+  "edit-message-warning": "ამ შეტყობინების რედაქтирование က သ 컴ák Beach повikáníchай하려면, kit összes le 아래의 minden besz違いをすべて削除し、AIの返信を再度生成します。",
+  "enter-your-message": "შეიყვანეთ თქვეnო წოmoqđa"
 }

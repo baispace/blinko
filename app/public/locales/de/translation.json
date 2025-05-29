@@ -640,5 +640,10 @@
   "restore": "Wiederherstellung",
   "complete": "Fertigstellung",
   "today": "Heute",
-  "yesterday": "Gestern"
+  "yesterday": "Gestern",
+  "common.refreshing": "Aktualisierung läuft",
+  "common.releaseToRefresh": "Zum Aktualisieren loslassen",
+  "common.pullToRefresh": "Nach unten ziehen zum Aktualisieren",
+  "edit-message-warning": "Das Bearbeiten dieser Nachricht löscht alle nachfolgenden Dialogverläufe und erzeugt neue KI-Antworten.",
+  "enter-your-message": "Geben Sie Ihre Nachricht ein"
 }

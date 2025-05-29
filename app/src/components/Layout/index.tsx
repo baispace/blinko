@@ -79,7 +79,8 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
     location.pathname == '/api-doc' ||
     location.pathname.includes('/share') ||
     location.pathname == '/editor' ||
-    location.pathname == '/oauth-callback'
+    location.pathname == '/oauth-callback' ||
+    location.pathname.includes('/ai-share')
   ) {
     return <>{children}</>;
   }
@@ -117,7 +118,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             )}
             <div className="flex flex-1 items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-[4px] h-[16px] bg-primary rounded-xl" />
+                <div className="w-[4px] h-[16px] bg-primary rounded-xl hidden md:block" />
                 <div className="flex flex-row items-center gap-1">
                   <div className="font-black select-none">
                     {location.pathname == '/ai'
@@ -128,7 +129,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                   </div>
                   {searchParams.get('path') != 'trash' ? (
                     <Icon
-                      className="cursor-pointer hover:rotate-180 !transition-all"
+                      className="cursor-pointer hover:rotate-180 !transition-all hidden md:block"
                       onClick={() => {
                         blinkoStore.refreshData();
                         blinkoStore.updateTicker++;

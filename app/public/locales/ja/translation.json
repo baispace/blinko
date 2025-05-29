@@ -641,5 +641,10 @@
   "restore": "回復",
   "complete": "完了",
   "today": "今日",
-  "yesterday": "昨日"
+  "yesterday": "昨日",
+  "common.refreshing": "更新中",
+  "common.releaseToRefresh": "リフレッシュのために開放します",
+  "common.pullToRefresh": "下に引っ張って更新",
+  "edit-message-warning": "このメッセージを編集すると、以降のすべての会話記録が消去され、AIの返信が再生成されます。",
+  "enter-your-message": "あなたのメッセージを入力してください"
 }

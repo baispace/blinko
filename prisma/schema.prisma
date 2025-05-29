@@ -206,6 +206,7 @@ model plugin {
 model conversation {
   id        Int       @id @default(autoincrement())
   title     String    @default("") @db.VarChar(255)
+  isShare   Boolean   @default(false)
   accountId Int
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @db.Timestamptz(6)

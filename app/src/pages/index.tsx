@@ -28,7 +28,7 @@ const Home = observer(() => {
   blinko.useQuery();
   const [searchParams] = useSearchParams();
   const isTodoView = searchParams.get('path') === 'todo';
-  
+
   const store = RootStore.Local(() => ({
     editorHeight: 30,
     get showEditor() {
@@ -38,7 +38,7 @@ const Home = observer(() => {
       return blinko.noteList.isLoadAll
     }
   }))
-  
+
   const todosByDate = useMemo(() => {
     if (!isTodoView || !blinko.noteList.value) return {} as Record<string, TodoGroup>;
     const todoItems = blinko.noteList.value.filter(note => note.type === NoteType.TODO);
@@ -93,10 +93,15 @@ const Home = observer(() => {
 
       {
         !blinko.noteList.isEmpty && <ScrollArea
-          onBottom={() => blinko.onBottom()}
+          onRefresh={async () => {
+            await blinko.noteList.resetAndCall({})
+          }}
+          onBottom={() => {
+            blinko.onBottom();
+          }}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? store.editorHeight : 0)}px)` : '100%' }}
           className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
-          
+
           {isTodoView ? (
             <div className="timeline-view relative">
               <div className="absolute left-1 top-4 bottom-4 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
@@ -140,7 +145,7 @@ const Home = observer(() => {
               </Masonry>
             </>
           )}
-          
+
           {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: blinko.noteList.value?.length })}</div>}
         </ScrollArea>
       }

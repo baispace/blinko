@@ -250,7 +250,7 @@ export const MutiSelectItem = observer(() => {
 export const SelectAllItem = observer(() => {
   const { t } = useTranslation();
   return <div className="flex items-start gap-2">
-    <Icon icon="mingcute:multiselect-fill" width="20" height="20" />
+    <Icon icon="lucide:square-check" width="20" height="20" />
     <div>{t('select-all')}</div>
   </div>
 })

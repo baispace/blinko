@@ -40,7 +40,7 @@ export const ExpandableContainer = ({ isExpanded, children, onClose }: Expandabl
     if (isExpanded) {
       return createPortal(
         <div
-          className='w-full expand-container fixed inset-0 touch-manipulation'
+          className={`w-full expand-container fixed inset-0 touch-manipulation ${isExpanded ? 'expanded-container' : ''}`}
           style={{
             ...BASE_STYLES,
             backgroundColor: 'var(--background)',

@@ -175,6 +175,28 @@ export class AiStore implements Store {
     await this.onInputSubmit(true);
   };
 
+  editUserMessage = async (messageId: number, newContent: string) => {
+    try {
+      // Update the message content
+      await api.message.update.mutate({
+        id: messageId,
+        content: newContent
+      });
+      
+      // Clear all messages after this message
+      await api.message.clearAfter.mutate({ id: messageId });
+      
+      // Refresh conversation
+      await this.currentConversation.call();
+      
+      // Set input to the new content and regenerate AI response
+      this.input = newContent;
+      await this.onInputSubmit(true);
+    } catch (error) {
+      RootStore.Get(ToastPlugin).error(error.message);
+    }
+  };
+
   newChat = () => {
     this.currentConversationId = 0;
     this.input = '';

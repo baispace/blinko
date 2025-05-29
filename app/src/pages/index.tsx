@@ -97,16 +97,7 @@ const Home = observer(() => {
             await blinko.noteList.resetAndCall({})
           }}
           onBottom={() => {
-            console.log('✅ onBottom 函数开始执行');
-            console.log('✅ blinko:', blinko);
-            console.log('✅ blinko.onBottom:', blinko.onBottom);
-            if (blinko && blinko.onBottom) {
-              console.log('✅ 调用 blinko.onBottom');
-              blinko.onBottom();
-              console.log('✅ blinko.onBottom 调用完成');
-            } else {
-              console.error('❌ blinko.onBottom 不存在');
-            }
+            blinko.onBottom();
           }}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? store.editorHeight : 0)}px)` : '100%' }}
           className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>

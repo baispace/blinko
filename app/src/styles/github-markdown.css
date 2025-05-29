@@ -639,13 +639,13 @@ ol {
   margin-bottom: var(--base-size-2);
 }
 
-.expand-container .markdown-body p,
-.expand-container .markdown-body blockquote,
-.expand-container .markdown-body ul,
-.expand-container .markdown-body ol,
-.expand-container .markdown-body dl,
-.expand-container .markdown-body pre,
-.expand-container .markdown-body details {
+.expanded-container .markdown-body p,
+.expanded-container .markdown-body blockquote,
+.expanded-container .markdown-body ul,
+.expanded-container .markdown-body ol,
+.expanded-container .markdown-body dl,
+.expanded-container .markdown-body pre,
+.expanded-container .markdown-body details {
   margin-bottom: var(--base-size-8);
 }
 

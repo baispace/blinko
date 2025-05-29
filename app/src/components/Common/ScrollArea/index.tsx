@@ -1,7 +1,6 @@
 import { _ } from "@/lib/lodash";
 import { observer } from "mobx-react-lite";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { motion, useAnimation } from "motion/react";
 import { useMediaQuery } from "usehooks-ts";
 
 type IProps = {
@@ -9,18 +8,14 @@ type IProps = {
   className?: any;
   onBottom: () => void;
   children: any;
-  disableAnimation?: boolean;
 };
 
 export type ScrollAreaHandles = {
   scrollToBottom: () => void;
 }
 
-export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ style, className, children, onBottom, disableAnimation = true }, ref) => {
+export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ style, className, children, onBottom }, ref) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAtTop, setIsAtTop] = useState(false);
-  const [isAtBottom, setIsAtBottom] = useState(false);
-  const controls = useAnimation();
   const isPc = useMediaQuery('(min-width: 768px)');
   let debounceBottom
   if (onBottom) {
@@ -36,25 +31,8 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ styl
   const handleScroll = (e) => {
     const target = e.target;
     const bottom = (target.scrollHeight - target.scrollTop) <= target.clientHeight + 100;
-    const top = target.scrollTop <= 100;
-
     if (bottom) {
       debounceBottom?.();
-      if (!isAtBottom && !disableAnimation) {
-        setIsAtBottom(true);
-        controls.start({ y: [-10, 0], transition: { type: "spring", stiffness: 300 } });
-      }
-    } else {
-      setIsAtBottom(false);
-    }
-
-    if (top && !disableAnimation) {
-      if (!isAtTop) {
-        setIsAtTop(true);
-        controls.start({ y: [10, 0], transition: { type: "spring", stiffness: 300 } });
-      }
-    } else {
-      setIsAtTop(false);
     }
   };
 
@@ -64,7 +42,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ styl
     return () => {
       divElement!.removeEventListener("scroll", handleScroll);
     };
-  }, [isAtTop, isAtBottom]);
+  }, []);
 
   return (
     <div

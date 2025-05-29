@@ -637,5 +637,7 @@
   "yesterday": "Вчера",
   "common.refreshing": "Обновление",
   "common.releaseToRefresh": "Отпустите для обновления",
-  "common.pullToRefresh": "Обновить, потянув вниз"
+  "common.pullToRefresh": "Обновить, потянув вниз",
+  "edit-message-warning": "Редактирование этого сообщения удалит все последующие записи разговора и снова сгенерирует ответ AI.",
+  "enter-your-message": "Введите свое сообщение"
 }

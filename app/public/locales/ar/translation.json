@@ -643,5 +643,7 @@
   "yesterday": "البارحة",
   "common.refreshing": "جارٍ التحديث",
   "common.releaseToRefresh": "أطلق للتحديث",
-  "common.pullToRefresh": "السحب لأسفل للتحديث"
+  "common.pullToRefresh": "السحب لأسفل للتحديث",
+  "edit-message-warning": "تحرير هذه الرسالة سيقوم بمسح جميع سجلات المحادثات اللاحقة، وإعادة توليد الردود من الذكاء الاصطناعي.",
+  "enter-your-message": "أدخل رسالتك"
 }

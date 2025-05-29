@@ -644,5 +644,7 @@
   "yesterday": "Ayer",
   "common.refreshing": "Actualizando",
   "common.releaseToRefresh": "Soltar para actualizar",
-  "common.pullToRefresh": "Deslizar hacia abajo para actualizar"
+  "common.pullToRefresh": "Deslizar hacia abajo para actualizar",
+  "edit-message-warning": "Editar este mensaje borrará todo el historial de conversación subsiguiente y generará nuevamente respuestas de IA.",
+  "enter-your-message": "Introduce tu mensaje"
 }

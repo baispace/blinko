@@ -638,5 +638,7 @@
   "yesterday": "ontem",
   "common.refreshing": "Atualizando",
   "common.releaseToRefresh": "Solte para atualizar",
-  "common.pullToRefresh": "Puxar para atualizar"
+  "common.pullToRefresh": "Puxar para atualizar",
+  "edit-message-warning": "Editar esta mensagem apagará todos os registros de conversação subsequentes e gerará novamente as respostas da IA.",
+  "enter-your-message": "Insira a sua mensagem"
 }

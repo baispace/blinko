@@ -79,7 +79,8 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
     location.pathname == '/api-doc' ||
     location.pathname.includes('/share') ||
     location.pathname == '/editor' ||
-    location.pathname == '/oauth-callback'
+    location.pathname == '/oauth-callback' ||
+    location.pathname.includes('/ai-share')
   ) {
     return <>{children}</>;
   }

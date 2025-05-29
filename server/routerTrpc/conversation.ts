@@ -1,4 +1,4 @@
-import { router, authProcedure } from '../middleware';
+import { router, authProcedure, publicProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 
@@ -62,6 +62,68 @@ export const conversationRouter = router({
               createdAt: 'asc'
             }
           }
+        }
+      });
+    }),
+
+  publicDetail: publicProcedure
+    .input(z.object({
+      shareId: z.string()
+    }))
+    .query(async ({ input }) => {
+      try {
+        // Decode the share ID to extract conversation ID
+        const decoded = Buffer.from(input.shareId, 'base64').toString('utf-8');
+        const conversationId = parseInt(decoded.replace('blinko-ai-share-', ''));
+        
+        if (isNaN(conversationId)) {
+          throw new Error('Invalid share ID');
+        }
+
+        const conversation = await prisma.conversation.findUnique({
+          where: { 
+            id: conversationId,
+            isShare: true  // Only return if the conversation is shared
+          },
+          include: {
+            messages: {
+              orderBy: {
+                createdAt: 'asc'
+              }
+            },
+            account: {
+              select: {
+                name: true,
+                nickname: true,
+                image: true,
+              }
+            }
+          }
+        });
+
+        if (!conversation) {
+          throw new Error('Conversation not found or not shared');
+        }
+
+        return conversation;
+      } catch (error) {
+        throw new Error('Invalid share link');
+      }
+    }),
+
+  toggleShare: authProcedure
+    .input(z.object({
+      id: z.number(),
+      isShare: z.boolean()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      return await prisma.conversation.update({
+        where: {
+          id: input.id,
+          accountId: Number(ctx.id)
+        },
+        data: {
+          isShare: input.isShare
         }
       });
     }),

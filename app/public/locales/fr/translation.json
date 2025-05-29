@@ -644,5 +644,7 @@
   "yesterday": "Hier",
   "common.refreshing": "Actualisation en cours",
   "common.releaseToRefresh": "Lâchez pour actualiser",
-  "common.pullToRefresh": "Tirer pour rafraîchir"
+  "common.pullToRefresh": "Tirer pour rafraîchir",
+  "edit-message-warning": "Modifier ce message effacera tous les enregistrements de conversation ultérieurs et générera à nouveau une réponse IA.",
+  "enter-your-message": "Entrez votre message"
 }

@@ -99,4 +99,37 @@ export const messageRouter = router({
         });
       });
     }),
+
+  clearAfter: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const message = await prisma.message.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: {
+          conversationId: true,
+          createdAt: true,
+        },
+      });
+
+      if (!message) {
+        throw new Error('Message not found');
+      }
+
+      await prisma.message.deleteMany({
+        where: {
+          conversationId: message.conversationId,
+          createdAt: {
+            gt: message.createdAt,
+          },
+        },
+      });
+
+      return {
+        success: true
+      }
+    }),
 }); 

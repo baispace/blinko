@@ -646,5 +646,7 @@
   "yesterday": "昨天",
   "common.refreshing": "正在更新中",
   "common.releaseToRefresh": "鬆開以更新",
-  "common.pullToRefresh": "下拉更新"
+  "common.pullToRefresh": "下拉更新",
+  "edit-message-warning": "編輯此訊息將清除後續的所有對話記錄，並重新生成AI回覆。",
+  "enter-your-message": "輸入您的訊息"
 }

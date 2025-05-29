@@ -32,7 +32,7 @@ const OAuthCallbackPage = lazy(() => import('./pages/oauth-callback'));
 const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
-
+const AiSharePage = lazy(() => import('./pages/ai-share'));
 const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,9 +45,9 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const publicRoutes = ['/signin', '/signup', '/share', '/_offline','/oauth-callback'];
+      const publicRoutes = ['/signin', '/signup', '/share', '/_offline','/oauth-callback','/ai-share'];
       const isPublicRoute = publicRoutes.some(route =>
-        location.pathname === route || location.pathname.startsWith('/share/')
+        location.pathname === route || location.pathname.startsWith('/share/') || location.pathname.startsWith('/ai-share/')
       );
       if (!userStore.isLogin && !isPublicRoute) {
         const tokenData = await getTokenData();
@@ -91,6 +91,7 @@ function AppRoutes() {
         <Route path="/detail/*" element={<ProtectedRoute><DetailPage /></ProtectedRoute>} />
         <Route path="/share" element={<ShareIndexPage />} />
         <Route path="/share/:id" element={<ShareDetailPage />} />
+        <Route path="/ai-share/:id" element={<AiSharePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

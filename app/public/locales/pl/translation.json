@@ -635,5 +635,7 @@
   "yesterday": "Wczoraj",
   "common.refreshing": "Odświeżanie",
   "common.releaseToRefresh": "Zwolnij, aby odświeżyć",
-  "common.pullToRefresh": "Przeciągnij do odświeżenia"
+  "common.pullToRefresh": "Przeciągnij do odświeżenia",
+  "edit-message-warning": "Edycja tej wiadomości usunie wszystkie następujące po niej rekordy rozmów i ponownie wygeneruje odpowiedź AI.",
+  "enter-your-message": "Wprowadź swoją wiadomość"
 }

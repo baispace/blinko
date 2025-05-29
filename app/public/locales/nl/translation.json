@@ -650,5 +650,7 @@
   "yesterday": "Gisteren",
   "common.refreshing": "Bezig met vernieuwen",
   "common.releaseToRefresh": "Laat los om te vernieuwen",
-  "common.pullToRefresh": "Trek naar beneden om te vernieuwen"
+  "common.pullToRefresh": "Trek naar beneden om te vernieuwen",
+  "edit-message-warning": "Het bewerken van dit bericht zal alle volgende gespreksrecords wissen en de AI-antwoorden opnieuw genereren.",
+  "enter-your-message": "Voer uw bericht in"
 }

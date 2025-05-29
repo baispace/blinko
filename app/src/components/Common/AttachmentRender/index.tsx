@@ -33,7 +33,7 @@ const AttachmentsRender = observer((props: IProps) => {
     : 'flex flex-row gap-2 overflow-x-auto pb-2';
 
   return (
-    <div className='flex flex-col gap-[4px]'>
+    <div className={`flex flex-col ${files.length == 0 ? 'gap-[2px]' : 'gap-[4px]'}`}>
       {/* image render */}
       <ImageRender {...props} />
 

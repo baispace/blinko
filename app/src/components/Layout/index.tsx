@@ -117,7 +117,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             )}
             <div className="flex flex-1 items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-[4px] h-[16px] bg-primary rounded-xl" />
+                <div className="w-[4px] h-[16px] bg-primary rounded-xl hidden md:block" />
                 <div className="flex flex-row items-center gap-1">
                   <div className="font-black select-none">
                     {location.pathname == '/ai'

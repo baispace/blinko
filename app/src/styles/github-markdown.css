@@ -636,12 +636,19 @@ ol {
 .markdown-body pre,
 .markdown-body details {
   margin-top: 0;
+  margin-bottom: var(--base-size-2);
+}
+
+.expand-container .markdown-body p,
+.expand-container .markdown-body blockquote,
+.expand-container .markdown-body ul,
+.expand-container .markdown-body ol,
+.expand-container .markdown-body dl,
+.expand-container .markdown-body pre,
+.expand-container .markdown-body details {
   margin-bottom: var(--base-size-8);
 }
 
-.markdown-body blockquote>:first-child {
-  margin-top: 0;
-}
 
 .markdown-body blockquote>:last-child {
   margin-bottom: 0;

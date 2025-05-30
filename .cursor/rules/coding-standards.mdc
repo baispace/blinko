@@ -1,0 +1,52 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Coding Standards
+
+## Language Requirements
+
+**All code, comments, documentation, variable names, function names, class names, file names, and commit messages MUST be written in English.**
+
+### Code Style
+- Use TypeScript for all new code
+- Follow consistent naming conventions:
+  - camelCase for variables and functions
+  - PascalCase for classes and components
+  - UPPER_SNAKE_CASE for constants
+  - kebab-case for file names
+- Use meaningful and descriptive English names
+- Write clear and concise English comments
+- Follow ESLint and Prettier configurations
+
+### File Naming
+- All files must use English names
+- Use kebab-case for component files (e.g., `user-profile.tsx`)
+- Use camelCase for utility files (e.g., `apiClient.ts`)
+- Use descriptive English names that clearly indicate the file's purpose
+
+### Documentation
+- All documentation must be in English
+- Use clear and professional English in README files
+- Write English comments for complex logic
+- API documentation should be in English
+
+### Commit Messages
+- All commit messages must be in English
+- Follow conventional commit format:
+  - `feat: add new feature description`
+  - `fix: resolve specific issue description`
+  - `chore: update dependencies or tooling`
+  - `docs: update documentation`
+  - `refactor: improve code structure`
+
+
+### Project Structure Adherence
+- Follow the established monorepo structure
+- Frontend code goes in `app/` directory
+- Backend code goes in `server/` directory
+- Shared types in `blinko-types/` directory
+- Database schema in `prisma/` directory
+
+

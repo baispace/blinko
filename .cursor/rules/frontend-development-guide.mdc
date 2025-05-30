@@ -1,0 +1,388 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Frontend Development Guide
+
+## State Management with MobX
+
+**Use MobX for all state management. Do NOT use React's useState for complex state or state shared between components.**
+
+### Store Creation Pattern
+```typescript
+// ✅ Good - MobX Store Pattern
+export class MyStore implements Store {
+  sid = 'MyStore';
+  someProperty = '';
+  isLoading = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // Actions
+  updateProperty(value: string) {
+    this.someProperty = value;
+  }
+}
+
+// ❌ Bad - Don't use useState for complex state
+const [complexState, setComplexState] = useState({});
+```
+
+### Local Component State with useLocalObserver
+
+**For small components with local state, use `useLocalObserver` instead of useState.**
+
+```typescript
+// ✅ Good - useLocalObserver for component-level state
+import { useLocalObserver } from 'mobx-react-lite';
+
+export const SmallComponent = observer(() => {
+  const localState = useLocalObserver(() => ({
+    inputValue: '',
+    isEditing: false,
+    
+    // Actions
+    setInputValue(value: string) {
+      this.inputValue = value;
+    },
+    
+    toggleEditing() {
+      this.isEditing = !this.isEditing;
+    },
+    
+    // Computed
+    get isValid() {
+      return this.inputValue.length > 0;
+    }
+  }));
+
+  return (
+    <div>
+      {localState.isEditing ? (
+        <input
+          value={localState.inputValue}
+          onChange={(e) => localState.setInputValue(e.target.value)}
+          className={localState.isValid ? 'valid' : 'invalid'}
+        />
+      ) : (
+        <span onClick={() => localState.toggleEditing()}>
+          {localState.inputValue || 'Click to edit'}
+        </span>
+      )}
+    </div>
+  );
+});
+
+// ❌ Bad - Don't use useState for reactive state
+const [inputValue, setInputValue] = useState('');
+const [isEditing, setIsEditing] = useState(false);
+```
+
+### When to Use Each Pattern
+
+```typescript
+// ✅ Use Global Stores for:
+// - Shared state across multiple components
+// - API calls and data fetching
+// - Complex business logic
+// - State that needs to persist across route changes
+
+// ✅ Use useLocalObserver for:
+// - Component-specific UI state
+// - Form inputs and validation
+// - Toggle states (dropdowns, modals within component)
+// - Computed values based on local state
+
+// Example: Form component with local validation
+export const UserForm = observer(() => {
+  const form = useLocalObserver(() => ({
+    name: '',
+    email: '',
+    errors: {} as Record<string, string>,
+    
+    setField(field: string, value: string) {
+      this[field] = value;
+      this.validateField(field);
+    },
+    
+    validateField(field: string) {
+      switch (field) {
+        case 'email':
+          this.errors.email = this.email.includes('@') ? '' : 'Invalid email';
+          break;
+        case 'name':
+          this.errors.name = this.name.length > 0 ? '' : 'Name required';
+          break;
+      }
+    },
+    
+    get isValid() {
+      return Object.values(this.errors).every(error => !error) && 
+             this.name && this.email;
+    }
+  }));
+
+  const handleSubmit = async () => {
+    if (form.isValid) {
+      await RootStore.Get(UserStore).updateProfile.call({
+        name: form.name,
+        email: form.email
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={form.name}
+        onChange={(e) => form.setField('name', e.target.value)}
+      />
+      {form.errors.name && <span className="error">{form.errors.name}</span>}
+      
+      <input
+        value={form.email}
+        onChange={(e) => form.setField('email', e.target.value)}
+      />
+      {form.errors.email && <span className="error">{form.errors.email}</span>}
+      
+      <button type="submit" disabled={!form.isValid}>
+        Submit
+      </button>
+    </form>
+  );
+});
+```
+
+### Accessing Stores
+Always use `RootStore.Get()` to access other stores:
+
+```typescript
+// ✅ Good - Accessing stores
+const userStore = RootStore.Get(UserStore);
+const blinkoStore = RootStore.Get(BlinkoStore);
+const toastPlugin = RootStore.Get(ToastPlugin);
+```
+
+## API Calls with PromiseState
+
+**Use PromiseState and PromisePageState for all API calls. Reference [app/src/store/blinkoStore.tsx](mdc:app/src/store/blinkoStore.tsx) for patterns.**
+
+### PromiseState for Single API Calls
+```typescript
+// ✅ Good - PromiseState pattern
+upsertNote = new PromiseState({
+  eventKey: 'upsertNote',
+  function: async (params: UpsertNoteParams) => {
+    const res = await api.notes.upsert.mutate(params);
+    RootStore.Get(ToastPlugin).success(i18n.t("operation-success"));
+    this.updateTicker++; // Trigger refresh
+    return res;
+  }
+});
+
+// Usage in component
+await blinkoStore.upsertNote.call(params);
+```
+
+### PromisePageState for Paginated Data
+```typescript
+// ✅ Good - PromisePageState for lists
+noteList = new PromisePageState({
+  function: async ({ page, size }) => {
+    return await api.notes.list.mutate({
+      ...this.noteListFilterConfig,
+      searchText: this.searchText,
+      page,
+      size
+    });
+  }
+});
+
+// Usage for pagination
+await blinkoStore.noteList.callNextPage({});
+```
+
+### State Properties Access
+```typescript
+// ✅ Access loading state
+if (blinkoStore.noteList.loading) {
+  return <LoadingSpinner />;
+}
+
+// ✅ Access data
+const notes = blinkoStore.noteList.value || [];
+
+// ✅ Access error state
+if (blinkoStore.noteList.error) {
+  return <ErrorMessage error={blinkoStore.noteList.error} />;
+}
+```
+
+## Toast Notifications
+
+**Use ToastPlugin for all user feedback messages.**
+
+```typescript
+// ✅ Good - Toast usage patterns
+RootStore.Get(ToastPlugin).success(i18n.t("operation-success"));
+RootStore.Get(ToastPlugin).error(i18n.t("operation-failed"));
+RootStore.Get(ToastPlugin).info(i18n.t("info-message"));
+RootStore.Get(ToastPlugin).warning(i18n.t("warning-message"));
+
+// ✅ With dynamic content
+RootStore.Get(ToastPlugin).success(
+  i18n.t("create-successfully") + " - " + i18n.t("offline-status")
+);
+
+// ✅ Conditional toast
+showToast && RootStore.Get(ToastPlugin).success(
+  id ? i18n.t("update-successfully") : i18n.t("create-successfully")
+);
+```
+
+## Dialog/Modal Usage
+
+**Use DialogStore for all modal dialogs and popups.**
+
+```typescript
+// ✅ Good - Dialog pattern
+RootStore.Get(DialogStore).setData({
+  isOpen: true,
+  size: '2xl',
+  title: i18n.t('dialog-title'),
+  content: (
+    <MyDialogContent
+      onConfirm={(data) => {
+        // Handle confirmation
+        RootStore.Get(DialogStore).close();
+      }}
+      onCancel={() => {
+        RootStore.Get(DialogStore).close();
+      }}
+    />
+  )
+});
+
+// ✅ Different dialog sizes
+RootStore.Get(DialogStore).setData({
+  isOpen: true,
+  size: 'sm', // sm, md, lg, xl, 2xl
+  title: i18n.t('confirm-action'),
+  content: <ConfirmationDialog />
+});
+```
+
+## Component Patterns
+
+### Observer Components
+```typescript
+// ✅ Good - Observer for MobX reactivity
+import { observer } from 'mobx-react-lite';
+
+export const MyComponent = observer(() => {
+  const blinkoStore = RootStore.Get(BlinkoStore);
+  
+  return (
+    <div>
+      {blinkoStore.noteList.loading ? (
+        <LoadingSpinner />
+      ) : (
+        <NoteList notes={blinkoStore.noteList.value} />
+      )}
+    </div>
+  );
+});
+```
+
+### Effect Hooks with MobX
+```typescript
+// ✅ Good - useEffect with MobX observables
+useEffect(() => {
+  if (blinkoStore.updateTicker === 0) return;
+  console.log('updateTicker', blinkoStore.updateTicker);
+  blinkoStore.refreshData();
+}, [blinkoStore.updateTicker]);
+
+// ✅ Conditional effects
+useEffect(() => {
+  if (RootStore.Get(UserStore).id) {
+    blinkoStore.firstLoad();
+  }
+}, [RootStore.Get(UserStore).id]);
+```
+
+## Internationalization
+
+**Always use i18n for user-facing text.**
+
+```typescript
+// ✅ Good - i18n usage
+import i18n from '@/lib/i18n';
+
+const title = i18n.t('page-title');
+const message = i18n.t('success-message');
+
+// ✅ With parameters
+const greeting = i18n.t('welcome-user', { name: user.name });
+```
+
+## Data Refresh Patterns
+
+### Update Ticker Pattern
+```typescript
+// ✅ Good - Trigger refresh across components
+export class MyStore {
+  updateTicker = 0;
+
+  async performAction() {
+    await this.someAction.call();
+    this.updateTicker++; // Triggers refresh in useEffect
+  }
+}
+```
+
+### Manual Refresh
+```typescript
+// ✅ Good - Manual refresh methods
+async refreshData() {
+  this.noteList.resetAndCall({});
+  this.tagList.call();
+  this.config.call();
+}
+```
+
+## Error Handling
+
+```typescript
+// ✅ Good - Error handling in PromiseState
+myAction = new PromiseState({
+  function: async (params) => {
+    try {
+      const result = await api.someEndpoint.mutate(params);
+      RootStore.Get(ToastPlugin).success(i18n.t("operation-success"));
+      return result;
+    } catch (error) {
+      console.error('Action failed:', error);
+      RootStore.Get(ToastPlugin).error(i18n.t("operation-failed"));
+      throw error; // Re-throw for component handling
+    }
+  }
+});
+```
+
+## Best Practices
+
+1. **Always use observer() for components that read MobX state**
+2. **Use PromiseState/PromisePageState for API calls instead of manual state management**
+3. **Access stores through RootStore.Get() pattern**
+4. **Use ToastPlugin for user feedback instead of custom notifications**
+5. **Use DialogStore for modals instead of component-level modal state**
+6. **Always use i18n.t() for user-facing text**
+7. **Use updateTicker pattern for triggering cross-component refreshes**
+8. **Avoid useState for complex state - use MobX stores instead**
+
+
+

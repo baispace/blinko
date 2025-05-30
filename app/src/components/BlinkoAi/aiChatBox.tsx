@@ -79,7 +79,7 @@ const UserMessage = ({ content, time, id, onEdit, shareMode = false }: {
 
   return (
     <motion.div
-      className="group flex flex-col w-full gap-1"
+      className={`group flex flex-col w-full gap-1 ${shareMode ? 'mb-2' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -88,18 +88,16 @@ const UserMessage = ({ content, time, id, onEdit, shareMode = false }: {
         {content}
       </div>
 
-      {!!id && (
+      {!!id && !shareMode && (
         <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 ml-auto mb-2`}>
           <div className="flex gap-2 backdrop-blur-sm rounded-full p-1 items-center">
-            {shareMode ? null : (
-              <IconButton
-                tooltip={i18n.t('edit')}
-                icon="hugeicons:edit-02"
-                onClick={() => onEdit?.(id, content)}
-                size={18}
-                containerSize={24}
-              />
-            )}
+            <IconButton
+              tooltip={i18n.t('edit')}
+              icon="hugeicons:edit-02"
+              onClick={() => onEdit?.(id, content)}
+              size={18}
+              containerSize={24}
+            />
 
             <IconButton
               tooltip={i18n.t('copy')}
@@ -127,144 +125,148 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   return (
-    <motion.div
-      className="group"
-      initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
-      exit={withoutAnimation ? {} : { opacity: 0, y: -20 }}
-      animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
-      transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
-    >
-      <div className="max-w-[100%] bg-sencondbackground px-2 py-1 rounded-xl">
-        <MarkdownRender content={content} />
-      </div>
-      <>
-        {
-          !!metadata?.notes?.length && metadata?.notes?.length > 0 && <div className="mt-2 flex flex-col gap-2">
-            <div className="text-desc text-xs font-bold ml-1 select-none line-clamp-1 ">{i18n.t('ai-chat-box-notes')}</div>
-            {
-              //@ts-ignore
-              metadata?.notes?.map((item: BlinkoItem) => (
-                <Button
-                  key={item.id}
-                  size="sm"
-                  className="w-fit max-w-[400px] text-truncate"
-                  onPress={async () => {
-                    RootStore.Get(DialogStandaloneStore).setData({
-                      isOpen: true,
-                      onlyContent: true,
-                      showOnlyContentCloseButton: true,
-                      size: '4xl',
-                      content: <BlinkoCard blinkoItem={item!} withoutHoverAnimation />
-                    })
-                  }}
-                  endContent={<Icon icon="hugeicons:arrow-right-02" className='ml-auto' width="16" height="16" />}
-                >
-                  <div className="text-xs font-bold ml-1 select-none line-clamp-1 text-truncate">{!!item.content ? item.content : i18n.t('no-title')}</div>
-                </Button>
-              ))
-            }
+    <>
+      {content.length > 0 && (
+        <motion.div
+          className={`group ${shareMode ? 'mb-2' : ''}`}
+          initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
+          exit={withoutAnimation ? {} : { opacity: 0, y: -20 }}
+          animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
+          transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
+        >
+          <div className="max-w-[100%] bg-sencondbackground px-2 py-1 rounded-xl">
+            <MarkdownRender content={content} />
           </div>
-        }
-      </>
+          <>
+            {
+              !!metadata?.notes?.length && metadata?.notes?.length > 0 && <div className="mt-2 flex flex-col gap-2">
+                <div className="text-desc text-xs font-bold ml-1 select-none line-clamp-1 ">{i18n.t('ai-chat-box-notes')}</div>
+                {
+                  //@ts-ignore
+                  metadata?.notes?.map((item: BlinkoItem) => (
+                    <Button
+                      key={item.id}
+                      size="sm"
+                      className="w-fit max-w-[400px] text-truncate"
+                      onPress={async () => {
+                        RootStore.Get(DialogStandaloneStore).setData({
+                          isOpen: true,
+                          onlyContent: true,
+                          showOnlyContentCloseButton: true,
+                          size: '4xl',
+                          content: <BlinkoCard blinkoItem={item!} withoutHoverAnimation />
+                        })
+                      }}
+                      endContent={<Icon icon="hugeicons:arrow-right-02" className='ml-auto' width="16" height="16" />}
+                    >
+                      <div className="text-xs font-bold ml-1 select-none line-clamp-1 text-truncate">{!!item.content ? item.content : i18n.t('no-title')}</div>
+                    </Button>
+                  ))
+                }
+              </div>
+            }
+          </>
 
-      {
-        content.length > 0 && !shareMode && (
-          <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>
-            <div className="flex gap-2  backdrop-blur-sm rounded-full p-1 items-center">
-              <IconButton
-                tooltip={i18n.t('add-to-blinko')}
-                icon="basil:lightning-solid"
-                classNames={{
-                  icon: 'text-yellow-500'
-                }}
-                onClick={() => {
-                  RootStore.Get(BlinkoStore).upsertNote.call({
-                    content: content,
-                    type: NoteType.BLINKO,
-                  })
-                }}
-                size={20}
-                containerSize={25}
-              />
+          {
+            !shareMode && (
+              <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>
+                <div className="flex gap-2  backdrop-blur-sm rounded-full p-1 items-center">
+                  <IconButton
+                    tooltip={i18n.t('add-to-blinko')}
+                    icon="basil:lightning-solid"
+                    classNames={{
+                      icon: 'text-yellow-500'
+                    }}
+                    onClick={() => {
+                      RootStore.Get(BlinkoStore).upsertNote.call({
+                        content: content,
+                        type: NoteType.BLINKO,
+                      })
+                    }}
+                    size={20}
+                    containerSize={25}
+                  />
 
-              <IconButton
-                tooltip={i18n.t('add-to-note')}
-                icon="solar:notes-minimalistic-bold-duotone"
-                classNames={{
-                  icon: 'text-blue-500'
-                }}
-                onClick={() => {
-                  RootStore.Get(BlinkoStore).upsertNote.call({
-                    content: content,
-                    type: NoteType.NOTE
-                  })
-                }}
-                size={20}
-                containerSize={25}
-              />
+                  <IconButton
+                    tooltip={i18n.t('add-to-note')}
+                    icon="solar:notes-minimalistic-bold-duotone"
+                    classNames={{
+                      icon: 'text-blue-500'
+                    }}
+                    onClick={() => {
+                      RootStore.Get(BlinkoStore).upsertNote.call({
+                        content: content,
+                        type: NoteType.NOTE
+                      })
+                    }}
+                    size={20}
+                    containerSize={25}
+                  />
 
-              <IconButton
-                tooltip={i18n.t('copy')}
-                icon="hugeicons:copy-01"
-                onClick={() => {
-                  copy(content)
-                  RootStore.Get(ToastPlugin).success(i18n.t('operation-success'))
-                }}
-                size={20}
-                containerSize={25}
-              />
-              {
-                !!id && <IconButton
-                  tooltip={i18n.t('refresh')}
-                  icon="solar:refresh-outline"
-                  onClick={() => {
-                    RootStore.Get(AiStore).regenerate(id)
-                  }}
-                  size={20}
-                  containerSize={25}
-                />
-              }
-              <IconButton
-                tooltip={i18n.t('share-conversation')}
-                icon="hugeicons:share-05"
-                onClick={async () => {
-                  const aiStore = RootStore.Get(AiStore);
-                  if (aiStore.currentConversation.value) {
-                    try {
-                      // First enable sharing for this conversation
-                      await api.conversation.toggleShare.mutate({
-                        id: aiStore.currentConversation.value.id,
-                        isShare: true
-                      });
-
-                      // Create a longer, more aesthetically pleasing share ID
-                      const conversationId = aiStore.currentConversation.value.id?.toString();
-                      const shareData = `blinko-ai-share-${conversationId}`;
-                      const encodedId = btoa(shareData);
-                      const shareUrl = getBlinkoEndpoint(`/ai-share/${encodedId}`)
-                      copy(shareUrl);
-                      RootStore.Get(ToastPlugin).success(i18n.t('share-link-copied'));
-                    } catch (error) {
-                      console.error('Failed to share conversation:', error);
-                      RootStore.Get(ToastPlugin).error(i18n.t('operation-failed'));
-                    }
+                  <IconButton
+                    tooltip={i18n.t('copy')}
+                    icon="hugeicons:copy-01"
+                    onClick={() => {
+                      copy(content)
+                      RootStore.Get(ToastPlugin).success(i18n.t('operation-success'))
+                    }}
+                    size={20}
+                    containerSize={25}
+                  />
+                  {
+                    !!id && <IconButton
+                      tooltip={i18n.t('refresh')}
+                      icon="solar:refresh-outline"
+                      onClick={() => {
+                        RootStore.Get(AiStore).regenerate(id)
+                      }}
+                      size={20}
+                      containerSize={25}
+                    />
                   }
-                }}
-                size={20}
-                containerSize={25}
-              />
+                  <IconButton
+                    tooltip={i18n.t('share-conversation')}
+                    icon="hugeicons:share-05"
+                    onClick={async () => {
+                      const aiStore = RootStore.Get(AiStore);
+                      if (aiStore.currentConversation.value) {
+                        try {
+                          // First enable sharing for this conversation
+                          await api.conversation.toggleShare.mutate({
+                            id: aiStore.currentConversation.value.id,
+                            isShare: true
+                          });
 
-              {
-                !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold ml-1 select-none line-clamp-1">
-                  {i18n.t('total-tokens')}: {metadata?.usage?.totalTokens} | {i18n.t('first-char-delay')}: {metadata?.fristCharDelay}ms
+                          // Create a longer, more aesthetically pleasing share ID
+                          const conversationId = aiStore.currentConversation.value.id?.toString();
+                          const shareData = `blinko-ai-share-${conversationId}`;
+                          const encodedId = btoa(shareData);
+                          const shareUrl = getBlinkoEndpoint(`/ai-share/${encodedId}`)
+                          copy(shareUrl);
+                          RootStore.Get(ToastPlugin).success(i18n.t('share-link-copied'));
+                        } catch (error) {
+                          console.error('Failed to share conversation:', error);
+                          RootStore.Get(ToastPlugin).error(i18n.t('operation-failed'));
+                        }
+                      }
+                    }}
+                    size={20}
+                    containerSize={25}
+                  />
+
+                  {
+                    !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold ml-1 select-none line-clamp-1">
+                      {i18n.t('total-tokens')}: {metadata?.usage?.totalTokens} | {i18n.t('first-char-delay')}: {metadata?.fristCharDelay}ms
+                    </div>
+                  }
+
                 </div>
-              }
-
-            </div>
-          </div>)
-      }
-    </motion.div >
-  )
+              </div>)
+          }
+        </motion.div >
+      )}
+    </>
+  );
 };
 
 export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: boolean } = {}) => {

@@ -1,0 +1,66 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Blinko Project Structure Guide
+
+## Overview
+Blinko is a monorepo containing a note-taking application with Tauri frontend and Node.js backend.
+
+## Main Structure
+```
+blinko/
+├── app/                    # Frontend (Tauri + React + TypeScript)
+├── server/                 # Backend (Node.js + TypeScript + tRPC)
+├── prisma/                 # Database schema and migrations
+├── blinko-types/          # Shared TypeScript types
+├── shared/                # Shared utilities and components
+└── [package.json](mdc:package.json)          # Root package configuration
+```
+
+## Frontend Structure (`app/`)
+The frontend is built with Tauri, React, and TypeScript:
+- Entry point: [app/src/main.tsx](mdc:app/src/main.tsx)
+- Main app component: [app/src/App.tsx](mdc:app/src/App.tsx)
+- Configuration: [app/vite.config.ts](mdc:app/vite.config.ts)
+- Styling: [app/tailwind.config.js](mdc:app/tailwind.config.js)
+
+### Frontend Directories
+- `src/components/` - React components
+- `src/pages/` - Page components
+- `src/store/` - State management
+- `src/lib/` - Utility functions
+- `src-tauri/` - Tauri native integration
+
+## Backend Structure (`server/`)
+The backend uses Node.js with TypeScript and tRPC:
+- Entry point: [server/index.ts](mdc:server/index.ts)
+- Database connection: [server/prisma.ts](mdc:server/prisma.ts)
+- API context: [server/context.ts](mdc:server/context.ts)
+
+### Backend Directories
+- `routerTrpc/` - tRPC API routes
+- `routerExpress/` - Express API routes
+- `middleware/` - Custom middleware
+- `lib/` - Utility functions
+- `types/` - Backend-specific types
+- `jobs/` - Background jobs
+- `aiServer/` - AI integration
+
+## Database (`prisma/`)
+Database schema and migrations using Prisma ORM.
+
+## Development Workflow
+1. **Frontend development**: `bun run dev:frontend`
+2. **Backend development**: `bun run dev:backend`
+3. **Full stack development**: `bun run dev`
+4. **Database operations**: Use `prisma:*` scripts from root [package.json](mdc:package.json)
+
+## Technology Stack
+- **Frontend**: Tauri, React, TypeScript, Tailwind CSS, Vite
+- **Backend**: Node.js, TypeScript, tRPC, Express, Prisma
+- **Database**: PostgreSQL (configurable)
+- **Package Manager**: Bun
+- **Build Tool**: Turbo (monorepo)
+

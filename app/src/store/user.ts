@@ -327,6 +327,7 @@ export class UserStore implements Store {
       if (pathname !== '/signin' &&
         pathname !== '/signup' &&
         !pathname.includes('/share') &&
+        !pathname.includes('/ai-share') &&
         !isInitialLoad) {
         navigate('/signin');
       }
@@ -417,7 +418,7 @@ export class UserStore implements Store {
     useEffect(() => {
       const handleSignout = () => {
         const pathname = location.pathname;
-        if (pathname === '/signup' || pathname.includes('/share')) {
+        if (pathname === '/signup' || pathname.includes('/share') || pathname.includes('/ai-share')) {
           return
         }
         this.clear()

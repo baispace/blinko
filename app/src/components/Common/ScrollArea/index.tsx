@@ -142,34 +142,80 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
     };
   }, [onRefresh, isRefreshing, isDragging, pullDistance, pullDownThreshold]);
 
+  // Calculate pull progress and arrow rotation
+  const pullProgress = Math.min(pullDistance / pullDownThreshold, 1);
+  const arrowRotation = pullProgress * 180; // 0 to 180 degrees
+  const isReadyToRefresh = pullDistance >= pullDownThreshold;
+  
   const showRefreshIndicator = onRefresh && (pullDistance > 0 || isRefreshing);
-  const refreshText = isRefreshing ? i18n.t('common.refreshing') : pullDistance >= pullDownThreshold ? i18n.t('common.releaseToRefresh') : i18n.t('common.pullToRefresh');
+  const refreshText = isRefreshing 
+    ? i18n.t('common.refreshing') 
+    : isReadyToRefresh 
+      ? i18n.t('common.releaseToRefresh') 
+      : i18n.t('common.pullToRefresh');
+
+  // Arrow Icon Component
+  const ArrowIcon = () => (
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className={`transition-transform duration-150 ${isDragging ? '' : 'duration-300'}`}
+      style={{ 
+        transform: `rotate(${arrowRotation}deg)`,
+        opacity: pullProgress
+      }}
+    >
+      <path 
+        d="M12 5l0 14m-7-7l7-7 7 7" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 
   return (
     <div
       ref={scrollRef}
       style={{
         ...style,
-        paddingTop: showRefreshIndicator ? `${Math.max(pullDistance, isRefreshing ? pullDownThreshold : 0)}px` : undefined,
-        transition: isDragging ? 'none' : 'padding-top 0.3s ease-out'
+        paddingTop: showRefreshIndicator ? `${pullDistance}px` : undefined,
+        transition: isDragging ? 'none' : 'padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
       className={`${className} overflow-y-scroll overflow-x-hidden ${isPc ? '' : 'scrollbar-hide'} scroll-smooth`}
     >
       {/* Pull to refresh indicator */}
       {showRefreshIndicator && (
         <div 
-          className="flex items-center justify-center text-gray-600 bg-gray-50"
+          className={`flex items-center justify-center transition-all duration-150 ${
+            isDragging ? '' : 'duration-300'
+          } ${isReadyToRefresh ? 'text-primary' : 'text-gray-500'} ${
+            isReadyToRefresh ? 'bg-primary/5' : 'bg-gray-50/80'
+          }`}
           style={{
-            height: `${Math.max(pullDistance, isRefreshing ? pullDownThreshold : 0)}px`,
-            marginTop: `-${Math.max(pullDistance, isRefreshing ? pullDownThreshold : 0)}px`,
-            opacity: isRefreshing ? 1 : Math.min(pullDistance / pullDownThreshold, 1)
+            height: `${pullDistance}px`,
+            marginTop: `-${pullDistance}px`,
+            opacity: Math.max(pullProgress * 0.8, 0.3),
+            backdropFilter: 'blur(8px)'
           }}
         >
           <div className="flex items-center gap-2">
-            {isRefreshing && (
+            {isRefreshing ? (
               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <ArrowIcon />
             )}
-            <span className="text-sm">{refreshText}</span>
+            <span 
+              className={`text-sm font-medium transition-all duration-200 ${
+                isReadyToRefresh ? 'scale-105' : 'scale-100'
+              }`}
+              style={{ opacity: Math.max(pullProgress, 0.6) }}
+            >
+              {refreshText}
+            </span>
           </div>
         </div>
       )}

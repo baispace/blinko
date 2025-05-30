@@ -117,7 +117,7 @@ export const AiSetting = observer(() => {
           this.rerankModelSelect.save(modelList);
         } else {
           try {
-            let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com'}/models`, {
+            let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com/v1'}/models`, {
               headers: {
                 'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
               }
@@ -135,7 +135,7 @@ export const AiSetting = observer(() => {
         }
         if (blinko.config.value?.embeddingApiEndpoint) {
           const embeddingEndpoint = new URL(blinko.config.value?.embeddingApiEndpoint);
-          let { data } = await axios.get(`${!!embeddingEndpoint ? embeddingEndpoint.href : 'https://api.openai.com'}/models`, {
+          let { data } = await axios.get(`${!!embeddingEndpoint ? embeddingEndpoint.href : 'https://api.openai.com/v1'}/models`, {
             headers: {
               'Authorization': `Bearer ${blinko.config.value?.embeddingApiKey}`
             }

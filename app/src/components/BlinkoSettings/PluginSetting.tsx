@@ -105,7 +105,7 @@ const InstalledPlugins = observer(() => {
     
     async function fetchAppVersion() {
       try {
-        const version = await api.public.version.query();
+        const version = await api.public.serverVersion.query();
         setCurrentAppVersion(version);
       } catch (error) {
         console.error('Failed to fetch app version:', error);
@@ -286,7 +286,7 @@ const AllPlugins = observer(() => {
   useEffect(() => {
     async function fetchAppVersion() {
       try {
-        const version = await api.public.version.query();
+        const version = await api.public.serverVersion.query();
         setCurrentAppVersion(version);
       } catch (error) {
         console.error('Failed to fetch app version:', error);

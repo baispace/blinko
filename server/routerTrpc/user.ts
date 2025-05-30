@@ -191,20 +191,20 @@ export const userRouter = router({
     .input(z.void())
     .output(z.boolean())
     .mutation(async () => {
-     try {
-      console.log('canRegisterxxx')
-      const count = await prisma.accounts.count()
-      if (count == 0) {
+      try {
+        console.log('canRegisterxxx')
+        const count = await prisma.accounts.count()
+        if (count == 0) {
+          return true
+        } else {
+          const res = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } })
+          //@ts-ignore
+          return res?.config.value === true
+        }
+      } catch (error) {
+        console.log(error, 'canRegister error')
         return true
-      } else {
-        const res = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } })
-        //@ts-ignore
-        return res?.config.value === true
       }
-     } catch (error) {
-        console.log(error,'canRegister error')
-        return true
-     }
     }),
   register: publicProcedure
     .meta({
@@ -301,10 +301,78 @@ export const userRouter = router({
         id: user.id,
         name: user.name ?? '',
         role: user.role,
-        permissions: ['notes.upsert', 'ai.completions']
+        permissions: ['notes.upsert', 'ai.completions', 'users.list', 'users.genTokenByUserId']
       });
 
       return { token };
+    }),
+  genTokenByUserId: authProcedure.use(superAdminAuthMiddleware)
+    .meta({ 
+      openapi: { 
+        method: 'POST', 
+        path: '/v1/user/gen-token-by-user-id', 
+        summary: 'Generate tokens by user IDs', 
+        description: 'Generate tokens for specific users by user IDs, need super admin permission',
+        tags: ['User'] 
+      } 
+    })
+    .input(z.object({
+      userIds: z.array(z.number())
+    }))
+    .output(z.array(z.object({
+      userId: z.number(),
+      token: z.string(),
+      name: z.string(),
+      success: z.boolean(),
+      error: z.string().optional()
+    })))
+    .mutation(async ({ input }) => {
+      const results: Array<{
+        userId: number;
+        token: string;
+        name: string;
+        success: boolean;
+        error?: string;
+      }> = [];
+
+      for (const userId of input.userIds) {
+        try {
+          const user = await prisma.accounts.findFirst({ where: { id: userId } });
+          if (!user) {
+            results.push({
+              userId,
+              token: '',
+              name: '',
+              success: false,
+              error: 'User not found'
+            });
+            continue;
+          }
+
+          const token = await genToken({
+            id: user.id,
+            name: user.name ?? '',
+            role: user.role
+          });
+
+          results.push({
+            userId: user.id,
+            token,
+            name: user.name ?? '',
+            success: true
+          });
+        } catch (error) {
+          results.push({
+            userId,
+            token: '',
+            name: '',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return results;
     }),
   upsertUser: authProcedure.use(demoAuthMiddleware)
     .meta({

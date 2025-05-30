@@ -6,10 +6,10 @@ import jwt from 'jsonwebtoken';
 import { prisma } from "@server/prisma";
 import { User } from "@server/context";
 import { Request as ExpressRequest } from 'express';
+import { getGlobalConfig } from "@server/routerTrpc/config";
 
-export const SendWebhook = async (data: any, webhookType: string, ctx: { id: string }) => {
+export const SendWebhook = async (data: any, webhookType: string, ctx: any) => {
   try {
-    //@ts-ignore
     const globalConfig = await getGlobalConfig({ ctx })
     if (globalConfig.webhookEndpoint) {
       await axios.post(globalConfig.webhookEndpoint, { data, webhookType, activityType: `blinko.note.${webhookType}` })

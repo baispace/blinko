@@ -25,6 +25,45 @@ interface GlobalSearchProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Text highlighting component
+const HighlightText = ({ text, searchTerm }: { text: string; searchTerm: string }) => {
+  if (!searchTerm || !text) return <span>{text}</span>;
+
+  // Clean search term (remove @ and # prefixes)
+  const cleanSearchTerm = searchTerm.replace(/^[@#]/, '').trim();
+  if (!cleanSearchTerm) return <span>{text}</span>;
+
+  // Escape special regex characters
+  const escapedSearchTerm = cleanSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+  // Create regex for case-insensitive matching
+  const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+  
+  // Split text into parts
+  const parts = text.split(regex);
+  
+  return (
+    <span>
+      {parts.map((part, index) => {
+        // Check if this part matches the search term (case insensitive)
+        const isMatch = regex.test(part);
+        regex.lastIndex = 0; // Reset regex for next test
+        
+        return isMatch ? (
+          <mark 
+            key={index} 
+            className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white px-1 rounded-sm"
+          >
+            {part}
+          </mark>
+        ) : (
+          <span key={index}>{part}</span>
+        );
+      })}
+    </span>
+  );
+};
+
 export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProps) => {
   const { t } = useTranslation();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -251,19 +290,24 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
 
   // Render search result items
   const renderNoteItem = (note: Note) => (
-    <div key={note.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => navigateToNote(note)}>
-      <div className="text-xs truncate w-full md:w-[80%]">{note?.content?.substring(0, 60) || t('no-content')}</div>
-      <div className="ml-auto hidden md:block">
+    <div key={note.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md transition-colors">
+      <div 
+        className="text-xs truncate w-full md:w-[80%] cursor-pointer" 
+        onClick={() => navigateToNote(note)}
+      >
+        <HighlightText text={note?.content?.substring(0, 60) || t('no-content')} searchTerm={store.searchQuery} />
+      </div>
+      <div className="ml-auto hidden md:block" onClick={(e) => e.stopPropagation()}>
         <ConvertTypeButton
           blinkoItem={note}
           tooltipPlacement="right"
           toolTipClassNames={{
-            base: '!bg-none p-0 rounded-full',
-            content: '!bg-none p-0 rounded-full',
+            base: 'bg-content1 border border-default-200 shadow-lg',
+            content: 'p-0',
           }}
           tooltip={
-            <div className="max-w-[400px] p-0">
-              <BlinkoCard blinkoItem={note} />
+            <div className="max-w-[400px] p-0 rounded-2xl bg-transparent">
+              <BlinkoCard blinkoItem={note} withoutHoverAnimation withoutBoxShadow className='!border-none'/>
             </div>
           }
         />
@@ -397,7 +441,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                     {!store.isTagSearch && (
                       <div className="flex flex-col gap-1 mb-2">
                         <div className="flex items-center">
-                          <Icon icon="mingcute:lightning-line" className="mr-2 text-primary" />
+                          <Icon icon="hugeicons:ai-browser" className="h-4 w-4 mr-2 text-primary" />
                           <h3 className="text-sm font-medium text-default-700">{t('action')}</h3>
                         </div>
                         <div className="flex flex-col">
@@ -421,7 +465,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <Icon icon="mingcute:document-line" className="mr-2 text-primary" />
+                            <Icon icon="hugeicons:sticky-note-02" className="h-4 w-4 mr-2 text-primary" />
                             <h3 className="text-sm font-medium text-default-700">{t('note')}</h3>
                           </div>
                         </div>
@@ -435,7 +479,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                         <Divider className="my-2" />
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <Icon icon="mingcute:folder-line" className="mr-2 text-success" />
+                            <Icon icon="mingcute:folder-line" className="h-4 w-4 mr-2 text-success" />
                             <h3 className="text-sm font-medium text-default-700">{t('resources')}</h3>
                           </div>
                         </div>

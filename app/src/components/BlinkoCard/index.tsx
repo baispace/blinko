@@ -37,9 +37,10 @@ interface BlinkoCardProps {
   defaultExpanded?: boolean;
   glassEffect?: boolean;
   withoutHoverAnimation?: boolean;
+  withoutBoxShadow?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutHoverAnimation = false, className, defaultExpanded = false }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutBoxShadow = false, withoutHoverAnimation = false, className, defaultExpanded = false }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
@@ -99,7 +100,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   };
 
   return (
-    <ExpandableContainer isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
+    <ExpandableContainer withoutBoxShadow={withoutBoxShadow} isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
       {(() => {
         const cardContent = (
           <div

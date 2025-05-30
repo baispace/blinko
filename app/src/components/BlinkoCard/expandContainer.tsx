@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 interface ExpandableContainerProps {
   isExpanded: boolean;
   children: React.ReactNode;
+  withoutBoxShadow?: boolean;
   onClose?: () => void;
 }
 
@@ -16,13 +17,15 @@ const ANIMATION_CONFIG = {
   mass: 0.6,
 } as const;
 
-const BASE_STYLES = {
-  boxShadow: '0 0 15px -5px #5858581a',
-} as const;
 
-export const ExpandableContainer = ({ isExpanded, children, onClose }: ExpandableContainerProps) => {
+
+export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxShadow = false }: ExpandableContainerProps) => {
+  const BASE_STYLES = {
+    boxShadow: withoutBoxShadow ? 'none' : '0 0 15px -5px #5858581a',
+  } as const;
+
   const isIOS = useIsIOS()
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isExpanded) {
@@ -55,7 +58,7 @@ export const ExpandableContainer = ({ isExpanded, children, onClose }: Expandabl
         document.body
       );
     }
-  
+
     return (
       <div
         className='w-full expand-container touch-manipulation'

@@ -195,14 +195,14 @@ export type GlobalConfig = z.infer<typeof ZConfigSchema>;
 // Zod schema for plugin information
 export const pluginInfoSchema = z.object({
   name: z.string(),
-  author: z.string(),
-  url: z.string(),
+  author: z.string().optional(),
+  url: z.string().optional(),
   version: z.string(),
-  minAppVersion: z.string(),
-  displayName: z.any(),
-  description: z.any(),
-  readme: z.any(),
-  downloads: z.number()
+  minAppVersion: z.string().optional(),
+  displayName: z.any().optional(),
+  description: z.any().optional(),
+  readme: z.any().optional(),
+  downloads: z.number().optional()
 });
 
 // Schema for plugin installation input (subset of PluginInfo)

@@ -97,23 +97,24 @@ const cleanPluginDir = async (pluginName: string) => {
 };
 
 export const pluginRouter = router({
-  getAllPlugins: authProcedure.output(z.array(pluginInfoSchema)).query(async () => {
-    return cache.wrap(
-      `plugin-list-${await getHttpCacheKey()}`,
-      async () => {
-        try {
-          const response = await getWithProxy('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
-          return response.data;
-        } catch (error) {
-          console.error('Failed to fetch plugin list:', error);
-          return [];
-        }
-      },
-      {
-        ttl: 5 * 60 * 1000,
-      },
-    );
-  }),
+  getAllPlugins: authProcedure
+    .query(async () => {
+      return cache.wrap(
+        `plugin-list-${await getHttpCacheKey()}`,
+        async () => {
+          try {
+            const response = await getWithProxy('https://raw.githubusercontent.com/blinko-space/blinko-plugin-marketplace/main/index.json');
+            return response.data;
+          } catch (error) {
+            console.error('Failed to fetch plugin list:', error);
+            return [];
+          }
+        },
+        {
+          ttl: 5 * 60 * 1000,
+        },
+      );
+    }),
 
   // Get CSS file contents for a plugin
   getPluginCssContents: authProcedure
@@ -132,10 +133,10 @@ export const pluginRouter = router({
         if (!existsSync(pluginDir)) {
           return [];
         }
-        
+
         const cssFiles = await scanCssFiles(pluginDir);
         const result: Array<{ fileName: string, content: string }> = [];
-        
+
         for (const cssFile of cssFiles) {
           try {
             const filePath = path.join(pluginDir, cssFile);
@@ -148,7 +149,7 @@ export const pluginRouter = router({
             console.error(`Failed to read CSS file ${cssFile}:`, error);
           }
         }
-        
+
         return result;
       } catch (error) {
         console.error(`Failed to get CSS contents for plugin ${input.pluginName}:`, error);
@@ -169,21 +170,21 @@ export const pluginRouter = router({
       try {
         // Clean dev plugin directory
         await cleanPluginDir('dev');
-        
+
         // Rebuild directory and save file
         const devPluginDir = getPluginDir('dev');
         await ensureDirectoryExists(devPluginDir);
-        
+
         const fullFilePath = path.join(devPluginDir, input.fileName);
         await writeFileWithDir(fullFilePath, input.code);
-        
+
         return { success: true };
       } catch (error) {
         console.error('Save dev plugin error:', error);
         throw error;
       }
     }),
-    
+
   // Save additional files for dev plugin
   saveAdditionalDevFile: authProcedure
     .input(
@@ -199,7 +200,7 @@ export const pluginRouter = router({
         const devPluginDir = getPluginDir('dev');
         const fullPath = path.join(devPluginDir, input.filePath);
         await writeFileWithDir(fullPath, input.content);
-        
+
         return { success: true };
       } catch (error) {
         console.error(`Save additional dev file error: ${input.filePath}`, error);
@@ -311,7 +312,7 @@ export const pluginRouter = router({
         }
 
         const metadata = plugin.metadata as { name: string };
-        
+
         // Delete plugin files
         await cleanPluginDir(metadata.name);
 

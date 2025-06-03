@@ -30,7 +30,7 @@ interface PluginCardProps {
 const PluginCard = ({ name, version, displayName, description, author, downloads, actionButton, url }: PluginCardProps) => {
   const { t } = useTranslation();
   return (
-    <Card key={name} className="group relative overflow-hidden backdrop-blur-sm border border-default-200 dark:border-default-100/20">
+    <Card key={name} className="group relative overflow-hidden  border border-default-200 dark:border-default-100/20 shadow-none">
       <div className="absolute inset-0 bg-gradient-to-r from-default-100/50 via-default-200/30 to-default-100/50 dark:from-default-50/10 dark:via-default-100/5 dark:to-default-50/10 opacity-0 transition-opacity duration-300" />
 
       <CardBody className="p-5">

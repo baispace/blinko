@@ -646,5 +646,18 @@
   "common.releaseToRefresh": "リフレッシュのために開放します",
   "common.pullToRefresh": "下に引っ張って更新",
   "edit-message-warning": "このメッセージを編集すると、以降のすべての会話記録が消去され、AIの返信が再生成されます。",
-  "enter-your-message": "あなたのメッセージを入力してください"
+  "enter-your-message": "あなたのメッセージを入力してください",
+  "set-deadline": "締切日を設定する",
+  "expired": "期限切れ",
+  "expired-days": "期限切れ{{count}}日",
+  "expired-hours": "期限切れ{{count}}時間",
+  "expired-minutes": "有効期限切れ{{count}}分",
+  "days-left": "{{count}}日後",
+  "hours-left": "{{count}}時間後",
+  "minutes-left": "{{count}}分後",
+  "about-to-expire": "まもなく期限切れ",
+  "1-day": "1日",
+  "1-week": "一週間",
+  "1-month": "1か月",
+  "quick-select": "クイック選択"
 }

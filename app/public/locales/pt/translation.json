@@ -640,5 +640,18 @@
   "common.releaseToRefresh": "Solte para atualizar",
   "common.pullToRefresh": "Puxar para atualizar",
   "edit-message-warning": "Editar esta mensagem apagará todos os registros de conversação subsequentes e gerará novamente as respostas da IA.",
-  "enter-your-message": "Insira a sua mensagem"
+  "enter-your-message": "Insira a sua mensagem",
+  "set-deadline": "Definir o prazo.",
+  "expired": "Expirado",
+  "expired-days": "Vencido por {{count}} dias",
+  "expired-hours": "Expirado há {{count}} horas.",
+  "expired-minutes": "Expirado há {{count}} minutos.",
+  "days-left": "{{count}} dias depois",
+  "hours-left": "{{count}} horas depois",
+  "minutes-left": "{{count}} minutos depois",
+  "about-to-expire": "Prestes a expirar",
+  "1-day": "1 dia",
+  "1-week": "Uma semana",
+  "1-month": "um mês",
+  "quick-select": "Seleção rápida"
 }

@@ -646,5 +646,18 @@
   "common.releaseToRefresh": "Lâchez pour actualiser",
   "common.pullToRefresh": "Tirer pour rafraîchir",
   "edit-message-warning": "Modifier ce message effacera tous les enregistrements de conversation ultérieurs et générera à nouveau une réponse IA.",
-  "enter-your-message": "Entrez votre message"
+  "enter-your-message": "Entrez votre message",
+  "set-deadline": "Définir la date limite",
+  "expired": "Expiré",
+  "expired-days": "Expiré de {{count}} jours",
+  "expired-hours": "Expiré de {{count}} heures",
+  "expired-minutes": "Expiré depuis {{count}} minutes",
+  "days-left": "{{count}} jours plus tard",
+  "hours-left": "{{count}} heures plus tard",
+  "minutes-left": "{{count}} minutes après",
+  "about-to-expire": "Sur le point d'expirer",
+  "1-day": "1 jour",
+  "1-week": "une semaine",
+  "1-month": "Un mois",
+  "quick-select": "Sélection rapide"
 }

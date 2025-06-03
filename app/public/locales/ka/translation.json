@@ -605,5 +605,18 @@
   "common.releaseToRefresh": "გაუშვი განახო refresh",
   "common.pullToRefresh": "ჩამოიყოლე განა Refresh",
   "edit-message-warning": "ამ შეტყობინების რედაქтирование က သ 컴ák Beach повikáníchай하려면, kit összes le 아래의 minden besz違いをすべて削除し、AIの返信を再度生成します。",
-  "enter-your-message": "შეიყვანეთ თქვეnო წოmoqđa"
+  "enter-your-message": "შეიყვანეთ თქვეnო წოmoqđa",
+  "set-deadline": "დინების თარიღის დაყენება",
+  "expired": "ვადა გასულია",
+  "expired-days": "ვადაგასული {{count}} დღე",
+  "expired-hours": "ვადაგასული {{count}} საათი.",
+  "expired-minutes": "ვადაგასული {{count}} წუთი",
+  "days-left": "{{count}} დღის შემდეგ",
+  "hours-left": "{{count}} საათის შემდეგ",
+  "minutes-left": "{{count}} წუთის შემდეგ",
+  "about-to-expire": "ვადის ამოწურვა",
+  "1-day": "1 დღე",
+  "1-week": "ერთი კვირა",
+  "1-month": "ერთი თვე",
+  "quick-select": "სწრაფი არჩევანი"
 }

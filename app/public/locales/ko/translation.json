@@ -641,5 +641,18 @@
   "common.releaseToRefresh": "새로 고침을 위해 놓으십시오",
   "common.pullToRefresh": "드롭 다운으로 새로 고침",
   "edit-message-warning": "이 메시지를 편집하면 모든 후속 대화 기록이 지워지고 AI 응답이 다시 생성됩니다.",
-  "enter-your-message": "당신의 메시지를 입력하십시오."
+  "enter-your-message": "당신의 메시지를 입력하십시오.",
+  "set-deadline": "마감일 설정",
+  "expired": "만료되었습니다.",
+  "expired-days": "만료 {{count}}일 경과",
+  "expired-hours": "만료 {{count}}시간",
+  "expired-minutes": "만료 {{count}}분",
+  "days-left": "{{count}}일 후",
+  "hours-left": "{{count}}시간 후에",
+  "minutes-left": "{{count}}분 후",
+  "about-to-expire": "곧 만료됨",
+  "1-day": "1일",
+  "1-week": "일주",
+  "1-month": "한 달",
+  "quick-select": "빠른 선택"
 }

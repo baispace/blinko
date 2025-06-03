@@ -645,5 +645,18 @@
   "common.releaseToRefresh": "أطلق للتحديث",
   "common.pullToRefresh": "السحب لأسفل للتحديث",
   "edit-message-warning": "تحرير هذه الرسالة سيقوم بمسح جميع سجلات المحادثات اللاحقة، وإعادة توليد الردود من الذكاء الاصطناعي.",
-  "enter-your-message": "أدخل رسالتك"
+  "enter-your-message": "أدخل رسالتك",
+  "set-deadline": "设置截止日期  \nتحديد الموعد النهائي",
+  "expired": "منتهي الصلاحية",
+  "expired-days": "منتهية الصلاحية منذ {{count}} يومًا",
+  "expired-hours": "انتهت الصلاحية منذ {{count}} ساعة",
+  "expired-minutes": "انتهت صلاحيته منذ {{count}} دقيقة",
+  "days-left": "{{count}} بعد يوم.",
+  "hours-left": "{{count}} ساعة لاحقًا",
+  "minutes-left": "{{count}} دقيقة بعد",
+  "about-to-expire": "على وشك الانتهاء",
+  "1-day": "一天",
+  "1-week": "一周  \nأسبوع",
+  "1-month": "一个月  \nشهر واحد",
+  "quick-select": "الاختيار السريع"
 }

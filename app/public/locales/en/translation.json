@@ -666,7 +666,7 @@
   "shared-at": "Shared at",
   "loading-shared-conversation": "Loading shared conversation...",
   "invalid-share-link": "Invalid share link",
-  "conversation-not-found": "Shared conversation does not exist or has expired",
+  "conversation-not-found": "Shared conversation not found or not public",
   "load-conversation-failed": "Failed to load shared conversation",
   "conversation-not-exist": "Shared conversation does not exist",
   "load-failed": "Load failed",
@@ -674,5 +674,18 @@
   "pull-to-refresh": "Pull to refresh",
   "conversation-id-missing": "Conversation ID missing",
   "shared-by": "Shared by",
-  "conversation-not-found": "Shared conversation not found or not public"
+  "set-deadline": "Set a deadline",
+  "expired": "Expired",
+  "days-left": "{{count}} days left",
+  "hours-left": "{{count}} hours left",
+  "minutes-left": "{{count}} minutes left",
+  "about-to-expire": "About to expire",
+  "just-expired": "Just expired",
+  "expired-days": "Expired {{count}} days",
+  "expired-hours": "Expired {{count}} hours",
+  "expired-minutes": "Expired {{count}} minutes",
+  "1-day": "1 day",
+  "1-week": "One week",
+  "1-month": "One month",
+  "quick-select": "Quick Selection"
 }

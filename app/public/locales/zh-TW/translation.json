@@ -648,5 +648,17 @@
   "common.releaseToRefresh": "鬆開以更新",
   "common.pullToRefresh": "下拉更新",
   "edit-message-warning": "編輯此訊息將清除後續的所有對話記錄，並重新生成AI回覆。",
-  "enter-your-message": "輸入您的訊息"
+  "enter-your-message": "輸入您的訊息",
+  "set-deadline": "設定截止日期",
+  "expired": "已過期",
+  "expired-days": "過期{{count}}天",
+  "expired-hours": "過期{{count}}小時",
+  "days-left": "{{count}}天後",
+  "hours-left": "{{count}}小時後",
+  "minutes-left": "{{count}}分鐘後",
+  "about-to-expire": "即將到期",
+  "1-day": "1天",
+  "1-week": "一週",
+  "1-month": "一個月",
+  "quick-select": "快捷選擇"
 }

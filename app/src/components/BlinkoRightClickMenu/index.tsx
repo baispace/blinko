@@ -25,7 +25,7 @@ import { useLocation } from "react-router-dom";
 import { ShowCommentDialog } from "../BlinkoCard/commentButton";
 import { useMediaQuery } from "usehooks-ts";
 
-export const ShowEditTimeModel = () => {
+export const ShowEditTimeModel = (showExpired: boolean = false) => {
   const blinko = RootStore.Get(BlinkoStore)
   RootStore.Get(DialogStore).setData({
     size: 'sm' as any,
@@ -40,38 +40,138 @@ export const ShowEditTimeModel = () => {
       const [updatedAt, setUpdatedAt] = useState(blinko.curSelectedNote?.updatedAt ?
         parseAbsoluteToLocal(blinko.curSelectedNote.updatedAt.toISOString()) : null);
 
-      const handleSave = () => {
-        if (!createdAt || !updatedAt) return;
+      const [expireAt, setExpireAt] = useState(blinko.curSelectedNote?.metadata?.expireAt ?
+        parseAbsoluteToLocal(new Date(blinko.curSelectedNote.metadata.expireAt).toISOString()) : null);
 
-        blinko.upsertNote.call({
-          id: blinko.curSelectedNote?.id,
-          createdAt: createdAt.toDate(),
-          updatedAt: updatedAt.toDate()
-        });
+      const handleSave = () => {
+        if (showExpired) {
+          // Handle expired date save
+          const existingMetadata = blinko.curSelectedNote?.metadata || {};
+          
+          blinko.upsertNote.call({
+            id: blinko.curSelectedNote?.id,
+            metadata: {
+              ...existingMetadata,
+              expireAt: expireAt ? expireAt.toDate().toISOString() : null
+            }
+          });
+        } else {
+          // Handle created/updated date save
+          if (!createdAt || !updatedAt) return;
+
+          blinko.upsertNote.call({
+            id: blinko.curSelectedNote?.id,
+            createdAt: createdAt.toDate(),
+            updatedAt: updatedAt.toDate()
+          });
+        }
 
         RootStore.Get(DialogStore).close();
       }
+
       return <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 p-4">
-          <DatePicker
-            label={i18n.t('created-at')}
-            value={createdAt}
-            onChange={setCreatedAt}
-            labelPlacement="outside"
-          />
-          <DatePicker
-            label={i18n.t('updated-at')}
-            value={updatedAt}
-            onChange={setUpdatedAt}
-            labelPlacement="outside"
-          />
-          <Button
-            color="primary"
-            className="mt-2"
-            onPress={handleSave}
-          >
-            {i18n.t('save')}
-          </Button>
+          {showExpired ? (
+            // Show expired date picker for TODO
+            <>
+              <DatePicker
+                label={i18n.t('expiry-time')}
+                value={expireAt}
+                onChange={setExpireAt}
+                labelPlacement="outside"
+                showMonthAndYearPickers
+                granularity="second"
+                hideTimeZone
+              />
+              
+              {/* Quick time selection buttons */}
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-gray-600 font-medium">{i18n.t('quick-select') || 'Quick Select'}:</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    onPress={() => {
+                      const now = new Date();
+                      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                      setExpireAt(parseAbsoluteToLocal(tomorrow.toISOString()));
+                    }}
+                  >
+                    {i18n.t('1-day') || '1 Day'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    onPress={() => {
+                      const now = new Date();
+                      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      setExpireAt(parseAbsoluteToLocal(nextWeek.toISOString()));
+                    }}
+                  >
+                    {i18n.t('1-week') || '1 Week'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    onPress={() => {
+                      const now = new Date();
+                      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+                      setExpireAt(parseAbsoluteToLocal(nextMonth.toISOString()));
+                    }}
+                  >
+                    {i18n.t('1-month') || '1 Month'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    color="warning"
+                    onPress={() => {
+                      setExpireAt(null);
+                    }}
+                  >
+                    {i18n.t('cancel')}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  color="primary"
+                  className="flex-1"
+                  onPress={handleSave}
+                >
+                  {i18n.t('save')}
+                </Button>
+              </div>
+            </>
+          ) : (
+            // Show created/updated date pickers
+            <>
+              <DatePicker
+                label={i18n.t('created-at')}
+                value={createdAt}
+                onChange={setCreatedAt}
+                labelPlacement="outside"
+                granularity="second"
+                hideTimeZone
+              />
+              <DatePicker
+                label={i18n.t('updated-at')}
+                value={updatedAt}
+                onChange={setUpdatedAt}
+                labelPlacement="outside"
+                granularity="second"
+                hideTimeZone
+              />
+              <Button
+                color="primary"
+                className="mt-2"
+                onPress={handleSave}
+              >
+                {i18n.t('save')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     }

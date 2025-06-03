@@ -682,7 +682,7 @@
   "shared-at": "分享于",
   "loading-shared-conversation": "加载分享对话中...",
   "invalid-share-link": "无效的分享链接",
-  "conversation-not-found": "分享的对话不存在或已过期",
+  "conversation-not-found": "分享的对话不存在或未公开",
   "load-conversation-failed": "加载分享对话失败",
   "conversation-not-exist": "分享的对话不存在",
   "load-failed": "加载失败",
@@ -690,5 +690,18 @@
   "pull-to-refresh": "下拉刷新",
   "conversation-id-missing": "对话ID缺失",
   "shared-by": "分享者",
-  "conversation-not-found": "分享的对话不存在或未公开"
+  "set-deadline": "设置截止日期",
+  "expired": "已过期",
+  "days-left": "{{count}}天后",
+  "hours-left": "{{count}}小时后",
+  "minutes-left": "{{count}}分钟后",
+  "about-to-expire": "即将到期",
+  "just-expired": "刚过期",
+  "expired-days": "过期{{count}}天",
+  "expired-hours": "过期{{count}}小时",
+  "expired-minutes": "过期{{count}}分钟",
+  "1-day": "1天",
+  "1-week": "一周",
+  "1-month": "一个月",
+  "quick-select": "快捷选择"
 }

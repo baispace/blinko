@@ -637,5 +637,18 @@
   "common.releaseToRefresh": "Zwolnij, aby odświeżyć",
   "common.pullToRefresh": "Przeciągnij do odświeżenia",
   "edit-message-warning": "Edycja tej wiadomości usunie wszystkie następujące po niej rekordy rozmów i ponownie wygeneruje odpowiedź AI.",
-  "enter-your-message": "Wprowadź swoją wiadomość"
+  "enter-your-message": "Wprowadź swoją wiadomość",
+  "set-deadline": "Ustawienie terminu zakończenia.",
+  "expired": "Wygasło.",
+  "expired-days": "Przeterminowane o {{count}} dni.",
+  "expired-hours": "Przeterminowane {{count}} godzin.",
+  "expired-minutes": "Przedawnione o {{count}} minut.",
+  "days-left": "{{count}} dni później",
+  "hours-left": "{{count}} godzin później",
+  "minutes-left": "{{count}} minut później",
+  "about-to-expire": "Wkrótce wygaśnie.",
+  "1-day": "1 dzień",
+  "1-week": "Jeden tydzień",
+  "1-month": "Jeden miesiąc",
+  "quick-select": "Szybki wybór"
 }

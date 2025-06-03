@@ -639,5 +639,18 @@
   "common.releaseToRefresh": "Отпустите для обновления",
   "common.pullToRefresh": "Обновить, потянув вниз",
   "edit-message-warning": "Редактирование этого сообщения удалит все последующие записи разговора и снова сгенерирует ответ AI.",
-  "enter-your-message": "Введите свое сообщение"
+  "enter-your-message": "Введите свое сообщение",
+  "set-deadline": "设置截止日期 -> Установить крайний срок",
+  "expired": "已过期 -> Истёк срок действия",
+  "expired-days": "истекло {{count}} дней",
+  "expired-hours": "Просрочено {{count}} часов.",
+  "expired-minutes": "Просрочено {{count}} минут",
+  "days-left": "{{count}} дней спустя",
+  "hours-left": "{{count}} часов спустя",
+  "minutes-left": "{{count}} минут спустя",
+  "about-to-expire": "Скоро истекает срок.",
+  "1-day": "1 день",
+  "1-week": "一周 - неделя",
+  "1-month": "один месяц",
+  "quick-select": "Быстрый выбор"
 }

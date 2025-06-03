@@ -646,5 +646,18 @@
   "common.releaseToRefresh": "Yenilemek için bırakın",
   "common.pullToRefresh": "Aşağı çekerek yenile",
   "edit-message-warning": "Bu mesajı düzenlemek, tüm sonraki sohbet kayıtlarını temizleyecek ve AI yanıtlarını yeniden oluşturacaktır.",
-  "enter-your-message": "Mesajınızı girin"
+  "enter-your-message": "Mesajınızı girin",
+  "set-deadline": "Son teslim tarihini ayarla.",
+  "expired": "Süresi doldu",
+  "expired-days": "Süresi {{count}} gün geçmiş.",
+  "expired-hours": "Süresi doldu {{count}} saat.",
+  "expired-minutes": "Süresi {{count}} dakika geçti.",
+  "days-left": "{{count}} gün sonra",
+  "hours-left": "{{count}} saat sonra",
+  "minutes-left": "{{count}} dakika sonra",
+  "about-to-expire": "Süresi dolmak üzere",
+  "1-day": "1 gün",
+  "1-week": "Bir Hafta",
+  "1-month": "bir ay",
+  "quick-select": "Hızlı Seçim"
 }

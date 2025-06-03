@@ -645,5 +645,18 @@
   "common.releaseToRefresh": "Zum Aktualisieren loslassen",
   "common.pullToRefresh": "Nach unten ziehen zum Aktualisieren",
   "edit-message-warning": "Das Bearbeiten dieser Nachricht löscht alle nachfolgenden Dialogverläufe und erzeugt neue KI-Antworten.",
-  "enter-your-message": "Geben Sie Ihre Nachricht ein"
+  "enter-your-message": "Geben Sie Ihre Nachricht ein",
+  "set-deadline": "Fälligkeitsdatum festlegen",
+  "expired": "Abgelaufen",
+  "expired-days": "Abgelaufen seit {{count}} Tagen",
+  "expired-hours": "Abgelaufen {{count}} Stunden",
+  "expired-minutes": "Abgelaufen seit {{count}} Minuten",
+  "days-left": "{{count}} Tage später",
+  "hours-left": "{{count}} Stunden später",
+  "minutes-left": "{{count}} Minuten später",
+  "about-to-expire": "Bald ablaufen",
+  "1-day": "1 Tag",
+  "1-week": "eine Woche",
+  "1-month": "ein Monat",
+  "quick-select": "Schnellauswahl"
 }

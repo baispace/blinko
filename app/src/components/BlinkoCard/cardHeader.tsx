@@ -1,7 +1,7 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Button, Tooltip } from '@heroui/react';
 import { Copy } from "../Common/Copy";
-import { LeftCickMenu } from "../BlinkoRightClickMenu";
+import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note, NoteType } from '@shared/lib/types';
 import { RootStore } from '@/store';
@@ -34,15 +34,18 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
     e.stopPropagation();
 
     try {
-      if (blinkoItem.isRecycle) {
+      if (blinkoItem.isArchived) {
         await blinko.upsertNote.call({
           id: blinkoItem.id,
-          isRecycle: false,
           isArchived: false
         });
         blinko.updateTicker++
       } else {
-        await PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] }));
+        await blinko.upsertNote.call({
+          id: blinkoItem.id,
+          isArchived: true
+        });
+        blinko.updateTicker++
       }
     } catch (error) {
       console.error('Error toggling TODO status:', error);
@@ -97,14 +100,14 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         {blinkoItem.type === NoteType.TODO && (
-          <Tooltip content={blinkoItem.isRecycle ? t('restore') : t('complete')}>
+          <Tooltip content={blinkoItem.isArchived ? t('restore') : t('complete')}>
             <div
               className="flex items-center cursor-pointer"
               onClick={handleTodoToggle}
             >
               <Icon
-                icon={blinkoItem.isRecycle ? "solar:refresh-circle-bold" : "mdi:circle-outline"}
-                className={`${blinkoItem.isRecycle ? 'text-blue-500' : 'text-green-500'} hover:opacity-80`}
+                icon={blinkoItem.isArchived ? "solar:refresh-circle-bold" : "mdi:circle-outline"}
+                className={`${blinkoItem.isArchived ? 'text-blue-500' : 'text-green-500'} hover:opacity-80`}
                 width="16"
                 height="16"
               />
@@ -112,12 +115,21 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </Tooltip>
         )}
 
-        <div className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc`}>
-          {blinko.config.value?.timeFormat == 'relative'
-            ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
-            : dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).format(blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss')
-          }
-        </div>
+        <Tooltip content={t('edit-time')} delay={1000}>
+          <div 
+            className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc cursor-pointer transition-colors`}
+            onClick={(e) => {
+              e.stopPropagation();
+              blinko.curSelectedNote = _.cloneDeep(blinkoItem);
+              ShowEditTimeModel();
+            }}
+          >
+            {blinko.config.value?.timeFormat == 'relative'
+              ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
+              : dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).format(blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss')
+            }
+          </div>
+        </Tooltip>
 
         <Copy
           size={16}

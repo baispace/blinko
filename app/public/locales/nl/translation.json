@@ -652,5 +652,18 @@
   "common.releaseToRefresh": "Laat los om te vernieuwen",
   "common.pullToRefresh": "Trek naar beneden om te vernieuwen",
   "edit-message-warning": "Het bewerken van dit bericht zal alle volgende gespreksrecords wissen en de AI-antwoorden opnieuw genereren.",
-  "enter-your-message": "Voer uw bericht in"
+  "enter-your-message": "Voer uw bericht in",
+  "set-deadline": "Stel een deadline in",
+  "expired": "Verlopen.",
+  "expired-days": "Verlopen {{count}} dagen",
+  "expired-hours": "Verlopen {{count}} uur",
+  "expired-minutes": "Verlopen {{count}} minuten",
+  "days-left": "Over {{count}} dagen",
+  "hours-left": "{{count}} uur later",
+  "minutes-left": "{{count}} minuten later",
+  "about-to-expire": "Bijna verlopen",
+  "1-day": "1 dag",
+  "1-week": "Een week",
+  "1-month": "een maand",
+  "quick-select": "Snelselectie"
 }

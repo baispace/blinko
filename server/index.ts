@@ -209,9 +209,9 @@ async function bootstrap() {
 
     // Start or update server
     if (!server) {
-      const server = app.listen(PORT, "0.0.0.0", () =>
+      const server = app.listen(PORT, "0.0.0.0", () => {
         console.log(`🎉server start on port http://0.0.0.0:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
-      );
+      });
       ViteExpress.bind(app, server); // the server binds to all network interfaces
     } else {
       console.log(`API routes updated - env: ${process.env.NODE_ENV || 'development'}`);
@@ -221,9 +221,9 @@ async function bootstrap() {
     try {
       // Attempt to start server even if route setup fails
       if (!server) {
-        const server = app.listen(PORT, "0.0.0.0", () =>
+        const server = app.listen(PORT, "0.0.0.0", () => {
           console.log(`🎉server start on port http://0.0.0.0:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
-        );
+        });
         ViteExpress.bind(app, server); // the server binds to all network interfaces
       }
     } catch (startupError) {

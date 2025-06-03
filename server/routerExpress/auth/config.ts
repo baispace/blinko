@@ -412,4 +412,30 @@ const initOAuthStrategies = async () => {
   }
 };
 
+export const reinitializeOAuthStrategies = async () => {
+  try {
+    // Clear existing OAuth strategies
+    const config = await getGlobalConfig({ useAdmin: true });
+    const providers = config.oauth2Providers || [];
+    
+    // Unregister existing OAuth strategies
+    for (const provider of providers) {
+      try {
+        passport.unuse(provider.id);
+      } catch (error) {
+        // Strategy might not exist, continue
+      }
+    }
+    
+    // Re-initialize OAuth strategies
+    await initOAuthStrategies();
+    
+    console.log('OAuth strategies reinitialized successfully');
+    return { success: true, message: 'OAuth strategies reinitialized' };
+  } catch (error) {
+    console.error('Failed to reinitialize OAuth strategies:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default passport; 

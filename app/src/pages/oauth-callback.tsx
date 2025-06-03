@@ -9,6 +9,7 @@ import { LoadingPage } from '@/components/Common/LoadingPage';
 import { signIn, getTokenData } from '@/components/Auth/auth-client';
 import { eventBus } from '@/lib/event';
 import { UserStore } from '@/store/user';
+import { Button } from '@heroui/react';
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function OAuthCallback() {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showReturnButton, setShowReturnButton] = useState(false);
   const userStore = RootStore.Get(UserStore);
 
   const handleTwoFactorAuth = async (code: string) => {
@@ -60,6 +62,10 @@ export default function OAuthCallback() {
     }
   };
 
+  const handleReturnToLogin = () => {
+    navigate('/signin');
+  };
+
   useEffect(() => {
     console.log('OAuth callback, useEffect');
     const checkAuthStatus = async () => {
@@ -73,10 +79,9 @@ export default function OAuthCallback() {
 
         if (errorMsg) {
           setError(errorMsg);
+          setShowReturnButton(true);
+          setIsLoading(false);
           RootStore.Get(ToastPlugin).error(`${t('login-failed')}: ${errorMsg}`);
-          setTimeout(() => {
-            navigate('/signin');
-          }, 3000);
           return;
         }
 
@@ -94,6 +99,7 @@ export default function OAuthCallback() {
           setIsLoading(false);
           return;
         }
+        
         console.log('OAuth callback, success:', success, token);
         if (success === 'true') {
           if (token) {
@@ -110,11 +116,16 @@ export default function OAuthCallback() {
               if (userData && userData.user && userData.user.id) {
                 navigate('/');
               } else {
+                setError(t('login-failed'));
+                setShowReturnButton(true);
+                setIsLoading(false);
               }
             } catch (err) {
               console.log('OAuth callback, error:', err);
+              setError(t('login-failed'));
+              setShowReturnButton(true);
+              setIsLoading(false);
               RootStore.Get(ToastPlugin).error(t('login-failed'));
-              navigate('/signin');
             }
             return;
           } else {
@@ -122,8 +133,10 @@ export default function OAuthCallback() {
             if (tokenData?.user) {
               navigate('/');
             } else {
+              setError(t('login-failed'));
+              setShowReturnButton(true);
+              setIsLoading(false);
               RootStore.Get(ToastPlugin).error(t('login-failed'));
-              navigate('/signin');
             }
             return;
           }
@@ -136,17 +149,18 @@ export default function OAuthCallback() {
         } else if (tokenData?.user) {
           navigate('/');
         } else {
+          setError(t('login-failed'));
+          setShowReturnButton(true);
+          setIsLoading(false);
           RootStore.Get(ToastPlugin).error(t('login-failed'));
-          navigate('/signin');
         }
 
         setIsLoading(false);
       } catch (error) {
         setError('handle oauth callback error');
+        setShowReturnButton(true);
+        setIsLoading(false);
         RootStore.Get(ToastPlugin).error(t('login-failed'));
-        setTimeout(() => {
-          navigate('/signin');
-        }, 3000);
       }
     };
 
@@ -163,13 +177,19 @@ export default function OAuthCallback() {
     };
   }, [navigate, t, location]);
 
-  if (error) {
+  if (error && showReturnButton) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
         <div className="mb-4 text-3xl">😢</div>
-        <h1 className="text-xl font-bold mb-2">{t('authentication-failed')}</h1>
-        <p className="text-sm text-red-500 mb-4">{error}</p>
-        <p>{t('redirecting-to-login')}...</p>
+        <h1 className="text-xl font-bold mb-2">{t('login-failed')}</h1>
+        <p className="text-sm text-red-500 mb-6">{error}</p>
+        <Button 
+          color="primary" 
+          onPress={handleReturnToLogin}
+          className="px-6 py-2"
+        >
+          {t('sign-in')}
+        </Button>
       </div>
     );
   }

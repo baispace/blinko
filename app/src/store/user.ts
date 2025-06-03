@@ -328,6 +328,7 @@ export class UserStore implements Store {
         pathname !== '/signup' &&
         !pathname.includes('/share') &&
         !pathname.includes('/ai-share') &&
+        !pathname.includes('/oauth-callback') &&
         !isInitialLoad) {
         navigate('/signin');
       }
@@ -418,7 +419,7 @@ export class UserStore implements Store {
     useEffect(() => {
       const handleSignout = () => {
         const pathname = location.pathname;
-        if (pathname === '/signup' || pathname.includes('/share') || pathname.includes('/ai-share')) {
+        if (pathname === '/signup' || pathname.includes('/share') || pathname.includes('/ai-share') || pathname.includes('/oauth-callback')) {
           return
         }
         this.clear()

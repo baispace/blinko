@@ -45,7 +45,7 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const publicRoutes = ['/signin', '/signup', '/share', '/_offline','/oauth-callback','/ai-share'];
+      const publicRoutes = ['/signin', '/signup', '/share', '/_offline', '/oauth-callback', '/ai-share', '/oauth-callback'];
       const isPublicRoute = publicRoutes.some(route =>
         location.pathname === route || location.pathname.startsWith('/share/') || location.pathname.startsWith('/ai-share/')
       );
@@ -119,12 +119,12 @@ function App() {
         <HeroUIProvider>
           <ThemeProvider attribute="class" enableSystem={false}>
             <AppProvider />
-              <CommonLayout>
-                <div className="app-content">
-                  <AppRoutes />
-                  <BlinkoMultiSelectPop />
-                </div>
-              </CommonLayout>
+            <CommonLayout>
+              <div className="app-content">
+                <AppRoutes />
+                <BlinkoMultiSelectPop />
+              </div>
+            </CommonLayout>
           </ThemeProvider>
         </HeroUIProvider>
         <BlinkoMusicPlayer />

@@ -4,6 +4,7 @@ import { prisma } from '../prisma';
 import { GlobalConfig, ZConfigKey, ZConfigSchema, ZUserPerferConfigKey } from '../../shared/lib/types';
 import { configSchema } from '@shared/lib/prismaZodType';
 import { Context } from '../context';
+import { reinitializeOAuthStrategies } from '../routerExpress/auth/config';
 
 export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context, useAdmin?: boolean }) => {
   const userId = Number(ctx?.id ?? 0);
@@ -67,12 +68,15 @@ export const configRouter = router({
       const userId = Number(ctx.id)
       const { key, value } = input
       const isUserPreferConfig = ZUserPerferConfigKey.safeParse(key).success;
+      
+      let updateResult;
+      
       if (isUserPreferConfig) {
         const matchedConfigs = await prisma.config.findMany({ where: { userId, key } });
         
         if (matchedConfigs.length > 0) {
           const configToKeep = matchedConfigs[0];
-          const updateResult = await prisma.config.update({ 
+          updateResult = await prisma.config.update({ 
             where: { id: configToKeep?.id }, 
             data: { config: { type: typeof value, value } } 
           });
@@ -86,11 +90,9 @@ export const configRouter = router({
               }
             });
           }
-          
-          return updateResult;
+        } else {
+          updateResult = await prisma.config.create({ data: { userId, key, config: { type: typeof value, value } } });
         }
-        
-        return await prisma.config.create({ data: { userId, key, config: { type: typeof value, value } } });
       } else {
         if (ctx.role !== 'superadmin') {
           throw new Error('You are not allowed to update global config')
@@ -99,7 +101,7 @@ export const configRouter = router({
         
         if (matchedConfigs.length > 0) {
           const configToKeep = matchedConfigs[0];
-          const updateResult = await prisma.config.update({ 
+          updateResult = await prisma.config.update({ 
             where: { id: configToKeep?.id }, 
             data: { config: { type: typeof value, value } } 
           });
@@ -112,12 +114,23 @@ export const configRouter = router({
               }
             });
           }
-          
-          return updateResult;
+        } else {
+          updateResult = await prisma.config.create({ data: { key, config: { type: typeof value, value } } });
         }
-        
-        return await prisma.config.create({ data: { key, config: { type: typeof value, value } } });
       }
+
+      // If updating OAuth2 providers, reinitialize OAuth strategies
+      if (key === 'oauth2Providers') {
+        try {
+          const result = await reinitializeOAuthStrategies();
+          console.log('OAuth strategies reinitialized after config update:', result);
+        } catch (error) {
+          console.error('Failed to reinitialize OAuth strategies after config update:', error);
+          // Don't throw error here to avoid breaking the config update
+        }
+      }
+
+      return updateResult;
     }),
 
   setPluginConfig: authProcedure

@@ -20,7 +20,7 @@ function handleOAuthCallback(req: any, res: any, err: any, user: any, info: any)
     return res.redirect(`/oauth-callback?error=${encodeURIComponent(info?.message || 'Authentication failed')}`);
   }
 
-  console.log('OAuth认证成功, 用户:', user.id);
+  console.log('oauth verify success, user:', user.id);
   
   return res.redirect(`/oauth-callback?success=true&token=${encodeURIComponent(user.token)}`);
 }

@@ -652,5 +652,9 @@
   "1-day": "1 день",
   "1-week": "一周 - неделя",
   "1-month": "один месяц",
-  "quick-select": "Быстрый выбор"
+  "quick-select": "Быстрый выбор",
+  "import-ai-configuration": "Импорт настроек AI",
+  "would-you-like-to-import-this-configuration": "Вы хотите импортировать эту конфигурацию AI?",
+  "detected-ai-configuration-to-import": "Обнаружена конфигурация AI для импорта",
+  "importing": "Импорт"
 }

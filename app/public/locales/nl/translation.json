@@ -665,5 +665,9 @@
   "1-day": "1 dag",
   "1-week": "Een week",
   "1-month": "een maand",
-  "quick-select": "Snelselectie"
+  "quick-select": "Snelselectie",
+  "import-ai-configuration": "Importeer AI-configuratie",
+  "would-you-like-to-import-this-configuration": "Wilt u deze AI-configuratie importeren?",
+  "detected-ai-configuration-to-import": "AI-configuratie gedetecteerd voor importeren",
+  "importing": "Invoeren"
 }

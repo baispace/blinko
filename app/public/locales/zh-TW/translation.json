@@ -660,5 +660,9 @@
   "1-day": "1天",
   "1-week": "一週",
   "1-month": "一個月",
-  "quick-select": "快捷選擇"
+  "quick-select": "快捷選擇",
+  "import-ai-configuration": "匯入AI配置",
+  "would-you-like-to-import-this-configuration": "你是否想要匯入該AI配置？",
+  "detected-ai-configuration-to-import": "偵測到AI配置待導入",
+  "importing": "匯入中"
 }

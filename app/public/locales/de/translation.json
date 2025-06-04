@@ -658,5 +658,9 @@
   "1-day": "1 Tag",
   "1-week": "eine Woche",
   "1-month": "ein Monat",
-  "quick-select": "Schnellauswahl"
+  "quick-select": "Schnellauswahl",
+  "import-ai-configuration": "AI-Konfiguration importieren",
+  "would-you-like-to-import-this-configuration": "Möchten Sie diese AI-Konfiguration importieren?",
+  "detected-ai-configuration-to-import": "AI-Konfiguration zur Importierung erkannt",
+  "importing": "Importieren"
 }

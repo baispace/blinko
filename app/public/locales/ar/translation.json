@@ -658,5 +658,9 @@
   "1-day": "一天",
   "1-week": "一周  \nأسبوع",
   "1-month": "一个月  \nشهر واحد",
-  "quick-select": "الاختيار السريع"
+  "quick-select": "الاختيار السريع",
+  "import-ai-configuration": "استيراد إعدادات الذكاء الصناعي",
+  "would-you-like-to-import-this-configuration": "هل تريد استيراد إعدادات الذكاء الاصطناعي هذه؟",
+  "detected-ai-configuration-to-import": "تم اكتشاف إعدادات AI في انتظار الاستيراد",
+  "importing": "جارٍ الاستيراد"
 }

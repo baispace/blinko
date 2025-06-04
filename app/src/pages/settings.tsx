@@ -20,6 +20,7 @@ import { ScrollableTabs, TabItem } from '@/components/Common/ScrollableTabs';
 import { useState } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PluginSetting } from '@/components/BlinkoSettings/PluginSetting';
+import { ImportAIDialog } from '@/components/BlinkoSettings/ImportAIDialog';
 
 type SettingItem = {
   key: string;
@@ -188,6 +189,7 @@ const Page = observer(() => {
 
   return (
     <div className="h-full flex flex-col">
+      <ImportAIDialog onSelectTab={setSelected} />
       <div className="sticky top-0 z-10 w-full">
         <div className="md:max-w-[980px] md:-translate-x-[3px] mx-1 md:mx-3 md:mx-auto backdrop-blur-md bg-background rounded-2xl">
           <ScrollableTabs items={tabItems} selectedKey={selected} onSelectionChange={setSelected} color="primary" />

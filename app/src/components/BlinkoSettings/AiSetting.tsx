@@ -317,7 +317,19 @@ export const AiSetting = observer(() => {
                         const urlWithProtocol = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') 
                           ? baseUrl 
                           : `https://${baseUrl}`;
-                        return new URL('/chat/completions', urlWithProtocol).href;
+                        
+                        // Parse the URL to preserve any paths the user has entered
+                        const url = new URL(urlWithProtocol);
+                        
+                        // Check if the URL already contains a path
+                        if (url.pathname === '/' || url.pathname === '') {
+                          // No path, just add chat/completions
+                          return new URL('/chat/completions', url.origin).href;
+                        } else {
+                          // Preserve existing path and append chat/completions
+                          const path = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
+                          return `${url.origin}${path}/chat/completions`;
+                        }
                       } catch (e) {
                         return 'https://api.openai.com/chat/completions';
                       }

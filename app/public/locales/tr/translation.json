@@ -659,5 +659,9 @@
   "1-day": "1 gün",
   "1-week": "Bir Hafta",
   "1-month": "bir ay",
-  "quick-select": "Hızlı Seçim"
+  "quick-select": "Hızlı Seçim",
+  "import-ai-configuration": "AI yapılandırmasını içe aktar",
+  "would-you-like-to-import-this-configuration": "Bu AI yapılandırmasını içe aktarmak ister misiniz?",
+  "detected-ai-configuration-to-import": "AI yapılandırmanın ithal edilmeye hazır olduğu tespit edildi",
+  "importing": "İçe aktarıyor"
 }

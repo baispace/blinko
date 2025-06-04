@@ -659,5 +659,9 @@
   "1-day": "1日",
   "1-week": "一週間",
   "1-month": "1か月",
-  "quick-select": "クイック選択"
+  "quick-select": "クイック選択",
+  "import-ai-configuration": "AI設定をインポートする",
+  "would-you-like-to-import-this-configuration": "そのAI設定をインポートしたいですか？",
+  "detected-ai-configuration-to-import": "AI設定のインポート待ちが検出されました",
+  "importing": "インポート中"
 }

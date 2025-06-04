@@ -703,5 +703,9 @@
   "1-day": "1天",
   "1-week": "一周",
   "1-month": "一个月",
-  "quick-select": "快捷选择"
+  "quick-select": "快捷选择",
+  "import-ai-configuration": "导入AI配置",
+  "would-you-like-to-import-this-configuration": "你是否想要导入该AI配置？",
+  "detected-ai-configuration-to-import": "检测到AI配置待导入",
+  "importing": "导入中"
 }

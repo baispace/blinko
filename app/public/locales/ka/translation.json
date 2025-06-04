@@ -618,5 +618,9 @@
   "1-day": "1 დღე",
   "1-week": "ერთი კვირა",
   "1-month": "ერთი თვე",
-  "quick-select": "სწრაფი არჩევანი"
+  "quick-select": "სწრაფი არჩევანი",
+  "import-ai-configuration": "AI კონფიგურაციის იმპორტოೌ",
+  "would-you-like-to-import-this-configuration": "გსურთ ამ AI-კონფიგურაციო ឴的.",
+  "detected-ai-configuration-to-import": "AI კონფიგურაციის მოპო-22b3; narginertion detected",
+  "importing": "იმპორტი"
 }

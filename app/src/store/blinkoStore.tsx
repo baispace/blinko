@@ -141,6 +141,41 @@ export class BlinkoStore implements Store {
     }
   }
 
+  private async getFilteredNotes(params: {
+    page: number;
+    size: number;
+    filterConfig: any;
+    offlineFilter?: (note: OfflineNote) => boolean | undefined;
+  }) {
+    const { page, size, filterConfig, offlineFilter = () => true } = params;
+    let notes: Note[] = [];
+
+    if (this.isOnline) {
+      notes = await api.notes.list.mutate({ 
+        ...this.noteListFilterConfig, 
+        ...filterConfig,
+        searchText: this.searchText, 
+        page, 
+        size 
+      });
+      
+      if (this.offlineNotes.length > 0) {
+        await this.syncOfflineNotes();
+      }
+    }
+
+    const filteredOfflineNotes = this.offlineNotes.filter(offlineFilter);
+    const mergedNotes = [...filteredOfflineNotes, ...notes].map(i => ({ ...i, isExpand: false }));
+
+    if (!this.isOnline) {
+      const start = (page - 1) * size;
+      const end = start + size;
+      return mergedNotes.slice(start, end);
+    }
+
+    return mergedNotes;
+  }
+
   upsertNote = new PromiseState({
     eventKey: 'upsertNote',
     function: async (params: UpsertNoteParams) => {
@@ -255,27 +290,98 @@ export class BlinkoStore implements Store {
     this.updateTicker++;
   }
 
+  blinkoList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          type: NoteType.BLINKO,
+          isArchived: false,
+          isRecycle: false
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.type === NoteType.BLINKO && !note.isArchived && !note.isRecycle);
+        }
+      });
+    }
+  })
+
+  noteOnlyList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          type: NoteType.NOTE,
+          isArchived: false,
+          isRecycle: false
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.type === NoteType.NOTE && !note.isArchived && !note.isRecycle);
+        }
+      });
+    }
+  })
+
+  todoList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          type: NoteType.TODO,
+          isArchived: false,
+          isRecycle: false
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.type === NoteType.TODO && !note.isArchived && !note.isRecycle);
+        }
+      });
+    }
+  })
+
+  archivedList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          isArchived: true,
+          isRecycle: false
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.isArchived && !note.isRecycle);
+        }
+      });
+    }
+  })
+
+  trashList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          isRecycle: true
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.isRecycle);
+        }
+      });
+    }
+  })
+
   noteList = new PromisePageState({
     function: async ({ page, size }) => {
-      let notes: Note[] = [];
-
-      if (this.isOnline) {
-        notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, searchText: this.searchText, page, size });
-        if (this.offlineNotes.length > 0) {
-          await this.syncOfflineNotes();
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {},
+        offlineFilter: () => {
+          return true;
         }
-      }
-
-      const mergedNotes = [...this.offlineNotes, ...notes]
-        .map(i => ({ ...i, isExpand: false }))
-
-      if (!this.isOnline) {
-        const start = (page - 1) * size;
-        const end = start + size;
-        return mergedNotes.slice(start, end);
-      }
-
-      return mergedNotes;
+      });
     }
   })
 
@@ -387,7 +493,19 @@ export class BlinkoStore implements Store {
 
 
   async onBottom() {
-    await this.noteList.callNextPage({})
+    const currentPath = new URLSearchParams(window.location.search).get('path');
+    
+    if (currentPath === 'notes') {
+      await this.noteOnlyList.callNextPage({});
+    } else if (currentPath === 'todo') {
+      await this.todoList.callNextPage({});
+    } else if (currentPath === 'archived') {
+      await this.archivedList.callNextPage({});
+    } else if (currentPath === 'trash') {
+      await this.trashList.callNextPage({});
+    } else {
+      await this.blinkoList.callNextPage({});
+    }
   }
 
   onMultiSelectNote(id: number) {
@@ -417,7 +535,21 @@ export class BlinkoStore implements Store {
 
   async refreshData() {
     this.tagList.call()
-    this.noteList.resetAndCall({})
+    
+    const currentPath = new URLSearchParams(window.location.search).get('path');
+    
+    if (currentPath === 'notes') {
+      this.noteOnlyList.resetAndCall({});
+    } else if (currentPath === 'todo') {
+      this.todoList.resetAndCall({});
+    } else if (currentPath === 'archived') {
+      this.archivedList.resetAndCall({});
+    } else if (currentPath === 'trash') {
+      this.trashList.resetAndCall({});
+    } else {
+      this.blinkoList.resetAndCall({});
+    }
+    
     this.config.call()
     this.dailyReviewNoteList.call()
   }
@@ -473,10 +605,25 @@ export class BlinkoStore implements Store {
 
       if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
-      }
-      if (path == 'todo') {
+        this.noteOnlyList.resetAndCall({});
+      } else if (path == 'todo') {
         this.noteListFilterConfig.type = NoteType.TODO
+        this.todoList.resetAndCall({});
+      } else if (path == 'all') {
+        this.noteListFilterConfig.type = -1
+        this.noteList.resetAndCall({});
+      } else if (path == 'archived') {
+        this.noteListFilterConfig.type = -1
+        this.noteListFilterConfig.isArchived = true
+        this.archivedList.resetAndCall({});
+      } else if (path == 'trash') {
+        this.noteListFilterConfig.type = -1
+        this.noteListFilterConfig.isRecycle = true
+        this.trashList.resetAndCall({});
+      } else {
+        this.blinkoList.resetAndCall({});
       }
+
       if (tagId) {
         this.noteListFilterConfig.tagId = Number(tagId) as number
       }
@@ -497,19 +644,6 @@ export class BlinkoStore implements Store {
       } else {
         this.searchText = '';
       }
-
-      if (path == 'all') {
-        this.noteListFilterConfig.type = -1
-      }
-      if (path == 'archived') {
-        this.noteListFilterConfig.type = -1
-        this.noteListFilterConfig.isArchived = true
-      }
-      if (path == 'trash') {
-        this.noteListFilterConfig.type = -1
-        this.noteListFilterConfig.isRecycle = true
-      }
-      this.noteList.resetAndCall({})
     }, [this.forceQuery, location.pathname, searchParams])
   }
 

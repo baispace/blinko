@@ -28,6 +28,26 @@ const Home = observer(() => {
   blinko.useQuery();
   const [searchParams] = useSearchParams();
   const isTodoView = searchParams.get('path') === 'todo';
+  const isNotesView = searchParams.get('path') === 'notes';
+  const isArchivedView = searchParams.get('path') === 'archived';
+  const isTrashView = searchParams.get('path') === 'trash';
+  const isAllView = searchParams.get('path') === 'all';
+
+  const currentListState = useMemo(() => {
+    if (isNotesView) {
+      return blinko.noteOnlyList;
+    } else if (isTodoView) {
+      return blinko.todoList;
+    } else if (isArchivedView) {
+      return blinko.archivedList;
+    } else if (isTrashView) {
+      return blinko.trashList;
+    } else if (isAllView) {
+      return blinko.noteList;
+    } else {
+      return blinko.blinkoList;
+    }
+  }, [isNotesView, isTodoView, isArchivedView, isTrashView, isAllView, blinko]);
 
   const store = RootStore.Local(() => ({
     editorHeight: 30,
@@ -35,13 +55,13 @@ const Home = observer(() => {
       return !blinko.noteListFilterConfig.isArchived && !blinko.noteListFilterConfig.isRecycle
     },
     get showLoadAll() {
-      return blinko.noteList.isLoadAll
+      return currentListState.isLoadAll
     }
   }))
 
   const todosByDate = useMemo(() => {
-    if (!isTodoView || !blinko.noteList.value) return {} as Record<string, TodoGroup>;
-    const todoItems = blinko.noteList.value.filter(note => note.type === NoteType.TODO);
+    if (!isTodoView || !currentListState.value) return {} as Record<string, TodoGroup>;
+    const todoItems = currentListState.value;
     const groupedTodos: Record<string, TodoGroup> = {};
     todoItems.forEach(todo => {
       const date = dayjs(todo.createdAt).format('YYYY-MM-DD');
@@ -69,7 +89,7 @@ const Home = observer(() => {
         acc[date] = data;
         return acc;
       }, {} as Record<string, TodoGroup>);
-  }, [blinko.noteList.value, isTodoView, t]);
+  }, [currentListState.value, isTodoView, t]);
 
   return (
     <div
@@ -87,19 +107,19 @@ const Home = observer(() => {
       {(!isPc || blinko.config.value?.hidePcEditor) && <BlinkoAddButton />}
 
       <LoadingAndEmpty
-        isLoading={blinko.noteList.isLoading}
-        isEmpty={blinko.noteList.isEmpty}
+        isLoading={currentListState.isLoading}
+        isEmpty={currentListState.isEmpty}
       />
 
       {
-        !blinko.noteList.isEmpty && <ScrollArea
+        !currentListState.isEmpty && <ScrollArea
           onRefresh={async () => {
-            await blinko.noteList.resetAndCall({})
+            await currentListState.resetAndCall({})
           }}
           onBottom={() => {
             blinko.onBottom();
           }}
-          style={{ height: store.showEditor ? `calc(100% - ${(isPc ? store.editorHeight : 0)}px)` : '100%' }}
+          style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
 
           {isTodoView ? (
@@ -138,7 +158,7 @@ const Home = observer(() => {
                 className="card-masonry-grid"
                 columnClassName="card-masonry-grid_column">
                 {
-                  blinko.noteList?.value?.map(i => {
+                  currentListState?.value?.map(i => {
                     return <BlinkoCard key={i.id} blinkoItem={i} />
                   })
                 }
@@ -146,7 +166,7 @@ const Home = observer(() => {
             </>
           )}
 
-          {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: blinko.noteList.value?.length })}</div>}
+          {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: currentListState.value?.length })}</div>}
         </ScrollArea>
       }
     </div>

@@ -211,13 +211,13 @@ const ResourceItem = observer(({ item, index, onSelect, isSelected, onFolderClic
         return (
           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`relative group`} onClick={handleClick} style={draggableStyle}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.2,
-                delay: index * 0.05,
-                ease: 'easeOut',
-              }}
+              // initial={{ opacity: 0, y: 20 }}
+              // animate={{ opacity: 1, y: 0 }}
+              // transition={{
+              //   duration: 0.2,
+              //   delay: index * 0.05,
+              //   ease: 'easeOut',
+              // }}
             >
               {item.isFolder ? (
                 <Droppable droppableId={droppableId!}>

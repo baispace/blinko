@@ -1,17 +1,17 @@
 module.exports = {
-  types: {
-    feat: { title: "✨ Features" },
-    fix: { title: "🐛 Bug Fixes" },
-    docs: { title: "📝 Documentation" },
-    style: { title: "💄 Styles" },
-    refactor: { title: "♻️ Code Refactoring" },
-    perf: { title: "⚡️ Performance Improvements" },
-    test: { title: "✅ Tests" },
-    build: { title: "🏗️ Build System" },
-    ci: { title: "👷 CI/CD Changes" },
-    chore: { title: "🔧 Chores" },
-    revert: { title: "⏪ Reverts" }
-  },
+  types: [
+    { type: "feat", section: "✨ Features" },
+    { type: "fix", section: "🐛 Bug Fixes" },
+    { type: "docs", section: "📝 Documentation" },
+    { type: "style", section: "💄 Styles" },
+    { type: "refactor", section: "♻️ Code Refactoring" },
+    { type: "perf", section: "⚡️ Performance Improvements" },
+    { type: "test", section: "✅ Tests" },
+    { type: "build", section: "🏗️ Build System" },
+    { type: "ci", section: "👷 CI/CD Changes" },
+    { type: "chore", section: "🔧 Chores" },
+    { type: "revert", section: "⏪ Reverts" }
+  ],
   excludeTypes: ["chore", "refactor", "test", "style"],
   parseCommit: function(commit) {
     const standardRegex = /^(\w+)(?:\(([^\)]+)\))?:(.+)$/;

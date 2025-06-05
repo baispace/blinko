@@ -1,3 +1,4 @@
+
 export function getBlinkoEndpoint(path: string = ''): string {
     try {
         const blinkoEndpoint = window.localStorage.getItem('blinkoEndpoint')

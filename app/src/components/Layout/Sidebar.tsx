@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { UserAvatarDropdown } from '../Common/UserAvatarDropdown';
 import { TagListPanel } from '../Common/TagListPanel';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useLocation, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { eventBus } from '@/lib/event';
@@ -25,6 +25,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const blinkoStore = RootStore.Get(BlinkoStore);
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [isHovering, setIsHovering] = useState(false);
 
   const routerInfo = {
     pathname: location.pathname,
@@ -44,6 +45,8 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       className={`flex h-full flex-1 flex-col p-4 relative bg-background 
         ${!base.isDragging ? '!transition-all duration-300' : 'transition-none'} 
         group/sidebar`}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       {!base.isSidebarCollapsed && (
         <div
@@ -59,7 +62,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         <div className={`flex w-full ${base.isSidebarCollapsed ? 'flex-col-reverse gap-2 justify-center items-center mr-2 mb-2' : 'items-center '}`}>
           {/* Mobile: Display avatar dropdown at the top */}
           <div className={`${base.isSidebarCollapsed ? 'w-full flex justify-center' : ''}`}>
-            <UserAvatarDropdown onItemClick={onItemClick} collapsed={base.isSidebarCollapsed} />
+            <UserAvatarDropdown onItemClick={onItemClick} collapsed={base.isSidebarCollapsed} showOverlay={isHovering} />
           </div>
 
           {/* Toggle sidebar button for PC */}

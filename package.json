@@ -1,6 +1,6 @@
 {
   "name": "blinko-monorepo",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "private": true,
   "packageManager": "bun@1.2.8",
   "workspaces": [
@@ -40,6 +40,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@tauri-apps/plugin-process": "^2.2.1",
+    "@tauri-apps/plugin-updater": "^2.7.1",
     "dotenv": "^16.5.0",
     "lru-cache": "^11.1.0",
     "react-i18next": "^15.4.1",

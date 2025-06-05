@@ -11,6 +11,10 @@ import { Item } from "./Item";
 import { useEffect } from "react";
 import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 import packageJson from '../../../src-tauri/tauri.conf.json';
+import { isDesktop, isInTauri } from "@/lib/tauriHelper";
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
+
 
 export const AboutSetting = observer(() => {
   const { t } = useTranslation()
@@ -75,15 +79,18 @@ export const AboutSetting = observer(() => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Chip
-                color="primary"
-                variant="flat"
-                size="sm"
-                className="text-xs"
-                startContent={<Icon icon="mingcute:version-fill" width="16" height="16" />}
-              >
-                {t('client')}: v{packageJson.version}
-              </Chip>
+              {
+                isInTauri() && <Chip
+                  color="primary"
+                  variant="flat"
+                  size="sm"
+                  className="text-xs"
+                  startContent={<Icon icon="mingcute:version-fill" width="16" height="16" />}
+                >
+                  {t('client')}: v{packageJson.version}
+                </Chip>
+              }
+
               {store.latestClientVersion.value != '' && store.latestClientVersion.value != packageJson.version && (
                 <Chip
                   classNames={{
@@ -92,8 +99,14 @@ export const AboutSetting = observer(() => {
                   }}
                   size="sm"
                   className="cursor-pointer"
-                  onClick={() => {
-                    window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
+                  onClick={async () => {
+                    if (!isDesktop()) {
+                      window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
+                    } else {
+                      const updater = await check();
+                      await updater?.downloadAndInstall()
+                      await relaunch()
+                    }
                   }}
                 >
                   {t('new-client-version-available')}: v{store.latestClientVersion.value}

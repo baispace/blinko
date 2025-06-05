@@ -12,9 +12,10 @@ import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 interface UserAvatarDropdownProps {
   onItemClick?: () => void;
   collapsed?: boolean;
+  showOverlay?: boolean;
 }
 
-export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: UserAvatarDropdownProps) => {
+export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, showOverlay = false }: UserAvatarDropdownProps) => {
   const base = RootStore.Get(BaseStore);
   const user = RootStore.Get(UserStore);
   const { t } = useTranslation();
@@ -26,12 +27,17 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
       }}
     >
       <DropdownTrigger>
-        <div className={`cursor-pointer hover:opacity-80 transition-opacity ${collapsed ? 'flex justify-center' : 'flex items-center gap-2'}`}>
-          {user.image ? (
-            <img src={getBlinkoEndpoint(user.image)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover`} />
-          ) : (
-            <Image src="/icons/icon-128x128.png" width={30} />
-          )}
+        <div className={`cursor-pointer ${collapsed ? 'flex justify-center' : 'flex items-center gap-2'}`}>
+          <div className="relative group">
+            {user.image ? (
+              <img src={getBlinkoEndpoint(user.image)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover transition-all`} />
+            ) : (
+              <Image src="/icons/icon-128x128.png" width={30} />
+            )}
+            <div className={`absolute inset-0 bg-black/30 rounded-full flex items-center justify-center transition-opacity ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              <Icon icon="mdi:cog" width="16" height="16" className="text-white" />
+            </div>
+          </div>
           {!collapsed && <span className="font-bold">{user.nickname || user.name}</span>}
         </div>
       </DropdownTrigger>

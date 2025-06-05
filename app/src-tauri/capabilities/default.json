@@ -44,6 +44,8 @@
         }
       ]
     },
-    "upload:default"
+    "upload:default",
+    "process:allow-restart",
+    "process:default"
   ]
 }

@@ -34,26 +34,26 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![greet])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
-            
+
             // Set platform-specific window decorations
             #[cfg(target_os = "macos")]
             {
                 // On macOS, use native decorations
                 main_window.set_decorations(true).unwrap();
             }
-            
+
             #[cfg(any(target_os = "windows", target_os = "linux"))]
             {
                 // On Windows and Linux, hide decorations
                 main_window.set_decorations(false).unwrap();
             }
-            
+
             // Apply Windows-specific titlebar
             #[cfg(target_os = "windows")]
             {
                 main_window.create_overlay_titlebar().unwrap();
             }
-            
+
             Ok(())
         })
         .run(tauri::generate_context!())

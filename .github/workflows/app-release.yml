@@ -347,7 +347,6 @@ jobs:
         uses: loopwerk/tag-changelog@v1.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          exclude_types: "chore,refactor,test,style"
           config_file: .github/changelog/changelog.js
 
   # Update release with final changelog

@@ -11,6 +11,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
@@ -18,6 +19,11 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_blinko::init())
         .plugin(tauri_plugin_opener::init());
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
 
     #[cfg(target_os = "windows")]
     {

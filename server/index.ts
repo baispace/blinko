@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import zlib from 'zlib';
+import fs from 'fs';
 import authRoutes from './routerExpress/auth';
 import { configureSession } from './routerExpress/auth/config';
 
@@ -109,13 +111,33 @@ async function setupApiRoutes(app: express.Application) {
   app.use('/api/file/upload', uploadRouter);
   app.use('/api/file/delete', deleteRouter);
   app.use('/api/s3file', s3fileRouter);
+  
+  // Special handling for lute.min.js with gzip compression
   app.use('/dist/js/lute/lute.min.js', (req, res) => {
+    const filePath = path.resolve(__dirname, './lute.min.js');
+    
+    // Check if client accepts gzip encoding
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const supportsGzip = acceptEncoding.includes('gzip');
+    
     res.set({
       'Cache-Control': 'public, max-age=604800, immutable',
-      'Expires': new Date(Date.now() + 604800000).toUTCString()
+      'Expires': new Date(Date.now() + 604800000).toUTCString(),
+      'Content-Type': 'application/javascript'
     });
-    res.sendFile(path.resolve(__dirname, './lute.min.js'));
+    
+    if (supportsGzip) {
+      // Send gzip compressed version
+      res.set('Content-Encoding', 'gzip');
+      const readStream = fs.createReadStream(filePath);
+      const gzipStream = zlib.createGzip({ level: 6 });
+      readStream.pipe(gzipStream).pipe(res);
+    } else {
+      // Send uncompressed version
+      res.sendFile(filePath);
+    }
   });
+  
   app.use('/dist/js/icons/ant.js', (req, res) => {
     res.set({
       'Cache-Control': 'public, max-age=604800, immutable',
@@ -156,8 +178,6 @@ async function setupApiRoutes(app: express.Application) {
       }
     })
   );
-
-
 
   // Health check endpoint
   app.get('/health', (req, res) => {

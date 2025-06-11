@@ -664,5 +664,7 @@
   "import-ai-configuration": "匯入AI配置",
   "would-you-like-to-import-this-configuration": "你是否想要匯入該AI配置？",
   "detected-ai-configuration-to-import": "偵測到AI配置待導入",
-  "importing": "匯入中"
+  "importing": "匯入中",
+  "cache-cleared-successfully": "快取已清除成功！頁面將自動重新載入。",
+  "failed-to-clear-cache": "清除瀏覽器快取失敗。請嘗試手動重新整理 (Ctrl+Shift+R)。"
 }

@@ -622,5 +622,7 @@
   "import-ai-configuration": "AI კონფიგურაციის იმპორტოೌ",
   "would-you-like-to-import-this-configuration": "გსურთ ამ AI-კონფიგურაციო ឴的.",
   "detected-ai-configuration-to-import": "AI კონფიგურაციის მოპო-22b3; narginertion detected",
-  "importing": "იმპორტი"
+  "importing": "იმპორტი",
+  "cache-cleared-successfully": "ქეშის გასუფთავება წარმატებით დასრულდა! გვერდი ავტომატურად გადატვირთავს.",
+  "failed-to-clear-cache": "ბრაუზერის ქეშის გასუფთავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელით განახლება (Ctrl+Shift+R)."
 }

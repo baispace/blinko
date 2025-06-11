@@ -656,5 +656,7 @@
   "import-ai-configuration": "Импорт настроек AI",
   "would-you-like-to-import-this-configuration": "Вы хотите импортировать эту конфигурацию AI?",
   "detected-ai-configuration-to-import": "Обнаружена конфигурация AI для импорта",
-  "importing": "Импорт"
+  "importing": "Импорт",
+  "cache-cleared-successfully": "Кэш успешно очищен! Страница будет автоматически перезагружена.",
+  "failed-to-clear-cache": "Не удалось очистить кэш браузера. Пожалуйста, попробуйте обновить вручную (Ctrl+Shift+R)."
 }

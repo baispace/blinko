@@ -1,7 +1,7 @@
 // blinko.public.value?.version
 
 import { observer } from "mobx-react-lite";
-import { Link, Image, Chip } from "@heroui/react";
+import { Link, Image, Chip, Button } from "@heroui/react";
 import { RootStore } from "@/store";
 import { PromiseState } from "@/store/standard/PromiseState";
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -14,6 +14,7 @@ import packageJson from '../../../src-tauri/tauri.conf.json';
 import { isDesktop, isInTauri } from "@/lib/tauriHelper";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 
 
 export const AboutSetting = observer(() => {
@@ -41,6 +42,46 @@ export const AboutSetting = observer(() => {
     store.latestServerVersion.call()
     store.latestClientVersion.call()
   }, [])
+
+  const clearBrowserCache = async () => {
+    try {
+      // Clear service worker caches (disk cache)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+      
+      // Unregister all service workers to clear their cache
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(
+          registrations.map(registration => registration.unregister())
+        );
+      }
+      
+      RootStore.Get(ToastPlugin).success(t('cache-cleared-successfully'));
+      
+      // Force hard reload (bypass cache) similar to Ctrl+Shift+R
+      setTimeout(() => {
+        // Method 1: Use location.reload with force flag (deprecated but still works in some browsers)
+        try {
+          // @ts-ignore - force parameter is deprecated but still functional
+          window.location.reload(true);
+        } catch {
+          // Method 2: Fallback - reload with cache busting timestamp
+          const url = new URL(window.location.href);
+          url.searchParams.set('_cache_bust', Date.now().toString());
+          window.location.href = url.toString();
+        }
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      RootStore.Get(ToastPlugin).error(t('failed-to-clear-cache'));
+    }
+  };
 
   return (
     <CollapsibleCard
@@ -159,6 +200,24 @@ export const AboutSetting = observer(() => {
           }
         />
 
+      </div>
+
+      <div className="space-y-4 mt-6">
+        <h3 className="font-medium text-gray-500 mb-2">{t('maintenance')}</h3>
+        <Item
+          leftContent={<>{t('clear-browser-cache')}</>}
+          rightContent={
+            <Button
+              size="sm"
+              color="warning"
+              variant="flat"
+              startContent={<Icon icon="mdi:cached" width="16" />}
+              onClick={clearBrowserCache}
+            >
+              {t('clear-cache')}
+            </Button>
+          }
+        />
       </div>
     </CollapsibleCard>
   );

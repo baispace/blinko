@@ -691,5 +691,10 @@
   "import-ai-configuration": "Import AI configuration",
   "would-you-like-to-import-this-configuration": "Do you want to import this AI configuration?",
   "detected-ai-configuration-to-import": "Detected that AI configuration needs to be imported.",
-  "importing": "Importing"
+  "importing": "Importing",
+  "maintenance": "Maintenance",
+  "clear-browser-cache": "Clear Browser Cache",
+  "clear-cache": "Clear Cache",
+  "cache-cleared-successfully": "Cache cleared successfully! Page will reload automatically.",
+  "failed-to-clear-cache": "Failed to clear browser cache. Please try manual refresh (Ctrl+Shift+R)."
 }

@@ -663,5 +663,7 @@
   "import-ai-configuration": "AI yapılandırmasını içe aktar",
   "would-you-like-to-import-this-configuration": "Bu AI yapılandırmasını içe aktarmak ister misiniz?",
   "detected-ai-configuration-to-import": "AI yapılandırmanın ithal edilmeye hazır olduğu tespit edildi",
-  "importing": "İçe aktarıyor"
+  "importing": "İçe aktarıyor",
+  "cache-cleared-successfully": "Önbellek başarıyla temizlendi! Sayfa otomatik olarak yeniden yüklenecek.",
+  "failed-to-clear-cache": "Tarayıcı önbelleğini temizleme başarısız oldu. Lütfen manuel olarak yenilemeyi deneyin (Ctrl+Shift+R)."
 }

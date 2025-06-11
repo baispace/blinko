@@ -669,5 +669,7 @@
   "import-ai-configuration": "Importeer AI-configuratie",
   "would-you-like-to-import-this-configuration": "Wilt u deze AI-configuratie importeren?",
   "detected-ai-configuration-to-import": "AI-configuratie gedetecteerd voor importeren",
-  "importing": "Invoeren"
+  "importing": "Invoeren",
+  "cache-cleared-successfully": "De cache is succesvol gewist! De pagina wordt automatisch opnieuw geladen.",
+  "failed-to-clear-cache": "Het verwijderen van browsercache is mislukt. Probeer handmatig te verversen (Ctrl+Shift+R)."
 }

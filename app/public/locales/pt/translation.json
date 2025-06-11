@@ -657,5 +657,7 @@
   "import-ai-configuration": "Importar configurações de IA",
   "would-you-like-to-import-this-configuration": "Você deseja importar essa configuração de IA?",
   "detected-ai-configuration-to-import": "Detecção de configuração AI para importar",
-  "importing": "Importando"
+  "importing": "Importando",
+  "cache-cleared-successfully": "O cache foi limpo com sucesso! A página será recarregada automaticamente.",
+  "failed-to-clear-cache": "Falha ao limpar o cache do navegador. Por favor, tente atualizar manualmente (Ctrl+Shift+R)."
 }

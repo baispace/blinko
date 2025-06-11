@@ -654,5 +654,7 @@
   "import-ai-configuration": "Importuj konfigurację AI",
   "would-you-like-to-import-this-configuration": "Czy chcesz zaimportować tę konfigurację AI?",
   "detected-ai-configuration-to-import": "Wykryto konfigurację AI do zaimportowania",
-  "importing": "Importowanie"
+  "importing": "Importowanie",
+  "cache-cleared-successfully": "Pamięć podręczna została pomyślnie wyczyszczona! Strona zostanie automatycznie przeładowana.",
+  "failed-to-clear-cache": "Nie udało się wyczyścić pamięci podręcznej przeglądarki. Spróbuj odświeżyć ręcznie (Ctrl+Shift+R)."
 }

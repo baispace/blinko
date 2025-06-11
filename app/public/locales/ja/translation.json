@@ -663,5 +663,7 @@
   "import-ai-configuration": "AI設定をインポートする",
   "would-you-like-to-import-this-configuration": "そのAI設定をインポートしたいですか？",
   "detected-ai-configuration-to-import": "AI設定のインポート待ちが検出されました",
-  "importing": "インポート中"
+  "importing": "インポート中",
+  "cache-cleared-successfully": "キャッシュが正常にクリアされました！ページは自動的に再読み込みされます。",
+  "failed-to-clear-cache": "ブラウザのキャッシュを削除できませんでした。手動で更新してください (Ctrl+Shift+R)。"
 }

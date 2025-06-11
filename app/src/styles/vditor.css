@@ -31,6 +31,11 @@
   display: none;
 }
 
+.vditor-reset ul,
+.vditor-reset ol {
+  padding-left: 1em;
+}
+
 .vditor-toolbar {
   padding: 0;
   padding-left: 4px !important;

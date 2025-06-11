@@ -17,7 +17,7 @@ import { BlinkoFollowDialog, BlinkoFollowingDialog } from "@/components/BlinkoFo
 import { HubStore } from "@/store/hubStore";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
 import { _ } from "@/lib/lodash";
-import { ScrollableTabs } from "@/components/Common/ScrollableTabs";
+import { ResponsiveTabs } from "@/components/Common/ResponsiveTabs";
 
 const Hub = observer(({ className }: { className?: string }) => {
   const { t } = useTranslation()
@@ -40,6 +40,44 @@ const Hub = observer(({ className }: { className?: string }) => {
   useEffect(() => {
     debounceLoadData()
   }, [blinko.searchText])
+
+  const tabItems = [
+    { 
+      key: "site", 
+      title: t("home-site"),
+      icon: "tabler:home"
+    },
+    ...(store.followingList.value?.length ?? 0 > 0 ? [{
+      key: "recommand", 
+      title: t("recommand"),
+      icon: "tabler:stars"
+    }] : []),
+    ...(store.followingList.value?.map(item => ({
+      key: item.siteUrl,
+      title: item.siteName,
+      icon: item.siteAvatar ? undefined : "tabler:world",
+      avatar: item.siteAvatar || undefined
+    })) || [])
+  ];
+
+  const handleTabChange = (selectedKey: string) => {
+    if (selectedKey == 'site') {
+      store.currentSiteURL = ''
+      store.currentListType = 'home'
+    } else if (selectedKey == 'recommand') {
+      store.currentListType = 'recommand'
+    } else {
+      store.currentListType = 'site'
+      store.currentSiteURL = store.followingList.value?.find(item => item.siteUrl == selectedKey)?.siteUrl ?? ''
+    }
+    //add to next tick
+    setTimeout(() => {
+      store.shareNoteList.value = []
+      store.shareNoteList.resetAndCall({})
+    }, 0)
+  };
+
+  const currentSelectedKey = store.currentListType === 'home' ? 'site' : store.currentListType === 'site' ? store.currentSiteURL : store.currentListType;
 
   return <ScrollArea className={'h-full bg-background'} onBottom={() => store.shareNoteList.callNextPage({})}>
     <GradientBackground className="flex flex-col gap-2 bg-background md:h-[300px] h-[150px]">
@@ -136,71 +174,52 @@ const Hub = observer(({ className }: { className?: string }) => {
     <div className="max-w-screen-xl mx-auto p-4 md:p-0">
       <div className='flex items-center justify-between gap-2 mb-4 md:mb-6 md:my-6 rounded-2xl overflow-hidden'>
         <div className="flex-1 min-w-0">
-          <ScrollableTabs
-            items={[
-              { key: "site", title: t("home-site") },
-              ...(store.followingList.value?.length ?? 0 > 0 ? [{ key: "recommand", title: t("recommand") }] : []),
-              ...(store.followingList.value?.map(item => ({
-                key: item.siteUrl,
-                title: item.siteName
-              })) || [])
-            ]}
-            selectedKey={store.currentListType === 'home' ? 'site' : store.currentListType === 'site' ? store.currentSiteURL : store.currentListType}
-            onSelectionChange={(e) => {
-              if (e == 'site') {
-                store.currentSiteURL = ''
-                store.currentListType = 'home'
-              } else if (e == 'recommand') {
-                store.currentListType = 'recommand'
-              } else {
-                store.currentListType = 'site'
-                store.currentSiteURL = store.followingList.value?.find(item => item.siteUrl == e)?.siteUrl ?? ''
-              }
-              //add to next tick
-              setTimeout(() => {
-                store.shareNoteList.value = []
-                store.shareNoteList.resetAndCall({})
-              }, 0)
-            }}
+          <ResponsiveTabs
+            items={tabItems}
+            selectedKey={currentSelectedKey}
+            onSelectionChange={handleTabChange}
             color="primary"
             classNames={{
               base: "w-full",
               tabList: "gap-2 relative p-2 w-full bg-transparent text-foreground overflow-x-auto scroll-smooth",
               tab: "max-w-fit px-2 h-8 text-sm md:px-3 md:h-10 md:text-base"
             }}
-          />
-        </div>
-
-        <Button variant="faded" color="primary" isIconOnly onPress={() => {
-          store.forceBlog.save(!store.forceBlog.value)
-        }} className="shrink-0">
-          <Icon icon="fluent:arrow-expand-all-16-filled" width="20" height="20" className={`transition-transform duration-300 ${store.forceBlog.value ? "rotate-180" : ""}`} />
-        </Button>
-      </div>
-      <LoadingAndEmpty
-        isLoading={store.shareNoteList.isLoading}
-        isEmpty={store.shareNoteList.isEmpty}
-      />
-      <Masonry
-        breakpointCols={{
-          default: 3,
-          500: 1
-        }}
-        className="blog-masonry-grid"
-        columnClassName="blog-masonry-grid_column">
-        {
-          store.shareNoteList?.value?.map(i => {
-            return <BlinkoCard
-              className='border-1 border-hover rounded-2xl'
-              key={i.id}
-              blinkoItem={i}
-              isShareMode={
-                RootStore.Get(UserStore).userInfo.value?.id != i.accountId || store.currentSiteURL != '' || i.originURL
+          >
+            <div className="flex items-center justify-end mb-4">
+              <Button variant="faded" color="primary" isIconOnly onPress={() => {
+                store.forceBlog.save(!store.forceBlog.value)
+              }} className="shrink-0">
+                <Icon icon="fluent:arrow-expand-all-16-filled" width="20" height="20" className={`transition-transform duration-300 ${store.forceBlog.value ? "rotate-180" : ""}`} />
+              </Button>
+            </div>
+            
+            <LoadingAndEmpty
+              isLoading={store.shareNoteList.isLoading}
+              isEmpty={store.shareNoteList.isEmpty}
+            />
+            <Masonry
+              breakpointCols={{
+                default: 3,
+                500: 1
+              }}
+              className="blog-masonry-grid"
+              columnClassName="blog-masonry-grid_column">
+              {
+                store.shareNoteList?.value?.map(i => {
+                  return <BlinkoCard
+                    className='border-1 border-hover rounded-2xl'
+                    key={i.id}
+                    blinkoItem={i}
+                    isShareMode={
+                      RootStore.Get(UserStore).userInfo.value?.id != i.accountId || store.currentSiteURL != '' || i.originURL
+                    }
+                    account={i.account ?? undefined} forceBlog={store.forceBlog.value} />
+                })
               }
-              account={i.account ?? undefined} forceBlog={store.forceBlog.value} />
-          })
-        }
-      </Masonry>
+            </Masonry>
+          </ResponsiveTabs>
+        </div>
+      </div>
     </div>
   </ScrollArea>
 });

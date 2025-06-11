@@ -3,11 +3,13 @@ import { Tabs, Tab } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
+import { Avatar } from '@heroui/react';
 
 export type TabItem = {
   key: string;
   title: string | React.ReactNode;
   icon?: string;
+  avatar?: string;
 };
 
 interface ScrollableTabsProps {
@@ -69,6 +71,28 @@ export const ScrollableTabs = ({ items, selectedKey, onSelectionChange, color = 
     });
   };
 
+  const renderTabTitle = (item: TabItem) => {
+    const titleText = typeof item.title === 'string' ? t(item.title) : item.title;
+    
+    if (item.avatar) {
+      return (
+        <div className="flex items-center space-x-2">
+          <Avatar src={item.avatar} size="sm" className="w-5 h-5" />
+          <span className="text-sm">{titleText}</span>
+        </div>
+      );
+    } else if (item.icon) {
+      return (
+        <div className="flex items-center space-x-2">
+          <Icon icon={item.icon} width="18" />
+          <span className="text-sm">{titleText}</span>
+        </div>
+      );
+    } else {
+      return titleText;
+    }
+  };
+
   return (
     <div className="relative" ref={containerRef}>
       {showLeftArrow && (
@@ -91,16 +115,7 @@ export const ScrollableTabs = ({ items, selectedKey, onSelectionChange, color = 
         {items.map((item) => (
           <Tab
             key={item.key}
-            title={
-              typeof item.title === 'string' && item.icon ? (
-                <div className="flex items-center space-x-2">
-                  <Icon icon={item.icon} width="18" />
-                  <span className="text-sm">{t(item.title)}</span>
-                </div>
-              ) : (
-                t(item.title as any)
-              )
-            }
+            title={renderTabTitle(item)}
           />
         ))}
       </Tabs>

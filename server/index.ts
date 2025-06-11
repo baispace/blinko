@@ -129,17 +129,6 @@ async function setupApiRoutes(app: express.Application) {
   app.use('/api/rss', rssRouter);
   app.use('/v1', openaiRouter);
 
-  // OpenAPI integration
-  app.use('/api',
-    // @ts-ignore
-    createOpenApiExpressMiddleware({
-      router: appRouter,
-      createContext: ({ req, res }: { req: express.Request; res: express.Response }) => {
-        return createContext(req, res);
-      }
-    })
-  );
-
   // OpenAPI documentation endpoints
   app.get('/api/openapi.json', (req, res) => {
     res.json(openApiDocument);
@@ -156,6 +145,19 @@ async function setupApiRoutes(app: express.Application) {
       filter: true
     }
   }));
+
+  // OpenAPI integration
+  app.use('/api',
+    // @ts-ignore
+    createOpenApiExpressMiddleware({
+      router: appRouter,
+      createContext: ({ req, res }: { req: express.Request; res: express.Response }) => {
+        return createContext(req, res);
+      }
+    })
+  );
+
+
 
   // Health check endpoint
   app.get('/health', (req, res) => {

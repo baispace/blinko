@@ -92,7 +92,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       </div>
 
       <ScrollShadow className="-mr-[16px] mt-[-5px] h-full max-h-full pr-6 hide-scrollbar">
-        <div className={`flex flex-col gap-2 mt-4 font-semibold ${base.isSidebarCollapsed ? 'items-center gap-4' : ''}`}>
+        <div className={`flex flex-col gap-1 mt-4 font-semibold ${base.isSidebarCollapsed ? 'items-center gap-4' : ''}`}>
           {base.routerList
             .filter((i) => !i.hiddenSidebar)
             .map((i) => (
@@ -103,7 +103,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
                   base.currentRouter = i;
                   onItemClick?.();
                 }}
-                className={`flex items-center gap-2 group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!bg-primary  !text-primary-foreground' : ''}`}
+                className={`flex items-center gap-1 group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!bg-primary  !text-primary-foreground' : ''}`}
               >
                 <Icon className={`${base.isSidebarCollapsed ? 'mx-auto' : ''}`} icon={i.icon} width="20" height="20" />
                 {!base.isSidebarCollapsed && <span className="!transition-all">{t(i.title)}</span>}

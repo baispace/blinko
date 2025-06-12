@@ -113,7 +113,7 @@ export const TagListPanel = observer(() => {
           handleSelect,
         }) => (
           <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) + 6 }} >
-            <div className={`${SideBarItem} mb-1 relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : ''}`}
+            <div className={`${SideBarItem}relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : ''}`}
               onClick={e => {
                 //@ts-ignore
                 base.currentRouter = blinko.allTagRouter

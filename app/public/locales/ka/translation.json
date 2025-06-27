@@ -624,5 +624,9 @@
   "detected-ai-configuration-to-import": "AI კონფიგურაციის მოპო-22b3; narginertion detected",
   "importing": "იმპორტი",
   "cache-cleared-successfully": "ქეშის გასუფთავება წარმატებით დასრულდა! გვერდი ავტომატურად გადატვირთავს.",
-  "failed-to-clear-cache": "ბრაუზერის ქეშის გასუფთავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელით განახლება (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "ბრაუზერის ქეშის გასუფთავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელით განახლება (Ctrl+Shift+R).",
+  "select-deployment": "აირჩიეთ განთავსება",
+  "deployment-name": "განთავსების სახელი",
+  "please-set-the-api-endpoint": "გთხოვთ დააყენოთ API Endpoint",
+  "please-set-the-api-key": "გთხოვთ დააყენოთ API Key"
 }

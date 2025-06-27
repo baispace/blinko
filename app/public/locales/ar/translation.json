@@ -664,5 +664,9 @@
   "detected-ai-configuration-to-import": "تم اكتشاف إعدادات AI في انتظار الاستيراد",
   "importing": "جارٍ الاستيراد",
   "cache-cleared-successfully": "تم مسح ذاكرة التخزين المؤقت بنجاح! ستتم إعادة تحميل الصفحة تلقائيًا.",
-  "failed-to-clear-cache": "清除 ذاكرة التخزين المؤقت للمتصفح فشل. حاول التحديث يدويًا (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "إزالة ذاكرة التخزين المؤقت للمتصفح فشل. حاول التحديث يدويًا (Ctrl+Shift+R).",
+  "select-deployment": "اختر النشر",
+  "deployment-name": "اسم النشر",
+  "please-set-the-api-endpoint": "يرجى تعيين نقطة نهاية API",
+  "please-set-the-api-key": "يرجى تعيين مفتاح API"
 }

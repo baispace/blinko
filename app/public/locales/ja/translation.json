@@ -665,5 +665,9 @@
   "detected-ai-configuration-to-import": "AI設定のインポート待ちが検出されました",
   "importing": "インポート中",
   "cache-cleared-successfully": "キャッシュが正常にクリアされました！ページは自動的に再読み込みされます。",
-  "failed-to-clear-cache": "ブラウザのキャッシュを削除できませんでした。手動で更新してください (Ctrl+Shift+R)。"
+  "failed-to-clear-cache": "ブラウザのキャッシュを削除できませんでした。手動で更新してください (Ctrl+Shift+R)。",
+  "select-deployment": "デプロイを選択",
+  "deployment-name": "デプロイ名",
+  "please-set-the-api-endpoint": "APIエンドポイントを設定してください",
+  "please-set-the-api-key": "APIキーを設定してください"
 }

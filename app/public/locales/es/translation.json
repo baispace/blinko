@@ -665,5 +665,9 @@
   "detected-ai-configuration-to-import": "Detección de configuración de IA para importar",
   "importing": "Importando",
   "cache-cleared-successfully": "¡La memoria caché se ha borrado con éxito! La página se recargará automáticamente.",
-  "failed-to-clear-cache": "No se pudo borrar la caché del navegador. Intenta actualizar manualmente (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "No se pudo borrar la caché del navegador. Intenta actualizar manualmente (Ctrl+Shift+R).",
+  "select-deployment": "Seleccionar implementación",
+  "deployment-name": "Nombre de la implementación",
+  "please-set-the-api-endpoint": "Por favor, configure el endpoint de la API",
+  "please-set-the-api-key": "Por favor, configure la clave de la API"
 }

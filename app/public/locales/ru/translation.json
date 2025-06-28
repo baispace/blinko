@@ -658,5 +658,9 @@
   "detected-ai-configuration-to-import": "Обнаружена конфигурация AI для импорта",
   "importing": "Импорт",
   "cache-cleared-successfully": "Кэш успешно очищен! Страница будет автоматически перезагружена.",
-  "failed-to-clear-cache": "Не удалось очистить кэш браузера. Пожалуйста, попробуйте обновить вручную (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Не удалось очистить кэш браузера. Пожалуйста, попробуйте обновить вручную (Ctrl+Shift+R).",
+  "select-deployment": "Выберите развертывание",
+  "deployment-name": "Имя развертывания",
+  "please-set-the-api-endpoint": "Пожалуйста, укажите конечную точку API",
+  "please-set-the-api-key": "Пожалуйста, укажите ключ API"
 }

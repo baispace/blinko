@@ -665,5 +665,9 @@
   "detected-ai-configuration-to-import": "AI yapılandırmanın ithal edilmeye hazır olduğu tespit edildi",
   "importing": "İçe aktarıyor",
   "cache-cleared-successfully": "Önbellek başarıyla temizlendi! Sayfa otomatik olarak yeniden yüklenecek.",
-  "failed-to-clear-cache": "Tarayıcı önbelleğini temizleme başarısız oldu. Lütfen manuel olarak yenilemeyi deneyin (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Tarayıcı önbelleğini temizleme başarısız oldu. Lütfen manuel olarak yenilemeyi deneyin (Ctrl+Shift+R).",
+  "select-deployment": "Dağıtımı seç",
+  "deployment-name": "Dağıtım adı",
+  "please-set-the-api-endpoint": "Lütfen API uç noktasını ayarlayın",
+  "please-set-the-api-key": "Lütfen API anahtarını ayarlayın"
 }

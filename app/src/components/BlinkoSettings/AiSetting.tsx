@@ -104,33 +104,63 @@ export const AiSetting = observer(() => {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
         console.log(blinko.config.value?.aiApiEndpoint,'xxx')
+        if (!blinko.config.value?.aiApiEndpoint) {
+          RootStore.Get(ToastPlugin).error(t('please-set-the-api-endpoint'));
+          return;
+        }
         const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
-        if (provider === 'Ollama') {
-          console.log(blinko.config.value?.aiApiEndpoint);
-          let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
-          modelList = data.models.map(model => ({
-            label: model.name,
-            value: model.name
-          }));
-          this.aiModelSelect.save(modelList);
-          this.embeddingModelSelect.save(modelList);
-          this.rerankModelSelect.save(modelList);
-        } else {
-          try {
-            let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com/v1'}/models`, {
-              headers: {
-                'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
-              }
-            });
-            modelList = data.data.map(model => ({
-              label: model.id,
-              value: model.id
+        switch (provider) {
+          case 'Ollama':{
+            console.log(blinko.config.value?.aiApiEndpoint);
+            let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
+            modelList = data.models.map(model => ({
+              label: model.name,
+              value: model.name
             }));
             this.aiModelSelect.save(modelList);
             this.embeddingModelSelect.save(modelList);
             this.rerankModelSelect.save(modelList);
-          } catch (error) {
-            RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            break;
+          }
+          case 'AzureOpenAI':{
+            if (!blinko.config.value?.aiApiKey) {
+              RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
+              return;
+            }
+            console.log("target URL: ", `${blinko.config.value?.aiApiEndpoint}?api-version=2022-12-01`)
+            //use old Azure OpenAI API to retrieve deployment list
+            let { data } = await axios.get(`${blinko.config.value?.aiApiEndpoint}?api-version=2022-12-01`, {
+                headers: {
+                  'api-key': blinko.config.value?.aiApiKey
+                }
+              });
+            modelList = data.data.map(deployment => ({
+              label: deployment.id,
+              value: deployment.id
+            }));
+            this.aiModelSelect.save(modelList);
+            this.embeddingModelSelect.save(modelList);
+            this.rerankModelSelect.save(modelList);
+            break;
+          }
+          default:{
+            try {
+              let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com/v1'}/models`, {
+                headers: {
+                  'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
+                }
+              });
+              modelList = data.data.map(model => ({
+                label: model.id,
+                value: model.id
+              }));
+              this.aiModelSelect.save(modelList);
+              this.embeddingModelSelect.save(modelList);
+              this.rerankModelSelect.save(modelList);
+            } catch (error) {
+              RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            }
+            break;
           }
         }
         if (blinko.config.value?.embeddingApiEndpoint) {
@@ -255,7 +285,7 @@ export const AiSetting = observer(() => {
         </div>
 
         <Item
-          leftContent={<>{t('model')}</>}
+          leftContent={<>{blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? t('deployment-name') : t('model')}</>}
           rightContent={
             <div className="flex items-center gap-2">
               <Autocomplete
@@ -282,7 +312,7 @@ export const AiSetting = observer(() => {
                 }}
                 size="sm"
                 className="w-[200px] md:w-[300px]"
-                label={t('select-model')}
+                label={blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? t('select-deployment') : t('select-model')}
               >
                 {store.aiModelSelect.list.map((item) => (
                   <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
@@ -303,7 +333,9 @@ export const AiSetting = observer(() => {
           }
         />
 
-        {(blinko.config.value?.aiModelProvider == 'OpenAI' || blinko.config.value?.aiModelProvider == 'Ollama') && (
+        {(blinko.config.value?.aiModelProvider == 'OpenAI'
+        || blinko.config.value?.aiModelProvider == 'AzureOpenAI'
+        || blinko.config.value?.aiModelProvider == 'Ollama') && (
           <Item
             type={isPc ? 'row' : 'col'}
             leftContent={
@@ -320,15 +352,17 @@ export const AiSetting = observer(() => {
                         
                         // Parse the URL to preserve any paths the user has entered
                         const url = new URL(urlWithProtocol);
+
+                        const postfix = blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? `/${blinko.config.value?.aiModel ? blinko.config.value?.aiModel : "deployment-name"}/chat/completions${blinko.config.value?.aiApiVersion ? "?api-version=" + blinko.config.value?.aiApiVersion : ""}` : '/chat/completions';
                         
                         // Check if the URL already contains a path
                         if (url.pathname === '/' || url.pathname === '') {
                           // No path, just add chat/completions
-                          return new URL('/chat/completions', url.origin).href;
+                          return new URL(postfix, url.origin).href;
                         } else {
                           // Preserve existing path and append chat/completions
                           const path = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
-                          return `${url.origin}${path}/chat/completions`;
+                          return `${url.origin}${path}${postfix}`;
                         }
                       } catch (e) {
                         return 'https://api.openai.com/chat/completions';

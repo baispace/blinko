@@ -187,7 +187,7 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem 
                   >
                     <Icon icon="akar-icons:comment" width="16" height="16" />
                   </Button>
-                  {(user.id === String(comment.note?.account?.id) || user.id === String(comment.account?.id)) && !blinkoItem.originURL && (
+                  {(user.id === comment.note?.account?.id || user.id === comment.account?.id) && !blinkoItem.originURL && (
                     <Button
                       size="sm"
                       variant="light"

@@ -105,7 +105,10 @@ export const useEditorInit = (
           lineNumber: true,
         },
         theme,
-        delay: 20
+        delay: 20,
+        math: {
+          engine: 'MathJax',
+        }
       },
       after: () => {
         vditor.setValue(content);

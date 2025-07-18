@@ -660,5 +660,9 @@
   "detected-ai-configuration-to-import": "AI 구성을 가져올 준비가 완료되었습니다.",
   "importing": "가져오는 중",
   "cache-cleared-successfully": "캐시가 성공적으로 삭제되었습니다! 페이지가 자동으로 새로고침됩니다.",
-  "failed-to-clear-cache": "브라우저 캐시를 삭제하지 못했습니다. 수동 새로고침(Ctrl+Shift+R)을 시도해 주세요."
+  "failed-to-clear-cache": "브라우저 캐시를 삭제하지 못했습니다. 수동 새로고침(Ctrl+Shift+R)을 시도해 주세요.",
+  "select-deployment": "배포 선택",
+  "deployment-name": "배포 이름",
+  "please-set-the-api-endpoint": "API 엔드포인트를 설정하세요",
+  "please-set-the-api-key": "API 키를 설정하세요"
 }

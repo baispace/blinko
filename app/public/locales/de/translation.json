@@ -664,5 +664,9 @@
   "detected-ai-configuration-to-import": "AI-Konfiguration zur Importierung erkannt",
   "importing": "Importieren",
   "cache-cleared-successfully": "Der Cache wurde erfolgreich gelöscht! Die Seite wird automatisch neu geladen.",
-  "failed-to-clear-cache": "Fehler beim Löschen des Browser-Cache. Bitte versuchen Sie, manuell zu aktualisieren (Strg+Shift+R)."
+  "failed-to-clear-cache": "Fehler beim Löschen des Browser-Cache. Bitte versuchen Sie, manuell zu aktualisieren (Strg+Shift+R).",
+  "select-deployment": "Bereitstellung auswählen",
+  "deployment-name": "Bereitstellungsname",
+  "please-set-the-api-endpoint": "Bitte API-Endpunkt festlegen",
+  "please-set-the-api-key": "Bitte API-Schlüssel festlegen"
 }

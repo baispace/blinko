@@ -643,7 +643,7 @@
   "import-from-markdown": "Importeren vanuit Markdown-bestand",
   "import-from-markdown-tip": "Importeer uit een enkel .md-bestand of een .zip-archief dat .md-bestanden bevat.",
   "not-a-markdown-or-zip-file": "Het is geen Markdown- of zip-bestand. Kies een .md- of .zip-bestand.",
-  "todo": "vervanging",
+  "todo": "Taken",
   "restore": "Herstellen",
   "complete": "Voltooid",
   "today": "Vandaag",
@@ -671,5 +671,9 @@
   "detected-ai-configuration-to-import": "AI-configuratie gedetecteerd voor importeren",
   "importing": "Invoeren",
   "cache-cleared-successfully": "De cache is succesvol gewist! De pagina wordt automatisch opnieuw geladen.",
-  "failed-to-clear-cache": "Het verwijderen van browsercache is mislukt. Probeer handmatig te verversen (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Het verwijderen van browsercache is mislukt. Probeer handmatig te verversen (Ctrl+Shift+R).",
+  "select-deployment": "Selecteer deployment",
+  "deployment-name": "Deploymentnaam",
+  "please-set-the-api-endpoint": "Stel het API-eindpunt in",
+  "please-set-the-api-key": "Stel de API-sleutel in"
 }

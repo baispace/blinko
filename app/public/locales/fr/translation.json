@@ -665,5 +665,9 @@
   "detected-ai-configuration-to-import": "Détection de la configuration IA à importer",
   "importing": "Importation en cours",
   "cache-cleared-successfully": "Le cache a été effacé avec succès ! La page se rechargera automatiquement.",
-  "failed-to-clear-cache": "Échec du nettoyage du cache du navigateur. Veuillez essayer de rafraîchir manuellement (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Échec du nettoyage du cache du navigateur. Veuillez essayer de rafraîchir manuellement (Ctrl+Shift+R).",
+  "select-deployment": "Sélectionner le déploiement",
+  "deployment-name": "Nom du déploiement",
+  "please-set-the-api-endpoint": "Veuillez définir le point de terminaison de l'API",
+  "please-set-the-api-key": "Veuillez définir la clé de l'API"
 }

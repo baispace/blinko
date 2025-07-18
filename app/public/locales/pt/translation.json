@@ -659,5 +659,9 @@
   "detected-ai-configuration-to-import": "Detecção de configuração AI para importar",
   "importing": "Importando",
   "cache-cleared-successfully": "O cache foi limpo com sucesso! A página será recarregada automaticamente.",
-  "failed-to-clear-cache": "Falha ao limpar o cache do navegador. Por favor, tente atualizar manualmente (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Falha ao limpar o cache do navegador. Por favor, tente atualizar manualmente (Ctrl+Shift+R).",
+  "select-deployment": "Selecionar implantação",
+  "deployment-name": "Nome da implantação",
+  "please-set-the-api-endpoint": "Por favor, defina o endpoint da API",
+  "please-set-the-api-key": "Por favor, defina a chave da API"
 }

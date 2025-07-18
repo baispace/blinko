@@ -89,7 +89,6 @@ let activeStreams = 0;
 router.get(/.*/, async (req, res) => {
   const fullPath = decodeURIComponent(req.path.substring(1));
   const token = await getTokenFromRequest(req);
-  console.log('token', token);
   const needThumbnail = req.query.thumbnail === 'true';
   const isDownload = req.query.download === 'true';
 
@@ -110,7 +109,15 @@ router.get(/.*/, async (req, res) => {
       });
       console.log('myFile', myFile);
 
-      if (myFile && !myFile?.note?.isShare && Number(token?.id) != myFile?.note?.accountId && !myFile?.accountId) {
+
+      if (!token) {
+        if (myFile?.note?.isShare) {
+        } else {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      }
+
+      if (myFile && (!myFile?.note?.isShare && Number(token?.id) != myFile?.note?.accountId && !myFile?.accountId)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
     } catch (error) {
@@ -138,7 +145,7 @@ router.get(/.*/, async (req, res) => {
       let processingTimeout = setTimeout(() => {
         return res.status(408).json({ message: "Image processing timeout" });
       }, IMAGE_PROCESSING_TIMEOUT);
-      
+
       try {
         const thumbnailStream = sharp()
           .rotate()
@@ -146,9 +153,9 @@ router.get(/.*/, async (req, res) => {
             fit: 'inside',
             withoutEnlargement: true
           });
-        
+
         createReadStream(filePath).pipe(thumbnailStream);
-        
+
         const thumbnail = await thumbnailStream.toBuffer();
 
         const filename = path.basename(fullPath);
@@ -161,7 +168,7 @@ router.get(/.*/, async (req, res) => {
           "Content-Disposition": `inline; filename="${safeFilename}"`
         });
         return res.send(thumbnail);
-      } catch(error) {
+      } catch (error) {
         clearTimeout(processingTimeout);
         console.error('Error processing thumbnail:', error);
         return res.status(500).json({ message: "Error processing thumbnail" });
@@ -184,7 +191,7 @@ router.get(/.*/, async (req, res) => {
     const contentType = mime.lookup(filePath) || "application/octet-stream";
     const encodedFilename = encodeURIComponent(fullPath).replace(/['()]/g, (char) => '%' + char.charCodeAt(0).toString(16));
     const fallbackFilename = `file${path.extname(fullPath)}`;
-    
+
     res.set({
       "Content-Type": contentType,
       "ETag": etag,
@@ -200,7 +207,7 @@ router.get(/.*/, async (req, res) => {
     if (stats.size > STREAM_THRESHOLD) {
       activeStreams++;
       console.log(`[File Stream] Active streams: ${activeStreams}, Path: ${fullPath}`);
-      
+
       req.on('close', () => {
         activeStreams--;
         console.log(`[File Stream] Connection closed. Active streams: ${activeStreams}`);
@@ -220,19 +227,19 @@ router.get(/.*/, async (req, res) => {
         res.status(206);
 
         const stream = createReadStream(filePath, { start, end });
-        
+
         const timeout = setTimeout(() => {
           console.log(`[File Stream] Timeout for ${fullPath}`);
           stream.destroy();
           res.end();
           activeStreams--;
         }, 300000);
-        
+
         stream.on('end', () => {
           clearTimeout(timeout);
           activeStreams--;
         });
-        
+
         stream.on('error', (error) => {
           clearTimeout(timeout);
           console.error(`[File Stream] Stream error: ${error.message}`);
@@ -243,7 +250,7 @@ router.get(/.*/, async (req, res) => {
           }
           activeStreams--;
         });
-        
+
         stream.pipe(res);
       } else {
         res.set({
@@ -252,19 +259,19 @@ router.get(/.*/, async (req, res) => {
         });
 
         const stream = createReadStream(filePath);
-        
+
         const timeout = setTimeout(() => {
           console.log(`[File Stream] Timeout for ${fullPath}`);
           stream.destroy();
           res.end();
           activeStreams--;
         }, 300000);
-        
+
         stream.on('end', () => {
           clearTimeout(timeout);
           activeStreams--;
         });
-        
+
         stream.on('error', (error) => {
           clearTimeout(timeout);
           console.error(`[File Stream] Stream error: ${error.message}`);
@@ -275,7 +282,7 @@ router.get(/.*/, async (req, res) => {
           }
           activeStreams--;
         });
-        
+
         stream.pipe(res);
       }
     } else {

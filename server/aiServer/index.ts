@@ -346,6 +346,41 @@ export class AiService {
         return { success: false, message: 'Note not found' };
       }
 
+      const processingMode = config.aiPostProcessingMode || 'comment';
+      
+      // Handle custom processing mode
+      if (processingMode === 'custom') {
+        // Get all tags for tag replacement
+        const tags = await getAllPathTags();
+        const tagsList = tags.join(', ');
+        
+        // Get custom prompt and replace variables
+        let customPrompt = config.aiCustomPrompt || 'Analyze the following note content and provide feedback.';
+        customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
+        const withOnlineSearch = !!config.tavilyApiKey;
+        // Process with AI using BaseChatAgent with tools
+        const agent = await AiModelFactory.BaseChatAgent({ withTools: true, withOnlineSearch: withOnlineSearch });
+        const result = await agent.generate([
+          {
+            role: 'system',
+            content: `You are an AI assistant that helps to process notes. You MUST use the available tools to complete your task.
+This is a one-time conversation, so you MUST take action immediately using the tools provided.
+You have access to tools that can help you modify notes, add comments, or create new notes.
+DO NOT just respond with suggestions or analysis - you MUST use the appropriate tool to implement your changes.
+If you need to add a comment, use the createCommentTool.
+If you need to update the note, use the updateBlinkoTool.
+If you need to create a new note, use the upsertBlinkoTool.
+Remember: ALWAYS use tools to implement your suggestions rather than just describing what should be done.`
+          },
+          {
+            role: 'user',
+            content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
+          }
+        ]);
+        
+        return { success: true, message: 'Custom processing completed' };
+      }
+
       // Get the custom prompt, or use default
       const prompt = config.aiCommentPrompt || 'Analyze the following note content. Extract key topics as tags and provide a brief summary of the main points.';
 
@@ -362,7 +397,6 @@ export class AiService {
         },
       ]);
 
-      const processingMode = config.aiPostProcessingMode || 'comment';
       const aiResponse = result.text.trim();
 
       // Handle based on the processing mode

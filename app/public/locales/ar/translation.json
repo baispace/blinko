@@ -668,5 +668,9 @@
   "select-deployment": "اختر النشر",
   "deployment-name": "اسم النشر",
   "please-set-the-api-endpoint": "يرجى تعيين نقطة نهاية API",
-  "please-set-the-api-key": "يرجى تعيين مفتاح API"
+  "please-set-the-api-key": "يرجى تعيين مفتاح API",
+  "custom-ai-prompt": "تلميحات الذكاء الاصطناعي المخصصة",
+  "available-variables": "المتغيرات المتاحة",
+  "enter-custom-prompt": "مثال: تحليل محتوى الملاحظة التالية {note}، واستنادًا إلى العلامات الحالية {tags}، قُم بإنشاء علامات مناسبة، وقُم بتلخيص الملاحظات لإضافتها إلى التعليق.",
+  "custom": "تخصيص"
 }

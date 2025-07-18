@@ -660,5 +660,9 @@
   "select-deployment": "Wybierz wdrożenie",
   "deployment-name": "Nazwa wdrożenia",
   "please-set-the-api-endpoint": "Proszę ustawić punkt końcowy API",
-  "please-set-the-api-key": "Proszę ustawić klucz API"
+  "please-set-the-api-key": "Proszę ustawić klucz API",
+  "custom-ai-prompt": "Niestandardowe wskazówki AI",
+  "available-variables": "Dostępne zmienne",
+  "enter-custom-prompt": "Przykład: Analizując zawartość poniższych notatek {note}, na podstawie istniejących tagów {tags} generuj odpowiednie tagi i podsumuj notatki dodając komentarz.",
+  "custom": "niestandardowy"
 }

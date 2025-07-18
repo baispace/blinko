@@ -669,5 +669,9 @@
   "detected-ai-configuration-to-import": "偵測到AI配置待導入",
   "importing": "匯入中",
   "cache-cleared-successfully": "快取已清除成功！頁面將自動重新載入。",
-  "failed-to-clear-cache": "清除瀏覽器快取失敗。請嘗試手動重新整理 (Ctrl+Shift+R)。"
+  "failed-to-clear-cache": "清除瀏覽器快取失敗。請嘗試手動重新整理 (Ctrl+Shift+R)。",
+  "custom-ai-prompt": "自訂AI提示詞",
+  "available-variables": "可用變量",
+  "enter-custom-prompt": "示例：分析以下筆記內容{note}，基於現有標籤{tags}生成合適標籤，並總結筆記添加至評論",
+  "custom": "自訂"
 }

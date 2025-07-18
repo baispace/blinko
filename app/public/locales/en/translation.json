@@ -700,5 +700,9 @@
   "clear-browser-cache": "Clear Browser Cache",
   "clear-cache": "Clear Cache",
   "cache-cleared-successfully": "Cache cleared successfully! Page will reload automatically.",
-  "failed-to-clear-cache": "Failed to clear browser cache. Please try manual refresh (Ctrl+Shift+R)."
+  "failed-to-clear-cache": "Failed to clear browser cache. Please try manual refresh (Ctrl+Shift+R).",
+  "custom-ai-prompt": "Custom AI prompts",
+  "available-variables": "Available Variables",
+  "enter-custom-prompt": "Example: Analyze the following note content {note}, generate appropriate tags based on existing tags {tags}, and summarize the note to add to comments.",
+  "custom": "customization"
 }

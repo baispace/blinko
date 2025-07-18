@@ -668,5 +668,9 @@
   "select-deployment": "Bereitstellung auswählen",
   "deployment-name": "Bereitstellungsname",
   "please-set-the-api-endpoint": "Bitte API-Endpunkt festlegen",
-  "please-set-the-api-key": "Bitte API-Schlüssel festlegen"
+  "please-set-the-api-key": "Bitte API-Schlüssel festlegen",
+  "custom-ai-prompt": "Benutzerdefinierte KI-Vorschläge",
+  "available-variables": "Verfügbare Variablen",
+  "enter-custom-prompt": "Beispiel: Analysieren Sie den Inhalt der folgenden Notiz {note}, erstellen Sie geeignete Tags basierend auf vorhandenen Tags {tags} und fassen Sie die Notizen in einem Kommentar zusammen.",
+  "custom": "Individuelle Anpassung"
 }

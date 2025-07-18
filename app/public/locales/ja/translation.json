@@ -669,5 +669,9 @@
   "select-deployment": "デプロイを選択",
   "deployment-name": "デプロイ名",
   "please-set-the-api-endpoint": "APIエンドポイントを設定してください",
-  "please-set-the-api-key": "APIキーを設定してください"
+  "please-set-the-api-key": "APIキーを設定してください",
+  "custom-ai-prompt": "カスタムAIプロンプト",
+  "available-variables": "利用可能な変数",
+  "enter-custom-prompt": "例：以下のメモ内容{note}を分析し、既存のタグ{tags}に基づいて適切なタグを生成し、コメントにメモの要約を追加します。",
+  "custom": "カスタマイズ"
 }

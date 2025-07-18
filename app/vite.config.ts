@@ -66,6 +66,7 @@ export default defineConfig({
     port: EXPRESS_PORT,
     strictPort: false,
     host: host || false,
+    allowedHosts: true,
     watch: {
       ignored: ["**/src-tauri/**", "**/node_modules/**", "**/.git/**"],
     },

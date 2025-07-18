@@ -78,6 +78,7 @@ export const AiSetting = observer(() => {
     embeddingApiKey: '',
     aiCommentPrompt: '',
     aiTagsPrompt: '',
+    aiCustomPrompt: '',
     embeddingApiEndpoint: '',
     apiEndPoint: '',
     aiModel: '',
@@ -207,6 +208,7 @@ export const AiSetting = observer(() => {
     store.aiCommentPrompt = blinko.config.value?.aiCommentPrompt!;
     store.aiTagsPrompt = blinko.config.value?.aiTagsPrompt!;
     store.aiSmartEditPrompt = blinko.config.value?.aiSmartEditPrompt!;
+    store.aiCustomPrompt = blinko.config.value?.aiCustomPrompt!;
     store.rerankModel = blinko.config.value?.rerankModel!;
     store.rerankTopK = blinko.config.value?.rerankTopK || 2;
     store.rerankScore = blinko.config.value?.rerankScore || 0.75;
@@ -1227,7 +1229,7 @@ export const AiSetting = observer(() => {
                         store.aiCommentPrompt = e.target.value;
                       }}
                       placeholder={t('enter-custom-prompt-for-post-processing')}
-                      className="w-full"
+                      className="w-full md:w-[400px]"
                     />
                   }
                 />
@@ -1267,7 +1269,7 @@ export const AiSetting = observer(() => {
                         store.aiTagsPrompt = e.target.value;
                       }}
                       placeholder="Enter custom prompt for auto-generating tags"
-                      className="w-full"
+                      className="w-full md:w-[400px]"
                     />
                   }
                 />
@@ -1312,9 +1314,69 @@ export const AiSetting = observer(() => {
                   <SelectItem key="both" startContent={<Icon icon="tabler:analyze" />}>
                     {t('both')}
                   </SelectItem>
+                  <SelectItem key="custom" startContent={<Icon icon="tabler:code" />}>
+                    {t('custom')}
+                  </SelectItem>
                 </Select>
               }
             />
+
+            {blinko.config.value?.aiPostProcessingMode === 'custom' && (
+              <Item
+                type={isPc ? 'row' : 'col'}
+                leftContent={
+                  <div className="flex flex-col gap-1">
+                    <div>{t('custom-ai-prompt')}</div>
+                    <div className="text-[12px] text-default-400">
+                      {t('available-variables')}:
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        className="ml-2"
+                        onPress={() => {
+                          store.aiCustomPrompt = (store.aiCustomPrompt || '') + ' {tags}';
+                        }}
+                      >
+                        {'{tags}'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        className="ml-2"
+                        onPress={() => {
+                          store.aiCustomPrompt = (store.aiCustomPrompt || '') + ' {note}';
+                        }}
+                      >
+                        {'{note}'}
+                      </Button>
+                    </div>
+                  </div>
+                }
+                rightContent={
+                  <Textarea
+                    id="custom-ai-prompt"
+                    radius="lg"
+                    minRows={4}
+                    maxRows={8}
+                    value={store.aiCustomPrompt || 'Analyze the note content and provide feedback. Use the available tools to implement your suggestions. Available tags: {tags}'}
+                    onChange={(e) => {
+                      store.aiCustomPrompt = e.target.value;
+                    }}
+                    onBlur={(e) => {
+                      PromiseCall(
+                        api.config.update.mutate({
+                          key: 'aiCustomPrompt',
+                          value: e.target.value,
+                        }),
+                        { autoAlert: false },
+                      );
+                    }}
+                    className="w-full md:w-[400px]"
+                    placeholder={t('enter-custom-prompt')}
+                  />
+                }
+              />
+            )}
           </>
         )}
       </CollapsibleCard>

@@ -669,5 +669,9 @@
   "select-deployment": "Dağıtımı seç",
   "deployment-name": "Dağıtım adı",
   "please-set-the-api-endpoint": "Lütfen API uç noktasını ayarlayın",
-  "please-set-the-api-key": "Lütfen API anahtarını ayarlayın"
+  "please-set-the-api-key": "Lütfen API anahtarını ayarlayın",
+  "custom-ai-prompt": "Özel AI İpuçları",
+  "available-variables": "Kullanılabilir değişkenler",
+  "enter-custom-prompt": "Örnek: Aşağıdaki not içeriğini {note} analiz edin, mevcut etiketler {tags} üzerinden uygun etiketler oluşturun ve notları yoruma ekleyerek özetleyin.",
+  "custom": "Özel"
 }

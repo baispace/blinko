@@ -4,6 +4,7 @@ import { OpenAIModelProvider } from './providers/openAI';
 import { OllamaModelProvider } from './providers/ollama';
 import { AnthropicModelProvider } from './providers/anthropic';
 import { upsertBlinkoTool } from './tools/createBlinko';
+import { createCommentTool } from './tools/createComment';
 import { LibSQLVector } from './vector';
 import { DeepSeekModelProvider } from './providers/deepseek';
 import dayjs from 'dayjs';
@@ -287,6 +288,7 @@ export class AiModelFactory {
           updateBlinkoTool,
           deleteBlinkoTool,
           webExtra,
+          createCommentTool,
         },
       };
     }

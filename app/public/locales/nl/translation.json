@@ -675,5 +675,9 @@
   "select-deployment": "Selecteer deployment",
   "deployment-name": "Deploymentnaam",
   "please-set-the-api-endpoint": "Stel het API-eindpunt in",
-  "please-set-the-api-key": "Stel de API-sleutel in"
+  "please-set-the-api-key": "Stel de API-sleutel in",
+  "custom-ai-prompt": "Aangepaste AI-aanwijzingen",
+  "available-variables": "Bruikbare variabelen",
+  "enter-custom-prompt": "Voorbeeld: Analyseer de volgende notitie-inhoud {note}, genereer geschikte labels op basis van bestaande labels {tags} en voeg een samenvatting van de notities toe aan de opmerkingen.",
+  "custom": "aanpassen"
 }

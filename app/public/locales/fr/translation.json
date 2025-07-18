@@ -669,5 +669,9 @@
   "select-deployment": "Sélectionner le déploiement",
   "deployment-name": "Nom du déploiement",
   "please-set-the-api-endpoint": "Veuillez définir le point de terminaison de l'API",
-  "please-set-the-api-key": "Veuillez définir la clé de l'API"
+  "please-set-the-api-key": "Veuillez définir la clé de l'API",
+  "custom-ai-prompt": "Conseils personnalisés pour l'IA",
+  "available-variables": "Variables disponibles",
+  "enter-custom-prompt": "Exemple : Analysez le contenu des notes suivantes {note}, générer des étiquettes appropriées basées sur les étiquettes existantes {tags} et résumer les notes à ajouter aux commentaires.",
+  "custom": "Personnalisation"
 }

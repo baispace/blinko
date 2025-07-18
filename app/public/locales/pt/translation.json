@@ -663,5 +663,9 @@
   "select-deployment": "Selecionar implantação",
   "deployment-name": "Nome da implantação",
   "please-set-the-api-endpoint": "Por favor, defina o endpoint da API",
-  "please-set-the-api-key": "Por favor, defina a chave da API"
+  "please-set-the-api-key": "Por favor, defina a chave da API",
+  "custom-ai-prompt": "Palavras de prompt personalizadas de IA",
+  "available-variables": "Variáveis disponíveis",
+  "enter-custom-prompt": "Exemplo: Analise o conteúdo da nota {note}, gere etiquetas apropriadas com base nas existentes {tags} e resuma a nota para adicionar ao comentário.",
+  "custom": "Personalizado"
 }

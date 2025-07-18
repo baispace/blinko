@@ -30,7 +30,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
         <div className={`cursor-pointer ${collapsed ? 'flex justify-center' : 'flex items-center gap-2'}`}>
           <div className="relative group">
             {user.image ? (
-              <img src={getBlinkoEndpoint(user.image)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover transition-all`} />
+              <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover transition-all`} />
             ) : (
               <Image src="/icons/icon-128x128.png" width={30} />
             )}

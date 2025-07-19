@@ -664,5 +664,6 @@
   "custom-ai-prompt": "Niestandardowe wskazówki AI",
   "available-variables": "Dostępne zmienne",
   "enter-custom-prompt": "Przykład: Analizując zawartość poniższych notatek {note}, na podstawie istniejących tagów {tags} generuj odpowiednie tagi i podsumuj notatki dodając komentarz.",
-  "custom": "niestandardowy"
+  "custom": "niestandardowy",
+  "global-prompt": "Globalny komunikat"
 }

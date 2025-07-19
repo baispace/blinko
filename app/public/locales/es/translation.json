@@ -673,5 +673,6 @@
   "custom-ai-prompt": "Palabras clave personalizadas de IA",
   "available-variables": "Variables disponibles",
   "enter-custom-prompt": "Ejemplo: Analiza el contenido de la siguiente nota {note}, genera etiquetas apropiadas basadas en las existentes {tags} y resume la nota para añadirla como comentario.",
-  "custom": "Personalizado"
+  "custom": "Personalizado",
+  "global-prompt": "Palabras de advertencia global"
 }

@@ -297,20 +297,24 @@ export class AiModelFactory {
         tools: { ...tools?.tools, webSearchTool },
       };
     }
+    
+    const globalConfig = await AiModelFactory.globalConfig();
+    const defaultInstructions = 
+      `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
+      'You are a versatile AI assistant who can:\n' +
+      '1. Answer questions and explain concepts\n' +
+      '2. Provide suggestions and analysis\n' +
+      '3. Help with planning and organizing ideas\n' +
+      '4. Assist with content creation and editing\n' +
+      '5. Perform basic calculations and reasoning\n\n' +
+      "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
+      "7. When using 'search-blinko-tool', The entire content of the note should not be returned unless specifically specified by the user " +
+      "Always respond in the user's language.\n" +
+      'Maintain a friendly and professional conversational tone.';
+    
     const BlinkoAgent = new Agent({
       name: 'Blinko Chat Agent',
-      instructions:
-        `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
-        'You are a versatile AI assistant who can:\n' +
-        '1. Answer questions and explain concepts\n' +
-        '2. Provide suggestions and analysis\n' +
-        '3. Help with planning and organizing ideas\n' +
-        '4. Assist with content creation and editing\n' +
-        '5. Perform basic calculations and reasoning\n\n' +
-        "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
-        "7. When using 'search-blinko-tool', The entire content of the note should not be returned unless specifically specified by the user " +
-        "Always respond in the user's language.\n" +
-        'Maintain a friendly and professional conversational tone.',
+      instructions: globalConfig.globalPrompt || defaultInstructions,
       model: provider?.LLM!,
       ...tools,
     });

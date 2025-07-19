@@ -668,5 +668,6 @@
   "custom-ai-prompt": "사용자 정의 AI 프롬프트",
   "available-variables": "사용 가능한 변수",
   "enter-custom-prompt": "예시: 다음 노트 내용 {note}을 분석하여, 기존 태그 {tags}를 바탕으로 적절한 태그를 생성하고, 노트 요약을 댓글에 추가합니다.",
-  "custom": "맞춤 설정"
+  "custom": "맞춤 설정",
+  "global-prompt": "전체적인 힌트어"
 }

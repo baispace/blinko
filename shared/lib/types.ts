@@ -102,6 +102,7 @@ export const ZConfigKey = z.union([
   z.literal('rerankTopK'),
   z.literal('rerankScore'),
   z.literal('rerankUseEembbingEndpoint'),
+  z.literal('globalPrompt'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -190,6 +191,7 @@ export const ZConfigSchema = z.object({
   rerankScore: z.number().optional(),
   rerankUseEembbingEndpoint: z.boolean().optional(),
   hidePcEditor: z.boolean().optional(),
+  globalPrompt: z.string().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

@@ -673,5 +673,6 @@
   "custom-ai-prompt": "Özel AI İpuçları",
   "available-variables": "Kullanılabilir değişkenler",
   "enter-custom-prompt": "Örnek: Aşağıdaki not içeriğini {note} analiz edin, mevcut etiketler {tags} üzerinden uygun etiketler oluşturun ve notları yoruma ekleyerek özetleyin.",
-  "custom": "Özel"
+  "custom": "Özel",
+  "global-prompt": "Genel ipucu kelimesi"
 }

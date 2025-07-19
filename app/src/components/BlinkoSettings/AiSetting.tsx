@@ -18,6 +18,7 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import axios from 'axios';
 import { StorageListState } from '@/store/standard/StorageListState';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
+import dayjs from 'dayjs';
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -97,6 +98,7 @@ export const AiSetting = observer(() => {
     showRerankAdvancedSetting: false,
     excludeEmbeddingTagId: null as number | null,
     aiSmartEditPrompt: '',
+    globalPrompt: '',
     aiModelSelect: new StorageListState({ key: 'aiModelSelect' }),
     embeddingModelSelect: new StorageListState({ key: 'embeddingModelSelect' }),
     rerankModelSelect: new StorageListState({ key: 'rerankModelSelect' }),
@@ -213,6 +215,7 @@ export const AiSetting = observer(() => {
     store.rerankTopK = blinko.config.value?.rerankTopK || 2;
     store.rerankScore = blinko.config.value?.rerankScore || 0.75;
     store.rerankUseEembbingEndpoint = blinko.config.value?.rerankUseEembbingEndpoint || false;
+    store.globalPrompt = blinko.config.value?.globalPrompt || '';
   }, [blinko.config.value]);
 
   return (
@@ -537,6 +540,44 @@ export const AiSetting = observer(() => {
                 {!!rebuildProgress?.isRunning ? t('rebuild-in-progress') : t('force-rebuild')}
               </Button>
             </div>
+          }
+        />
+
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={
+            <div className="flex flex-col gap-2">
+              <div>{t('global-prompt')}</div>
+            </div>
+          }
+          rightContent={
+            <Textarea
+              radius="lg"
+              minRows={1}
+              maxRows={6}
+              value={store.globalPrompt}
+              onChange={(e) => {
+                store.globalPrompt = e.target.value;
+              }}
+              onBlur={(e) => {
+                PromiseCall(
+                  api.config.update.mutate({
+                    key: 'globalPrompt',
+                    value: store.globalPrompt,
+                  }),
+                  { autoAlert: false },
+                );
+              }}
+              placeholder={`Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}
+You are a versatile AI assistant who can:
+1. Answer questions and explain concepts
+2. Provide suggestions and analysis
+3. Help with planning and organizing ideas
+
+Always respond in the user's language.
+Maintain a friendly and professional conversational tone.`}
+              className="w-full md:w-[400px]"
+            />
           }
         />
       </CollapsibleCard>

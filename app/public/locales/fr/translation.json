@@ -673,5 +673,6 @@
   "custom-ai-prompt": "Conseils personnalisés pour l'IA",
   "available-variables": "Variables disponibles",
   "enter-custom-prompt": "Exemple : Analysez le contenu des notes suivantes {note}, générer des étiquettes appropriées basées sur les étiquettes existantes {tags} et résumer les notes à ajouter aux commentaires.",
-  "custom": "Personnalisation"
+  "custom": "Personnalisation",
+  "global-prompt": "Mot de prompt global"
 }

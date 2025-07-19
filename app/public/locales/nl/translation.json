@@ -679,5 +679,6 @@
   "custom-ai-prompt": "Aangepaste AI-aanwijzingen",
   "available-variables": "Bruikbare variabelen",
   "enter-custom-prompt": "Voorbeeld: Analyseer de volgende notitie-inhoud {note}, genereer geschikte labels op basis van bestaande labels {tags} en voeg een samenvatting van de notities toe aan de opmerkingen.",
-  "custom": "aanpassen"
+  "custom": "aanpassen",
+  "global-prompt": "wereldwijde prompt woorden"
 }

@@ -672,5 +672,6 @@
   "custom-ai-prompt": "Benutzerdefinierte KI-Vorschläge",
   "available-variables": "Verfügbare Variablen",
   "enter-custom-prompt": "Beispiel: Analysieren Sie den Inhalt der folgenden Notiz {note}, erstellen Sie geeignete Tags basierend auf vorhandenen Tags {tags} und fassen Sie die Notizen in einem Kommentar zusammen.",
-  "custom": "Individuelle Anpassung"
+  "custom": "Individuelle Anpassung",
+  "global-prompt": "Globale Hinweiswörter"
 }

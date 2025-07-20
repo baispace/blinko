@@ -32,29 +32,12 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(112);
-  const blinko = RootStore.Get(BlinkoStore);
-  const isHideBlogImages = blinko.config.value?.isHideBlogImages;
-
-  const gradientStyle = useMemo(() => {
-    const hash = blinkoItem.title?.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0) ?? 0;
-    const index = Math.abs(hash) % gradientPairs.length;
-    const angle = Math.abs((hash * 137) % 360);
-    const [color1, color2] = gradientPairs[index] ?? ['#000', '#000'];
-    return {
-      background: `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`,
-      opacity: 0.8
-    };
-  }, [blinkoItem.title]);
-
-  // Extract cover image from markdown content if no explicit cover is provided
   const coverImage = useMemo(() => {
     if (blinkoItem.blogCover) return blinkoItem.blogCover;
     const coverMatch = blinkoItem.content?.match(/\!\[cover\]\(([^)]+)\)/);
     return coverMatch ? coverMatch[1] : null;
   }, [blinkoItem.blogCover, blinkoItem.content]);
-  
+
   useEffect(() => {
     const updateHeight = () => {
       if (contentRef.current) {
@@ -77,46 +60,19 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
 
   return (
     <div className={`flex items-start gap-2 mt-4 w-full mb-4`}>
-      {!isHideBlogImages ? (
-        coverImage ? (
-          <Image
-            src={coverImage}
-            alt='blog cover'
-            isZoomed
-            style={{
-              width: `${contentHeight}px`,
-              height: `${contentHeight}px`,
-            }}
-            className="object-cover rounded-lg shrink-0"
-          />
-        ) : blinkoItem.title && (
-          <div
-            className="shrink-0 flex items-center justify-center rounded-xl p-2 overflow-hidden"
-            style={{
-              width: `${contentHeight}px`,
-              height: `${contentHeight}px`,
-              ...gradientStyle
-            }}
-          >
-            <div className="text-md font-bold line-clamp-3 text-center text-white">
-              {blinkoItem.title.replace(/#/g, '').replace(/\*/g, '')}
-            </div>
-          </div>
-        )
-      ) : null}
       <div
         ref={contentRef}
         className='blog-content flex flex-col pr-2'
         style={{
-          width: isHideBlogImages ? '100%' : 'calc(100% - 112px - 0.5rem)'
+          width: '100%'
         }}
       >
-        {(isHideBlogImages || coverImage) && (
+        {(coverImage) && (
           <div className={`font-bold mb-1 line-clamp-2 ${isExpanded ? 'text-lg' : 'text-md'}`}>
             {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
           </div>
         )}
-        <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${!isHideBlogImages && coverImage ?
+        <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${coverImage ?
           `${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-2' : 'line-clamp-3'}` :
           'line-clamp-4'}`}
         >

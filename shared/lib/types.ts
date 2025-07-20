@@ -51,7 +51,6 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('maxHomePageWidth'),
   z.literal('isUseBlinkoHub'),
   z.literal('isHiddenNotification'),
-  z.literal('isHideBlogImages'),
   z.literal('hidePcEditor'),
 ]);
 
@@ -176,7 +175,6 @@ export const ZConfigSchema = z.object({
   isHiddenNotification: z.boolean().optional(),
   tavilyApiKey: z.any().optional(),
   tavilyMaxResult: z.any().optional(),
-  isHideBlogImages: z.boolean().optional(),
   isUseAiPostProcessing: z.boolean().optional(),
   aiCommentPrompt: z.string().optional(),
   aiTagsPrompt: z.string().optional(),

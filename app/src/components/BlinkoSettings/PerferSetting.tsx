@@ -133,20 +133,6 @@ export const PerferSetting = observer(() => {
 
     <Item
       leftContent={<div className="flex flex-col">
-        <div>{t('hide-blog-images')}</div>
-      </div>}
-      rightContent={<Switch
-        isSelected={blinko.config.value?.isHideBlogImages}
-        onChange={e => {
-          PromiseCall(api.config.update.mutate({
-            key: 'isHideBlogImages',
-            value: e.target.checked
-          }))
-        }}
-      />} />
-
-    <Item
-      leftContent={<div className="flex flex-col">
         <div>{t('max-home-page-width')}</div>
         <div className="text-xs text-default-400">{t('max-home-page-width-tip')}</div>
       </div>}

@@ -76,12 +76,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const axios = require('axios');
-            
             try {
-              const response = await axios.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                {
+              const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   model: 'qwen/qwen-2.5-72b-instruct',
                   messages: [
                     {
@@ -98,16 +100,11 @@ jobs:
                       请保持简洁，使用纯文本格式，不要使用Markdown语法，使用emoji表情符号增加可读性。`
                     }
                   ]
-                },
-                {
-                  headers: {
-                    'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
-                    'Content-Type': 'application/json'
-                  }
-                }
-              );
+                })
+              });
               
-              const message = response.data.choices[0].message.content.trim();
+              const data = await response.json();
+              const message = data.choices[0].message.content.trim();
               core.setOutput('message', message);
               console.log('Generated Chinese message');
             } catch (error) {
@@ -122,12 +119,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const axios = require('axios');
-            
             try {
-              const response = await axios.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                {
+              const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   model: 'qwen/qwen-2.5-72b-instruct',
                   messages: [
                     {
@@ -144,16 +143,11 @@ jobs:
                       Keep it concise, use plain text format, no Markdown syntax, and use emoji for better readability.`
                     }
                   ]
-                },
-                {
-                  headers: {
-                    'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
-                    'Content-Type': 'application/json'
-                  }
-                }
-              );
+                })
+              });
               
-              const message = response.data.choices[0].message.content.trim();
+              const data = await response.json();
+              const message = data.choices[0].message.content.trim();
               core.setOutput('message', message);
               console.log('Generated English message');
             } catch (error) {

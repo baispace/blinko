@@ -373,9 +373,11 @@ jobs:
     steps:
       - name: Send notification to Telegram group 1
         uses: appleboy/telegram-action@v0.1.1
+        continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_GROUP_ID_1 }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          debug: true
           message: |
             🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
             
@@ -387,9 +389,11 @@ jobs:
 
       - name: Send notification to Telegram group 2
         uses: appleboy/telegram-action@v0.1.1
+        continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_GROUP_ID_2 }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          debug: true
           message: |
             🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
             

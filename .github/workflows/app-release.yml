@@ -366,39 +366,129 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
+  # Process notification content with AI
+  process-notification:
+    runs-on: ubuntu-latest
+    needs: [set-version, generate-changelog]
+    outputs:
+      chinese_message: ${{ steps.generate_chinese.outputs.message }}
+      english_message: ${{ steps.generate_english.outputs.message }}
+    steps:
+      - name: Generate Chinese message using OpenRouter AI
+        id: generate_chinese
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const axios = require('axios');
+            
+            try {
+              const response = await axios.post(
+                'https://openrouter.ai/api/v1/chat/completions',
+                {
+                  model: 'qwen/qwen-2.5-72b-instruct',
+                  messages: [
+                    {
+                      role: 'user',
+                      content: `请将以下发布通知翻译成简体中文，并格式化为Telegram纯文本消息（不要使用Markdown）：
+                      
+                      版本: ${{ needs.set-version.outputs.version }}
+                      
+                      更新日志:
+                      ${{ needs.generate-changelog.outputs.changelog }}
+                      
+                      下载链接: https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}
+                      
+                      请保持简洁，使用纯文本格式，不要使用Markdown语法，使用emoji表情符号增加可读性。`
+                    }
+                  ]
+                },
+                {
+                  headers: {
+                    'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+              
+              const message = response.data.choices[0].message.content.trim();
+              core.setOutput('message', message);
+              console.log('Generated Chinese message');
+            } catch (error) {
+              console.error('Error calling OpenRouter API:', error.message);
+              // 如果API调用失败，使用默认消息
+              const defaultMessage = `🚀 Blinko ${{ needs.set-version.outputs.version }} 已发布！\n\n📝 更新日志：\n${{ needs.generate-changelog.outputs.changelog }}\n\n📥 下载链接：\nhttps://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}`;
+              core.setOutput('message', defaultMessage);
+            }
+      
+      - name: Generate English message using OpenRouter AI
+        id: generate_english
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const axios = require('axios');
+            
+            try {
+              const response = await axios.post(
+                'https://openrouter.ai/api/v1/chat/completions',
+                {
+                  model: 'qwen/qwen-2.5-72b-instruct',
+                  messages: [
+                    {
+                      role: 'user',
+                      content: `Format the following release notification as a plain text Telegram message (no Markdown):
+                      
+                      Version: ${{ needs.set-version.outputs.version }}
+                      
+                      Changelog:
+                      ${{ needs.generate-changelog.outputs.changelog }}
+                      
+                      Download: https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}
+                      
+                      Keep it concise, use plain text format, no Markdown syntax, and use emoji for better readability.`
+                    }
+                  ]
+                },
+                {
+                  headers: {
+                    'Authorization': 'Bearer ${{ secrets.OPENROUTER_API_KEY }}',
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+              
+              const message = response.data.choices[0].message.content.trim();
+              core.setOutput('message', message);
+              console.log('Generated English message');
+            } catch (error) {
+              console.error('Error calling OpenRouter API:', error.message);
+              // 如果API调用失败，使用默认消息
+              const defaultMessage = `🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!\n\n📝 Changelog:\n${{ needs.generate-changelog.outputs.changelog }}\n\n📥 Download:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}`;
+              core.setOutput('message', defaultMessage);
+            }
+
   # Send notification to Telegram groups
   notify-telegram:
     runs-on: ubuntu-latest
-    needs: [set-version, update-release, generate-changelog]
+    needs: [set-version, update-release, generate-changelog, process-notification]
     steps:
-      - name: Send notification to Telegram group 1
+      - name: Send notification to Telegram group 1 (Chinese)
         uses: appleboy/telegram-action@v0.1.1
         continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_GROUP_ID_1 }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: html
           debug: true
           message: |
-            🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
-            
-            📝 Changelog:
-            ${{ needs.generate-changelog.outputs.changelog }}
-            
-            📥 Download:
-            https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}
+            ${{ needs.process-notification.outputs.chinese_message }}
 
-      - name: Send notification to Telegram group 2
+      - name: Send notification to Telegram group 2 (English)
         uses: appleboy/telegram-action@v0.1.1
         continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_GROUP_ID_2 }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: html
           debug: true
           message: |
-            🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
-            
-            📝 Changelog:
-            ${{ needs.generate-changelog.outputs.changelog }}
-            
-            📥 Download:
-            https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }} 
+            ${{ needs.process-notification.outputs.english_message }} 

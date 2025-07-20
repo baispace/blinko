@@ -505,6 +505,8 @@ export class BlinkoStore implements Store {
       await this.archivedList.callNextPage({});
     } else if (currentPath === 'trash') {
       await this.trashList.callNextPage({});
+    } else if (currentPath === 'all') {
+      this.noteList.resetAndCall({});
     } else {
       await this.blinkoList.callNextPage({});
     }
@@ -548,6 +550,8 @@ export class BlinkoStore implements Store {
       this.archivedList.resetAndCall({});
     } else if (currentPath === 'trash') {
       this.trashList.resetAndCall({});
+    } else if (currentPath === 'all') {
+      this.noteList.resetAndCall({});
     } else {
       this.blinkoList.resetAndCall({});
     }

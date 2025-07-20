@@ -24,7 +24,8 @@ import i18n from '@/lib/i18n';
 import { Spinner } from '@heroui/react';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { BlinkoItem } from '.';
-
+import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { FallbackImage } from '../Common/FallbackImage';
 export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
 
 export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, withoutName, size = 20 }: {
@@ -42,7 +43,7 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
       {account ? (
         <>
           {account.image ? (
-            <Image src={blinkoItem?.originURL ? blinkoItem.originURL + account.image : account.image} radius="full" alt="" width={size} height={size} />
+            <FallbackImage src={blinkoItem?.originURL ? (blinkoItem.originURL + account.image) : getBlinkoEndpoint(account.image + `?token=${RootStore.Get(UserStore).tokenData.value?.token}`)} radius="full" alt="" width={size} height={size} />
           ) : (
             <Avatar
               size={size}
@@ -298,6 +299,28 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem 
   );
 });
 
+export const SimpleCommentList = observer(({ blinkoItem }: { blinkoItem: BlinkoItem }) => {
+  const { t } = useTranslation();
+  const commentList = blinkoItem.comments;
+
+  if (!commentList || commentList?.length === 0) {
+    return <div className="text-center text-gray-500 py-2">{t('no-comments-yet')}</div>;
+  }
+
+  return (
+    <div className="bg-sencondbackground rounded-lg px-1 py-2 mt-1">
+      {commentList.map((comment: Comment['items'][0]) => (
+        <div key={comment.id} className="pb-[2px] ">
+          <div className="ml-1 text-xs flex-1">
+            <span className='font-bold text-primary mr-1'> {comment.guestName || comment.account?.nickname || comment.account?.name || t('anonymous')}:</span>
+            {comment.content}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+});
+
 export const ShowCommentDialog = async (noteId: number) => {
   const blinko = RootStore.Get(BlinkoStore);
   const dialog = RootStore.Get(DialogStore);
@@ -365,8 +388,17 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
 
 export const CommentCount = observer(({ blinkoItem }: { blinkoItem: Note }) => {
   if (blinkoItem?._count?.comments == 0) return null;
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    RootStore.Get(DialogStore).setData({
+      isOpen: true,
+      size: 'lg',
+      title: `${i18n.t('comment')} ${blinkoItem._count?.comments ? `(${blinkoItem._count.comments})` : ''}`,
+      content: <CommentDialog blinkoItem={blinkoItem} />
+    });
+  };
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 hover:bg-background rounded-full px-1 py-0.5 cursor-pointer" onClick={handleClick}>
       <CommentButton blinkoItem={blinkoItem} alwaysShow={true} />
       <span className="text-sm text-ignore">{blinkoItem?._count?.comments}</span>
     </div>

@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 import { helper, TagTreeNode } from '@shared/lib/helper';
 import { _ } from '@shared/lib/lodash';
 import { NoteType } from '../../shared/lib/types';
-import { attachmentsSchema, historySchema, notesSchema, tagSchema, tagsToNoteSchema } from '@shared/lib/prismaZodType';
+import { attachmentsSchema, historySchema, notesSchema, tagSchema, tagsToNoteSchema, commentsSchema } from '@shared/lib/prismaZodType';
 import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
 import { AiService } from '@server/aiServer';
@@ -85,6 +85,7 @@ export const noteRouter = router({
                 }),
               )
               .optional(),
+            comments: z.any().optional(),
             _count: z.object({
               comments: z.number(),
               histories: z.number(),
@@ -191,6 +192,17 @@ export const noteRouter = router({
           attachments: {
             orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
           },
+          comments: {
+            include: {
+              account: {
+                select: {
+                  image: true,
+                  nickname: true,
+                  name: true,
+                },
+              },
+            },
+          },
           references: {
             select: {
               toNoteId: true,
@@ -221,7 +233,7 @@ export const noteRouter = router({
               histories: true,
             },
           },
-          internalShares: true, 
+          internalShares: true,
         },
       });
 

@@ -633,5 +633,6 @@
   "available-variables": "მართვადი ცვლადebi",
   "enter-custom-prompt": "მაგალითი: ანალიოᲖ შᳮㄔ下面的笔记内容{note}，基于现有标签{tags}生成合适标签，并总结笔记添加至评论",
   "custom": "定制",
-  "global-prompt": "გლობალური მონიშვნო នាពាք"
+  "global-prompt": "გლობალური მონიშვნო នាពាք",
+  "hide-comments-in-card": "კომენტარი დამალო  ბარათ-ka"
 }

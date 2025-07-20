@@ -665,5 +665,6 @@
   "available-variables": "Dostępne zmienne",
   "enter-custom-prompt": "Przykład: Analizując zawartość poniższych notatek {note}, na podstawie istniejących tagów {tags} generuj odpowiednie tagi i podsumuj notatki dodając komentarz.",
   "custom": "niestandardowy",
-  "global-prompt": "Globalny komunikat"
+  "global-prompt": "Globalny komunikat",
+  "hide-comments-in-card": "Ukryć komentarze w karcie"
 }

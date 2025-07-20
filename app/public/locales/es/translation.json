@@ -674,5 +674,6 @@
   "available-variables": "Variables disponibles",
   "enter-custom-prompt": "Ejemplo: Analiza el contenido de la siguiente nota {note}, genera etiquetas apropiadas basadas en las existentes {tags} y resume la nota para añadirla como comentario.",
   "custom": "Personalizado",
-  "global-prompt": "Palabras de advertencia global"
+  "global-prompt": "Palabras de advertencia global",
+  "hide-comments-in-card": "Ocultar comentarios en la tarjeta"
 }

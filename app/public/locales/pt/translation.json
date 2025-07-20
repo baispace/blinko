@@ -668,5 +668,6 @@
   "available-variables": "Variáveis disponíveis",
   "enter-custom-prompt": "Exemplo: Analise o conteúdo da nota {note}, gere etiquetas apropriadas com base nas existentes {tags} e resuma a nota para adicionar ao comentário.",
   "custom": "Personalizado",
-  "global-prompt": "Palavra de aviso global"
+  "global-prompt": "Palavra de aviso global",
+  "hide-comments-in-card": "Ocultar comentários no cartão"
 }

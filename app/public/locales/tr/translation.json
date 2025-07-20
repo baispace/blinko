@@ -674,5 +674,6 @@
   "available-variables": "Kullanılabilir değişkenler",
   "enter-custom-prompt": "Örnek: Aşağıdaki not içeriğini {note} analiz edin, mevcut etiketler {tags} üzerinden uygun etiketler oluşturun ve notları yoruma ekleyerek özetleyin.",
   "custom": "Özel",
-  "global-prompt": "Genel ipucu kelimesi"
+  "global-prompt": "Genel ipucu kelimesi",
+  "hide-comments-in-card": "Kartta yorumları gizle"
 }

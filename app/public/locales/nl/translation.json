@@ -680,5 +680,6 @@
   "available-variables": "Bruikbare variabelen",
   "enter-custom-prompt": "Voorbeeld: Analyseer de volgende notitie-inhoud {note}, genereer geschikte labels op basis van bestaande labels {tags} en voeg een samenvatting van de notities toe aan de opmerkingen.",
   "custom": "aanpassen",
-  "global-prompt": "wereldwijde prompt woorden"
+  "global-prompt": "wereldwijde prompt woorden",
+  "hide-comments-in-card": "Verberg opmerkingen in de kaart"
 }

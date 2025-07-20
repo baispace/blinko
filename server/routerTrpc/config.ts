@@ -68,7 +68,7 @@ export const configRouter = router({
       const userId = Number(ctx.id)
       const { key, value } = input
       const isUserPreferConfig = ZUserPerferConfigKey.safeParse(key).success;
-      
+      console.log('isUserPreferConfig', isUserPreferConfig)
       let updateResult;
       
       if (isUserPreferConfig) {

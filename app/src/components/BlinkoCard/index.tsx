@@ -16,10 +16,11 @@ import { CardHeader } from "./cardHeader";
 import { CardFooter } from "./cardFooter";
 import { useHistoryBack } from "@/lib/hooks";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
-import { AvatarAccount } from "./commentButton";
+import { AvatarAccount, SimpleCommentList } from "./commentButton";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from "@/store/plugin/pluginRender";
 import { useLocation } from "react-router-dom";
+
 
 export type BlinkoItem = Note & {
   isBlog?: boolean;
@@ -156,6 +157,9 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                   ))}
 
                 <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                {!blinko.config.value?.isHideCommentInCard && blinkoItem.comments && blinkoItem.comments.length > 0 && (
+                  <SimpleCommentList blinkoItem={blinkoItem} />
+                )}
 
                 {isExpanded && (
                   <>

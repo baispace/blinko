@@ -107,6 +107,17 @@ export const PerferSetting = observer(() => {
         }}
       />} />
 
+    <Item
+      leftContent={<>{t('hide-comments-in-card')}</>}
+      rightContent={<Switch
+        isSelected={blinko.config.value?.isHideCommentInCard}
+        onChange={e => {
+          PromiseCall(api.config.update.mutate({
+            key: 'isHideCommentInCard',
+            value: e.target.checked
+          }))
+        }}
+      />} />
 
     <Item
       leftContent={<>{t('order-by-create-time')}</>}

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from 'next-themes';
 import { Inspector, InspectParams } from 'react-dev-inspector';
 import { HeroUIProvider } from '@heroui/react';
@@ -16,6 +16,7 @@ import { PluginManagerStore } from '@/store/plugin/pluginManagerStore';
 import { RootStore } from '@/store';
 import { UserStore } from '@/store/user';
 import { getTokenData, setNavigate } from '@/components/Auth/auth-client';
+import { BlinkoStore } from '@/store/blinkoStore';
 
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
@@ -33,6 +34,37 @@ const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
 const AiSharePage = lazy(() => import('./pages/ai-share'));
+
+const HomeRedirect = () => {
+  const navigate = useNavigate();
+  const blinko = RootStore.Get(BlinkoStore);
+  const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const redirectToDefaultPage = async () => {
+      await blinko.config.call();
+      const defaultHomePage = blinko.config.value?.defaultHomePage;
+      const currentPath = searchParams.get('path');
+      
+      if (currentPath || !defaultHomePage || defaultHomePage === 'blinko') {
+        setLoading(false);
+        return;
+      }
+      
+      navigate(`/?path=${defaultHomePage}`, { replace: true });
+    };
+    
+    redirectToDefaultPage();
+  }, [navigate, searchParams]);
+  
+  if (loading) {
+    return <LoadingPage />;
+  }
+  
+  return <HomePage />;
+};
+
 const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,7 +108,7 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingPage />}>
       <Routes>
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/hub" element={<ProtectedRoute><HubPage /></ProtectedRoute>} />

@@ -675,5 +675,7 @@
   "enter-custom-prompt": "示例：分析以下筆記內容{note}，基於現有標籤{tags}生成合適標籤，並總結筆記添加至評論",
   "custom": "自訂",
   "global-prompt": "全局提示詞",
-  "hide-comments-in-card": "在卡片中隱藏評論"
+  "hide-comments-in-card": "在卡片中隱藏評論",
+  "default-home-page": "預設首頁",
+  "select-default-home-page": "請選擇預設首頁"
 }

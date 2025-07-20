@@ -52,6 +52,7 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('isUseBlinkoHub'),
   z.literal('isHiddenNotification'),
   z.literal('hidePcEditor'),
+  z.literal('defaultHomePage'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -192,6 +193,7 @@ export const ZConfigSchema = z.object({
   rerankUseEembbingEndpoint: z.boolean().optional(),
   hidePcEditor: z.boolean().optional(),
   globalPrompt: z.string().optional(),
+  defaultHomePage: z.string().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

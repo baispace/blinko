@@ -297,9 +297,9 @@ export class AiModelFactory {
         tools: { ...tools?.tools, webSearchTool },
       };
     }
-    
+
     const globalConfig = await AiModelFactory.globalConfig();
-    const defaultInstructions = 
+    const defaultInstructions =
       `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
       'You are a versatile AI assistant who can:\n' +
       '1. Answer questions and explain concepts\n' +
@@ -311,10 +311,10 @@ export class AiModelFactory {
       "7. When using 'search-blinko-tool', The entire content of the note should not be returned unless specifically specified by the user " +
       "Always respond in the user's language.\n" +
       'Maintain a friendly and professional conversational tone.';
-    
+
     const BlinkoAgent = new Agent({
       name: 'Blinko Chat Agent',
-      instructions: globalConfig.globalPrompt || defaultInstructions,
+      instructions: `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt || defaultInstructions,
       model: provider?.LLM!,
       ...tools,
     });

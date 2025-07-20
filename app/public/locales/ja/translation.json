@@ -675,5 +675,7 @@
   "enter-custom-prompt": "例：以下のメモ内容{note}を分析し、既存のタグ{tags}に基づいて適切なタグを生成し、コメントにメモの要約を追加します。",
   "custom": "カスタマイズ",
   "global-prompt": "グローバルプロンプトワード",
-  "hide-comments-in-card": "カードにコメントを隠す"
+  "hide-comments-in-card": "カードにコメントを隠す",
+  "default-home-page": "デフォルトのホームページ",
+  "select-default-home-page": "デフォルトのホームページを選択してください"
 }

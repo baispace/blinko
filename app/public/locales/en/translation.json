@@ -706,5 +706,7 @@
   "enter-custom-prompt": "Example: Analyze the following note content {note}, generate appropriate tags based on existing tags {tags}, and summarize the note to add to comments.",
   "custom": "customization",
   "global-prompt": "Global prompt word",
-  "hide-comments-in-card": "Hide comments in the card"
+  "hide-comments-in-card": "Hide comments in the card",
+  "default-home-page": "Default home page",
+  "select-default-home-page": "Please select the default home page."
 }

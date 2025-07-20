@@ -675,5 +675,7 @@
   "enter-custom-prompt": "Örnek: Aşağıdaki not içeriğini {note} analiz edin, mevcut etiketler {tags} üzerinden uygun etiketler oluşturun ve notları yoruma ekleyerek özetleyin.",
   "custom": "Özel",
   "global-prompt": "Genel ipucu kelimesi",
-  "hide-comments-in-card": "Kartta yorumları gizle"
+  "hide-comments-in-card": "Kartta yorumları gizle",
+  "default-home-page": "Varsayılan ana sayfa",
+  "select-default-home-page": "Lütfen varsayılan ana sayfayı seçin."
 }

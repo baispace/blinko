@@ -674,5 +674,6 @@
   "enter-custom-prompt": "Beispiel: Analysieren Sie den Inhalt der folgenden Notiz {note}, erstellen Sie geeignete Tags basierend auf vorhandenen Tags {tags} und fassen Sie die Notizen in einem Kommentar zusammen.",
   "custom": "Individuelle Anpassung",
   "global-prompt": "Globale Hinweiswörter",
-  "hide-comments-in-card": "Kommentare in der Karte verstecken"
+  "hide-comments-in-card": "Kommentare in der Karte verstecken",
+  "select-default-home-page": "Bitte wählen Sie die Standard-Startseite aus."
 }

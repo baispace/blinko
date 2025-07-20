@@ -722,5 +722,7 @@
   "enter-custom-prompt": "示例：分析以下笔记内容{note}，基于现有标签{tags}生成合适标签，并总结笔记添加至评论",
   "custom": "自定义",
   "global-prompt": "全局提示词",
-  "hide-comments-in-card": "在卡片中隐藏评论"
+  "hide-comments-in-card": "在卡片中隐藏评论",
+  "default-home-page": "默认首页",
+  "select-default-home-page": "请选择默认首页"
 }

@@ -14,11 +14,13 @@ import { useMediaQuery } from "usehooks-ts";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { GradientBackground } from "../Common/GradientBackground";
 import { UserStore } from "@/store/user";
+import { BaseStore } from "@/store/baseStore";
 
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
+  const base = RootStore.Get(BaseStore)
   const [textLength, setTextLength] = useState(blinko.config.value?.textFoldLength?.toString() || '500');
   const [maxHomePageWidth, setMaxHomePageWidth] = useState(blinko.config.value?.maxHomePageWidth?.toString() || '0');
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
@@ -82,6 +84,27 @@ export const PerferSetting = observer(() => {
           value: value
         }))
       }} />} />
+      
+    <Item
+      leftContent={<>{t('default-home-page')}</>}
+      rightContent={
+        <SelectDropdown
+          value={blinko.config.value?.defaultHomePage}
+          placeholder={t('select-default-home-page')}
+          options={base.routerList
+            .filter(route => route.href === '/' || route.href.startsWith('/?path='))
+            .map(route => ({
+              key: route.href === '/' ? 'blinko' : route.href.split('=')[1],
+              label: t(route.title)
+            }))}
+          onChange={async (value) => {
+            await PromiseCall(api.config.update.mutate({
+              key: 'defaultHomePage',
+              value: value
+            }))
+          }}
+        />
+      } />
 
     <Item
       leftContent={<>{t('hide-notification')}</>}
@@ -299,6 +322,7 @@ export const PerferSetting = observer(() => {
         />
       } />
 
+
     <Item
       leftContent={<>{t('page-size')}</>}
       rightContent={
@@ -368,28 +392,28 @@ export const PerferSetting = observer(() => {
 
     {
       user.isSuperAdmin && (
-      <Item
-        type={isPc ? 'row' : 'col'}
-        leftContent={<div className="flex flex-col">
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={<div className="flex flex-col">
 
 
-          <div>{t('custom-background-url')}</div>
-          <div className="text-xs text-default-400">{t('custom-bg-tip')}</div>
-        </div>}
-        rightContent={<Input
-          className="w-full md:w-[400px]"
-          placeholder="https://www.shadergradient.co/customize?"
-          type="text"
-          value={customBackgroundUrl}
-          onChange={e => {
-            setCustomBackgroundUrl(e.target.value)
-          }}
-          onBlur={e => {
-            PromiseCall(api.config.update.mutate({
-              key: 'customBackgroundUrl',
-              value: customBackgroundUrl
-            }), { autoAlert: false })
-          }} />} />
+            <div>{t('custom-background-url')}</div>
+            <div className="text-xs text-default-400">{t('custom-bg-tip')}</div>
+          </div>}
+          rightContent={<Input
+            className="w-full md:w-[400px]"
+            placeholder="https://www.shadergradient.co/customize?"
+            type="text"
+            value={customBackgroundUrl}
+            onChange={e => {
+              setCustomBackgroundUrl(e.target.value)
+            }}
+            onBlur={e => {
+              PromiseCall(api.config.update.mutate({
+                key: 'customBackgroundUrl',
+                value: customBackgroundUrl
+              }), { autoAlert: false })
+            }} />} />
       )
     }
   </CollapsibleCard>

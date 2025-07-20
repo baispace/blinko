@@ -568,7 +568,7 @@ export const AiSetting = observer(() => {
                   { autoAlert: false },
                 );
               }}
-              placeholder={`Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}
+              placeholder={`
 You are a versatile AI assistant who can:
 1. Answer questions and explain concepts
 2. Provide suggestions and analysis

@@ -97,7 +97,8 @@ jobs:
                       
                       下载链接: https://github.com/${{ github.repository }}/releases/tag/${{ needs.get-latest-release.outputs.version }}
                       
-                      请保持简洁，使用纯文本格式，不要使用Markdown语法，使用emoji表情符号增加可读性。`
+                      请保持简洁，使用纯文本格式，不要使用Markdown语法，使用emoji表情符号增加可读性。
+                      重要：除了下载链接外，不要包含任何其他链接。如果更新日志中包含其他链接，请将它们去除。`
                     }
                   ]
                 })
@@ -140,7 +141,8 @@ jobs:
                       
                       Download: https://github.com/${{ github.repository }}/releases/tag/${{ needs.get-latest-release.outputs.version }}
                       
-                      Keep it concise, use plain text format, no Markdown syntax, and use emoji for better readability.`
+                      Keep it concise, use plain text format, no Markdown syntax, and use emoji for better readability.
+                      IMPORTANT: Only include the download link, remove all other links. If the changelog contains other links,remove them.`
                     }
                   ]
                 })

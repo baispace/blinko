@@ -365,3 +365,36 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+
+  # Send notification to Telegram groups
+  notify-telegram:
+    runs-on: ubuntu-latest
+    needs: [set-version, update-release, generate-changelog]
+    steps:
+      - name: Send notification to Telegram group 1
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_GROUP_ID_1 }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
+            
+            📝 Changelog:
+            ${{ needs.generate-changelog.outputs.changelog }}
+            
+            📥 Download:
+            https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}
+
+      - name: Send notification to Telegram group 2
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_GROUP_ID_2 }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!
+            
+            📝 Changelog:
+            ${{ needs.generate-changelog.outputs.changelog }}
+            
+            📥 Download:
+            https://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }} 

@@ -72,8 +72,6 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           debug: true
           message: |
-            🧪 TEST NOTIFICATION 🧪
-            
             ${{ github.event.inputs.custom_message != '' && github.event.inputs.custom_message || '' }}
             
             🚀 Blinko ${{ needs.get-latest-release.outputs.version }} has been released!

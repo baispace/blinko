@@ -377,7 +377,9 @@ export class BlinkoStore implements Store {
       return this.getFilteredNotes({
         page,
         size,
-        filterConfig: {},
+        filterConfig: {
+          isArchived: false,
+        },
         offlineFilter: () => {
           return true;
         }

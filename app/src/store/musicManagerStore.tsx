@@ -2,6 +2,8 @@ import { makeAutoObservable } from 'mobx';
 import { Store } from './standard/base';
 import { FileType } from '@/components/Common/Editor/type';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { RootStore } from './root';
+import { UserStore } from './user';
 
 export interface AudioMetadata {
   coverUrl?: string;
@@ -21,14 +23,14 @@ export class MusicManagerStore implements Store {
   sid = 'MusicManagerStore';
   private static instance: MusicManagerStore;
   private static audioInstance: HTMLAudioElement | null = null;
-  
+
   constructor() {
     makeAutoObservable(this);
     if (MusicManagerStore.instance) {
       return MusicManagerStore.instance;
     }
     MusicManagerStore.instance = this;
-    
+
     if (!MusicManagerStore.audioInstance) {
       const audio = new Audio();
       this.initAudio(audio);
@@ -58,13 +60,13 @@ export class MusicManagerStore implements Store {
   }
 
   get currentTrack(): PlaylistTrack | undefined {
-    return this.playlist.find(track => 
+    return this.playlist.find(track =>
       (track.metadata?.trackName || track.file.name) === this._currentTrackName
     );
   }
 
   get currentIndex(): number {
-    return this.playlist.findIndex(track => 
+    return this.playlist.findIndex(track =>
       (track.metadata?.trackName || track.file.name) === this._currentTrackName
     );
   }
@@ -78,7 +80,7 @@ export class MusicManagerStore implements Store {
       const currentSrc = MusicManagerStore.audioInstance.src;
       const currentTime = MusicManagerStore.audioInstance.currentTime;
       const wasPlaying = !MusicManagerStore.audioInstance.paused;
-      
+
       this.audioElement = MusicManagerStore.audioInstance;
     } else {
       this.audioElement = audio;
@@ -128,8 +130,8 @@ export class MusicManagerStore implements Store {
 
   addToPlaylist(file: FileType, metadata?: AudioMetadata, playNow: boolean = false) {
     const trackName = metadata?.trackName || file.name;
-    
-    const exists = this.playlist.some(track => 
+
+    const exists = this.playlist.some(track =>
       (track.metadata?.trackName || track.file.name) === trackName
     );
 
@@ -139,7 +141,7 @@ export class MusicManagerStore implements Store {
         metadata,
         addedAt: Date.now()
       };
-      
+
       this._playlist = [...this.playlist, newTrack];
       this.showMiniPlayer = true;
     }
@@ -158,22 +160,22 @@ export class MusicManagerStore implements Store {
 
     const uniqueTracks = this.mergePlaylist(this.playlist, newTracks);
     this._playlist = uniqueTracks;
-    
+
     const currentTrackName = this._currentTrackName;
-    const stillExists = uniqueTracks.some(track => 
+    const stillExists = uniqueTracks.some(track =>
       (track.metadata?.trackName || track.file.name) === currentTrackName
     );
-    
+
     if (!stillExists) {
       this._currentTrackName = '';
     }
-    
+
     this.showMiniPlayer = true;
   }
 
   private mergePlaylist(oldTracks: PlaylistTrack[], newTracks: PlaylistTrack[]): PlaylistTrack[] {
     const trackMap = new Map<string, PlaylistTrack>();
-    
+
     oldTracks.forEach(track => {
       const key = track.metadata?.trackName || track.file.name;
       trackMap.set(key, track);
@@ -190,7 +192,7 @@ export class MusicManagerStore implements Store {
   }
 
   removeFromPlaylist(trackName: string) {
-    const newPlaylist = this.playlist.filter(track => 
+    const newPlaylist = this.playlist.filter(track =>
       (track.metadata?.trackName || track.file.name) !== trackName
     );
     this._playlist = newPlaylist;
@@ -205,29 +207,32 @@ export class MusicManagerStore implements Store {
   }
 
   async playTrackByName(trackName: string) {
-    const track = this.playlist.find(t => 
+    const track = this.playlist.find(t =>
       (t.metadata?.trackName || t.file.name) === trackName
     );
-    
+
     if (!track || !this.audioElement) return;
-    
+
     this.audioElement.pause();
     this.isPlaying = false;
     this.duration = 0;
     this.currentTime = 0;
-    
+
     this._currentTrackName = trackName;
-    
+
     if (track.file.preview) {
       try {
-        this.audioElement.src = getBlinkoEndpoint(track.file.preview);
-        
+        let audioUrl = getBlinkoEndpoint(track.file.preview);
+        audioUrl = `${audioUrl}?token=${RootStore.Get(UserStore).tokenData?.value?.token}`;
+
+        this.audioElement.src = audioUrl;
+
         try {
           await new Promise<void>((resolve, reject) => {
             const timeoutId = setTimeout(() => {
               resolve();
             }, 2000);
-            
+
             this.audioElement!.addEventListener('loadedmetadata', () => {
               clearTimeout(timeoutId);
               if (this.audioElement && !isNaN(this.audioElement.duration) && isFinite(this.audioElement.duration)) {
@@ -235,7 +240,7 @@ export class MusicManagerStore implements Store {
               }
               resolve();
             }, { once: true });
-            
+
             this.audioElement!.addEventListener('error', (e) => {
               clearTimeout(timeoutId);
               reject(e);
@@ -244,7 +249,7 @@ export class MusicManagerStore implements Store {
         } catch (error) {
           console.error('Failed to load audio metadata:', error);
         }
-        
+
         await this.audioElement.play();
         this.isPlaying = true;
         this.showMiniPlayer = true;
@@ -268,13 +273,13 @@ export class MusicManagerStore implements Store {
         if (!this.audioElement.src) {
           return;
         }
-        
+
         if (this.audioElement.readyState < 2) {
           await new Promise((resolve) => {
             this.audioElement!.addEventListener('canplay', resolve, { once: true });
           });
         }
-        
+
         await this.audioElement.play();
         this.isPlaying = true;
       }

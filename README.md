@@ -47,7 +47,7 @@ Blinko is an innovative open-source project designed for individuals who want to
 
 - 🔓**Open for Collaboration** :As an open-source project, Blinko invites contributions from the community. All code is transparent and available on GitHub, fostering a spirit of collaboration and constant improvement.
 
-## 📦Start with Docker Compose in seconds
+## 📦Start with Docker in seconds
 
 ```bash
 curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | bash

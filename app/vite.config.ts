@@ -10,20 +10,22 @@ export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
-    VitePWA({
-      devOptions: {
-        enabled: true
-      },
-      injectRegister: 'auto',
-      disable: process.env.NODE_ENV === 'development',
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'logo.png', 'logo.svg'],
-      manifest: false,
-      workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/api\/auth\/.*/],
-      }
-    })
+    ...(!process.env.DISABLE_PWA ? [
+      VitePWA({
+        devOptions: {
+          enabled: true
+        },
+        injectRegister: 'auto',
+        // disable: process.env.NODE_ENV === 'development',
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'logo.png', 'logo.svg'],
+        manifest: false,
+        workbox: {
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          navigateFallbackDenylist: [/^\/api\/auth\/.*/],
+        }
+      })
+    ] : [])
   ],
   resolve: {
     alias: {

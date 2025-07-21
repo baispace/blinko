@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cd ../server && bun run dev",
     "build": "bun run build:web",
+    "build:no-pwa": "cross-env DISABLE_PWA=true bun run build:web",
     "icon": "bun run tauri icon",
     "build:iconify:icons": "bun run src/components/Common/Iconify/buildIcons.js",
     "build:web": "vite build",
@@ -93,6 +94,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "tailwindcss": "^4.1.4",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.6.2",

@@ -27,3 +27,4 @@ dist
 keystore.properties
 !**/lute.min.js
 .blinko
+dev-dist

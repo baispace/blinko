@@ -369,7 +369,6 @@ export class UserStore implements Store {
 
     useEffect(() => {
       this.initializeSettings(setTheme, i18n);
-
     }, []);
 
     useEffect(() => {

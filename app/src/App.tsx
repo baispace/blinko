@@ -37,6 +37,7 @@ const AiSharePage = lazy(() => import('./pages/ai-share'));
 
 const HomeRedirect = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const blinko = RootStore.Get(BlinkoStore);
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -46,8 +47,8 @@ const HomeRedirect = () => {
       await blinko.config.call();
       const defaultHomePage = blinko.config.value?.defaultHomePage;
       const currentPath = searchParams.get('path');
-      
-      if (currentPath || !defaultHomePage || defaultHomePage === 'blinko') {
+      const isDirectNavigation = location.key === 'default';
+      if (currentPath || !defaultHomePage || defaultHomePage === 'blinko' || !isDirectNavigation) {
         setLoading(false);
         return;
       }
@@ -56,7 +57,7 @@ const HomeRedirect = () => {
     };
     
     redirectToDefaultPage();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, location]);
   
   if (loading) {
     return <LoadingPage />;

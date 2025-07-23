@@ -1,5 +1,5 @@
 import { getGlobalConfig } from '@server/routerTrpc/config';
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { tavily } from '@tavily/core';
 import { z } from 'zod';
 export const webExtra = createTool({

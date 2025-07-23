@@ -1,6 +1,6 @@
 import { userCaller } from '@server/routerTrpc/_app';
 import { NoteType } from '@shared/lib/types';
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 export const searchBlinkoTool = createTool({

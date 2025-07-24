@@ -1,5 +1,5 @@
 import { userCaller } from '@server/routerTrpc/_app';
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 export const createCommentTool = createTool({

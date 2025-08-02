@@ -9,7 +9,6 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 interface BlogContentProps {
   blinkoItem: Note & {
     isBlog?: boolean;
-    blogCover?: string;
     title?: string;
   };
   isExpanded?: boolean;
@@ -32,11 +31,6 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(112);
-  const coverImage = useMemo(() => {
-    if (blinkoItem.blogCover) return blinkoItem.blogCover;
-    const coverMatch = blinkoItem.content?.match(/\!\[cover\]\(([^)]+)\)/);
-    return coverMatch ? coverMatch[1] : null;
-  }, [blinkoItem.blogCover, blinkoItem.content]);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -67,11 +61,9 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
           width: '100%'
         }}
       >
-        {(coverImage) && (
-          <div className={`font-bold mb-1 line-clamp-2 ${isExpanded ? 'text-lg' : 'text-md'}`}>
-            {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
-          </div>
-        )}
+        <div className={`font-bold mb-1 line-clamp-2 ${isExpanded ? 'text-lg' : 'text-md'}`}>
+          {blinkoItem.title?.replace(/#/g, '').replace(/\*/g, '')}
+        </div>
         <div className={`text-desc flex-1 ${isExpanded ? 'text-sm' : 'text-sm'} ${coverImage ?
           `${(!!blinkoItem?.tags?.length && blinkoItem?.tags?.length > 0) ? 'line-clamp-2' : 'line-clamp-3'}` :
           'line-clamp-4'}`}

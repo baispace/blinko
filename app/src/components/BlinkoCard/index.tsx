@@ -24,7 +24,6 @@ import { useLocation } from "react-router-dom";
 
 export type BlinkoItem = Note & {
   isBlog?: boolean;
-  blogCover?: string;
   title?: string;
   originURL?: string;
 }
@@ -70,9 +69,6 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     if (helper.regex.isContainHashTag.test(line)) return false;
     return true;
   }) || '';
-  blinkoItem.blogCover = blinkoItem.attachments?.find(i =>
-    i.type.includes('image') || helper.getFileType(i.type, i.path) == 'image'
-  )?.path ?? '';
 
   const handleExpand = () => {
     if (blinkoItem.isBlog) {

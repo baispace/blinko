@@ -106,15 +106,17 @@ export const AiSetting = observer(() => {
       try {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
-        console.log(blinko.config.value?.aiApiEndpoint,'xxx')
+        console.log(blinko.config.value?.aiApiEndpoint, 'xxx')
         if (!blinko.config.value?.aiApiEndpoint) {
           RootStore.Get(ToastPlugin).error(t('please-set-the-api-endpoint'));
           return;
         }
-        const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
+
+        console.log(blinko.config.value?.aiModelProvider, ' blinko.config.value?.aiModelProvider')
         switch (provider) {
-          case 'Ollama':{
+          case 'Ollama': {
             console.log(blinko.config.value?.aiApiEndpoint);
+            const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
             let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
             modelList = data.models.map(model => ({
               label: model.name,
@@ -125,7 +127,7 @@ export const AiSetting = observer(() => {
             this.rerankModelSelect.save(modelList);
             break;
           }
-          case 'AzureOpenAI':{
+          case 'AzureOpenAI': {
             if (!blinko.config.value?.aiApiKey) {
               RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
               return;
@@ -133,10 +135,10 @@ export const AiSetting = observer(() => {
             console.log("target URL: ", `${blinko.config.value?.aiApiEndpoint}?api-version=2022-12-01`)
             //use old Azure OpenAI API to retrieve deployment list
             let { data } = await axios.get(`${blinko.config.value?.aiApiEndpoint}?api-version=2022-12-01`, {
-                headers: {
-                  'api-key': blinko.config.value?.aiApiKey
-                }
-              });
+              headers: {
+                'api-key': blinko.config.value?.aiApiKey
+              }
+            });
             modelList = data.data.map(deployment => ({
               label: deployment.id,
               value: deployment.id
@@ -146,8 +148,114 @@ export const AiSetting = observer(() => {
             this.rerankModelSelect.save(modelList);
             break;
           }
-          default:{
+          case 'Gemini': {
+            if (!blinko.config.value?.aiApiKey) {
+              RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
+              return;
+            }
             try {
+              let { data } = await axios.get(`${'https://generativelanguage.googleapis.com/v1beta'}/models?key=${blinko.config.value?.aiApiKey}`);
+              modelList = data.models
+                .map(model => ({
+                  label: model.displayName || model.name.replace('models/', ''),
+                  value: model.name.replace('models/', '')
+                }));
+              this.aiModelSelect.save(modelList);
+              this.embeddingModelSelect.save(modelList);
+              this.rerankModelSelect.save(modelList);
+            } catch (error) {
+              RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            }
+            break;
+          }
+          case 'Grok': {
+            if (!blinko.config.value?.aiApiKey) {
+              RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
+              return;
+            }
+            try {
+              let { data } = await axios.get(`${'https://api.x.ai/v1'}/models`, {
+                headers: {
+                  'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
+                }
+              });
+              modelList = data.data.map(model => ({
+                label: model.id,
+                value: model.id
+              }));
+              this.aiModelSelect.save(modelList);
+              this.embeddingModelSelect.save(modelList);
+              this.rerankModelSelect.save(modelList);
+            } catch (error) {
+              RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            }
+            break;
+          }
+          case 'DeepSeek': {
+            if (!blinko.config.value?.aiApiKey) {
+              RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
+              return;
+            }
+            try {
+              let { data } = await axios.get(`${'https://api.deepseek.com/v1'}/models`, {
+                headers: {
+                  'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
+                }
+              });
+              modelList = data.data.map(model => ({
+                label: model.id,
+                value: model.id
+              }));
+              this.aiModelSelect.save(modelList);
+              this.embeddingModelSelect.save(modelList);
+              this.rerankModelSelect.save(modelList);
+            } catch (error) {
+              RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            }
+            break;
+          }
+          case 'Anthropic': {
+            // Anthropic API doesn't provide a models endpoint, so we use predefined models
+            modelList = [
+              { label: 'claude-3-5-sonnet-20241022', value: 'claude-3-5-sonnet-20241022' },
+              { label: 'claude-3-5-sonnet-20240620', value: 'claude-3-5-sonnet-20240620' },
+              { label: 'claude-3-5-haiku-20241022', value: 'claude-3-5-haiku-20241022' },
+              { label: 'claude-3-opus-20240229', value: 'claude-3-opus-20240229' },
+              { label: 'claude-3-sonnet-20240229', value: 'claude-3-sonnet-20240229' },
+              { label: 'claude-3-haiku-20240307', value: 'claude-3-haiku-20240307' }
+            ];
+            this.aiModelSelect.save(modelList);
+            // Anthropic doesn't provide embedding models, so we keep existing ones
+            this.rerankModelSelect.save(modelList);
+            break;
+          }
+          case 'OpenRouter': {
+            if (!blinko.config.value?.aiApiKey) {
+              RootStore.Get(ToastPlugin).error(t('please-set-the-api-key'));
+              return;
+            }
+            try {
+              let { data } = await axios.get(`${'https://openrouter.ai/api/v1'}/models`, {
+                headers: {
+                  'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
+                }
+              });
+              modelList = data.data.map(model => ({
+                label: model.id,
+                value: model.id
+              }));
+              this.aiModelSelect.save(modelList);
+              this.embeddingModelSelect.save(modelList);
+              this.rerankModelSelect.save(modelList);
+            } catch (error) {
+              RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+            }
+            break;
+          }
+
+          default: {
+            try {
+              const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
               let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com/v1'}/models`, {
                 headers: {
                   'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
@@ -339,85 +447,85 @@ export const AiSetting = observer(() => {
         />
 
         {(blinko.config.value?.aiModelProvider == 'OpenAI'
-        || blinko.config.value?.aiModelProvider == 'AzureOpenAI'
-        || blinko.config.value?.aiModelProvider == 'Ollama') && (
-          <Item
-            type={isPc ? 'row' : 'col'}
-            leftContent={
-              <div className="flex flex-col gap-1">
-                <>{t('endpoint')}</>
-                {blinko.config.value?.aiModelProvider == 'Ollama' ? <div className="text-desc text-xs">http://127.0.0.1:11434/api</div>
-                  : <div className="text-desc text-xs">{
-                    (() => {
-                      try {
-                        const baseUrl = store.apiEndPoint?.trim() ? store.apiEndPoint : 'https://api.openai.com';
-                        const urlWithProtocol = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') 
-                          ? baseUrl 
-                          : `https://${baseUrl}`;
-                        
-                        // Parse the URL to preserve any paths the user has entered
-                        const url = new URL(urlWithProtocol);
+          || blinko.config.value?.aiModelProvider == 'AzureOpenAI'
+          || blinko.config.value?.aiModelProvider == 'Ollama') && (
+            <Item
+              type={isPc ? 'row' : 'col'}
+              leftContent={
+                <div className="flex flex-col gap-1">
+                  <>{t('endpoint')}</>
+                  {blinko.config.value?.aiModelProvider == 'Ollama' ? <div className="text-desc text-xs">http://127.0.0.1:11434/api</div>
+                    : <div className="text-desc text-xs">{
+                      (() => {
+                        try {
+                          const baseUrl = store.apiEndPoint?.trim() ? store.apiEndPoint : 'https://api.openai.com';
+                          const urlWithProtocol = baseUrl.startsWith('http://') || baseUrl.startsWith('https://')
+                            ? baseUrl
+                            : `https://${baseUrl}`;
 
-                        const postfix = blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? `/${blinko.config.value?.aiModel ? blinko.config.value?.aiModel : "deployment-name"}/chat/completions${blinko.config.value?.aiApiVersion ? "?api-version=" + blinko.config.value?.aiApiVersion : ""}` : '/chat/completions';
-                        
-                        // Check if the URL already contains a path
-                        if (url.pathname === '/' || url.pathname === '') {
-                          // No path, just add chat/completions
-                          return new URL(postfix, url.origin).href;
-                        } else {
-                          // Preserve existing path and append chat/completions
-                          const path = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
-                          return `${url.origin}${path}${postfix}`;
+                          // Parse the URL to preserve any paths the user has entered
+                          const url = new URL(urlWithProtocol);
+
+                          const postfix = blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? `/${blinko.config.value?.aiModel ? blinko.config.value?.aiModel : "deployment-name"}/chat/completions${blinko.config.value?.aiApiVersion ? "?api-version=" + blinko.config.value?.aiApiVersion : ""}` : '/chat/completions';
+
+                          // Check if the URL already contains a path
+                          if (url.pathname === '/' || url.pathname === '') {
+                            // No path, just add chat/completions
+                            return new URL(postfix, url.origin).href;
+                          } else {
+                            // Preserve existing path and append chat/completions
+                            const path = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
+                            return `${url.origin}${path}${postfix}`;
+                          }
+                        } catch (e) {
+                          return 'https://api.openai.com/chat/completions';
                         }
-                      } catch (e) {
-                        return 'https://api.openai.com/chat/completions';
+                      })()
+                    }</div>}
+                </div>
+              }
+              rightContent={
+                <div className="flex gap-2 items-center">
+                  <Input
+                    size="sm"
+                    label={t('api-endpoint')}
+                    variant="bordered"
+                    className="w-full md:w-[300px]"
+                    placeholder="https://api.openapi.com/v1/"
+                    value={store.apiEndPoint}
+                    onChange={(e) => {
+                      store.apiEndPoint = e.target.value;
+                    }}
+                    onBlur={(e) => {
+                      PromiseCall(
+                        api.config.update.mutate({
+                          key: 'aiApiEndpoint',
+                          value: store.apiEndPoint,
+                        }),
+                        { autoAlert: false },
+                      );
+                    }}
+                  />
+                  <IconButton
+                    icon="hugeicons:connect"
+                    containerSize={40}
+                    tooltip={<div>{t('check-connect')}</div>}
+                    onClick={async (e) => {
+                      if (!blinko.config.value?.embeddingModel) {
+                        RootStore.Get(ToastPlugin).error(t('please-set-the-embedding-model'));
+                        return;
                       }
-                    })()
-                  }</div>}
-              </div>
-            }
-            rightContent={
-              <div className="flex gap-2 items-center">
-                <Input
-                  size="sm"
-                  label={t('api-endpoint')}
-                  variant="bordered"
-                  className="w-full md:w-[300px]"
-                  placeholder="https://api.openapi.com/v1/"
-                  value={store.apiEndPoint}
-                  onChange={(e) => {
-                    store.apiEndPoint = e.target.value;
-                  }}
-                  onBlur={(e) => {
-                    PromiseCall(
-                      api.config.update.mutate({
-                        key: 'aiApiEndpoint',
-                        value: store.apiEndPoint,
-                      }),
-                      { autoAlert: false },
-                    );
-                  }}
-                />
-                <IconButton
-                  icon="hugeicons:connect"
-                  containerSize={40}
-                  tooltip={<div>{t('check-connect')}</div>}
-                  onClick={async (e) => {
-                    if (!blinko.config.value?.embeddingModel) {
-                      RootStore.Get(ToastPlugin).error(t('please-set-the-embedding-model'));
-                      return;
-                    }
-                    RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
-                      loading: t('loading'),
-                      success: t('check-connect-success'),
-                      error: t('check-connect-error'),
-                    });
-                  }}
-                />
-              </div>
-            }
-          />
-        )}
+                      RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
+                        loading: t('loading'),
+                        success: t('check-connect-success'),
+                        error: t('check-connect-error'),
+                      });
+                    }}
+                  />
+                </div>
+              }
+            />
+          )}
 
 
         {

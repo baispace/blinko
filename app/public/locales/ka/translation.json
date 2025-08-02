@@ -629,12 +629,12 @@
   "deployment-name": "განთავსების სახელი",
   "please-set-the-api-endpoint": "გთხოვთ დააყენოთ API Endpoint",
   "please-set-the-api-key": "გთხოვთ დააყენოთ API Key",
-  "custom-ai-prompt": "自定义AI提示词",
+  "custom-ai-prompt": "მორგებული AI პრომპტი",
   "available-variables": "მართვადი ცვლადebi",
   "enter-custom-prompt": "მაგალითი: ანალიოᲖ შᳮㄔ下面的笔记内容{note}，基于现有标签{tags}生成合适标签，并总结笔记添加至评论",
-  "custom": "定制",
+  "custom": "მორგებული",
   "global-prompt": "გლობალური მონიშვნო នាពាք",
   "hide-comments-in-card": "კომენტარი დამალო  ბარათ-ka",
-  "default-home-page": "默认首页",
+  "default-home-page": "ნაგულისხმევი საწყისი გვერდი",
   "select-default-home-page": "გთხოვთ, აირჩიოთ საწყის  ̈defaulẗ- ́home page`"
 }

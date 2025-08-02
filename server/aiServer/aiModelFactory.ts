@@ -5,10 +5,10 @@ import { OllamaModelProvider } from './providers/ollama';
 import { AnthropicModelProvider } from './providers/anthropic';
 import { upsertBlinkoTool } from './tools/createBlinko';
 import { createCommentTool } from './tools/createComment';
-import { LibSQLVector } from './vector';
+import { LibSQLVector } from "@mastra/libsql";
 import { DeepSeekModelProvider } from './providers/deepseek';
 import dayjs from 'dayjs';
-import { Agent, createLogger, Mastra } from '@mastra/core';
+import { Agent, Mastra } from '@mastra/core';
 import { LanguageModelV1, EmbeddingModelV1 } from '@ai-sdk/provider';
 import { MarkdownTextSplitter, TokenTextSplitter } from '@langchain/textsplitters';
 import { embed } from 'ai';
@@ -153,7 +153,7 @@ export class AiModelFactory {
   static async rebuildVectorIndex({ vectorStore, isDelete = false }: { vectorStore: LibSQLVector; isDelete?: boolean }) {
     try {
       if (isDelete) {
-        await vectorStore.deleteIndex('blinko');
+        await vectorStore.deleteIndex({ indexName: 'blinko' });
       }
     } catch (error) {
       console.error('delete vector index failed:', error);
@@ -202,7 +202,7 @@ export class AiModelFactory {
     if (userConfigDimensions != 0 && userConfigDimensions != undefined) {
       dimensions = userConfigDimensions;
     }
-    await vectorStore.createIndex('blinko', dimensions, 'cosine');
+    await vectorStore.createIndex({ indexName: 'blinko', dimension: dimensions, metric: 'cosine' });
   }
 
   static async globalConfig() {
@@ -321,7 +321,6 @@ export class AiModelFactory {
 
     const mastra = new Mastra({
       agents: { BlinkoAgent },
-      logger: createLogger({ name: 'Blinko', level: 'debug' }),
     });
     return mastra.getAgent('BlinkoAgent');
   }
@@ -348,7 +347,6 @@ export class AiModelFactory {
 
       return new Mastra({
         agents: { agent },
-        logger: createLogger({ name: loggerName, level: 'info' }),
       }).getAgent('agent');
     };
   }

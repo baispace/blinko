@@ -7,8 +7,8 @@ import { VECTOR_DB_FILE_PATH } from '@shared/lib/sharedConstant';
 import { AiModelFactory } from '../aiModelFactory';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createVoyage } from 'voyage-ai-provider';
-import { LibSQLVector } from '../vector';
 import { fetchWithProxy } from '@server/lib/proxy';
+import { LibSQLVector } from '@mastra/libsql';
 let vectorStore: LibSQLVector;
 
 export abstract class AiBaseModelProvider {

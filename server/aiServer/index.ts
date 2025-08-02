@@ -18,8 +18,9 @@ import { MDocument } from '@mastra/rag';
 import { embedMany } from 'ai';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { userCaller } from '../routerTrpc/_app';
-import { LibSQLVector } from './vector';
+
 import { getAllPathTags } from '@server/lib/helper';
+import { LibSQLVector } from '@mastra/libsql';
 
 
 export function isImage(filePath: string): boolean {
@@ -61,11 +62,11 @@ export class AiService {
   }
 
   static async embeddingDeleteAll(id: number, VectorStore: LibSQLVector) {
-    await VectorStore.truncateIndex('blinko');
+    await VectorStore.truncateIndex({ indexName: 'blinko' });
   }
 
   static async embeddingDeleteAllAttachments(filePath: string, VectorStore: LibSQLVector) {
-    await VectorStore.truncateIndex('blinko');
+    await VectorStore.truncateIndex({ indexName: 'blinko' });
   }
 
   static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {

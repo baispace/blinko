@@ -12,6 +12,7 @@ docker run --name blinko-website -d -p 1111:1111 -e "DATABASE_URL=postgresql://p
 ## build docker with dockerfile locally on arm64
 ```
 docker buildx build --platform linux/arm64 -t blinko-arm .
+
 docker run --name blinko-website --platform linux/arm64 -d -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" dlhtx/blinko:latest
 
 docker run -p 1111:1111 -e "DATABASE_URL=postgresql://postgres:mysecretpassword@192.168.31.200:5438/postgres"  -v "C:\Users\94972\Desktop\testblinko:/app/.blinko" dlhtx/blinko:latest
@@ -50,3 +51,30 @@ act -W .github/workflows/debug-changelog.yml
 
 ## runnung job
 act -j debug-changelog -W .github/workflows/debug-changelog.yml
+
+
+## RUN on QEMU
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker run -d \
+--name blinko-postgres \
+--network blinko-network \
+-p 5435:5432 \
+-e POSTGRES_DB=postgres \
+-e POSTGRES_USER=postgres \
+-e POSTGRES_PASSWORD=mysecretpassword \
+-e TZ=Asia/Shanghai \
+--restart always \
+postgres:14
+
+docker run -d \
+  --name blinko-website \
+  --network blinko-network \
+  -p 1111:1111 \
+  -e NODE_ENV=production \
+  -e NEXTAUTH_URL=http://localhost:1111 \
+  -e NEXT_PUBLIC_BASE_URL=http://localhost:1111 \
+  -e NEXTAUTH_SECRET=my_ultra_secure_nextauth_secret \
+  -e DATABASE_URL=postgresql://postgres:mysecretpassword@blinko-postgres:5432/postgres \
+  --restart always \
+  --platform linux/arm64 \
+  blinkospace/blinko:latest

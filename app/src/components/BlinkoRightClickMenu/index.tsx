@@ -208,11 +208,30 @@ const handleMultiSelect = () => {
 const handleSelectAll = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.isMultiSelectMode = true
-  blinko.noteList.value?.forEach(note => {
-    if (note.id) {
-      blinko.onMultiSelectNote(note.id)
-    }
-  })
+
+  const currentPath = new URLSearchParams(window.location.search).get('path');
+  let items: Array<{ id?: number | null }> | undefined;
+
+  if (currentPath === 'notes') {
+    items = blinko.noteOnlyList.value;
+  } else if (currentPath === 'todo') {
+    items = blinko.todoList.value;
+  } else if (currentPath === 'archived') {
+    items = blinko.archivedList.value;
+  } else if (currentPath === 'trash') {
+    items = blinko.trashList.value;
+  } else if (currentPath === 'all') {
+    items = blinko.noteList.value;
+  } else {
+    items = blinko.blinkoList.value;
+  }
+
+  const ids = (items || [])
+    .map(n => n.id)
+    .filter((id): id is number => typeof id === 'number');
+
+  // Assign directly to avoid toggle side-effects
+  blinko.curMultiSelectIds = Array.from(new Set(ids));
 }
 
 const handleTop = () => {

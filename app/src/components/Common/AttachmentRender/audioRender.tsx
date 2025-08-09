@@ -107,9 +107,10 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
       const progress = progressRefs.current[fileName];
       if (!progress) return;
 
-      // Avoid division by zero or NaN values
-      const percentage = musicManager.duration > 0 
-        ? (musicManager.currentTime / musicManager.duration) * 100 
+      const rawDuration = musicManager.audioElement?.duration;
+      const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+      const percentage = dur > 0
+        ? (musicManager.currentTime / dur) * 100
         : 0;
       progress.style.width = `${percentage}%`;
 
@@ -118,14 +119,11 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
         [fileName]: formatTime(musicManager.currentTime)
       }));
 
-      if (musicManager.duration) {
-        // Check for valid duration before setting
-        if (!isNaN(musicManager.duration) && isFinite(musicManager.duration)) {
-          setDuration(prev => ({
-            ...prev,
-            [fileName]: formatTime(musicManager.duration)
-          }));
-        }
+      if (dur && isFinite(dur) && !isNaN(dur)) {
+        setDuration(prev => ({
+          ...prev,
+          [fileName]: formatTime(dur)
+        }));
       }
     };
 
@@ -141,7 +139,10 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
 
-    musicManager.seek(musicManager.duration * percentage);
+    const rawDuration = musicManager.audioElement?.duration;
+    const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+    if (!dur || !isFinite(dur) || isNaN(dur) || dur <= 0) return;
+    musicManager.seek(dur * percentage);
   };
 
   const handleEnded = (fileName: string) => {
@@ -160,7 +161,10 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
       const rect = progressBar.getBoundingClientRect();
       const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
       const percentage = x / rect.width;
-      musicManager.seek(musicManager.duration * percentage);
+      const rawDuration = musicManager.audioElement?.duration;
+      const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+      if (!dur || !isFinite(dur) || isNaN(dur) || dur <= 0) return;
+      musicManager.seek(dur * percentage);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -258,7 +262,11 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
                               exit={{ opacity: 0, x: -10 }}
                               transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
-                              {currentTime[file.name]} / {duration[file.name] || (file as any).audioDuration}
+                              {currentTime[file.name]} / {(duration[file.name] || (file as any).audioDuration || formatTime((() => {
+                                 const rawDuration = musicManager.audioElement?.duration;
+                                 const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+                                 return dur || 0;
+                               })()))}
                             </motion.div>
                           )}
                         </AnimatePresence>

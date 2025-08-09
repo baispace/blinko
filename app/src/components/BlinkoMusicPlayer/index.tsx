@@ -26,13 +26,19 @@ export const BlinkoMusicPlayer = observer(() => {
     const rect = progressBar.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
-    musicManager.seek(musicManager.duration * percentage);
+
+    const rawDuration = musicManager.audioElement?.duration;
+    const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+    if (!dur || !isFinite(dur) || isNaN(dur) || dur <= 0) return;
+    musicManager.seek(dur * percentage);
   };
 
   useEffect(() => {
     const updateProgress = () => {
       if (!progressRef.current || !musicManager.audioElement) return;
-      const percentage = (musicManager.currentTime / musicManager.duration) * 100;
+      const rawDuration = musicManager.audioElement?.duration;
+      const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+      const percentage = dur > 0 ? (musicManager.currentTime / dur) * 100 : 0;
       progressRef.current.style.width = `${percentage}%`;
     };
 
@@ -270,7 +276,11 @@ export const BlinkoMusicPlayer = observer(() => {
                       marginLeft: isCompact ? 0 : 8
                     }}
                   >
-                    {formatTime(musicManager.duration)}
+                    {formatTime((() => {
+                      const rawDuration = musicManager.audioElement?.duration;
+                      const dur = (rawDuration && isFinite(rawDuration) && !isNaN(rawDuration)) ? rawDuration : musicManager.duration;
+                      return dur || 0;
+                    })())}
                   </motion.span>
                 </motion.div>
               </div>

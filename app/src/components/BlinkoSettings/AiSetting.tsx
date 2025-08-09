@@ -398,7 +398,13 @@ export const AiSetting = observer(() => {
         </div>
 
         <Item
-          leftContent={<>{blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? t('deployment-name') : t('model')}</>}
+          type={isPc ? 'row' : 'col'}
+          leftContent={
+            <div className="flex flex-col gap-1">
+              <div>{blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? t('deployment-name') : t('model')}</div>
+              <div className="text-desc text-xs">{t('ai-model-desc')}</div>
+            </div>
+          }
           rightContent={
             <div className="flex items-center gap-2">
               <Autocomplete
@@ -424,7 +430,7 @@ export const AiSetting = observer(() => {
                   store.aiModel = key as string;
                 }}
                 size="sm"
-                className="w-[200px] md:w-[300px]"
+                className="w-full md:w-[300px]"
                 label={blinko.config.value?.aiModelProvider == 'AzureOpenAI' ? t('select-deployment') : t('select-model')}
               >
                 {store.aiModelSelect.list.map((item) => (

@@ -683,5 +683,6 @@
   "global-prompt": "wereldwijde prompt woorden",
   "hide-comments-in-card": "Verberg opmerkingen in de kaart",
   "default-home-page": "standaard startpagina",
-  "select-default-home-page": "Selecteer de standaard homepage"
+  "select-default-home-page": "Selecteer de standaard homepage",
+  "ai-model-desc": "Als het geselecteerde model visuele (multimodale) ondersteuning biedt, zal Blinko automatisch afbeeldingen indexeren."
 }

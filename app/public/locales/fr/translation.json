@@ -677,5 +677,6 @@
   "global-prompt": "Mot de prompt global",
   "hide-comments-in-card": "Cacher les commentaires dans la carte",
   "default-home-page": "Page d'accueil par défaut",
-  "select-default-home-page": "Veuillez sélectionner la page d'accueil par défaut."
+  "select-default-home-page": "Veuillez sélectionner la page d'accueil par défaut.",
+  "ai-model-desc": "Si le modèle sélectionné prend en charge la vision (multimodal), Blinko indexera automatiquement les images."
 }

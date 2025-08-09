@@ -708,5 +708,6 @@
   "global-prompt": "Global prompt word",
   "hide-comments-in-card": "Hide comments in the card",
   "default-home-page": "Default home page",
-  "select-default-home-page": "Please select the default home page."
+  "select-default-home-page": "Please select the default home page.",
+  "ai-model-desc": "If the selected model supports vision (multimodal), Blinko will automatically index images."
 }

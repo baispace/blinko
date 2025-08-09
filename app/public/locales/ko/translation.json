@@ -672,5 +672,6 @@
   "global-prompt": "전체적인 힌트어",
   "hide-comments-in-card": "카드에 댓글 숨기기",
   "default-home-page": "기본 홈페이지",
-  "select-default-home-page": "기본 홈페이지를 선택하세요"
+  "select-default-home-page": "기본 홈페이지를 선택하세요",
+  "ai-model-desc": "선택한 모델이 시각(멀티모드)을 지원하는 경우, Blinko는 자동으로 이미지를 인덱싱합니다."
 }

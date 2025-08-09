@@ -107,7 +107,7 @@ export const noteRouter = router({
       const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate, isShare, hasTodo } = input;
       if (isUseAiQuery && searchText?.trim() != '') {
         if (page == 1) {
-          return await AiService.enhanceQuery({ query: searchText!, ctx });
+          return await AiService.enhanceQuery({ query: searchText?.replace(/@/g, '')!, ctx });
         } else {
           return [];
         }

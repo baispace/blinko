@@ -668,5 +668,6 @@
   "global-prompt": "Globalny komunikat",
   "hide-comments-in-card": "Ukryć komentarze w karcie",
   "default-home-page": "Domyślna strona główna",
-  "select-default-home-page": "Proszę wybrać domyślną stronę główną"
+  "select-default-home-page": "Proszę wybrać domyślną stronę główną",
+  "ai-model-desc": "Jeśli wybrany model obsługuje wizję (wielomodalność), Blinko automatycznie zindeksuje obrazy."
 }

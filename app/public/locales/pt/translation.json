@@ -671,5 +671,6 @@
   "global-prompt": "Palavra de aviso global",
   "hide-comments-in-card": "Ocultar comentários no cartão",
   "default-home-page": "Página inicial padrão",
-  "select-default-home-page": "Por favor, selecione a página inicial padrão."
+  "select-default-home-page": "Por favor, selecione a página inicial padrão.",
+  "ai-model-desc": "Se o modelo selecionado suportar visão (multimodal), o Blinko indexará automaticamente as imagens."
 }

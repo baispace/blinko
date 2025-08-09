@@ -636,5 +636,6 @@
   "global-prompt": "გლობალური მონიშვნო នាពាք",
   "hide-comments-in-card": "კომენტარი დამალო  ბარათ-ka",
   "default-home-page": "ნაგულისხმევი საწყისი გვერდი",
-  "select-default-home-page": "გთხოვთ, აირჩიოთ საწყის  ̈defaulẗ- ́home page`"
+  "select-default-home-page": "გთხოვთ, აირჩიოთ საწყის  ̈defaulẗ- ́home page`",
+  "ai-model-desc": "თუ არჩეული მოდელი მხარს უჭერს ვიზუალურ (მრავალმოდუსიან) ფუნქციებს, Blinko ავტომატურად გააანალიზებს გამოსახულებებს."
 }

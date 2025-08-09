@@ -675,5 +675,6 @@
   "custom": "Individuelle Anpassung",
   "global-prompt": "Globale Hinweiswörter",
   "hide-comments-in-card": "Kommentare in der Karte verstecken",
-  "select-default-home-page": "Bitte wählen Sie die Standard-Startseite aus."
+  "select-default-home-page": "Bitte wählen Sie die Standard-Startseite aus.",
+  "ai-model-desc": "Wenn das ausgewählte Modell visuelle (multimodale) Unterstützung bietet, wird Blinko automatisch Bilder indizieren."
 }

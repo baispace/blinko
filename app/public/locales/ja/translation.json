@@ -677,5 +677,6 @@
   "global-prompt": "グローバルプロンプトワード",
   "hide-comments-in-card": "カードにコメントを隠す",
   "default-home-page": "デフォルトのホームページ",
-  "select-default-home-page": "デフォルトのホームページを選択してください"
+  "select-default-home-page": "デフォルトのホームページを選択してください",
+  "ai-model-desc": "選択したモデルがビジュアル（マルチモード）をサポートしている場合、Blinkoは自動的に画像をインデックス化します。"
 }

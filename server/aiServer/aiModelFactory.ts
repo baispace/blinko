@@ -25,6 +25,9 @@ import { rerank } from '@mastra/rag';
 import { AiBaseModelProvider } from './providers';
 import { prisma } from '@server/prisma';
 import { getGlobalConfig } from '@server/routerTrpc/config';
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -65,7 +68,6 @@ export class AiModelFactory {
 
   static async queryVector(query: string, accountId: number, _topK?: number) {
     const { VectorStore, Embeddings, provider } = await AiModelFactory.GetProvider();
-
     const config = await AiModelFactory.globalConfig();
     const topK = _topK ?? config.embeddingTopK ?? 3;
     const embeddingMinScore = config.embeddingScore ?? 0.4;
@@ -464,6 +466,66 @@ export class AiModelFactory {
   );
 
   static TestConnectAgent = AiModelFactory.#createAgentFactory('Blinko Test Connect Agent', `Test the api is working,return 1 words`, 'BlinkoTestConnect');
+
+  static ImageEmbeddingAgent = AiModelFactory.#createAgentFactory(
+    'Blinko Image Embedding Agent',
+    `You are a vision assistant. When provided an image, you must:
+1) Describe the image in detail (objects, scenes, layout, style, colors).
+2) Extract and return all visible text in the image (OCR) accurately.
+If the underlying model does not support image inputs, respond exactly with: not support image`,
+    'BlinkoImageEmbedding',
+  );
+
+  static async readImage(
+    imagePath: string,
+    options?: { maxEdge?: number; quality?: number; toJPEG?: boolean; background?: string },
+  ): Promise<{ dataUrl: string; mime: string }> {
+    const { maxEdge = 1024, quality = 70, toJPEG = true, background = '#ffffff' } = options || {};
+    try {
+      let pipeline = sharp(imagePath).rotate();
+      pipeline = pipeline.resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true });
+      if (toJPEG) {
+        // Remove alpha channel when converting to JPEG
+        pipeline = pipeline.flatten({ background }).jpeg({ quality, mozjpeg: true });
+      }
+      const buffer = await pipeline.toBuffer();
+      const mime = toJPEG ? 'image/jpeg' : path.extname(imagePath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+      return { dataUrl: `data:${mime};base64,${buffer.toString('base64')}`, mime };
+    } catch (err) {
+      // Fallback to original file if compression fails
+      const fallbackMime = path.extname(imagePath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+      return { dataUrl: `data:${fallbackMime};base64,${fs.readFileSync(imagePath, 'base64')}`, mime: fallbackMime };
+    }
+  }
+
+  static async describeImage(imagePath: string): Promise<string> {
+    try {
+      const agent = await AiModelFactory.ImageEmbeddingAgent();
+      console.log(imagePath, 'imagePath');
+      const { dataUrl, mime } = await AiModelFactory.readImage(imagePath);
+      const response = await agent.generate(
+        [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', image: dataUrl, mimeType: mime },
+              {
+                type: 'text',
+                text: 'Describe the image in detail, and extract all the text in the image.',
+              },
+            ],
+          },
+        ],
+        { temperature: 0.3 },
+      );
+      console.log(response.text?.trim(), 'response.text?.trim()');
+      return response.text?.trim() || '';
+    } catch (error) {
+      console.log(error, 'error');
+      // Fallback when model/provider does not support images or any error occurs
+      return 'not support image';
+    }
+  }
 
   // static async GetAudioLoader(audioPath: string) {
   //   const globalConfig = await AiModelFactory.ValidConfig()

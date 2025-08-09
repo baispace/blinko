@@ -82,6 +82,11 @@ export class AiService {
         }
       }
 
+      const note = await prisma.notes.findUnique({
+        where: { id },
+        select: { metadata: true, attachments: true }
+      });
+
       const chunks = await MDocument.fromMarkdown(content).chunk();
       if (type == 'update') {
         AiModelFactory.queryAndDeleteVectorById(id);
@@ -99,10 +104,6 @@ export class AiService {
       });
 
       try {
-        const note = await prisma.notes.findUnique({
-          where: { id },
-          select: { metadata: true }
-        });
         await prisma.notes.update({
           where: { id },
           data: {
@@ -129,7 +130,12 @@ export class AiService {
   static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number; updatedAt?: Date; filePath: string }) {
     try {
       const absolutePath = await FileService.getFile(filePath);
-      const content = await AiService.loadFileContent(absolutePath);
+      let content: string;
+      if (AiService.isImage(filePath)) {
+        content = await AiModelFactory.describeImage(absolutePath);
+      } else {
+        content = await AiService.loadFileContent(absolutePath);
+      }
       const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider();
 
       const doc = MDocument.fromText(content);
@@ -348,13 +354,13 @@ export class AiService {
       }
 
       const processingMode = config.aiPostProcessingMode || 'comment';
-      
+
       // Handle custom processing mode
       if (processingMode === 'custom') {
         // Get all tags for tag replacement
         const tags = await getAllPathTags();
         const tagsList = tags.join(', ');
-        
+
         // Get custom prompt and replace variables
         let customPrompt = config.aiCustomPrompt || 'Analyze the following note content and provide feedback.';
         customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
@@ -378,7 +384,7 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
             content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
           }
         ]);
-        
+
         return { success: true, message: 'Custom processing completed' };
       }
 

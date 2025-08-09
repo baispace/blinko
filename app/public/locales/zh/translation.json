@@ -724,5 +724,6 @@
   "global-prompt": "全局提示词",
   "hide-comments-in-card": "在卡片中隐藏评论",
   "default-home-page": "默认首页",
-  "select-default-home-page": "请选择默认首页"
+  "select-default-home-page": "请选择默认首页",
+  "ai-model-desc": "如果所选模型支持视觉（多模态），Blinko将自动索引图像。"
 }

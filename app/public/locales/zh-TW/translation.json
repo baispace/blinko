@@ -677,5 +677,6 @@
   "global-prompt": "全局提示詞",
   "hide-comments-in-card": "在卡片中隱藏評論",
   "default-home-page": "預設首頁",
-  "select-default-home-page": "請選擇預設首頁"
+  "select-default-home-page": "請選擇預設首頁",
+  "ai-model-desc": "如果所選模型支持視覺（多模態），Blinko將自動索引圖像。"
 }

@@ -677,5 +677,6 @@
   "global-prompt": "Genel ipucu kelimesi",
   "hide-comments-in-card": "Kartta yorumları gizle",
   "default-home-page": "Varsayılan ana sayfa",
-  "select-default-home-page": "Lütfen varsayılan ana sayfayı seçin."
+  "select-default-home-page": "Lütfen varsayılan ana sayfayı seçin.",
+  "ai-model-desc": "Eğer seçilen model görsel (çok modlu) destekliyorsa, Blinko otomatik olarak görüntüleri indeksleyecektir."
 }

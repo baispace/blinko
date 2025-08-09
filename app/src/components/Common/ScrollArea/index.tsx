@@ -117,37 +117,29 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
     
     divElement.addEventListener("scroll", handleScroll);
     
-    // Add pull-to-refresh listeners only if onRefresh exists
-    if (onRefresh) {
+    // Add pull-to-refresh listeners only if onRefresh exists AND device is mobile
+    if (onRefresh && !isPc) {
       divElement.addEventListener('touchstart', handleTouchStart, { passive: false });
       divElement.addEventListener('touchmove', handleTouchMove, { passive: false });
       divElement.addEventListener('touchend', handleTouchEnd, { passive: true });
-      divElement.addEventListener('mousedown', handleTouchStart);
-      divElement.addEventListener('mousemove', handleTouchMove);
-      divElement.addEventListener('mouseup', handleTouchEnd);
-      divElement.addEventListener('mouseleave', handleTouchEnd);
     }
     
     return () => {
       divElement.removeEventListener("scroll", handleScroll);
-      if (onRefresh) {
+      if (onRefresh && !isPc) {
         divElement.removeEventListener('touchstart', handleTouchStart);
         divElement.removeEventListener('touchmove', handleTouchMove);
         divElement.removeEventListener('touchend', handleTouchEnd);
-        divElement.removeEventListener('mousedown', handleTouchStart);
-        divElement.removeEventListener('mousemove', handleTouchMove);
-        divElement.removeEventListener('mouseup', handleTouchEnd);
-        divElement.removeEventListener('mouseleave', handleTouchEnd);
       }
     };
-  }, [onRefresh, isRefreshing, isDragging, pullDistance, pullDownThreshold]);
+  }, [onRefresh, isRefreshing, isDragging, pullDistance, pullDownThreshold, isPc]);
 
   // Calculate pull progress and arrow rotation
   const pullProgress = Math.min(pullDistance / pullDownThreshold, 1);
   const arrowRotation = pullProgress * 180; // 0 to 180 degrees
   const isReadyToRefresh = pullDistance >= pullDownThreshold;
   
-  const showRefreshIndicator = onRefresh && (pullDistance > 0 || isRefreshing);
+  const showRefreshIndicator = onRefresh && !isPc && (pullDistance > 0 || isRefreshing);
   const refreshText = isRefreshing 
     ? i18n.t('common.refreshing') 
     : isReadyToRefresh 

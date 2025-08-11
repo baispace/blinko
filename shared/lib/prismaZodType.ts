@@ -33,7 +33,25 @@ export const attachmentsSchema = z.object({
   sharePassword: z.string(),
   name: z.string(),
   path: z.string(),
-  size: z.union([z.instanceof(Prisma.Decimal, { message: "Field 'size' must be a Decimal. Location: ['Models', 'attachments']" }), z.number(), z.string()]),
+  size: z.union([
+    z.instanceof(Prisma.Decimal, { message: "Field 'size' must be a Decimal. Location: ['Models', 'attachments']" }).meta({
+      override: { type: 'string', format: 'decimal' }
+    }),
+    z.number().meta({
+      override: { type: 'number' }
+    }),
+    z.string().meta({
+      override: { type: 'string' }
+    })
+  ]).meta({
+    override: {
+      anyOf: [
+        { type: 'string', format: 'decimal' },
+        { type: 'number' },
+        { type: 'string' }
+      ]
+    }
+  }),
   noteId: z.number().int().nullable(),
   accountId: z.number().int().nullable(),
   createdAt: z.coerce.date(),
@@ -268,7 +286,7 @@ export const pluginSchema = z.object({
 
 export type plugin = z.infer<typeof pluginSchema>
 
-  
+
 /////////////////////////////////////////
 // CONVERSATION SCHEMA
 /////////////////////////////////////////
@@ -309,7 +327,7 @@ export const historySchema = z.object({
   content: z.string(),
   noteId: z.number().int(),
   createdAt: z.coerce.date(),
-  version:  z.number().int().optional(),
+  version: z.number().int().optional(),
   accountId: z.number().int().nullable()
 })
 

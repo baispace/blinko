@@ -9,8 +9,7 @@ export const webSearchTool = createTool({
   //@ts-ignore
   inputSchema: z.object({
     query: z.string().describe('the query to search'),
-    accountId: z.number()
-  }),
+  }) as any,
   execute: async ({ context }) => {
     try {
       const config = await getGlobalConfig({ useAdmin: true })

@@ -12,6 +12,7 @@ export const webExtra = createTool({
   execute: async ({ context }) => {
     try {
       const config = await getGlobalConfig({ useAdmin: true })
+      console.log('config', config.tavilyApiKey)
       if (!config.tavilyApiKey) {
         return 'No tavily api key found,go to settings to set it "tavilyApiKey"'
       }
@@ -20,6 +21,7 @@ export const webExtra = createTool({
         max_results: config?.tavilyMaxResult ?? 5,
         with_images: true
       })
+      console.log('res', res)
       return res
     } catch (error) {
       return error.message;

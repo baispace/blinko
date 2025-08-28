@@ -8,7 +8,7 @@ export const searchBlinkoTool = createTool({
   description: 'you can search note or blinko from blinko api.',
   //@ts-ignore
   inputSchema: z.object({
-    content: z.string(),
+    content: z.string().optional(),
     page: z.number().default(1),
     size: z.number().default(30),
     orderBy: z.enum(["asc", 'desc']).default('desc'),

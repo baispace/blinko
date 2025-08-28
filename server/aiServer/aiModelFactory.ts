@@ -28,6 +28,7 @@ import { getGlobalConfig } from '@server/routerTrpc/config';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { PinoLogger } from '@mastra/loggers';
 
 export class AiModelFactory {
   //metadata->>'id'
@@ -290,6 +291,7 @@ export class AiModelFactory {
           updateBlinkoTool,
           deleteBlinkoTool,
           webExtra,
+          webSearchTool,
           createCommentTool,
         },
       };
@@ -323,6 +325,10 @@ export class AiModelFactory {
 
     const mastra = new Mastra({
       agents: { BlinkoAgent },
+      logger: process.env.NODE_ENV === 'development' ? new PinoLogger({
+        name: 'Mastra',
+        level: 'debug',
+      }) : undefined
     });
     return mastra.getAgent('BlinkoAgent');
   }
@@ -349,6 +355,10 @@ export class AiModelFactory {
 
       return new Mastra({
         agents: { agent },
+        logger: process.env.NODE_ENV === 'development' ? new PinoLogger({
+          name: 'Mastra',
+          level: 'debug',
+        }) : undefined,
       }).getAgent('agent');
     };
   }

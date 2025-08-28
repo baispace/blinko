@@ -148,7 +148,7 @@ export class RecommandJob extends BaseScheduleJob {
         select: { id: true }
       });
 
-      console.log('hasCache', cachedList);
+      // console.log('hasCache', cachedList);
 
       if (hasCache) {
         await prisma.cache.update({
@@ -167,7 +167,7 @@ export class RecommandJob extends BaseScheduleJob {
         });
       }
 
-      console.log('Successfully updated recommand_list cache');
+      // console.log('Successfully updated recommand_list cache');
 
     } catch (error) {
       console.error('RecommandJob failed:', error);

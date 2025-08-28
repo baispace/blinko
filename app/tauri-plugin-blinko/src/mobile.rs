@@ -31,4 +31,11 @@ impl<R: Runtime> Blinko<R> {
       .run_mobile_plugin("setcolor", payload)
       .map_err(Into::into)
   }
+
+  pub fn open_app_settings(&self) -> crate::Result<()> {
+    self
+      .0
+      .run_mobile_plugin("openAppSettings", ())
+      .map_err(Into::into)
+  }
 }

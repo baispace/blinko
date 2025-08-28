@@ -17,4 +17,10 @@ impl<R: Runtime> Blinko<R> {
   pub fn setcolor(&self, payload: SetColorRequest) -> crate::Result<()> {
     Ok(())
   }
+
+  pub fn open_app_settings(&self) -> crate::Result<()> {
+    // On desktop, this is a no-op or could open system settings
+    // Different platforms would need different implementations
+    Ok(())
+  }
 }

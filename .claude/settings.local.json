@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where bun)",
+      "Bash(bun:*)",
+      "Bash(echo $ANDROID_HOME)",
+      "Bash(echo $JAVA_HOME)",
+      "Bash(copy:*)",
+      "WebSearch",
+      "Bash(.gradlew.bat:*)",
+      "Bash(powershell:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

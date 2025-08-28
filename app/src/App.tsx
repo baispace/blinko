@@ -17,7 +17,7 @@ import { RootStore } from '@/store';
 import { UserStore } from '@/store/user';
 import { getTokenData, setNavigate } from '@/components/Auth/auth-client';
 import { BlinkoStore } from '@/store/blinkoStore';
-
+import { useAndroidShortcuts } from '@/lib/hooks';
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
 const SignUpPage = lazy(() => import('./pages/signup'));
@@ -133,6 +133,9 @@ function AppRoutes() {
 
 function App() {
   initStore();
+  
+  // Initialize Android shortcuts handler
+  useAndroidShortcuts();
 
   useEffect(() => {
     RootStore.Get(PluginManagerStore).initInstalledPlugins();

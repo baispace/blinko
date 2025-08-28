@@ -11,3 +11,10 @@ pub(crate) async fn setcolor<R: Runtime>(
 ) -> Result<()> {
     app.blinko().setcolor(payload)
 }
+
+#[command]
+pub(crate) async fn open_app_settings<R: Runtime>(
+    app: AppHandle<R>,
+) -> Result<()> {
+    app.blinko().open_app_settings()
+}

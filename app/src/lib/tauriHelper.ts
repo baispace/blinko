@@ -9,6 +9,13 @@ import { UserStore } from '@/store/user'
 import { download } from '@tauri-apps/plugin-upload'
 import { downloadDir, publicDir } from '@tauri-apps/api/path'
 import { setStatusBarColor } from 'tauri-plugin-blinko-api'
+import { useEffect, useState } from 'react';
+
+export interface PermissionStatus {
+    audio: boolean;
+    camera: boolean;
+}
+
 /**
  * isAndroid
  * @returns wether the platform is android
@@ -114,3 +121,151 @@ export function setTauriTheme(theme: any) {
         setStatusBarColor(theme === 'light' ? lightColor : darkColor);
     }
 }
+
+
+
+
+export const requestMicrophonePermission = async (): Promise<boolean> => {
+    try {
+        // Check current platform
+        const currentPlatform = isInTauri() ? platform() : 'web';
+        
+        // Try to request permission first
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+            }
+        }).catch((error) => {
+            console.error('getUserMedia error:', error);
+            return null;
+        });
+        
+        if (stream) {
+            // Permission granted, stop the stream immediately
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        }
+        
+        // Handle platform-specific permission denied scenarios
+        if (isAndroid()) {
+            const shouldShowSettings = confirm(
+                'Microphone permission is required for audio recording.\n\n' +
+                'Please grant microphone permission in the app settings.\n\n' +
+                'Would you like to open settings now?'
+            );
+            
+            if (shouldShowSettings) {
+                try {
+                    const { openAppSettings } = await import('tauri-plugin-blinko-api');
+                    await openAppSettings();
+                } catch (error) {
+                    console.error('Failed to open app settings:', error);
+                    // Fallback: Show instructions
+                    alert('Please go to Settings > Apps > Blinko > Permissions and enable Microphone access.');
+                }
+            }
+        } else if (currentPlatform === 'macos') {
+            // macOS specific handling
+            alert(
+                'Microphone permission is required.\n\n' +
+                'Please grant microphone access to this app in:\n' +
+                'System Preferences > Security & Privacy > Privacy > Microphone'
+            );
+        } else if (currentPlatform === 'windows') {
+            // Windows specific handling
+            alert(
+                'Microphone permission is required.\n\n' +
+                'Please grant microphone access to this app in:\n' +
+                'Settings > Privacy & Security > Microphone'
+            );
+        } else if (currentPlatform === 'linux') {
+            // Linux specific handling
+            alert(
+                'Microphone permission is required.\n\n' +
+                'Please ensure your microphone is properly configured and permissions are granted.'
+            );
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Failed to request microphone permission:', error);
+        return false;
+    }
+};
+
+export const checkMicrophonePermission = async (): Promise<boolean> => {
+    try {
+        // Check if the permission API is available (mainly for web)
+        if ('permissions' in navigator) {
+            try {
+                const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+                if (permission.state === 'granted') {
+                    return true;
+                } else if (permission.state === 'denied') {
+                    return false;
+                }
+                // If prompt, fall through to test actual access
+            } catch (e) {
+                // Permission API might not support microphone query
+                console.log('Permission API not supported for microphone:', e);
+            }
+        }
+        
+        // Fallback: Try to access the microphone
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            .catch(() => null);
+        
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Error checking microphone permission:', error);
+        return false;
+    }
+};
+
+export const usePermissions = () => {
+    const [permissions, setPermissions] = useState<PermissionStatus>({
+        audio: false,
+        camera: false,
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkPermissions = async () => {
+            setLoading(true);
+            
+            try {
+                const audioPermission = await checkMicrophonePermission();
+                
+                setPermissions({
+                    audio: audioPermission,
+                    camera: false, // Camera permission check can be added later
+                });
+            } catch (error) {
+                console.error('Error checking permissions:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkPermissions();
+    }, []);
+
+    const requestAudioPermission = async () => {
+        const granted = await requestMicrophonePermission();
+        setPermissions(prev => ({ ...prev, audio: granted }));
+        return granted;
+    };
+
+    return {
+        permissions,
+        loading,
+        requestAudioPermission,
+    };
+};

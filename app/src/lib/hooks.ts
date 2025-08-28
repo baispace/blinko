@@ -2,6 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { helper } from "./helper";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { RootStore } from "@/store";
+import { isAndroid, isInTauri } from '@/lib/tauriHelper';
+import { ShowEditBlinkoModel } from '@/components/BlinkoRightClickMenu';
+import { eventBus } from '@/lib/event';
 
 export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -91,7 +94,7 @@ export const handlePaste = (event) => {
 };
 
 
-const usePasteFile = (targetRef) => {
+export const usePasteFile = (targetRef) => {
   const [pastedFiles, setPastedFiles] = useState([]);
 
   useEffect(() => {
@@ -169,6 +172,54 @@ export const useIsIOS = () => {
   return isIOS;
 };
 
-export { usePasteFile };
+export const useAndroidShortcuts = () => {
+  useEffect(() => {
+    if (!isAndroid() || !isInTauri()) {
+      return;
+    }
+
+    const handleShortcutAction = (action: string) => {
+      switch (action) {
+        case 'quick_note':
+          ShowEditBlinkoModel('2xl', 'create');
+          break;
+          
+        case 'voice_recording':
+          ShowEditBlinkoModel('2xl', 'create');
+          // Use eventBus to trigger audio recording after editor is ready
+          setTimeout(() => {
+            eventBus.emit('editor:startAudioRecording');
+          }, 800);
+          break;
+      }
+    };
+
+    // Check localStorage for Android shortcut action
+    const checkLocalStorage = () => {
+      const action = window.localStorage.getItem('android_shortcut_action');
+      if (action) {
+        window.localStorage.removeItem('android_shortcut_action');
+        handleShortcutAction(action);
+      }
+    };
+
+    // Check immediately and periodically for timing issues
+    checkLocalStorage();
+    
+    let checkCount = 0;
+    const checkInterval = setInterval(() => {
+      checkLocalStorage();
+      checkCount++;
+      if (checkCount >= 10) {
+        clearInterval(checkInterval);
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, []);
+};
+
 
 

@@ -1,5 +1,6 @@
 package com.blinko.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.graphics.Color
 import android.view.WindowInsetsController
@@ -9,6 +10,48 @@ import android.os.Build
 class MainActivity : TauriActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleShortcutIntent()
+    }
+    
+    private fun handleShortcutIntent() {
+        intent?.data?.let { uri ->
+            if (uri.scheme == "blinko" && uri.host == "shortcut") {
+                uri.pathSegments?.firstOrNull()?.let { action ->
+                    // Try multiple times to inject action into WebView
+                    listOf(1000L, 2000L, 3000L, 5000L).forEach { delay ->
+                        window.decorView.postDelayed({
+                            injectShortcutAction(action)
+                        }, delay)
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun injectShortcutAction(action: String) {
+        try {
+            findWebView(window.decorView)?.evaluateJavascript(
+                """
+                (function() {
+                    if (!window.localStorage.getItem('android_shortcut_action')) {
+                        window.localStorage.setItem('android_shortcut_action', '$action');
+                    }
+                })();
+                """.trimIndent(), null
+            )
+        } catch (e: Exception) {
+            // Silently ignore
+        }
+    }
+    
+    private fun findWebView(view: View): android.webkit.WebView? {
+        if (view is android.webkit.WebView) return view
+        if (view is android.view.ViewGroup) {
+            for (i in 0 until view.childCount) {
+                findWebView(view.getChildAt(i))?.let { return it }
+            }
+        }
+        return null
     }
     
     override fun onResume() {

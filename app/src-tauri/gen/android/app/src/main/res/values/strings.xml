@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">Blinko</string>
     <string name="main_activity_title">Blinko</string>
+    
+    <!-- App Shortcuts -->
+    <string name="quick_note_short">Quick Note</string>
+    <string name="quick_note_long">Create a quick note</string>
+    <string name="quick_note_disabled">Quick Note is disabled</string>
+    
+    <string name="voice_recording_short">Voice Input</string>
+    <string name="voice_recording_long">Start voice recording</string>
+    <string name="voice_recording_disabled">Voice recording is disabled</string>
 </resources>

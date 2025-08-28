@@ -24,4 +24,10 @@ class BlinkoPlugin(private val activity: Activity): Plugin(activity) {
         implementation.setcolor(args.hex, activity)
         invoke.resolve()
     }
+
+    @Command
+    fun openAppSettings(invoke: Invoke) {
+        implementation.openAppSettings(activity)
+        invoke.resolve()
+    }
 }

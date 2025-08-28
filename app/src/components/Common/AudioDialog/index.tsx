@@ -3,6 +3,8 @@ import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import useAudioRecorder from "../AudioRecorder/hook";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { requestMicrophonePermission, checkMicrophonePermission } from "@/lib/tauriHelper";
+import { Button } from "@heroui/react";
 
 interface MyAudioRecorderProps {
   onComplete?: (file: File) => void;
@@ -129,11 +131,26 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
   useEffect(() => {
     const initRecording = async () => {
       try {
+        // First check/request permission
+        const hasPermission = await checkMicrophonePermission();
+        if (!hasPermission) {
+          const granted = await requestMicrophonePermission();
+          if (!granted) {
+            setAudioPermissionGranted(false);
+            console.error('Microphone permission denied');
+            return;
+          }
+        }
+        
         const stream = await startRecording();
         if (stream) {
           setupAudioAnalyser(stream);
+          setAudioPermissionGranted(true);
+        } else {
+          setAudioPermissionGranted(false);
+          console.error('Failed to start recording');
+          return;
         }
-        setAudioPermissionGranted(true);
         setIsRecording(true);
         
         // Start timer for recording duration
@@ -291,8 +308,19 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         <div className="w-full flex-1 flex flex-col items-center justify-center my-4">
           <div className="my-4 w-full">
             {!audioPermissionGranted ? (
-              <div className="text-yellow-500 text-center text-sm mb-2">
-                Please allow microphone access to start recording
+              <div className="text-yellow-500 text-center text-sm mb-2 px-4">
+                <p>Microphone permission is required for recording.</p>
+                <Button 
+                  onPress={async () => {
+                    const granted = await requestMicrophonePermission();
+                    if (granted) {
+                      window.location.reload(); // Reload to reinitialize recording
+                    }
+                  }}
+                  className="mt-2"
+                >
+                  Grant Permission
+                </Button>
               </div>
             ) : null}
             

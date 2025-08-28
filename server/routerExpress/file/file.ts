@@ -107,7 +107,7 @@ router.get(/.*/, async (req, res) => {
           }
         }
       });
-      console.log('myFile', myFile);
+      // console.log('myFile', myFile);
 
 
       if (!token) {

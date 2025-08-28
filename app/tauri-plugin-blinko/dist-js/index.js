@@ -8,5 +8,8 @@ async function setStatusBarColor(hexColor) {
     });
     return null;
 }
+async function openAppSettings() {
+    await invoke('plugin:blinko|open_app_settings');
+}
 
-export { setStatusBarColor };
+export { openAppSettings, setStatusBarColor };

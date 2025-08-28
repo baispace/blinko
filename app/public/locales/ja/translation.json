@@ -678,5 +678,7 @@
   "hide-comments-in-card": "カードにコメントを隠す",
   "default-home-page": "デフォルトのホームページ",
   "select-default-home-page": "デフォルトのホームページを選択してください",
-  "ai-model-desc": "選択したモデルがビジュアル（マルチモード）をサポートしている場合、Blinkoは自動的に画像をインデックス化します。"
+  "ai-model-desc": "選択したモデルがビジュアル（マルチモード）をサポートしている場合、Blinkoは自動的に画像をインデックス化します。",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "オーディオノートを録音するには、マイクのアクセス権が必要です。",
+  "grant-microphone-permission": "マイクのアクセス許可"
 }

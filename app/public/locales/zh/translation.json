@@ -725,5 +725,8 @@
   "hide-comments-in-card": "在卡片中隐藏评论",
   "default-home-page": "默认首页",
   "select-default-home-page": "请选择默认首页",
-  "ai-model-desc": "如果所选模型支持视觉（多模态），Blinko将自动索引图像。"
+  "ai-model-desc": "如果所选模型支持视觉（多模态），Blinko将自动索引图像。",
+  "microphone-access-required": "麦克风访问权限",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "需要访问您的麦克风权限才能录制音频笔记。",
+  "grant-microphone-permission": "授权麦克风"
 }

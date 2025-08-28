@@ -5,6 +5,7 @@ import { RootStore } from "@/store";
 import { isAndroid, isInTauri } from '@/lib/tauriHelper';
 import { ShowEditBlinkoModel } from '@/components/BlinkoRightClickMenu';
 import { eventBus } from '@/lib/event';
+import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
 
 export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -53,11 +54,11 @@ export const useSwiper = (threshold = 50) => {
         if (deltaY > 0) {
           lastDirection.current = 'down';
           setIsVisible(true);
-        } else { 
+        } else {
           lastDirection.current = 'up';
           setIsVisible(false);
         }
-        touchStartY.current = touchY; 
+        touchStartY.current = touchY;
       }
     };
 
@@ -132,7 +133,7 @@ export const useHistoryBack = <T extends string>({
     if (state) {
       try {
         const currentPath = window.location.pathname + window.location.search;
-        history.pushState({ 
+        history.pushState({
           [historyState]: true,
           timestamp: Date.now(),
           path: currentPath
@@ -178,12 +179,15 @@ export const useAndroidShortcuts = () => {
       return;
     }
 
-    const handleShortcutAction = (action: string) => {
+    const action = window.localStorage.getItem('android_shortcut_action');
+    if (action) {
+      window.localStorage.removeItem('android_shortcut_action');
       switch (action) {
         case 'quick_note':
           ShowEditBlinkoModel('2xl', 'create');
+          FocusEditorFixMobile()
           break;
-          
+
         case 'voice_recording':
           ShowEditBlinkoModel('2xl', 'create');
           // Use eventBus to trigger audio recording after editor is ready
@@ -192,32 +196,7 @@ export const useAndroidShortcuts = () => {
           }, 800);
           break;
       }
-    };
-
-    // Check localStorage for Android shortcut action
-    const checkLocalStorage = () => {
-      const action = window.localStorage.getItem('android_shortcut_action');
-      if (action) {
-        window.localStorage.removeItem('android_shortcut_action');
-        handleShortcutAction(action);
-      }
-    };
-
-    // Check immediately and periodically for timing issues
-    checkLocalStorage();
-    
-    let checkCount = 0;
-    const checkInterval = setInterval(() => {
-      checkLocalStorage();
-      checkCount++;
-      if (checkCount >= 10) {
-        clearInterval(checkInterval);
-      }
-    }, 1000);
-
-    return () => {
-      clearInterval(checkInterval);
-    };
+    }
   }, []);
 };
 

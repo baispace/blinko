@@ -669,5 +669,7 @@
   "hide-comments-in-card": "Ukryć komentarze w karcie",
   "default-home-page": "Domyślna strona główna",
   "select-default-home-page": "Proszę wybrać domyślną stronę główną",
-  "ai-model-desc": "Jeśli wybrany model obsługuje wizję (wielomodalność), Blinko automatycznie zindeksuje obrazy."
+  "ai-model-desc": "Jeśli wybrany model obsługuje wizję (wielomodalność), Blinko automatycznie zindeksuje obrazy.",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Aby nagrywać notatki dźwiękowe, potrzebny jest dostęp do mikrofonu.",
+  "grant-microphone-permission": "Autoryzuj mikrofon"
 }

@@ -684,5 +684,7 @@
   "hide-comments-in-card": "Verberg opmerkingen in de kaart",
   "default-home-page": "standaard startpagina",
   "select-default-home-page": "Selecteer de standaard homepage",
-  "ai-model-desc": "Als het geselecteerde model visuele (multimodale) ondersteuning biedt, zal Blinko automatisch afbeeldingen indexeren."
+  "ai-model-desc": "Als het geselecteerde model visuele (multimodale) ondersteuning biedt, zal Blinko automatisch afbeeldingen indexeren.",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Toegang tot uw microfoon is nodig om audiogegevens op te nemen.",
+  "grant-microphone-permission": "Microfoon machtigen"
 }

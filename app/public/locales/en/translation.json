@@ -709,5 +709,8 @@
   "hide-comments-in-card": "Hide comments in the card",
   "default-home-page": "Default home page",
   "select-default-home-page": "Please select the default home page.",
-  "ai-model-desc": "If the selected model supports vision (multimodal), Blinko will automatically index images."
+  "ai-model-desc": "If the selected model supports vision (multimodal), Blinko will automatically index images.",
+  "microphone-access-required": "Microphone Access Required",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "To record audio notes, we need permission to access your microphone.",
+  "grant-microphone-permission": "Grant Microphone Permission"
 }

@@ -709,5 +709,7 @@
   "outdent": "",
   "check-connect": "",
   "status-code": "Tangalt n waddad",
-  "preview-mode": "Askar n uskan"
+  "preview-mode": "Askar n uskan",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Nu qidam li mikrofoonu ke waraqta sawto tafaadii.",
+  "grant-microphone-permission": "麦克风を許可する"
 }

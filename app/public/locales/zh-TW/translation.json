@@ -678,5 +678,7 @@
   "hide-comments-in-card": "在卡片中隱藏評論",
   "default-home-page": "預設首頁",
   "select-default-home-page": "請選擇預設首頁",
-  "ai-model-desc": "如果所選模型支持視覺（多模態），Blinko將自動索引圖像。"
+  "ai-model-desc": "如果所選模型支持視覺（多模態），Blinko將自動索引圖像。",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "需要存取您的麥克風權限才能錄製音訊筆記。",
+  "grant-microphone-permission": "授權麥克風"
 }

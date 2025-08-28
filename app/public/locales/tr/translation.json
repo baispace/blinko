@@ -678,5 +678,7 @@
   "hide-comments-in-card": "Kartta yorumları gizle",
   "default-home-page": "Varsayılan ana sayfa",
   "select-default-home-page": "Lütfen varsayılan ana sayfayı seçin.",
-  "ai-model-desc": "Eğer seçilen model görsel (çok modlu) destekliyorsa, Blinko otomatik olarak görüntüleri indeksleyecektir."
+  "ai-model-desc": "Eğer seçilen model görsel (çok modlu) destekliyorsa, Blinko otomatik olarak görüntüleri indeksleyecektir.",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Sesli notlar kaydetmek için mikrofon erişimine izin vermeniz gerekiyor.",
+  "grant-microphone-permission": "Mikrofon yetkilendirme"
 }

@@ -678,5 +678,7 @@
   "hide-comments-in-card": "Cacher les commentaires dans la carte",
   "default-home-page": "Page d'accueil par défaut",
   "select-default-home-page": "Veuillez sélectionner la page d'accueil par défaut.",
-  "ai-model-desc": "Si le modèle sélectionné prend en charge la vision (multimodal), Blinko indexera automatiquement les images."
+  "ai-model-desc": "Si le modèle sélectionné prend en charge la vision (multimodal), Blinko indexera automatiquement les images.",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "L'accès à votre microphone est nécessaire pour enregistrer des notes audio.",
+  "grant-microphone-permission": "Autoriser le microphone"
 }

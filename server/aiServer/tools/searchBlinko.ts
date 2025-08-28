@@ -9,7 +9,6 @@ export const searchBlinkoTool = createTool({
   //@ts-ignore
   inputSchema: z.object({
     content: z.string(),
-    accountId: z.number(),
     page: z.number().default(1),
     size: z.number().default(30),
     orderBy: z.enum(["asc", 'desc']).default('desc'),
@@ -24,16 +23,18 @@ export const searchBlinkoTool = createTool({
     days: z.number().optional().describe('Number of days to search back from today. If provided, startDate will be set to today minus this many days, and endDate will be set to today.'),
     hasTodo: z.boolean().default(false).optional().describe('has to do list'),
   }),
-  execute: async ({ context }) => {
+  execute: async ({ context, runtimeContext }) => {
+    // Get accountId from runtime context
+    const accountId = runtimeContext?.get('accountId');
     console.log(`search blinko: ${context.searchText || context.content}`);
  
     try {
       const caller = userCaller({
-        id: context.accountId.toString(),
+        id: String(accountId),
         exp: 0,
         iat: 0,
         name: 'admin',
-        sub: context.accountId.toString(),
+        sub: String(accountId),
         role: 'superadmin'
       });
 

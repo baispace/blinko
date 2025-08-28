@@ -7,17 +7,19 @@ export const deleteBlinkoTool = createTool({
   description: 'you are a blinko assistant,you can use api to delete blinko,save to database',
   //@ts-ignore
   inputSchema: z.object({
-    accountId: z.number(),
     ids: z.array(z.number())
   }),
-  execute: async ({ context }) => {
+  execute: async ({ context, runtimeContext }) => {
+    // Get accountId from runtime context
+    const accountId: any = runtimeContext?.get('accountId');
+
     try {
       const caller = userCaller({
-        id: context.accountId.toString(),
+        id: String(accountId),
         exp: 0,
         iat: 0,
         name: 'admin',
-        sub: context.accountId.toString(),
+        sub: String(accountId),
         role: 'superadmin'
       })
       const note = await caller.notes.trashMany({

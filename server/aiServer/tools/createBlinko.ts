@@ -5,32 +5,54 @@ import { z } from 'zod';
 
 export const upsertBlinkoTool = createTool({
   id: 'upsert-blinko-tool',
-  description: 'you are a blinko assistant,you can use api to create blinko,save to database',
-  //@ts-ignore
+  description: 'You are a blinko assistant. You can create different types of content. "Blinko" means flash thoughts or sudden inspiration - those fleeting ideas that pop into mind.',
   inputSchema: z.object({
-    content: z.string().describe("Tag is start with #"),
-    accountId: z.number(),
-    type: z.nativeEnum(NoteType).default(NoteType.BLINKO).describe('The types of notes include 0:blinko, 1:note, 2:todo, with blinko being the default.'),
-  }),
-  execute: async ({ context }) => {
-    console.log(`create note:${context.content}`);
+    content: z.string().describe("The content to save. Tag is start with #"),
+    type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
+  }) as any, // Add 'as any' to fix type error
+  execute: async ({ context, runtimeContext  }) => {
+    // Get accountId from runtime context
+    const accountId = runtimeContext?.get('accountId');
+    
+    console.log(`create note:${context.content}, type:${context.type}, accountId:${accountId}`);
+    
+    // Convert string type to NoteType enum
+    let noteType: NoteType;
+    const typeStr = (context.type || 'blinko').toLowerCase();
+    
+    switch (typeStr) {
+      case 'note':
+      case '1':
+        noteType = NoteType.NOTE; // 1
+        break;
+      case 'todo':
+      case '2':
+        noteType = NoteType.TODO; // 2
+        break;
+      case 'blinko':
+      case '0':
+      default:
+        noteType = NoteType.BLINKO; // 0
+        break;
+    }
+    
     try {
       const caller = userCaller({
-        id: context.accountId.toString(),
+        id: String(accountId),
         exp: 0,
         iat: 0,
         name: 'admin',
-        sub: context.accountId.toString(),
+        sub: String(accountId),
         role: 'superadmin'
       })
       const note = await caller.notes.upsert({
         content: context.content,
-        type: context.type,
+        type: noteType,
       })
-      console.log(note)
+      console.log('Created note:', note)
       return true
     } catch (error) {
-      console.log(error)
+      console.log('Error creating note:', error)
       return error.message
     }
   }

@@ -4,7 +4,7 @@ import useAudioRecorder from "../AudioRecorder/hook";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { requestMicrophonePermission, checkMicrophonePermission } from "@/lib/tauriHelper";
-import { Button } from "@heroui/react";
+import { Button, Card, CardBody } from "@heroui/react";
 
 interface MyAudioRecorderProps {
   onComplete?: (file: File) => void;
@@ -297,82 +297,109 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
 
   return (
     <div className="relative flex flex-col items-center overflow-hidden">
-      <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-neutral-900 rounded-lg">
-        <div className="w-full">
-          <div className="flex items-center">
-            <span className="text-white font-bold">REC</span>
-            <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-          </div>
+      {!audioPermissionGranted ? (
+        // Permission Request UI - Clean and Professional
+        <div className="flex flex-col items-center justify-center w-full h-full p-8 rounded-lg">
+          <Card className="max-w-md w-full p-6 ">
+            <CardBody className="flex flex-col items-center text-center gap-6">
+              <div className="p-4 bg-gradient-to-br from-red-500 to-red-600 rounded-full">
+                <Icon icon="solar:microphone-3-bold" className="text-white text-4xl" />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-white">Microphone Access Required</h3>
+                <p className="text-sm text-slate-300">
+                  To record audio notes, we need permission to access your microphone.
+                </p>
+              </div>
+
+              <Button 
+                onPress={async () => {
+                  const granted = await requestMicrophonePermission();
+                  if (granted) {
+                    window.location.reload();
+                  }
+                }}
+                color="danger"
+                variant="shadow"
+                size="lg"
+                startContent={<Icon icon="solar:shield-check-bold" />}
+                className="w-full font-medium"
+              >
+                Grant Microphone Permission
+              </Button>
+
+              <div className="flex items-start gap-2 p-3 bg-slate-700/50 rounded-lg">
+                <Icon icon="solar:info-circle-linear" className="text-blue-400 text-lg mt-0.5" />
+                <p className="text-xs text-slate-400 text-left">
+                  Your privacy is important. Audio is only recorded when you actively press the record button.
+                </p>
+              </div>
+            </CardBody>
+          </Card>
         </div>
-        
-        <div className="w-full flex-1 flex flex-col items-center justify-center my-4">
-          <div className="my-4 w-full">
-            {!audioPermissionGranted ? (
-              <div className="text-yellow-500 text-center text-sm mb-2 px-4">
-                <p>Microphone permission is required for recording.</p>
-                <Button 
-                  onPress={async () => {
-                    const granted = await requestMicrophonePermission();
-                    if (granted) {
-                      window.location.reload(); // Reload to reinitialize recording
-                    }
-                  }}
-                  className="mt-2"
-                >
-                  Grant Permission
-                </Button>
-              </div>
-            ) : null}
-            
-            <div className="w-full h-[40px] flex items-center justify-center rounded">
-              <div className="w-full h-full flex items-end justify-center space-x-1 px-2">
-                {audioLevel.map((level, index) => (
-                  <div 
-                    key={index} 
-                    className="w-[3px] bg-green-500 rounded-t-sm" 
-                    style={{ 
-                      height: `${Math.min(level, 100)}%`,
-                      transition: 'height 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
-                      opacity: isRecording ? 1 : 0.5,
-                      transform: `translateY(${isRecording ? 0 : 2}px)`,
-                    }}
-                  />
-                ))}
-              </div>
+      ) : (
+        // Recording UI - Original design when permission is granted
+        <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-neutral-900 rounded-lg">
+          <div className="w-full">
+            <div className="flex items-center">
+              <span className="text-white font-bold">REC</span>
+              <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             </div>
           </div>
           
-          <div className="text-white text-7xl font-bold mt-4">
-            {formattedTime}
+          <div className="w-full flex-1 flex flex-col items-center justify-center my-4">
+            <div className="my-4 w-full">
+              <div className="w-full h-[40px] flex items-center justify-center rounded">
+                <div className="w-full h-full flex items-end justify-center space-x-1 px-2">
+                  {audioLevel.map((level, index) => (
+                    <div 
+                      key={index} 
+                      className="w-[3px] bg-green-500 rounded-t-sm" 
+                      style={{ 
+                        height: `${Math.min(level, 100)}%`,
+                        transition: 'height 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                        opacity: isRecording ? 1 : 0.5,
+                        transform: `translateY(${isRecording ? 0 : 2}px)`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-white text-7xl font-bold mt-4">
+              {formattedTime}
+            </div>
           </div>
-        </div>
-        
-        <div className="flex justify-center mt-4 w-full">
-          {isRecording ? (
-            <button
-              className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
-              onClick={handleStopRecording}
-            >
-              <div className="w-6 h-6 bg-white rounded"></div>
-            </button>
-          ) : (
-            <div className="flex gap-5">
-              <button
-                className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
-                onClick={handleDelete}
-              >
-                <Icon icon="mdi:close" className="text-red-500" width="30" height="30" />
-              </button>
+          
+          <div className="flex justify-center mt-4 w-full">
+            {isRecording ? (
               <button
                 className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
-                onClick={handleComplete}
+                onClick={handleStopRecording}
               >
-                <Icon icon="mdi:check" className="text-white" width="30" height="30" />
+                <div className="w-6 h-6 bg-white rounded"></div>
               </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex gap-5">
+                <button
+                  className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
+                  onClick={handleDelete}
+                >
+                  <Icon icon="mdi:close" className="text-red-500" width="30" height="30" />
+                </button>
+                <button
+                  className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
+                  onClick={handleComplete}
+                >
+                  <Icon icon="mdi:check" className="text-white" width="30" height="30" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

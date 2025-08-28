@@ -17,16 +17,18 @@ export const updateBlinkoTool = createTool({
       isShare: z.union([z.boolean(), z.null()]).default(null),
       isRecycle: z.union([z.boolean(), z.null()]).default(null),
     })),
-    accountId: z.number()
   }),
-  execute: async ({ context }) => {
+  execute: async ({ context, runtimeContext }) => {
+    // Get accountId from runtime context
+    const accountId = runtimeContext?.get('accountId');
+    
     try {
       const caller = userCaller({
-        id: context.accountId.toString(),
+        id: String(accountId),
         exp: 0,
         iat: 0,
         name: 'admin',
-        sub: context.accountId.toString(),
+        sub: String(accountId),
         role: 'superadmin'
       })
       return await Promise.all(context.notes.map(async (note, index) => {

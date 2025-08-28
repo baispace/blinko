@@ -21,7 +21,7 @@ import { userCaller } from '../routerTrpc/_app';
 
 import { getAllPathTags } from '@server/lib/helper';
 import { LibSQLVector } from '@mastra/libsql';
-
+import { RuntimeContext } from "@mastra/core/di";
 
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;
@@ -242,7 +242,7 @@ export class AiService {
       });
       conversations.push({
         role: 'system',
-        content: `Current userId: ${ctx.id}\n Current user name: ${ctx.name}\n`,
+        content: `Current user name: ${ctx.name}\n`,
       });
       if (systemPrompt) {
         conversations.push({
@@ -260,8 +260,10 @@ export class AiService {
         });
       }
       console.log(conversations, 'conversations');
+      const runtimeContext = new RuntimeContext();
+      runtimeContext.set('accountId', Number(ctx.id));
       const agent = await AiModelFactory.BaseChatAgent({ withTools, withOnlineSearch: withOnline });
-      const result = await agent.stream(conversations);
+      const result = await agent.stream(conversations, { runtimeContext });
       return { result, notes: ragNote };
     } catch (error) {
       console.log(error);
@@ -326,6 +328,9 @@ export class AiService {
 
   static async postProcessNote({ noteId, ctx }: { noteId: number; ctx: Context }) {
     try {
+      const runtimeContext = new RuntimeContext();
+      runtimeContext.set('accountId', ctx.id);
+
       const caller = userCaller(ctx);
       // Get the configuration
       const config = await AiModelFactory.globalConfig();
@@ -341,6 +346,7 @@ export class AiService {
         select: {
           content: true,
           accountId: true,
+          type: true,
           tags: {
             include: {
               tag: true,
@@ -348,6 +354,20 @@ export class AiService {
           },
         },
       });
+      let noteType = 'blinko'
+      switch (note?.type) {
+        case 0:
+          noteType = 'blinko';
+          break;
+        case 1:
+          noteType = 'note';
+          break;
+        case 2:
+          noteType = 'todo';
+          break;
+        default:
+          noteType = 'blinko';
+      }
 
       if (!note) {
         return { success: false, message: 'Note not found' };
@@ -366,6 +386,7 @@ export class AiService {
         customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
         const withOnlineSearch = !!config.tavilyApiKey;
         // Process with AI using BaseChatAgent with tools
+   
         const agent = await AiModelFactory.BaseChatAgent({ withTools: true, withOnlineSearch: withOnlineSearch });
         const result = await agent.generate([
           {
@@ -381,9 +402,12 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
           },
           {
             role: 'user',
-            content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
+            content: `Current user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}
+            Current Note Type: ${noteType}`
           }
-        ]);
+        ], {
+          runtimeContext
+        });
 
         return { success: true, message: 'Custom processing completed' };
       }
@@ -467,7 +491,9 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
               role: 'user',
               content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${smartEditPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
             }
-          ]);
+          ], {
+            runtimeContext
+          });
           await prisma.comments.create({
             data: {
               content: result.text,

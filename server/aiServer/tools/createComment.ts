@@ -9,18 +9,20 @@ export const createCommentTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("The content of the comment"),
     noteId: z.number().describe("The ID of the note to comment on"),
-    accountId: z.number().describe("The account ID making the comment"),
     guestName: z.string().optional().describe("Optional guest name if not using an account")
   }),
-  execute: async ({ context }) => {
+  execute: async ({ context, runtimeContext }) => {
+    // Get accountId from runtime context
+    const accountId = runtimeContext?.get('accountId');
     console.log(`Creating comment on note ${context.noteId}: ${context.content}`);
+    
     try {
       const caller = userCaller({
-        id: context.accountId.toString(),
+        id: String(accountId),
         exp: 0,
         iat: 0,
         name: 'Blinko AI',
-        sub: context.accountId.toString(),
+        sub: String(accountId),
         role: 'superadmin'
       });
       

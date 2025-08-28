@@ -316,14 +316,11 @@ jobs:
           echo "Renamed APK file:"
           ls -la
 
-      - name: Publish Android App
+      - name: Upload Android App to Existing Release
         uses: softprops/action-gh-release@v1
         with:
           files: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
           tag_name: ${{ needs.set-version.outputs.version }}
-          body: "Under construction, full changelog will be updated after build completion..."
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

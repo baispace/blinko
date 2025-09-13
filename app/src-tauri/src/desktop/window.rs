@@ -32,7 +32,6 @@ fn create_quick_window<R: Runtime>(
         .minimizable(false)
         .maximizable(false)
         .closable(false)
-        .shadow(config.label == "quicktool") // Only quicktool needs shadow
         .build()
         .map_err(|e| format!("Failed to create {} window: {}", config.label, e))?;
 
@@ -105,8 +104,8 @@ pub fn resize_quicknote_window<R: tauri::Runtime>(app: AppHandle<R>, height: f64
         // Limit max height to 600, min height to 100
         let constrained_height = height.max(100.0).min(600.0);
         
-        // Use Tauri 2 LogicalSize
-        let size = tauri::LogicalSize::new(width, constrained_height);
+        // Use Tauri 2 Size
+        let size = tauri::Size::Logical(tauri::LogicalSize::new(width, constrained_height));
         window.set_size(size)
             .map_err(|e| format!("Failed to set size: {}", e))?;
         
@@ -145,8 +144,8 @@ pub fn resize_quickai_window<R: tauri::Runtime>(app: AppHandle<R>, height: f64) 
         // Limit max height to 600, min height to 100 (same as quicknote)
         let constrained_height = height.max(100.0).min(600.0);
         
-        // Use Tauri 2 LogicalSize
-        let size = tauri::LogicalSize::new(width, constrained_height);
+        // Use Tauri 2 Size
+        let size = tauri::Size::Logical(tauri::LogicalSize::new(width, constrained_height));
         window.set_size(size)
             .map_err(|e| format!("Failed to set size: {}", e))?;
         

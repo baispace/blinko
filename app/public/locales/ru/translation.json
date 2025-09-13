@@ -683,5 +683,8 @@
   "hotkey.clickRecordButton": "Нажмите кнопку записи, чтобы начать запись.",
   "hotkey.stop": "Остановить",
   "hotkey.record": "",
-  "hotkeys": "горячие клавиши"
+  "hotkeys": "горячие клавиши",
+  "translation-languages": "Перевод языков",
+  "trigger-modifier": "Изменить горячие клавиши",
+  "text-selection-toolbar": "Панель инструментов для выделения текста"
 }

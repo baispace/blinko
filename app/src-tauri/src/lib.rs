@@ -49,10 +49,17 @@ pub fn run() {
             toggle_quickai_window,
             resize_quickai_window,
             navigate_main_to_ai_with_prompt,
+            toggle_quicktool_window,
+            hide_quicktool_window,
             is_autostart_enabled,
             enable_autostart,
             disable_autostart,
-            toggle_autostart
+            toggle_autostart,
+            setup_text_selection_monitoring,
+            copy_to_clipboard,
+            test_text_selection,
+            check_accessibility_permissions,
+            show_quicktool
         ])
         .setup(|app| {
             setup_app(app)?;

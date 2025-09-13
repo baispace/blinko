@@ -690,5 +690,8 @@
   "hotkey.clickRecordButton": "點擊錄製按鈕開始錄製",
   "hotkey.stop": "停止",
   "hotkey.record": "",
-  "hotkeys": "快速鍵"
+  "hotkeys": "快速鍵",
+  "translation-languages": "翻譯語言",
+  "trigger-modifier": "更改快捷鍵",
+  "text-selection-toolbar": "劃詞工具列"
 }

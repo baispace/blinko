@@ -688,5 +688,8 @@
   "hotkey.clickRecordButton": "انقر على زر التسجيل لبدء التسجيل",
   "hotkey.stop": "توقف",
   "hotkey.record": "تسجيل",
-  "hotkeys": "اختصارات الكيبورد"
+  "hotkeys": "اختصارات الكيبورد",
+  "translation-languages": "ترجمة اللغات",
+  "trigger-modifier": "تغيير الاختصارات",
+  "text-selection-toolbar": "شريط أدوات التحديد"
 }

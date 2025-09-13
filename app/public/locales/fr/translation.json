@@ -690,5 +690,8 @@
   "hotkey.clickRecordButton": "Cliquez sur le bouton d'enregistrement pour commencer à enregistrer.",
   "hotkey.stop": "Arrêter",
   "hotkey.record": "Enregistrer",
-  "hotkeys": "Raccourci clavier"
+  "hotkeys": "Raccourci clavier",
+  "translation-languages": "langue de traduction",
+  "trigger-modifier": "Modifier le raccourci clavier",
+  "text-selection-toolbar": "Barre d'outils de sélection de texte"
 }

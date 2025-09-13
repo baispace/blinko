@@ -681,5 +681,8 @@
   "hotkey.clickRecordButton": "Kliknij przycisk nagrywania, aby rozpocząć nagrywanie.",
   "hotkey.stop": "Zatrzymać",
   "hotkey.record": "",
-  "hotkeys": "Skrót klawiszowy"
+  "hotkeys": "Skrót klawiszowy",
+  "translation-languages": "Język tłumaczenia",
+  "trigger-modifier": "Zmień skrót klawiszowy",
+  "text-selection-toolbar": "Pasek narzędzi do zaznaczania tekstu"
 }

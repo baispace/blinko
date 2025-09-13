@@ -738,5 +738,8 @@
   "hotkey.clickRecordButton": "点击录制按钮开始录制",
   "hotkey.stop": "停止",
   "hotkey.record": "录制",
-  "hotkeys": "快捷键"
+  "hotkeys": "快捷键",
+  "translation-languages": "翻译语言",
+  "trigger-modifier": "更改快捷键",
+  "text-selection-toolbar": "划词工具栏"
 }

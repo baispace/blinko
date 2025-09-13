@@ -684,5 +684,8 @@
   "hotkey.clickRecordButton": "Clique no botão de gravação para começar a gravar.",
   "hotkey.stop": "Parar",
   "hotkey.record": "",
-  "hotkeys": "Teclas de atalho"
+  "hotkeys": "Teclas de atalho",
+  "translation-languages": "Língua de tradução",
+  "trigger-modifier": "Alterar teclas de atalho",
+  "text-selection-toolbar": "Barra de ferramentas de seleção de texto"
 }

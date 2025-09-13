@@ -246,7 +246,35 @@ export interface HotkeyConfig {
   aiEnabled: boolean;          // Enable AI hotkey
   systemTrayEnabled: boolean;  // Enable system tray
   windowBehavior: 'show' | 'hide' | 'minimize'; // Window behavior
+  textSelectionToolbar: TextSelectionToolbarConfig; // Text selection toolbar config
 }
+
+// Text Selection Toolbar Configuration
+export interface TextSelectionToolbarConfig {
+  enabled: boolean;            // Enable text selection toolbar
+  triggerModifier: 'ctrl' | 'shift' | 'alt'; // Modifier key to trigger toolbar
+  translationFromLang: string; // Source language for translation
+  translationToLang: string;   // Target language for translation
+  features: {
+    translation: boolean;      // Enable translation feature
+    copy: boolean;            // Enable copy feature
+    qna: boolean;             // Enable Q&A feature
+    bookmark: boolean;        // Enable bookmark feature
+  };
+}
+
+export const DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG: TextSelectionToolbarConfig = {
+  enabled: true,
+  triggerModifier: 'ctrl',
+  translationFromLang: 'auto',
+  translationToLang: 'zh',
+  features: {
+    translation: true,
+    copy: true,
+    qna: true,
+    bookmark: true
+  }
+};
 
 export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
   quickNote: 'Shift+Space',
@@ -254,7 +282,8 @@ export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
   enabled: true,
   aiEnabled: true,
   systemTrayEnabled: true,
-  windowBehavior: 'show'
+  windowBehavior: 'show',
+  textSelectionToolbar: DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG
 };
 
 // System Tray Configuration

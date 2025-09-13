@@ -688,5 +688,8 @@
   "hotkey.clickRecordButton": "Klicken Sie auf die Aufnahmetaste, um die Aufnahme zu starten.",
   "hotkey.stop": "Stopp",
   "hotkey.record": "aufnehmen",
-  "hotkeys": "Tastenkombination"
+  "hotkeys": "Tastenkombination",
+  "translation-languages": "Übersetzungssprache",
+  "trigger-modifier": "Ändern Sie die Tastenkombinationen",
+  "text-selection-toolbar": "Wortmarkierungswerkzeugleiste"
 }

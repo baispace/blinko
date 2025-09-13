@@ -722,5 +722,8 @@
   "hotkey.clickRecordButton": "Click the record button to start recording.",
   "hotkey.stop": "Stop",
   "hotkey.record": "record",
-  "hotkeys": "shortcut key"
+  "hotkeys": "shortcut key",
+  "translation-languages": "Translation Languages",
+  "trigger-modifier": "Trigger Modifier",
+  "text-selection-toolbar": "Text Selection Toolbar"
 }

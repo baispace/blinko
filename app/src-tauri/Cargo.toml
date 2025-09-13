@@ -35,3 +35,12 @@ tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2.0.0"
 auto-launch = "0.5"
+get-selected-text = "0.1"
+arboard = { version = "3", default-features = false }
+mouse_position = "0.1"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+macos-accessibility-client = "0.0.1"

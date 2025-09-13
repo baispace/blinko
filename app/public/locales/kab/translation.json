@@ -721,5 +721,8 @@
   "hotkey.clickRecordButton": "Anef-as iḍum n teqdimt akken ad tebded taɣuri",
   "hotkey.stop": "Aredjed",
   "hotkey.record": "ⵉⵙⴳⴰ",
-  "hotkeys": "ⵜⴰⵏⴻⵙⵎⴰ ⵜⴰⵣᴇṛṛumt"
+  "hotkeys": "ⵜⴰⵏⴻⵙⵎⴰ ⵜⴰⵣᴇṛṛumt",
+  "translation-languages": "Tuffɣa n tutlayt",
+  "trigger-modifier": "Beddel timmad-islayen",
+  "text-selection-toolbar": "Asefreḍ n tneɣẓiwin"
 }

@@ -45,6 +45,7 @@ export const useQuickaiHotkey = () => {
           
           try {
             // Start AI chat with the prompt
+            await aiStore.newChat();
             await aiStore.newChatWithSuggestion(prompt);
             
             // Navigate to AI page

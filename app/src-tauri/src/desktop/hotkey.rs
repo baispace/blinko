@@ -70,9 +70,9 @@ pub fn register_hotkey(app: AppHandle, shortcut: String, command: String) -> Res
         app.global_shortcut().register(parsed_shortcut)
             .map_err(|e| format!("Failed to register shortcut: {}", e))?;
         
-        // Store command for the shortcut handler
+        // Store command for the shortcut handler (normalize to lowercase)
         let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-        shortcuts.insert(shortcut.clone(), command.clone());
+        shortcuts.insert(shortcut.to_lowercase(), command.clone());
         
         println!("Successfully registered shortcut: {} for command: {}", shortcut, command);
         Ok(())
@@ -97,9 +97,9 @@ pub fn unregister_hotkey(app: AppHandle, shortcut: String) -> Result<(), String>
         app.global_shortcut().unregister(parsed_shortcut)
             .map_err(|e| format!("Failed to unregister shortcut: {}", e))?;
         
-        // Remove from local storage
+        // Remove from local storage (normalize to lowercase)
         let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-        shortcuts.remove(&shortcut);
+        shortcuts.remove(&shortcut.to_lowercase());
         
         println!("Successfully unregistered shortcut: {}", shortcut);
         Ok(())
@@ -115,6 +115,11 @@ pub fn get_registered_shortcuts() -> HashMap<String, String> {
     REGISTERED_SHORTCUTS.lock().unwrap().clone()
 }
 
+pub fn register_shortcut_command(shortcut: String, command: String) {
+    let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+    shortcuts.insert(shortcut.to_lowercase(), command);
+}
+
 pub fn setup_default_shortcuts(app_handle: &AppHandle) -> Result<(), String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
@@ -127,9 +132,9 @@ pub fn setup_default_shortcuts(app_handle: &AppHandle) -> Result<(), String> {
             if let Err(e) = app_handle.global_shortcut().register(parsed_shortcut) {
                 eprintln!("Failed to register default quicknote hotkey: {}", e);
             } else {
-                // Store the registered shortcut
+                // Store the registered shortcut (normalize to lowercase)
                 let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-                shortcuts.insert(default_config.quick_note.clone(), "quicknote".to_string());
+                shortcuts.insert(default_config.quick_note.to_lowercase(), "quicknote".to_string());
                 println!("Registered default shortcut: {}", default_config.quick_note);
             }
         }
@@ -139,9 +144,9 @@ pub fn setup_default_shortcuts(app_handle: &AppHandle) -> Result<(), String> {
             if let Err(e) = app_handle.global_shortcut().register(parsed_shortcut) {
                 eprintln!("Failed to register default quickai hotkey: {}", e);
             } else {
-                // Store the registered shortcut
+                // Store the registered shortcut (normalize to lowercase)
                 let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-                shortcuts.insert(default_config.quick_ai.clone(), "quickai".to_string());
+                shortcuts.insert(default_config.quick_ai.to_lowercase(), "quickai".to_string());
                 println!("Registered default AI shortcut: {}", default_config.quick_ai);
             }
         }

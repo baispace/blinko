@@ -1,7 +1,78 @@
-use tauri::{AppHandle, Manager, Emitter};
+use tauri::{AppHandle, Manager, Emitter, WebviewWindowBuilder, WebviewUrl, Runtime, WindowEvent};
+
+// QuickTool window dimensions - defined once for consistency
+pub const QUICKTOOL_WIDTH: f64 = 190.0;
+pub const QUICKTOOL_HEIGHT: f64 = 35.0;
+
+/// Configuration for quick windows
+struct QuickWindowConfig {
+    label: &'static str,
+    title: &'static str,
+    url: &'static str,
+    width: f64,
+    height: f64,
+    resizable: bool,
+    skip_taskbar: bool,
+}
+
+/// Helper function to create a quick window with common settings
+fn create_quick_window<R: Runtime>(
+    app: &AppHandle<R>,
+    config: QuickWindowConfig
+) -> Result<(), String> {
+    let window = WebviewWindowBuilder::new(app, config.label, WebviewUrl::App(config.url.into()))
+        .title(config.title)
+        .inner_size(config.width, config.height)
+        .resizable(config.resizable)
+        .focused(true)
+        .visible(true)
+        .always_on_top(true)
+        .skip_taskbar(config.skip_taskbar)
+        .decorations(false)
+        .minimizable(false)
+        .maximizable(false)
+        .closable(false)
+        .transparent(config.label == "quicktool") // Only quicktool needs transparency
+        .shadow(config.label == "quicktool") // Only quicktool needs shadow
+        .build()
+        .map_err(|e| format!("Failed to create {} window: {}", config.label, e))?;
+
+    // Handle window close event - hide instead of close
+    let window_clone = window.clone();
+    window.on_window_event(move |event| {
+        if let WindowEvent::CloseRequested { api, .. } = event {
+            api.prevent_close();
+            let _ = window_clone.hide();
+            println!("{} window hidden", config.label);
+        }
+    });
+
+    Ok(())
+}
+
+/// Helper function to toggle a quick window
+fn toggle_window<R: Runtime>(app: &AppHandle<R>, window_label: &str) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(window_label) {
+        match window.is_visible() {
+            Ok(true) => {
+                let _ = window.hide();
+                println!("{} window hidden", window_label);
+                Ok(())
+            }
+            Ok(false) | Err(_) => {
+                let _ = window.show();
+                let _ = window.set_focus();
+                println!("{} window shown", window_label);
+                Ok(())
+            }
+        }
+    } else {
+        Err(format!("{} window not found", window_label))
+    }
+}
 
 #[tauri::command]
-pub fn toggle_editor_window(app: AppHandle) -> Result<(), String> {
+pub fn toggle_editor_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
     match app.get_webview_window("main") {
         Some(window) => {
             match window.is_visible() {
@@ -29,7 +100,7 @@ pub fn toggle_editor_window(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn resize_quicknote_window(app: AppHandle, height: f64) -> Result<(), String> {
+pub fn resize_quicknote_window<R: tauri::Runtime>(app: AppHandle<R>, height: f64) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("quicknote") {
         let width = 600.0;
         // Limit max height to 600, min height to 100
@@ -48,58 +119,28 @@ pub fn resize_quicknote_window(app: AppHandle, height: f64) -> Result<(), String
 }
 
 #[tauri::command]
-pub fn toggle_quicknote_window(app: AppHandle) -> Result<(), String> {
-    // Try to get existing quicknote window
-    if let Some(window) = app.get_webview_window("quicknote") {
-        // Check if window is visible and toggle state
-        match window.is_visible() {
-            Ok(true) => {
-                // If visible, hide it
-                let _ = window.hide();
-                println!("Quicknote window hidden");
-                return Ok(());
-            },
-            Ok(false) | Err(_) => {
-                // If hidden or error checking, show and focus it
-                let _ = window.show();
-                let _ = window.set_focus();
-                println!("Quicknote window shown");
-                return Ok(());
-            }
-        }
+pub fn toggle_quicknote_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    // Try to toggle existing window first
+    if let Ok(()) = toggle_window(&app, "quicknote") {
+        return Ok(());
     }
 
-    // Create new quicknote window
-    let quicknote_window = tauri::WebviewWindowBuilder::new(&app, "quicknote", tauri::WebviewUrl::App("/quicknote".into()))
-        .title("Quick Note")
-        .inner_size(600.0, 150.0)
-        .resizable(true)
-        .focused(true)
-        .visible(true)
-        .always_on_top(true)
-        .skip_taskbar(false)
-        .decorations(false)
-        .minimizable(false)
-        .maximizable(false)
-        .closable(false)
-        .build()
-        .map_err(|e| format!("Failed to create quicknote window: {}", e))?;
+    // Create new quicknote window if it doesn't exist
+    let config = QuickWindowConfig {
+        label: "quicknote",
+        title: "Quick Note",
+        url: "/quicknote",
+        width: 600.0,
+        height: 150.0,
+        resizable: true,
+        skip_taskbar: false,
+    };
 
-    // Handle window close event - hide instead of close
-    let window_clone = quicknote_window.clone();
-    quicknote_window.on_window_event(move |event| {
-        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-            api.prevent_close();
-            let _ = window_clone.hide();
-            println!("Quicknote window hidden");
-        }
-    });
-
-    Ok(())
+    create_quick_window(&app, config)
 }
 
 #[tauri::command]
-pub fn resize_quickai_window(app: AppHandle, height: f64) -> Result<(), String> {
+pub fn resize_quickai_window<R: tauri::Runtime>(app: AppHandle<R>, height: f64) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("quickai") {
         let width = 600.0;
         // Limit max height to 600, min height to 100 (same as quicknote)
@@ -118,58 +159,28 @@ pub fn resize_quickai_window(app: AppHandle, height: f64) -> Result<(), String> 
 }
 
 #[tauri::command]
-pub fn toggle_quickai_window(app: AppHandle) -> Result<(), String> {
-    // Try to get existing quickai window
-    if let Some(window) = app.get_webview_window("quickai") {
-        // Check if window is visible and toggle state
-        match window.is_visible() {
-            Ok(true) => {
-                // If visible, hide it
-                let _ = window.hide();
-                println!("Quickai window hidden");
-                return Ok(());
-            },
-            Ok(false) | Err(_) => {
-                // If hidden or error checking, show and focus it
-                let _ = window.show();
-                let _ = window.set_focus();
-                println!("Quickai window shown");
-                return Ok(());
-            }
-        }
+pub fn toggle_quickai_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    // Try to toggle existing window first
+    if let Ok(()) = toggle_window(&app, "quickai") {
+        return Ok(());
     }
 
-    // Create new quickai window
-    let quickai_window = tauri::WebviewWindowBuilder::new(&app, "quickai", tauri::WebviewUrl::App("/quickai".into()))
-        .title("Quick AI")
-        .inner_size(600.0, 125.0)
-        .resizable(true)
-        .focused(true)
-        .visible(true)
-        .always_on_top(true)
-        .skip_taskbar(false)
-        .decorations(false)
-        .minimizable(false)
-        .maximizable(false)
-        .closable(false)
-        .build()
-        .map_err(|e| format!("Failed to create quickai window: {}", e))?;
+    // Create new quickai window if it doesn't exist
+    let config = QuickWindowConfig {
+        label: "quickai",
+        title: "Quick AI",
+        url: "/quickai",
+        width: 600.0,
+        height: 125.0,
+        resizable: true,
+        skip_taskbar: false,
+    };
 
-    // Handle window close event - hide instead of close
-    let window_clone = quickai_window.clone();
-    quickai_window.on_window_event(move |event| {
-        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-            api.prevent_close();
-            let _ = window_clone.hide();
-            println!("Quickai window hidden");
-        }
-    });
-
-    Ok(())
+    create_quick_window(&app, config)
 }
 
 #[tauri::command]
-pub fn navigate_main_to_ai_with_prompt(app: AppHandle, prompt: String) -> Result<(), String> {
+pub fn navigate_main_to_ai_with_prompt<R: tauri::Runtime>(app: AppHandle<R>, prompt: String) -> Result<(), String> {
     // Show and focus main window
     let main_window = match app.get_webview_window("main") {
         Some(window) => window,
@@ -193,4 +204,39 @@ pub fn navigate_main_to_ai_with_prompt(app: AppHandle, prompt: String) -> Result
 
     println!("Triggered main window navigation to AI with prompt");
     Ok(())
+}
+
+#[tauri::command]
+pub fn toggle_quicktool_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    // Try to toggle existing window first
+    if let Ok(()) = toggle_window(&app, "quicktool") {
+        return Ok(());
+    }
+
+    // Create new quicktool window if it doesn't exist
+    let config = QuickWindowConfig {
+        label: "quicktool",
+        title: "Quick Tool",
+        url: "/quicktool",
+        width: QUICKTOOL_WIDTH,
+        height: QUICKTOOL_HEIGHT,
+        resizable: false,
+        skip_taskbar: true,
+    };
+
+    create_quick_window(&app, config)
+}
+
+#[tauri::command]
+pub fn hide_quicktool_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("quicktool") {
+        let _ = window.hide();
+        println!("Quicktool window hidden");
+
+        let _ = window.hide();
+        println!("Quicktool window hidden");
+        Ok(())
+    } else {
+        Err("Quicktool window not found".to_string())
+    }
 }

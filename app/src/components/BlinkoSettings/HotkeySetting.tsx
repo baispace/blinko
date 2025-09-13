@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Input, Switch, Code, Card, CardBody, CardHeader, Divider, Kbd } from '@heroui/react';
+import { Button, Input, Switch, Code, Card, CardBody, CardHeader, Divider, Kbd, Select, SelectItem, Checkbox } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
@@ -12,7 +12,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { isDesktop, isInTauri } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { HotkeyConfig, DEFAULT_HOTKEY_CONFIG } from '@/../../shared/lib/types';
+import { HotkeyConfig, DEFAULT_HOTKEY_CONFIG, TextSelectionToolbarConfig, DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG } from '@/../../shared/lib/types';
 
 const HOTKEY_EXAMPLES = {
   'Shift+Space': 'Shift+Space (Recommended)',
@@ -59,10 +59,30 @@ export const HotkeySetting = observer(() => {
         windowBehavior: 'show' as const
       };
       setHotkeyConfig(finalConfig);
-      
+
       // Refresh registration status (only if Tauri desktop)
       if (isTauriDesktop) {
         await getRegisteredShortcuts();
+
+        // Initialize text selection monitoring if enabled
+        if (finalConfig.textSelectionToolbar?.enabled) {
+          try {
+            console.log('🎯 Initializing text selection monitoring with config:', finalConfig.textSelectionToolbar);
+            console.log('📤 Calling setup_text_selection_monitoring with:', {
+              enabled: finalConfig.textSelectionToolbar.enabled,
+              triggerModifier: finalConfig.textSelectionToolbar.triggerModifier
+            });
+            await invoke('setup_text_selection_monitoring', {
+              enabled: finalConfig.textSelectionToolbar.enabled,
+              triggerModifier: finalConfig.textSelectionToolbar.triggerModifier
+            });
+            console.log('✅ Text selection monitoring initialized successfully');
+          } catch (error) {
+            console.error('❌ Failed to initialize text selection monitoring:', error);
+          }
+        } else {
+          console.log('🚫 Text selection monitoring disabled in config');
+        }
       }
     } catch (error) {
       console.error('Failed to get hotkey config:', error);
@@ -126,7 +146,7 @@ export const HotkeySetting = observer(() => {
             console.warn('Failed to unregister quicknote hotkey on disable:', error);
           }
         }
-        
+
         if (updatedConfig.aiEnabled) {
           await updateAIHotkeyRegistration(updatedConfig.quickAI, true);
         } else {
@@ -136,6 +156,19 @@ export const HotkeySetting = observer(() => {
             console.log('QuickAI hotkey unregistered due to disable');
           } catch (error) {
             console.warn('Failed to unregister quickai hotkey on disable:', error);
+          }
+        }
+
+        // Setup text selection monitoring if configuration changed
+        if (updatedConfig.textSelectionToolbar && isTauriDesktop) {
+          try {
+            await invoke('setup_text_selection_monitoring', {
+              enabled: updatedConfig.textSelectionToolbar.enabled,
+              triggerModifier: updatedConfig.textSelectionToolbar.triggerModifier
+            });
+            console.log('Text selection monitoring updated:', updatedConfig.textSelectionToolbar);
+          } catch (error) {
+            console.warn('Failed to setup text selection monitoring:', error);
           }
         }
       }
@@ -328,7 +361,7 @@ export const HotkeySetting = observer(() => {
   // Toggle autostart
   const toggleAutoStart = async (enabled: boolean) => {
     if (!isTauriDesktop) return;
-    
+
     try {
       await invoke('toggle_autostart', { enable: enabled });
       setAutoStartEnabled(enabled);
@@ -453,7 +486,7 @@ export const HotkeySetting = observer(() => {
 
         </div>
       </CollapsibleCard>
-      
+
       {/* Quick AI CollapsibleCard */}
       <CollapsibleCard
         icon="mingcute:ai-line"
@@ -516,6 +549,125 @@ export const HotkeySetting = observer(() => {
                     <Icon icon="material-symbols:refresh" />
                   </Button>
                 )}
+              </div>
+            }
+            type="col"
+          />
+
+        </div>
+      </CollapsibleCard>
+
+      {/* Text Selection Toolbar CollapsibleCard */}
+      <CollapsibleCard
+        icon="material-symbols:select-all"
+        title={t('text-selection-toolbar')}
+        className="w-full mt-6"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Text selection toolbar enable switch */}
+          <Item
+            leftContent={
+              <ItemWithTooltip
+                content="Enable Text Selection Toolbar"
+                toolTipContent="Show toolbar when text is selected globally on desktop"
+              />
+            }
+            rightContent={
+              <Switch
+                isSelected={hotkeyConfig.textSelectionToolbar?.enabled ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.enabled}
+                onValueChange={(enabled) =>
+                  saveConfig({
+                    textSelectionToolbar: {
+                      ...hotkeyConfig.textSelectionToolbar,
+                      ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                      enabled
+                    }
+                  })
+                }
+              />
+            }
+          />
+
+          {/* Trigger modifier selection */}
+          <Item
+            leftContent={t('trigger-modifier')}
+            rightContent={
+              <Select
+                size="sm"
+                selectedKeys={[hotkeyConfig.textSelectionToolbar?.triggerModifier ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.triggerModifier]}
+                onSelectionChange={(keys) => {
+                  const modifier = Array.from(keys)[0] as 'ctrl' | 'shift' | 'alt';
+                  saveConfig({
+                    textSelectionToolbar: {
+                      ...hotkeyConfig.textSelectionToolbar,
+                      ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                      triggerModifier: modifier
+                    }
+                  });
+                }}
+                className="w-32"
+              >
+                <SelectItem key="ctrl" >Ctrl + `</SelectItem>
+                <SelectItem key="shift">Shift + `</SelectItem>
+                <SelectItem key="alt">Alt + `</SelectItem>
+              </Select>
+            }
+            type="col"
+          />
+
+          {/* Translation language settings */}
+          <Item
+            leftContent={t('translation-languages')}
+            rightContent={
+              <div className="flex gap-2">
+                <Select
+                  size="sm"
+                  selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationFromLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationFromLang]}
+                  onSelectionChange={(keys) => {
+                    const fromLang = Array.from(keys)[0] as string;
+                    saveConfig({
+                      textSelectionToolbar: {
+                        ...hotkeyConfig.textSelectionToolbar,
+                        ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                        translationFromLang: fromLang
+                      }
+                    });
+                  }}
+                  className="w-24"
+                >
+                  <SelectItem key="auto">Auto</SelectItem>
+                  <SelectItem key="en">English</SelectItem>
+                  <SelectItem key="zh">Chinese</SelectItem>
+                  <SelectItem key="ja">Japanese</SelectItem>
+                  <SelectItem key="ko">Korean</SelectItem>
+                  <SelectItem key="fr">French</SelectItem>
+                  <SelectItem key="de">German</SelectItem>
+                  <SelectItem key="es">Spanish</SelectItem>
+                </Select>
+                <span className="text-sm text-gray-500 self-center">→</span>
+                <Select
+                  size="sm"
+                  selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationToLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationToLang]}
+                  onSelectionChange={(keys) => {
+                    const toLang = Array.from(keys)[0] as string;
+                    saveConfig({
+                      textSelectionToolbar: {
+                        ...hotkeyConfig.textSelectionToolbar,
+                        ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                        translationToLang: toLang
+                      }
+                    });
+                  }}
+                  className="w-24"
+                >
+                  <SelectItem key="en">English</SelectItem>
+                  <SelectItem key="zh">Chinese</SelectItem>
+                  <SelectItem key="ja">Japanese</SelectItem>
+                  <SelectItem key="ko">Korean</SelectItem>
+                  <SelectItem key="fr">French</SelectItem>
+                  <SelectItem key="de">German</SelectItem>
+                  <SelectItem key="es">Spanish</SelectItem>
+                </Select>
               </div>
             }
             type="col"

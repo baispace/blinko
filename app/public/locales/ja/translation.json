@@ -690,5 +690,8 @@
   "hotkey.clickRecordButton": "録画ボタンをクリックして録画を開始します",
   "hotkey.stop": "停止",
   "hotkey.record": "録音",
-  "hotkeys": "ショートカットキー"
+  "hotkeys": "ショートカットキー",
+  "translation-languages": "翻訳言語",
+  "trigger-modifier": "ショートカットキーを変更する",
+  "text-selection-toolbar": "划词ツールバー"
 }

@@ -690,5 +690,8 @@
   "hotkey.clickRecordButton": "Kayıt düğmesine tıklayarak kayda başlayın.",
   "hotkey.stop": "Dur停止",
   "hotkey.record": "",
-  "hotkeys": "Kısayol tuşları"
+  "hotkeys": "Kısayol tuşları",
+  "translation-languages": "Çeviri dili",
+  "trigger-modifier": "Kısayol tuşlarını değiştir",
+  "text-selection-toolbar": "Kelime Çizim Araç Çubuğu"
 }

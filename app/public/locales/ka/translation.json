@@ -649,5 +649,8 @@
   "hotkey.clickRecordButton": "დააჭირეთ ღილაკ \"Record\"  რო,  ការចាប់ផ្តើម录制",
   "hotkey.stop": "შეჩერება",
   "hotkey.record": "ჩაწერა",
-  "hotkeys": "მარტივი გზები"
+  "hotkeys": "მარტივი გზები",
+  "translation-languages": "თარგმნის ენა",
+  "trigger-modifier": "შეცვალე სწრაფ გონ-ო-KEY",
+  "text-selection-toolbar": "划词工具栏 - ტექსტის მოჭრის ხაზи"
 }

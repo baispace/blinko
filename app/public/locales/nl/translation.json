@@ -696,5 +696,8 @@
   "hotkey.clickRecordButton": "Klik op de opnameknop om te beginnen met opnemen.",
   "hotkey.stop": "Stoppen",
   "hotkey.record": "opnemen",
-  "hotkeys": "sneltoets"
+  "hotkeys": "sneltoets",
+  "translation-languages": "Vertaal taal",
+  "trigger-modifier": "Wijzig sneltoetsen",
+  "text-selection-toolbar": "Woordenbalk markeren"
 }

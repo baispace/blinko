@@ -685,5 +685,8 @@
   "hotkey.clickRecordButton": "녹화 버튼을 클릭하여 녹화를 시작하세요.",
   "hotkey.stop": "중지",
   "hotkey.record": "녹음하다",
-  "hotkeys": "단축키"
+  "hotkeys": "단축키",
+  "translation-languages": "번역 언어",
+  "trigger-modifier": "바로 가기 키 변경",
+  "text-selection-toolbar": "단어 표시 도구 모음"
 }

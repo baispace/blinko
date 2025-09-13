@@ -690,5 +690,8 @@
   "hotkey.clickRecordButton": "Haz clic en el botón de grabación para comenzar a grabar.",
   "hotkey.stop": "Detener",
   "hotkey.record": "grabar",
-  "hotkeys": "Teclas de acceso rápido"
+  "hotkeys": "Teclas de acceso rápido",
+  "translation-languages": "Idioma de traducción",
+  "trigger-modifier": "Cambiar teclas de acceso rápido",
+  "text-selection-toolbar": "Barra de herramientas de selección de texto"
 }

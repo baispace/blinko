@@ -10,7 +10,17 @@ const DEFAULT_HOTKEY_CONFIG = {
   enabled: true,
   aiEnabled: true,
   systemTrayEnabled: true,
-  windowBehavior: 'show' as const
+  windowBehavior: 'show' as const,
+  textSelectionToolbar: {
+    enabled: true,
+    triggerModifier: 'none' as const,
+    features: {
+      translation: true,
+      copy: true,
+      qna: true,
+      bookmark: true
+    }
+  }
 };
 
 export const useInitialHotkeySetup = () => {
@@ -55,6 +65,19 @@ export const useInitialHotkeySetup = () => {
             console.log('Initial registration - quickai shortcut:', finalConfig.quickAI);
           } catch (error) {
             console.warn('Failed to register initial quickai shortcut:', error);
+          }
+        }
+        
+        // Setup text selection monitoring if enabled
+        if (finalConfig.textSelectionToolbar.enabled) {
+          try {
+            await invoke('setup_text_selection_monitoring', {
+              enabled: true,
+              triggerModifier: finalConfig.textSelectionToolbar.triggerModifier
+            });
+            console.log('Text selection monitoring enabled with trigger:', finalConfig.textSelectionToolbar.triggerModifier);
+          } catch (error) {
+            console.warn('Failed to setup text selection monitoring:', error);
           }
         }
         

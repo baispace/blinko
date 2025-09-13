@@ -23,6 +23,7 @@ import { PluginSetting } from '@/components/BlinkoSettings/PluginSetting';
 import { ImportAIDialog } from '@/components/BlinkoSettings/ImportAIDialog';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { HotkeySetting } from '@/components/BlinkoSettings/HotkeySetting';
 
 type SettingItem = {
   key: string;
@@ -56,6 +57,14 @@ export const allSettings: SettingItem[] = [
     component: <PerferSetting />,
     requireAdmin: false,
     keywords: ['preference', 'theme', 'language', '偏好设置', '主题', '语言'],
+  },
+  {
+    key: 'hotkey',
+    title: ('hotkeys'),
+    icon: 'material-symbols:keyboard',
+    component: <HotkeySetting />,
+    requireAdmin: false,
+    keywords: ['hotkey', 'shortcut', 'keyboard', 'desktop', '快捷键', '热键', '桌面'],
   },
   {
     key: 'user',

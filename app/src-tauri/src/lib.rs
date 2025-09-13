@@ -1,12 +1,13 @@
-use tauri::Manager;
-#[cfg(target_os = "windows")]
-use tauri_plugin_decorum::WebviewWindowExt;
+mod desktop;
+use desktop::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,7 +23,13 @@ pub fn run() {
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(
+                tauri_plugin_global_shortcut::Builder::new()
+                    .with_handler(create_global_shortcut_handler())
+                    .build()
+            );
     }
 
     #[cfg(target_os = "windows")]
@@ -31,29 +38,17 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            toggle_editor_window,
+            register_hotkey,
+            unregister_hotkey,
+            get_registered_shortcuts,
+            toggle_quicknote_window,
+            resize_quicknote_window
+        ])
         .setup(|app| {
-            let main_window = app.get_webview_window("main").unwrap();
-
-            // Set platform-specific window decorations
-            #[cfg(target_os = "macos")]
-            {
-                // On macOS, use native decorations
-                main_window.set_decorations(true).unwrap();
-            }
-
-            #[cfg(any(target_os = "windows", target_os = "linux"))]
-            {
-                // On Windows and Linux, hide decorations
-                main_window.set_decorations(false).unwrap();
-            }
-
-            // Apply Windows-specific titlebar
-            #[cfg(target_os = "windows")]
-            {
-                main_window.create_overlay_titlebar().unwrap();
-            }
-
+            setup_app(app)?;
             Ok(())
         })
         .run(tauri::generate_context!())

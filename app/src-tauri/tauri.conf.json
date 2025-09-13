@@ -25,6 +25,25 @@
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "decorations": false
+      },
+      {
+        "label": "quicknote",
+        "title": "Quick Note",
+        "width": 600,
+        "height": 125,
+        "maxHeight": 600,
+        "fullscreen": false,
+        "resizable": false,
+        "focus": true,
+        "center": true,
+        "visible": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "titleBarStyle": "Overlay",
+        "transparent": true,
+        "hiddenTitle": true,
+        "decorations": false,
+        "url": "/quicknote"
       }
     ]
   },

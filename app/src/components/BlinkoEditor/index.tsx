@@ -6,6 +6,7 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@shared/lib/types"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useQuicknoteHotkey } from "@/hooks/useQuicknoteHotkey"
 
 type IProps = {
   mode: 'create' | 'edit',
@@ -109,7 +110,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     }
   }, [mode])
 
-  return <div className="max-h-[100vh]" ref={editorRef} id='global-editor' onClick={() => {
+  // Use Tauri hotkey hook
+  useQuicknoteHotkey(isCreateMode);
+
+  return <div className="h-full" ref={editorRef} id='global-editor' data-tauri-drag-region onClick={() => {
     blinko.isCreateMode = mode == 'create'
   }}>
     <Editor

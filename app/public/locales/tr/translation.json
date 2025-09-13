@@ -680,5 +680,15 @@
   "select-default-home-page": "Lütfen varsayılan ana sayfayı seçin.",
   "ai-model-desc": "Eğer seçilen model görsel (çok modlu) destekliyorsa, Blinko otomatik olarak görüntüleri indeksleyecektir.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Sesli notlar kaydetmek için mikrofon erişimine izin vermeniz gerekiyor.",
-  "grant-microphone-permission": "Mikrofon yetkilendirme"
+  "grant-microphone-permission": "Mikrofon yetkilendirme",
+  "hotkey.title": "Kısayol tuşları",
+  "hotkey.enableGlobalHotkey": "",
+  "hotkey-settings": "Sıcak Tuş Ayarları",
+  "enable-hotkeys-desc": "Kısayol tuşlarını kullanarak not penceresini hızlıca açmaya izin ver.",
+  "hotkey.quickNoteShortcut": "Hızlı Not Alma Kısayolları",
+  "hotkey.pressShortcut": "Lütfen kısayol tuşuna basın.",
+  "hotkey.clickRecordButton": "Kayıt düğmesine tıklayarak kayda başlayın.",
+  "hotkey.stop": "Dur停止",
+  "hotkey.record": "",
+  "hotkeys": "Kısayol tuşları"
 }

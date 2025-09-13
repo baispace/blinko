@@ -711,5 +711,15 @@
   "status-code": "Tangalt n waddad",
   "preview-mode": "Askar n uskan",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Nu qidam li mikrofoonu ke waraqta sawto tafaadii.",
-  "grant-microphone-permission": "麦克风を許可する"
+  "grant-microphone-permission": "麦克风を許可する",
+  "hotkey.title": "ⵜⴰⵏⴻⵎⵉⵜ",
+  "hotkey.enableGlobalHotkey": "Enable global hotkeys",
+  "hotkey-settings": "Tansayt n usnerni",
+  "enable-hotkeys-desc": "Ixeddamen n teqleḍ i d-yettuɣalen ara ad yeldin tikkelt tameqrant n tweḍriwin n yizerfan",
+  "hotkey.quickNoteShortcut": "Tugna taneflit n teqbaylit",
+  "hotkey.pressShortcut": "ⴰⵣⴻⵎ ⴰⵙ ⵜⴰⵏⴼⵓ ⵜⴰḍṛart",
+  "hotkey.clickRecordButton": "Anef-as iḍum n teqdimt akken ad tebded taɣuri",
+  "hotkey.stop": "Aredjed",
+  "hotkey.record": "ⵉⵙⴳⴰ",
+  "hotkeys": "ⵜⴰⵏⴻⵙⵎⴰ ⵜⴰⵣᴇṛṛumt"
 }

@@ -728,5 +728,15 @@
   "ai-model-desc": "如果所选模型支持视觉（多模态），Blinko将自动索引图像。",
   "microphone-access-required": "麦克风访问权限",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "需要访问您的麦克风权限才能录制音频笔记。",
-  "grant-microphone-permission": "授权麦克风"
+  "grant-microphone-permission": "授权麦克风",
+  "hotkey.title": "快捷键",
+  "hotkey.enableGlobalHotkey": "启用全局热键",
+  "hotkey-settings": "热键设置",
+  "enable-hotkeys-desc": "允许使用快捷键快速打开笔记窗口",
+  "hotkey.quickNoteShortcut": "快捷笔记快捷键",
+  "hotkey.pressShortcut": "请按下快捷键",
+  "hotkey.clickRecordButton": "点击录制按钮开始录制",
+  "hotkey.stop": "停止",
+  "hotkey.record": "录制",
+  "hotkeys": "快捷键"
 }

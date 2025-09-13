@@ -686,5 +686,15 @@
   "select-default-home-page": "Selecteer de standaard homepage",
   "ai-model-desc": "Als het geselecteerde model visuele (multimodale) ondersteuning biedt, zal Blinko automatisch afbeeldingen indexeren.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Toegang tot uw microfoon is nodig om audiogegevens op te nemen.",
-  "grant-microphone-permission": "Microfoon machtigen"
+  "grant-microphone-permission": "Microfoon machtigen",
+  "hotkey.title": "sneltoets",
+  "hotkey.enableGlobalHotkey": "Activeer globale sneltoetsen",
+  "hotkey-settings": "Sneltoetsinstellingen",
+  "enable-hotkeys-desc": "Toestaan om met sneltoetsen snel het notitievenster te openen",
+  "hotkey.quickNoteShortcut": "Sneltoetsen voor snelle notities",
+  "hotkey.pressShortcut": "Druk op de sneltoets",
+  "hotkey.clickRecordButton": "Klik op de opnameknop om te beginnen met opnemen.",
+  "hotkey.stop": "Stoppen",
+  "hotkey.record": "opnemen",
+  "hotkeys": "sneltoets"
 }

@@ -18,6 +18,8 @@ import { UserStore } from '@/store/user';
 import { getTokenData, setNavigate } from '@/components/Auth/auth-client';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useAndroidShortcuts } from '@/lib/hooks';
+import QuickNotePage from "./pages/quicknote";
+
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
 const SignUpPage = lazy(() => import('./pages/signup'));
@@ -125,6 +127,7 @@ function AppRoutes() {
         <Route path="/share" element={<ShareIndexPage />} />
         <Route path="/share/:id" element={<ShareDetailPage />} />
         <Route path="/ai-share/:id" element={<AiSharePage />} />
+        <Route path="/quicknote" element={<QuickNotePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

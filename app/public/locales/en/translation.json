@@ -712,5 +712,15 @@
   "ai-model-desc": "If the selected model supports vision (multimodal), Blinko will automatically index images.",
   "microphone-access-required": "Microphone Access Required",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "To record audio notes, we need permission to access your microphone.",
-  "grant-microphone-permission": "Grant Microphone Permission"
+  "grant-microphone-permission": "Grant Microphone Permission",
+  "hotkey.title": "shortcut key",
+  "hotkey.enableGlobalHotkey": "Enable global hotkey",
+  "hotkey-settings": "Hotkey Settings",
+  "enable-hotkeys-desc": "Allow the use of shortcut keys to quickly open the note window.",
+  "hotkey.quickNoteShortcut": "Shortcut keys for quick notes",
+  "hotkey.pressShortcut": "Please press the shortcut key.",
+  "hotkey.clickRecordButton": "Click the record button to start recording.",
+  "hotkey.stop": "Stop",
+  "hotkey.record": "record",
+  "hotkeys": "shortcut key"
 }

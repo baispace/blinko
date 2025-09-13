@@ -680,5 +680,18 @@
   "select-default-home-page": "請選擇預設首頁",
   "ai-model-desc": "如果所選模型支持視覺（多模態），Blinko將自動索引圖像。",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "需要存取您的麥克風權限才能錄製音訊筆記。",
-  "grant-microphone-permission": "授權麥克風"
+  "grant-microphone-permission": "授權麥克風",
+  "hotkey.title": "快速鍵",
+  "hotkey.enableGlobalHotkey": "啟用快捷筆記",
+  "hotkey-settings": "熱鍵設置",
+  "enable-hotkeys-desc": "允許使用快捷鍵快速打開筆記視窗",
+  "hotkey.quickNoteShortcut": "快捷筆記快捷鍵",
+  "hotkey.pressShortcut": "請按下快捷鍵",
+  "hotkey.clickRecordButton": "點擊錄製按鈕開始錄製",
+  "hotkey.stop": "停止",
+  "hotkey.record": "",
+  "hotkeys": "快速鍵",
+  "translation-languages": "翻譯語言",
+  "trigger-modifier": "更改快捷鍵",
+  "text-selection-toolbar": "劃詞工具列"
 }

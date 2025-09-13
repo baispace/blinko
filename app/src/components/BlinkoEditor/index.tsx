@@ -6,16 +6,18 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@shared/lib/types"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useQuicknoteHotkey } from "@/hooks/useQuicknoteHotkey"
 
 type IProps = {
   mode: 'create' | 'edit',
   onSended?: () => void,
   onHeightChange?: (height: number) => void,
   height?: number,
-  isInDialog?: boolean
+  isInDialog?: boolean,
+  withoutOutline?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -109,7 +111,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     }
   }, [mode])
 
-  return <div className="max-h-[100vh]" ref={editorRef} id='global-editor' onClick={() => {
+  // Use Tauri hotkey hook
+  useQuicknoteHotkey(isCreateMode);
+
+  return <div className={`h-full ${withoutOutline ? '' : ''}`} ref={editorRef} id='global-editor' data-tauri-drag-region onClick={() => {
     blinko.isCreateMode = mode == 'create'
   }}>
     <Editor
@@ -120,6 +125,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       onChange={v => {
         store.noteContent = v
       }}
+      withoutOutline={withoutOutline}
       onHeightChange={() => {
         onHeightChange?.(editorRef.current?.clientHeight ?? 75)
         if (editorRef.current) {

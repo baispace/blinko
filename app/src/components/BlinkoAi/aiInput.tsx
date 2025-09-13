@@ -20,6 +20,7 @@ interface AiInputProps {
   mode?: 'card' | 'inline';
   onSubmit?: (value: string) => void;
   className?: string;
+  withoutOutline?: boolean;
 }
 
 const cardIcons = [
@@ -108,14 +109,14 @@ const cardIcons = [
   },
 ];
 
-export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
+export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInputProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const aiStore = RootStore.Get(AiStore);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
   return (
     <motion.div
-      className={`w-full p-2 rounded-3xl bg-background ${className}`}
+      className={`w-full p-2 ${withoutOutline ? '' : 'rounded-3xl bg-background'} ${className}`}
       animate={{
         width: mode === 'inline' ? (isPc ? '85%' : '100%') : isPc ? '60%' : '100%',
       }}
@@ -133,7 +134,11 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
 
             if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
               e.preventDefault();
-              aiStore.onInputSubmit();
+              if (onSubmit) {
+                onSubmit(aiStore.input);
+              } else {
+                aiStore.onInputSubmit();
+              }
             }
           }}
           onChange={(e) => (aiStore.input = e.target.value)}
@@ -213,7 +218,11 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
               if (aiStore.input.trim() == '') {
                 return;
               } else {
-                aiStore.onInputSubmit();
+                if (onSubmit) {
+                  onSubmit(aiStore.input);
+                } else {
+                  aiStore.onInputSubmit();
+                }
               }
             }}
           >

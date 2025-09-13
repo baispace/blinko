@@ -70,7 +70,7 @@
 html,
 body {
   scroll-behavior: smooth;
-  overflow-y: hidden;
+  overflow-y: hidden!important;
   height: var(--doc-height);
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;

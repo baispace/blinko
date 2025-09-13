@@ -671,5 +671,18 @@
   "select-default-home-page": "Proszę wybrać domyślną stronę główną",
   "ai-model-desc": "Jeśli wybrany model obsługuje wizję (wielomodalność), Blinko automatycznie zindeksuje obrazy.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Aby nagrywać notatki dźwiękowe, potrzebny jest dostęp do mikrofonu.",
-  "grant-microphone-permission": "Autoryzuj mikrofon"
+  "grant-microphone-permission": "Autoryzuj mikrofon",
+  "hotkey.title": "Skrót klawiszowy",
+  "hotkey.enableGlobalHotkey": "Włącz szybkie notatki",
+  "hotkey-settings": "Ustawienia klawiszy skrótu",
+  "enable-hotkeys-desc": "Zezwól na używanie skrótów klawiszowych do szybkiego otwierania okna notatek.",
+  "hotkey.quickNoteShortcut": "Skróty klawiszowe szybkich notatek",
+  "hotkey.pressShortcut": "Naciśnij klawisz skrótu",
+  "hotkey.clickRecordButton": "Kliknij przycisk nagrywania, aby rozpocząć nagrywanie.",
+  "hotkey.stop": "Zatrzymać",
+  "hotkey.record": "",
+  "hotkeys": "Skrót klawiszowy",
+  "translation-languages": "Język tłumaczenia",
+  "trigger-modifier": "Zmień skrót klawiszowy",
+  "text-selection-toolbar": "Pasek narzędzi do zaznaczania tekstu"
 }

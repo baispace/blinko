@@ -678,5 +678,18 @@
   "default-home-page": "الصفحة الرئيسية الافتراضية",
   "select-default-home-page": "اختر الصفحة الرئيسية الافتراضية",
   "ai-model-desc": "إذا كان النموذج المختار يدعم الرؤية (متعدد الوسائط)، فسيقوم Blinko بفهرسة الصور تلقائيًا.",
-  "grant-microphone-permission": "تفويض الميكروفون"
+  "grant-microphone-permission": "تفويض الميكروفون",
+  "hotkey.title": "اختصارات الكيبورد",
+  "hotkey.enableGlobalHotkey": "تفعيل الملاحظات السريعة",
+  "hotkey-settings": "إعدادات مفاتيح الاختصار",
+  "enable-hotkeys-desc": "السماح باستخدام اختصارات لفتح نافذة الملاحظات بسرعة",
+  "hotkey.quickNoteShortcut": "اختصارات ملاحظات سريعة",
+  "hotkey.pressShortcut": "يرجى الضغط على مفتاح الاختصار",
+  "hotkey.clickRecordButton": "انقر على زر التسجيل لبدء التسجيل",
+  "hotkey.stop": "توقف",
+  "hotkey.record": "تسجيل",
+  "hotkeys": "اختصارات الكيبورد",
+  "translation-languages": "ترجمة اللغات",
+  "trigger-modifier": "تغيير الاختصارات",
+  "text-selection-toolbar": "شريط أدوات التحديد"
 }

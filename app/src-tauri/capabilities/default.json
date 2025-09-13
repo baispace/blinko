@@ -3,7 +3,10 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main",
+    "quicknote",
+    "quickai",
+    "quicktool"
   ],
   "permissions": [
     "core:default",
@@ -18,6 +21,10 @@
     "core:window:allow-set-focus",
     "core:window:allow-is-maximized",
     "core:window:allow-toggle-maximize",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-is-visible",
+    "core:window:allow-inner-size",
     "core:app:default",
     "fs:default",
     "dialog:default",

@@ -639,5 +639,18 @@
   "select-default-home-page": "გთხოვთ, აირჩიოთ საწყის  ̈defaulẗ- ́home page`",
   "ai-model-desc": "თუ არჩეული მოდელი მხარს უჭერს ვიზუალურ (მრავალმოდუსიან) ფუნქციებს, Blinko ავტომატურად გააანალიზებს გამოსახულებებს.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "თქვენს აუდიოს ჩანაწერისთვის მიკროფონის ნებართვის მიღება სჭირდება.",
-  "grant-microphone-permission": "მიკროფონის დაშვება"
+  "grant-microphone-permission": "მიკროფონის დაშვება",
+  "hotkey.title": "მარტივი გზებи",
+  "hotkey.enableGlobalHotkey": "启用快捷笔记",
+  "hotkey-settings": "ცხელი ღილაკების დაყოបba",
+  "enable-hotkeys-desc": "დაშვებულია გამოიყო  ̈hotkeys-ebi, rom gacherebuli iqos jishis p`anjara.",
+  "hotkey.quickNoteShortcut": "快捷筆記快捷鍵",
+  "hotkey.pressShortcut": "გთხოვთ, დააჭიროთ სწრაფ ប៊ូតុងis",
+  "hotkey.clickRecordButton": "დააჭირეთ ღილაკ \"Record\"  რო,  ការចាប់ផ្តើម录制",
+  "hotkey.stop": "შეჩერება",
+  "hotkey.record": "ჩაწერა",
+  "hotkeys": "მარტივი გზები",
+  "translation-languages": "თარგმნის ენა",
+  "trigger-modifier": "შეცვალე სწრაფ გონ-ო-KEY",
+  "text-selection-toolbar": "划词工具栏 - ტექსტის მოჭრის ხაზи"
 }

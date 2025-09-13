@@ -680,5 +680,18 @@
   "select-default-home-page": "Por favor, seleccione la página de inicio predeterminada.",
   "ai-model-desc": "Si el modelo seleccionado admite visión (multimodal), Blinko indexará automáticamente las imágenes.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Se necesita acceso a su micrófono para poder grabar notas de audio.",
-  "grant-microphone-permission": "Autorizar micrófono"
+  "grant-microphone-permission": "Autorizar micrófono",
+  "hotkey.title": "Teclas de acceso rápido",
+  "hotkey.enableGlobalHotkey": "Habilitar notas rápidas",
+  "hotkey-settings": "Configuración de teclas rápidas",
+  "enable-hotkeys-desc": "Permitir usar teclas de acceso rápido para abrir rápidamente la ventana de notas.",
+  "hotkey.quickNoteShortcut": "Teclas de acceso rápido para notas rápidas",
+  "hotkey.pressShortcut": "Por favor, presiona la tecla de acceso rápido.",
+  "hotkey.clickRecordButton": "Haz clic en el botón de grabación para comenzar a grabar.",
+  "hotkey.stop": "Detener",
+  "hotkey.record": "grabar",
+  "hotkeys": "Teclas de acceso rápido",
+  "translation-languages": "Idioma de traducción",
+  "trigger-modifier": "Cambiar teclas de acceso rápido",
+  "text-selection-toolbar": "Barra de herramientas de selección de texto"
 }

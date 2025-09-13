@@ -673,5 +673,18 @@
   "select-default-home-page": "Пожалуйста, выберите домашнюю страницу по умолчанию.",
   "ai-model-desc": "Если выбранная модель поддерживает визуальные (мультимодальные) функции, Blinko автоматически проиндексирует изображения.",
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Для записи аудиозаметок требуется доступ к вашему микрофону.",
-  "grant-microphone-permission": "Разрешить доступ к микрофону"
+  "grant-microphone-permission": "Разрешить доступ к микрофону",
+  "hotkey.title": "горячие клавиши",
+  "hotkey.enableGlobalHotkey": "Включить быстрые заметки",
+  "hotkey-settings": "Горячие клавиши",
+  "enable-hotkeys-desc": "Разрешить использование горячих клавиш для быстрого открытия окна заметок",
+  "hotkey.quickNoteShortcut": "Быстрые клавиши для заметок",
+  "hotkey.pressShortcut": "Пожалуйста, нажмите сочетание клавиш",
+  "hotkey.clickRecordButton": "Нажмите кнопку записи, чтобы начать запись.",
+  "hotkey.stop": "Остановить",
+  "hotkey.record": "",
+  "hotkeys": "горячие клавиши",
+  "translation-languages": "Перевод языков",
+  "trigger-modifier": "Изменить горячие клавиши",
+  "text-selection-toolbar": "Панель инструментов для выделения текста"
 }

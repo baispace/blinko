@@ -53,6 +53,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('isHiddenNotification'),
   z.literal('hidePcEditor'),
   z.literal('defaultHomePage'),
+  z.literal('desktopHotkeys'),
+  z.literal('systemTray'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -194,6 +196,8 @@ export const ZConfigSchema = z.object({
   hidePcEditor: z.boolean().optional(),
   globalPrompt: z.string().optional(),
   defaultHomePage: z.string().optional(),
+  desktopHotkeys: z.any().optional(),
+  systemTray: z.any().optional(),
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;
@@ -232,4 +236,90 @@ export type ProgressResult = {
   type: 'success' | 'skip' | 'error' | 'info';
   content?: string;
   error?: unknown;
+}
+
+// Desktop Hotkey Configuration Types
+export interface HotkeyConfig {
+  quickNote: string;           // Quick note hotkey
+  quickAI: string;             // Quick AI hotkey
+  enabled: boolean;            // Enable hotkeys
+  aiEnabled: boolean;          // Enable AI hotkey
+  systemTrayEnabled: boolean;  // Enable system tray
+  windowBehavior: 'show' | 'hide' | 'minimize'; // Window behavior
+  textSelectionToolbar: TextSelectionToolbarConfig; // Text selection toolbar config
+}
+
+// Text Selection Toolbar Configuration
+export interface TextSelectionToolbarConfig {
+  enabled: boolean;            // Enable text selection toolbar
+  triggerModifier: 'ctrl' | 'shift' | 'alt'; // Modifier key to trigger toolbar
+  translationFromLang: string; // Source language for translation
+  translationToLang: string;   // Target language for translation
+  features: {
+    translation: boolean;      // Enable translation feature
+    copy: boolean;            // Enable copy feature
+    qna: boolean;             // Enable Q&A feature
+    bookmark: boolean;        // Enable bookmark feature
+  };
+}
+
+export const DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG: TextSelectionToolbarConfig = {
+  enabled: true,
+  triggerModifier: 'ctrl',
+  translationFromLang: 'auto',
+  translationToLang: 'zh',
+  features: {
+    translation: true,
+    copy: true,
+    qna: true,
+    bookmark: true
+  }
+};
+
+export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
+  quickNote: 'Shift+Space',
+  quickAI: 'Alt+Space',
+  enabled: true,
+  aiEnabled: true,
+  systemTrayEnabled: true,
+  windowBehavior: 'show',
+  textSelectionToolbar: DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG
+};
+
+// System Tray Configuration
+export interface SystemTrayConfig {
+  enabled: boolean;
+  showInTray: boolean;
+  minimizeToTray: boolean;
+  closeToTray: boolean;
+}
+
+export const DEFAULT_SYSTEM_TRAY_CONFIG: SystemTrayConfig = {
+  enabled: true,
+  showInTray: true,
+  minimizeToTray: true,
+  closeToTray: false
+};
+
+// Platform detection utility type
+export interface PlatformInfo {
+  isTauri: boolean;
+  isDesktop: boolean;
+  platform: 'windows' | 'macos' | 'linux' | 'android' | 'ios' | 'web';
+}
+
+// Hotkey event types for Tauri communication
+export interface HotkeyEvent {
+  type: 'quicknote-triggered' | 'window-toggle' | 'settings-open';
+  payload?: any;
+}
+
+// Tray menu item types
+export interface TrayMenuItem {
+  id: string;
+  label: string;
+  accelerator?: string;
+  enabled?: boolean;
+  visible?: boolean;
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
 }

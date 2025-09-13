@@ -6,9 +6,10 @@ use tauri_plugin_decorum::WebviewWindowExt;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri_plugin_global_shortcut::{ShortcutState, ShortcutEvent};
 
-use crate::desktop::{HotkeyConfig, setup_default_shortcuts, setup_system_tray, toggle_quicknote_window};
+use crate::desktop::{HotkeyConfig, setup_default_shortcuts, setup_system_tray, toggle_quicknote_window, restore_main_window_state, setup_window_state_monitoring};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let app_handle = app.handle();
     let main_window = app.get_webview_window("main").unwrap();
 
     // Set platform-specific window decorations
@@ -29,6 +30,12 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     {
         main_window.create_overlay_titlebar().unwrap();
     }
+
+    // Restore window state first
+    restore_main_window_state(&app_handle);
+    
+    // Setup window state monitoring
+    setup_window_state_monitoring(&app_handle);
 
     // Set window close event handler to hide to tray instead of exit
     let window = main_window.clone();

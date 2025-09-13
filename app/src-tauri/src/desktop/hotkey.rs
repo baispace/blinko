@@ -17,6 +17,15 @@ pub struct HotkeyConfig {
     pub window_behavior: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WindowConfig {
+    pub width: f64,
+    pub height: f64,
+    pub x: Option<i32>,
+    pub y: Option<i32>,
+    pub maximized: bool,
+}
+
 impl Default for HotkeyConfig {
     fn default() -> Self {
         Self {
@@ -24,6 +33,18 @@ impl Default for HotkeyConfig {
             enabled: true,
             system_tray_enabled: true,
             window_behavior: "show".to_string(),
+        }
+    }
+}
+
+impl Default for WindowConfig {
+    fn default() -> Self {
+        Self {
+            width: 1024.0,
+            height: 768.0,
+            x: None,
+            y: None,
+            maximized: false,
         }
     }
 }

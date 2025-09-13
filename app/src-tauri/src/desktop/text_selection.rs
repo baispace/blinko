@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Emitter, Runtime, Manager, Monitor, WebviewUrl};
+use tauri::{AppHandle, Emitter, Runtime, Manager, Position, Size};
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, LazyLock};
 
@@ -69,7 +69,7 @@ pub fn setup_text_selection_monitoring<R: Runtime>(
     enabled: bool,
     trigger_modifier: String,
 ) -> Result<(), String> {
-    use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+    use tauri_plugin_global_shortcut::{Shortcut, GlobalShortcutExt};
 
     println!("🔧 setup_text_selection_monitoring called: enabled={}, modifier={}", enabled, trigger_modifier);
 
@@ -125,6 +125,7 @@ pub fn setup_text_selection_monitoring<R: Runtime>(
 
 
 // Helper function to get and validate mouse position
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn get_mouse_position<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
     match Mouse::get_mouse_position() {
         Mouse::Position { x, y } => {
@@ -197,6 +198,13 @@ fn get_mouse_position<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
     }
 }
 
+// Fallback for mobile platforms
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn get_mouse_position<R: Runtime>(_app: &AppHandle<R>) -> (f64, f64) {
+    println!("📱 Mobile platform - using fixed position");
+    (400.0, 300.0) // Fixed position for mobile
+}
+
 // Helper function to show and position quicktool window
 fn show_quicktool_window_at_position<R: Runtime>(app: &AppHandle<R>, x: f64, y: f64) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("quicktool") {
@@ -234,7 +242,7 @@ fn show_quicktool_window_at_position<R: Runtime>(app: &AppHandle<R>, x: f64, y: 
         }
 
         // Position window first
-        let position = tauri::LogicalPosition::new(x, y);
+        let position = tauri::Position::Logical(tauri::LogicalPosition::new(x, y));
         window.set_position(position)
             .map_err(|e| format!("Failed to set window position: {}", e))?;
 
@@ -423,7 +431,7 @@ pub fn show_quicktool<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
 
     if let Some(window) = app.get_webview_window("quicktool") {
         // Position at center of screen
-        let position = tauri::LogicalPosition::new(400.0, 300.0);
+        let position = tauri::Position::Logical(tauri::LogicalPosition::new(400.0, 300.0));
         window.set_position(position)
             .map_err(|e| format!("Failed to set position: {}", e))?;
 

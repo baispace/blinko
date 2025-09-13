@@ -94,9 +94,25 @@ pub fn disable_autostart() -> Result<(), String> {
 fn create_auto_launch() -> Result<auto_launch::AutoLaunch, String> {
     use auto_launch::AutoLaunch;
     
+    #[cfg(target_os = "macos")]
     let auto_launch = AutoLaunch::new(
         "Blinko",                    // App name
-        env!("CARGO_PKG_NAME"),      // App identifier  
+        env!("CARGO_PKG_NAME"),      // App identifier
+        false,                       // Use app path instead of executable path
+        &[] as &[&str],              // No additional args needed
+    );
+
+    #[cfg(target_os = "windows")]
+    let auto_launch = AutoLaunch::new(
+        "Blinko",                    // App name
+        env!("CARGO_PKG_NAME"),      // App identifier
+        &[] as &[&str],              // No additional args needed
+    );
+
+    #[cfg(target_os = "linux")]
+    let auto_launch = AutoLaunch::new(
+        "Blinko",                    // App name
+        env!("CARGO_PKG_NAME"),      // App identifier
         &[] as &[&str],              // No additional args needed
     );
     

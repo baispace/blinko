@@ -26,6 +26,7 @@ fn get_window_state_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_data_dir = app.path().app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     
+    
     // Ensure directory exists
     if !app_data_dir.exists() {
         fs::create_dir_all(&app_data_dir)

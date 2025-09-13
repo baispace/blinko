@@ -32,7 +32,6 @@ fn create_quick_window<R: Runtime>(
         .minimizable(false)
         .maximizable(false)
         .closable(false)
-        .transparent(config.label == "quicktool") // Only quicktool needs transparency
         .shadow(config.label == "quicktool") // Only quicktool needs shadow
         .build()
         .map_err(|e| format!("Failed to create {} window: {}", config.label, e))?;
@@ -230,9 +229,6 @@ pub fn toggle_quicktool_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(
 #[tauri::command]
 pub fn hide_quicktool_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("quicktool") {
-        let _ = window.hide();
-        println!("Quicktool window hidden");
-
         let _ = window.hide();
         println!("Quicktool window hidden");
         Ok(())

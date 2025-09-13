@@ -45,7 +45,11 @@ pub fn run() {
             unregister_hotkey,
             get_registered_shortcuts,
             toggle_quicknote_window,
-            resize_quicknote_window
+            resize_quicknote_window,
+            is_autostart_enabled,
+            enable_autostart,
+            disable_autostart,
+            toggle_autostart
         ])
         .setup(|app| {
             setup_app(app)?;

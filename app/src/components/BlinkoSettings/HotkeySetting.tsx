@@ -39,6 +39,7 @@ export const HotkeySetting = observer(() => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedKeys, setRecordedKeys] = useState<string[]>([]);
   const [registeredShortcuts, setRegisteredShortcuts] = useState<Record<string, string>>({});
+  const [autoStartEnabled, setAutoStartEnabled] = useState(false);
   const recordingRef = useRef<HTMLInputElement>(null);
 
   // Check if running on Tauri desktop
@@ -70,6 +71,17 @@ export const HotkeySetting = observer(() => {
       setRegisteredShortcuts(shortcuts);
     } catch (error) {
       console.error('Failed to get registered shortcuts:', error);
+    }
+  };
+
+  // Get autostart status
+  const getAutoStartStatus = async () => {
+    if (!isTauriDesktop) return;
+    try {
+      const enabled = await invoke<boolean>('is_autostart_enabled');
+      setAutoStartEnabled(enabled);
+    } catch (error) {
+      console.error('Failed to get autostart status:', error);
     }
   };
 
@@ -210,10 +222,27 @@ export const HotkeySetting = observer(() => {
       .replace('+', isMac ? '' : '+');
   };
 
+  // Toggle autostart
+  const toggleAutoStart = async (enabled: boolean) => {
+    if (!isTauriDesktop) return;
+    
+    try {
+      await invoke('toggle_autostart', { enable: enabled });
+      setAutoStartEnabled(enabled);
+      toast.success(enabled ? '开机自启动已启用' : '开机自启动已禁用');
+    } catch (error) {
+      console.error('Failed to toggle autostart:', error);
+      toast.error('设置开机自启动失败: ' + (error instanceof Error ? error.message : String(error)));
+      // Revert the state on error
+      await getAutoStartStatus();
+    }
+  };
+
   // Initialize
   useEffect(() => {
     getCurrentConfig();
     getRegisteredShortcuts();
+    getAutoStartStatus();
   }, []);
 
   // Don't show this setting if not Tauri desktop
@@ -223,10 +252,27 @@ export const HotkeySetting = observer(() => {
 
   return (
     <CollapsibleCard
-      icon="material-symbols:keyboard"
-      title={t('hotkey-settings')}
+      icon="material-symbols:desktop-windows"
+      title="桌面和快捷键"
       className="w-full"
     >
+      <div className="flex flex-col gap-4">
+        {/* Autostart switch */}
+        <Item
+          leftContent={
+            <ItemWithTooltip
+              content="开机自启动"
+              toolTipContent="开机时自动启动 Blinko 应用程序"
+            />
+          }
+          rightContent={
+            <Switch
+              isSelected={autoStartEnabled}
+              onValueChange={toggleAutoStart}
+            />
+          }
+        />
+
         {/* Hotkey enable switch */}
         <Item
           leftContent={
@@ -274,6 +320,8 @@ export const HotkeySetting = observer(() => {
           }
           type="col"
         />
+
+      </div>
     </CollapsibleCard>
   );
 });

@@ -12,6 +12,9 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     let app_handle = app.handle();
     let main_window = app.get_webview_window("main").unwrap();
 
+    // Restore window state before applying decorations
+    restore_main_window_state(&app_handle);
+
     // Set platform-specific window decorations
     #[cfg(target_os = "macos")]
     {
@@ -30,9 +33,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     {
         main_window.create_overlay_titlebar().unwrap();
     }
-
-    // Restore window state first
-    restore_main_window_state(&app_handle);
     
     // Setup window state monitoring
     setup_window_state_monitoring(&app_handle);

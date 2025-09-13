@@ -98,17 +98,19 @@ pub fn restore_main_window_state(app: &AppHandle) {
     
     if let Some(window) = app.get_webview_window("main") {
         if let Some(config) = window_state.main_window {
-            // Restore window size
-            let size = tauri::LogicalSize::new(config.width, config.height);
-            if let Err(e) = window.set_size(size) {
-                eprintln!("Failed to restore window size: {}", e);
-            }
-            
-            // Restore window position if available
-            if let (Some(x), Some(y)) = (config.x, config.y) {
-                let position = tauri::LogicalPosition::new(x, y);
-                if let Err(e) = window.set_position(position) {
-                    eprintln!("Failed to restore window position: {}", e);
+            // Only restore if not maximized, otherwise maximize will set the size
+            if !config.maximized {
+                // Use PhysicalSize to ensure exact pixel restoration
+                let size = tauri::PhysicalSize::new(config.width as u32, config.height as u32);
+                if let Err(e) = window.set_size(tauri::Size::Physical(size)) {
+                    eprintln!("Failed to restore window size: {}", e);
+                } else {
+                    println!("Restored window size: {}x{}", config.width, config.height);
+                }
+                
+                // Center the window after setting size
+                if let Err(e) = window.center() {
+                    eprintln!("Failed to center window: {}", e);
                 }
             }
             
@@ -116,11 +118,10 @@ pub fn restore_main_window_state(app: &AppHandle) {
             if config.maximized {
                 if let Err(e) = window.maximize() {
                     eprintln!("Failed to maximize window: {}", e);
+                } else {
+                    println!("Restored window maximized state");
                 }
             }
-            
-            println!("Restored main window state: {}x{} at ({:?}, {:?}), maximized: {}", 
-                     config.width, config.height, config.x, config.y, config.maximized);
         }
     }
 }
@@ -130,25 +131,24 @@ pub fn save_main_window_state(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let mut window_state = load_window_state(app);
         
-        // Get current window state
-        if let (Ok(size), Ok(position), Ok(is_maximized)) = (
+        // Get current window state - only size and maximized state
+        if let (Ok(size), Ok(is_maximized)) = (
             window.inner_size(),
-            window.outer_position(),
             window.is_maximized()
         ) {
             let config = WindowConfig {
                 width: size.width as f64,
                 height: size.height as f64,
-                x: Some(position.x),
-                y: Some(position.y),
+                x: None,  // Don't save position, always center
+                y: None,  // Don't save position, always center
                 maximized: is_maximized,
             };
             
             window_state.main_window = Some(config.clone());
             save_window_state(app, &window_state);
             
-            // println!("Saved main window state: {}x{} at ({}, {}), maximized: {}", 
-            //          config.width, config.height, config.x.unwrap_or(0), config.y.unwrap_or(0), config.maximized);
+            println!("Saved main window state: {}x{}, maximized: {}", 
+                     config.width, config.height, config.maximized);
         }
     }
 }

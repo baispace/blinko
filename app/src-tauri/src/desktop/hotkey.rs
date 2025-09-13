@@ -42,8 +42,8 @@ impl Default for WindowConfig {
         Self {
             width: 1024.0,
             height: 768.0,
-            x: None,
-            y: None,
+            x: None,  // Always center, don't save position
+            y: None,  // Always center, don't save position
             maximized: false,
         }
     }

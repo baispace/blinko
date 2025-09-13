@@ -17,7 +17,9 @@
       "mcp__context7__get-library-docs",
       "WebFetch(domain:v2.tauri.app)",
       "WebFetch(domain:docs.rs)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

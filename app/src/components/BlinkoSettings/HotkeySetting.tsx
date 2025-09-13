@@ -37,10 +37,13 @@ export const HotkeySetting = observer(() => {
 
   const [hotkeyConfig, setHotkeyConfig] = useState<HotkeyConfig>(DEFAULT_HOTKEY_CONFIG);
   const [isRecording, setIsRecording] = useState(false);
+  const [isRecordingAI, setIsRecordingAI] = useState(false);
   const [recordedKeys, setRecordedKeys] = useState<string[]>([]);
+  const [recordedAIKeys, setRecordedAIKeys] = useState<string[]>([]);
   const [registeredShortcuts, setRegisteredShortcuts] = useState<Record<string, string>>({});
   const [autoStartEnabled, setAutoStartEnabled] = useState(false);
   const recordingRef = useRef<HTMLInputElement>(null);
+  const recordingAIRef = useRef<HTMLInputElement>(null);
 
   // Check if running on Tauri desktop
   const isTauriDesktop = isInTauri() && isDesktop();
@@ -49,14 +52,17 @@ export const HotkeySetting = observer(() => {
   const getCurrentConfig = async () => {
     try {
       const config = await blinko.config.value?.desktopHotkeys;
-      if (config) {
-        // Ensure system tray is always enabled, window behavior fixed to show
-        setHotkeyConfig({
-          ...DEFAULT_HOTKEY_CONFIG,
-          ...config,
-          systemTrayEnabled: true,
-          windowBehavior: 'show'
-        });
+      const finalConfig = {
+        ...DEFAULT_HOTKEY_CONFIG,
+        ...config,
+        systemTrayEnabled: true,
+        windowBehavior: 'show' as const
+      };
+      setHotkeyConfig(finalConfig);
+      
+      // Refresh registration status (only if Tauri desktop)
+      if (isTauriDesktop) {
+        await getRegisteredShortcuts();
       }
     } catch (error) {
       console.error('Failed to get hotkey config:', error);
@@ -112,12 +118,24 @@ export const HotkeySetting = observer(() => {
         if (updatedConfig.enabled) {
           await updateHotkeyRegistration(updatedConfig.quickNote, true);
         } else {
-          // Unregister hotkey when disabled
+          // Unregister quicknote hotkey when disabled
           try {
             await invoke('unregister_hotkey', { shortcut: hotkeyConfig.quickNote });
-            console.log('Hotkey unregistered due to disable');
+            console.log('QuickNote hotkey unregistered due to disable');
           } catch (error) {
-            console.warn('Failed to unregister hotkey on disable:', error);
+            console.warn('Failed to unregister quicknote hotkey on disable:', error);
+          }
+        }
+        
+        if (updatedConfig.aiEnabled) {
+          await updateAIHotkeyRegistration(updatedConfig.quickAI, true);
+        } else {
+          // Unregister quickai hotkey when disabled
+          try {
+            await invoke('unregister_hotkey', { shortcut: hotkeyConfig.quickAI });
+            console.log('QuickAI hotkey unregistered due to disable');
+          } catch (error) {
+            console.warn('Failed to unregister quickai hotkey on disable:', error);
           }
         }
       }
@@ -160,7 +178,40 @@ export const HotkeySetting = observer(() => {
     }
   };
 
-  // Keyboard event handling
+  // Update AI hotkey registration
+  const updateAIHotkeyRegistration = async (newShortcut: string, enabled: boolean = true) => {
+    if (!isTauriDesktop) return;
+
+    try {
+      // Unregister old AI shortcut
+      const oldShortcut = hotkeyConfig.quickAI;
+      if (oldShortcut && oldShortcut !== newShortcut) {
+        try {
+          await invoke('unregister_hotkey', { shortcut: oldShortcut });
+        } catch (error) {
+          console.warn('Failed to unregister old AI shortcut:', error);
+          // Continue execution, old shortcut may not exist
+        }
+      }
+
+      // Register new AI shortcut only if enabled
+      if (enabled) {
+        await invoke('register_hotkey', {
+          shortcut: newShortcut,
+          command: 'quickai'
+        });
+      }
+
+      // Refresh registration status
+      await getRegisteredShortcuts();
+      console.log('AI Hotkey registration updated successfully');
+    } catch (error) {
+      console.error('Failed to update AI hotkey registration:', error);
+      toast.error((error instanceof Error ? error.message : String(error)));
+    }
+  };
+
+  // Keyboard event handling for quicknote
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (!isRecording) return;
 
@@ -193,6 +244,39 @@ export const HotkeySetting = observer(() => {
     setRecordedKeys(keys);
   };
 
+  // Keyboard event handling for AI
+  const handleAIKeyDown = (event: React.KeyboardEvent) => {
+    if (!isRecordingAI) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const keys: string[] = [];
+
+    // Add modifier keys
+    if (event.metaKey || event.ctrlKey) keys.push('CommandOrControl');
+    if (event.altKey) keys.push('Alt');
+    if (event.shiftKey) keys.push('Shift');
+
+    // Add main key
+    const mainKey = event.key;
+    if (mainKey && !['Control', 'Alt', 'Shift', 'Meta', 'Command'].includes(mainKey)) {
+      // Special key mapping
+      const keyMap: Record<string, string> = {
+        ' ': 'Space',
+        'ArrowUp': 'Up',
+        'ArrowDown': 'Down',
+        'ArrowLeft': 'Left',
+        'ArrowRight': 'Right',
+        'Escape': 'Esc',
+      };
+
+      keys.push(keyMap[mainKey] || mainKey.toUpperCase());
+    }
+
+    setRecordedAIKeys(keys);
+  };
+
   // Start/stop shortcut recording
   const toggleRecording = async () => {
     if (isRecording) {
@@ -209,6 +293,25 @@ export const HotkeySetting = observer(() => {
       setIsRecording(true);
       setRecordedKeys([]);
       recordingRef.current?.focus();
+    }
+  };
+
+  // Start/stop AI shortcut recording
+  const toggleAIRecording = async () => {
+    if (isRecordingAI) {
+      // Stop recording, apply recorded shortcut
+      if (recordedAIKeys.length > 1) {
+        const newShortcut = recordedAIKeys.join('+');
+        // Immediately save to database and update registration
+        await saveConfig({ quickAI: newShortcut });
+      }
+      setIsRecordingAI(false);
+      setRecordedAIKeys([]);
+    } else {
+      // Start recording
+      setIsRecordingAI(true);
+      setRecordedAIKeys([]);
+      recordingAIRef.current?.focus();
     }
   };
 
@@ -238,6 +341,20 @@ export const HotkeySetting = observer(() => {
     }
   };
 
+  // Reset to default shortcut
+  const resetQuickNoteToDefault = async () => {
+    await saveConfig({ quickNote: DEFAULT_HOTKEY_CONFIG.quickNote });
+  };
+
+  // Reset AI shortcut to default
+  const resetQuickAIToDefault = async () => {
+    await saveConfig({ quickAI: DEFAULT_HOTKEY_CONFIG.quickAI });
+  };
+
+  // Check if shortcut is not default
+  const isQuickNoteNotDefault = hotkeyConfig.quickNote !== DEFAULT_HOTKEY_CONFIG.quickNote;
+  const isQuickAINotDefault = hotkeyConfig.quickAI !== DEFAULT_HOTKEY_CONFIG.quickAI;
+
   // Initialize
   useEffect(() => {
     getCurrentConfig();
@@ -251,77 +368,161 @@ export const HotkeySetting = observer(() => {
   }
 
   return (
-    <CollapsibleCard
-      icon="material-symbols:desktop-windows"
-      title="桌面和快捷键"
-      className="w-full"
-    >
-      <div className="flex flex-col gap-4">
-        {/* Autostart switch */}
-        <Item
-          leftContent={
-            <ItemWithTooltip
-              content="开机自启动"
-              toolTipContent="开机时自动启动 Blinko 应用程序"
-            />
-          }
-          rightContent={
-            <Switch
-              isSelected={autoStartEnabled}
-              onValueChange={toggleAutoStart}
-            />
-          }
-        />
-
-        {/* Hotkey enable switch */}
-        <Item
-          leftContent={
-            <ItemWithTooltip
-              content={t('hotkey.enableGlobalHotkey')}
-              toolTipContent={t('enable-hotkeys-desc')}
-            />
-          }
-          rightContent={
-            <Switch
-              isSelected={hotkeyConfig.enabled}
-              onValueChange={(enabled) => saveConfig({ enabled })}
-            />
-          }
-        />
-
-        {/* Hotkey configuration */}
-        <Item
-          leftContent={t('hotkey.quickNoteShortcut')}
-          rightContent={
-            <div className="flex items-center gap-2">
-              <Input
-                ref={recordingRef}
-                value={isRecording ? recordedKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickNote}
-                placeholder={t('hotkey.clickRecordButton')}
-                readOnly
-                onKeyDown={handleKeyDown}
-                classNames={{
-                  input: "text-center font-mono",
-                  inputWrapper: isRecording ? "ring-2 ring-primary" : ""
-                }}
+    <div>
+      <CollapsibleCard
+        icon="material-symbols:desktop-windows"
+        title="Desktop & Hotkeys"
+        className="w-full"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Autostart switch */}
+          <Item
+            leftContent={
+              <ItemWithTooltip
+                content="Autostart"
+                toolTipContent="Start Blinko automatically on system boot"
               />
-              <Button
-                size="sm"
-                color={isRecording ? "danger" : "primary"}
-                variant={isRecording ? "flat" : "solid"}
-                onPress={toggleRecording}
-                startContent={
-                  <Icon icon={isRecording ? "material-symbols:stop" : "material-symbols:keyboard"} />
-                }
-              >
-                {isRecording ? t('hotkey.stop') : t('hotkey.record')}
-              </Button>
-            </div>
-          }
-          type="col"
-        />
+            }
+            rightContent={
+              <Switch
+                isSelected={autoStartEnabled}
+                onValueChange={toggleAutoStart}
+              />
+            }
+          />
 
-      </div>
-    </CollapsibleCard>
+          {/* Hotkey enable switch */}
+          <Item
+            leftContent={
+              <ItemWithTooltip
+                content={t('hotkey.enableGlobalHotkey')}
+                toolTipContent={t('enable-hotkeys-desc')}
+              />
+            }
+            rightContent={
+              <Switch
+                isSelected={hotkeyConfig.enabled}
+                onValueChange={(enabled) => saveConfig({ enabled })}
+              />
+            }
+          />
+
+          {/* Hotkey configuration */}
+          <Item
+            leftContent={t('hotkey.quickNoteShortcut')}
+            rightContent={
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={recordingRef}
+                  value={isRecording ? recordedKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickNote}
+                  placeholder={t('hotkey.clickRecordButton')}
+                  readOnly
+                  onKeyDown={handleKeyDown}
+                  classNames={{
+                    input: "text-center font-mono",
+                    inputWrapper: isRecording ? "ring-2 ring-primary" : ""
+                  }}
+                />
+                <Button
+                  size="sm"
+                  color={isRecording ? "danger" : "primary"}
+                  variant={isRecording ? "flat" : "solid"}
+                  onPress={toggleRecording}
+                  startContent={
+                    <Icon icon={isRecording ? "material-symbols:stop" : "material-symbols:keyboard"} />
+                  }
+                >
+                  {isRecording ? t('hotkey.stop') : t('hotkey.record')}
+                </Button>
+                {isQuickNoteNotDefault && (
+                  <Button
+                    size="sm"
+                    color="default"
+                    variant="flat"
+                    isIconOnly
+                    onPress={resetQuickNoteToDefault}
+                    className="opacity-70 hover:opacity-100"
+                  >
+                    <Icon icon="material-symbols:refresh" />
+                  </Button>
+                )}
+              </div>
+            }
+            type="col"
+          />
+
+        </div>
+      </CollapsibleCard>
+      
+      {/* Quick AI CollapsibleCard */}
+      <CollapsibleCard
+        icon="mingcute:ai-line"
+        title="Quick AI"
+        className="w-full mt-6"
+      >
+        <div className="flex flex-col gap-4">
+          {/* AI hotkey enable switch */}
+          <Item
+            leftContent={
+              <ItemWithTooltip
+                content="Enable Quick AI"
+                toolTipContent="Enable hotkey to quickly open AI input dialog"
+              />
+            }
+            rightContent={
+              <Switch
+                isSelected={hotkeyConfig.aiEnabled}
+                onValueChange={(enabled) => saveConfig({ aiEnabled: enabled })}
+              />
+            }
+          />
+
+          {/* AI Hotkey configuration */}
+          <Item
+            leftContent="Quick AI Shortcut"
+            rightContent={
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={recordingAIRef}
+                  value={isRecordingAI ? recordedAIKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickAI}
+                  placeholder={t('hotkey.clickRecordButton')}
+                  readOnly
+                  onKeyDown={handleAIKeyDown}
+                  classNames={{
+                    input: "text-center font-mono",
+                    inputWrapper: isRecordingAI ? "ring-2 ring-primary" : ""
+                  }}
+                />
+                <Button
+                  size="sm"
+                  color={isRecordingAI ? "danger" : "primary"}
+                  variant={isRecordingAI ? "flat" : "solid"}
+                  onPress={toggleAIRecording}
+                  startContent={
+                    <Icon icon={isRecordingAI ? "material-symbols:stop" : "material-symbols:keyboard"} />
+                  }
+                >
+                  {isRecordingAI ? t('hotkey.stop') : t('hotkey.record')}
+                </Button>
+                {isQuickAINotDefault && (
+                  <Button
+                    size="sm"
+                    color="default"
+                    variant="flat"
+                    isIconOnly
+                    onPress={resetQuickAIToDefault}
+                    className="opacity-70 hover:opacity-100"
+                  >
+                    <Icon icon="material-symbols:refresh" />
+                  </Button>
+                )}
+              </div>
+            }
+            type="col"
+          />
+
+        </div>
+      </CollapsibleCard>
+    </div>
   );
 });

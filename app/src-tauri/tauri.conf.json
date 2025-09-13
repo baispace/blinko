@@ -43,7 +43,28 @@
         "transparent": true,
         "hiddenTitle": true,
         "decorations": false,
+        "shadow": true,
         "url": "/quicknote"
+      },
+      {
+        "label": "quickai",
+        "title": "Quick AI",
+        "width": 600,
+        "height": 125,
+        "maxHeight": 600,
+        "fullscreen": false,
+        "resizable": false,
+        "focus": true,
+        "center": true,
+        "visible": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "titleBarStyle": "Overlay",
+        "transparent": true,
+        "hiddenTitle": true,
+        "decorations": false,
+        "shadow": true,
+        "url": "/quickai"
       }
     ]
   },

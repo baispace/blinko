@@ -144,16 +144,17 @@ const QuickNotePage = observer(() => {
   };
 
   return (
-    <div className="w-full h-full p-0 m-0 overflow-hidden! ">
+    <div className="w-full h-full p-0 m-0 overflow-hidden">
       <div
         ref={containerRef}
         data-tauri-drag-region
         id="quicknote-editor"
-        className="w-full h-full"
+        className="w-full h-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
         <BlinkoEditor
           mode="create"
           onSended={handleSend}
+          withoutOutline={true}
         // height={undefined} - let editor auto-adjust height 
         />
       </div>

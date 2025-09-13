@@ -240,15 +240,19 @@ export type ProgressResult = {
 
 // Desktop Hotkey Configuration Types
 export interface HotkeyConfig {
-  quickNote: string;           // 快速笔记快捷键，默认 "CommandOrControl+Shift+N"
-  enabled: boolean;            // 是否启用快捷键
-  systemTrayEnabled: boolean;  // 是否启用系统托盘
-  windowBehavior: 'show' | 'hide' | 'minimize'; // 窗口行为
+  quickNote: string;           // Quick note hotkey
+  quickAI: string;             // Quick AI hotkey
+  enabled: boolean;            // Enable hotkeys
+  aiEnabled: boolean;          // Enable AI hotkey
+  systemTrayEnabled: boolean;  // Enable system tray
+  windowBehavior: 'show' | 'hide' | 'minimize'; // Window behavior
 }
 
 export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
   quickNote: 'Shift+Space',
+  quickAI: 'Alt+Space',
   enabled: true,
+  aiEnabled: true,
   systemTrayEnabled: true,
   windowBehavior: 'show'
 };

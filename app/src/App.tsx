@@ -18,7 +18,10 @@ import { UserStore } from '@/store/user';
 import { getTokenData, setNavigate } from '@/components/Auth/auth-client';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useAndroidShortcuts } from '@/lib/hooks';
+import { useQuickaiHotkey } from '@/hooks/useQuickaiHotkey';
+import { useInitialHotkeySetup } from '@/hooks/useInitialHotkeySetup';
 import QuickNotePage from "./pages/quicknote";
+import QuickAIPage from "./pages/quickai";
 
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
@@ -108,6 +111,9 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppRoutes() {
+  // Initialize Quick AI hotkey handler inside Router context
+  useQuickaiHotkey();
+  
   return (
     <Suspense fallback={<LoadingPage />}>
       <Routes>
@@ -128,6 +134,7 @@ function AppRoutes() {
         <Route path="/share/:id" element={<ShareDetailPage />} />
         <Route path="/ai-share/:id" element={<AiSharePage />} />
         <Route path="/quicknote" element={<QuickNotePage />} />
+        <Route path="/quickai" element={<QuickAIPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
@@ -139,6 +146,9 @@ function App() {
   
   // Initialize Android shortcuts handler
   useAndroidShortcuts();
+  
+  // Initialize hotkey setup for desktop app
+  useInitialHotkeySetup();
 
   useEffect(() => {
     RootStore.Get(PluginManagerStore).initInstalledPlugins();

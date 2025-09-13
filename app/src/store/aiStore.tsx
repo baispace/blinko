@@ -96,6 +96,7 @@ export class AiStore implements Store {
             conversationId: this.currentConversationId,
             content: userQuestion,
             role: 'user',
+            metadata: ""
           });
         }
 
@@ -182,13 +183,13 @@ export class AiStore implements Store {
         id: messageId,
         content: newContent
       });
-      
+
       // Clear all messages after this message
       await api.message.clearAfter.mutate({ id: messageId });
-      
+
       // Refresh conversation
       await this.currentConversation.call();
-      
+
       // Set input to the new content and regenerate AI response
       this.input = newContent;
       await this.onInputSubmit(true);
@@ -224,6 +225,7 @@ export class AiStore implements Store {
         conversationId: this.currentConversationId,
         content: prompt,
         role: 'system',
+        metadata: ""
       });
       await this.currentConversation.call();
     }

@@ -43,10 +43,11 @@ type IProps = {
   bottomSlot?: ReactElement<any, any>,
   originFiles?: Attachment[],
   originReference?: number[],
-  hiddenToolbar?: boolean
+  hiddenToolbar?: boolean,
+  withoutOutline?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -107,7 +108,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     <div {...getRootProps()} className={isDragAccept ? 'border-2 border-green-500 border-dashed' : ''}>
       <Card
         shadow='none'
-        className={`p-2 relative border-2 border-border !transition-all overflow-visible 
+        className={`p-2 relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all overflow-visible 
         ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}`}
         ref={el => {
           if (el) {

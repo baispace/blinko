@@ -12,7 +12,9 @@ static REGISTERED_SHORTCUTS: LazyLock<Mutex<HashMap<String, String>>> = LazyLock
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HotkeyConfig {
     pub quick_note: String,
+    pub quick_ai: String,
     pub enabled: bool,
+    pub ai_enabled: bool,
     pub system_tray_enabled: bool,
     pub window_behavior: String,
 }
@@ -30,7 +32,9 @@ impl Default for HotkeyConfig {
     fn default() -> Self {
         Self {
             quick_note: "Shift+Space".to_string(),
+            quick_ai: "Alt+Space".to_string(),
             enabled: true,
+            ai_enabled: true,
             system_tray_enabled: true,
             window_behavior: "show".to_string(),
         }
@@ -58,6 +62,9 @@ pub fn register_hotkey(app: AppHandle, shortcut: String, command: String) -> Res
         // Parse the shortcut string
         let parsed_shortcut = shortcut.parse::<Shortcut>()
             .map_err(|e| format!("Invalid shortcut format: {}", e))?;
+        
+        // First try to unregister if it already exists (prevent duplicate registration)
+        let _ = app.global_shortcut().unregister(parsed_shortcut);
         
         // Register with Tauri global shortcut system
         app.global_shortcut().register(parsed_shortcut)
@@ -118,12 +125,24 @@ pub fn setup_default_shortcuts(app_handle: &AppHandle) -> Result<(), String> {
         // Register default quick note shortcut
         if let Ok(parsed_shortcut) = default_config.quick_note.parse::<Shortcut>() {
             if let Err(e) = app_handle.global_shortcut().register(parsed_shortcut) {
-                eprintln!("Failed to register default hotkey: {}", e);
+                eprintln!("Failed to register default quicknote hotkey: {}", e);
             } else {
                 // Store the registered shortcut
                 let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
                 shortcuts.insert(default_config.quick_note.clone(), "quicknote".to_string());
                 println!("Registered default shortcut: {}", default_config.quick_note);
+            }
+        }
+        
+        // Register default quick AI shortcut
+        if let Ok(parsed_shortcut) = default_config.quick_ai.parse::<Shortcut>() {
+            if let Err(e) = app_handle.global_shortcut().register(parsed_shortcut) {
+                eprintln!("Failed to register default quickai hotkey: {}", e);
+            } else {
+                // Store the registered shortcut
+                let mut shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+                shortcuts.insert(default_config.quick_ai.clone(), "quickai".to_string());
+                println!("Registered default AI shortcut: {}", default_config.quick_ai);
             }
         }
     }

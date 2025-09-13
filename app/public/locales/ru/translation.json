@@ -675,7 +675,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Для записи аудиозаметок требуется доступ к вашему микрофону.",
   "grant-microphone-permission": "Разрешить доступ к микрофону",
   "hotkey.title": "горячие клавиши",
-  "hotkey.enableGlobalHotkey": "",
+  "hotkey.enableGlobalHotkey": "Включить быстрые заметки",
   "hotkey-settings": "Горячие клавиши",
   "enable-hotkeys-desc": "Разрешить использование горячих клавиш для быстрого открытия окна заметок",
   "hotkey.quickNoteShortcut": "Быстрые клавиши для заметок",

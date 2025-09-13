@@ -95,9 +95,19 @@ export const HotkeySetting = observer(() => {
       setHotkeyConfig(updatedConfig);
       toast.success(t('operation-success'));
 
-      // If Tauri desktop, update hotkey registration
-      if (isTauriDesktop && updatedConfig.enabled) {
-        await updateHotkeyRegistration(updatedConfig.quickNote);
+      // If Tauri desktop, update hotkey registration based on enabled state
+      if (isTauriDesktop) {
+        if (updatedConfig.enabled) {
+          await updateHotkeyRegistration(updatedConfig.quickNote, true);
+        } else {
+          // Unregister hotkey when disabled
+          try {
+            await invoke('unregister_hotkey', { shortcut: hotkeyConfig.quickNote });
+            console.log('Hotkey unregistered due to disable');
+          } catch (error) {
+            console.warn('Failed to unregister hotkey on disable:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to save hotkey config:', error);
@@ -106,7 +116,7 @@ export const HotkeySetting = observer(() => {
   };
 
   // Update hotkey registration
-  const updateHotkeyRegistration = async (newShortcut: string) => {
+  const updateHotkeyRegistration = async (newShortcut: string, enabled: boolean = true) => {
     if (!isTauriDesktop) return;
 
     try {
@@ -121,8 +131,8 @@ export const HotkeySetting = observer(() => {
         }
       }
 
-      // Register new shortcut
-      if (hotkeyConfig.enabled) {
+      // Register new shortcut only if enabled
+      if (enabled) {
         await invoke('register_hotkey', {
           shortcut: newShortcut,
           command: 'quicknote'
@@ -134,7 +144,7 @@ export const HotkeySetting = observer(() => {
       console.log('Hotkey registration updated successfully');
     } catch (error) {
       console.error('Failed to update hotkey registration:', error);
-      toast.error('热键注册失败: ' + (error instanceof Error ? error.message : String(error)));
+      toast.error((error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -217,7 +227,6 @@ export const HotkeySetting = observer(() => {
       title={t('hotkey-settings')}
       className="w-full"
     >
-      <div className="flex flex-col gap-4">
         {/* Hotkey enable switch */}
         <Item
           leftContent={
@@ -265,7 +274,6 @@ export const HotkeySetting = observer(() => {
           }
           type="col"
         />
-      </div>
     </CollapsibleCard>
   );
 });

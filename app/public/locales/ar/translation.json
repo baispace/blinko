@@ -680,7 +680,7 @@
   "ai-model-desc": "إذا كان النموذج المختار يدعم الرؤية (متعدد الوسائط)، فسيقوم Blinko بفهرسة الصور تلقائيًا.",
   "grant-microphone-permission": "تفويض الميكروفون",
   "hotkey.title": "اختصارات الكيبورد",
-  "hotkey.enableGlobalHotkey": "تفعيل الاختصارات العالمية",
+  "hotkey.enableGlobalHotkey": "تفعيل الملاحظات السريعة",
   "hotkey-settings": "إعدادات مفاتيح الاختصار",
   "enable-hotkeys-desc": "السماح باستخدام اختصارات لفتح نافذة الملاحظات بسرعة",
   "hotkey.quickNoteShortcut": "اختصارات ملاحظات سريعة",

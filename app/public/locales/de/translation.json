@@ -680,7 +680,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Der Zugriff auf Ihr Mikrofon ist erforderlich, um Audioaufzeichnungen machen zu können.",
   "grant-microphone-permission": "Mikrofon freigeben",
   "hotkey.title": "Tastenkombination",
-  "hotkey.enableGlobalHotkey": "Aktivieren Sie globale Hotkeys",
+  "hotkey.enableGlobalHotkey": "Aktivieren Sie Schnellnotizen",
   "hotkey-settings": "Tastenkürzel-Einstellungen",
   "enable-hotkeys-desc": "Erlauben Sie die Verwendung von Tastenkombinationen, um das Notizfenster schnell zu öffnen.",
   "hotkey.quickNoteShortcut": "Schnelltasten für Kurznotizen",

@@ -682,7 +682,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Sesli notlar kaydetmek için mikrofon erişimine izin vermeniz gerekiyor.",
   "grant-microphone-permission": "Mikrofon yetkilendirme",
   "hotkey.title": "Kısayol tuşları",
-  "hotkey.enableGlobalHotkey": "",
+  "hotkey.enableGlobalHotkey": "Hızlı notları etkinleştir",
   "hotkey-settings": "Sıcak Tuş Ayarları",
   "enable-hotkeys-desc": "Kısayol tuşlarını kullanarak not penceresini hızlıca açmaya izin ver.",
   "hotkey.quickNoteShortcut": "Hızlı Not Alma Kısayolları",

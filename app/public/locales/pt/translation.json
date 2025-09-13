@@ -676,7 +676,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "É necessário acessar a permissão do seu microfone para gravar notas de áudio.",
   "grant-microphone-permission": "Autorizar microfone",
   "hotkey.title": "Teclas de atalho",
-  "hotkey.enableGlobalHotkey": "",
+  "hotkey.enableGlobalHotkey": "Ativar notas rápidas",
   "hotkey-settings": "Configuração de teclas de atalho",
   "enable-hotkeys-desc": "Permitir o uso de teclas de atalho para abrir rapidamente a janela de notas.",
   "hotkey.quickNoteShortcut": "Teclas de atalho para notas rápidas",

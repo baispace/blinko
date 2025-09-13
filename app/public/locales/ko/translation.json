@@ -677,7 +677,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "오디오 메모를 녹음하려면 마이크 권한이 필요합니다.",
   "grant-microphone-permission": "마이크 권한 부여",
   "hotkey.title": "단축키",
-  "hotkey.enableGlobalHotkey": "전역 단축키 활성화",
+  "hotkey.enableGlobalHotkey": "빠른 메모 활성화",
   "hotkey-settings": "핫키 설정",
   "enable-hotkeys-desc": "단축키를 사용하여 빠르게 메모 창을 열 수 있습니다.",
   "hotkey.quickNoteShortcut": "빠른 메모 단축키",

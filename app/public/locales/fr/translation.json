@@ -682,7 +682,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "L'accès à votre microphone est nécessaire pour enregistrer des notes audio.",
   "grant-microphone-permission": "Autoriser le microphone",
   "hotkey.title": "Raccourci clavier",
-  "hotkey.enableGlobalHotkey": "Activer le raccourci clavier global",
+  "hotkey.enableGlobalHotkey": "Activer les notes rapides",
   "hotkey-settings": "Configuration des raccourcis clavier",
   "enable-hotkeys-desc": "Autoriser l'utilisation de raccourcis clavier pour ouvrir rapidement la fenêtre de notes.",
   "hotkey.quickNoteShortcut": "Raccourcis de prise de notes rapide",

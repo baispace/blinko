@@ -682,7 +682,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "オーディオノートを録音するには、マイクのアクセス権が必要です。",
   "grant-microphone-permission": "マイクのアクセス許可",
   "hotkey.title": "ショートカットキー",
-  "hotkey.enableGlobalHotkey": "グローバルホットキーを有効にする",
+  "hotkey.enableGlobalHotkey": "クイックノートを有効にする",
   "hotkey-settings": "ホットキー設定",
   "enable-hotkeys-desc": "ショートカットキーを使用してすばやくノートウィンドウを開くことが許可されています。",
   "hotkey.quickNoteShortcut": "クイックノートショートカットキー",

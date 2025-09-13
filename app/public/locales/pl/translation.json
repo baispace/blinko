@@ -673,7 +673,7 @@
   "to-record-audio-notes-we-need-permission-to-access-your-microphone": "Aby nagrywać notatki dźwiękowe, potrzebny jest dostęp do mikrofonu.",
   "grant-microphone-permission": "Autoryzuj mikrofon",
   "hotkey.title": "Skrót klawiszowy",
-  "hotkey.enableGlobalHotkey": "",
+  "hotkey.enableGlobalHotkey": "Włącz szybkie notatki",
   "hotkey-settings": "Ustawienia klawiszy skrótu",
   "enable-hotkeys-desc": "Zezwól na używanie skrótów klawiszowych do szybkiego otwierania okna notatek.",
   "hotkey.quickNoteShortcut": "Skróty klawiszowe szybkich notatek",

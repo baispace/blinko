@@ -1,4 +1,6 @@
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod desktop;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -37,34 +39,48 @@ pub fn run() {
         builder = builder.plugin(tauri_plugin_decorum::init());
     }
 
-    builder
-        .invoke_handler(tauri::generate_handler![
-            greet,
-            toggle_editor_window,
-            register_hotkey,
-            unregister_hotkey,
-            get_registered_shortcuts,
-            toggle_quicknote_window,
-            resize_quicknote_window,
-            toggle_quickai_window,
-            resize_quickai_window,
-            navigate_main_to_ai_with_prompt,
-            toggle_quicktool_window,
-            hide_quicktool_window,
-            is_autostart_enabled,
-            enable_autostart,
-            disable_autostart,
-            toggle_autostart,
-            setup_text_selection_monitoring,
-            copy_to_clipboard,
-            test_text_selection,
-            check_accessibility_permissions,
-            show_quicktool
-        ])
-        .setup(|app| {
-            setup_app(app)?;
-            Ok(())
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder
+            .invoke_handler(tauri::generate_handler![
+                greet,
+                toggle_editor_window,
+                register_hotkey,
+                unregister_hotkey,
+                get_registered_shortcuts,
+                toggle_quicknote_window,
+                resize_quicknote_window,
+                toggle_quickai_window,
+                resize_quickai_window,
+                navigate_main_to_ai_with_prompt,
+                toggle_quicktool_window,
+                hide_quicktool_window,
+                is_autostart_enabled,
+                enable_autostart,
+                disable_autostart,
+                toggle_autostart,
+                setup_text_selection_monitoring,
+                copy_to_clipboard,
+                test_text_selection,
+                check_accessibility_permissions,
+                show_quicktool
+            ])
+            .setup(|app| {
+                setup_app(app)?;
+                Ok(())
+            })
+            .run(tauri::generate_context!())
+            .expect("error while running tauri application");
+    }
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        builder
+            .invoke_handler(tauri::generate_handler![greet])
+            .setup(|_app| {
+                Ok(())
+            })
+            .run(tauri::generate_context!())
+            .expect("error while running tauri application");
+    }
 }

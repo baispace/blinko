@@ -20,11 +20,12 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { useAndroidShortcuts } from '@/lib/hooks';
 import { useQuickaiHotkey } from '@/hooks/useQuickaiHotkey';
 import { useInitialHotkeySetup } from '@/hooks/useInitialHotkeySetup';
-import { isInTauri } from "@/lib/tauriHelper";
+import { isInTauri, isDesktop } from "@/lib/tauriHelper";
 import { listen } from "@tauri-apps/api/event";
 import QuickNotePage from "./pages/quicknote";
 import QuickAIPage from "./pages/quickai";
 import QuickToolPage from "./pages/quicktool";
+import { useQuicknoteHotkey } from "./hooks/useQuicknoteHotkey";
 
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
@@ -129,9 +130,10 @@ function AppRoutes() {
   const navigate = useNavigate();
   const windowType = getWindowType();
 
-  // Initialize Quick AI hotkey handler inside Router context (only for main window)
-  if (windowType === 'main') {
+  // Initialize Quick AI hotkey handler inside Router context (only for main window on desktop)
+  if (windowType === 'main' && isDesktop()) {
     useQuickaiHotkey();
+    useQuicknoteHotkey(true);
   }
 
   // Listen for navigation commands from Tauri (only for current window type)
@@ -236,9 +238,11 @@ function App() {
   
   // Initialize Android shortcuts handler
   useAndroidShortcuts();
-  
-  // Initialize hotkey setup for desktop app
-  useInitialHotkeySetup();
+
+  // Initialize hotkey setup for desktop app only
+  if (isDesktop()) {
+    useInitialHotkeySetup();
+  }
 
   useEffect(() => {
     RootStore.Get(PluginManagerStore).initInstalledPlugins();

@@ -6,7 +6,7 @@ use tauri_plugin_decorum::WebviewWindowExt;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri_plugin_global_shortcut::{ShortcutState, ShortcutEvent};
 
-use crate::desktop::{HotkeyConfig, setup_default_shortcuts, setup_system_tray, toggle_quicknote_window, toggle_quickai_window, toggle_quicktool_window, restore_main_window_state, setup_window_state_monitoring};
+use crate::desktop::{HotkeyConfig, setup_system_tray, toggle_quicknote_window, toggle_quickai_window, toggle_quicktool_window, restore_main_window_state, setup_window_state_monitoring};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle();

@@ -1,4 +1,4 @@
-use tauri::AppHandle;
+// AppHandle is not used in this file
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

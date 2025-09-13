@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isInTauri } from '@/lib/tauriHelper';
+import { isInTauri, isDesktop } from '@/lib/tauriHelper';
 import { RootStore } from '@/store';
 import { AiStore } from '@/store/aiStore';
 
@@ -9,7 +9,7 @@ export const useQuickaiHotkey = () => {
   const aiStore = RootStore.Get(AiStore);
 
   useEffect(() => {
-    if (!isInTauri()) return;
+    if (!isInTauri() || !isDesktop()) return;
 
     let unlistenQuickai: any;
     let unlistenNavigation: any;

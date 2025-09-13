@@ -120,6 +120,7 @@ pub fn register_shortcut_command(shortcut: String, command: String) {
     shortcuts.insert(shortcut.to_lowercase(), command);
 }
 
+#[allow(dead_code)]
 pub fn setup_default_shortcuts(app_handle: &AppHandle) -> Result<(), String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {

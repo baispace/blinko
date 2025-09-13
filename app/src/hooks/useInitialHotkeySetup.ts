@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { isInTauri } from '@/lib/tauriHelper';
+import { isInTauri, isDesktop } from '@/lib/tauriHelper';
 import { invoke } from '@tauri-apps/api/core';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -25,7 +25,7 @@ const DEFAULT_HOTKEY_CONFIG = {
 
 export const useInitialHotkeySetup = () => {
   useEffect(() => {
-    if (!isInTauri()) return;
+    if (!isInTauri() || !isDesktop()) return;
 
     const setupInitialHotkeys = async () => {
       try {

@@ -1,4 +1,5 @@
-use tauri::{AppHandle, Emitter, Runtime, Manager, Position, Size};
+use tauri::{AppHandle, Emitter, Runtime, Manager};
+// Position and Size are not used in this file anymore
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, LazyLock};
 

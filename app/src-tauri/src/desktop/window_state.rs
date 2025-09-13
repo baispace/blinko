@@ -7,7 +7,7 @@ use crate::desktop::hotkey::WindowConfig;
 const WINDOW_STATE_FILE: &str = "window_state.json";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct AppWindowState {
+pub struct AppWindowState {
     main_window: Option<WindowConfig>,
     quicknote_window: Option<WindowConfig>,
 }

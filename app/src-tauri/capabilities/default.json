@@ -31,7 +31,6 @@
     "fs:allow-app-write",
     "blinko:default",
     "core:window:allow-center",
-    "decorum:allow-show-snap-overlay",
     {
       "identifier": "fs:scope",
       "allow": [

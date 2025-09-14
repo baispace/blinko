@@ -109,16 +109,20 @@ pub fn restore_main_window_state(app: &AppHandle) {
                 }
 
                 // Center the window after setting size
-                // Note: center() method may not be available in Tauri 2.x
-                // For now, we'll skip centering and just log it
-                println!("Window should be centered but center() method not available in Tauri 2.x");
+                if let Err(e) = window.center() {
+                    eprintln!("Failed to center window: {}", e);
+                } else {
+                    println!("Window centered successfully");
+                }
             }
             
             // Restore maximized state
             if config.maximized {
-                // Note: maximize() method may not be available in Tauri 2.x
-                // For now, we'll skip maximizing and just log it
-                println!("Window should be maximized but maximize() method not available in Tauri 2.x");
+                if let Err(e) = window.maximize() {
+                    eprintln!("Failed to maximize window: {}", e);
+                } else {
+                    println!("Window maximized successfully");
+                }
             }
         }
     }

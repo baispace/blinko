@@ -43,14 +43,23 @@ impl Default for HotkeyConfig {
 
 impl Default for WindowConfig {
     fn default() -> Self {
+        // Try to get screen size, fallback to fixed size if unavailable
+        let (default_width, default_height) = get_default_window_size();
+
         Self {
-            width: 1024.0,
-            height: 768.0,
+            width: default_width,
+            height: default_height,
             x: None,  // Always center, don't save position
             y: None,  // Always center, don't save position
             maximized: false,
         }
     }
+}
+
+// Helper function to get default window size (full HD resolution)
+fn get_default_window_size() -> (f64, f64) {
+    // Use full HD as default window size
+    (1920.0, 1080.0)
 }
 
 #[tauri::command]

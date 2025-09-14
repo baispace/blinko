@@ -2,18 +2,35 @@
 mod desktop;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            // Called when a second instance tries to start
+            println!("Second instance detected with args: {:?} and cwd: {:?}", args, cwd);
+
+            // Show and focus the existing window
+            if let Some(window) = app.get_webview_window("main") {
+                // Show window if it's hidden
+                if let Err(e) = window.show() {
+                    eprintln!("Failed to show window: {}", e);
+                }
+
+                // Unminimize if minimized
+                if let Err(e) = window.unminimize() {
+                    eprintln!("Failed to unminimize window: {}", e);
+                }
+
+                // Bring to front and focus
+                if let Err(e) = window.set_focus() {
+                    eprintln!("Failed to focus window: {}", e);
+                }
+
+                println!("Focused existing Blinko window");
+            }
+        }))
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_http::init())
@@ -34,16 +51,10 @@ pub fn run() {
             );
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        builder = builder.plugin(tauri_plugin_decorum::init());
-    }
-
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         builder
             .invoke_handler(tauri::generate_handler![
-                greet,
                 toggle_editor_window,
                 register_hotkey,
                 unregister_hotkey,

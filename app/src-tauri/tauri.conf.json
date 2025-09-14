@@ -17,8 +17,8 @@
     "windows": [
       {
         "title": "Blinko",
-        "width": 1024,
-        "height": 768,
+        "width": 1920,
+        "height": 1080,
         "minWidth": 600,
         "minHeight": 300,
         "fullscreen": false,
@@ -26,7 +26,7 @@
         "focus": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "decorations": false
+        "decorations": true
       },
       {
         "label": "quicknote",

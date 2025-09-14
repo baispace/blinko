@@ -1,7 +1,6 @@
 use tauri::{AppHandle, Manager};
 
-#[cfg(target_os = "windows")]
-use tauri_plugin_decorum::WebviewWindowExt;
+
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri_plugin_global_shortcut::{ShortcutState, ShortcutEvent};
@@ -15,25 +14,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     // Restore window state before applying decorations
     restore_main_window_state(&app_handle);
 
-    // Set platform-specific window decorations
-    #[cfg(target_os = "macos")]
-    {
-        // On macOS, use native decorations
-        main_window.set_decorations(true).unwrap();
-    }
-
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    {
-        // On Windows and Linux, hide decorations
-        main_window.set_decorations(false).unwrap();
-    }
-
-    // Apply Windows-specific titlebar
-    #[cfg(target_os = "windows")]
-    {
-        main_window.create_overlay_titlebar().unwrap();
-    }
-    
     // Setup window state monitoring
     setup_window_state_monitoring(&app_handle);
 

@@ -106,7 +106,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
         {...swipeHandlers}
         id="page-wrap"
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
-        className={`${isDesktop() ? 'mt-[35px]' : ''} flex !transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-sencondbackground`}
+        className={`flex !transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-sencondbackground`}
       >
         {/* nav bar  */}
         <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2 overflow-hidden">

@@ -196,6 +196,11 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
       blinkoStore.globalSearchTerm = query;
 
       try {
+        // Ensure AI retrieval flag is in sync for this call
+        // Detect "@" prefix proactively to avoid timing issues with the effect
+        const isAiQuery = query.trim().startsWith('@') || store.isAiQuestion;
+        blinkoStore.noteListFilterConfig.isUseAiQuery = isAiQuery;
+
         // 2. Search for notes using the API
         // Set search text in the store and call the API through the store
         blinkoStore.searchText = query;
@@ -205,7 +210,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         const resources = await blinkoStore.resourceList.resetAndCall({
           page: 1,
           size: 20,
-          searchText: query,
+          // Strip leading @/# so regular resource search still works with prefixes
+          searchText: query.replace(/^[@#]/, ''),
           folder: undefined,
         });
 

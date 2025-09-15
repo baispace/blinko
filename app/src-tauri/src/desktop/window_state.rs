@@ -128,53 +128,70 @@ pub fn restore_main_window_state(app: &AppHandle) {
     }
 }
 
+// Minimum window dimensions 
+const MIN_WINDOW_WIDTH: f64 = 600.0;
+const MIN_WINDOW_HEIGHT: f64 = 300.0;
+
 // Save current main window state
 pub fn save_main_window_state(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let mut window_state = load_window_state(app);
-        
+
         // Get current window state - only size and maximized state
-        if let (Ok(size), Ok(is_maximized)) = (
+        if let (Ok(size), Ok(is_maximized), Ok(is_minimized)) = (
             window.inner_size(),
-            window.is_maximized()
+            window.is_maximized(),
+            window.is_minimized()
         ) {
+            let width = size.width as f64;
+            let height = size.height as f64;
+
+            // Don't save state if window is minimized or dimensions are too small
+            if is_minimized || width < MIN_WINDOW_WIDTH || height < MIN_WINDOW_HEIGHT {
+                println!("Skipping window state save - minimized: {}, size: {}x{} (min: {}x{})",
+                         is_minimized, width, height, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
+                return;
+            }
+
             let config = WindowConfig {
-                width: size.width as f64,
-                height: size.height as f64,
+                width,
+                height,
                 x: None,  // Don't save position, always center
                 y: None,  // Don't save position, always center
                 maximized: is_maximized,
             };
-            
+
             window_state.main_window = Some(config.clone());
             save_window_state(app, &window_state);
-            
-            println!("Saved main window state: {}x{}, maximized: {}", 
+
+            println!("Saved main window state: {}x{}, maximized: {}",
                      config.width, config.height, config.maximized);
         }
     }
 }
 
-// Setup window state monitoring
+// Setup window state monitoring - ONLY for main window
 pub fn setup_window_state_monitoring(app: &AppHandle) {
+    // Only monitor the main window for state saving
     if let Some(window) = app.get_webview_window("main") {
         let app_handle = app.clone();
-        
+
         window.on_window_event(move |event| {
             match event {
-                tauri::WindowEvent::Resized(_) | 
-                tauri::WindowEvent::Moved(_) => {
-                    // Save state on resize or move
+                tauri::WindowEvent::Resized(_) => {
+                    // Save state on resize (but only if not minimized and above minimum size)
                     save_main_window_state(&app_handle);
                 }
                 tauri::WindowEvent::CloseRequested { .. } => {
-                    // Save state before closing
+                    // Save state before closing (but only if not minimized and above minimum size)
                     save_main_window_state(&app_handle);
                 }
                 _ => {}
             }
         });
-        
-        println!("Window state monitoring setup for main window");
+
+        println!("Window state monitoring setup ONLY for main window");
+    } else {
+        eprintln!("Failed to setup window state monitoring: main window not found");
     }
 }

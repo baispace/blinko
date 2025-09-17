@@ -701,5 +701,7 @@
   "installing-update": "正在安裝更新",
   "update-completed": "更新完成",
   "app-update": "應用更新",
-  "updating-to-version": "更新至"
+  "updating-to-version": "更新至",
+  "install-from-github": "從 GitHub 安裝",
+  "marketplace-description": "瀏覽並安裝來自官方市場的插件。"
 }

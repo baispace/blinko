@@ -660,5 +660,7 @@
   "installing-update": "განახლების ინსტალო",
   "update-completed": "განახლება დასრუ finished",
   "app-update": "应用更新",
-  "updating-to-version": "更新至 Georgia"
+  "updating-to-version": "更新至 Georgia",
+  "install-from-github": "GitHub-დან ინსტალაცია",
+  "marketplace-description": "დათვალი და ინსტალო  Პო Გო Მო Შო Რ."
 }

@@ -701,5 +701,7 @@
   "installing-update": "Instalando actualizaciones",
   "update-completed": "Actualización completada",
   "app-update": "Actualización de la aplicación",
-  "updating-to-version": "actualizado a"
+  "updating-to-version": "actualizado a",
+  "install-from-github": "Instalar desde GitHub",
+  "marketplace-description": "Explora e instala complementos del mercado oficial."
 }

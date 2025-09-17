@@ -692,5 +692,7 @@
   "installing-update": "Instalacja aktualizacji",
   "update-completed": "Aktualizacja zakończona",
   "app-update": "Aktualizacja aplikacji",
-  "updating-to-version": "zaktualizuj do"
+  "updating-to-version": "zaktualizuj do",
+  "install-from-github": "Zainstaluj z GitHub",
+  "marketplace-description": "Przeglądaj i instaluj wtyczki z oficjalnego rynku."
 }

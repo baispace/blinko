@@ -699,5 +699,7 @@
   "installing-update": "تثبيت التحديثات",
   "update-completed": "تم التحديث بنجاح",
   "app-update": "تحديث التطبيق",
-  "updating-to-version": "تحديث إلى"
+  "updating-to-version": "تحديث إلى",
+  "install-from-github": "من GitHub تثبيت",
+  "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي."
 }

@@ -701,5 +701,7 @@
   "installing-update": "Installation des mises à jour",
   "update-completed": "Mise à jour terminée",
   "app-update": "Mise à jour de l'application",
-  "updating-to-version": "Mise à jour vers"
+  "updating-to-version": "Mise à jour vers",
+  "install-from-github": "Installer depuis GitHub",
+  "marketplace-description": "Parcourez et installez des plugins depuis le marché officiel."
 }

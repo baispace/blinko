@@ -701,5 +701,7 @@
   "installing-update": "Güncelleme yükleniyor",
   "update-completed": "Güncelleme tamamlandı",
   "app-update": "Uygulama güncellemesi",
-  "updating-to-version": "güncellendi"
+  "updating-to-version": "güncellendi",
+  "install-from-github": "GitHub'dan yükle",
+  "marketplace-description": "Resmi pazardan eklentilere göz atın ve yükleyin."
 }

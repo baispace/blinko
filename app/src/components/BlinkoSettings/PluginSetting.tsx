@@ -97,12 +97,12 @@ const InstalledPlugins = observer(() => {
   const pluginManager = RootStore.Get(PluginManagerStore);
   const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
   const [currentAppVersion, setCurrentAppVersion] = useState<string>('0.0.0');
-  const [upgradeModal, setUpgradeModal] = useState<{isOpen: boolean, plugin?: PluginInfo}>({isOpen: false});
+  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean, plugin?: PluginInfo }>({ isOpen: false });
 
   // Load all plugins and fetch app version when component mounts
   useEffect(() => {
     pluginManager.loadAllPlugins();
-    
+
     async function fetchAppVersion() {
       try {
         const version = await api.public.serverVersion.query();
@@ -111,7 +111,7 @@ const InstalledPlugins = observer(() => {
         console.error('Failed to fetch app version:', error);
       }
     }
-    
+
     fetchAppVersion();
   }, []);
 
@@ -136,18 +136,18 @@ const InstalledPlugins = observer(() => {
   // Open Blinko official website to upgrade app
   const handleUpgrade = () => {
     window.open('https://github.com/blinko-space/blinko/releases', '_blank');
-    setUpgradeModal({isOpen: false});
+    setUpgradeModal({ isOpen: false });
   };
 
   // Show upgrade modal with plugin details
   const showUpgradeModal = (plugin: PluginInfo) => {
-    setUpgradeModal({isOpen: true, plugin});
+    setUpgradeModal({ isOpen: true, plugin });
   };
 
   // Check if plugin requires newer app version
   const needsAppUpgrade = (plugin: PluginInfo): boolean => {
     if (!plugin.minAppVersion) return false;
-    
+
     try {
       return compareVersions(plugin.minAppVersion, currentAppVersion) > 0;
     } catch (error) {
@@ -176,7 +176,7 @@ const InstalledPlugins = observer(() => {
         // Find the latest version from marketplace
         const latestPlugin = allPlugins.find(p => p.name === metadata.name);
         const hasUpdate = latestPlugin && latestPlugin.version !== metadata.version;
-        
+
         // Check if we need app upgrade for the latest version of the plugin
         const updateRequiresAppUpgrade = latestPlugin && needsAppUpgrade(latestPlugin);
 
@@ -238,7 +238,7 @@ const InstalledPlugins = observer(() => {
       })}
 
       {/* App upgrade modal */}
-      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({isOpen: false})}>
+      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({ isOpen: false })}>
         <ModalContent>
           <ModalHeader>{t('app-upgrade-required')}</ModalHeader>
           <ModalBody>
@@ -262,7 +262,7 @@ const InstalledPlugins = observer(() => {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" variant="light" onPress={() => setUpgradeModal({isOpen: false})}>
+            <Button color="default" variant="light" onPress={() => setUpgradeModal({ isOpen: false })}>
               {t('cancel')}
             </Button>
             <Button color="primary" onPress={handleUpgrade}>
@@ -278,9 +278,10 @@ const InstalledPlugins = observer(() => {
 const AllPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
+  const dialog = RootStore.Get(DialogStandaloneStore);
   const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
   const [currentAppVersion, setCurrentAppVersion] = useState<string>('0.0.0');
-  const [upgradeModal, setUpgradeModal] = useState<{isOpen: boolean, plugin?: PluginInfo}>({isOpen: false});
+  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean, plugin?: PluginInfo }>({ isOpen: false });
 
   // Fetch the current app version when component mounts
   useEffect(() => {
@@ -292,7 +293,7 @@ const AllPlugins = observer(() => {
         console.error('Failed to fetch app version:', error);
       }
     }
-    
+
     fetchAppVersion();
   }, []);
 
@@ -309,18 +310,18 @@ const AllPlugins = observer(() => {
   // Open Blinko official website to upgrade app
   const handleUpgrade = () => {
     window.open('https://github.com/blinko-space/blinko/releases', '_blank');
-    setUpgradeModal({isOpen: false});
+    setUpgradeModal({ isOpen: false });
   };
 
   // Show upgrade modal with plugin details
   const showUpgradeModal = (plugin: PluginInfo) => {
-    setUpgradeModal({isOpen: true, plugin});
+    setUpgradeModal({ isOpen: true, plugin });
   };
 
   // Check if plugin requires newer app version
   const needsAppUpgrade = (plugin: PluginInfo): boolean => {
     if (!plugin.minAppVersion) return false;
-    
+
     try {
       return compareVersions(plugin.minAppVersion, currentAppVersion) > 0;
     } catch (error) {
@@ -329,8 +330,32 @@ const AllPlugins = observer(() => {
     }
   };
 
+  const handleInstallFromGithub = () => {
+    dialog.setData({
+      isOpen: true,
+      title: t('install-from-github'),
+      size: 'md',
+      content: <InstallFromGithubDialog onClose={() => dialog.close()} />
+    });
+  };
+
   return (
-    <div className="space-y-2 relative">
+    <div className="space-y-4 relative">
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-default-500">
+          {t('marketplace-description')}
+        </div>
+        <Button
+          color="success"
+          size="sm"
+          className="px-4"
+          startContent={<Icon icon="mdi:github" className="text-lg" />}
+          onPress={handleInstallFromGithub}
+        >
+          {t('install-from-github')}
+        </Button>
+      </div>
+
       <LoadingAndEmpty isAbsolute={false} isLoading={pluginManager.marketplacePlugins.loading.value} isEmpty={pluginManager.marketplacePlugins.value?.length === 0} />
 
       {pluginManager.marketplacePlugins.value?.filter(plugin => !pluginManager.installedPlugins.value?.some(installedPlugin => installedPlugin.metadata.name === plugin.name)).map((plugin) => (
@@ -365,7 +390,7 @@ const AllPlugins = observer(() => {
       ))}
 
       {/* App upgrade modal */}
-      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({isOpen: false})}>
+      <Modal isOpen={upgradeModal.isOpen} onClose={() => setUpgradeModal({ isOpen: false })}>
         <ModalContent>
           <ModalHeader>{t('app-upgrade-required')}</ModalHeader>
           <ModalBody>
@@ -389,7 +414,7 @@ const AllPlugins = observer(() => {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" variant="light" onPress={() => setUpgradeModal({isOpen: false})}>
+            <Button color="default" variant="light" onPress={() => setUpgradeModal({ isOpen: false })}>
               {t('cancel')}
             </Button>
             <Button color="primary" onPress={handleUpgrade}>
@@ -429,6 +454,132 @@ const AddLocalPluginDialog = observer(({ onClose }: { onClose: () => void }) => 
         </Button>
         <Button color="primary" onPress={handleConfirm}>
           {t('confirm')}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+const InstallFromGithubDialog = observer(({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
+  const pluginManager = RootStore.Get(PluginManagerStore);
+  const [githubUrl, setGithubUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInstall = async () => {
+    if (!githubUrl.trim()) return;
+
+    setIsLoading(true);
+    try {
+      // Parse GitHub URL to extract owner and repo
+      const cleanUrl = githubUrl.trim().replace(/\/$/, ''); // Remove trailing slash
+      const match = cleanUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+      if (!match) {
+        throw new Error('Invalid GitHub URL format. Please use: https://github.com/owner/repo');
+      }
+
+      const [, owner, repo] = match;
+      const repoName = repo.replace(/\.git$/, ''); // Remove .git suffix if present
+
+      // Validate owner and repo names
+      if (!owner || !repoName || owner === '' || repoName === '') {
+        throw new Error('Invalid repository format. Please check the URL.');
+      }
+
+      // Fetch repository information to get the latest release
+      const repoApiUrl = `https://api.github.com/repos/${owner}/${repoName}`;
+      const releasesApiUrl = `https://api.github.com/repos/${owner}/${repoName}/releases/latest`;
+
+      // Try to get repo info and latest release
+      let repoData: any = null;
+      let version = '1.0.0'; // Default version
+
+      try {
+        const repoResponse = await fetch(repoApiUrl);
+        if (repoResponse.ok) {
+          repoData = await repoResponse.json();
+        }
+      } catch (error) {
+        console.warn('Failed to fetch repo info:', error);
+      }
+
+      try {
+        const releaseResponse = await fetch(releasesApiUrl);
+        if (releaseResponse.ok) {
+          const releaseData = await releaseResponse.json();
+          version = releaseData.tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+        }
+      } catch (error) {
+        console.warn('Failed to fetch release info:', error);
+      }
+
+      // Create plugin info object
+      const pluginInfo: PluginInfo = {
+        name: repoName,
+        author: owner,
+        url: githubUrl,
+        version: version,
+        displayName: {
+          default: repoData?.name || repoName,
+          zh_CN: repoData?.name || repoName
+        },
+        description: {
+          default: repoData?.description || 'Plugin installed from GitHub'
+        }
+      };
+
+      // Install the plugin
+      await PromiseCall(pluginManager.installPlugin(pluginInfo), { autoAlert: true });
+      pluginManager.loadAllPlugins();
+      onClose();
+    } catch (error) {
+      console.error('Failed to install plugin from GitHub:', error);
+      // Show error message
+      RootStore.Get(DialogStandaloneStore).setData({
+        isOpen: true,
+        title: t('error'),
+        size: 'sm',
+        content: (
+          <div className="text-center py-4">
+            <p className="text-danger">{error instanceof Error ? error.message : 'Installation failed'}</p>
+          </div>
+        )
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="text-sm text-default-500 mb-2">
+        {t('install-from-github-description')}
+      </div>
+      <div className="text-xs text-warning bg-warning/10 p-3 rounded-lg">
+        <Icon icon="mdi:information" className="inline mr-1" />
+        {t('github-api-limit-notice')}
+      </div>
+      <Input
+        label={t('github-repository-url')}
+        placeholder="https://github.com/owner/plugin-repo"
+        value={githubUrl}
+        onChange={(e) => setGithubUrl(e.target.value)}
+        startContent={
+          <Icon icon="mdi:github" className="text-default-400 pointer-events-none flex-shrink-0" />
+        }
+        className="w-full"
+      />
+      <div className="flex justify-end gap-2">
+        <Button color="danger" variant="light" onPress={onClose}>
+          {t('cancel')}
+        </Button>
+        <Button
+          color="primary"
+          onPress={handleInstall}
+          isLoading={isLoading}
+          isDisabled={!githubUrl.trim() || isLoading}
+        >
+          {t('install')}
         </Button>
       </div>
     </div>

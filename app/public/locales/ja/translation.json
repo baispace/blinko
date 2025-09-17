@@ -701,5 +701,7 @@
   "installing-update": "アップデート中のインストール",
   "update-completed": "更新完了",
   "app-update": "アプリケーションの更新",
-  "updating-to-version": "更新すると"
+  "updating-to-version": "更新すると",
+  "install-from-github": "GitHub からインストール",
+  "marketplace-description": "公式マーケットからプラグインを閲覧し、インストールしてください。"
 }

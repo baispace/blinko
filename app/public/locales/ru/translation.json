@@ -694,5 +694,7 @@
   "installing-update": "Установка обновлений",
   "update-completed": "Обновление завершено",
   "app-update": "Приложение обновлено",
-  "updating-to-version": "обновить до"
+  "updating-to-version": "обновить до",
+  "install-from-github": "Установка с GitHub",
+  "marketplace-description": "Просматривайте и устанавливайте плагины из официального магазина."
 }

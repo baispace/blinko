@@ -699,5 +699,7 @@
   "installing-update": "Installation von Updates",
   "update-completed": "Aktualisierung abgeschlossen",
   "app-update": "Anwendungsaktualisierung",
-  "updating-to-version": "Aktualisieren auf"
+  "updating-to-version": "Aktualisieren auf",
+  "install-from-github": "Von GitHub installieren",
+  "marketplace-description": "Durchsuchen und installieren Sie Plugins aus dem offiziellen Markt."
 }

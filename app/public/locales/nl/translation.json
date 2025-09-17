@@ -707,5 +707,7 @@
   "installing-update": "Update installeren",
   "update-completed": "Update voltooid",
   "app-update": "Applicatie-update",
-  "updating-to-version": "Bijgewerkt tot"
+  "updating-to-version": "Bijgewerkt tot",
+  "install-from-github": "Van GitHub installeren",
+  "marketplace-description": "Blader door en installeer plug-ins van de officiële markt."
 }

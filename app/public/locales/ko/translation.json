@@ -696,5 +696,7 @@
   "installing-update": "업데이트 설치 중입니다",
   "update-completed": "업데이트 완료",
   "app-update": "애플리케이션 업데이트",
-  "updating-to-version": "업데이트할 때까지"
+  "updating-to-version": "업데이트할 때까지",
+  "install-from-github": "GitHub에서 설치하세요",
+  "marketplace-description": "공식 시장에서 플러그인을 검색하고 설치하세요."
 }

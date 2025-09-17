@@ -732,5 +732,7 @@
   "installing-update": "Tiwli tuddsa s timellalin",
   "update-completed": "Tigemmi tettwakkes",
   "app-update": "aseggas n usefrek",
-  "updating-to-version": "Asmelkem ara"
+  "updating-to-version": "Asmelkem ara",
+  "install-from-github": "Install-iten seg GitHub",
+  "marketplace-description": "Ssuter akkeddaw s ufus n usenfughal."
 }

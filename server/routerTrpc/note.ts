@@ -106,11 +106,16 @@ export const noteRouter = router({
     .mutation(async function ({ input, ctx }) {
       const { tagId, type, isArchived, isRecycle, searchText, page, size, orderBy, withFile, withoutTag, withLink, isUseAiQuery, startDate, endDate, isShare, hasTodo } = input;
       if (isUseAiQuery && searchText?.trim() != '') {
-        if (page == 1) {
-          return await AiService.enhanceQuery({ query: searchText?.replace(/@/g, '')!, ctx });
-        } else {
-          return [];
+        const cleanedQuery = searchText?.replace(/@/g, '').trim();
+        if (cleanedQuery && cleanedQuery.length > 0) {
+          if (page == 1) {
+            return await AiService.enhanceQuery({ query: cleanedQuery, ctx });
+          } else {
+            return [];
+          }
         }
+        // 如果清理后的查询为空，返回空结果而不是调用AI
+        return [];
       }
 
       let where: Prisma.notesWhereInput = {

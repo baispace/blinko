@@ -18,7 +18,7 @@ export const Code = ({ className, children, ...props }: CodeProps) => {
   
   const shouldHighlight = !className || className?.includes('language-') || className?.includes('hljs');
   
-  const isCodeBlock = shouldHighlight && String(children).includes('\n');
+  const isCodeBlock = shouldHighlight && (String(children).includes('\n') || (className && className.includes('language-')));
   
   return isCodeBlock ? (
     <div className="relative group">

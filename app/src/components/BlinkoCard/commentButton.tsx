@@ -70,6 +70,88 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
   );
 });
 
+// Recursive Comment Component for nested rendering
+const NestedComment = observer(({
+  comment,
+  blinkoItem,
+  depth = 0,
+  Store
+}: {
+  comment: Comment['items'][0],
+  blinkoItem: BlinkoItem,
+  depth?: number,
+  Store: any
+}) => {
+  const { t } = useTranslation();
+  const user = RootStore.Get(UserStore);
+  const maxDepth = 5; // Limit nesting depth to prevent UI issues
+
+  return (
+    <div
+      key={comment.id}
+      className={`mb-2 border-divider p-2 rounded-2xl bg-background ${depth > 0 ? 'ml-6' : ''}`}
+      style={{ marginLeft: `${Math.min(depth * 24, maxDepth * 24)}px` }}
+    >
+      <div className="flex items-center justify-between">
+        <UserAvatar
+          account={comment.account || undefined}
+          guestName={comment.guestName || undefined}
+          isAuthor={true}
+          blinkoItem={blinkoItem}
+        />
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="light"
+            isIconOnly
+            onPress={() => Store.handleReply(comment.id, comment.account?.nickname || comment.account?.name || comment.guestName || '')}
+          >
+            <Icon icon="akar-icons:comment" width="16" height="16" />
+          </Button>
+          {(user.id === comment.note?.account?.id || user.id === comment.account?.id) && !blinkoItem.originURL && (
+            <Button
+              size="sm"
+              variant="light"
+              color="danger"
+              isIconOnly
+              onPress={() => Store.handleDelete.call(comment.id)}
+            >
+              <Icon icon="akar-icons:trash" width="16" height="16" />
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="p-2 -mt-2">
+        <MarkdownRender content={comment.content} />
+        <div className="text-xs text-desc mt-1 flex items-center gap-2">
+          <span>{dayjs(comment.createdAt).fromNow()}</span>
+          {Store.safeUA(comment?.guestUA ?? '') && (
+            <>
+              <span>·</span>
+              <span>{t('from')} {Store.safeUA(comment?.guestUA ?? '')}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Render nested replies recursively */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="mt-2">
+          {comment.replies.map((reply) => (
+            <NestedComment
+              key={reply.id}
+              comment={reply}
+              blinkoItem={blinkoItem}
+              depth={depth + 1}
+              Store={Store}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
@@ -171,89 +253,13 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem 
           await Store.commentList.callNextPage({});
         }}>
           {Store.commentList.value?.map((comment: Comment['items'][0]) => (
-            <div key={comment.id} className="mb-2 border-divider p-2 rounded-2xl bg-background">
-              <div className="flex items-center justify-between">
-                <UserAvatar
-                  account={comment.account || undefined}
-                  guestName={comment.guestName || undefined}
-                  isAuthor={true}
-                  blinkoItem={blinkoItem}
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="light"
-                    isIconOnly
-                    onPress={() => Store.handleReply(comment.id, comment.account?.nickname || comment.account?.name || comment.guestName || '')}
-                  >
-                    <Icon icon="akar-icons:comment" width="16" height="16" />
-                  </Button>
-                  {(user.id === comment.note?.account?.id || user.id === comment.account?.id) && !blinkoItem.originURL && (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      isIconOnly
-                      onPress={() => Store.handleDelete.call(comment.id)}
-                    >
-                      <Icon icon="akar-icons:trash" width="16" height="16" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="p-2 -mt-2">
-                <MarkdownRender content={comment.content} />
-                <div className="text-xs text-desc mt-1 flex items-center gap-2">
-                  <span>{dayjs(comment.createdAt).fromNow()}</span>
-                  {Store.safeUA(comment?.guestUA ?? '') && (
-                    <>
-                      <span>·</span>
-                      <span>{t('from')} {Store.safeUA(comment?.guestUA ?? '')}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {comment.replies && comment.replies.length > 0 && (
-                <div className="ml-8 mt-2 space-y-2">
-                  {comment.replies.map((reply) => (
-                    <div key={reply.id} className="pl-4 py-1">
-                      <div className="flex items-center justify-between">
-                        <UserAvatar
-                          account={reply.account || undefined}
-                          guestName={reply.guestName || undefined}
-                          isAuthor={true}
-                          blinkoItem={blinkoItem}
-                        />
-                        {user.id === String(reply.accountId) && (
-                          <Button
-                            size="sm"
-                            color="danger"
-                            variant="light"
-                            isIconOnly
-                            onPress={() => Store.handleDelete.call(reply.id)}
-                          >
-                            <Icon icon="akar-icons:trash" width="16" height="16" />
-                          </Button>
-                        )}
-                      </div>
-                      <div className="text-sm mt-1">
-                        {reply.content}
-                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                          <span>{dayjs(reply.createdAt).fromNow()}</span>
-                          {Store.safeUA(reply?.guestUA ?? '') && (
-                            <>
-                              <span>·</span>
-                              <span>{t('from')} {Store.safeUA(reply?.guestUA ?? '')}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <NestedComment
+              key={comment.id}
+              comment={comment}
+              blinkoItem={blinkoItem}
+              depth={0}
+              Store={Store}
+            />
           ))}
         </ScrollArea>
       )}

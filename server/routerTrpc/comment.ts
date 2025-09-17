@@ -23,10 +23,37 @@ const commentWithRelationsSchema: z.ZodType<any> = baseCommentSchema.extend({
       id: z.number()
     }).nullable()
   }).nullable(),
-  replies: z.array(baseCommentSchema.extend({
-    account: accountSchema.nullable()
-  })).optional()
+  replies: z.any().optional()
 });
+
+async function getNestedComments(commentIds: number[]): Promise<any[]> {
+  if (commentIds.length === 0) return [];
+
+  const comments = await prisma.comments.findMany({
+    where: {
+      parentId: {
+        in: commentIds
+      }
+    },
+    include: {
+      account: {
+        select: {
+          id: true,
+          name: true,
+          nickname: true,
+          image: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  for (const comment of comments) {
+    comment.replies = await getNestedComments([comment.id]);
+  }
+
+  return comments;
+}
 
 export const commentRouter = router({
   create: publicProcedure
@@ -164,22 +191,14 @@ export const commentRouter = router({
                 }
               }
             },
-            replies: {
-              orderBy: { createdAt: 'asc' },
-              include: {
-                account: {
-                  select: {
-                    id: true,
-                    name: true,
-                    nickname: true,
-                    image: true
-                  }
-                }
-              }
-            }
           }
         })
       ]);
+
+      // Load nested replies recursively
+      for (const comment of comments) {
+        comment.replies = await getNestedComments([comment.id]);
+      }
 
       return {
         total,

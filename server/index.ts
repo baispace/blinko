@@ -190,7 +190,6 @@ async function setupApiRoutes(app: express.Application) {
  * Sets up middleware, auth, API routes and starts the server
  */
 async function bootstrap() {
-  console.log('bootstrap');
   try {
     app.use(cors({
       origin: true,

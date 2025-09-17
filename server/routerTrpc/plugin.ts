@@ -208,7 +208,9 @@ export const pluginRouter = router({
       }
     }),
 
-  installPlugin: authProcedure.input(installPluginSchema).mutation(async ({ input }) => {
+  installPlugin: authProcedure.input(installPluginSchema.extend({
+    forceReinstall: z.boolean().optional().default(false)
+  })).mutation(async ({ input }) => {
     const pluginDir = getPluginDir(input.name);
     const tempZipPath = path.join(pluginDir, 'release.zip');
 
@@ -225,7 +227,7 @@ export const pluginRouter = router({
 
       if (existingPlugin) {
         const metadata = existingPlugin.metadata as { version: string };
-        if (metadata.version !== input.version) {
+        if (metadata.version !== input.version || input.forceReinstall) {
           await cleanPluginDir(input.name);
         } else {
           throw new Error(`Plugin v${metadata.version} is already installed`);

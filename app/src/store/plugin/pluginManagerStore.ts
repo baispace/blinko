@@ -32,6 +32,7 @@ export class PluginManagerStore implements Store {
     value: ''
   });
   private loadedCssFiles: Map<string, HTMLStyleElement[]> = new Map();
+  private pluginRetryCount: Map<string, number> = new Map();
 
   constructor() {
     makeAutoObservable(this);
@@ -409,14 +410,95 @@ export class PluginManagerStore implements Store {
       // Extract plugin name from path
       const pathSegments = pluginPath.split('/');
       const pluginName = pathSegments[pathSegments.indexOf('plugins') + 1] || '';
-      
+
       // Load plugin CSS
       await this.loadCssFiles(pluginName);
-      
+
       // Initialize plugin
-      return await this.initPlugin(module.default, pluginName);
+      const result = await this.initPlugin(module.default, pluginName);
+
+      // Clear retry count on successful load
+      const retryKeysToDelete = Array.from(this.pluginRetryCount.keys()).filter(key => key.startsWith(pluginName + '_'));
+      retryKeysToDelete.forEach(key => this.pluginRetryCount.delete(key));
+
+      return result;
     } catch (error) {
       console.error(`load plugin error: ${pluginPath}`, error);
+
+      // Check if it's a 404 error (plugin file not found)
+      const isLoadError = error.message && (
+        error.message.includes('SystemJS Error#3') ||
+        error.message.includes('Error loading') ||
+        error.message.includes('404') ||
+        error.message.includes('Not Found')
+      );
+
+      if (isLoadError) {
+        await this.handlePluginNotFound(pluginPath);
+      }
+    }
+  }
+
+  /**
+   * Handle plugin not found - attempt to reinstall with retry limit
+   */
+  private async handlePluginNotFound(pluginPath: string) {
+    try {
+      // Extract plugin name from path
+      const pathSegments = pluginPath.split('/');
+      const pluginName = pathSegments[pathSegments.indexOf('plugins') + 1] || '';
+
+      // Check retry count to prevent infinite loop
+      const retryKey = `${pluginName}_${pluginPath}`;
+      const currentRetries = this.pluginRetryCount.get(retryKey) || 0;
+      const MAX_RETRIES = 2;
+
+      if (currentRetries >= MAX_RETRIES) {
+        console.error(`Plugin ${pluginName} has failed ${MAX_RETRIES} times, giving up`);
+        RootStore.Get(ToastPlugin).error(i18n.t('plugin-update-failed'));
+        this.pluginRetryCount.delete(retryKey);
+        return;
+      }
+
+      console.log(`Plugin ${pluginName} not found, attempting to reinstall... (attempt ${currentRetries + 1}/${MAX_RETRIES})`);
+
+      // Increment retry count
+      this.pluginRetryCount.set(retryKey, currentRetries + 1);
+
+      // Find the plugin in database
+      const installedPlugins = await this.installedPlugins.getOrCall();
+      const pluginRecord = installedPlugins?.find(p => {
+        const metadata = p.metadata as any;
+        return metadata?.name === pluginName;
+      });
+
+      if (pluginRecord) {
+        const metadata = pluginRecord.metadata as any;
+        console.log(`Reinstalling plugin ${pluginName} version ${metadata.version}...`);
+
+        // Reinstall the plugin with force flag
+        await this.installPlugin({ ...metadata, forceReinstall: true });
+
+        // Try to load again after reinstallation
+        setTimeout(() => {
+          // Use the direct plugin path from database instead of constructing it
+          this.loadPlugin(pluginRecord.path);
+        }, 1000);
+
+        // Only show success message on first retry
+        if (currentRetries === 0) {
+        }
+      } else {
+        console.error(`Plugin ${pluginName} not found in database, cannot reinstall`);
+        this.pluginRetryCount.delete(retryKey);
+      }
+    } catch (error) {
+      console.error('Failed to reinstall plugin:', error);
+      // Clear retry count on error
+      const pathSegments = pluginPath.split('/');
+      const pluginName = pathSegments[pathSegments.indexOf('plugins') + 1] || '';
+      const retryKey = `${pluginName}_${pluginPath}`;
+      this.pluginRetryCount.delete(retryKey);
     }
   }
 
@@ -433,6 +515,8 @@ export class PluginManagerStore implements Store {
         this.plugins.delete(pluginName);
       }
       this.removeCssFiles(pluginName);
+      // Clear retry count when destroying plugin
+      this.pluginRetryCount.delete(pluginName);
     } catch (error) {
       console.error(`destroy plugin error: ${pluginName}`, error);
     }
@@ -447,7 +531,8 @@ export class PluginManagerStore implements Store {
     try {
       await api.plugin.installPlugin.mutate(plugin);
       await this.marketplacePlugins.call();
-      await this.initInstalledPlugins();
+      // Don't call initInstalledPlugins here to avoid recursive loading
+      await this.installedPlugins.call();
     } catch (error) {
       console.error('Install plugin error:', error);
       throw error;

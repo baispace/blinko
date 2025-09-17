@@ -206,7 +206,6 @@ const initOAuthStrategies = async () => {
   try {
     const config = await getGlobalConfig({ useAdmin: true });
     const providers = config.oauth2Providers || [];
-    console.log('initOAuthStrategies', providers);
     for (const provider of providers) {
       const callbackURL = `/api/auth/callback/${provider.id}`;
       switch (provider.id) {

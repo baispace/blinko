@@ -741,5 +741,14 @@
   "hotkeys": "快捷键",
   "translation-languages": "翻译语言",
   "trigger-modifier": "更改快捷键",
-  "text-selection-toolbar": "划词工具栏"
+  "text-selection-toolbar": "划词工具栏",
+  "no-update-available": "没有可用更新",
+  "update-failed-generic": "更新失败",
+  "update-failed": "更新失败",
+  "checking-for-updates": "检查更新中",
+  "downloading-update": "下载更新中",
+  "installing-update": "安装更新中",
+  "update-completed": "更新完成",
+  "app-update": "应用更新",
+  "updating-to-version": "更新至"
 }

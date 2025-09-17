@@ -652,5 +652,13 @@
   "hotkeys": "მარტივი გზები",
   "translation-languages": "თარგმნის ენა",
   "trigger-modifier": "შეცვალე სწრაფ გონ-ო-KEY",
-  "text-selection-toolbar": "划词工具栏 - ტექსტის მოჭრის ხაზи"
+  "text-selection-toolbar": "划词工具栏 - ტექსტის მოჭრის ხაზи",
+  "no-update-available": "没有可用更新",
+  "update-failed": "განახლების ჩავარდობា",
+  "checking-for-updates": "检查更新",
+  "downloading-update": "გადმოწერის განახლებis",
+  "installing-update": "განახლების ინსტალო",
+  "update-completed": "განახლება დასრუ finished",
+  "app-update": "应用更新",
+  "updating-to-version": "更新至 Georgia"
 }

@@ -693,5 +693,13 @@
   "hotkeys": "Kısayol tuşları",
   "translation-languages": "Çeviri dili",
   "trigger-modifier": "Kısayol tuşlarını değiştir",
-  "text-selection-toolbar": "Kelime Çizim Araç Çubuğu"
+  "text-selection-toolbar": "Kelime Çizim Araç Çubuğu",
+  "no-update-available": "Kullanılabilir güncelleme yok",
+  "update-failed": "Güncelleme başarısız oldu",
+  "checking-for-updates": "Güncellemeleri kontrol et",
+  "downloading-update": "Güncelleme indiriliyor",
+  "installing-update": "Güncelleme yükleniyor",
+  "update-completed": "Güncelleme tamamlandı",
+  "app-update": "Uygulama güncellemesi",
+  "updating-to-version": "güncellendi"
 }

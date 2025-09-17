@@ -687,5 +687,13 @@
   "hotkeys": "Teclas de atalho",
   "translation-languages": "Língua de tradução",
   "trigger-modifier": "Alterar teclas de atalho",
-  "text-selection-toolbar": "Barra de ferramentas de seleção de texto"
+  "text-selection-toolbar": "Barra de ferramentas de seleção de texto",
+  "no-update-available": "Não há atualizações disponíveis",
+  "update-failed": "Atualização falhou",
+  "checking-for-updates": "Verificar atualizações",
+  "downloading-update": "Baixando atualização",
+  "installing-update": "Instalando atualizações",
+  "update-completed": "Atualização concluída",
+  "app-update": "Atualização de aplicativo",
+  "updating-to-version": "atualizado até"
 }

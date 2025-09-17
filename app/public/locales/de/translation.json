@@ -691,5 +691,13 @@
   "hotkeys": "Tastenkombination",
   "translation-languages": "Übersetzungssprache",
   "trigger-modifier": "Ändern Sie die Tastenkombinationen",
-  "text-selection-toolbar": "Wortmarkierungswerkzeugleiste"
+  "text-selection-toolbar": "Wortmarkierungswerkzeugleiste",
+  "no-update-available": "Keine verfügbaren Updates",
+  "update-failed": "Aktualisierung fehlgeschlagen",
+  "checking-for-updates": "Überprüfung auf Updates",
+  "downloading-update": "Download wird aktualisiert",
+  "installing-update": "Installation von Updates",
+  "update-completed": "Aktualisierung abgeschlossen",
+  "app-update": "Anwendungsaktualisierung",
+  "updating-to-version": "Aktualisieren auf"
 }

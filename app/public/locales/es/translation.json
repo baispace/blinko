@@ -693,5 +693,13 @@
   "hotkeys": "Teclas de acceso rápido",
   "translation-languages": "Idioma de traducción",
   "trigger-modifier": "Cambiar teclas de acceso rápido",
-  "text-selection-toolbar": "Barra de herramientas de selección de texto"
+  "text-selection-toolbar": "Barra de herramientas de selección de texto",
+  "no-update-available": "No hay actualizaciones disponibles",
+  "update-failed": "Actualización fallida",
+  "checking-for-updates": "Verificar actualizaciones",
+  "downloading-update": "Descargando actualización",
+  "installing-update": "Instalando actualizaciones",
+  "update-completed": "Actualización completada",
+  "app-update": "Actualización de la aplicación",
+  "updating-to-version": "actualizado a"
 }

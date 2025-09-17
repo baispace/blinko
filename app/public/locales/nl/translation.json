@@ -699,5 +699,13 @@
   "hotkeys": "sneltoets",
   "translation-languages": "Vertaal taal",
   "trigger-modifier": "Wijzig sneltoetsen",
-  "text-selection-toolbar": "Woordenbalk markeren"
+  "text-selection-toolbar": "Woordenbalk markeren",
+  "no-update-available": "Geen beschikbare updates",
+  "update-failed": "Update mislukt",
+  "checking-for-updates": "Controleer op updates",
+  "downloading-update": "Downloaden van updates",
+  "installing-update": "Update installeren",
+  "update-completed": "Update voltooid",
+  "app-update": "Applicatie-update",
+  "updating-to-version": "Bijgewerkt tot"
 }

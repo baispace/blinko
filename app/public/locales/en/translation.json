@@ -725,5 +725,13 @@
   "hotkeys": "shortcut key",
   "translation-languages": "Translation Languages",
   "trigger-modifier": "Trigger Modifier",
-  "text-selection-toolbar": "Text Selection Toolbar"
+  "text-selection-toolbar": "Text Selection Toolbar",
+  "no-update-available": "No updates available",
+  "update-failed": "Update failed",
+  "checking-for-updates": "Checking for updates",
+  "downloading-update": "Downloading updates",
+  "installing-update": "Installing updates",
+  "update-completed": "Update completed",
+  "app-update": "Application Update",
+  "updating-to-version": "Update to"
 }

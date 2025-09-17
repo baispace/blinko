@@ -693,5 +693,13 @@
   "hotkeys": "Raccourci clavier",
   "translation-languages": "langue de traduction",
   "trigger-modifier": "Modifier le raccourci clavier",
-  "text-selection-toolbar": "Barre d'outils de sélection de texte"
+  "text-selection-toolbar": "Barre d'outils de sélection de texte",
+  "no-update-available": "Aucune mise à jour disponible",
+  "update-failed": "Échec de la mise à jour",
+  "checking-for-updates": "Vérifier les mises à jour",
+  "downloading-update": "Téléchargement de la mise à jour en cours",
+  "installing-update": "Installation des mises à jour",
+  "update-completed": "Mise à jour terminée",
+  "app-update": "Mise à jour de l'application",
+  "updating-to-version": "Mise à jour vers"
 }

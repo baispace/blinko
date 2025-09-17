@@ -693,5 +693,13 @@
   "hotkeys": "ショートカットキー",
   "translation-languages": "翻訳言語",
   "trigger-modifier": "ショートカットキーを変更する",
-  "text-selection-toolbar": "划词ツールバー"
+  "text-selection-toolbar": "划词ツールバー",
+  "no-update-available": "利用可能な更新がありません",
+  "update-failed": "更新に失敗しました",
+  "checking-for-updates": "更新をチェックする",
+  "downloading-update": "ダウンロード更新中",
+  "installing-update": "アップデート中のインストール",
+  "update-completed": "更新完了",
+  "app-update": "アプリケーションの更新",
+  "updating-to-version": "更新すると"
 }

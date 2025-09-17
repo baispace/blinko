@@ -688,5 +688,13 @@
   "hotkeys": "단축키",
   "translation-languages": "번역 언어",
   "trigger-modifier": "바로 가기 키 변경",
-  "text-selection-toolbar": "단어 표시 도구 모음"
+  "text-selection-toolbar": "단어 표시 도구 모음",
+  "no-update-available": "사용 가능한 업데이트가 없습니다",
+  "update-failed": "업데이트 실패",
+  "checking-for-updates": "업데이트 확인",
+  "downloading-update": "다운로드 업데이트 중입니다",
+  "installing-update": "업데이트 설치 중입니다",
+  "update-completed": "업데이트 완료",
+  "app-update": "애플리케이션 업데이트",
+  "updating-to-version": "업데이트할 때까지"
 }

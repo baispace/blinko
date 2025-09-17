@@ -686,5 +686,13 @@
   "hotkeys": "горячие клавиши",
   "translation-languages": "Перевод языков",
   "trigger-modifier": "Изменить горячие клавиши",
-  "text-selection-toolbar": "Панель инструментов для выделения текста"
+  "text-selection-toolbar": "Панель инструментов для выделения текста",
+  "no-update-available": "Нет доступных обновлений",
+  "update-failed": "Обновление не удалось",
+  "checking-for-updates": "Проверить обновления",
+  "downloading-update": "Загрузка обновления",
+  "installing-update": "Установка обновлений",
+  "update-completed": "Обновление завершено",
+  "app-update": "Приложение обновлено",
+  "updating-to-version": "обновить до"
 }

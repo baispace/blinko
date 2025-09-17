@@ -8,17 +8,17 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
 import { Item } from "./Item";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 import packageJson from '../../../src-tauri/tauri.conf.json';
 import { isDesktop, isInTauri } from "@/lib/tauriHelper";
-import { check } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
 import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { UpdateProgressDialog } from "@/components/Common/UpdateProgressDialog";
 
 
 export const AboutSetting = observer(() => {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const store = RootStore.Local(() => ({
     serverVersion: new PromiseState({
       function: async () => {
@@ -144,9 +144,7 @@ export const AboutSetting = observer(() => {
                     if (!isDesktop()) {
                       window.open(`https://github.com/blinko-space/blinko/releases`, '_blank')
                     } else {
-                      const updater = await check();
-                      await updater?.downloadAndInstall()
-                      await relaunch()
+                      setShowUpdateDialog(true);
                     }
                   }}
                 >
@@ -219,6 +217,12 @@ export const AboutSetting = observer(() => {
           }
         />
       </div>
+
+      <UpdateProgressDialog
+        isOpen={showUpdateDialog}
+        onClose={() => setShowUpdateDialog(false)}
+        newVersion={store.latestClientVersion.value}
+      />
     </CollapsibleCard>
   );
 });

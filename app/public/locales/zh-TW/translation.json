@@ -693,5 +693,13 @@
   "hotkeys": "快速鍵",
   "translation-languages": "翻譯語言",
   "trigger-modifier": "更改快捷鍵",
-  "text-selection-toolbar": "劃詞工具列"
+  "text-selection-toolbar": "劃詞工具列",
+  "no-update-available": "沒有可用更新",
+  "update-failed": "更新失敗",
+  "checking-for-updates": "檢查更新",
+  "downloading-update": "下載更新中",
+  "installing-update": "正在安裝更新",
+  "update-completed": "更新完成",
+  "app-update": "應用更新",
+  "updating-to-version": "更新至"
 }

@@ -684,5 +684,13 @@
   "hotkeys": "Skrót klawiszowy",
   "translation-languages": "Język tłumaczenia",
   "trigger-modifier": "Zmień skrót klawiszowy",
-  "text-selection-toolbar": "Pasek narzędzi do zaznaczania tekstu"
+  "text-selection-toolbar": "Pasek narzędzi do zaznaczania tekstu",
+  "no-update-available": "Brak dostępnych aktualizacji",
+  "update-failed": "Aktualizacja nie powiodła się",
+  "checking-for-updates": "Sprawdź aktualizacje",
+  "downloading-update": "Pobieranie aktualizacji",
+  "installing-update": "Instalacja aktualizacji",
+  "update-completed": "Aktualizacja zakończona",
+  "app-update": "Aktualizacja aplikacji",
+  "updating-to-version": "zaktualizuj do"
 }

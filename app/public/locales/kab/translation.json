@@ -724,5 +724,13 @@
   "hotkeys": "ⵜⴰⵏⴻⵙⵎⴰ ⵜⴰⵣᴇṛṛumt",
   "translation-languages": "Tuffɣa n tutlayt",
   "trigger-modifier": "Beddel timmad-islayen",
-  "text-selection-toolbar": "Asefreḍ n tneɣẓiwin"
+  "text-selection-toolbar": "Asefreḍ n tneɣẓiwin",
+  "no-update-available": "Ulac yiwen usiweḍ yettwasqedcam",
+  "update-failed": "tugdi ur tufi",
+  "checking-for-updates": "Asenqeḍ udiwan",
+  "downloading-update": "Tuzzemt n ugmuḍ",
+  "installing-update": "Tiwli tuddsa s timellalin",
+  "update-completed": "Tigemmi tettwakkes",
+  "app-update": "aseggas n usefrek",
+  "updating-to-version": "Asmelkem ara"
 }

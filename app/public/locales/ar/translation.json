@@ -691,5 +691,13 @@
   "hotkeys": "اختصارات الكيبورد",
   "translation-languages": "ترجمة اللغات",
   "trigger-modifier": "تغيير الاختصارات",
-  "text-selection-toolbar": "شريط أدوات التحديد"
+  "text-selection-toolbar": "شريط أدوات التحديد",
+  "no-update-available": "لا توجد تحديثات متاحة",
+  "update-failed": "فشل التحديث",
+  "checking-for-updates": "تحقق من التحديثات",
+  "downloading-update": "جاري تحميل التحديثات",
+  "installing-update": "تثبيت التحديثات",
+  "update-completed": "تم التحديث بنجاح",
+  "app-update": "تحديث التطبيق",
+  "updating-to-version": "تحديث إلى"
 }

@@ -60,7 +60,7 @@ export const userRouter = router({
     })))
     .query(async () => {
       return await prisma.accounts.findMany({
-        where: { loginType: '' }, select: {
+        select: {
           id: true,
           name: true,
           nickname: true,
@@ -307,14 +307,14 @@ export const userRouter = router({
       return { token };
     }),
   genTokenByUserId: authProcedure.use(superAdminAuthMiddleware)
-    .meta({ 
-      openapi: { 
-        method: 'POST', 
-        path: '/v1/user/gen-token-by-user-id', 
-        summary: 'Generate tokens by user IDs', 
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/user/gen-token-by-user-id',
+        summary: 'Generate tokens by user IDs',
         description: 'Generate tokens for specific users by user IDs, need super admin permission',
-        tags: ['User'] 
-      } 
+        tags: ['User']
+      }
     })
     .input(z.object({
       userIds: z.array(z.number())

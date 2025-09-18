@@ -324,10 +324,8 @@ const initOAuthStrategies = async () => {
           break;
 
         default:
-          console.log('handle custom oauth provider', provider);
           // Custom OAuth provider configuration
           if (provider.wellKnown || (provider.authorizationUrl && provider.tokenUrl)) {
-            console.log(`Custom OAuth provider ${provider.id} needs additional configuration`);
             try {
               const { Strategy: OAuth2Strategy } = require('passport-oauth2');
 
@@ -339,9 +337,6 @@ const initOAuthStrategies = async () => {
                   throw new Error(`Failed to fetch well-known configuration from ${provider.wellKnown}`);
                 }
                 const wellKnownConfig = await wellKnownResponse.json();
-                
-                console.log(`Well-known configuration for ${provider.id}:`, wellKnownConfig);
-                
                 oauthConfig = {
                   authorizationURL: wellKnownConfig.authorization_endpoint,
                   tokenURL: wellKnownConfig.token_endpoint,
@@ -428,8 +423,6 @@ export const reinitializeOAuthStrategies = async () => {
     
     // Re-initialize OAuth strategies
     await initOAuthStrategies();
-    
-    console.log('OAuth strategies reinitialized successfully');
     return { success: true, message: 'OAuth strategies reinitialized' };
   } catch (error) {
     console.error('Failed to reinitialize OAuth strategies:', error);

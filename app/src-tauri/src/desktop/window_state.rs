@@ -45,7 +45,6 @@ pub fn load_window_state(app: &AppHandle) -> AppWindowState {
                     Ok(content) => {
                         match serde_json::from_str::<AppWindowState>(&content) {
                             Ok(state) => {
-                                println!("Loaded window state from: {}", path.display());
                                 return state;
                             }
                             Err(e) => {

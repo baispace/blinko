@@ -22,7 +22,9 @@
       "WebFetch(domain:github.com)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
-      "Bash(gh issue comment:*)"
+      "Bash(gh issue comment:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []

@@ -158,10 +158,13 @@ export class FileService {
     }
   }
 
-  static async getFile(filePath: string) {
+
+  /**
+   * Get file buffer from S3 or local storage without creating temporary files
+   */
+  static async getFileBuffer(filePath: string): Promise<Buffer> {
     const config = await getGlobalConfig({ useAdmin: true });
     const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
-    const tempPath = path.join(UPLOAD_FILE_PATH, path.basename(fileName));
 
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
@@ -175,11 +178,51 @@ export class FileService {
       for await (const chunk of response.Body as any) {
         chunks.push(chunk);
       }
-      //@ts-ignore
-      await fs.writeFile(tempPath, Buffer.concat(chunks));
-      return tempPath;
+      return Buffer.concat(chunks);
     } else {
-      return path.join(UPLOAD_FILE_PATH, fileName);
+      const localPath = path.join(UPLOAD_FILE_PATH, fileName);
+      return await fs.readFile(localPath);
+    }
+  }
+
+  /**
+   * Get temporary file path (creates local copy for S3 files)
+   * WARNING: This method creates temporary files for S3 storage. Use getFileBuffer() when possible.
+   * Remember to clean up the returned path for S3 files after use.
+   */
+  static async getFile(filePath: string): Promise<{ path: string; isTemporary: boolean; cleanup?: () => Promise<void> }> {
+    const config = await getGlobalConfig({ useAdmin: true });
+    const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
+
+    if (config.objectStorage === 's3') {
+      const tempPath = path.join(UPLOAD_FILE_PATH, 'temp', `${Date.now()}_${path.basename(fileName)}`);
+      await fs.mkdir(path.dirname(tempPath), { recursive: true });
+
+      const buffer = await this.getFileBuffer(filePath);
+      await fs.writeFile(tempPath, new Uint8Array(buffer));
+
+      return {
+        path: tempPath,
+        isTemporary: true,
+        cleanup: async () => {
+          try {
+            await fs.unlink(tempPath);
+            // Try to remove temp directory if empty
+            try {
+              await fs.rmdir(path.dirname(tempPath));
+            } catch {
+              // Ignore if directory is not empty
+            }
+          } catch (error) {
+            console.warn('Failed to cleanup temporary file:', tempPath, error);
+          }
+        }
+      };
+    } else {
+      return {
+        path: path.join(UPLOAD_FILE_PATH, fileName),
+        isTemporary: false
+      };
     }
   }
 

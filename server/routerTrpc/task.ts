@@ -51,13 +51,17 @@ export const taskRouter = router({
     .mutation(async function* ({ input, ctx }) {
       const { filePath } = input
       try {
-        const localFilePath = await FileService.getFile(filePath)
-        const res = DBJob.RestoreDB(localFilePath, ctx)
+        const fileResult = await FileService.getFile(filePath)
+        const res = DBJob.RestoreDB(fileResult.path, ctx)
         for await (const result of res) {
           yield result;
         }
         try {
-          await unlink(localFilePath)
+          if (fileResult.isTemporary && fileResult.cleanup) {
+            await fileResult.cleanup()
+          } else {
+            await unlink(fileResult.path)
+          }
           await FileService.deleteFile(filePath)
         } catch (error) {
         }
@@ -80,9 +84,8 @@ export const taskRouter = router({
         for await (const result of memos.importFiles(ctx)) {
           yield result;
         }
-        memos.closeDB();
+        await memos.closeDB();
         try {
-          await unlink(dbPath)
           await FileService.deleteFile(input.filePath)
         } catch (error) {
         }
@@ -97,16 +100,20 @@ export const taskRouter = router({
     }))
     .mutation(async function* ({ input, ctx }) {
       try {
-        const localFilePath = await FileService.getFile(input.filePath);
+        const fileResult = await FileService.getFile(input.filePath);
         const markdownImporter = new MarkdownImporter();
-        
-        for await (const result of markdownImporter.importMarkdown(localFilePath, ctx)) {
+
+        for await (const result of markdownImporter.importMarkdown(fileResult.path, ctx)) {
           yield result;
         }
-        
+
         // Clean up the file after import
         try {
-          await unlink(localFilePath);
+          if (fileResult.isTemporary && fileResult.cleanup) {
+            await fileResult.cleanup()
+          } else {
+            await unlink(fileResult.path)
+          }
           await FileService.deleteFile(input.filePath);
         } catch (error) {
           console.error("Failed to clean up files after markdown import:", error);

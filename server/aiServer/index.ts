@@ -129,12 +129,19 @@ export class AiService {
   //api/file/123.pdf
   static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number; updatedAt?: Date; filePath: string }) {
     try {
-      const absolutePath = await FileService.getFile(filePath);
+      const fileResult = await FileService.getFile(filePath);
       let content: string;
-      if (AiService.isImage(filePath)) {
-        content = await AiModelFactory.describeImage(absolutePath);
-      } else {
-        content = await AiService.loadFileContent(absolutePath);
+      try {
+        if (AiService.isImage(filePath)) {
+          content = await AiModelFactory.describeImage(fileResult.path);
+        } else {
+          content = await AiService.loadFileContent(fileResult.path);
+        }
+      } finally {
+        // Clean up temporary file if needed
+        if (fileResult.isTemporary && fileResult.cleanup) {
+          await fileResult.cleanup();
+        }
       }
       const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider();
 

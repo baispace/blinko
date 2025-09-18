@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import { createReadStream, statSync } from 'fs';
 import { stat, readFile, mkdir } from 'fs/promises';
-import fs from 'fs';
 import mime from 'mime-types';
 import { UPLOAD_FILE_PATH } from '../../../shared/lib/pathConstant';
 import crypto from 'crypto';

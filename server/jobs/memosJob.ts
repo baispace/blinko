@@ -25,17 +25,23 @@ type Memo = {
 
 export class Memos {
   private db!: sqlite3.Database
+  private cleanup?: () => Promise<void>
+
   async initDB(filePath: string) {
-    const dbPath = await FileService.getFile(filePath);
-    this.db = new sqlite3.Database(dbPath, (err) => {
+    const fileResult = await FileService.getFile(filePath);
+    this.cleanup = fileResult.cleanup;
+    this.db = new sqlite3.Database(fileResult.path, (err) => {
       if (err) {
         console.error('can not connect to memos db', err.message);
       }
     });
-    return dbPath;
+    return fileResult.path;
   }
-  closeDB() {
+  async closeDB() {
     this.db.close()
+    if (this.cleanup) {
+      await this.cleanup()
+    }
   }
 
   async *importMemosDB(ctx: Context): AsyncGenerator<ProgressResult & { progress?: { current: number, total: number } }, void, unknown> {

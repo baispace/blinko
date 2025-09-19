@@ -192,7 +192,6 @@ export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit
       blinko.isCreateMode = false
     }} />
   })
-  FocusEditorFixMobile()
 }
 
 const handleEdit = (isDetailPage: boolean) => {

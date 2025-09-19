@@ -23,6 +23,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
           blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
         }}
         isShareMode={isShareMode}
+        largeSpacing={isExpanded}
       />
       <ReferencesContent blinkoItem={blinkoItem} className={`${isExpanded ? 'my-4' : 'my-2'}`} />
       <div className={blinkoItem.attachments?.length != 0 ? 'my-2' : ''}>

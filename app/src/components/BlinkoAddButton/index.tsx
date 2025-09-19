@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { ShowEditBlinkoModel } from '../BlinkoRightClickMenu';
-import { FocusEditorFixMobile } from '../Common/Editor/editorUtils';
+import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
 
 export const BlinkoAddButton = observer(() => {
   const ICON_SIZE = {

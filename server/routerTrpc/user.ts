@@ -168,9 +168,7 @@ export const userRouter = router({
       role: z.string()
     }))
     .query(async ({ input, ctx }) => {
-      console.log('detail', input, ctx);
       const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
-      console.log('user', user);
       if (Number(user?.id) !== Number(ctx.id) && user?.role !== 'superadmin') {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
       }

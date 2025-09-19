@@ -66,10 +66,6 @@ pub fn run() {
                 navigate_main_to_ai_with_prompt,
                 toggle_quicktool_window,
                 hide_quicktool_window,
-                is_autostart_enabled,
-                enable_autostart,
-                disable_autostart,
-                toggle_autostart,
                 setup_text_selection_monitoring,
                 copy_to_clipboard,
                 test_text_selection,
@@ -77,6 +73,16 @@ pub fn run() {
                 show_quicktool
             ])
             .setup(|app| {
+                #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                {
+                    use tauri_plugin_autostart::MacosLauncher;
+
+                    let _ = app.handle().plugin(tauri_plugin_autostart::init(
+                        MacosLauncher::LaunchAgent,
+                        Some(vec!["--autostart"]),
+                    ));
+                }
+
                 setup_app(app)?;
                 Ok(())
             })

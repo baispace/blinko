@@ -10,7 +10,7 @@ export class VoyageModelProvider extends AiBaseModelProvider {
   protected createProvider(): ProviderV1 {
     return createVoyage({
       apiKey: this.globalConfig.aiApiKey,
-      // fetch: this.proxiedFetch
+      fetch: this.proxiedFetch
     });
   }
 
@@ -22,6 +22,7 @@ export class VoyageModelProvider extends AiBaseModelProvider {
     if (this.globalConfig.embeddingApiKey) {
       let overrideProvider = createVoyage({
         apiKey: this.globalConfig.embeddingApiKey,
+        fetch: this.proxiedFetch
       });
       return overrideProvider.textEmbeddingModel(this.globalConfig.embeddingModel ?? 'voyage-3-large');
     }

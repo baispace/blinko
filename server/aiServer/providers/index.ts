@@ -81,6 +81,7 @@ export abstract class AiBaseModelProvider {
       const config = {
         apiKey: this.globalConfig.embeddingApiKey,
         baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+        fetch: this.proxiedFetch
       };
       if (this.globalConfig.embeddingModel?.includes('voyage')) {
         return createVoyage(config).textEmbeddingModel(this.globalConfig.embeddingModel);
@@ -107,6 +108,7 @@ export abstract class AiBaseModelProvider {
         const config = {
           apiKey: this.globalConfig.embeddingApiKey,
           baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+          fetch: this.proxiedFetch
         };
         if (this.globalConfig.embeddingApiKey) {
           console.log(this.globalConfig.rerankModel, 'rerankModel');

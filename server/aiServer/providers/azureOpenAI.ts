@@ -17,6 +17,7 @@ export class AzureOpenAIModelProvider extends AiBaseModelProvider {
       apiKey: this.globalConfig.aiApiKey,
       baseURL: this.globalConfig.aiApiEndpoint || undefined,
       apiVersion: this.globalConfig.aiApiVersion || undefined,
+      fetch: this.proxiedFetch
     });
   }
 
@@ -31,6 +32,7 @@ export class AzureOpenAIModelProvider extends AiBaseModelProvider {
     const config = {
       apiKey: this.globalConfig.embeddingApiKey,
       baseURL: this.globalConfig.embeddingApiEndpoint || undefined,
+      fetch: this.proxiedFetch
     };
     if (config.baseURL && config.baseURL) {
       return createAzure(config).textEmbeddingModel(

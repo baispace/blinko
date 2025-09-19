@@ -3,8 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosProxyConfig } from 'axio
 import * as http from 'http';
 import * as https from 'https';
 import { URL } from 'url';
-import { ProxyAgent } from 'proxy-agent';
-import nodeFetch from 'node-fetch';
+import { ProxyAgent } from 'undici';
 import { getGlobalConfig } from '@server/routerTrpc/config';
 import { Context } from '@server/context';
 
@@ -27,20 +26,28 @@ export async function fetchWithProxy(): Promise<typeof fetch> {
 
   console.log(`[Server] Creating proxied fetch with proxy: ${proxyUrl}`);
 
-  // Create proxy agent
-  const agent = new ProxyAgent(proxyUrl as any);
-  console.log(`[Server] Proxy agent created2: ${JSON.stringify(agent.httpAgent)}`);
-  // Return a fetch function that uses the proxy
-  // @ts-ignore
-  return (url: RequestInfo | URL, init?: RequestInit) => {
-    const fetchOptions: RequestInit = {
-      ...init,
-      // @ts-ignore - agent is not in the standard RequestInit type
-      agent: agent,
-    };
-    // @ts-ignore
-    return nodeFetch(url as string, fetchOptions);
-  };
+  try {
+    // Create undici proxy agent
+    const proxyAgent = new ProxyAgent(proxyUrl);
+    console.log(`[Server] Undici proxy agent created for: ${proxyUrl}`);
+
+    // Return a fetch function that uses the proxy with proper type casting
+    const proxiedFetch = ((url: RequestInfo | URL, init?: RequestInit) => {
+      const fetchOptions: RequestInit & { dispatcher?: any } = {
+        ...init,
+        dispatcher: proxyAgent,
+        // proxy: proxyUrl //bun env use this
+      };
+
+      return fetch(url, fetchOptions);
+    }) as typeof fetch;
+
+    return proxiedFetch;
+  } catch (error) {
+    console.error(`[Server] Failed to create proxy agent:`, error);
+    // Fallback to regular fetch
+    return fetch;
+  }
 }
 
 /**
@@ -58,7 +65,7 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
     ...baseConfig,
     timeout: baseConfig.timeout || 30000,
     validateStatus: function (status) {
-      return true; 
+      return true;
     }
   });
 
@@ -117,9 +124,9 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
       auth:
         globalConfig.httpProxyUsername && globalConfig.httpProxyPassword
           ? {
-              username: globalConfig.httpProxyUsername,
-              password: globalConfig.httpProxyPassword,
-            }
+            username: globalConfig.httpProxyUsername,
+            password: globalConfig.httpProxyPassword,
+          }
           : undefined,
     } as AxiosProxyConfig;
   }
@@ -136,7 +143,7 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
         let errorDetails = {};
 
         const safeError = error instanceof Error ? error : new Error(String(error));
-        
+
         if (error.response) {
           statusCode = error.response.status;
           console.error(`[Server] Proxy response status: ${statusCode}`);

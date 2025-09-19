@@ -79,6 +79,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "trpc-to-openapi": "3.0.0",
+    "undici": "^7.16.0",
     "unfurl.js": "^6.4.0",
     "vite-express": "^0.20.0",
     "voyage-ai-provider": "^1.0.1",

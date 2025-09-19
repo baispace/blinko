@@ -107,7 +107,8 @@ export const AiSetting = observer(() => {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
         console.log(blinko.config.value?.aiApiEndpoint, 'xxx')
-        if (!blinko.config.value?.aiApiEndpoint) {
+        // Skip endpoint check for providers that use fixed endpoints
+        if (!blinko.config.value?.aiApiEndpoint && !['Gemini', 'Grok', 'DeepSeek', 'Anthropic', 'OpenRouter'].includes(provider)) {
           RootStore.Get(ToastPlugin).error(t('please-set-the-api-endpoint'));
           return;
         }

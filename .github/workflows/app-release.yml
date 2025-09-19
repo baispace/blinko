@@ -96,24 +96,28 @@ jobs:
           path: app/src-tauri/tauri.conf.json
 
   # Desktop Platform Build Task
-  publish-desktop:
+  build-desktop:
     needs: [set-version, update-version]
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: 'macos-latest' # Apple M-series chip (ARM)
             args: '--target aarch64-apple-darwin'
+            target: 'aarch64-apple-darwin'
           - platform: 'macos-latest' # Intel chip Mac
             args: '--target x86_64-apple-darwin'
+            target: 'x86_64-apple-darwin'
           - platform: 'ubuntu-22.04' # Linux Platform
             args: ''
+            target: 'x86_64-unknown-linux-gnu'
           - platform: 'windows-latest' # Windows Platform
             args: ''
+            target: 'x86_64-pc-windows-msvc'
 
     runs-on: ${{ matrix.platform }}
+    outputs:
+      artifacts-created: ${{ steps.build.outputs.artifactsCreated }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -130,16 +134,16 @@ jobs:
         run: |
           $versionJson = Get-Content -Path app/src-tauri/tauri.conf.json | ConvertFrom-Json
           $currentVersion = $versionJson.version
-          
+
           if ($currentVersion -match '-(.+)$') {
             $newVersion = $currentVersion -replace '-(.+)$', ''
-            
+
             $versionJson.version = $newVersion
-            
+
             $jsonContent = Get-Content -Path app/src-tauri/tauri.conf.json -Raw
             $jsonContent = $jsonContent -replace '"version": "([^"]+)"', "`"version`": `"$newVersion`""
             $jsonContent | Set-Content -Path app/src-tauri/tauri.conf.json -NoNewline
-            
+
             echo "Windows version $currentVersion changed to $newVersion"
           } else {
             echo "Version $currentVersion does not need to be modified"
@@ -186,8 +190,9 @@ jobs:
           bun install
           cd app && bun install
 
-      # Using official Tauri Action to build and publish
-      - name: Build and Publish Desktop App
+      # Build only, don't create release yet
+      - name: Build Desktop App
+        id: build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -197,18 +202,33 @@ jobs:
           projectPath: 'app'
           tauriScript: '../node_modules/.bin/tauri'
           args: ${{ matrix.args }}
-          tagName: ${{ needs.set-version.outputs.version }}
-          releaseName: Blinko ${{ needs.set-version.outputs.version }}
-          releaseBody: "Under construction, full changelog will be updated after build completion..."
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: true
+          # Don't create release, just build
+          tagName: ''
+
+      - name: Upload Desktop Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: |
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.rpm
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.AppImage
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.app
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
+            app/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
+            app/src-tauri/target/release/bundle/**/*.deb
+            app/src-tauri/target/release/bundle/**/*.rpm
+            app/src-tauri/target/release/bundle/**/*.AppImage
+            app/src-tauri/target/release/bundle/**/*.dmg
+            app/src-tauri/target/release/bundle/**/*.app
+            app/src-tauri/target/release/bundle/**/*.msi
+            app/src-tauri/target/release/bundle/**/*.exe
+          retention-days: 1
 
   # Android Platform Build Task
-  publish-android:
+  build-android:
     needs: [set-version, update-version]
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -316,18 +336,66 @@ jobs:
           echo "Renamed APK file:"
           ls -la
 
-      - name: Upload Android App to Existing Release
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
+          retention-days: 1
+
+  # Create release with all artifacts after all builds are complete
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [set-version, build-desktop, build-android]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Display downloaded artifacts
+        run: find artifacts/ -type f -name "*" | head -20
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          # Copy all desktop build artifacts
+          find artifacts/desktop-* -name "*.deb" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.rpm" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.AppImage" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.dmg" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.app" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.msi" -exec cp {} release-files/ \; || true
+          find artifacts/desktop-* -name "*.exe" -exec cp {} release-files/ \; || true
+          # Copy Android APK
+          find artifacts/android-apk -name "*.apk" -exec cp {} release-files/ \; || true
+          # List final files
+          echo "Release files:"
+          ls -la release-files/
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
           tag_name: ${{ needs.set-version.outputs.version }}
+          name: Blinko ${{ needs.set-version.outputs.version }}
+          body: "🚀 Release ${{ needs.set-version.outputs.version }} - All platforms built successfully! Changelog will be updated shortly..."
+          files: release-files/*
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Generate changelog after all builds are complete
   generate-changelog:
     runs-on: ubuntu-latest
-    needs: [set-version, publish-desktop, publish-android]
+    needs: [set-version, create-release]
     outputs:
       changelog: ${{ steps.changelog.outputs.changes }}
     steps:

@@ -16,7 +16,7 @@ import { BlinkoCard } from '../BlinkoCard';
 import { ConvertTypeButton } from '../BlinkoCard/cardFooter';
 import { LoadingAndEmpty } from '../Common/LoadingAndEmpty';
 import { helper } from '@/lib/helper';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { downloadFromLink } from '@/lib/tauriHelper';
 
@@ -35,23 +35,23 @@ const HighlightText = ({ text, searchTerm }: { text: string; searchTerm: string 
 
   // Escape special regex characters
   const escapedSearchTerm = cleanSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
+
   // Create regex for case-insensitive matching
   const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
-  
+
   // Split text into parts
   const parts = text.split(regex);
-  
+
   return (
     <span>
       {parts.map((part, index) => {
         // Check if this part matches the search term (case insensitive)
         const isMatch = regex.test(part);
         regex.lastIndex = 0; // Reset regex for next test
-        
+
         return isMatch ? (
-          <mark 
-            key={index} 
+          <mark
+            key={index}
             className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white px-1 rounded-sm"
           >
             {part}
@@ -69,12 +69,13 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const searchInputRef = useRef<HTMLInputElement>(null);
   const blinkoStore = RootStore.Get(BlinkoStore);
   const aiStore = RootStore.Get(AiStore);
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate()
   // Move all state management to RootStore.Local
   const store = RootStore.Local(() => ({
     searchQuery: '',
     isAiQuestion: false,
-    isTagSearch: false,
     isSearching: false,
     searchResults: {
       notes: [] as Note[],
@@ -90,24 +91,14 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
       // Auto-detect @AI syntax
       if (value.startsWith('@') && !this.isAiQuestion) {
         this.isAiQuestion = true;
-        this.isTagSearch = false;
-      } else if (value.startsWith('#') && !this.isTagSearch) {
-        this.isTagSearch = true;
+      } else if (!value.startsWith('@')) {
         this.isAiQuestion = false;
-      } else if (!value.startsWith('@') && !value.startsWith('#')) {
-        this.isAiQuestion = false;
-        this.isTagSearch = false;
       }
 
       // Trigger search with loading state
       if (value) {
         this.isSearching = true;
-        if (this.isTagSearch) {
-          // Perform local tag search without debounce
-          this.performTagSearch(value.substring(1));
-        } else {
-          debouncedSearch.current(value);
-        }
+        debouncedSearch.current(value);
       } else if (!value) {
         this.searchResults = { notes: [], resources: [], settings: [], tags: [] };
         // Reset blinkoStore search text and reset list calls
@@ -124,34 +115,9 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
       }
     },
 
-    performTagSearch(query: string) {
-      // Filter tags from the blinkoStore.tagList
-      const matchingTags = blinkoStore.tagList.value?.listTags
-        .filter(tag => tag.name.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 10); // Limit to top 10 results
-      
-      this.searchResults = { 
-        notes: [], 
-        resources: [], 
-        settings: [], 
-        tags: matchingTags || []
-      };
-      this.isSearching = false;
-    },
-
     toggleAiQuestion() {
       this.isAiQuestion = !this.isAiQuestion;
-      this.isTagSearch = false;
       this.searchQuery = this.isAiQuestion ? '@' + this.searchQuery.replace('#', '') : this.searchQuery.replace('@', '');
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    },
-
-    toggleTagSearch() {
-      this.isTagSearch = !this.isTagSearch;
-      this.isAiQuestion = false;
-      this.searchQuery = this.isTagSearch ? '#' + this.searchQuery.replace('@', '') : this.searchQuery.replace('#', '');
       if (searchInputRef.current) {
         searchInputRef.current.focus();
       }
@@ -160,8 +126,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
     // Computed properties
     get hasResults() {
       return (
-        this.searchResults.notes.length > 0 || 
-        this.searchResults.resources.length > 0 || 
+        this.searchResults.notes.length > 0 ||
+        this.searchResults.resources.length > 0 ||
         this.searchResults.settings.length > 0 ||
         this.searchResults.tags.length > 0
       );
@@ -206,6 +172,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         blinkoStore.searchText = query;
         const notes = await blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
 
+        // await blinkoStore.blinkoList.resetAndCall({ page: 1, size: 20 });
         // 3. Search for resources using the API
         const resources = await blinkoStore.resourceList.resetAndCall({
           page: 1,
@@ -229,6 +196,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
           settings: matchingSettings,
           tags: [],
         };
+
+        blinkoStore.forceQuery++
       } catch (error) {
         console.error('Search error:', error);
       } finally {
@@ -242,17 +211,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
     if (e.key === 'Enter') {
       if (store.isAiQuestion) {
         handleAiQuestion();
-      } else if (store.isTagSearch && store.searchResults.tags.length > 0) {
-        navigateToTag(store.searchResults.tags?.[0]?.name || '');
-      } else if (store.searchQuery) {
-        // Navigate to the first result
-        if (store.searchResults.notes.length > 0) {
-          navigateToNote(store.searchResults.notes?.[0] as any);
-        } else if (store.searchResults.resources.length > 0) {
-          navigateToResource(store.searchResults.resources?.[0] as any);
-        } else if (store.searchResults.settings.length > 0) {
-          navigateToSetting(store.searchResults.settings?.[0].key);
-        }
+      } else {
+        onOpenChange(false);
       }
     } else if (e.key === 'Escape') {
       onOpenChange(false);
@@ -297,8 +257,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   // Render search result items
   const renderNoteItem = (note: Note) => (
     <div key={note.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md transition-colors">
-      <div 
-        className="text-xs truncate w-full md:w-[80%] cursor-pointer" 
+      <div
+        className="text-xs truncate w-full md:w-[80%] cursor-pointer"
         onClick={() => navigateToNote(note)}
       >
         <HighlightText text={note?.content?.substring(0, 60) || t('no-content')} searchTerm={store.searchQuery} />
@@ -313,7 +273,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
           }}
           tooltip={
             <div className="max-w-[400px] p-0 rounded-2xl bg-transparent">
-              <BlinkoCard blinkoItem={note} withoutHoverAnimation withoutBoxShadow className='!border-none'/>
+              <BlinkoCard blinkoItem={note} withoutHoverAnimation withoutBoxShadow className='!border-none' />
             </div>
           }
         />
@@ -380,7 +340,6 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
               aria-label="global-search"
               className={cn("mt-4", {
                 'input-highlight': store.isAiQuestion,
-                'input-tag-highlight': store.isTagSearch
               })}
               placeholder={t('search-or-ask-ai')}
               value={store.searchQuery}
@@ -391,37 +350,35 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
               autoFocus
               onKeyDown={handleKeyDown}
               startContent={
-                <Icon 
-                  className="" 
+                <Icon
+                  className=""
                   icon={
-                    store.isAiQuestion 
-                      ? 'hugeicons:ai-magic' 
-                      : store.isTagSearch 
-                        ? 'mingcute:hashtag-line' 
-                        : 'lets-icons:search'
-                  } 
-                  width="24" 
-                  height="24" 
+                    store.isAiQuestion
+                      ? 'hugeicons:ai-magic'
+                      : 'lets-icons:search'
+                  }
+                  width="24"
+                  height="24"
                 />
               }
               endContent={
                 <div className="flex items-center gap-1">
                   {store.searchQuery && (
-                    <Button 
-                      isIconOnly 
-                      variant="light" 
-                      size="sm" 
-                      onPress={() => store.setSearchQuery('')} 
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      size="sm"
+                      onPress={() => store.setSearchQuery('')}
                       className="hover:text-danger transition-colors"
                     >
                       <Icon icon="ph:x-bold" width="16" height="16" />
                     </Button>
                   )}
-                  <Button 
-                    isIconOnly 
-                    variant="light" 
-                    size="sm" 
-                    onPress={() => store.toggleAiQuestion()} 
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    onPress={() => store.toggleAiQuestion()}
                     className={cn('hover:text-primary transition-colors', store.isAiQuestion && 'text-primary')}
                   >
                     <Icon icon={store.isAiQuestion ? 'lets-icons:search' : 'hugeicons:ai-magic'} width="20" height="20" />
@@ -434,40 +391,10 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
             {store.searchQuery && (
               <div className="mt-2">
                 <LoadingAndEmpty isLoading={store.isSearching} isEmpty={!store.hasResults} />
-                <ScrollArea className="max-h-[600px] md:max-h-[400px]" onBottom={() => {}}>
+                <ScrollArea className="max-h-[600px] md:max-h-[400px]" onBottom={() => { }}>
                   <div className="flex flex-col gap-3 px-1">
-                    {/* Tag section - only shown when in tag search mode */}
-                    {store.isTagSearch && store.searchResults.tags.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex flex-col">{store.searchResults.tags.map(renderTagItem)}</div>
-                      </div>
-                    )}
-                    
-                    {/* Actions section - only show if not in tag search mode */}
-                    {!store.isTagSearch && (
-                      <div className="flex flex-col gap-1 mb-2">
-                        <div className="flex items-center">
-                          <Icon icon="hugeicons:ai-browser" className="h-4 w-4 mr-2 text-primary" />
-                          <h3 className="text-sm font-medium text-default-700">{t('action')}</h3>
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => handleAiQuestion()}>
-                            <div className="p-2 rounded-md bg-primary-50">
-                              <Icon icon="hugeicons:ai-magic" className="text-primary" />
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                              <div className="font-medium text-sm truncate">
-                                {t('ask-ai')} "{store.searchQuery}"
-                              </div>
-                              <div className="text-xs text-default-500 truncate">{t('ask-blinko-ai-about-this-query')}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Notes section - only show if not in tag search mode */}
-                    {!store.isTagSearch && store.searchResults.notes.length > 0 && (
+                    {store.searchResults.notes.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -480,7 +407,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                     )}
 
                     {/* Resources section - only show if not in tag search mode */}
-                    {!store.isTagSearch && store.searchResults.resources.length > 0 && (
+                    {store.searchResults.resources.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <Divider className="my-2" />
                         <div className="flex items-center justify-between">
@@ -494,7 +421,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                     )}
 
                     {/* Settings section - only show if not in tag search mode */}
-                    {!store.isTagSearch && store.searchResults.settings.length > 0 && (
+                    {store.searchResults.settings.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <Divider className="my-2" />
                         <div className="flex items-center justify-between">
@@ -515,8 +442,6 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
               <div>
                 {store.isAiQuestion ? (
                   t('to-ask-ai')
-                ) : store.isTagSearch ? (
-                  t('to-search-tags')
                 ) : (
                   <>
                     {t('press-enter-to-select-first-result')} • <span className="text-primary">@</span> {t('to-ask-ai')} • <span className="text-primary">#</span> {t('to-search-tags')}

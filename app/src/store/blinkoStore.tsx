@@ -592,7 +592,7 @@ export class BlinkoStore implements Store {
       const withoutTag = searchParams.get('withoutTag');
       const withFile = searchParams.get('withFile');
       const withLink = searchParams.get('withLink');
-      const searchText = searchParams.get('searchText');
+      const searchText = searchParams.get('searchText') || this.searchText;
       const hasTodo = searchParams.get('hasTodo');
       const path = searchParams.get('path');
 

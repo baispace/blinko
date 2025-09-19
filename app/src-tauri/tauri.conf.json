@@ -24,7 +24,6 @@
         "fullscreen": false,
         "resizable": true,
         "focus": true,
-        "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "decorations": true
       },

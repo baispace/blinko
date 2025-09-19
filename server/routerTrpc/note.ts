@@ -114,7 +114,6 @@ export const noteRouter = router({
             return [];
           }
         }
-        // 如果清理后的查询为空，返回空结果而不是调用AI
         return [];
       }
 

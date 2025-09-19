@@ -1380,3 +1380,78 @@ iframe {
   margin-bottom: 16px !important;
   width: -webkit-fill-available;
 }
+
+/* Large spacing styles for AI chat */
+.markdown-large-spacing h1 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.markdown-large-spacing h2 {
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.markdown-large-spacing h3 {
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.005em !important;
+}
+
+.markdown-large-spacing h4,
+.markdown-large-spacing h5,
+.markdown-large-spacing h6 {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.005em !important;
+}
+
+.markdown-large-spacing p {
+  margin-bottom: 1rem !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.005em !important;
+}
+
+.markdown-large-spacing ul,
+.markdown-large-spacing ol {
+  margin-bottom: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.markdown-large-spacing li {
+  margin-bottom: 0.25rem !important;
+  line-height: 1.6 !important;
+}
+
+.markdown-large-spacing blockquote {
+  margin: 1rem 0 !important;
+  padding: 0.75rem 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.markdown-large-spacing pre {
+  margin: 1rem 0 !important;
+  padding: 1rem !important;
+  line-height: 1.5 !important;
+}
+
+.markdown-large-spacing code {
+  padding: 0.15em 0.3em !important;
+  letter-spacing: 0.005em !important;
+}
+
+.markdown-large-spacing table {
+  margin: 1rem 0 !important;
+}
+
+.markdown-large-spacing th,
+.markdown-large-spacing td {
+  padding: 0.5rem 0.75rem !important;
+  line-height: 1.5 !important;
+}

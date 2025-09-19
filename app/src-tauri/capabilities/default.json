@@ -52,6 +52,9 @@
     },
     "upload:default",
     "process:allow-restart",
-    "process:default"
+    "process:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

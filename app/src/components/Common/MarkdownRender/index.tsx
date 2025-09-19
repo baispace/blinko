@@ -61,13 +61,13 @@ const Table = ({ children }: { children: React.ReactNode }) => {
   return <div className="table-container">{children}</div>;
 };
 
-export const MarkdownRender = observer(({ content = '', onChange, isShareMode }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean }) => {
+export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean, largeSpacing?: boolean }) => {
   const { theme } = useTheme()
   const contentRef = useRef(null);
 
   return (
-    <div className={`markdown-body`}>
-      <div ref={contentRef} data-markdown-theme={theme} className={`markdown-body content`}>
+    <div className={`markdown-body ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
+      <div ref={contentRef} data-markdown-theme={theme} className={`markdown-body content ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
         <ReactMarkdown
           remarkPlugins={[
             [remarkGfm, { table: false }],

@@ -34,7 +34,7 @@ tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2.0.0"
 tauri-plugin-single-instance = "2"
-auto-launch = "0.5"
+tauri-plugin-autostart = "2"
 get-selected-text = "0.1"
 arboard = { version = "3", default-features = false }
 mouse_position = "0.1"

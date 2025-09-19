@@ -44,10 +44,11 @@ type IProps = {
   originFiles?: Attachment[],
   originReference?: number[],
   hiddenToolbar?: boolean,
-  withoutOutline?: boolean
+  withoutOutline?: boolean,
+  initialData?: { file?: File, text?: string }
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -68,10 +69,27 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     };
   }, [openPopover]);
 
-  useEditorInit(store, onChange, onSend, mode, originReference, content);
+  let initalContent = content
+  if (initialData && mode === 'create' && initialData.text) {
+    initalContent = initialData.text
+  }
+
+  useEditorInit(store, onChange, onSend, mode, originReference, initalContent);
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
   useEditorHeight(onHeightChange, blinko, content, store);
+
+  // Handle initial data from sharing
+  useEffect(() => {
+    if (initialData && mode === 'create') {
+      if (initialData.text) {
+        onChange?.(initialData.text)
+      }
+      if (initialData.file) {
+        store.uploadFiles([initialData.file]);
+      }
+    }
+  }, [initialData, mode]);
 
   const {
     getRootProps,

@@ -146,6 +146,13 @@ export const noteRouter = router({
             }
           ],
         };
+        where.isRecycle = isRecycle;
+        if (!isRecycle && isArchived != null) {
+          where.isArchived = isArchived;
+        }
+        if (type != -1) {
+          where.type = type;
+        }
       } else {
         where.isRecycle = isRecycle;
         if (!isRecycle && isArchived != null) {

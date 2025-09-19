@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Item, ItemWithTooltip } from './Item';
 import { useEffect, useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { isDesktop, isInTauri } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
@@ -104,7 +105,7 @@ export const HotkeySetting = observer(() => {
   const getAutoStartStatus = async () => {
     if (!isTauriDesktop) return;
     try {
-      const enabled = await invoke<boolean>('is_autostart_enabled');
+      const enabled = await isEnabled();
       setAutoStartEnabled(enabled);
     } catch (error) {
       console.error('Failed to get autostart status:', error);
@@ -363,12 +364,15 @@ export const HotkeySetting = observer(() => {
     if (!isTauriDesktop) return;
 
     try {
-      await invoke('toggle_autostart', { enable: enabled });
+      if (enabled) {
+        await enable();
+      } else {
+        await disable();
+      }
       setAutoStartEnabled(enabled);
-      toast.success(enabled ? '开机自启动已启用' : '开机自启动已禁用');
     } catch (error) {
       console.error('Failed to toggle autostart:', error);
-      toast.error('设置开机自启动失败: ' + (error instanceof Error ? error.message : String(error)));
+      toast.error((error instanceof Error ? error.message : String(error)));
       // Revert the state on error
       await getAutoStartStatus();
     }

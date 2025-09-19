@@ -25,7 +25,8 @@
       "Bash(gh issue comment:*)",
       "Bash(gh repo view:*)",
       "Bash(gh api:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(del \"E:\\code\\blinko\\app\\src-tauri\\src\\desktop\\autostart.rs\")"
     ],
     "deny": [],
     "ask": []

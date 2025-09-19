@@ -12,7 +12,6 @@ import { BlinkoEditor } from "../BlinkoEditor";
 import { useEffect, useState } from "react";
 import { NoteType } from "@shared/lib/types";
 import { AiStore } from "@/store/aiStore";
-import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import i18n from "@/lib/i18n";
 import { BlinkoShareDialog } from "../BlinkoShareDialog";
@@ -24,6 +23,8 @@ import { BlinkoCard } from "../BlinkoCard";
 import { useLocation } from "react-router-dom";
 import { ShowCommentDialog } from "../BlinkoCard/commentButton";
 import { useMediaQuery } from "usehooks-ts";
+import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
+
 
 export const ShowEditTimeModel = (showExpired: boolean = false) => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -178,16 +179,15 @@ export const ShowEditTimeModel = (showExpired: boolean = false) => {
   })
 }
 
-export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit') => {
+export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit', initialData?: { file?: File, text?: string }) => {
   const blinko = RootStore.Get(BlinkoStore)
-  const base = RootStore.Get(BaseStore)
   RootStore.Get(DialogStore).setData({
     size: size as any,
     isOpen: true,
     onlyContent: true,
     isDismissable: false,
     showOnlyContentCloseButton: true,
-    content: <BlinkoEditor isInDialog mode={mode} key={`editor-key-${mode}`} onSended={() => {
+    content: <BlinkoEditor isInDialog mode={mode} initialData={initialData} key={`editor-key-${mode}`} onSended={() => {
       RootStore.Get(DialogStore).close()
       blinko.isCreateMode = false
     }} />

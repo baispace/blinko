@@ -11,8 +11,19 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     let app_handle = app.handle();
     let main_window = app.get_webview_window("main").unwrap();
 
-    // Restore window state before applying decorations
-    restore_main_window_state(&app_handle);
+    // Check if launched via autostart
+    let args: Vec<String> = std::env::args().collect();
+    let is_autostart = args.iter().any(|arg| arg == "--autostart");
+
+    if is_autostart {
+        println!("Application launched via autostart, hiding window to tray");
+        // Hide window immediately on autostart
+        let _ = main_window.hide();
+    } else {
+        println!("Application launched normally");
+        // Restore window state before applying decorations only for normal launches
+        restore_main_window_state(&app_handle);
+    }
 
     // Setup window state monitoring
     setup_window_state_monitoring(&app_handle);

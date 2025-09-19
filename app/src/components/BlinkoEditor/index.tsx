@@ -13,10 +13,11 @@ type IProps = {
   onHeightChange?: (height: number) => void,
   height?: number,
   isInDialog?: boolean,
-  withoutOutline?: boolean
+  withoutOutline?: boolean,
+  initialData?: { file?: File, text?: string }
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -125,6 +126,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         store.noteContent = v
       }}
       withoutOutline={withoutOutline}
+      initialData={initialData}
       onHeightChange={() => {
         onHeightChange?.(editorRef.current?.clientHeight ?? 75)
         if (editorRef.current) {

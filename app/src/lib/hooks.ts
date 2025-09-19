@@ -5,6 +5,8 @@ import { RootStore } from "@/store";
 import { isAndroid, isInTauri } from '@/lib/tauriHelper';
 import { ShowEditBlinkoModel } from '@/components/BlinkoRightClickMenu';
 import { eventBus } from '@/lib/event';
+
+import { readFile } from "@tauri-apps/plugin-fs";
 import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
 
 export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
@@ -179,6 +181,7 @@ export const useAndroidShortcuts = () => {
       return;
     }
 
+    // Handle shortcuts
     const action = window.localStorage.getItem('android_shortcut_action');
     if (action) {
       window.localStorage.removeItem('android_shortcut_action');
@@ -195,6 +198,45 @@ export const useAndroidShortcuts = () => {
             eventBus.emit('editor:startAudioRecording');
           }, 800);
           break;
+      }
+    }
+
+    // Handle shared data
+    const shareDataStr = window.localStorage.getItem('android_share_data');
+    if (shareDataStr) {
+      // alert(shareDataStr)
+      window.localStorage.removeItem('android_share_data');
+      try {
+        const shareData = JSON.parse(shareDataStr);
+        if (shareData.text) {
+          // Remove surrounding quotes (single, double, backticks) and trim whitespace
+          let cleanText = shareData.text.trim();
+          if ((cleanText.startsWith('"') && cleanText.endsWith('"')) ||
+              (cleanText.startsWith("'") && cleanText.endsWith("'")) ||
+              (cleanText.startsWith('`') && cleanText.endsWith('`'))) {
+            cleanText = cleanText.slice(1, -1);
+          }
+          ShowEditBlinkoModel('2xl', 'create', { text: cleanText });
+        }
+        else if (shareData.stream && shareData.content_type) {
+          readFile(shareData.stream).then(contents => {
+            const file = new File([contents], shareData.name || 'shared_file', {
+              type: shareData.content_type
+            });
+            console.log('xxx!!!')
+            ShowEditBlinkoModel('2xl', 'create', { file });
+          }).catch((error: Error) => {
+            console.warn('fetching shared content failed:', error);
+            ShowEditBlinkoModel('2xl', 'create');
+          });
+        }
+        else {
+          ShowEditBlinkoModel('2xl', 'create');
+        }
+      } catch (e) {
+        console.error('Failed to parse share data:', e);
+        // Fallback: just open create modal
+        ShowEditBlinkoModel('2xl', 'create');
       }
     }
   }, []);

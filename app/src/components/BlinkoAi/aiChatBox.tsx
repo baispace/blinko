@@ -135,7 +135,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
         >
           <div className="max-w-[100%] bg-sencondbackground px-2 py-1 rounded-xl">
-            <MarkdownRender content={content} />
+            <MarkdownRender content={content} largeSpacing={true} />
           </div>
           <>
             {

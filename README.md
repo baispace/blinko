@@ -21,8 +21,8 @@
 <div align="center">
 
 [Live Demo](https://demo.blinko.space) •
-[中文文档](README.zh-CN.md) •
-[Docs](https://docs.blinko.space/introduction) •
+[中文README](README.zh-CN.md) •
+[Docs](https://docs.blinko.space/) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
 [Telegram English](https://t.me/blinkoEnglish)
 </div>

@@ -43,7 +43,7 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
     if (isExpanded) {
       return createPortal(
         <div
-          className={`w-full expand-container fixed inset-0 touch-manipulation ${isExpanded ? 'expanded-container' : ''}`}
+          className={`w-full expanded-container fixed inset-0 touch-manipulation ${isExpanded ? 'expanded-container' : ''}`}
           style={{
             ...BASE_STYLES,
             backgroundColor: 'var(--background)',
@@ -61,7 +61,7 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
 
     return (
       <div
-        className='w-full expand-container touch-manipulation'
+        className='w-full expanded-container touch-manipulation'
         style={{
           ...BASE_STYLES,
           position: 'relative',
@@ -75,7 +75,7 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
 
   return (
     <motion.div
-      className={`w-full ${isExpanded ? 'expand-container' : ''}`}
+      className={`w-full ${isExpanded ? 'expanded-container ' : ''}`}
       style={{
         ...BASE_STYLES,
         position: isExpanded ? 'fixed' : 'relative',

@@ -34,10 +34,11 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Touch tracking
   const startYRef = useRef(0);
   const canPullRef = useRef(true); // Initialize as true for initial state
+  const currentInstanceRef = useRef(Math.random().toString(36)); // Unique identifier for this ScrollArea instance
   
   let debounceBottom;
   if (onBottom) {
@@ -63,11 +64,24 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
 
   const handleTouchStart = (e: TouchEvent | MouseEvent) => {
     if (!onRefresh || isRefreshing) return;
-    
-    // Check if at top position
+
+    // Ensure the event is targeting this specific ScrollArea
     const scrollElement = scrollRef.current;
-    if (scrollElement && scrollElement.scrollTop > 0) return;
-    
+    if (!scrollElement) return;
+
+    // Check if the touch started within this ScrollArea
+    const target = e.target as Element;
+    if (!scrollElement.contains(target)) return;
+
+    // Check if the touch event is within an expanded container (blog mode)
+    const expandedContainer = target.closest('.expanded-container');
+    if (expandedContainer) {
+      return;
+    }
+
+    // Check if at top position
+    if (scrollElement.scrollTop > 0) return;
+
     const clientY = e instanceof TouchEvent ? e.touches[0].clientY : e.clientY;
     startYRef.current = clientY;
     setIsDragging(true);
@@ -75,27 +89,51 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
 
   const handleTouchMove = (e: TouchEvent | MouseEvent) => {
     if (!isDragging || !onRefresh || isRefreshing) return;
-    
+
+    // Check if the touch event is within an expanded container (blog mode)
+    const target = e.target as Element;
+    const expandedContainer = target.closest('.expanded-container');
+    if (expandedContainer) {
+      setIsDragging(false);
+      setPullDistance(0);
+      return;
+    }
+
+    // Ensure we're still within this ScrollArea
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
+
     const clientY = e instanceof TouchEvent ? e.touches[0].clientY : e.clientY;
     const deltaY = clientY - startYRef.current;
-    
+
     if (deltaY > 0) {
-      e.preventDefault();
-      const distance = Math.min(deltaY * 0.5, maxPullDownDistance);
-      setPullDistance(distance);
+      // Only prevent default if we're at the top and pulling down
+      if (scrollElement.scrollTop === 0) {
+        e.preventDefault();
+        const distance = Math.min(deltaY * 0.5, maxPullDownDistance);
+        setPullDistance(distance);
+      }
     }
   };
 
-  const handleTouchEnd = async () => {
+  const handleTouchEnd = async (e: TouchEvent | MouseEvent) => {
     if (!isDragging || !onRefresh) return;
-    
+
+    // Check if the touch event is within an expanded container (blog mode)
+    const target = e.target as Element;
+    const expandedContainer = target.closest('.expanded-container');
+    if (expandedContainer) {
+      setIsDragging(false);
+      setPullDistance(0);
+      return;
+    }
+
     setIsDragging(false);
-    
+
     if (pullDistance >= pullDownThreshold) {
       setIsRefreshing(true);
-      
+
       try {
-        console.log('onRefresh');
         await onRefresh();
       } catch (error) {
         console.error('Refresh failed:', error);
@@ -172,12 +210,13 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   return (
     <div
       ref={scrollRef}
+      data-scroll-area-id={currentInstanceRef.current}
       style={{
         ...style,
         paddingTop: showRefreshIndicator ? `${pullDistance}px` : undefined,
         transition: isDragging ? 'none' : 'padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
-      className={`${className} overflow-y-scroll overflow-x-hidden ${isPc ? '' : 'scrollbar-hide'} scroll-smooth`}
+      className={`${className} overflow-y-scroll overflow-x-hidden ${isPc ? '' : 'scrollbar-hide'} scroll-smooth scroll-area`}
     >
       {/* Pull to refresh indicator */}
       {showRefreshIndicator && (

@@ -21,7 +21,7 @@
     <shortcut
         android:shortcutId="voice_recording"
         android:enabled="true"
-        android:icon="@drawable/ic_mic"
+        android:icon="@drawable/ic_voice"
         android:shortcutShortLabel="@string/voice_recording_short"
         android:shortcutLongLabel="@string/voice_recording_long"
         android:shortcutDisabledMessage="@string/voice_recording_disabled">

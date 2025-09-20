@@ -13,7 +13,8 @@
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
     "tauri:android:dev": "tauri android dev --host",
     "tauri:android:build": "tauri android build",
-    "tauri:desktop:build": "tauri build"
+    "tauri:desktop:build": "tauri build",
+    "svg2vectordrawable":"bun add svg2vectordrawable"
   },
   "dependencies": {
     "@heroui/react": "^2.8.0-beta.1",

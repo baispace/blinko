@@ -81,7 +81,7 @@ export async function generateFeed(userId: number, origin: string, rows: number 
     link: origin,
     copyright: "All rights reserved",
     updated: new Date(),
-    image: `${origin}/logo-dark.png`,
+    image: `${origin}/logo-dark-title.png`,
     feedLinks: {
       atom: `${origin}/api/rss/${userId}/atom`,
       rss: `${origin}/api/rss/${userId}/rss`

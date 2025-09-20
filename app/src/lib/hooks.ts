@@ -8,6 +8,7 @@ import { eventBus } from '@/lib/event';
 
 import { readFile } from "@tauri-apps/plugin-fs";
 import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 
 export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -175,70 +176,112 @@ export const useIsIOS = () => {
   return isIOS;
 };
 
+// Global state for Android shortcuts handling
+let androidShortcutsIntervalId: NodeJS.Timeout | null = null;
+let isProcessingSharedData = false;
+let isInitialized = false;
+
+// Singleton function to initialize Android shortcuts listener
+const initializeAndroidShortcuts = () => {
+  if (isInitialized || !isAndroid() || !isInTauri()) {
+    return;
+  }
+
+  isInitialized = true;
+
+  const checkAndroidData = () => {
+      // Handle shortcuts
+      const action = window.localStorage.getItem('android_shortcut_action');
+      if (action) {
+        window.localStorage.removeItem('android_shortcut_action');
+        switch (action) {
+          case 'quick_note':
+            ShowEditBlinkoModel('2xl', 'create');
+            FocusEditorFixMobile()
+            break;
+
+          case 'voice_recording':
+            ShowEditBlinkoModel('2xl', 'create');
+            // Use eventBus to trigger audio recording after editor is ready
+            setTimeout(() => {
+              eventBus.emit('editor:startAudioRecording');
+            }, 300);
+            break;
+        }
+      }
+
+      // Handle shared data
+      const shareDataStr = window.localStorage.getItem('android_share_data');
+      if (shareDataStr && !isProcessingSharedData) {
+        isProcessingSharedData = true;
+        // alert(shareDataStr)
+        window.localStorage.removeItem('android_share_data');
+        try {
+          const shareData = JSON.parse(shareDataStr);
+          if (shareData.text) {
+            // Remove surrounding quotes (single, double, backticks) and trim whitespace
+            let cleanText = shareData.text.trim();
+            if ((cleanText.startsWith('"') && cleanText.endsWith('"')) ||
+                (cleanText.startsWith("'") && cleanText.endsWith("'")) ||
+                (cleanText.startsWith('`') && cleanText.endsWith('`'))) {
+              cleanText = cleanText.slice(1, -1);
+            }
+            ShowEditBlinkoModel('2xl', 'create', { text: cleanText });
+            isProcessingSharedData = false;
+          }
+          else if (shareData.stream && shareData.content_type) {
+            readFile(shareData.stream).then(contents => {
+              const file = new File([contents], shareData.name || 'shared_file', {
+                type: shareData.content_type
+              });
+              console.log('xxx!!!')
+              ShowEditBlinkoModel('2xl', 'create', { file });
+              isProcessingSharedData = false;
+            }).catch((error: Error) => {
+              console.warn('fetching shared content failed:', error);
+              RootStore.Get(ToastPlugin).error(error?.message)
+              isProcessingSharedData = false;
+            });
+          }
+          else {
+            ShowEditBlinkoModel('2xl', 'create');
+            isProcessingSharedData = false;
+          }
+        } catch (e) {
+          console.error('Failed to parse share data:', e);
+          // Fallback: just open create modal
+          RootStore.Get(ToastPlugin).error(e?.message)
+          setTimeout(() => { isProcessingSharedData = false; }, 100);
+        }
+      }
+    };
+
+  // Start checking immediately
+  checkAndroidData();
+
+  // Register global interval (slower polling since Android injects with 1.5s delay)
+  androidShortcutsIntervalId = setInterval(checkAndroidData, 800);
+};
+
+// Cleanup function
+const cleanupAndroidShortcuts = () => {
+  if (androidShortcutsIntervalId) {
+    clearInterval(androidShortcutsIntervalId);
+    androidShortcutsIntervalId = null;
+  }
+  isProcessingSharedData = false;
+  isInitialized = false;
+};
+
 export const useAndroidShortcuts = () => {
   useEffect(() => {
-    if (!isAndroid() || !isInTauri()) {
-      return;
-    }
+    // Initialize only once globally
+    initializeAndroidShortcuts();
 
-    // Handle shortcuts
-    const action = window.localStorage.getItem('android_shortcut_action');
-    if (action) {
-      window.localStorage.removeItem('android_shortcut_action');
-      switch (action) {
-        case 'quick_note':
-          ShowEditBlinkoModel('2xl', 'create');
-          FocusEditorFixMobile()
-          break;
-
-        case 'voice_recording':
-          ShowEditBlinkoModel('2xl', 'create');
-          // Use eventBus to trigger audio recording after editor is ready
-          setTimeout(() => {
-            eventBus.emit('editor:startAudioRecording');
-          }, 800);
-          break;
-      }
-    }
-
-    // Handle shared data
-    const shareDataStr = window.localStorage.getItem('android_share_data');
-    if (shareDataStr) {
-      // alert(shareDataStr)
-      window.localStorage.removeItem('android_share_data');
-      try {
-        const shareData = JSON.parse(shareDataStr);
-        if (shareData.text) {
-          // Remove surrounding quotes (single, double, backticks) and trim whitespace
-          let cleanText = shareData.text.trim();
-          if ((cleanText.startsWith('"') && cleanText.endsWith('"')) ||
-              (cleanText.startsWith("'") && cleanText.endsWith("'")) ||
-              (cleanText.startsWith('`') && cleanText.endsWith('`'))) {
-            cleanText = cleanText.slice(1, -1);
-          }
-          ShowEditBlinkoModel('2xl', 'create', { text: cleanText });
-        }
-        else if (shareData.stream && shareData.content_type) {
-          readFile(shareData.stream).then(contents => {
-            const file = new File([contents], shareData.name || 'shared_file', {
-              type: shareData.content_type
-            });
-            console.log('xxx!!!')
-            ShowEditBlinkoModel('2xl', 'create', { file });
-          }).catch((error: Error) => {
-            console.warn('fetching shared content failed:', error);
-            ShowEditBlinkoModel('2xl', 'create');
-          });
-        }
-        else {
-          ShowEditBlinkoModel('2xl', 'create');
-        }
-      } catch (e) {
-        console.error('Failed to parse share data:', e);
-        // Fallback: just open create modal
-        ShowEditBlinkoModel('2xl', 'create');
-      }
-    }
+    // Return cleanup function (cleanup when app unmounts)
+    return () => {
+      cleanupAndroidShortcuts();
+    };
   }, []);
 };
 

@@ -12,6 +12,9 @@ import android.util.Log
 import org.json.JSONObject
 
 class MainActivity : TauriActivity() {
+    private var hasInjectedShortcut = false
+    private var hasInjectedShare = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleShortcutIntent()
@@ -21,20 +24,24 @@ class MainActivity : TauriActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // Reset flags for new intent
+        hasInjectedShortcut = false
+        hasInjectedShare = false
         handleShortcutIntent()
         handleShareIntent()
     }
     
     private fun handleShortcutIntent() {
+        if (hasInjectedShortcut) return
+
         intent?.data?.let { uri ->
             if (uri.scheme == "blinko" && uri.host == "shortcut") {
                 uri.pathSegments?.firstOrNull()?.let { action ->
-                    // Try multiple times to inject action into WebView
-                    listOf(1000L, 2000L, 3000L, 5000L).forEach { delay ->
-                        window.decorView.postDelayed({
-                            injectShortcutAction(action)
-                        }, delay)
-                    }
+                    hasInjectedShortcut = true
+                    // Single injection with reasonable delay for WebView to be ready
+                    window.decorView.postDelayed({
+                        injectShortcutAction(action)
+                    }, 1500L)
                 }
             }
         }
@@ -45,8 +52,13 @@ class MainActivity : TauriActivity() {
             findWebView(window.decorView)?.evaluateJavascript(
                 """
                 (function() {
-                    if (!window.localStorage.getItem('android_shortcut_action')) {
-                        window.localStorage.setItem('android_shortcut_action', '$action');
+                    var key = 'android_shortcut_action';
+                    var existing = window.localStorage.getItem(key);
+                    if (!existing || existing === 'null' || existing === '') {
+                        window.localStorage.setItem(key, '$action');
+                        console.log('Injected shortcut action: $action');
+                    } else {
+                        console.log('Shortcut action already exists: ' + existing);
                     }
                 })();
                 """.trimIndent(), null
@@ -67,7 +79,10 @@ class MainActivity : TauriActivity() {
     }
 
     private fun handleShareIntent() {
+        if (hasInjectedShare) return
+
         if (intent?.action == Intent.ACTION_SEND) {
+            hasInjectedShare = true
             val payload = intentToJson(intent)
             intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { uri ->
                 val name = getNameFromUri(uri)
@@ -78,12 +93,10 @@ class MainActivity : TauriActivity() {
             }
             Log.i("triggering event", payload.toString())
 
-            // Try multiple times to inject share data into WebView
-            listOf(1000L, 2000L, 3000L, 5000L).forEach { delay ->
-                window.decorView.postDelayed({
-                    injectShareData(payload.toString())
-                }, delay)
-            }
+            // Single injection with reasonable delay for WebView to be ready
+            window.decorView.postDelayed({
+                injectShareData(payload.toString())
+            }, 1500L)
         }
     }
 
@@ -141,8 +154,13 @@ class MainActivity : TauriActivity() {
             findWebView(window.decorView)?.evaluateJavascript(
                 """
                 (function() {
-                    if (!window.localStorage.getItem('android_share_data')) {
-                        window.localStorage.setItem('android_share_data', '$escapedData');
+                    var key = 'android_share_data';
+                    var existing = window.localStorage.getItem(key);
+                    if (!existing || existing === 'null' || existing === '') {
+                        window.localStorage.setItem(key, '$escapedData');
+                        console.log('Injected share data');
+                    } else {
+                        console.log('Share data already exists');
                     }
                 })();
                 """.trimIndent(), null

@@ -20,7 +20,7 @@ export default defineConfig({
         injectRegister: 'auto',
         // disable: process.env.NODE_ENV === 'development',
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'logo.svg', 'logo.svg'],
+        includeAssets: ['favicon.ico', 'logo.png', 'logo.png'],
         manifest: false,
         workbox: {
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,

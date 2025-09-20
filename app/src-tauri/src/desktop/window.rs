@@ -235,3 +235,80 @@ pub fn hide_quicktool_window<R: tauri::Runtime>(app: AppHandle<R>) -> Result<(),
         Err("Quicktool window not found".to_string())
     }
 }
+
+#[tauri::command]
+pub fn set_desktop_theme<R: tauri::Runtime>(app: AppHandle<R>, theme: String) -> Result<(), String> {
+    use tauri::{Theme, window::Color};
+
+    let tauri_theme = match theme.as_str() {
+        "light" => Theme::Light,
+        "dark" => Theme::Dark,
+        _ => return Err(format!("Invalid theme: {}", theme))
+    };
+
+    // Define background colors based on theme
+    let background_color = match theme.as_str() {
+        "light" => Color(248, 248, 248, 255), // #F8F8F8
+        "dark" => Color(28, 28, 30, 255),     // #1C1C1E
+        _ => Color(248, 248, 248, 255),
+    };
+
+    // Set theme for main window only
+    if let Some(window) = app.get_webview_window("main") {
+        // Set system theme
+        if let Err(e) = window.set_theme(Some(tauri_theme)) {
+            eprintln!("Failed to set theme for main window: {}", e);
+        } else {
+            println!("Set main window theme to: {}", theme);
+        }
+
+        // Set window background color
+        if let Err(e) = window.set_background_color(Some(background_color)) {
+            eprintln!("Failed to set background color for main window: {}", e);
+        } else {
+            println!("Set main window background color to: {:?}", background_color);
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_desktop_colors<R: tauri::Runtime>(
+    app: AppHandle<R>,
+    background_color: Option<String>
+) -> Result<(), String> {
+    use tauri::window::Color;
+
+    // Helper function to parse hex color to RGBA
+    fn hex_to_rgba(hex: &str) -> Result<(u8, u8, u8, u8), String> {
+        let hex = hex.trim_start_matches('#');
+        if hex.len() != 6 {
+            return Err("Invalid hex color format".to_string());
+        }
+
+        let r = u8::from_str_radix(&hex[0..2], 16).map_err(|_| "Invalid red component")?;
+        let g = u8::from_str_radix(&hex[2..4], 16).map_err(|_| "Invalid green component")?;
+        let b = u8::from_str_radix(&hex[4..6], 16).map_err(|_| "Invalid blue component")?;
+
+        Ok((r, g, b, 255))
+    }
+
+    // Set background color for main window only
+    if let Some(color_str) = background_color {
+        if let Ok((r, g, b, a)) = hex_to_rgba(&color_str) {
+            if let Some(window) = app.get_webview_window("main") {
+                let color = Color(r, g, b, a);
+                if let Err(e) = window.set_background_color(Some(color)) {
+                    eprintln!("Failed to set custom background color for main window: {}", e);
+                } else {
+                    println!("Set main window custom background color to: {}", color_str);
+                }
+            }
+        } else {
+            return Err("Invalid color format. Use hex format like #FF0000".to_string());
+        }
+    }
+
+    Ok(())
+}

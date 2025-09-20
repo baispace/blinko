@@ -70,7 +70,9 @@ pub fn run() {
                 copy_to_clipboard,
                 test_text_selection,
                 check_accessibility_permissions,
-                show_quicktool
+                show_quicktool,
+                set_desktop_theme,
+                set_desktop_colors
             ])
             .setup(|app| {
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]

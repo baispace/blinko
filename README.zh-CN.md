@@ -1,4 +1,4 @@
-<img align='right' height='40px' src="./public/logo.svg" alt="Blinko" />
+<img align='right' height='40px' src="./public/logo.png" alt="Blinko" />
 
 # Blinko - 开源、自托管的笔记应用
 

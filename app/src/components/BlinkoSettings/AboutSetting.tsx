@@ -89,7 +89,7 @@ export const AboutSetting = observer(() => {
       title={t('about')}
     >
       <div className="flex items-start space-x-4 mb-6">
-        <Image src="/logo.svg" alt="Blinko" className="w-16 h-16 rounded-xl" />
+        <Image src="/logo.png" alt="Blinko" className="w-16 h-16 rounded-xl" />
         <div>
           <h2 className="text-xl font-semibold">Blinko</h2>
           <div className="flex flex-col gap-2 mt-1">

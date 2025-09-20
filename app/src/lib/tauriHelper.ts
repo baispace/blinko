@@ -10,6 +10,7 @@ import { download } from '@tauri-apps/plugin-upload'
 import { downloadDir, publicDir } from '@tauri-apps/api/path'
 import { setStatusBarColor } from 'tauri-plugin-blinko-api'
 import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
 export interface PermissionStatus {
     audio: boolean;
@@ -114,11 +115,17 @@ export async function downloadFromLink(uri: string, filename?: string) {
     }
 }
 
-export function setTauriTheme(theme: any) {
+export async function setTauriTheme(theme: any) {
     if (isAndroid()) {
         const lightColor = '#f8f8f8';
         const darkColor = '#1C1C1E';
         setStatusBarColor(theme === 'light' ? lightColor : darkColor);
+    } else if (isDesktop()) {
+        try {
+            await invoke('set_desktop_theme', { theme });
+        } catch (error) {
+            console.error('Failed to set desktop theme:', error);
+        }
     }
 }
 

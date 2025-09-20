@@ -244,7 +244,7 @@ export class UserStore implements Store {
       const themeToSet = savedTheme === 'system' ? systemTheme : savedTheme;
       setTheme(themeToSet);
       this.updatePWAColor(themeToSet);
-      setTauriTheme(themeToSet);
+      setTauriTheme(themeToSet).catch(console.error);
       this.themeInitialized = true;
     }
 
@@ -294,6 +294,7 @@ export class UserStore implements Store {
             const newTheme = config.theme === 'system' ? systemTheme : config.theme;
             setTheme(newTheme);
             this.updatePWAColor(newTheme);
+            setTauriTheme(newTheme).catch(console.error);
           }
         }
       } catch (error) {
@@ -372,7 +373,7 @@ export class UserStore implements Store {
     }, []);
 
     useEffect(() => {
-      setTauriTheme(theme);
+      setTauriTheme(theme).catch(console.error);
     }, [theme]);
 
     useEffect(() => {

@@ -70,9 +70,9 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 [![Contributors](https://contrib.rocks/image?repo=blinko-space/blinko)]([...](https://github.com/blinko-space/blinko/graphs/contributors))
 
 ## 赞助
-如果你觉得 Blinko 有价值，请考虑支持我们！你的贡献将使我们能够继续为所有人改进和维护这个项目。感谢你帮助我们成长，你也可以使用 PikaPods 来支持 Blinko。
+如果你觉得 Blinko 有价值，请考虑支持我们！你的贡献将使我们能够继续为所有人改进和维护这个项目。感谢你帮助我们成长，如果你想部署blinko,你也可以使用 PikaPods 来支持 Blinko,在pikapods上部署产生的费用有20%会贡献给Blinko。
 
-[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
+[![Run on PikaPods](./app/public/run-on-pikapods.svg)](https://www.pikapods.com/pods?run=blinko)
 
 [https://ko-fi.com/blinkospace](https://ko-fi.com/blinkospace)
 

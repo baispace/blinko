@@ -1,7 +1,7 @@
 
-<img align='right' height='40px' src="./app/public/logo.png" alt="Blinko" />
+<img style="border-radius:20px;margin-bottom:20px" src="./app/public/home.png" alt="Blinko" />
 
-# Blinko - Open Source, Self-hosted
+<h1 align="center">Blinko</h1>
 
 <div align="center">
 
@@ -30,11 +30,15 @@
 
 > Live Demo: username:blinko password:blinko
 
-[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
+
 
 Blinko is an innovative open-source project designed for individuals who want to quickly capture and organize their fleeting thoughts. Blinko allows users to seamlessly jot down ideas the moment they strike, ensuring that no spark of creativity is lost.
 
-<img style="border-radius:20px" src="./app/public/home.webp" alt="Blinko" />
+<div align="center">
+
+[![Run on PikaPods](./app/public/run-on-pikapods.svg)](https://www.pikapods.com/pods?run=blinko)
+
+</div>
 
 ## 🚀Main Features
 - 🤖**AI-Enhanced Note Retrieval** ：With Blinko's advanced AI-powered RAG (Retrieval-Augmented Generation), you can quickly search and access your notes using natural language queries, making it effortless to find exactly what you need.

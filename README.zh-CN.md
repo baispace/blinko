@@ -1,6 +1,7 @@
-<img align='right' height='40px' src="./public/logo.png" alt="Blinko" />
 
-# Blinko - 开源、自托管的笔记应用
+<img style="border-radius:20px;margin-bottom:20px" src="./app/public/home.png" alt="Blinko" />
+
+<h1 align="center">Blinko</h1>
 
 <div align="center">
 
@@ -25,11 +26,13 @@
 
 > 在线演示账号: username:blinko password:blinko
 
-[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
-
 Blinko 是一个创新的开源项目，专为那些想要快速捕捉和组织灵感的人设计。它允许用户在灵感闪现的瞬间无缝记录想法，确保不错过任何创意火花。
 
-<img style="border-radius:20px" src="./app/public/home.webp" alt="Blinko" />
+<div align="center">
+
+[![Run on PikaPods](./app/public/run-on-pikapods.svg)](https://www.pikapods.com/pods?run=blinko)
+
+</div>
 
 ## 🚀主要特性
 - 🤖**AI 增强笔记检索**：通过 Blinko 的先进 AI 驱动的 RAG（检索增强生成）技术，你可以使用自然语言查询快速搜索和访问笔记，轻松找到所需内容。支持 OpenAI、Azure OpenAI 和 Ollama。

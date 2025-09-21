@@ -1,5 +1,12 @@
 name: App Release
 
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch' && format('App Released - v{0}', github.event.inputs.tag) ||
+    github.event_name == 'repository_dispatch' && format('App Released - v{0}', github.event.client_payload.version || github.event.client_payload.tag) ||
+    format('App Released - {0}', github.ref_name)
+  }}
+
 on:
   push:
     tags:

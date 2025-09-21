@@ -700,5 +700,8 @@
   "marketplace-description": "Navegue e instale plugins do mercado oficial.",
   "live-preview": "Renderização em tempo real",
   "raw-markdown": "Markdown Original",
-  "rich-text": "O que você vê é o que você obtém."
+  "rich-text": "O que você vê é o que você obtém.",
+  "reference-notes": "Conteúdo citado",
+  "custom-configuration": "Fornecedor personalizado",
+  "configure-your-own-api-endpoint": "Fornecedores personalizados devem estar em conformidade com os padrões compatíveis com OpenAPI."
 }

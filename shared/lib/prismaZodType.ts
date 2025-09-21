@@ -178,6 +178,45 @@ export const configSelectSchema: z.ZodType<Prisma.configSelect> = z.object({
   config: z.boolean().optional(),
 }).strict()
 
+// AI PROVIDERS
+//------------------------------------------------------
+
+export const aiProvidersSelectSchema: z.ZodType<Prisma.aiProvidersSelect> = z.object({
+  id: z.boolean().optional(),
+  title: z.boolean().optional(),
+  provider: z.boolean().optional(),
+  baseURL: z.boolean().optional(),
+  apiKey: z.boolean().optional(),
+  config: z.boolean().optional(),
+  sortOrder: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  models: z.boolean().optional(),
+}).strict()
+
+export const aiProvidersIncludeSchema: z.ZodType<Prisma.aiProvidersInclude> = z.object({
+  models: z.boolean().optional(),
+}).strict()
+
+// AI MODELS
+//------------------------------------------------------
+
+export const aiModelsSelectSchema: z.ZodType<Prisma.aiModelsSelect> = z.object({
+  id: z.boolean().optional(),
+  providerId: z.boolean().optional(),
+  title: z.boolean().optional(),
+  modelKey: z.boolean().optional(),
+  capabilities: z.boolean().optional(),
+  config: z.boolean().optional(),
+  sortOrder: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  provider: z.boolean().optional(),
+}).strict()
+
+export const aiModelsIncludeSchema: z.ZodType<Prisma.aiModelsInclude> = z.object({
+  provider: z.boolean().optional(),
+}).strict()
 
 // NOTE REFERENCE
 //------------------------------------------------------
@@ -346,4 +385,40 @@ export const noteInternalShareSchema = z.object({
 })
 
 export type noteInternalShare = z.infer<typeof noteInternalShareSchema>
+
+/////////////////////////////////////////
+// AI PROVIDERS SCHEMA
+/////////////////////////////////////////
+
+export const aiProvidersSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  provider: z.string(),
+  baseURL: z.string().nullable().optional(),
+  apiKey: z.string().nullable().optional(),
+  config: z.any().nullable().optional(),
+  sortOrder: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type aiProviders = z.infer<typeof aiProvidersSchema>
+
+/////////////////////////////////////////
+// AI MODELS SCHEMA
+/////////////////////////////////////////
+
+export const aiModelsSchema = z.object({
+  id: z.number().int(),
+  providerId: z.number().int(),
+  title: z.string(),
+  modelKey: z.string(),
+  capabilities: z.any(),
+  config: z.any().nullable().optional(),
+  sortOrder: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type aiModels = z.infer<typeof aiModelsSchema>
 

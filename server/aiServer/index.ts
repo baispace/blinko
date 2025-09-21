@@ -29,8 +29,15 @@ export function isImage(filePath: string): boolean {
   return imageExtensions.some((ext) => filePath.toLowerCase().endsWith(ext));
 }
 
+export function isAudio(filePath: string): boolean {
+  if (!filePath) return false;
+  const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.wma', '.opus', '.webm'];
+  return audioExtensions.some((ext) => filePath.toLowerCase().endsWith(ext));
+}
+
 export class AiService {
   static isImage = isImage;
+  static isAudio = isAudio;
 
   static async loadFileContent(filePath: string): Promise<string> {
     try {
@@ -72,6 +79,9 @@ export class AiService {
   static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
     try {
       const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
+      if (!Embeddings) {
+        throw new Error("No embeddings model config")
+      }
       const config = await AiModelFactory.globalConfig();
 
       if (config.excludeEmbeddingTagId) {
@@ -129,6 +139,7 @@ export class AiService {
   //api/file/123.pdf
   static async embeddingInsertAttachments({ id, updatedAt, filePath }: { id: number; updatedAt?: Date; filePath: string }) {
     try {
+
       const fileResult = await FileService.getFile(filePath);
       let content: string;
       try {
@@ -144,7 +155,9 @@ export class AiService {
         }
       }
       const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider();
-
+      if (!Embeddings) {
+        throw new Error("No embeddings model config")
+      }
       const doc = MDocument.fromText(content);
       const chunks = await doc.chunk();
 
@@ -393,7 +406,7 @@ export class AiService {
         customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
         const withOnlineSearch = !!config.tavilyApiKey;
         // Process with AI using BaseChatAgent with tools
-   
+
         const agent = await AiModelFactory.BaseChatAgent({ withTools: true, withOnlineSearch: withOnlineSearch });
         const result = await agent.generate([
           {
@@ -528,6 +541,131 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
     } catch (error) {
       console.error('Error in post-processing note:', error);
       return { success: false, message: error.message || 'Unknown error' };
+    }
+  }
+
+  /**
+   * Transcribe audio file to text
+   * @param filePath Audio file path
+   * @param voiceModelId Voice model ID
+   * @param accountId User account ID
+   * @returns Transcribed text content
+   */
+  static async transcribeAudio({
+    filePath,
+    voiceModelId,
+    accountId
+  }: {
+    filePath: string;
+    voiceModelId: number;
+    accountId: number;
+  }): Promise<string> {
+    try {
+      // Get voice model configuration
+      const voiceModel = await prisma.aiModels.findUnique({
+        where: { id: voiceModelId },
+        include: { provider: true },
+      });
+
+      if (!voiceModel || !(voiceModel.capabilities as any)?.audio) {
+        throw new Error('Voice model not found or does not support audio');
+      }
+
+      // Get audio provider
+      const { audioModel } = await AiModelFactory.GetProvider();
+      // Read audio file
+      const fs = await import('fs');
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Audio file not found: ${filePath}`);
+      }
+
+      // Get file extension to determine audio format
+      const path = await import('path');
+      const fileExtension = path.extname(filePath).toLowerCase().substring(1);
+      // Create audio stream
+      const audioStream = fs.createReadStream(filePath);
+      // Execute speech to text, 
+      // {
+      //   filetype: fileExtension || 'mp3',
+      // }
+      const transcription = await audioModel?.listen(audioStream,
+        {
+          filetype: fileExtension || 'mp3',
+        }
+      );
+
+      console.log(`Audio transcription completed for file: ${filePath},${transcription}`);
+      return transcription?.toString() || '';
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      throw new Error(`Audio transcription failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Process audio attachments for transcription
+   * @param attachments Array of attachments to process
+   * @param voiceModelId Voice model ID
+   * @param accountId User account ID
+   * @returns Transcription results
+   */
+  static async processNoteAudioAttachments({
+    attachments,
+    voiceModelId,
+    accountId
+  }: {
+    attachments: Array<{ name: string; path: string; type?: string }>;
+    voiceModelId: number;
+    accountId: number;
+  }): Promise<{ success: boolean; transcriptions: Array<{ fileName: string; transcription: string }> }> {
+    try {
+      const audioAttachments = attachments.filter(attachment =>
+        this.isAudio(attachment.name || attachment.path)
+      );
+
+      if (audioAttachments.length === 0) {
+        return { success: true, transcriptions: [] };
+      }
+
+      const transcriptions: any = [];
+
+      for (const attachment of audioAttachments) {
+        let cleanup: (() => Promise<void>) | undefined;
+        try {
+          // Use FileService to get file path (handles both local and S3 storage)
+          const fileResult = await FileService.getFile(attachment.path);
+          cleanup = fileResult.cleanup;
+
+          const transcription = await this.transcribeAudio({
+            filePath: fileResult.path,
+            voiceModelId,
+            accountId,
+          });
+
+          transcriptions.push({
+            fileName: attachment.name || attachment.path,
+            transcription,
+          });
+
+          console.log(`Transcribed audio: ${attachment.name}`);
+        } catch (error) {
+          console.error(`Failed to transcribe audio ${attachment.name}:`, error);
+        } finally {
+          // Clean up temporary file if using S3 storage
+          if (cleanup) {
+            try {
+              await cleanup();
+            } catch (cleanupError) {
+              console.error(`Failed to cleanup temporary file for ${attachment.name}:`, cleanupError);
+            }
+          }
+        }
+      }
+
+      return { success: true, transcriptions };
+    } catch (error) {
+      console.error('Error processing note audio attachments:', error);
+      return { success: false, transcriptions: [] };
     }
   }
 }

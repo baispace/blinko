@@ -8,7 +8,20 @@ export class memoryCache {
       maxSize: 30 * 1024 * 1024,
       max: 10000,
       sizeCalculation: (value, key) => {
-        return JSON.stringify(value).length
+        try {
+          return JSON.stringify(value).length
+        } catch (error) {
+          // Handle circular references or non-serializable objects
+          if (error.message.includes('circular') || error.message.includes('cyclic')) {
+            // For objects with circular references, use a rough size estimation
+            if (typeof value === 'object' && value !== null) {
+              return Object.keys(value).length * 50; // Rough estimation
+            }
+            return 100; // Default size for complex objects
+          }
+          // For other serialization errors, return a default size
+          return 100;
+        }
       },
       ...options
     })

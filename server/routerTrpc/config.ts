@@ -31,11 +31,6 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
         return acc;
       }
     }
-    //always return isUseAI config
-    if (item.key == 'isUseAI') {
-      acc[item.key] = config.value;
-      return acc
-    }
     if (!isSuperAdmin && !item.userId) {
       return acc;
     }

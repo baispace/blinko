@@ -697,5 +697,8 @@
   "marketplace-description": "Przeglądaj i instaluj wtyczki z oficjalnego rynku.",
   "live-preview": "Natychmiastowe renderowanie",
   "raw-markdown": "Oryginalny Markdown",
-  "rich-text": "To, co widzisz, to co dostajesz."
+  "rich-text": "To, co widzisz, to co dostajesz.",
+  "reference-notes": "Zacytowana treść",
+  "custom-configuration": "Dostosowani dostawcy",
+  "configure-your-own-api-endpoint": "Dostosowani dostawcy powinni spełniać standardy zgodne z OpenAPI."
 }

@@ -701,5 +701,8 @@
   "marketplace-description": "공식 시장에서 플러그인을 검색하고 설치하세요.",
   "live-preview": "즉시 렌더링",
   "raw-markdown": "원시 Markdown",
-  "rich-text": "소견즉소득"
+  "rich-text": "소견즉소득",
+  "reference-notes": "인용 내용",
+  "custom-configuration": "맞춤형 공급업체",
+  "configure-your-own-api-endpoint": "맞춤형 공급업체는 OpenAPI 호환 표준을 준수해야 합니다."
 }

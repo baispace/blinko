@@ -704,5 +704,8 @@
   "marketplace-description": "Durchsuchen und installieren Sie Plugins aus dem offiziellen Markt.",
   "live-preview": "Echtzeit-Rendering",
   "raw-markdown": "Ursprüngliches Markdown",
-  "rich-text": "Was du siehst, ist was du bekommst."
+  "rich-text": "Was du siehst, ist was du bekommst.",
+  "reference-notes": "Zitierte Inhalte",
+  "custom-configuration": "Benutzerdefinierter Lieferant",
+  "configure-your-own-api-endpoint": "Benutzerdefinierte Anbieter sollten den OpenAPI-kompatiblen Standards entsprechen."
 }

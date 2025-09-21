@@ -665,5 +665,8 @@
   "marketplace-description": "დათვალი და ინსტალო  Პო Გო Მო Შო Რ.",
   "live-preview": "即時渲染",
   "raw-markdown": "მიწიერი Markdown",
-  "rich-text": "რაც ხედავ, იმ გონო."
+  "rich-text": "რაც ხედავ, იმ გონო.",
+  "reference-notes": "ციტირებული შორიփ",
+  "custom-configuration": "定制供应商",
+  "configure-your-own-api-endpoint": "定制供应商应符合 OpenAPI 兼容标准"
 }

@@ -5,6 +5,7 @@ import { RootStore } from './root';
 import { api, streamApi } from '@/lib/trpc';
 import { StorageListState } from './standard/StorageListState';
 import { GlobalConfig, Note } from '@shared/lib/types';
+import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { makeAutoObservable } from 'mobx';
 import { BlinkoStore } from './blinkoStore';
 import { eventBus } from '@/lib/event';
@@ -16,6 +17,28 @@ import i18n from '@/lib/i18n';
 import { AiEmoji } from '@/components/BlinkoAi/aiEmoji';
 import { StorageState } from './standard/StorageState';
 import { BlinkoItem } from '@/components/BlinkoCard';
+
+export interface ModelCapabilities {
+  inference: boolean;
+  tools: boolean;
+  image: boolean;
+  imageGeneration: boolean;
+  video: boolean;
+  audio: boolean;
+  embedding: boolean;
+  rerank: boolean;
+}
+
+// Use shared types from prismaZodType
+export type AiProvider = aiProviders & { models?: AiModel[] };
+export type AiModel = aiModels & { provider?: AiProvider; capabilities: ModelCapabilities };
+
+export interface ProviderModel {
+  id: string;
+  name: string;
+  description?: string;
+  capabilities?: Partial<ModelCapabilities>;
+}
 
 type Chat = {
   content: string;
@@ -44,12 +67,43 @@ export class AiStore implements Store {
       this.clear();
     });
   }
+
+  aiProviders = new PromiseState({
+    function: async () => {
+      const res = await api.ai.getAllProviders.query();
+      return res;
+    },
+  });
+
+  aiModels = new PromiseState({
+    function: async (providerId: number) => {
+      const res = await api.ai.getModelsByProvider.query({ providerId });
+      return res;
+    },
+  });
+
+  getModelsByCapability = new PromiseState({
+    function: async (capability: string) => {
+      const res = await api.ai.getModelsByCapability.query({ capability });
+      return res;
+    },
+  });
+
+  allModels = new PromiseState({
+    function: async () => {
+      const res = await api.ai.getAllModels.query();
+      return res;
+    },
+  });
+
+  selectedProviderId = 0;
   isChatting = false;
   isAnswering = false;
   input = '';
   withRAG = new StorageState({ key: 'withRAG', value: true, default: true });
   withTools = new StorageState({ key: 'withTools', value: false, default: false });
   withOnline = new StorageState({ key: 'withOnline', value: false, default: false });
+  cachedProviderModels: Map<number, ProviderModel[]> = new Map();
   referencesNotes: BlinkoItem[] = [];
   currentMessageResult: currentMessageResult = {
     id: 0,
@@ -161,7 +215,7 @@ export class AiStore implements Store {
         // this.clearCurrentMessageResult()
       }
     } catch (error) {
-      if (!error.message.includes('interrupted')) {
+      if (!error.message.includes('interrupted') && !error.message.includes('aborted') && !error.message.includes('BodyStreamBuffer was aborted')) {
         RootStore.Get(ToastPlugin).error(error.message);
       }
       this.isAnswering = false;
@@ -457,11 +511,265 @@ export class AiStore implements Store {
         metadata: this.currentMessageResult.notes,
       });
     }
+    // Add interruption notification message
+    await api.message.create.mutate({
+      conversationId: this.currentConversationId,
+      content: '[Request interrupted by user]',
+      role: 'system',
+      metadata: {},
+    });
     this.clearCurrentMessageResult();
     await this.currentConversation.call();
   }
 
+
+  createProvider = new PromiseState({
+    function: async (data: { title: string; provider: string; baseURL?: string; apiKey?: string; config?: any; sortOrder: number }) => {
+      await PromiseCall(api.ai.createProvider.mutate(data));
+      await this.aiProviders.call();
+    },
+  });
+
+  updateProvider = new PromiseState({
+    function: async (data: { id: number; title: string; provider: string; baseURL?: string; apiKey?: string; config?: any; sortOrder: number }) => {
+      await PromiseCall(api.ai.updateProvider.mutate(data));
+      await this.aiProviders.call();
+    },
+  });
+
+  deleteProvider = new PromiseState({
+    function: async (id: number) => {
+      await PromiseCall(api.ai.deleteProvider.mutate({ id }));
+      await this.aiProviders.call();
+    },
+  });
+
+  createModel = new PromiseState({
+    function: async (data: { providerId: number; title: string; modelKey: string; capabilities: ModelCapabilities; config?: any; sortOrder: number }) => {
+      await PromiseCall(api.ai.createModel.mutate(data));
+      await this.aiProviders.call();
+      await this.allModels.call();
+    },
+  });
+
+  updateModel = new PromiseState({
+    function: async (data: { id: number; providerId: number; title: string; modelKey: string; capabilities: ModelCapabilities; config?: any; sortOrder: number }) => {
+      await PromiseCall(api.ai.updateModel.mutate(data));
+      await this.aiProviders.call();
+      await this.allModels.call();
+    },
+  });
+
+  deleteModel = new PromiseState({
+    function: async (data: { id: number; providerId: number }) => {
+      await PromiseCall(api.ai.deleteModel.mutate({ id: data.id }));
+      await this.aiProviders.call();
+      await this.allModels.call();
+    },
+  });
+
+  createModelsFromProvider = new PromiseState({
+    function: async (data: { providerId: number; models: { id: string; name: string; capabilities: Partial<ModelCapabilities> }[] }) => {
+      await PromiseCall(api.ai.createModelsFromProvider.mutate(data));
+      await this.aiProviders.call();
+      await this.allModels.call();
+    },
+  });
+
+  fetchProviderModels = new PromiseState({
+    function: async (provider: AiProvider) => {
+      // Check cache first
+      const cached = this.cachedProviderModels.get(provider.id);
+      if (cached) {
+        return cached;
+      }
+
+      try {
+        let modelList: any = [];
+
+        switch (provider.provider) {
+          case 'ollama': {
+            const endpoint = provider.baseURL || 'http://127.0.0.1:11434';
+            const response = await fetch(`${endpoint}/api/tags`);
+            const data = await response.json();
+            modelList = data.models.map((model: any) => ({
+              id: model.name,
+              name: model.name,
+              description: model.description || '',
+              capabilities: this.inferModelCapabilities(model.name)
+            }));
+            break;
+          }
+          case 'openai': {
+            const endpoint = provider.baseURL || 'https://api.openai.com/v1';
+            const response = await fetch(`${endpoint}/models`, {
+              headers: {
+                'Authorization': `Bearer ${provider.apiKey}`
+              }
+            });
+            const data = await response.json();
+            modelList = data.data.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: this.inferModelCapabilities(model.id)
+            }));
+            break;
+          }
+          case 'anthropic': {
+            modelList = [
+              { id: 'claude-3-5-sonnet-20241022', name: 'claude-3-5-sonnet-20241022', capabilities: this.inferModelCapabilities('claude-3-5-sonnet-20241022') },
+              { id: 'claude-3-5-sonnet-20240620', name: 'claude-3-5-sonnet-20240620', capabilities: this.inferModelCapabilities('claude-3-5-sonnet-20240620') },
+              { id: 'claude-3-5-haiku-20241022', name: 'claude-3-5-haiku-20241022', capabilities: this.inferModelCapabilities('claude-3-5-haiku-20241022') },
+              { id: 'claude-3-opus-20240229', name: 'claude-3-opus-20240229', capabilities: this.inferModelCapabilities('claude-3-opus-20240229') },
+              { id: 'claude-3-sonnet-20240229', name: 'claude-3-sonnet-20240229', capabilities: this.inferModelCapabilities('claude-3-sonnet-20240229') },
+              { id: 'claude-3-haiku-20240307', name: 'claude-3-haiku-20240307', capabilities: this.inferModelCapabilities('claude-3-haiku-20240307') }
+            ];
+            break;
+          }
+          case 'openrouter': {
+            const endpoint = 'https://openrouter.ai/api/v1';
+            const response = await fetch(`${endpoint}/models`, {
+              headers: {
+                'Authorization': `Bearer ${provider.apiKey}`
+              }
+            });
+            const data = await response.json();
+            modelList = data.data.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: model.description || '',
+              capabilities: this.inferModelCapabilities(model.id)
+            }));
+            break;
+          }
+          default: {
+            const endpoint = provider.baseURL || 'https://api.openai.com/v1';
+            const response = await fetch(`${endpoint}/models`, {
+              headers: {
+                'Authorization': `Bearer ${provider.apiKey}`
+              }
+            });
+            const data = await response.json();
+            modelList = data.data.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: this.inferModelCapabilities(model.id)
+            }));
+            break;
+          }
+        }
+
+        // Cache the result
+        this.cachedProviderModels.set(provider.id, modelList);
+        return modelList;
+      } catch (error) {
+        console.error('Error fetching provider models:', error);
+        throw error;
+      }
+    },
+  });
+
+  getCachedProviderModels = (providerId: number): ProviderModel[] => {
+    return this.cachedProviderModels.get(providerId) || [];
+  };
+
+  clearProviderModelsCache = (providerId?: number) => {
+    if (providerId) {
+      this.cachedProviderModels.delete(providerId);
+    } else {
+      this.cachedProviderModels.clear();
+    }
+  };
+
+  inferModelCapabilities = (modelName: string): ModelCapabilities => {
+    const name = modelName.toLowerCase();
+
+    // Default capabilities
+    const capabilities: ModelCapabilities = {
+      inference: true,
+      tools: false,
+      image: false,
+      imageGeneration: false,
+      video: false,
+      audio: false,
+      embedding: false,
+      rerank: false
+    };
+
+    // GPT models
+    if (name.includes('gpt-4')) {
+      capabilities.tools = true;
+      if (name.includes('vision') || name.includes('turbo')) {
+        capabilities.image = true;
+      }
+    }
+
+    // Claude models
+    if (name.includes('claude')) {
+      capabilities.tools = true;
+      capabilities.image = true;
+    }
+
+    // Embedding models
+    if (name.includes('embedding') || name.includes('text-embedding')) {
+      capabilities.inference = false;
+      capabilities.embedding = true;
+    }
+
+    // Image generation models
+    if (name.includes('dalle') || name.includes('midjourney') || name.includes('stable-diffusion')) {
+      capabilities.inference = false;
+      capabilities.imageGeneration = true;
+    }
+
+    // Whisper for audio
+    if (name.includes('whisper')) {
+      capabilities.inference = false;
+      capabilities.audio = true;
+    }
+
+    // Rerank models
+    if (name.includes('rerank')) {
+      capabilities.inference = false;
+      capabilities.rerank = true;
+    }
+
+    return capabilities;
+  };
+
+  // Getter methods for different model types
+  get inferenceModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.inference) || [];
+  }
+
+  get embeddingModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.embedding) || [];
+  }
+
+  get voiceModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.audio) || [];
+  }
+
+  get imageModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.image) || [];
+  }
+
+  get imageGenerationModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.imageGeneration) || [];
+  }
+
+  get audioModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.audio) || [];
+  }
+
+  get rerankModels(): AiModel[] {
+    return this.allModels.value?.filter(model => model.capabilities.rerank) || [];
+  }
+
   private clear() {
     this.chatHistory.clear();
+    this.selectedProviderId = 0;
   }
 }

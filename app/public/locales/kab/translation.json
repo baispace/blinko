@@ -737,5 +737,8 @@
   "marketplace-description": "Ssuter akkeddaw s ufus n usenfughal.",
   "live-preview": "Rendering asɣan",
   "raw-markdown": "Markdown asli",
-  "rich-text": "ما تراه هو ما تحصل عليه"
+  "rich-text": "ما تراه هو ما تحصل عليه",
+  "reference-notes": "Axxam n uẓref",
+  "custom-configuration": "Amsag n umeskar usnulfu",
+  "configure-your-own-api-endpoint": "Abeddel iḥerzanen, yelhan ad yettwasnen s umennuɣ n OpenAPI."
 }

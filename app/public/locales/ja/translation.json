@@ -706,5 +706,8 @@
   "marketplace-description": "公式マーケットからプラグインを閲覧し、インストールしてください。",
   "live-preview": "リアルタイムレンダリング",
   "raw-markdown": "オリジナルMarkdown",
-  "rich-text": "見たままを得る"
+  "rich-text": "見たままを得る",
+  "reference-notes": "引用内容",
+  "custom-configuration": "カスタムサプライヤー",
+  "configure-your-own-api-endpoint": "カスタムプロバイダーは、OpenAPI互換の標準を満たすべきです。"
 }

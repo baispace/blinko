@@ -704,5 +704,8 @@
   "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي.",
   "live-preview": "التقديم الفوري",
   "raw-markdown": "الماركداون الأصلي",
-  "rich-text": "ما تراه هو ما تحصل عليه"
+  "rich-text": "ما تراه هو ما تحصل عليه",
+  "reference-notes": "محتوى الاقتباس",
+  "custom-configuration": "مورد مخصص",
+  "configure-your-own-api-endpoint": "الموردون المخصصون يجب أن يتوافقوا مع معايير OpenAPI"
 }

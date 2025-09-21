@@ -272,3 +272,33 @@ model session {
 
   @@index([expiresAt])
 }
+
+model aiProviders {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(255)
+  provider  String   @db.VarChar(50)
+  baseURL   String?  @db.VarChar(500)
+  apiKey    String?  @db.VarChar(500)
+  config    Json?    @db.Json
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  models    aiModels[]
+}
+
+model aiModels {
+  id            Int      @id @default(autoincrement())
+  providerId    Int
+  title         String   @db.VarChar(255)
+  modelKey      String   @db.VarChar(255)
+  capabilities  Json     @db.Json
+  config        Json?    @db.Json
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  provider      aiProviders @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+}

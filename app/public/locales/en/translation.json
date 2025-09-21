@@ -742,5 +742,8 @@
   "live-preview": "Live Preview",
   "real-time-rendering-as-you-type": "Real-time rendering as you type",
   "raw-markdown": "Raw Markdown",
-  "rich-text": "WYSIWYG"
+  "rich-text": "WYSIWYG",
+  "reference-notes": "Quoted content",
+  "custom-configuration": "Customized supplier",
+  "configure-your-own-api-endpoint": "Custom vendors should comply with OpenAPI-compatible standards."
 }

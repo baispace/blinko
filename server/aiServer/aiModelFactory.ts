@@ -1,37 +1,31 @@
 import { cache } from '@shared/lib/cache';
-import { AzureOpenAIModelProvider } from './providers/azureOpenAI';
-import { OpenAIModelProvider } from './providers/openAI';
-import { OllamaModelProvider } from './providers/ollama';
-import { AnthropicModelProvider } from './providers/anthropic';
+import { LLMProvider, EmbeddingProvider, AudioProvider, AiUtilities } from './providers';
 import { upsertBlinkoTool } from './tools/createBlinko';
 import { createCommentTool } from './tools/createComment';
 import { LibSQLVector } from "@mastra/libsql";
-import { DeepSeekModelProvider } from './providers/deepseek';
 import dayjs from 'dayjs';
 import { Agent, Mastra } from '@mastra/core';
 import { LanguageModelV1, EmbeddingModelV1 } from '@ai-sdk/provider';
 import { MarkdownTextSplitter, TokenTextSplitter } from '@langchain/textsplitters';
 import { embed } from 'ai';
 import { _ } from '@shared/lib/lodash';
-import { GeminiModelProvider } from './providers/gemini';
-import { GrokModelProvider } from './providers/grok';
-import { OpenRouterModelProvider } from './providers/openRouter';
 import { webSearchTool } from './tools/webSearch';
 import { webExtra } from './tools/webExtra';
 import { searchBlinkoTool } from './tools/searchBlinko';
 import { updateBlinkoTool } from './tools/updateBlinko';
 import { deleteBlinkoTool } from './tools/deleteBlinko';
 import { rerank } from '@mastra/rag';
-import { AiBaseModelProvider } from './providers';
 import { prisma } from '@server/prisma';
 import { getGlobalConfig } from '@server/routerTrpc/config';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { PinoLogger } from '@mastra/loggers';
+import { ModelCapabilities } from './types';
+import { aiModels } from '@shared/index';
+import { MastraVoice } from '@mastra/core/voice';
 
 export class AiModelFactory {
-  //metadata->>'id'
   static async queryAndDeleteVectorById(targetId: number) {
     const { VectorStore } = await AiModelFactory.GetProvider();
     try {
@@ -68,7 +62,10 @@ export class AiModelFactory {
   }
 
   static async queryVector(query: string, accountId: number, _topK?: number) {
-    const { VectorStore, Embeddings, provider } = await AiModelFactory.GetProvider();
+    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
+    if (!Embeddings) {
+      throw new Error("No embeddings model config")
+    }
     const config = await AiModelFactory.globalConfig();
     const topK = _topK ?? config.embeddingTopK ?? 3;
     const embeddingMinScore = config.embeddingScore ?? 0.4;
@@ -82,22 +79,8 @@ export class AiModelFactory {
       queryVector: embedding,
       topK: topK,
     });
+    console.log(result, 'result!!!!!!!!!!!!!!')
     let filteredResults = result.filter(({ score }) => score >= embeddingMinScore);
-
-    if (config.rerankModel) {
-      const rerankmodel = (await provider.rerankModel())!;
-      const rerankScore = config.rerankScore ?? 0.5;
-      const rerankedResults = await rerank(
-        result,
-        query,
-        rerankmodel,
-        {
-          topK: config.rerankTopK ?? 3
-        }
-      );
-      // console.log(rerankedResults, 'rerankedResults');
-      filteredResults = rerankedResults.filter((i) => i.score >= rerankScore).map((i) => i.result);
-    }
 
     const notes =
       (
@@ -163,8 +146,13 @@ export class AiModelFactory {
     }
 
     const config = await AiModelFactory.globalConfig();
-    const model = config.embeddingModel.toLowerCase();
-    let userConfigDimensions = config.embeddingDimensions;
+    const embeddingModel = config.embeddingModelId ? await AiModelFactory.getAiModel(config.embeddingModelId) : null;
+    if (!embeddingModel) {
+      throw new Error('Embedding model not configured!');
+    }
+
+    const model = embeddingModel.modelKey.toLowerCase();
+    let userConfigDimensions = (embeddingModel.config as any)?.embeddingDimensions || 0;
     let dimensions: number = 0;
     switch (true) {
       case model.includes('text-embedding-3-small'):
@@ -218,69 +206,152 @@ export class AiModelFactory {
     );
   }
 
+  static async getAiProvider(id: number) {
+    return await prisma.aiProviders.findUnique({
+      where: { id },
+      include: { models: true }
+    });
+  }
+
+  static async getAllAiProviders() {
+    return await prisma.aiProviders.findMany({
+      include: { models: true },
+      orderBy: { sortOrder: 'asc' }
+    });
+  }
+
+  static async getAiModel(id: number) {
+    return await prisma.aiModels.findUnique({
+      where: { id },
+      include: { provider: true }
+    });
+  }
+
+  static async getAiModelsByCapability(capability: string) {
+    return await prisma.aiModels.findMany({
+      where: {
+        capabilities: {
+          path: [capability],
+          equals: true
+        }
+      },
+      include: { provider: true },
+      orderBy: { sortOrder: 'asc' }
+    });
+  }
+
+
   static async ValidConfig() {
     const globalConfig = await AiModelFactory.globalConfig();
-    if (!globalConfig.aiModelProvider || !globalConfig.isUseAI) {
-      throw new Error('model provider or apikey not configure!');
+    if (!globalConfig.mainModelId) {
+      throw new Error('Main AI model not configured!');
     }
     return await AiModelFactory.globalConfig();
   }
 
   static async GetProvider() {
     const globalConfig = await AiModelFactory.ValidConfig();
+    if (!globalConfig.mainModelId) {
+      throw new Error('Main AI model configuration not found!');
+    }
+    const mainModel = await AiModelFactory.getAiModel(globalConfig.mainModelId);
+    if (!mainModel) {
+      throw new Error('Main AI model configuration not found!');
+    }
 
-    return cache.wrap(
-      `GetProvider-
-      ${globalConfig.aiModelProvider}-
-      ${globalConfig.aiApiKey}-
-      ${globalConfig.embeddingModel}-
-      ${globalConfig.embeddingApiKey}-
-      ${globalConfig.aiModel}-
-      ${globalConfig.aiApiEndpoint}-
-      ${globalConfig.embeddingTopK}-
-      ${globalConfig.embeddingScore}-
-      ${globalConfig.isUseHttpProxy}-
-      ${globalConfig.httpProxyHost}-
-      ${globalConfig.httpProxyPort}-
-      ${globalConfig.httpProxyPassword}-
-      ${globalConfig.httpProxyUsername}
-      `,
+    const embeddingModel = globalConfig.embeddingModelId
+      ? await AiModelFactory.getAiModel(globalConfig.embeddingModelId)
+      : null;
+
+    const audioModel = globalConfig.voiceModelId
+      ? await AiModelFactory.getAiModel(globalConfig.voiceModelId)
+      : null;
+
+    const imageModel = globalConfig.imageModelId
+      ? await AiModelFactory.getAiModel(globalConfig.imageModelId)
+      : null;
+
+    const cacheKey = `GetProvider-${mainModel.id}-${embeddingModel?.id || 'none'}-${imageModel?.id || 'none'}-${globalConfig.embeddingTopK}-${globalConfig.embeddingScore}`;
+
+    const cachedProvider = await cache.wrap(
+      cacheKey,
       async () => {
-        const createProviderResult = async (provider: any) => ({
-          LLM: (await provider.LLM()) as LanguageModelV1,
-          VectorStore: (await provider.VectorStore()) as LibSQLVector,
-          Embeddings: (await provider.Embeddings()) as EmbeddingModelV1<string>,
-          MarkdownSplitter: provider.MarkdownSplitter() as MarkdownTextSplitter,
-          TokenTextSplitter: provider.TokenTextSplitter() as TokenTextSplitter,
-          provider: provider as AiBaseModelProvider
-        });
+        // Initialize providers
+        const llmProvider = new LLMProvider();
+        const embeddingProvider = new EmbeddingProvider();
 
-        switch (globalConfig.aiModelProvider) {
-          case 'OpenAI':
-            return createProviderResult(new OpenAIModelProvider({ globalConfig }));
-          case 'AzureOpenAI':
-            return createProviderResult(new AzureOpenAIModelProvider({ globalConfig }));
-          case 'Ollama':
-            return createProviderResult(new OllamaModelProvider({ globalConfig }));
-          case 'DeepSeek':
-            return createProviderResult(new DeepSeekModelProvider({ globalConfig }));
-          case 'Anthropic':
-            return createProviderResult(new AnthropicModelProvider({ globalConfig }));
-          case 'Grok':
-            return createProviderResult(new GrokModelProvider({ globalConfig }));
-          case 'Gemini':
-            return createProviderResult(new GeminiModelProvider({ globalConfig }));
-          case 'OpenRouter':
-            return createProviderResult(new OpenRouterModelProvider({ globalConfig }));
-          default:
-            throw new Error(`Unsupported AI model provider: ${globalConfig.aiModelProvider}`);
+        // Create LLM configuration
+        const llmConfig = {
+          provider: mainModel.provider.provider,
+          apiKey: mainModel.provider.apiKey,
+          baseURL: mainModel.provider.baseURL,
+          modelKey: mainModel.modelKey,
+          apiVersion: (mainModel.provider.config as any)?.apiVersion
+        };
+
+        // Get LLM instance
+        const llm = await llmProvider.getLanguageModel(llmConfig);
+
+        // Get Embedding instance (if configured)
+        let embeddings: EmbeddingModelV1<string> | null = null;
+        if (embeddingModel) {
+          const embeddingConfig = {
+            provider: embeddingModel.provider.provider,
+            apiKey: embeddingModel.provider.apiKey,
+            baseURL: embeddingModel.provider.baseURL,
+            modelKey: embeddingModel.modelKey,
+            apiVersion: (embeddingModel.provider.config as any)?.apiVersion
+          };
+          embeddings = await embeddingProvider.getEmbeddingModel(embeddingConfig);
         }
+
+        // Get utilities
+        const vectorStore = await AiUtilities.VectorStore();
+        const markdownSplitter = AiUtilities.MarkdownSplitter();
+        const tokenTextSplitter = AiUtilities.TokenTextSplitter();
+
+        return {
+          LLM: llm,
+          VectorStore: vectorStore,
+          Embeddings: embeddings,
+          MarkdownSplitter: markdownSplitter,
+          TokenTextSplitter: tokenTextSplitter,
+          // Keep for backward compatibility
+          provider: {
+            llmProvider,
+            embeddingProvider
+          }
+        };
       },
       { ttl: 24 * 60 * 60 * 1000 },
     );
+
+    // Create audio provider separately (not cached due to circular references)
+    const audioProvider = new AudioProvider();
+    let audio: MastraVoice | null = null;
+    if (audioModel) {
+      console.log(audioModel,'!audioModel!!!!!!!!!!')
+      const audioConfig = {
+        provider: audioModel.provider.provider,
+        apiKey: audioModel.provider.apiKey,
+        baseURL: audioModel.provider.baseURL,
+        modelKey: audioModel.modelKey,
+        apiVersion: (audioModel.provider.config as any)?.apiVersion
+      };
+      audio = await audioProvider.getAudioModel(audioConfig);
+    }
+
+    return {
+      ...cachedProvider,
+      audioModel: audio,
+      // Keep for backward compatibility
+      provider: {
+        ...cachedProvider.provider,
+        audioProvider
+      }
+    };
   }
   static async BaseChatAgent({ withTools = true, withOnlineSearch = false }: { withTools?: boolean; withOnlineSearch?: boolean }) {
-    //globel.model.name cache
     const provider = await AiModelFactory.GetProvider();
     let tools: Record<string, any> = {};
     if (withTools) {

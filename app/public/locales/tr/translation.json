@@ -706,5 +706,8 @@
   "marketplace-description": "Resmi pazardan eklentilere göz atın ve yükleyin.",
   "live-preview": "Anında işleme",
   "raw-markdown": "Orijinal Markdown",
-  "rich-text": "Gördüğünüz odur"
+  "rich-text": "Gördüğünüz odur",
+  "reference-notes": "Alıntı içeriği",
+  "custom-configuration": "Özel tedarikçi",
+  "configure-your-own-api-endpoint": "Özel tedarikçiler, OpenAPI uyumlu standartlara uymalıdır."
 }

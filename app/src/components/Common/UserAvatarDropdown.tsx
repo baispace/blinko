@@ -32,7 +32,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
             {user.image ? (
               <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover transition-all`} />
             ) : (
-              <Image src="/icons/icon-128x128.png" width={30} />
+              <Image src="/logo.png" width={30} />
             )}
             <div className={`absolute inset-0 bg-black/30 rounded-full flex items-center justify-center transition-opacity ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
               <Icon icon="mdi:cog" width="16" height="16" className="text-white" />

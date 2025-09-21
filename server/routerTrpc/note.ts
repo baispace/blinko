@@ -1103,7 +1103,7 @@ export const noteRouter = router({
           console.log(err);
         }
 
-        if (config?.isUseAI) {
+        if (config?.embeddingModelId) {
           AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt });
           for (const attachment of attachments) {
             AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
@@ -1136,10 +1136,62 @@ export const noteRouter = router({
             });
           }
 
-          if (config?.isUseAI) {
+          if (config?.embeddingModelId) {
             AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt });
             for (const attachment of attachments) {
               AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
+            }
+          }
+
+          // Process audio attachments if voice model is configured
+          if (config?.voiceModelId && attachments.length > 0) {
+            console.log(config?.voiceModelId,attachments,'attachments@@@@')
+            try {
+              // Check if there are any audio attachments
+              const audioAttachments = attachments.filter(attachment =>
+                AiService.isAudio(attachment.name || attachment.path)
+              );
+
+              if (audioAttachments.length > 0) {
+                // Run audio transcription asynchronously to not block the response
+                AiService.processNoteAudioAttachments({
+                  attachments: audioAttachments,
+                  voiceModelId: config.voiceModelId,
+                  accountId: Number(ctx.id),
+                }).then(({ success, transcriptions }) => {
+                  if (success && transcriptions.length > 0) {
+                    // Append transcriptions to note content
+                    const transcriptionText = transcriptions
+                      .map(t => `${t.transcription}`)
+                      .join('');
+
+                    // Update note with transcriptions
+                    prisma.notes.update({
+                      where: { id: note.id },
+                      data: { content: note.content + transcriptionText },
+                    }).then(() => {
+                      console.log(`Added transcriptions to note ${note.id},${transcriptionText}`);
+
+                      // Re-run embedding if model is configured
+                      if (config?.embeddingModelId) {
+                        AiService.embeddingUpsert({
+                          id: note.id,
+                          content: note.content + transcriptionText,
+                          type: 'update',
+                          createTime: note.createdAt!,
+                          updatedAt: new Date(),
+                        });
+                      }
+                    }).catch((err) => {
+                      console.error('Error updating note with transcription:', err);
+                    });
+                  }
+                }).catch((err) => {
+                  console.error('Error in audio transcription:', err);
+                });
+              }
+            } catch (error) {
+              console.error('Failed to start audio transcription:', error);
             }
           }
 

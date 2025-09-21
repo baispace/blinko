@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { BasicSetting } from '@/components/BlinkoSettings/BasicSetting';
 import { AiSetting } from '@/components/BlinkoSettings/AiSetting';
+import NewAiSetting from '@/components/BlinkoSettings/AiSetting/NewAiSetting';
 import { PerferSetting } from '@/components/BlinkoSettings/PerferSetting';
 import { TaskSetting } from '@/components/BlinkoSettings/TaskSetting';
 import { ImportSetting } from '@/components/BlinkoSettings/ImportSetting';
@@ -74,6 +75,14 @@ export const allSettings: SettingItem[] = [
     component: <UserSetting />,
     requireAdmin: true,
     keywords: ['user', 'users', '用户', '用户列表'],
+  },
+  {
+    key: 'new-ai',
+    title: 'New AI',
+    icon: 'hugeicons:ai-magic',
+    component: <NewAiSetting />,
+    requireAdmin: true,
+    keywords: ['ai', 'artificial intelligence', '人工智能'],
   },
   {
     key: 'ai',

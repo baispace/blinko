@@ -706,5 +706,8 @@
   "marketplace-description": "瀏覽並安裝來自官方市場的插件。",
   "live-preview": "即時渲染",
   "raw-markdown": "原始Markdown",
-  "rich-text": "所見即所得"
+  "rich-text": "所見即所得",
+  "reference-notes": "引用內容",
+  "custom-configuration": "自訂供應商",
+  "configure-your-own-api-endpoint": "自訂的供應商，應該符合OpenAPI兼容的標準"
 }

@@ -25,7 +25,7 @@ interface AiInputProps {
 
 const cardIcons = [
   {
-    tooltip: <>{i18n.t('new-conversation')}</>,
+    tooltip: 'new-conversation',
     icon: 'hugeicons:bubble-chat-add',
     size: 20,
     containerSize: 30,
@@ -34,7 +34,7 @@ const cardIcons = [
     },
   },
   {
-    tooltip: <>{i18n.t('knowledge-base-search')}</>,
+    tooltip: 'knowledge-base-search',
     icon: 'hugeicons:search-list-01',
     size: 20,
     containerSize: 30,
@@ -44,17 +44,17 @@ const cardIcons = [
     classNames: () => {
       return RootStore.Get(AiStore).withRAG.value
         ? {
-            base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-            icon: 'text-primary-foreground font-bold',
-          }
+          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
+          icon: 'text-primary-foreground font-bold',
+        }
         : {
-            base: 'bg-transparent text-foreground',
-            icon: 'text-foreground',
-          };
+          base: 'bg-transparent text-foreground',
+          icon: 'text-foreground',
+        };
     },
   },
   {
-    tooltip: <>{i18n.t('online-search')}</>,
+    tooltip: 'online-search',
     icon: 'hugeicons:global-search',
     size: 20,
     containerSize: 30,
@@ -64,17 +64,17 @@ const cardIcons = [
     classNames: () => {
       return RootStore.Get(AiStore).withOnline.value
         ? {
-            base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-            icon: 'text-primary-foreground font-bold',
-          }
+          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
+          icon: 'text-primary-foreground font-bold',
+        }
         : {
-            base: 'bg-transparent text-foreground',
-            icon: 'text-foreground',
-          };
+          base: 'bg-transparent text-foreground',
+          icon: 'text-foreground',
+        };
     },
   },
   {
-    tooltip: <div className="w-[200px]">{i18n.t('add-tools-to-model')}</div>,
+    tooltip: 'add-tools-to-model',
     icon: 'hugeicons:ai-chemistry-02',
     size: 20,
     containerSize: 30,
@@ -84,17 +84,17 @@ const cardIcons = [
     classNames: () => {
       return RootStore.Get(AiStore).withTools.value
         ? {
-            base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-            icon: 'text-primary-foreground font-bold',
-          }
+          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
+          icon: 'text-primary-foreground font-bold',
+        }
         : {
-            base: 'bg-transparent text-foreground',
-            icon: 'text-foreground',
-          };
+          base: 'bg-transparent text-foreground',
+          icon: 'text-foreground',
+        };
     },
   },
   {
-    tooltip: <>{i18n.t('clear-current-content')}</>,
+    tooltip: 'clear-current-content',
     icon: 'hugeicons:delete-01',
     size: 20,
     containerSize: 30,
@@ -181,7 +181,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
                 onlyContent: true,
                 title: t('settings'),
                 content: (
-                  <ScrollArea className="h-full md:h-[600px]" onBottom={() => {}}>
+                  <ScrollArea className="h-full md:h-[600px]" onBottom={() => { }}>
                     <AiSetting />
                   </ScrollArea>
                 ),

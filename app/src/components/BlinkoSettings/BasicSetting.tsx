@@ -110,7 +110,7 @@ export const BasicSetting = observer(() => {
                     className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 ) : (
-                  <Image src="/icons/icon-128x128.png" width={30} />
+                  <Image src="/logo.png" width={30} />
                 )}
               </UploadFileWrapper>
             </div>

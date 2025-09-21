@@ -706,5 +706,8 @@
   "marketplace-description": "Parcourez et installez des plugins depuis le marché officiel.",
   "live-preview": "Rendu en temps réel",
   "raw-markdown": "Markdown original",
-  "rich-text": "Ce que vous voyez est ce que vous obtenez"
+  "rich-text": "Ce que vous voyez est ce que vous obtenez",
+  "reference-notes": "Contenu cité",
+  "custom-configuration": "Fournisseur personnalisé",
+  "configure-your-own-api-endpoint": "Les fournisseurs personnalisés devraient être conformes aux normes compatibles OpenAPI."
 }

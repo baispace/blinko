@@ -759,5 +759,8 @@
   "live-preview": "即时渲染",
   "real-time-rendering-as-you-type": "Real-time rendering as you type",
   "raw-markdown": "原始Markdown",
-  "rich-text": "所见即所得"
+  "rich-text": "所见即所得",
+  "reference-notes": "引用内容",
+  "custom-configuration": "自定义供应商",
+  "configure-your-own-api-endpoint": "自定义的供应商,应该符合OpenAPI兼容的标准"
 }

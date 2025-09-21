@@ -712,5 +712,8 @@
   "marketplace-description": "Blader door en installeer plug-ins van de officiële markt.",
   "live-preview": "realtime rendering",
   "raw-markdown": "Oorspronkelijke Markdown",
-  "rich-text": "Wat je ziet is wat je krijgt"
+  "rich-text": "Wat je ziet is wat je krijgt",
+  "reference-notes": "Geciteerde inhoud",
+  "custom-configuration": "Aangepaste leverancier",
+  "configure-your-own-api-endpoint": "Aangepaste leveranciers moeten voldoen aan de OpenAPI-compatibele normen."
 }

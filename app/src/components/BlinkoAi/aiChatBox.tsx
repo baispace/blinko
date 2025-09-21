@@ -1,6 +1,6 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from "mobx-react-lite";
-import { Button } from "@heroui/react";
+import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarkdownRender } from "../Common/MarkdownRender";
@@ -134,39 +134,41 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
           animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
           transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
         >
-          <div className="max-w-[100%] bg-sencondbackground px-2 py-1 rounded-xl">
-            <MarkdownRender content={content} largeSpacing={true} />
-          </div>
           <>
             {
-              !!metadata?.notes?.length && metadata?.notes?.length > 0 && <div className="mt-2 flex flex-col gap-2">
-                <div className="text-desc text-xs font-bold ml-1 select-none line-clamp-1 ">{i18n.t('ai-chat-box-notes')}</div>
-                {
-                  //@ts-ignore
-                  metadata?.notes?.map((item: BlinkoItem) => (
+              !!metadata?.notes?.length && metadata?.notes?.length > 0 && (
+                <Popover placement="bottom-start">
+                  <PopoverTrigger>
                     <Button
-                      key={item.id}
                       size="sm"
-                      className="w-fit max-w-[400px] text-truncate"
-                      onPress={async () => {
-                        RootStore.Get(DialogStandaloneStore).setData({
-                          isOpen: true,
-                          onlyContent: true,
-                          showOnlyContentCloseButton: true,
-                          size: '4xl',
-                          content: <BlinkoCard blinkoItem={item!} withoutHoverAnimation />
-                        })
-                      }}
-                      endContent={<Icon icon="hugeicons:arrow-right-02" className='ml-auto' width="16" height="16" />}
+                      radius='lg'
+                      variant="flat"
+                      className="w-fit my-2"
+                      startContent={<Icon icon="hugeicons:file-02" width="14" height="14" />}
                     >
-                      <div className="text-xs font-bold ml-1 select-none line-clamp-1 text-truncate">{!!item.content ? item.content : i18n.t('no-title')}</div>
+                      <span className="text-xs">
+                        {i18n.t('reference-notes', { count: metadata.notes.length })} ({metadata.notes.length})
+                      </span>
                     </Button>
-                  ))
-                }
-              </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="overflow-y-auto">
+                    <div className="flex flex-col gap-2 p-2">
+                      {
+                        //@ts-ignore
+                        metadata?.notes?.map((item: BlinkoItem) => (
+                          <BlinkoCard className='w-[300px]' blinkoItem={item!} withoutHoverAnimation />
+                        ))
+                      }
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )
             }
           </>
 
+          <div className="max-w-[100%] px-2 py-1 rounded-xl">
+            <MarkdownRender content={content} largeSpacing={true} />
+          </div>
           {
             !shareMode && (
               <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>

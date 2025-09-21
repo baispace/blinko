@@ -706,5 +706,8 @@
   "marketplace-description": "Explora e instala complementos del mercado oficial.",
   "live-preview": "Renderizado en tiempo real",
   "raw-markdown": "Markdown original",
-  "rich-text": "Lo que ves es lo que obtienes"
+  "rich-text": "Lo que ves es lo que obtienes",
+  "reference-notes": "Contenido citado",
+  "custom-configuration": "Proveedor personalizado",
+  "configure-your-own-api-endpoint": "Proveedores personalizados deben cumplir con los estándares compatibles con OpenAPI."
 }

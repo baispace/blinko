@@ -7,6 +7,8 @@ import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '@server/aiServer/aiModelFactory';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { getAllPathTags } from '@server/lib/helper';
+import { ModelCapabilities } from '@server/aiServer/types';
+import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -79,10 +81,10 @@ export const aiRouter = router({
           withRAG,
           systemPrompt
         })
+        yield { notes }
         for await (const chunk of responseStream.fullStream) {
           yield { chunk }
         }
-        yield { notes }
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -245,5 +247,234 @@ export const aiRouter = router({
         console.error("Connection test failed:", error);
         throw new Error(`Connection test failed: ${error?.message || "Unknown error"}`);
       }
+    }),
+
+  getAllProviders: authProcedure
+    .query(async () => {
+      return await AiModelFactory.getAllAiProviders();
+    }),
+
+  createProvider: authProcedure
+    .input(z.object({
+      title: z.string(),
+      provider: z.string(),
+      baseURL: z.string().optional(),
+      apiKey: z.string().optional(),
+      config: z.any().optional(),
+      sortOrder: z.number().default(0)
+    }))
+    .mutation(async ({ input }) => {
+      return await prisma.aiProviders.create({
+        data: input,
+        include: { models: true }
+      });
+    }),
+
+  updateProvider: authProcedure
+    .input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      provider: z.string().optional(),
+      baseURL: z.string().optional(),
+      apiKey: z.string().optional(),
+      config: z.any().optional(),
+      sortOrder: z.number().optional()
+    }))
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return await prisma.aiProviders.update({
+        where: { id },
+        data,
+        include: { models: true }
+      });
+    }),
+
+  deleteProvider: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      return await prisma.aiProviders.delete({
+        where: { id: input.id }
+      });
+    }),
+
+  getAllModels: authProcedure
+    .query(async () => {
+      return await prisma.aiModels.findMany({
+        include: { provider: true },
+        orderBy: [{ provider: { sortOrder: 'asc' } }, { sortOrder: 'asc' }]
+      });
+    }),
+
+  getModelsByProvider: authProcedure
+    .input(z.object({
+      providerId: z.number()
+    }))
+    .query(async ({ input }) => {
+      return await prisma.aiModels.findMany({
+        where: { providerId: input.providerId },
+        include: { provider: true },
+        orderBy: { sortOrder: 'asc' }
+      });
+    }),
+
+  getModelsByCapability: authProcedure
+    .input(z.object({
+      capability: z.string()
+    }))
+    .query(async ({ input }) => {
+      return await AiModelFactory.getAiModelsByCapability(input.capability);
+    }),
+
+  createModel: authProcedure
+    .input(z.object({
+      providerId: z.number(),
+      title: z.string(),
+      modelKey: z.string(),
+      capabilities: z.object({
+        inference: z.boolean().default(true),
+        tools: z.boolean().default(false),
+        image: z.boolean().default(false),
+        imageGeneration: z.boolean().default(false),
+        video: z.boolean().default(false),
+        audio: z.boolean().default(false),
+        embedding: z.boolean().default(false),
+        rerank: z.boolean().default(false)
+      }),
+      config: z.any().optional(),
+      sortOrder: z.number().default(0)
+    }))
+    .mutation(async ({ input }) => {
+      return await prisma.aiModels.create({
+        data: input,
+        include: { provider: true }
+      });
+    }),
+
+  updateModel: authProcedure
+    .input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      modelKey: z.string().optional(),
+      capabilities: z.object({
+        inference: z.boolean(),
+        tools: z.boolean(),
+        image: z.boolean(),
+        imageGeneration: z.boolean(),
+        video: z.boolean(),
+        audio: z.boolean(),
+        embedding: z.boolean(),
+        rerank: z.boolean()
+      }).optional(),
+      config: z.any().optional(),
+      sortOrder: z.number().optional()
+    }))
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return await prisma.aiModels.update({
+        where: { id },
+        data,
+        include: { provider: true }
+      });
+    }),
+
+  deleteModel: authProcedure
+    .input(z.object({
+      id: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      return await prisma.aiModels.delete({
+        where: { id: input.id }
+      });
+    }),
+
+
+  createModelsFromProvider: authProcedure
+    .input(z.object({
+      providerId: z.number(),
+      models: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        capabilities: z.object({
+          inference: z.boolean().default(true),
+          tools: z.boolean().default(false),
+          image: z.boolean().default(false),
+          imageGeneration: z.boolean().default(false),
+          video: z.boolean().default(false),
+          audio: z.boolean().default(false),
+          embedding: z.boolean().default(false),
+          rerank: z.boolean().default(false)
+        })
+      }))
+    }))
+    .mutation(async ({ input }) => {
+      const { providerId, models } = input;
+
+      const createdModels: aiModels[] = [];
+      for (const model of models) {
+        const created = await prisma.aiModels.create({
+          data: {
+            providerId,
+            title: model.name,
+            modelKey: model.id,
+            capabilities: model.capabilities,
+            sortOrder: 0
+          },
+          include: { provider: true }
+        });
+        createdModels.push(created);
+      }
+
+      return createdModels;
+    }),
+
+  batchCreateModelsFromProvider: authProcedure
+    .input(z.object({
+      providerId: z.number(),
+      selectedModels: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
+        capabilities: z.object({
+          inference: z.boolean(),
+          tools: z.boolean(),
+          image: z.boolean(),
+          imageGeneration: z.boolean(),
+          video: z.boolean(),
+          audio: z.boolean(),
+          embedding: z.boolean(),
+          rerank: z.boolean()
+        }).optional()
+      }))
+    }))
+    .mutation(async ({ input }) => {
+      const { providerId, selectedModels } = input;
+
+      const createdModels: aiModels[] = [];
+      for (const model of selectedModels) {
+        const created = await prisma.aiModels.create({
+          data: {
+            providerId,
+            title: model.name,
+            modelKey: model.id,
+            capabilities: model.capabilities || {
+              inference: true,
+              tools: false,
+              image: false,
+              imageGeneration: false,
+              video: false,
+              audio: false,
+              embedding: false,
+              rerank: false
+            },
+            sortOrder: 0
+          },
+          include: { provider: true }
+        });
+        createdModels.push(created);
+      }
+
+      return createdModels;
     }),
 })

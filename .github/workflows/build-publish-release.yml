@@ -1,5 +1,12 @@
 name: Build and Push Release Docker Image
 
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch' && format('Docker Released - v{0}', github.event.inputs.version) ||
+    github.event_name == 'release' && format('Docker Released - {0}', github.event.release.tag_name) ||
+    'Docker Released'
+  }}
+
 on:
   release:
     types: [published]

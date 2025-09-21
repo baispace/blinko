@@ -91,16 +91,20 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 [![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date) 
 
 
-<a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
+<div align="center">
+    <a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=dark" width="655" height="auto">
-    <img alt="Performance Stats of blinkospace/blinko - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=light" width="721" height="auto">
+    <img alt="Performance Stats of blinkospace/blinko - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=light" width="655" height="auto">
   </picture>
-</a>
+    </a>
+</div>
 
-<a href="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map?repo_id=877230294&activity=stars" target="_blank" style="display: block" align="center">
+<div align="center">
+    <a href="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map?repo_id=877230294&activity=stars" target="_blank" style="display: block" align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=dark" width="721" height="auto">
     <img alt="Star Geographical Distribution of blinkospace/blinko" src="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=light" width="721" height="auto">
   </picture>
-</a>
+    </a>
+</div>

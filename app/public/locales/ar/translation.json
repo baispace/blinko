@@ -701,5 +701,8 @@
   "app-update": "تحديث التطبيق",
   "updating-to-version": "تحديث إلى",
   "install-from-github": "من GitHub تثبيت",
-  "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي."
+  "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي.",
+  "live-preview": "التقديم الفوري",
+  "raw-markdown": "الماركداون الأصلي",
+  "rich-text": "ما تراه هو ما تحصل عليه"
 }

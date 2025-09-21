@@ -703,5 +703,8 @@
   "app-update": "Actualización de la aplicación",
   "updating-to-version": "actualizado a",
   "install-from-github": "Instalar desde GitHub",
-  "marketplace-description": "Explora e instala complementos del mercado oficial."
+  "marketplace-description": "Explora e instala complementos del mercado oficial.",
+  "live-preview": "Renderizado en tiempo real",
+  "raw-markdown": "Markdown original",
+  "rich-text": "Lo que ves es lo que obtienes"
 }

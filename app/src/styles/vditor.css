@@ -45,9 +45,9 @@
   height: 25px;
 }
 
-.vditor-toolbar--hide {
+/* .vditor-toolbar--hide {
   display: none;
-}
+} */
 
 .vditor-counter {
   background-color: var(--background);
@@ -87,6 +87,15 @@
 
 .vditor-ir pre.vditor-reset {
   background-color: transparent;
+  color: var(--foreground);
+}
+
+.vditor-wysiwyg pre.vditor-reset {
+  background-color: transparent;
+  color: var(--foreground);
+}
+
+.vditor-icon {
   color: var(--foreground);
 }
 

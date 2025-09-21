@@ -694,5 +694,8 @@
   "app-update": "Aktualizacja aplikacji",
   "updating-to-version": "zaktualizuj do",
   "install-from-github": "Zainstaluj z GitHub",
-  "marketplace-description": "Przeglądaj i instaluj wtyczki z oficjalnego rynku."
+  "marketplace-description": "Przeglądaj i instaluj wtyczki z oficjalnego rynku.",
+  "live-preview": "Natychmiastowe renderowanie",
+  "raw-markdown": "Oryginalny Markdown",
+  "rich-text": "To, co widzisz, to co dostajesz."
 }

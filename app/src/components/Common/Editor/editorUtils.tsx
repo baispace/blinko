@@ -5,7 +5,7 @@ import { PromiseState } from "@/store/standard/PromiseState"
 import { IsTagSelectVisible } from "../PopoverFloat/tagSelectPop"
 import Vditor from "vditor"
 
-export type ViewMode = "wysiwyg" | "sv" | "ir"
+export type ViewMode = "wysiwyg" | "sv" | "ir" | "raw"
 
 export type ToolbarProps = {
   store: any;

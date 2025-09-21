@@ -738,5 +738,9 @@
   "installing-update": "Installing updates",
   "update-completed": "Update completed",
   "app-update": "Application Update",
-  "updating-to-version": "Update to"
+  "updating-to-version": "Update to",
+  "live-preview": "Live Preview",
+  "real-time-rendering-as-you-type": "Real-time rendering as you type",
+  "raw-markdown": "Raw Markdown",
+  "rich-text": "WYSIWYG"
 }

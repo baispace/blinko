@@ -709,5 +709,8 @@
   "app-update": "Applicatie-update",
   "updating-to-version": "Bijgewerkt tot",
   "install-from-github": "Van GitHub installeren",
-  "marketplace-description": "Blader door en installeer plug-ins van de officiële markt."
+  "marketplace-description": "Blader door en installeer plug-ins van de officiële markt.",
+  "live-preview": "realtime rendering",
+  "raw-markdown": "Oorspronkelijke Markdown",
+  "rich-text": "Wat je ziet is wat je krijgt"
 }

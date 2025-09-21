@@ -703,5 +703,8 @@
   "app-update": "Uygulama güncellemesi",
   "updating-to-version": "güncellendi",
   "install-from-github": "GitHub'dan yükle",
-  "marketplace-description": "Resmi pazardan eklentilere göz atın ve yükleyin."
+  "marketplace-description": "Resmi pazardan eklentilere göz atın ve yükleyin.",
+  "live-preview": "Anında işleme",
+  "raw-markdown": "Orijinal Markdown",
+  "rich-text": "Gördüğünüz odur"
 }

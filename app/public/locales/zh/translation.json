@@ -755,5 +755,9 @@
   "installing-update": "安装更新中",
   "update-completed": "更新完成",
   "app-update": "应用更新",
-  "updating-to-version": "更新至"
+  "updating-to-version": "更新至",
+  "live-preview": "即时渲染",
+  "real-time-rendering-as-you-type": "Real-time rendering as you type",
+  "raw-markdown": "原始Markdown",
+  "rich-text": "所见即所得"
 }

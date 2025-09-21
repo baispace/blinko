@@ -703,5 +703,8 @@
   "app-update": "Mise à jour de l'application",
   "updating-to-version": "Mise à jour vers",
   "install-from-github": "Installer depuis GitHub",
-  "marketplace-description": "Parcourez et installez des plugins depuis le marché officiel."
+  "marketplace-description": "Parcourez et installez des plugins depuis le marché officiel.",
+  "live-preview": "Rendu en temps réel",
+  "raw-markdown": "Markdown original",
+  "rich-text": "Ce que vous voyez est ce que vous obtenez"
 }

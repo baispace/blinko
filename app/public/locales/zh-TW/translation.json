@@ -703,5 +703,8 @@
   "app-update": "應用更新",
   "updating-to-version": "更新至",
   "install-from-github": "從 GitHub 安裝",
-  "marketplace-description": "瀏覽並安裝來自官方市場的插件。"
+  "marketplace-description": "瀏覽並安裝來自官方市場的插件。",
+  "live-preview": "即時渲染",
+  "raw-markdown": "原始Markdown",
+  "rich-text": "所見即所得"
 }

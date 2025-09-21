@@ -662,5 +662,8 @@
   "app-update": "应用更新",
   "updating-to-version": "更新至 Georgia",
   "install-from-github": "GitHub-დან ინსტალაცია",
-  "marketplace-description": "დათვალი და ინსტალო  Პო Გო Მო Შო Რ."
+  "marketplace-description": "დათვალი და ინსტალო  Პო Გო Მო Შო Რ.",
+  "live-preview": "即時渲染",
+  "raw-markdown": "მიწიერი Markdown",
+  "rich-text": "რაც ხედავ, იმ გონო."
 }

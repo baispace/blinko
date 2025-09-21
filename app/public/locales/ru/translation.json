@@ -696,5 +696,8 @@
   "app-update": "Приложение обновлено",
   "updating-to-version": "обновить до",
   "install-from-github": "Установка с GitHub",
-  "marketplace-description": "Просматривайте и устанавливайте плагины из официального магазина."
+  "marketplace-description": "Просматривайте и устанавливайте плагины из официального магазина.",
+  "live-preview": "Мгновенная визуализация",
+  "raw-markdown": "Исходный Markdown",
+  "rich-text": "то, что видишь, то и получаешь"
 }

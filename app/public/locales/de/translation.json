@@ -701,5 +701,8 @@
   "app-update": "Anwendungsaktualisierung",
   "updating-to-version": "Aktualisieren auf",
   "install-from-github": "Von GitHub installieren",
-  "marketplace-description": "Durchsuchen und installieren Sie Plugins aus dem offiziellen Markt."
+  "marketplace-description": "Durchsuchen und installieren Sie Plugins aus dem offiziellen Markt.",
+  "live-preview": "Echtzeit-Rendering",
+  "raw-markdown": "Ursprüngliches Markdown",
+  "rich-text": "Was du siehst, ist was du bekommst."
 }

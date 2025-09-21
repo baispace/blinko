@@ -26,7 +26,27 @@ export class EditorStore {
   lastEndOffset: number = 0
   lastRangeText: string = ''
   lastRect: DOMRect | null = null
-  viewMode: ViewMode = "ir"
+  private _viewMode: ViewMode = (() => {
+    try {
+      const saved = localStorage.getItem('blinko-editor-view-mode');
+      return (saved as ViewMode) || "ir";
+    } catch {
+      return "ir";
+    }
+  })()
+
+  get viewMode(): ViewMode {
+    return this._viewMode;
+  }
+
+  set viewMode(mode: ViewMode) {
+    this._viewMode = mode;
+    try {
+      localStorage.setItem('blinko-editor-view-mode', mode);
+    } catch (error) {
+      console.warn('Failed to save editor view mode to localStorage:', error);
+    }
+  }
   lastSelection: Selection | null = null
   vditor: Vditor | null = null
   onChange: ((markdown: string) => void) | null = null

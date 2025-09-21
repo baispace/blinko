@@ -703,5 +703,8 @@
   "app-update": "アプリケーションの更新",
   "updating-to-version": "更新すると",
   "install-from-github": "GitHub からインストール",
-  "marketplace-description": "公式マーケットからプラグインを閲覧し、インストールしてください。"
+  "marketplace-description": "公式マーケットからプラグインを閲覧し、インストールしてください。",
+  "live-preview": "リアルタイムレンダリング",
+  "raw-markdown": "オリジナルMarkdown",
+  "rich-text": "見たままを得る"
 }

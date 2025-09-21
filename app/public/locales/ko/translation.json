@@ -698,5 +698,8 @@
   "app-update": "애플리케이션 업데이트",
   "updating-to-version": "업데이트할 때까지",
   "install-from-github": "GitHub에서 설치하세요",
-  "marketplace-description": "공식 시장에서 플러그인을 검색하고 설치하세요."
+  "marketplace-description": "공식 시장에서 플러그인을 검색하고 설치하세요.",
+  "live-preview": "즉시 렌더링",
+  "raw-markdown": "원시 Markdown",
+  "rich-text": "소견즉소득"
 }

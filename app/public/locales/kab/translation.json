@@ -734,5 +734,8 @@
   "app-update": "aseggas n usefrek",
   "updating-to-version": "Asmelkem ara",
   "install-from-github": "Install-iten seg GitHub",
-  "marketplace-description": "Ssuter akkeddaw s ufus n usenfughal."
+  "marketplace-description": "Ssuter akkeddaw s ufus n usenfughal.",
+  "live-preview": "Rendering asɣan",
+  "raw-markdown": "Markdown asli",
+  "rich-text": "ما تراه هو ما تحصل عليه"
 }

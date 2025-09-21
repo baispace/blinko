@@ -5,34 +5,33 @@
 
 <div align="center">
 
-<!-- ![GitHub forks](https://img.shields.io/github/forks/blinko-space/blinko?style=social) -->
-![GitHub issues](https://img.shields.io/github/issues/blinko-space/blinko)
-![GitHub license](https://img.shields.io/github/license/blinko-space/blinko)
-![GitHub last commit](https://img.shields.io/github/last-commit/blinko-space/blinko)
-![GitHub release](https://img.shields.io/github/v/release/blinko-space/blinko)
-![GitHub contributors](https://img.shields.io/github/contributors/blinko-space/blinko)
-<!-- ![Downloads](https://img.shields.io/github/downloads/blinko-space/blinko/total) -->
-
-[![Dependencies Status](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen.svg)](https://github.com/denser-org/denser-retriever/pulls?utf8=%E2%9C%93&q=is%3Apr%20author%3Aapp%2Fdependabot)
-![Maintenance](https://img.shields.io/badge/Maintained-Actively-green)
+![GitHub issues](https://img.shields.io/github/v/release/blinko-space/blinko?color=369eff&labelColor=black&logo=github&style=flat-square)
+![Docker Release](https://img.shields.io/docker/v/blinkospace/blinko?color=369eff&label=docker&labelColor=black&logo=docker&logoColor=white&style=flat-square&sort=semver)
+![Release Data](https://img.shields.io/github/release-date/blinko-space/blinko?labelColor=black&style=flat-square)
+![Release Data]( https://img.shields.io/github/contributors/blinko-space/blinko?color=c4f042&labelColor=black&style=flat-square)
+![Release Data](https://img.shields.io/github/forks/blinko-space/blinko?color=8ae8ff&labelColor=black&style=flat-square)
+![Release Data]( https://img.shields.io/github/stars/blinko-space/blinko?color=ffcb47&labelColor=black&style=flat-square)
+![Release Data]( https://img.shields.io/github/issues/blinko-space/blinko?color=ff80eb&labelColor=black&style=flat-square)
+![GitHub license](https://img.shields.io/github/license/blinko-space/blinko?color=white&labelColor=black&logo=github&style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/blinko-space/blinko?color=369eff&labelColor=black&logo=github&style=flat-square)
 
 </div>
 
 <div align="center">
 
 [Live Demo](https://demo.blinko.space) •
-[中文README](README.zh-CN.md) •
-[Docs](https://docs.blinko.space/) •
+[Official Site](https://blinko.space) •
+[Documents](https://docs.blinko.space/) •
 [Telegram Chinese](https://t.me/blinkoChinese) •
-[Telegram English](https://t.me/blinkoEnglish)
+[Telegram English](https://t.me/blinkoEnglish) •
+[中文](README.zh-CN.md)
 </div>
-
 
 > Live Demo: username:blinko password:blinko
 
 
 
-Blinko is an innovative open-source project designed for individuals who want to quickly capture and organize their fleeting thoughts. Blinko allows users to seamlessly jot down ideas the moment they strike, ensuring that no spark of creativity is lost.
+Blinko is an AI-powered card note-taking project. Designed for individuals who want to quickly capture and organize their fleeting thoughts. Blinko allows users to seamlessly jot down ideas the moment they strike, ensuring that no spark of creativity is lost.
 
 <div align="center">
 
@@ -62,6 +61,8 @@ Contributions are the heart of what makes the open-source community so dynamic, 
 
 [![Contributors](https://contrib.rocks/image?repo=blinko-space/blinko)]([...](https://github.com/blinko-space/blinko/graphs/contributors))
 
+
+
 ## Sponsorship
 If you find Blinko valuable, consider supporting us! Your contribution will enable us to continue enhancing and maintaining the project for everyone. Thank you for helping us grow. If you'd like to deploy Blinko, you can also use PikaPods to support Blinko. 20% of the deployment fees generated on PikaPods will be contributed to Blinko.
 
@@ -76,3 +77,16 @@ If you find Blinko valuable, consider supporting us! Your contribution will enab
 [![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date)
 
 
+<a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=dark" width="655" height="auto">
+    <img alt="Performance Stats of blinkospace/blinko - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=light" width="655" height="auto">
+  </picture>
+</a>
+
+<a href="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map?repo_id=877230294&activity=stars" target="_blank" style="display: block" align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=dark" width="721" height="auto">
+    <img alt="Star Geographical Distribution of blinkospace/blinko" src="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=light" width="721" height="auto">
+  </picture>
+</a>

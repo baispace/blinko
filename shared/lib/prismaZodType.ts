@@ -33,25 +33,7 @@ export const attachmentsSchema = z.object({
   sharePassword: z.string(),
   name: z.string(),
   path: z.string(),
-  size: z.union([
-    z.instanceof(Prisma.Decimal, { message: "Field 'size' must be a Decimal. Location: ['Models', 'attachments']" }).meta({
-      override: { type: 'string', format: 'decimal' }
-    }),
-    z.number().meta({
-      override: { type: 'number' }
-    }),
-    z.string().meta({
-      override: { type: 'string' }
-    })
-  ]).meta({
-    override: {
-      anyOf: [
-        { type: 'string', format: 'decimal' },
-        { type: 'number' },
-        { type: 'string' }
-      ]
-    }
-  }),
+  size: z.any(),
   noteId: z.number().int().nullable(),
   accountId: z.number().int().nullable(),
   createdAt: z.coerce.date(),

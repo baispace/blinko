@@ -42,7 +42,7 @@ router.post('/chat/completions', async (req, res) => {
 
     const config = await getGlobalConfig({ ctx: token });
 
-    const withRAG = !!config.embeddingModel;
+    const withRAG = !!config.embeddingModelId;
     const withTools = !!config.tavilyApiKey;
     const withOnline = !!config.tavilyApiKey;
     console.log('req.body', req.body);

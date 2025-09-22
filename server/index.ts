@@ -24,6 +24,7 @@ import s3fileRouter from './routerExpress/file/s3file';
 import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
+import mcpRouter from './routerExpress/mcp';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -178,11 +179,14 @@ async function setupApiRoutes(app: express.Application) {
       }
     })
   );
-
+  
   // Health check endpoint
   app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
   });
+
+
+  app.use('/', mcpRouter);
 }
 
 /**

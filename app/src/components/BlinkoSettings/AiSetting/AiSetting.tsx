@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Select, SelectItem } from '@heroui/react';
+import { Button, Select, SelectItem, Input } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { CollapsibleCard } from '../../Common/CollapsibleCard';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { UserStore } from '@/store/user';
 import ProviderCard from './ProviderCard';
 import ProviderDialogContent from './ProviderDialogContent';
 import { DefaultModelsSection } from './DefaultModelsSection';
@@ -16,12 +17,16 @@ import { AiToolsSection } from './AiToolsSection';
 import { EmbeddingSettingsSection } from './EmbeddingSettingsSection';
 import ModelDialogContent from './ModelDialogContent';
 import { AiSettingStore } from '@/store/aiSettingStore';
+import { Copy } from '../../Common/Copy';
+import { MarkdownRender } from '../../Common/MarkdownRender';
+import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
 
 export default observer(function AiSetting() {
   const { t } = useTranslation();
   const aiStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
+  const user = RootStore.Get(UserStore);
 
   useEffect(() => {
     blinko.config.call();
@@ -67,6 +72,72 @@ export default observer(function AiSetting() {
       <AiPostProcessingSection />
 
       <AiToolsSection />
+
+      <CollapsibleCard icon="hugeicons:api" title="MCP Integration">
+        <div className="space-y-4">
+          <div className="text-sm text-default-600 mb-4">
+            {t('mcp-integration-desc', 'Model Context Protocol (MCP) integration allows AI assistants to connect to Blinko and use its tools.')}
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-default-700">Endpoint URL</label>
+              <Input
+                value={`${getBlinkoEndpoint() ?? window.location.origin}api/mcp/sse`}
+                readOnly
+                className="mt-1"
+                endContent={<Copy size={20} content={`${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse`} />}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-default-700">Authorization Token</label>
+              <Input
+                value={user.userInfo.value?.token || ''}
+                readOnly
+                type="password"
+                className="mt-1"
+                endContent={<Copy size={20} content={user.userInfo.value?.token ?? ''} />}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-default-700 mb-2 block">MCP Client Configuration</label>
+              <div className="relative">
+                <Copy size={20} content={`{
+  "mcpServers": {
+    "blinko": {
+      "url": "${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
+      }
+    }
+  }
+}`} className="absolute top-4 right-2 z-10" />
+                <MarkdownRender content={`\`\`\`json
+{
+  "mcpServers": {
+    "blinko": {
+      "url": "${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
+      }
+    }
+  }
+}
+\`\`\``} />
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <Icon icon="hugeicons:info-circle" width="14" height="14" className="inline mr-2" />
+                Available tools: searchBlinko, upsertBlinko, updateBlinko, deleteBlinko, createComment, webSearch, webExtra
+              </p>
+            </div>
+          </div>
+        </div>
+      </CollapsibleCard>
     </div>
   );
 });

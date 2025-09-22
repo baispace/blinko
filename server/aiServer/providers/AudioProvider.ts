@@ -30,7 +30,7 @@ export class AudioProvider extends BaseProvider {
               apiKey: config.apiKey,
             },
           });
-          return openAIVoice
+          return openAIVoice as unknown as MastraVoice
         }
         return null
       case 'azureopenai':
@@ -55,7 +55,7 @@ export class AudioProvider extends BaseProvider {
             baseURL: config.baseURL,
             fetch: this.proxiedFetch,
           });
-          return openAIVoice
+          return openAIVoice as unknown as MastraVoice
         }
         return null
     }

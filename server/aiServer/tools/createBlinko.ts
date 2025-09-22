@@ -2,6 +2,7 @@ import { userCaller } from '@server/routerTrpc/_app';
 import { NoteType } from '@shared/lib/types';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { verifyToken } from '@server/lib/helper';
 
 export const upsertBlinkoTool = createTool({
   id: 'upsert-blinko-tool',
@@ -9,10 +10,10 @@ export const upsertBlinkoTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("The content to save. Tag is start with #"),
     type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
-  }) as any, // Add 'as any' to fix type error
-  execute: async ({ context, runtimeContext  }) => {
-    // Get accountId from runtime context
-    const accountId = runtimeContext?.get('accountId');
+    token: z.string().optional()
+  }),
+  execute: async ({ context, runtimeContext }) => {
+    const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;
     
     console.log(`create note:${context.content}, type:${context.type}, accountId:${accountId}`);
     

@@ -252,6 +252,17 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         writable: false
       });
 
+      // Add metadata to mark this as user voice recording with duration
+      Object.defineProperty(file, 'isUserVoiceRecording', {
+        value: true,
+        writable: false
+      });
+
+      Object.defineProperty(file, 'audioDurationSeconds', {
+        value: recordingTime,
+        writable: false
+      });
+
       onComplete?.(file);
     }
   }, [recordingBlob, onComplete, recordingTime]);

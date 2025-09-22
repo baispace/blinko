@@ -1,49 +1,43 @@
 import { observer } from 'mobx-react-lite';
-import { Card, CardBody, Button, Chip, Divider, Select, SelectItem } from '@heroui/react';
+import { Card, CardBody, Button, Chip, Select, SelectItem } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { RootStore } from '@/store';
-import { AiStore, AiProvider, ModelCapabilities } from '@/store/aiStore';
 import { DialogStore } from '@/store/module/Dialog';
 import ProviderDialogContent from './ProviderDialogContent';
 import ModelDialogContent from './ModelDialogContent';
 import { ProviderIcon, ModelIcon } from '@/components/Common/AIIcon';
-import { PROVIDER_TEMPLATES } from './ProviderDialogContent';
 import { useMediaQuery } from 'usehooks-ts';
+import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, PROVIDER_TEMPLATES } from './constants';
+import { showTipsDialog } from '@/components/Common/TipsDialog';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
+import { api } from '@/lib/trpc';
+import { AiProvider, AiSettingStore, ModelCapabilities } from '@/store/aiSettingStore';
 
-const CAPABILITY_ICONS = {
-  inference: <Icon icon="hugeicons:cpu" width="16" height="16" />,
-  tools: <Icon icon="hugeicons:settings-02" width="16" height="16" />,
-  image: <Icon icon="hugeicons:view" width="16" height="16" />,
-  imageGeneration: <Icon icon="hugeicons:image-01" width="16" height="16" />,
-  video: <Icon icon="hugeicons:video-01" width="16" height="16" />,
-  audio: <Icon icon="hugeicons:mic-01" width="16" height="16" />,
-  embedding: <Icon icon="hugeicons:database-01" width="16" height="16" />,
-  rerank: <Icon icon="hugeicons:arrow-up-down" width="16" height="16" />
+// Utility function to format test connection results
+const formatTestResults = (result: any, t: (key: string) => string): string => {
+  const details: string[] = [];
+
+  if (result?.capabilities?.inference?.success) {
+    const response = result.capabilities.inference.response || '';
+    details.push(`${response}`);
+  }
+
+  if (result?.capabilities?.embedding?.success) {
+    const dimensions = result.capabilities.embedding.dimensions || 0;
+    details.push(`${dimensions} dimensions`);
+  }
+
+  if (result?.capabilities?.audio?.success) {
+    const message = result.capabilities.audio.message || '';
+    details.push(`${message}`);
+  }
+
+  return `${t('check-connect-success')} - ${details.join(', ')}`;
 };
 
-const CAPABILITY_LABELS = {
-  inference: 'Chat',
-  tools: 'Tools',
-  image: 'Vision',
-  imageGeneration: 'Image Gen',
-  video: 'Video',
-  audio: 'Audio',
-  embedding: 'Embedding',
-  rerank: 'Rerank'
-};
-
-const CAPABILITY_COLORS = {
-  inference: 'primary',
-  tools: 'secondary',
-  image: 'success',
-  imageGeneration: 'warning',
-  video: 'danger',
-  audio: 'default',
-  embedding: 'primary',
-  rerank: 'secondary'
-} as const;
 
 interface ProviderCardProps {
   provider: AiProvider;
@@ -51,7 +45,7 @@ interface ProviderCardProps {
 
 export default observer(function ProviderCard({ provider }: ProviderCardProps) {
   const { t } = useTranslation();
-  const aiStore = RootStore.Get(AiStore);
+  const aiSettingStore = RootStore.Get(AiSettingStore);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [isModelsCollapsed, setIsModelsCollapsed] = useState(false);
   const [selectedModel, setSelectedModel] = useState('');
@@ -73,13 +67,28 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
   };
 
   const handleDeleteProvider = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this provider?')) return;
-    await aiStore.deleteProvider.call(id);
+    showTipsDialog({
+      title: t('confirm-to-delete'),
+      content: t('this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm'),
+      onConfirm: async () => {
+        await aiSettingStore.deleteProvider.call(id);
+        RootStore.Get(DialogStandaloneStore).close();
+      }
+    });
+
   };
 
   const handleDeleteModel = async (id: number, providerId: number) => {
-    if (!confirm('Are you sure you want to delete this model?')) return;
-    await aiStore.deleteModel.call({ id, providerId });
+    // if (!confirm('Are you sure you want to delete this model?')) return;
+    showTipsDialog({
+      title: t('confirm-to-delete'),
+      content: t('this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm'),
+      onConfirm: async () => {
+        await aiSettingStore.deleteModel.call({ id });
+        RootStore.Get(DialogStandaloneStore).close();
+      }
+    });
+
   };
 
   const renderCapabilityChips = (capabilities: ModelCapabilities) => {
@@ -91,6 +100,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
           size="sm"
           startContent={CAPABILITY_ICONS[capability as keyof ModelCapabilities]}
           variant="solid"
+          className='text-white'
           color={CAPABILITY_COLORS[capability as keyof ModelCapabilities]}
         >
           {CAPABILITY_LABELS[capability as keyof ModelCapabilities]}
@@ -99,7 +109,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
   };
 
   return (
-    <Card className="mb-4 bg-sencondbackground" shadow='none'>
+    <Card className="mb-4 bg-sencondbackground group" shadow='none'>
       <CardBody>
         <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-between items-start'} mb-3`}>
           <div className="flex items-center gap-3">
@@ -121,7 +131,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
               )}
             </div>
           </div>
-          <div className={`flex gap-2 ${isMobile ? 'self-end' : ''}`}>
+          <div className={`flex gap-2 ${isMobile ? 'self-end' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
             <Button
               size="sm"
               variant="flat"
@@ -151,7 +161,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
 
         {/* Models Section */}
         <div className="space-y-3">
-          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between items-center'}`}>
+          <div className={`flex justify-between items-center`}>
             <h4 className="text-sm font-semibold text-default-600">
               {t('model')} {provider.models && provider.models.length > 0 && (
                 <span className="text-xs bg-default-100 text-default-500 px-2 py-1 rounded-full ml-2">
@@ -162,32 +172,13 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
             <div className={`flex gap-2 ${isMobile ? 'self-end' : ''}`}>
               <Button
                 size="sm"
-                variant="flat"
-                startContent={<Icon icon="hugeicons:refresh" width="14" height="14" />}
-                onPress={async () => {
-                  try {
-                    // Clear cache and fetch fresh models
-                    aiStore.clearProviderModelsCache(provider.id);
-                    const models = await aiStore.fetchProviderModels.call(provider);
-                    if (models && models.length > 0) {
-                      setAvailableModels(models);
-                      // Don't automatically save to database, just show in dropdown
-                    }
-                  } catch (error) {
-                    console.error('Failed to fetch models:', error);
-                  }
-                }}
-              >
-                {isMobile ? '获取' : '获取模型'}
-              </Button>
-              <Button
-                size="sm"
+                variant='light'
                 color="primary"
                 startContent={<Icon icon="hugeicons:add-01" width="14" height="14" />}
                 onPress={() => {
                   RootStore.Get(DialogStore).setData({
                     isOpen: true,
-                    size: isMobile ? 'full' : '3xl',
+                    size: isMobile ? 'full' : '2xl',
                     title: `Add Model to ${provider.title}`,
                     content: <ModelDialogContent model={{
                       id: 0,
@@ -204,12 +195,14 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                         embedding: false,
                         rerank: false
                       },
-                      sortOrder: 0
+                      sortOrder: 0,
+                      createdAt: new Date(),
+                      updatedAt: new Date()
                     }} />,
                   });
                 }}
               >
-                {isMobile ? '添加' : '添加模型'}
+                {t('create-model')}
               </Button>
               <Button
                 size="sm"
@@ -226,8 +219,8 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
             <div className="mb-3">
               <Select
                 size="sm"
-                label="从获取的模型中选择"
-                placeholder="选择要添加的模型"
+                label=""
+                placeholder=""
                 selectedKeys={selectedModel ? [selectedModel] : []}
                 onSelectionChange={(keys) => {
                   const value = Array.from(keys)[0];
@@ -244,8 +237,10 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                           providerId: provider.id,
                           title: model.name,
                           modelKey: model.id,
-                          capabilities: aiStore.inferModelCapabilities(model.id),
-                          sortOrder: 0
+                          capabilities: aiSettingStore.inferModelCapabilities(model.id),
+                          sortOrder: 0,
+                          createdAt: new Date(),
+                          updatedAt: new Date()
                         }} />,
                       });
                       setSelectedModel('');
@@ -255,7 +250,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                 className="w-full"
               >
                 {availableModels.map(model => (
-                  <SelectItem key={model.id} value={model.id}>
+                  <SelectItem key={model.id}>
                     {model.name}
                   </SelectItem>
                 ))}
@@ -267,18 +262,107 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
           {!isModelsCollapsed && (
             <div className="space-y-2">
               {provider.models && provider.models.length > 0 ? (
-              provider.models.map(model => (
-                <div key={model.id} className={`${isMobile ? 'block' : 'flex items-center'} gap-3 p-3 bg-default-50 rounded-lg hover:bg-default-100 transition-colors group`}>
-                  {/* Mobile Layout */}
-                  {isMobile ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <ModelIcon modelName={model.modelKey} className="w-8 h-8" />
+                provider.models.map(model => (
+                  <div key={model.id} className={`${isMobile ? 'block' : 'flex items-center'} gap-3 p-3 bg-default-50 rounded-lg hover:bg-default-100 transition-colors group`}>
+                    {/* Mobile Layout */}
+                    {isMobile ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <ModelIcon modelName={model.modelKey} className="w-8 h-8" />
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-medium text-sm truncate">{model.title}</h5>
+                            <p className="text-xs text-default-500 truncate">{model.modelKey}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              isIconOnly
+                              startContent={<Icon icon="hugeicons:connect" width="12" height="12" />}
+                              onPress={() => {
+                                RootStore.Get(ToastPlugin).promise(
+                                  api.ai.testConnect.mutate({
+                                    providerId: model.providerId,
+                                    modelKey: model.modelKey,
+                                    capabilities: model.capabilities
+                                  }),
+                                  {
+                                    loading: t('loading'),
+                                    success: (result: any) => formatTestResults(result, t),
+                                    error: (error: any) => `${t('check-connect-error')}: ${error.message}`,
+                                  }
+                                );
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              isIconOnly
+                              startContent={<Icon icon="hugeicons:settings-02" width="12" height="12" />}
+                              onPress={() => {
+                                RootStore.Get(DialogStore).setData({
+                                  isOpen: true,
+                                  size: 'full',
+                                  title: 'Edit Model',
+                                  content: <ModelDialogContent model={model} />,
+                                });
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              color="danger"
+                              variant="flat"
+                              isIconOnly
+                              startContent={<Icon icon="hugeicons:delete-01" width="12" height="12" />}
+                              onPress={() => handleDeleteModel(model.id, model.providerId)}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-1 flex-wrap">
+                          {renderCapabilityChips(model.capabilities)}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Desktop Layout */
+                      <>
+                        {/* Model Icon */}
+                        <div className="flex-shrink-0">
+                          <ModelIcon modelName={model.modelKey} className="w-6 h-6" />
+                        </div>
+
+                        {/* Model Info */}
                         <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-sm truncate">{model.title}</h5>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h5 className="font-bold text-sm truncate">{model.title}</h5>
+                            <div className="flex gap-1">
+                              {renderCapabilityChips(model.capabilities)}
+                            </div>
+                          </div>
                           <p className="text-xs text-default-500 truncate">{model.modelKey}</p>
                         </div>
-                        <div className="flex gap-1">
+
+                        {/* Actions */}
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            isIconOnly
+                            startContent={<Icon icon="hugeicons:connect" width="12" height="12" />}
+                            onPress={() => {
+                              RootStore.Get(ToastPlugin).promise(
+                                api.ai.testConnect.mutate({
+                                  providerId: model.providerId,
+                                  modelKey: model.modelKey,
+                                  capabilities: model.capabilities
+                                }),
+                                {
+                                  loading: t('loading'),
+                                  success: (result: any) => formatTestResults(result, t),
+                                  error: (error: any) => `${t('check-connect-error')}: ${error.message}`,
+                                }
+                              );
+                            }}
+                          />
                           <Button
                             size="sm"
                             variant="flat"
@@ -287,7 +371,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                             onPress={() => {
                               RootStore.Get(DialogStore).setData({
                                 isOpen: true,
-                                size: 'full',
+                                size: '3xl',
                                 title: 'Edit Model',
                                 content: <ModelDialogContent model={model} />,
                               });
@@ -302,63 +386,14 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                             onPress={() => handleDeleteModel(model.id, model.providerId)}
                           />
                         </div>
-                      </div>
-                      <div className="flex gap-1 flex-wrap">
-                        {renderCapabilityChips(model.capabilities)}
-                      </div>
-                    </div>
-                  ) : (
-                    /* Desktop Layout */
-                    <>
-                      {/* Model Icon */}
-                      <div className="flex-shrink-0">
-                        <ModelIcon modelName={model.modelKey} className="w-8 h-8" />
-                      </div>
-
-                      {/* Model Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h5 className="font-medium text-sm truncate">{model.title}</h5>
-                          <div className="flex gap-1">
-                            {renderCapabilityChips(model.capabilities)}
-                          </div>
-                        </div>
-                        <p className="text-xs text-default-500 truncate">{model.modelKey}</p>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="sm"
-                          variant="flat"
-                          isIconOnly
-                          startContent={<Icon icon="hugeicons:settings-02" width="12" height="12" />}
-                          onPress={() => {
-                            RootStore.Get(DialogStore).setData({
-                              isOpen: true,
-                              size: '3xl',
-                              title: 'Edit Model',
-                              content: <ModelDialogContent model={model} />,
-                            });
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          color="danger"
-                          variant="flat"
-                          isIconOnly
-                          startContent={<Icon icon="hugeicons:delete-01" width="12" height="12" />}
-                          onPress={() => handleDeleteModel(model.id, model.providerId)}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))
+                      </>
+                    )}
+                  </div>
+                ))
               ) : (
                 <div className="text-center py-8 text-default-400">
                   <Icon icon="hugeicons:file-search" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">暂无模型配置</p>
+                  <p className="text-sm">{t('no-data')}</p>
                 </div>
               )}
             </div>
@@ -372,19 +407,27 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
             return (
               <div className="mt-4 pt-3 border-t border-default-200">
                 <p className="text-xs text-default-400">
-                  查看 {template.label} 的{' '}
+                  {t('view-provider-info', {
+                    provider: template.label,
+                    docs: template.docs ? '' : '',
+                    website: template.website ? '' : '',
+                    separator: template.docs && template.website ? "" : ''
+                  })}
                   {template.docs && (
                     <>
+                      {' '}
                       <a
                         href={template.docs}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary-600 underline cursor-pointer"
                       >
-                        文档
+                        {t('documentation')}
                       </a>
-                      {template.website && ' 和 '}
                     </>
+                  )}
+                  {template.docs && template.website && (
+                    <span> {t('and')} </span>
                   )}
                   {template.website && (
                     <a
@@ -393,10 +436,11 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
                       rel="noopener noreferrer"
                       className="text-primary hover:text-primary-600 underline cursor-pointer"
                     >
-                      网站
+                      {t('website')}
                     </a>
                   )}
-                  {' 获取更多信息'}
+                  {' '}
+                  {t('for-more-info')}
                 </p>
               </div>
             );

@@ -64,7 +64,7 @@ export const HttpProxySetting = observer(() => {
   };
 
   return (
-    <CollapsibleCard icon="mdi:connection" title={t('http-proxy')}>
+    <CollapsibleCard icon="tabler:cloud-network" title={t('http-proxy')}>
       <Item
         leftContent={
           <ItemWithTooltip

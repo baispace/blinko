@@ -707,5 +707,19 @@
   "rich-text": "Was du siehst, ist was du bekommst.",
   "reference-notes": "Zitierte Inhalte",
   "custom-configuration": "Benutzerdefinierter Lieferant",
-  "configure-your-own-api-endpoint": "Benutzerdefinierte Anbieter sollten den OpenAPI-kompatiblen Standards entsprechen."
+  "configure-your-own-api-endpoint": "Benutzerdefinierte Anbieter sollten den OpenAPI-kompatiblen Standards entsprechen.",
+  "create": "erstellen",
+  "back": "zurückkehren",
+  "model-capabilities": "Modellfähigkeit",
+  "model-cap-desc": "Bitte wählen Sie das Modell sorgfältig aus. Eine falsche Auswahl führt dazu, dass das Modell nicht verwendet werden kann.",
+  "model-selection": "Modellauswahl",
+  "model-name": "Modellname",
+  "create-model": "Modell hinzufügen",
+  "no-data": "Keine Daten verfügbar",
+  "view-provider-info": "Schauen Sie sich {{provider}} an",
+  "documentation": "Dokument",
+  "website": "Webseite",
+  "and": "und",
+  "for-more-info": "Um weitere Informationen zu erhalten",
+  "test-connection": "Testverbindung"
 }

@@ -79,7 +79,6 @@ export class AiModelFactory {
       queryVector: embedding,
       topK: topK,
     });
-    console.log(result, 'result!!!!!!!!!!!!!!')
     let filteredResults = result.filter(({ score }) => score >= embeddingMinScore);
 
     const notes =
@@ -148,7 +147,8 @@ export class AiModelFactory {
     const config = await AiModelFactory.globalConfig();
     const embeddingModel = config.embeddingModelId ? await AiModelFactory.getAiModel(config.embeddingModelId) : null;
     if (!embeddingModel) {
-      throw new Error('Embedding model not configured!');
+      console.warn('Embedding model not configured, skipping vector index creation');
+      return;
     }
 
     const model = embeddingModel.modelKey.toLowerCase();
@@ -330,7 +330,6 @@ export class AiModelFactory {
     const audioProvider = new AudioProvider();
     let audio: MastraVoice | null = null;
     if (audioModel) {
-      console.log(audioModel,'!audioModel!!!!!!!!!!')
       const audioConfig = {
         provider: audioModel.provider.provider,
         apiKey: audioModel.provider.apiKey,

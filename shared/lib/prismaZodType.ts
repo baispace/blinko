@@ -60,6 +60,7 @@ export const attachmentsSchema = z.object({
   type: z.string(),
   depth: z.any(),
   perfixPath: z.any(),
+  metadata: z.any().optional()
 })
 
 export type attachments = z.infer<typeof attachmentsSchema>

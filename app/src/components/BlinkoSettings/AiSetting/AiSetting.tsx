@@ -5,11 +5,8 @@ import { CollapsibleCard } from '../../Common/CollapsibleCard';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { RootStore } from '@/store';
-import { AiStore, AiModel } from '@/store/aiStore';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { PromiseCall } from '@/store/standard/PromiseState';
-import { api } from '@/lib/trpc';
 import ProviderCard from './ProviderCard';
 import ProviderDialogContent from './ProviderDialogContent';
 import { DefaultModelsSection } from './DefaultModelsSection';
@@ -17,61 +14,13 @@ import { GlobalPromptSection } from './GlobalPromptSection';
 import { AiPostProcessingSection } from './AiPostProcessingSection';
 import { AiToolsSection } from './AiToolsSection';
 import { EmbeddingSettingsSection } from './EmbeddingSettingsSection';
+import ModelDialogContent from './ModelDialogContent';
+import { AiSettingStore } from '@/store/aiSettingStore';
 
-const PROVIDER_OPTIONS = [
-  {
-    value: 'openai',
-    label: 'OpenAI',
-    defaultName: 'OpenAI',
-    defaultBaseURL: 'https://api.openai.com/v1',
-    website: 'https://openai.com',
-    docs: 'https://platform.openai.com/docs'
-  },
-  {
-    value: 'anthropic',
-    label: 'Anthropic',
-    defaultName: 'Anthropic',
-    defaultBaseURL: 'https://api.anthropic.com',
-    website: 'https://anthropic.com',
-    docs: 'https://docs.anthropic.com'
-  },
-  {
-    value: 'ollama',
-    label: 'Ollama',
-    defaultName: 'Ollama',
-    defaultBaseURL: 'http://localhost:11434',
-    website: 'https://ollama.ai',
-    docs: 'https://ollama.ai/docs'
-  },
-  {
-    value: 'openrouter',
-    label: 'OpenRouter',
-    defaultName: 'OpenRouter',
-    defaultBaseURL: 'https://openrouter.ai/api/v1',
-    website: 'https://openrouter.ai',
-    docs: 'https://openrouter.ai/docs'
-  },
-  {
-    value: 'siliconflow',
-    label: 'SiliconFlow',
-    defaultName: 'SiliconFlow',
-    defaultBaseURL: 'https://api.siliconflow.cn/v1',
-    website: 'https://siliconflow.cn',
-    docs: 'https://docs.siliconflow.cn'
-  },
-  {
-    value: 'custom',
-    label: 'Custom',
-    defaultName: 'Custom Provider',
-    defaultBaseURL: 'https://api.example.com/v1',
-    website: '',
-    docs: ''
-  }
-];
 
-export default observer(function NewAiSetting() {
+export default observer(function AiSetting() {
   const { t } = useTranslation();
-  const aiStore = RootStore.Get(AiStore);
+  const aiStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
 
   useEffect(() => {
@@ -88,7 +37,7 @@ export default observer(function NewAiSetting() {
               size='md'
               className='ml-auto'
               color="primary"
-              startContent={<Icon icon="fluent:cube-add-20-regular" width="16" height="16" />}
+              startContent={<Icon icon="iconamoon:cloud-add-light" width="20" height="20" />}
               onPress={() => {
                 RootStore.Get(DialogStore).setData({
                   isOpen: true,
@@ -103,7 +52,7 @@ export default observer(function NewAiSetting() {
           </div>
 
           {aiStore.aiProviders.value?.map(provider => (
-            <ProviderCard key={provider.id} provider={provider} />
+            <ProviderCard key={provider.id} provider={provider as any} />
           ))}
         </div>
       </CollapsibleCard>

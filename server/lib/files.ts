@@ -77,9 +77,9 @@ export class FileService {
   }
 
   static async uploadFile({
-    buffer, originalName, type, withOutAttachment = false, accountId
+    buffer, originalName, type, withOutAttachment = false, accountId, metadata
   }: {
-    buffer: Buffer, originalName: string, type: string, withOutAttachment?: boolean, accountId: number
+    buffer: Buffer, originalName: string, type: string, withOutAttachment?: boolean, accountId: number, metadata?: any
   }) {
     const extension = path.extname(originalName);
     const baseName = path.basename(originalName, extension);
@@ -112,7 +112,8 @@ export class FileService {
           name: FileService.getOriginFilename(timestampedFileName),
           size: buffer.length,
           type,
-          accountId
+          accountId,
+          metadata
         });
       }
       return { filePath: s3Url, fileName: FileService.getOriginFilename(timestampedFileName) };
@@ -123,7 +124,8 @@ export class FileService {
         name: FileService.getOriginFilename(filename),
         size: buffer.length,
         type,
-        accountId
+        accountId,
+        metadata
       });
       return { filePath: `/api/file/${filename}`, fileName: FileService.getOriginFilename(filename) };
     }
@@ -228,9 +230,9 @@ export class FileService {
 
   static async uploadFileStream(
     {
-      stream, originalName, fileSize, type, accountId
+      stream, originalName, fileSize, type, accountId, metadata
     }: {
-      stream: ReadableStream, originalName: string, fileSize: number, type: string, accountId
+      stream: ReadableStream, originalName: string, fileSize: number, type: string, accountId: number, metadata?: any
     }) {
     const config = await getGlobalConfig({ useAdmin: true });
     const extension = path.extname(originalName);
@@ -289,7 +291,8 @@ export class FileService {
           name: timestampedFileName,
           size: fileSize,
           type,
-          accountId
+          accountId,
+          metadata
         });
         return { filePath: s3Url, fileName: timestampedFileName };
 
@@ -338,7 +341,8 @@ export class FileService {
           size: fileSize,
           type,
           noteId: null,
-          accountId
+          accountId,
+          metadata
         });
         return {
           filePath: `/api/file/${relativePath}`,
@@ -353,9 +357,9 @@ export class FileService {
 
   // path: /api/file/123/456/789.jpg
   static async createAttachment({
-    path, name, size, type, noteId, accountId
+    path, name, size, type, noteId, accountId, metadata
   }: {
-    path: string, name: string, size: number, type: string, noteId?: number | null, accountId: number
+    path: string, name: string, size: number, type: string, noteId?: number | null, accountId: number, metadata?: any
   }) {
     const pathParts = (path as string)
       .replace('/api/file/', '')
@@ -373,7 +377,8 @@ export class FileService {
         depth: pathParts.length - 1,
         perfixPath: prefixPath.startsWith(',') ? prefixPath.substring(1) : prefixPath,
         ...(noteId ? { noteId } : {}),
-        accountId
+        accountId,
+        ...(metadata ? { metadata } : {})
       }
     })
   }

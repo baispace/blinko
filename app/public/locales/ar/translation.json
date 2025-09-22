@@ -707,5 +707,19 @@
   "rich-text": "ما تراه هو ما تحصل عليه",
   "reference-notes": "محتوى الاقتباس",
   "custom-configuration": "مورد مخصص",
-  "configure-your-own-api-endpoint": "الموردون المخصصون يجب أن يتوافقوا مع معايير OpenAPI"
+  "configure-your-own-api-endpoint": "الموردون المخصصون يجب أن يتوافقوا مع معايير OpenAPI",
+  "create": "إنشاء",
+  "back": "العودة",
+  "model-capabilities": "قدرة النموذج",
+  "model-cap-desc": "يرجى اختيار النموذج بعناية. سيؤدي الاختيار الخاطئ إلى عدم قدرة استخدام النموذج.",
+  "model-selection": "اختيار النموذج",
+  "model-name": "اسم النموذج",
+  "create-model": "إضافة نموذج",
+  "no-data": "لا توجد بيانات مؤقتا",
+  "view-provider-info": "查看{{provider}}的",
+  "documentation": "وثيقة",
+  "website": "موقع الكتروني",
+  "and": "و",
+  "for-more-info": "للحصول على مزيد من المعلومات",
+  "test-connection": "اختبار الاتصال"
 }

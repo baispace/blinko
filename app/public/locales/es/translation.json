@@ -709,5 +709,19 @@
   "rich-text": "Lo que ves es lo que obtienes",
   "reference-notes": "Contenido citado",
   "custom-configuration": "Proveedor personalizado",
-  "configure-your-own-api-endpoint": "Proveedores personalizados deben cumplir con los estándares compatibles con OpenAPI."
+  "configure-your-own-api-endpoint": "Proveedores personalizados deben cumplir con los estándares compatibles con OpenAPI.",
+  "create": "crear",
+  "back": "regresar",
+  "model-capabilities": "capacidad del modelo",
+  "model-cap-desc": "Por favor, elige el modelo con cuidado. Una elección incorrecta hará que el modelo sea inutilizable.",
+  "model-selection": "Seleccionar modelo",
+  "model-name": "Nombre del modelo",
+  "create-model": "Agregar modelo",
+  "no-data": "Sin datos temporales",
+  "view-provider-info": "Ver el {{provider}} de",
+  "documentation": "documento",
+  "website": "sitio web",
+  "and": "y",
+  "for-more-info": "Para obtener más información",
+  "test-connection": "Prueba de conexión"
 }

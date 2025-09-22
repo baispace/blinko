@@ -4,102 +4,10 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { RootStore } from '@/store';
-import { AiStore, AiProvider } from '@/store/aiStore';
 import { DialogStore } from '@/store/module/Dialog';
 import { ProviderIcon } from '@/components/Common/AIIcon';
-
-export const PROVIDER_TEMPLATES = [
-  {
-    value: 'openai',
-    label: 'OpenAI',
-    defaultName: 'OpenAI',
-    defaultBaseURL: 'https://api.openai.com/v1',
-    website: 'https://openai.com',
-    docs: 'https://platform.openai.com/docs',
-    icon: 'openai',
-    description: 'GPT-4, GPT-3.5 and other OpenAI models'
-  },
-  {
-    value: 'anthropic',
-    label: 'Anthropic',
-    defaultName: 'Anthropic',
-    defaultBaseURL: 'https://api.anthropic.com',
-    website: 'https://anthropic.com',
-    docs: 'https://docs.anthropic.com',
-    icon: 'anthropic',
-    description: 'Claude 3.5 Sonnet, Claude 3 Opus and other Claude models'
-  },
-  {
-    value: 'azure',
-    label: 'Azure OpenAI',
-    defaultName: 'Azure OpenAI',
-    defaultBaseURL: 'https://your-resource-name.openai.azure.com',
-    website: 'https://azure.microsoft.com/en-us/products/ai-services/openai-service',
-    docs: 'https://docs.microsoft.com/en-us/azure/cognitive-services/openai/',
-    icon: 'azure',
-    description: 'OpenAI models hosted on Microsoft Azure'
-  },
-  {
-    value: 'google',
-    label: 'Google AI',
-    defaultName: 'Google AI',
-    defaultBaseURL: 'https://generativelanguage.googleapis.com',
-    website: 'https://ai.google.dev',
-    docs: 'https://ai.google.dev/docs',
-    icon: 'google',
-    description: 'Gemini Pro, Gemini Flash and other Google models'
-  },
-  {
-    value: 'ollama',
-    label: 'Ollama',
-    defaultName: 'Ollama',
-    defaultBaseURL: 'http://localhost:11434',
-    website: 'https://ollama.ai',
-    docs: 'https://ollama.ai/docs',
-    icon: 'ollama',
-    description: 'Run large language models locally'
-  },
-  {
-    value: 'openrouter',
-    label: 'OpenRouter',
-    defaultName: 'OpenRouter',
-    defaultBaseURL: 'https://openrouter.ai/api/v1',
-    website: 'https://openrouter.ai',
-    docs: 'https://openrouter.ai/docs',
-    icon: 'openrouter',
-    description: 'Access to multiple AI models through one API'
-  },
-  {
-    value: 'deepseek',
-    label: 'DeepSeek',
-    defaultName: 'DeepSeek',
-    defaultBaseURL: 'https://api.deepseek.com',
-    website: 'https://www.deepseek.com',
-    docs: 'https://api-docs.deepseek.com',
-    icon: 'deepseek',
-    description: 'DeepSeek AI models'
-  },
-  {
-    value: 'siliconflow',
-    label: 'SiliconFlow',
-    defaultName: 'SiliconFlow',
-    defaultBaseURL: 'https://api.siliconflow.cn/v1',
-    website: 'https://siliconflow.cn',
-    docs: 'https://docs.siliconflow.cn',
-    icon: 'siliconflow',
-    description: 'High-performance AI inference platform'
-  },
-  {
-    value: 'grok',
-    label: 'Grok (X.AI)',
-    defaultName: 'Grok',
-    defaultBaseURL: 'https://api.x.ai',
-    website: 'https://x.ai',
-    docs: 'https://docs.x.ai',
-    icon: 'grok',
-    description: 'Grok AI by X.AI'
-  }
-];
+import { AiProvider, AiSettingStore } from '@/store/aiSettingStore';
+import { PROVIDER_TEMPLATES } from './constants';
 
 interface ProviderDialogContentProps {
   provider?: AiProvider;
@@ -133,7 +41,7 @@ const StepsIndicator = ({ currentStep, totalSteps }: { currentStep: number; tota
 
 export default observer(function ProviderDialogContent({ provider }: ProviderDialogContentProps) {
   const { t } = useTranslation();
-  const aiStore = RootStore.Get(AiStore);
+  const aiSettingStore = RootStore.Get(AiSettingStore);
   const [currentStep, setCurrentStep] = useState(provider ? 2 : 1);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(provider?.provider || '');
 
@@ -188,9 +96,9 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
     if (!editingProvider) return;
 
     if (editingProvider.id) {
-      await aiStore.updateProvider.call(editingProvider as any);
+      await aiSettingStore.updateProvider.call(editingProvider as any);
     } else {
-      await aiStore.createProvider.call(editingProvider as any);
+      await aiSettingStore.createProvider.call(editingProvider as any);
     }
     RootStore.Get(DialogStore).close();
   };
@@ -207,8 +115,8 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
       >
         <CardBody className="flex flex-row items-center gap-4 p-4">
           <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center relative">
-              <ProviderIcon provider="openai" className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center relative">
+              <ProviderIcon provider="openai" className="w-6 h-6 text-primary" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
                 <Icon icon="hugeicons:settings-03" className="w-2.5 h-2.5 text-primary" />
               </div>
@@ -259,13 +167,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-center gap-3 mb-6">
-          {selectedTemplate === 'custom' ? (
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-              <Icon icon="hugeicons:settings-03" className="w-5 h-5 text-white" />
-            </div>
-          ) : (
-            <ProviderIcon provider={selectedTemplate} className="w-8 h-8" />
-          )}
+          <ProviderIcon provider={selectedTemplate} className="w-8 h-8" />
           <h3 className="text-lg font-semibold">
             {selectedTemplate === 'custom' ? t('custom-configuration') : template?.label}
           </h3>
@@ -320,7 +222,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
   };
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto w-full">
       {/* Steps Indicator */}
       <StepsIndicator currentStep={currentStep} totalSteps={2} />
 
@@ -345,9 +247,6 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
         </div>
 
         <div className="flex gap-2">
-          <Button variant="flat" onPress={() => RootStore.Get(DialogStore).close()}>
-            {t('cancel')}
-          </Button>
           {currentStep === 2 && (
             <Button color="primary" onPress={handleSaveProvider}>
               {editingProvider.id ? t('update') : t('create')}

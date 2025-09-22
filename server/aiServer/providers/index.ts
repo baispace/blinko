@@ -2,6 +2,8 @@ import { MarkdownTextSplitter, TokenTextSplitter } from '@langchain/textsplitter
 import { VECTOR_DB_FILE_PATH } from '@shared/lib/sharedConstant';
 import { AiModelFactory } from '../aiModelFactory';
 import { LibSQLVector } from '@mastra/libsql';
+import fs from 'fs';
+import path from 'path';
 
 // Export the functional providers
 export { LLMProvider } from './LLMProvider';
@@ -30,11 +32,27 @@ export class AiUtilities {
 
   public static async VectorStore(): Promise<LibSQLVector> {
     if (!vectorStore) {
-      vectorStore = new LibSQLVector({
-        connectionUrl: VECTOR_DB_FILE_PATH,
-      });
-      //!index must be created before use
-      await AiModelFactory.rebuildVectorIndex({ vectorStore });
+      try {
+        // Ensure directory exists before creating database
+        const dbPath = VECTOR_DB_FILE_PATH.replace('file:', '');
+        const dbDir = path.dirname(dbPath);
+        if (!fs.existsSync(dbDir)) {
+          fs.mkdirSync(dbDir, { recursive: true });
+        }
+
+        vectorStore = new LibSQLVector({
+          connectionUrl: VECTOR_DB_FILE_PATH,
+        });
+
+        //!index must be created before use
+        await AiModelFactory.rebuildVectorIndex({ vectorStore });
+      } catch (error) {
+        console.error('Failed to initialize vector database:', error);
+        // Create a minimal fallback to prevent crashes
+        vectorStore = new LibSQLVector({
+          connectionUrl: VECTOR_DB_FILE_PATH,
+        });
+      }
     }
     return vectorStore;
   }

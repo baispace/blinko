@@ -709,5 +709,19 @@
   "rich-text": "見たままを得る",
   "reference-notes": "引用内容",
   "custom-configuration": "カスタムサプライヤー",
-  "configure-your-own-api-endpoint": "カスタムプロバイダーは、OpenAPI互換の標準を満たすべきです。"
+  "configure-your-own-api-endpoint": "カスタムプロバイダーは、OpenAPI互換の標準を満たすべきです。",
+  "create": "作成",
+  "back": "戻る",
+  "model-capabilities": "モデル能力",
+  "model-cap-desc": "モデルを慎重に選択してください。選択を誤ると、モデルが使用できなくなります。",
+  "model-selection": "選択モデル",
+  "model-name": "モデル名",
+  "create-model": "モデルを追加",
+  "no-data": "データがありません",
+  "view-provider-info": "{{provider}}をチェックしてください",
+  "documentation": "文書",
+  "website": "ウェブサイト",
+  "and": "和",
+  "for-more-info": "詳細情報を取得するために",
+  "test-connection": "テスト接続"
 }

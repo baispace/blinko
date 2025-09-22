@@ -175,9 +175,7 @@ const MODEL_ICON_MAP: Array<{
   }
 ];
 
-const DefaultModelIcon = ({ className }: { className?: string }) => (
-  <Icon icon="hugeicons:cpu" className={className} />
-);
+const DefaultModelIcon = OpenAI
 
 export function ModelIcon({ modelName, className = "w-6 h-6" }: ModelIconProps) {
   const normalizedModelName = modelName.toLowerCase();

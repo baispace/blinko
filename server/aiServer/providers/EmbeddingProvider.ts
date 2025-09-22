@@ -15,7 +15,7 @@ interface EmbeddingConfig {
 
 export class EmbeddingProvider extends BaseProvider {
 
-  async getEmbeddingModel(config: EmbeddingConfig): Promise<EmbeddingModelV1<string>> {
+  async getEmbeddingModel(config: EmbeddingConfig): Promise<EmbeddingModelV1<string>| null> {
     await this.initializeFetch();
 
     switch (config.provider.toLowerCase()) {
@@ -27,6 +27,7 @@ export class EmbeddingProvider extends BaseProvider {
         }).textEmbeddingModel(config.modelKey);
 
       case 'azureopenai':
+        return null;
       case 'azure':
         return createAzure({
           apiKey: config.apiKey,

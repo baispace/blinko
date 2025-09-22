@@ -9,6 +9,8 @@ import { api } from '@/lib/trpc';
 import { useTranslation } from 'react-i18next';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { AiSettingStore } from '@/store/aiSettingStore';
+import { DEFAULT_MODEL_TEMPLATES } from './AiSetting/constants';
 
 interface AIConfig {
     baseUrl?: string;
@@ -54,47 +56,100 @@ export const ImportAIDialog = observer(({ onSelectTab }: { onSelectTab?: (tab: s
 
         try {
             setIsLoading(true);
-            
-            await PromiseCall(
-                Promise.all([
-                    api.config.update.mutate({
-                        key: 'isUseAI',
-                        value: true,
-                    }),
+            const aiSettingStore = RootStore.Get(AiSettingStore);
 
-                    api.config.update.mutate({
-                        key: 'aiModelProvider',
-                        value: 'OpenAI',
-                    }),
+            // Create OpenAI provider
+            await aiSettingStore.createProvider.call({
+                title: 'Imported OpenAI Provider',
+                provider: 'openai',
+                baseURL: aiConfig.baseUrl,
+                apiKey: aiConfig.apiKey,
+                config: {},
+                sortOrder: 0
+            });
 
-                    api.config.update.mutate({
-                        key: 'aiApiEndpoint',
-                        value: aiConfig.baseUrl,
-                    }),
-
-                    api.config.update.mutate({
-                        key: 'aiApiKey',
-                        value: aiConfig.apiKey,
-                    }),
-
-                    api.config.update.mutate({
-                        key: 'aiModel',
-                        value: aiConfig.llmModel,
-                    }),
-
-                    api.config.update.mutate({
-                        key: 'embeddingModel',
-                        value: aiConfig.embeddingModel,
-                    }),
-
-                    api.config.update.mutate({
-                        key: 'embeddingDimensions',
-                        value: aiConfig.embeddingDimensions,
-                    }),
-                ]),
-                { autoAlert: false }
+            // Refresh providers to get the newly created one
+            await aiSettingStore.aiProviders.call();
+            const createdProvider = aiSettingStore.aiProviders.value?.find(p =>
+                p.provider === 'openai' && p.baseURL === aiConfig.baseUrl
             );
-            
+
+            if (!createdProvider) {
+                throw new Error('Failed to create provider');
+            }
+
+            // Create inference model
+            const inferenceTemplate = DEFAULT_MODEL_TEMPLATES.find(t =>
+                t.modelKey.toLowerCase() === aiConfig.llmModel?.toLowerCase()
+            );
+            const inferenceCapabilities = {
+                inference: true,
+                tools: false,
+                image: false,
+                imageGeneration: false,
+                video: false,
+                audio: false,
+                embedding: false,
+                rerank: false,
+                ...inferenceTemplate?.capabilities
+            };
+
+            await aiSettingStore.createModel.call({
+                title: aiConfig.llmModel,
+                modelKey: aiConfig.llmModel,
+                providerId: createdProvider.id,
+                capabilities: inferenceCapabilities,
+                config: {},
+                sortOrder: 0
+            });
+
+            // Create embedding model
+            const embeddingTemplate = DEFAULT_MODEL_TEMPLATES.find(t =>
+                t.modelKey.toLowerCase() === aiConfig.embeddingModel?.toLowerCase()
+            );
+            const embeddingCapabilities = {
+                inference: false,
+                tools: false,
+                image: false,
+                imageGeneration: false,
+                video: false,
+                audio: false,
+                embedding: true,
+                rerank: false,
+                ...embeddingTemplate?.capabilities
+            };
+
+            await aiSettingStore.createModel.call({
+                title: aiConfig.embeddingModel,
+                modelKey: aiConfig.embeddingModel,
+                providerId: createdProvider.id,
+                capabilities: embeddingCapabilities,
+                config: { embeddingDimensions: aiConfig.embeddingDimensions },
+                sortOrder: 1
+            });
+
+            // Refresh models
+            await aiSettingStore.allModels.call();
+
+            // Set the created models as default
+            const createdModels = aiSettingStore.allModels.value?.filter(m => m.providerId === createdProvider.id);
+            const inferenceModel = createdModels?.find(m => m.capabilities.inference);
+            const embeddingModel = createdModels?.find(m => m.capabilities.embedding);
+
+            if (inferenceModel) {
+                await api.config.update.mutate({
+                    key: 'mainModelId',
+                    value: inferenceModel.id,
+                });
+            }
+
+            if (embeddingModel) {
+                await api.config.update.mutate({
+                    key: 'embeddingModelId',
+                    value: embeddingModel.id,
+                });
+            }
+
             toast.success(t('operation-success'));
             searchParams.delete('v');
             setSearchParams(searchParams);
@@ -118,7 +173,7 @@ export const ImportAIDialog = observer(({ onSelectTab }: { onSelectTab?: (tab: s
             <ModalContent className="rounded-lg">
                 <ModalHeader className="flex items-center gap-2 pb-3">
                     <div className="flex items-center gap-2">
-                        <Icon icon="hugeicons:ai-magic" className="text-primary" width={24} height={24} />
+                        <Icon icon="hugeicons:ai-beautify" className="text-primary" width={24} height={24} />
                         <span className="text-lg font-semibold">{t('import-ai-configuration')}</span>
                     </div>
                 </ModalHeader>

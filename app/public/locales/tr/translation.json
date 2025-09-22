@@ -709,5 +709,19 @@
   "rich-text": "Gördüğünüz odur",
   "reference-notes": "Alıntı içeriği",
   "custom-configuration": "Özel tedarikçi",
-  "configure-your-own-api-endpoint": "Özel tedarikçiler, OpenAPI uyumlu standartlara uymalıdır."
+  "configure-your-own-api-endpoint": "Özel tedarikçiler, OpenAPI uyumlu standartlara uymalıdır.",
+  "create": "oluşturmak",
+  "back": "geri dön",
+  "model-capabilities": "model yeteneği",
+  "model-cap-desc": "Lütfen modeli dikkatlice seçin. Yanlış seçim modelin kullanılamaz hale gelmesine neden olacaktır.",
+  "model-selection": "Model seçimi",
+  "model-name": "Model adı",
+  "create-model": "Model ekle",
+  "no-data": "Geçici olarak veri yok",
+  "view-provider-info": "{{provider}}'ı görüntüle",
+  "documentation": "belge",
+  "website": "web sitesi",
+  "and": "ve",
+  "for-more-info": "Daha fazla bilgi edinmek için",
+  "test-connection": "Test bağlantısı"
 }

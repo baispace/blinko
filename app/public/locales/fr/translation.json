@@ -709,5 +709,19 @@
   "rich-text": "Ce que vous voyez est ce que vous obtenez",
   "reference-notes": "Contenu cité",
   "custom-configuration": "Fournisseur personnalisé",
-  "configure-your-own-api-endpoint": "Les fournisseurs personnalisés devraient être conformes aux normes compatibles OpenAPI."
+  "configure-your-own-api-endpoint": "Les fournisseurs personnalisés devraient être conformes aux normes compatibles OpenAPI.",
+  "create": "créer",
+  "back": "retourner",
+  "model-capabilities": "capacité du modèle",
+  "model-cap-desc": "Veuillez choisir le modèle avec prudence. Un mauvais choix rendra le modèle inutilisable.",
+  "model-selection": "Choisir un modèle",
+  "model-name": "Nom du modèle",
+  "create-model": "Ajouter un modèle",
+  "no-data": "Aucune donnée disponible",
+  "view-provider-info": "Consultez {{provider}}",
+  "documentation": "document",
+  "website": "site web",
+  "and": "et",
+  "for-more-info": "Pour obtenir plus d'informations",
+  "test-connection": "Tester la connexion"
 }

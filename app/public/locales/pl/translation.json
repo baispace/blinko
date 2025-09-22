@@ -700,5 +700,19 @@
   "rich-text": "To, co widzisz, to co dostajesz.",
   "reference-notes": "Zacytowana treść",
   "custom-configuration": "Dostosowani dostawcy",
-  "configure-your-own-api-endpoint": "Dostosowani dostawcy powinni spełniać standardy zgodne z OpenAPI."
+  "configure-your-own-api-endpoint": "Dostosowani dostawcy powinni spełniać standardy zgodne z OpenAPI.",
+  "create": "tworzyć",
+  "back": "powrót",
+  "model-capabilities": "Zdolności modelu",
+  "model-cap-desc": "Proszę dokładnie wybrać model. Błędny wybór spowoduje, że model będzie nie do użytku.",
+  "model-selection": "Wybór modelu",
+  "model-name": "Nazwa modelu",
+  "create-model": "Dodaj model",
+  "no-data": "Brak danych",
+  "view-provider-info": "Zobacz {{provider}}",
+  "documentation": "Dokument",
+  "website": "strona internetowa",
+  "and": "i",
+  "for-more-info": "Aby uzyskać więcej informacji",
+  "test-connection": "test połączenia"
 }

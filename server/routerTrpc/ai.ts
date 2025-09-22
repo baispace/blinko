@@ -235,14 +235,108 @@ export const aiRouter = router({
     }),
 
   testConnect: authProcedure
-    .mutation(async () => {
+    .input(z.object({
+      providerId: z.number(),
+      modelKey: z.string(),
+      capabilities: z.object({
+        inference: z.boolean(),
+        tools: z.boolean(),
+        image: z.boolean(),
+        imageGeneration: z.boolean(),
+        video: z.boolean(),
+        audio: z.boolean(),
+        embedding: z.boolean(),
+        rerank: z.boolean()
+      })
+    }))
+    .mutation(async ({ input }) => {
       try {
-        const agent = await AiModelFactory.TestConnectAgent();
-        const result = await agent.generate([
-          { role: 'user', content: 'test' }
-        ]);
-        console.log(result.text)
-        return { success: !!result };
+        const { providerId, modelKey, capabilities } = input;
+
+        // Get provider information
+        const provider = await prisma.aiProviders.findUnique({
+          where: { id: providerId }
+        });
+
+        if (!provider) {
+          throw new Error('Provider not found');
+        }
+
+        // Create temporary model configuration for testing
+        const tempModelConfig = {
+          provider: provider.provider,
+          baseURL: provider.baseURL,
+          apiKey: provider.apiKey,
+          config: provider.config,
+          modelKey,
+          capabilities
+        };
+
+        // Test based on model capabilities
+        let testResults: any = {};
+
+        // Test inference capability (chat)
+        if (capabilities.inference) {
+          try {
+            const { LLMProvider } = await import('@server/aiServer/providers');
+            const llmProvider = new LLMProvider();
+            const languageModel = await llmProvider.getLanguageModel({
+              provider: provider.provider,
+              apiKey: provider.apiKey,
+              baseURL: provider.baseURL,
+              modelKey,
+              apiVersion: (provider.config as any)?.apiVersion
+            });
+
+            // Test simple generation
+            const { generateText } = await import('ai');
+            const result = await generateText({
+              model: languageModel,
+              prompt: 'Say "Hello" to test connection'
+            });
+            testResults.inference = { success: true, response: result.text };
+          } catch (error) {
+            testResults.inference = { success: false, error: error.message };
+          }
+        }
+
+        // Test embedding capability
+        if (capabilities.embedding) {
+          try {
+            const { EmbeddingProvider } = await import('@server/aiServer/providers');
+            const embeddingProvider = new EmbeddingProvider();
+            const embeddingModel = await embeddingProvider.getEmbeddingModel({
+              provider: provider.provider,
+              apiKey: provider.apiKey,
+              baseURL: provider.baseURL,
+              modelKey,
+              apiVersion: (provider.config as any)?.apiVersion
+            });
+
+            const { embed } = await import('ai');
+            const result = await embed({
+              model: embeddingModel as any,
+              value: 'test embedding'
+            });
+            testResults.embedding = { success: true, dimensions: result.embedding?.length || 0 };
+          } catch (error) {
+            testResults.embedding = { success: false, error: error.message };
+          }
+        }
+
+        // Test audio capability (speech recognition)
+        if (capabilities.audio) {
+          throw new Error("audio cannot test")
+        }
+
+        const overallSuccess = Object.values(testResults).some((result: any) => result.success);
+
+        return {
+          success: overallSuccess,
+          capabilities: testResults,
+          provider: provider.title,
+          model: modelKey
+        };
       } catch (error) {
         console.error("Connection test failed:", error);
         throw new Error(`Connection test failed: ${error?.message || "Unknown error"}`);

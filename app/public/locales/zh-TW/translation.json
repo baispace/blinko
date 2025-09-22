@@ -709,5 +709,19 @@
   "rich-text": "所見即所得",
   "reference-notes": "引用內容",
   "custom-configuration": "自訂供應商",
-  "configure-your-own-api-endpoint": "自訂的供應商，應該符合OpenAPI兼容的標準"
+  "configure-your-own-api-endpoint": "自訂的供應商，應該符合OpenAPI兼容的標準",
+  "create": "創建",
+  "back": "返回",
+  "model-capabilities": "模型能力",
+  "model-cap-desc": "請慎重選擇模型。選擇錯誤將會導致模型無法使用。",
+  "model-selection": "選擇模型",
+  "model-name": "型號名稱",
+  "create-model": "新增模型",
+  "no-data": "暫無數據",
+  "view-provider-info": "檢視{{provider}}的",
+  "documentation": "文件",
+  "website": "網站",
+  "and": "與",
+  "for-more-info": "獲取更多資訊",
+  "test-connection": "測試連接"
 }

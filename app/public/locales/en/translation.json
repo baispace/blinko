@@ -745,5 +745,19 @@
   "rich-text": "WYSIWYG",
   "reference-notes": "Quoted content",
   "custom-configuration": "Customized supplier",
-  "configure-your-own-api-endpoint": "Custom vendors should comply with OpenAPI-compatible standards."
+  "configure-your-own-api-endpoint": "Custom vendors should comply with OpenAPI-compatible standards.",
+  "create": "create",
+  "back": "return",
+  "model-capabilities": "Model Capabilities",
+  "model-cap-desc": "Please choose model capabilities carefully. Incorrect selection may cause the model to malfunction.",
+  "model-selection": "Model selection",
+  "model-name": "Model Name",
+  "create-model": "Add model",
+  "no-data": "No data available",
+  "view-provider-info": "View {{provider}}'s",
+  "documentation": "document",
+  "website": "website",
+  "and": "and",
+  "for-more-info": "to obtain more information",
+  "test-connection": "test connection"
 }

@@ -1145,7 +1145,6 @@ export const noteRouter = router({
 
           // Process audio attachments if voice model is configured
           if (config?.voiceModelId && attachments.length > 0) {
-            console.log(config?.voiceModelId,attachments,'attachments@@@@')
             try {
               // Check if there are any audio attachments
               const audioAttachments = attachments.filter(attachment =>

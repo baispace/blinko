@@ -6,27 +6,27 @@ import { ModelIcon } from '@/components/Common/AIIcon';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import { RootStore } from '@/store';
-import { AiStore } from '@/store/aiStore';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { api } from '@/lib/trpc';
+import { AiSettingStore } from '@/store/aiSettingStore';
 
 export const DefaultModelsSection = observer(() => {
   const { t } = useTranslation();
-  const aiStore = RootStore.Get(AiStore);
+  const aiSettingStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
 
   useEffect(() => {
     blinko.config.call();
-    aiStore.aiProviders.call();
-    aiStore.allModels.call();
+    aiSettingStore.aiProviders.call();
+    aiSettingStore.allModels.call();
   }, []);
 
   // Also refresh when returning to this component (in case models were created)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        aiStore.allModels.call();
+        aiSettingStore.allModels.call();
       }
     };
 
@@ -48,7 +48,7 @@ export const DefaultModelsSection = observer(() => {
               placeholder={'select'}
               selectedKeys={blinko.config.value?.mainModelId ? [String(blinko.config.value.mainModelId)] : []}
               startContent={(() => {
-                const selectedModel = aiStore.inferenceModels.find(m => m.id === blinko.config.value?.mainModelId);
+                const selectedModel = aiSettingStore.inferenceModels.find(m => m.id === blinko.config.value?.mainModelId);
                 return selectedModel ? <ModelIcon modelName={selectedModel.modelKey} className="w-4 h-4" /> : <Icon icon="hugeicons:cpu" width="16" height="16" />;
               })()}
               onSelectionChange={(keys) => {
@@ -63,7 +63,7 @@ export const DefaultModelsSection = observer(() => {
                 }
               }}
             >
-              {aiStore.inferenceModels.map(model => (
+              {aiSettingStore.inferenceModels.map(model => (
                 <SelectItem key={String(model.id)} startContent={<ModelIcon modelName={model.modelKey} className="w-4 h-4" />}>
                   {model.title}
                 </SelectItem>
@@ -81,7 +81,7 @@ export const DefaultModelsSection = observer(() => {
               placeholder="Select embedding model"
               selectedKeys={blinko.config.value?.embeddingModelId ? [String(blinko.config.value.embeddingModelId)] : []}
               startContent={(() => {
-                const selectedModel = aiStore.embeddingModels.find(m => m.id === blinko.config.value?.embeddingModelId);
+                const selectedModel = aiSettingStore.embeddingModels.find(m => m.id === blinko.config.value?.embeddingModelId);
                 return selectedModel ? <ModelIcon modelName={selectedModel.modelKey} className="w-4 h-4" /> : <Icon icon="hugeicons:database-01" width="16" height="16" />;
               })()}
               onSelectionChange={(keys) => {
@@ -96,7 +96,7 @@ export const DefaultModelsSection = observer(() => {
                 }
               }}
             >
-              {aiStore.embeddingModels.map(model => (
+              {aiSettingStore.embeddingModels.map(model => (
                 <SelectItem key={String(model.id)} startContent={<ModelIcon modelName={model.modelKey} className="w-4 h-4" />}>{model.title}</SelectItem>
               ))}
             </Select>
@@ -112,7 +112,7 @@ export const DefaultModelsSection = observer(() => {
               placeholder="Select voice model"
               selectedKeys={blinko.config.value?.voiceModelId ? [String(blinko.config.value.voiceModelId)] : []}
               startContent={(() => {
-                const selectedModel = aiStore.voiceModels.find(m => m.id === blinko.config.value?.voiceModelId);
+                const selectedModel = aiSettingStore.voiceModels.find(m => m.id === blinko.config.value?.voiceModelId);
                 return selectedModel ? <ModelIcon modelName={selectedModel.modelKey} className="w-4 h-4" /> : <Icon icon="hugeicons:mic-01" width="16" height="16" />;
               })()}
               onSelectionChange={(keys) => {
@@ -127,7 +127,7 @@ export const DefaultModelsSection = observer(() => {
                 }
               }}
             >
-              {aiStore.voiceModels.map(model => (
+              {aiSettingStore.voiceModels.map(model => (
                 <SelectItem key={String(model.id)} startContent={<ModelIcon modelName={model.modelKey} className="w-4 h-4" />}>{model.title}</SelectItem>
               ))}
             </Select>
@@ -143,7 +143,7 @@ export const DefaultModelsSection = observer(() => {
               placeholder="Select vision model"
               selectedKeys={blinko.config.value?.imageModelId ? [String(blinko.config.value.imageModelId)] : []}
               startContent={(() => {
-                const selectedModel = aiStore.imageModels.find(m => m.id === blinko.config.value?.imageModelId);
+                const selectedModel = aiSettingStore.imageModels.find(m => m.id === blinko.config.value?.imageModelId);
                 return selectedModel ? <ModelIcon modelName={selectedModel.modelKey} className="w-4 h-4" /> : <Icon icon="hugeicons:view" width="16" height="16" />;
               })()}
               onSelectionChange={(keys) => {
@@ -158,7 +158,7 @@ export const DefaultModelsSection = observer(() => {
                 }
               }}
             >
-              {aiStore.imageModels.map(model => (
+              {aiSettingStore.imageModels.map(model => (
                 <SelectItem key={String(model.id)} startContent={<ModelIcon modelName={model.modelKey} className="w-4 h-4" />}>{model.title} </SelectItem>
               ))}
             </Select>

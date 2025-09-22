@@ -668,5 +668,19 @@
   "rich-text": "რაც ხედავ, იმ გონო.",
   "reference-notes": "ციტირებული შორიփ",
   "custom-configuration": "定制供应商",
-  "configure-your-own-api-endpoint": "定制供应商应符合 OpenAPI 兼容标准"
+  "configure-your-own-api-endpoint": "定制供应商应符合 OpenAPI 兼容标准",
+  "create": "შექმნა",
+  "back": "დაბრუნება",
+  "model-capabilities": "模型能力",
+  "model-cap-desc": "გთხოვთ, მოდელი აირჩიოთ ფრთო- վար. Խնդրի 选择 将会 导致 模型无法使用。",
+  "model-selection": "აირჩიე მოდელი",
+  "model-name": "მოდელის სახელი",
+  "create-model": "დაამატე მოდელი",
+  "no-data": "暫無數據",
+  "view-provider-info": "ნახეთ {{provider}}-ის",
+  "documentation": "დოკუმენტი",
+  "website": "ვებგვერდი",
+  "and": "და",
+  "for-more-info": "მეტი ინფორმაციო ს  为获取更多信息",
+  "test-connection": "测试连接"
 }

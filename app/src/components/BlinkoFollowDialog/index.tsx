@@ -1,4 +1,4 @@
-import { follows } from '@/lib/prismaZodType';
+import { follows } from '@shared/lib/prismaZodType';
 import { api } from '@/lib/trpc';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';

@@ -354,7 +354,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                   className=""
                   icon={
                     store.isAiQuestion
-                      ? 'hugeicons:ai-magic'
+                      ? 'hugeicons:ai-beautify'
                       : 'lets-icons:search'
                   }
                   width="24"
@@ -381,7 +381,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                     onPress={() => store.toggleAiQuestion()}
                     className={cn('hover:text-primary transition-colors', store.isAiQuestion && 'text-primary')}
                   >
-                    <Icon icon={store.isAiQuestion ? 'lets-icons:search' : 'hugeicons:ai-magic'} width="20" height="20" />
+                    <Icon icon={store.isAiQuestion ? 'lets-icons:search' : 'hugeicons:ai-beautify'} width="20" height="20" />
                   </Button>
                 </div>
               }

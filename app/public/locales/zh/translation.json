@@ -762,5 +762,19 @@
   "rich-text": "所见即所得",
   "reference-notes": "引用内容",
   "custom-configuration": "自定义供应商",
-  "configure-your-own-api-endpoint": "自定义的供应商,应该符合OpenAPI兼容的标准"
+  "configure-your-own-api-endpoint": "自定义的供应商,应该符合OpenAPI兼容的标准",
+  "create": "创建",
+  "back": "返回",
+  "model-capabilities": "模型能力",
+  "model-cap-desc": "请慎重选择模型。选择错误将会导致模型无法使用。",
+  "model-selection": "选择模型",
+  "model-name": "模型名称",
+  "create-model": "添加模型",
+  "no-data": "暂无数据",
+  "view-provider-info": "查看{{provider}}的",
+  "documentation": "文档",
+  "website": "网站",
+  "and": "和",
+  "for-more-info": "以获取更多信息",
+  "test-connection": "测试连接"
 }

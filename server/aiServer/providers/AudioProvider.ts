@@ -21,12 +21,6 @@ export class AudioProvider extends BaseProvider {
     switch (config.provider.toLowerCase()) {
       case 'openai':
         if (config.apiKey) {
-          console.log({
-            listeningModel: {
-              name: config.modelKey as any || "whisper-1",
-              apiKey: config.apiKey,
-            },
-          }, 'xxx@@')
           const openAIVoice = new OpenAIVoice({
             speechModel: {
               apiKey: config.apiKey,
@@ -40,10 +34,10 @@ export class AudioProvider extends BaseProvider {
         }
         return null
       case 'azureopenai':
+        return null;
       case 'azure':
         // TODO: Implement Azure OpenAI audio support
         return null;
-
       case 'custom':
       default:
         if (config.apiKey) {
@@ -60,7 +54,6 @@ export class AudioProvider extends BaseProvider {
             apiKey: config.apiKey,
             baseURL: config.baseURL,
             fetch: this.proxiedFetch,
-            logLevel: 'debug'
           });
           return openAIVoice
         }

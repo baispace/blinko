@@ -29,7 +29,8 @@
       "Bash(del \"E:\\code\\blinko\\app\\src-tauri\\src\\desktop\\autostart.rs\")",
       "Bash(del \"E:\\code\\blinko\\app\\src\\pages\\test-ai-settings.tsx\")",
       "Bash(del \"E:\\code\\blinko\\app\\src\\components\\BlinkoSettings\\AiSetting\\ProviderModal.tsx\")",
-      "WebFetch(domain:icons.lobehub.com)"
+      "WebFetch(domain:icons.lobehub.com)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

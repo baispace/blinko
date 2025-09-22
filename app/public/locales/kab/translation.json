@@ -740,5 +740,18 @@
   "rich-text": "ما تراه هو ما تحصل عليه",
   "reference-notes": "Axxam n uẓref",
   "custom-configuration": "Amsag n umeskar usnulfu",
-  "configure-your-own-api-endpoint": "Abeddel iḥerzanen, yelhan ad yettwasnen s umennuɣ n OpenAPI."
+  "configure-your-own-api-endpoint": "Abeddel iḥerzanen, yelhan ad yettwasnen s umennuɣ n OpenAPI.",
+  "create": "anefta",
+  "back": "asuli",
+  "model-capabilities": "Tumẓi n yimudel",
+  "model-selection": "Tiliẓri n umudel",
+  "model-name": "Isem n umodel",
+  "create-model": "rnuḍ amudal",
+  "no-data": "Aucune donnée pour le moment",
+  "view-provider-info": "ḥul {{provider}} n",
+  "documentation": "Amedya",
+  "website": "asebtar",
+  "and": "和 (hé) in Kabyle language is \"d\"",
+  "for-more-info": "iwadi ad yis-d amaynut",
+  "test-connection": "aseqdec nniwan"
 }

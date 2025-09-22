@@ -13,8 +13,8 @@ import { PromiseCall } from '@/store/standard/PromiseState';
 import { BlinkoSelectNote } from '../Common/BlinkoSelectNote';
 import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
-import { AiSetting } from '../BlinkoSettings/AiSetting';
 import { ScrollArea } from '../Common/ScrollArea';
+import AiSetting from '../BlinkoSettings/AiSetting/AiSetting';
 
 interface AiInputProps {
   mode?: 'card' | 'inline';

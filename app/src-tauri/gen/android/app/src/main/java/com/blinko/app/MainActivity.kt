@@ -2,20 +2,22 @@ package com.blinko.app
 
 import android.content.Intent
 import android.os.Bundle
-import android.graphics.Color
-import android.view.WindowInsetsController
-import android.view.View
-import android.os.Build
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import org.json.JSONObject
+import com.plugin.blinko.Blinko
 
 class MainActivity : TauriActivity() {
     private var hasInjectedShortcut = false
     private var hasInjectedShare = false
+    private val blinko = Blinko()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply saved theme before super.onCreate to prevent flash
+        blinko.applyStartupTheme(this)
         super.onCreate(savedInstanceState)
         handleShortcutIntent()
         handleShareIntent()
@@ -30,7 +32,8 @@ class MainActivity : TauriActivity() {
         handleShortcutIntent()
         handleShareIntent()
     }
-    
+
+
     private fun handleShortcutIntent() {
         if (hasInjectedShortcut) return
 
@@ -169,5 +172,6 @@ class MainActivity : TauriActivity() {
             // Silently ignore
         }
     }
+
 
 }

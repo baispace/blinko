@@ -492,7 +492,7 @@
   "align-right": "Верно",
   "alternate-text": "Альтернативный текст",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "Проанализируйте следующее содержимое ноты и предложите соответствующие теги и предоставьте краткое изложение",
-  "api-key": "",
+  "api-key": "API ключ",
   "check": "Список задач",
   "close": "Закрывать",
   "code": "Кодовый блок",
@@ -716,5 +716,12 @@
   "website": "веб-сайт",
   "and": "и",
   "for-more-info": "чтобы получить больше информации",
-  "test-connection": "Тестирование соединения"
+  "test-connection": "Тестирование соединения",
+  "base-url": "Базовый URL",
+  "api-version": "API версия",
+  "enter-provider-name": "Введите название провайдера, например: OpenAI",
+  "enter-api-base-url": "Введите базовый URL, например https://api.openapi.com/v1",
+  "tool-call-details": "Детали вызова инструмента",
+  "input-parameters": "Входные параметры",
+  "output-result": "Выходные параметры"
 }

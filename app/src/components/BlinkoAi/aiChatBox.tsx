@@ -16,7 +16,7 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@shared/lib/types";
-import { ToolUsageChip } from "./ToolComponents";
+import { ToolUsageChip, StreamToolRenderer } from "./ToolComponents";
 import { useMediaQuery } from "usehooks-ts";
 import { useState } from "react";
 import { Textarea } from "@heroui/react";
@@ -356,12 +356,14 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             )
           }
 
+
           {
-            aiStore.currentMessageResult.toolcall.length > 0 && (
-              <div className="my-2 flex flex-wrap">
-                {aiStore.currentMessageResult.toolcall.map((item, index) => (
-                  <ToolUsageChip key={`active-${item}-${index}`} toolName={item} index={index} />
-                ))}
+            aiStore.currentMessageResult.toolCalls.length > 0 && (
+              <div className="my-2">
+                <StreamToolRenderer
+                  toolCalls={aiStore.currentMessageResult.toolCalls}
+                  toolResults={aiStore.currentMessageResult.toolResults}
+                />
               </div>
             )
           }

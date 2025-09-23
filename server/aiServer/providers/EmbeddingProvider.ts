@@ -36,7 +36,7 @@ export class EmbeddingProvider extends BaseProvider {
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
-      case 'voyage':
+      case 'voyageai':
         return createVoyage({
           apiKey: config.apiKey,
           fetch: this.proxiedFetch

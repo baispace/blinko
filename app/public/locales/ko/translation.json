@@ -264,7 +264,7 @@
   "align-left": "왼쪽",
   "align-right": "옳다",
   "alternate-text": "대체 텍스트",
-  "api-key": "",
+  "api-key": "API 키",
   "both": "둘 다",
   "check": "작업 목록",
   "close": "가까운",
@@ -718,5 +718,12 @@
   "website": "웹사이트",
   "and": "화",
   "for-more-info": "더 많은 정보를 얻으려면",
-  "test-connection": "테스트 연결"
+  "test-connection": "테스트 연결",
+  "base-url": "기본 웹사이트 URL",
+  "api-version": "API 버전",
+  "enter-provider-name": "제공자 이름을 입력하세요, 예: OpenAI",
+  "enter-api-base-url": "기본 URL을 입력하세요. 예: https://api.openapi.com/v1",
+  "tool-call-details": "도구 호출 세부 정보",
+  "input-parameters": "입력 매개변수",
+  "output-result": "출력 매개변수"
 }

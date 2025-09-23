@@ -570,7 +570,7 @@
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "გაანალიზეთ შემდეგი შენიშვნის შინაარსი და მიუთითეთ შესაბამისი წარწერები და მიუთითეთ მოკლე შინაარსი",
-  "api-key": "",
+  "api-key": "API გასაღები",
   "content-generated-by-ai": "შინაარსი, რომელიც გამოწვეულია AI– ს მიერ",
   "enter-your-api-key": "",
   "hours-ago": "",
@@ -682,5 +682,12 @@
   "website": "ვებგვერდი",
   "and": "და",
   "for-more-info": "მეტი ინფორმაციო ს  为获取更多信息",
-  "test-connection": "测试连接"
+  "test-connection": "测试连接",
+  "base-url": "საბაზისო ვებ-URL",
+  "api-version": "API ვერსია",
+  "enter-provider-name": "输入提供商名称，例如:OpenAI",
+  "enter-api-base-url": "შეიყვანე საბაზო URL, მაგ: https://api.openapi.com/v1",
+  "tool-call-details": "ინსტრუმენტის გამოძაծო  Georgia",
+  "input-parameters": "შესაყვანი პარამეტრebi",
+  "output-result": "გამოსახულები  параметри"
 }

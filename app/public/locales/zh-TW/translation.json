@@ -259,7 +259,7 @@
   "your-azure-openai-instance-name": "您的 Azure OpenAI 实例名称",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
-  "api-key": "",
+  "api-key": "API金鑰",
   "date-range": "",
   "days-ago": "",
   "enter-your-api-key": "",
@@ -723,5 +723,12 @@
   "website": "網站",
   "and": "與",
   "for-more-info": "獲取更多資訊",
-  "test-connection": "測試連接"
+  "test-connection": "測試連接",
+  "base-url": "基礎網址",
+  "api-version": "API 版本",
+  "enter-provider-name": "輸入提供商名稱，例如：OpenAI",
+  "enter-api-base-url": "輸入基礎網址，例如https://api.openapi.com/v1",
+  "tool-call-details": "工具調用詳情",
+  "input-parameters": "輸入參數",
+  "output-result": "輸出參數"
 }

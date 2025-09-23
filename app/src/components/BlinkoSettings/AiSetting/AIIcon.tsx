@@ -43,6 +43,8 @@ const PROVIDER_ICONS: Record<string, React.ComponentType<any>> = {
   grok: Grok,
   xai: Grok,
   siliconflow: SiliconCloud.Color,
+  voyageai: Voyage.Color,
+  voyage: Voyage.Color,
   custom: OpenAI,
 };
 
@@ -135,7 +137,7 @@ const MODEL_ICON_MAP: Array<{
   },
   // Voyage AI models
   {
-    keywords: ['voyage', 'voyage-large', 'voyage-code', 'voyage-lite'],
+    keywords: ['voyage', 'voyage-large', 'voyage-code', 'voyage-lite', 'voyage-law', 'voyage-multilingual', 'voyage-finance', 'rerank'],
     icon: Voyage.Color
   },
   // Jina AI models

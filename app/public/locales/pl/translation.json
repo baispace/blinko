@@ -569,7 +569,7 @@
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "Przeanalizuj następującą zawartość notatki i zasugeruj odpowiednie znaczniki i podaj krótkie podsumowanie",
-  "api-key": "",
+  "api-key": "Klucz API",
   "content-generated-by-ai": "Treść generowana przez AI",
   "date-range": "",
   "days-ago": "",
@@ -714,5 +714,12 @@
   "website": "strona internetowa",
   "and": "i",
   "for-more-info": "Aby uzyskać więcej informacji",
-  "test-connection": "test połączenia"
+  "test-connection": "test połączenia",
+  "base-url": "Podstawowy adres URL",
+  "api-version": "Wersja API",
+  "enter-provider-name": "Wprowadź nazwę dostawcy, na przykład: OpenAI",
+  "enter-api-base-url": "Wprowadź podstawowy adres URL, na przykład https://api.openapi.com/v1",
+  "tool-call-details": "Szczegóły wywołania narzędzia",
+  "input-parameters": "Parametry wejściowe",
+  "output-result": "parametry wyjściowe"
 }

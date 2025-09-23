@@ -8,7 +8,7 @@ import { AiSettingStore, AiModel, ModelCapabilities, ProviderModel } from '@/sto
 import { DialogStore } from '@/store/module/Dialog';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, DEFAULT_MODEL_TEMPLATES } from './constants';
-import { ProviderIcon, ModelIcon } from '@/components/Common/AIIcon';
+import { ProviderIcon, ModelIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { api } from '@/lib/trpc';
 
 // Utility function to format test connection results
@@ -188,18 +188,13 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
       return;
     }
 
-    try {
-      if (editingModel.id) {
-        await aiSettingStore.updateModel.call(editingModel as any);
-        RootStore.Get(ToastPlugin).success('Model updated successfully!');
-      } else {
-        await aiSettingStore.createModel.call(editingModel as any);
-        RootStore.Get(ToastPlugin).success('Model created successfully!');
-      }
-      RootStore.Get(DialogStore).close();
-    } catch (error) {
-      RootStore.Get(ToastPlugin).error('Failed to save model: ' + error.message);
+    if (editingModel.id) {
+      await aiSettingStore.updateModel.call(editingModel as any);
+    } else {
+      await aiSettingStore.createModel.call(editingModel as any);
     }
+    RootStore.Get(DialogStore).close();
+
   };
 
   return (
@@ -431,7 +426,7 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
             Cancel
           </Button>
           <Button color="primary" onPress={handleSaveModel}>
-            {editingModel.id ? t('update') :  t('create')}
+            {editingModel.id ? t('update') : t('create')}
           </Button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { DEFAULT_MODEL_TEMPLATES } from '@/components/BlinkoSettings/AiSetting/c
 import { RootStore } from './root';
 import { ToastPlugin } from './module/Toast/Toast';
 import i18n from '@/lib/i18n';
+import { defaultUrlTransform } from 'react-markdown';
 
 export interface ModelCapabilities {
     inference: boolean;
@@ -111,6 +112,7 @@ export class AiSettingStore implements Store {
 
     // Provider model fetching
     fetchProviderModels = new PromiseState({
+        successMsg: i18n.t('model-list-updated'),
         function: async (provider: AiProvider) => {
             try {
                 let modelList: any = [];
@@ -155,6 +157,19 @@ export class AiSettingStore implements Store {
                         ];
                         break;
                     }
+                    case 'voyageai': {
+                        modelList = [
+                            { id: 'voyage-3', name: 'voyage-3', capabilities: this.inferModelCapabilities('voyage-3') },
+                            { id: 'voyage-3-lite', name: 'voyage-3-lite', capabilities: this.inferModelCapabilities('voyage-3-lite') },
+                            { id: 'voyage-finance-2', name: 'voyage-finance-2', capabilities: this.inferModelCapabilities('voyage-finance-2') },
+                            { id: 'voyage-multilingual-2', name: 'voyage-multilingual-2', capabilities: this.inferModelCapabilities('voyage-multilingual-2') },
+                            { id: 'voyage-law-2', name: 'voyage-law-2', capabilities: this.inferModelCapabilities('voyage-law-2') },
+                            { id: 'voyage-code-2', name: 'voyage-code-2', capabilities: this.inferModelCapabilities('voyage-code-2') },
+                            { id: 'voyage-large-2-instruct', name: 'voyage-large-2-instruct', capabilities: this.inferModelCapabilities('voyage-large-2-instruct') },
+                            { id: 'voyage-large-2', name: 'voyage-large-2', capabilities: this.inferModelCapabilities('voyage-large-2') }
+                        ];
+                        break;
+                    }
                     case 'google': {
                         const endpoint = provider.baseURL || 'https://generativelanguage.googleapis.com/v1beta';
                         const response = await fetch(`${endpoint}/models?key=${provider.apiKey}`);
@@ -183,6 +198,22 @@ export class AiSettingStore implements Store {
                         }));
                         break;
                     }
+                    default: {
+                        const endpoint = provider.baseURL;
+                        const response = await fetch(`${endpoint}/models`, {
+                            headers: {
+                                'Authorization': `Bearer ${provider.apiKey}`
+                            }
+                        });
+                        const data = await response.json();
+                        modelList = data.data.map((model: any) => ({
+                            id: model.id,
+                            name: model.id,
+                            description: '',
+                            capabilities: this.inferModelCapabilities(model.id)
+                        }));
+                        break;
+                    }
                 }
 
                 // Save models to provider config
@@ -196,7 +227,6 @@ export class AiSettingStore implements Store {
                     config: updatedConfig
                 });
 
-                RootStore.Get(ToastPlugin).success(i18n.t('model-list-updated'));
                 return modelList;
             } catch (error) {
                 console.error('Error fetching provider models:', error);

@@ -7,7 +7,7 @@ import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
 import ProviderDialogContent from './ProviderDialogContent';
 import ModelDialogContent from './ModelDialogContent';
-import { ProviderIcon, ModelIcon } from '@/components/Common/AIIcon';
+import { ProviderIcon, ModelIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { useMediaQuery } from 'usehooks-ts';
 import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, PROVIDER_TEMPLATES } from './constants';
 import { showTipsDialog } from '@/components/Common/TipsDialog';

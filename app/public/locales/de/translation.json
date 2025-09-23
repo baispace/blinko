@@ -257,7 +257,7 @@
   "your-azure-openai-instance-name": "Der Name Ihrer Azure OpenAI-Instanz",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
-  "api-key": "",
+  "api-key": "API-Schlüssel",
   "date-range": "",
   "days-ago": "",
   "enter-your-api-key": "",
@@ -721,5 +721,12 @@
   "website": "Webseite",
   "and": "und",
   "for-more-info": "Um weitere Informationen zu erhalten",
-  "test-connection": "Testverbindung"
+  "test-connection": "Testverbindung",
+  "base-url": "Grundlegende URL",
+  "api-version": "API-Version",
+  "enter-provider-name": "Geben Sie den Namen des Anbieters ein, zum Beispiel: OpenAI",
+  "enter-api-base-url": "Geben Sie die Basis-URL ein, zum Beispiel https://api.openapi.com/v1",
+  "tool-call-details": "Werkzeugaufrufdetails",
+  "input-parameters": "Eingabeparameter",
+  "output-result": "Ausgabeparameter"
 }

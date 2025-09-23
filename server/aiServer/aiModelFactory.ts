@@ -1,4 +1,3 @@
-import { cache } from '@shared/lib/cache';
 import { LLMProvider, EmbeddingProvider, AudioProvider, AiUtilities } from './providers';
 import { upsertBlinkoTool } from './tools/createBlinko';
 import { createCommentTool } from './tools/createComment';
@@ -197,13 +196,7 @@ export class AiModelFactory {
   }
 
   static async globalConfig() {
-    return cache.wrap(
-      'globalConfig',
-      async () => {
-        return await getGlobalConfig({ useAdmin: true });
-      },
-      { ttl: 1000 },
-    );
+    return await getGlobalConfig({ useAdmin: true });
   }
 
   static async getAiProvider(id: number) {
@@ -271,63 +264,37 @@ export class AiModelFactory {
       ? await AiModelFactory.getAiModel(globalConfig.imageModelId)
       : null;
 
-    const cacheKey = `GetProvider-${mainModel.id}-${embeddingModel?.id || 'none'}-${imageModel?.id || 'none'}-${globalConfig.embeddingTopK}-${globalConfig.embeddingScore}`;
-
-    const cachedProvider = await cache.wrap(
-      cacheKey,
-      async () => {
-        // Initialize providers
-        const llmProvider = new LLMProvider();
-        const embeddingProvider = new EmbeddingProvider();
-
-        // Create LLM configuration
-        const llmConfig = {
-          provider: mainModel.provider.provider,
-          apiKey: mainModel.provider.apiKey,
-          baseURL: mainModel.provider.baseURL,
-          modelKey: mainModel.modelKey,
-          apiVersion: (mainModel.provider.config as any)?.apiVersion
-        };
-
-        // Get LLM instance
-        const llm = await llmProvider.getLanguageModel(llmConfig);
-
-        // Get Embedding instance (if configured)
-        let embeddings: EmbeddingModelV1<string> | null = null;
-        if (embeddingModel) {
-          const embeddingConfig = {
-            provider: embeddingModel.provider.provider,
-            apiKey: embeddingModel.provider.apiKey,
-            baseURL: embeddingModel.provider.baseURL,
-            modelKey: embeddingModel.modelKey,
-            apiVersion: (embeddingModel.provider.config as any)?.apiVersion
-          };
-          embeddings = await embeddingProvider.getEmbeddingModel(embeddingConfig);
-        }
-
-        // Get utilities
-        const vectorStore = await AiUtilities.VectorStore();
-        const markdownSplitter = AiUtilities.MarkdownSplitter();
-        const tokenTextSplitter = AiUtilities.TokenTextSplitter();
-
-        return {
-          LLM: llm,
-          VectorStore: vectorStore,
-          Embeddings: embeddings,
-          MarkdownSplitter: markdownSplitter,
-          TokenTextSplitter: tokenTextSplitter,
-          // Keep for backward compatibility
-          provider: {
-            llmProvider,
-            embeddingProvider
-          }
-        };
-      },
-      { ttl: 24 * 60 * 60 * 1000 },
-    );
-
-    // Create audio provider separately (not cached due to circular references)
+    // Initialize providers
+    const llmProvider = new LLMProvider();
+    const embeddingProvider = new EmbeddingProvider();
     const audioProvider = new AudioProvider();
+
+    // Create LLM configuration
+    const llmConfig = {
+      provider: mainModel.provider.provider,
+      apiKey: mainModel.provider.apiKey,
+      baseURL: mainModel.provider.baseURL,
+      modelKey: mainModel.modelKey,
+      apiVersion: (mainModel.provider.config as any)?.apiVersion
+    };
+
+    // Get LLM instance
+    const llm = await llmProvider.getLanguageModel(llmConfig);
+
+    // Get Embedding instance (if configured)
+    let embeddings: EmbeddingModelV1<string> | null = null;
+    if (embeddingModel) {
+      const embeddingConfig = {
+        provider: embeddingModel.provider.provider,
+        apiKey: embeddingModel.provider.apiKey,
+        baseURL: embeddingModel.provider.baseURL,
+        modelKey: embeddingModel.modelKey,
+        apiVersion: (embeddingModel.provider.config as any)?.apiVersion
+      };
+      embeddings = await embeddingProvider.getEmbeddingModel(embeddingConfig);
+    }
+
+    // Get Audio instance (if configured)
     let audio: MastraVoice | null = null;
     if (audioModel) {
       const audioConfig = {
@@ -340,12 +307,22 @@ export class AiModelFactory {
       audio = await audioProvider.getAudioModel(audioConfig);
     }
 
+    // Get utilities
+    const vectorStore = await AiUtilities.VectorStore();
+    const markdownSplitter = AiUtilities.MarkdownSplitter();
+    const tokenTextSplitter = AiUtilities.TokenTextSplitter();
+
     return {
-      ...cachedProvider,
+      LLM: llm,
+      VectorStore: vectorStore,
+      Embeddings: embeddings,
+      MarkdownSplitter: markdownSplitter,
+      TokenTextSplitter: tokenTextSplitter,
       audioModel: audio,
       // Keep for backward compatibility
       provider: {
-        ...cachedProvider.provider,
+        llmProvider,
+        embeddingProvider,
         audioProvider
       }
     };

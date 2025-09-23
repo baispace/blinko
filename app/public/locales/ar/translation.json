@@ -721,5 +721,12 @@
   "website": "موقع الكتروني",
   "and": "و",
   "for-more-info": "للحصول على مزيد من المعلومات",
-  "test-connection": "اختبار الاتصال"
+  "test-connection": "اختبار الاتصال",
+  "base-url": "عنوان الويب الأساسي",
+  "api-version": "نسخة API",
+  "enter-provider-name": "أدخل اسم المزود، على سبيل المثال: OpenAI",
+  "enter-api-base-url": "أدخل عنوان URL الأساسي، مثل https://api.openapi.com/v1",
+  "tool-call-details": "تفاصيل استدعاء الأداة",
+  "input-parameters": "معاملات الإدخال",
+  "output-result": "معاملات الإخراج"
 }

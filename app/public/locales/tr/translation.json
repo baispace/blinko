@@ -571,7 +571,7 @@
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "Aşağıdaki not içeriğini analiz edin ve uygun etiketleri önerin ve kısa bir özet sağlayın",
-  "api-key": "",
+  "api-key": "API anahtarı",
   "date-range": "",
   "days-ago": "",
   "define-custom-prompt-for-ai-to-process-notes": "AI'yı mevcut not üzerine yorum yapmak üzere çalıştırın. Örneğin: Lütfen notun içeriğini özetleyin. Eğer not içeriği 10 kelimeden az ise, lütfen onu benim için düzenleyin.",
@@ -723,5 +723,12 @@
   "website": "web sitesi",
   "and": "ve",
   "for-more-info": "Daha fazla bilgi edinmek için",
-  "test-connection": "Test bağlantısı"
+  "test-connection": "Test bağlantısı",
+  "base-url": "Temel URL",
+  "api-version": "API versiyonu",
+  "enter-provider-name": "Sağlayıcı adını girin, örneğin: OpenAI",
+  "enter-api-base-url": "Temel URL'yi girin, örneğin https://api.openapi.com/v1",
+  "tool-call-details": "Araç çağrı detayları",
+  "input-parameters": "Giriş parametreleri",
+  "output-result": "Çıktı parametreleri"
 }

@@ -261,7 +261,7 @@
   "align-left": "左",
   "align-right": "正しい",
   "alternate-text": "代替テキスト",
-  "api-key": "",
+  "api-key": "APIキー",
   "both": "両方",
   "check": "タスクリスト",
   "close": "閉める",
@@ -723,5 +723,12 @@
   "website": "ウェブサイト",
   "and": "和",
   "for-more-info": "詳細情報を取得するために",
-  "test-connection": "テスト接続"
+  "test-connection": "テスト接続",
+  "base-url": "基本URL",
+  "api-version": "APIバージョン",
+  "enter-provider-name": "プロバイダー名を入力してください。例：OpenAI",
+  "enter-api-base-url": "基本URLを入力してください。例：https://api.openapi.com/v1",
+  "tool-call-details": "ツールの呼び出し詳細",
+  "input-parameters": "入力パラメータ",
+  "output-result": "出力パラメータ"
 }

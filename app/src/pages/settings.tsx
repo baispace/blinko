@@ -36,14 +36,6 @@ type SettingItem = {
 };
 export const allSettings: SettingItem[] = [
   {
-    key: 'all',
-    title: ('all'),
-    icon: 'tabler:settings',
-    component: <></>,
-    requireAdmin: false,
-    keywords: ['all', 'settings', '全部', '设置'],
-  },
-  {
     key: 'basic',
     title: ('basic-information'),
     icon: 'tabler:tool',
@@ -160,7 +152,7 @@ const Page = observer(() => {
   const user = RootStore.Get(UserStore);
   const blinkoStore = RootStore.Get(BlinkoStore);
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<string>('all');
+  const [selected, setSelected] = useState<string>('basic');
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const getVisibleSettings = () => {
@@ -188,11 +180,6 @@ const Page = observer(() => {
   };
 
   const getCurrentComponent = () => {
-    if (selected === 'all') {
-      return getVisibleSettings()
-        .filter((setting) => setting.key !== 'all')
-        .map((setting) => <div key={setting.key}>{setting.component}</div>);
-    }
     const setting = allSettings.find((s) => s.key === selected);
     return setting ? <div key={setting.key}>{setting.component}</div> : null;
   };

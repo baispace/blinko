@@ -484,7 +484,7 @@
   "align-right": "Certo",
   "alternate-text": "Texto alternativo",
   "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "Analise o conteúdo da nota a seguir e sugira tags apropriadas e forneça um breve resumo",
-  "api-key": "",
+  "api-key": "Chave de API",
   "camera": "Câmera",
   "check": "Lista de tarefas",
   "close": "Fechar",
@@ -717,5 +717,12 @@
   "website": "site",
   "and": "e",
   "for-more-info": "Para obter mais informações",
-  "test-connection": "Testar conexão"
+  "test-connection": "Testar conexão",
+  "base-url": "Endereço base",
+  "api-version": "Versão da API",
+  "enter-provider-name": "Insira o nome do fornecedor, por exemplo: OpenAI",
+  "enter-api-base-url": "Insira a URL base, por exemplo, https://api.openapi.com/v1",
+  "tool-call-details": "Detalhes da chamada de ferramenta",
+  "input-parameters": "Parâmetro de entrada",
+  "output-result": "Parâmetro de saída"
 }

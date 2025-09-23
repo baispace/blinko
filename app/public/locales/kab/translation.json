@@ -753,5 +753,13 @@
   "website": "asebtar",
   "and": "和 (hé) in Kabyle language is \"d\"",
   "for-more-info": "iwadi ad yis-d amaynut",
-  "test-connection": "aseqdec nniwan"
+  "test-connection": "aseqdec nniwan",
+  "api-key": "Tasarut n API",
+  "base-url": "Tansa n tusnakt",
+  "api-version": "Tasɣunt n API",
+  "enter-provider-name": "Ssexdem isem n umesnukel, amedya: OpenAI",
+  "enter-api-base-url": "Ssekcem tansaɣbal n yisekla, amedya https://api.openapi.com/v1",
+  "tool-call-details": "Tudert n usnulfu",
+  "input-parameters": "Agrud n unekcam",
+  "output-result": "Paramètres de sortie"
 }

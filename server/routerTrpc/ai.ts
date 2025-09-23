@@ -252,14 +252,14 @@ export const aiRouter = router({
       providerId: z.number(),
       modelKey: z.string(),
       capabilities: z.object({
-        inference: z.boolean(),
-        tools: z.boolean(),
-        image: z.boolean(),
-        imageGeneration: z.boolean(),
-        video: z.boolean(),
-        audio: z.boolean(),
-        embedding: z.boolean(),
-        rerank: z.boolean()
+        inference: z.boolean().optional(),
+        tools: z.boolean().optional(),
+        image: z.boolean().optional(),
+        imageGeneration: z.boolean().optional(),
+        video: z.boolean().optional(),
+        audio: z.boolean().optional(),
+        embedding: z.boolean().optional(),
+        rerank: z.boolean().optional()
       })
     }))
     .mutation(async ({ input }) => {
@@ -465,14 +465,14 @@ export const aiRouter = router({
       title: z.string().optional(),
       modelKey: z.string().optional(),
       capabilities: z.object({
-        inference: z.boolean(),
-        tools: z.boolean(),
-        image: z.boolean(),
-        imageGeneration: z.boolean(),
-        video: z.boolean(),
-        audio: z.boolean(),
-        embedding: z.boolean(),
-        rerank: z.boolean()
+        inference: z.boolean().optional(),
+        tools: z.boolean().optional(),
+        image: z.boolean().optional(),
+        imageGeneration: z.boolean().optional(),
+        video: z.boolean().optional(),
+        audio: z.boolean().optional(),
+        embedding: z.boolean().optional(),
+        rerank: z.boolean().optional()
       }).optional(),
       config: z.any().optional(),
       sortOrder: z.number().optional()
@@ -544,14 +544,14 @@ export const aiRouter = router({
         name: z.string(),
         description: z.string().optional(),
         capabilities: z.object({
-          inference: z.boolean(),
-          tools: z.boolean(),
-          image: z.boolean(),
-          imageGeneration: z.boolean(),
-          video: z.boolean(),
-          audio: z.boolean(),
-          embedding: z.boolean(),
-          rerank: z.boolean()
+          inference: z.boolean().optional(),
+          tools: z.boolean().optional(),
+          image: z.boolean().optional(),
+          imageGeneration: z.boolean().optional(),
+          video: z.boolean().optional(),
+          audio: z.boolean().optional(),
+          embedding: z.boolean().optional(),
+          rerank: z.boolean().optional()
         }).optional()
       }))
     }))

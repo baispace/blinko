@@ -1,13 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Input, Select, SelectItem, Card, CardBody } from '@heroui/react';
+import { Button, Input, Select, SelectItem, Card, CardBody, user } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
-import { ProviderIcon } from '@/components/Common/AIIcon';
+import { ProviderIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { AiProvider, AiSettingStore } from '@/store/aiSettingStore';
 import { PROVIDER_TEMPLATES } from './constants';
+import { Copy } from '@/components/Common/Copy';
 
 interface ProviderDialogContentProps {
   provider?: AiProvider;
@@ -199,6 +200,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
           onValueChange={(value) => {
             setEditingProvider(prev => ({ ...prev, apiKey: value }));
           }}
+          endContent={<Copy size={20} content={editingProvider.apiKey ?? ''} />}
         />
 
         {(editingProvider.provider === 'azure' || editingProvider.provider === 'azureopenai') && (

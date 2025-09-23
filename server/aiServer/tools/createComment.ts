@@ -11,7 +11,7 @@ export const createCommentTool = createTool({
     content: z.string().describe("The content of the comment"),
     noteId: z.number().describe("The ID of the note to comment on"),
     guestName: z.string().optional().describe("Optional guest name if not using an account"),
-    token: z.string().optional()
+    token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
     const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;

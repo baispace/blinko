@@ -209,9 +209,22 @@ export const aiRouter = router({
   rebuildEmbeddingStart: authProcedure
     .input(z.object({
       force: z.boolean().optional(),
+      incremental: z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
-      await RebuildEmbeddingJob.ForceRebuild(input.force ?? true);
+      await RebuildEmbeddingJob.ForceRebuild(input.force ?? true, input.incremental ?? false);
+      return { success: true };
+    }),
+
+  rebuildEmbeddingResume: authProcedure
+    .mutation(async () => {
+      await RebuildEmbeddingJob.ResumeRebuild();
+      return { success: true };
+    }),
+
+  rebuildEmbeddingRetryFailed: authProcedure
+    .mutation(async () => {
+      await RebuildEmbeddingJob.RetryFailedNotes();
       return { success: true };
     }),
 

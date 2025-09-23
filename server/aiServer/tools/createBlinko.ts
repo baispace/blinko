@@ -10,7 +10,7 @@ export const upsertBlinkoTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("The content to save. Tag is start with #"),
     type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
-    token: z.string().optional()
+    token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
     const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;
@@ -51,7 +51,7 @@ export const upsertBlinkoTool = createTool({
         type: noteType,
       })
       console.log('Created note:', note)
-      return true
+      return note
     } catch (error) {
       console.log('Error creating note:', error)
       return error.message

@@ -115,19 +115,19 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
     async stopTask() {
       try {
         await api.ai.rebuildEmbeddingStop.mutate();
-        
+
         const result = await api.ai.rebuildEmbeddingProgress.query();
         if (result) {
           store.progress = result.current || 0;
           store.total = result.total || 0;
           store.status = 'success';
         }
-        
+
         store.message.unshift({
           type: 'info',
           content: t('rebuild-stopped-by-user'),
         });
-        
+
         blinko.updateTicker++;
         store.stopPolling();
         RootStore.Get(DialogStandaloneStore).close()
@@ -148,61 +148,109 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
   const getStatusIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return '✅';
+        return <Icon icon="mingcute:check-circle-fill" className="text-green-500" width={16} height={16} />;
       case 'error':
-        return '❌';
+        return <Icon icon="mingcute:close-circle-fill" className="text-red-500" width={16} height={16} />;
       case 'skip':
-        return '🔄';
+        return <Icon icon="mingcute:refresh-3-line" className="text-yellow-500" width={16} height={16} />;
       case 'info':
-        return 'ℹ️';
+        return <Icon icon="mingcute:information-fill" className="text-blue-500" width={16} height={16} />;
       default:
-        return '•';
+        return <Icon icon="mingcute:dot-fill" className="text-gray-400" width={16} height={16} />;
     }
   };
 
-  return <div>
-    <Progress
-      size="sm"
-      radius="sm"
-      color="warning"
-      label="Progress"
-      value={store.value}
-      showValueLabel={true}
-    />
+  return <div className="space-y-4">
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <Progress
+          classNames={{
+            base: "w-full",
+            track: "border border-default",
+            indicator: "bg-linear-to-r from-pink-500 to-yellow-500",
+            label: "tracking-wider font-medium text-default-600",
+            value: "text-foreground/60",
+          }}
+          label={<span>
+            <span className="font-medium">{store.progress}</span> / <span className="font-medium">{store.total}</span> items
+          </span>}
+          radius="none"
+          showValueLabel={true}
+          size="sm"
+          value={store.value}
+        />
 
-    <div className="flex justify-between mt-4 text-sm">
-      <span>{store.progress} / {store.total}</span>
-      {store.status === 'running' && (
-        <button
-          onClick={store.stopTask}
-          className="ml-auto p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          title={t('stop-task')}
-        >
-          <Icon icon="mdi:stop-circle" className="text-danger" width={20} height={20} />
-        </button>
-      )}
+        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+          <span></span>
+          <span>
+            {store.status === 'running' ? t('processing') :
+              store.isSuccess ? t('completed') :
+                store.isError ? t('error') : ''}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-end items-center">{/* 移除了 justify-between，只保留右对齐 */}
+
+        {store.status === 'running' && (
+          <button
+            onClick={store.stopTask}
+            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-950/70 text-red-600 dark:text-red-400 rounded-md transition-all duration-200 text-sm font-medium"
+            title={t('stop-task')}
+          >
+            <Icon icon="mingcute:stop-circle-fill" width={16} height={16} />
+            {t('stop-task')}
+          </button>
+        )}
+
+        {store.isSuccess && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400 rounded-full text-sm font-medium">
+            <Icon icon="mingcute:check-circle-fill" width={16} height={16} />
+            {t('completed')}
+          </div>
+        )}
+
+        {store.isError && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-full text-sm font-medium">
+            <Icon icon="mingcute:close-circle-fill" width={16} height={16} />
+            {t('error')}
+          </div>
+        )}
+      </div>
     </div>
 
-    <div className='flex flex-col max-h-[400px] overflow-y-auto mt-2'>
+    <div className='flex flex-col max-h-[400px] overflow-y-auto mt-4 space-y-2 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent'>
       {store.message.map((item, index) => (
-        <div key={index} className='flex gap-2 mb-1'>
-          <div className={`${item.type === 'success' ? 'text-green-500' :
-            item.type === 'error' ? 'text-red-500' :
-              item.type === 'info' ? 'text-blue-500' : ''
-            }`}>
+        <div key={index} className={`flex gap-3 p-4 rounded-lg items-start transition-all duration-200 ${item.type === 'error' ? 'bg-red-50 dark:bg-red-950/20' :
+            item.type === 'success' ? 'bg-green-50 dark:bg-green-950/20' :
+              item.type === 'info' ? 'bg-blue-50 dark:bg-blue-950/20' :
+                'bg-gray-50 dark:bg-gray-800/50'
+          }`}>
+          <div className="flex-shrink-0 mt-0.5">
             {getStatusIcon(item.type)}
           </div>
-          <div className='flex justify-center flex-col'>
-            <div className={`truncate text-gray-500`}>{item?.content}</div>
-            {item.error as unknown as string && <div className="text-red-500 text-xs">{String(item.error as unknown as string)}</div>}
+          <div className='flex flex-col flex-1 min-w-0'>
+            <div className={`text-sm font-medium ${item.type === 'error' ? 'text-red-700 dark:text-red-300' :
+                item.type === 'success' ? 'text-green-700 dark:text-green-300' :
+                  item.type === 'info' ? 'text-blue-700 dark:text-blue-300' :
+                    'text-gray-700 dark:text-gray-300'
+              }`}>
+              {item?.content}
+            </div>
+            {item.error as unknown as string && (
+              <div className="mt-2 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg text-xs text-red-600 dark:text-red-400">
+                <div className="font-medium mb-1">错误详情:</div>
+                <div className="break-words">{String(item.error as unknown as string)}</div>
+              </div>
+            )}
           </div>
-
         </div>
       ))}
 
       {store.message.length === 0 && (
-        <div className="text-center py-4 text-gray-400">
-          {t('loading')}...
+        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+          <Icon icon="line-md:loading-twotone-loop" width={32} height={32} className="mb-2" />
+          <div>{t('loading')}...</div>
         </div>
       )}
     </div>

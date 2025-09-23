@@ -22,7 +22,7 @@ export const searchBlinkoTool = createTool({
     isUseAiQuery: z.boolean().default(false).optional().describe('use RAG to search'),
     days: z.number().optional().describe('Number of days to search back from today. If provided, startDate will be set to today minus this many days, and endDate will be set to today.'),
     hasTodo: z.boolean().default(false).optional().describe('has to do list'),
-    token: z.string().optional()
+    token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
     const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;

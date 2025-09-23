@@ -9,7 +9,7 @@ export const deleteBlinkoTool = createTool({
   //@ts-ignore
   inputSchema: z.object({
     ids: z.array(z.number()),
-    token: z.string().optional()
+    token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
     const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;

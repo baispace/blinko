@@ -66,37 +66,41 @@ export const EmbeddingSettingsSection = observer(function EmbeddingSettingsSecti
     return () => stopPolling();
   }, []);
 
-  const handleRebuildClick = () => {
-    if (rebuildProgress?.isRunning) {
-      showTipsDialog({
-        title: t('rebuild-in-progress'),
-        content: t('there-is-a-rebuild-task-in-progress-do-you-want-to-restart'),
-        onConfirm: async () => {
-          await api.ai.rebuildEmbeddingStart.mutate({ force: true });
-          setRebuildProgress({
-            percentage: 0,
-            isRunning: true,
-          });
-          startPolling();
-          ShowRebuildEmbeddingProgressDialog(true);
-        },
-      });
-    } else {
-      showTipsDialog({
-        title: t('force-rebuild-embedding-index'),
-        content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
-        onConfirm: async () => {
-          await api.ai.rebuildEmbeddingStart.mutate({ force: true });
-          setRebuildProgress({
-            percentage: 0,
-            isRunning: true,
-          });
-          startPolling();
-          ShowRebuildEmbeddingProgressDialog(true);
-        },
-      });
+
+  const handleRebuildClick = async () => {
+    try {
+      // Check the latest status from database
+      const latestProgress = await api.ai.rebuildEmbeddingProgress.query();
+
+      if (latestProgress?.isRunning) {
+        // Task is already running, show progress dialog
+        setRebuildProgress({
+          percentage: latestProgress.percentage,
+          isRunning: true,
+        });
+        ShowRebuildEmbeddingProgressDialog(true);
+        startPolling();
+      } else {
+        // No task running, show confirmation dialog for new rebuild
+        showTipsDialog({
+          title: t('force-rebuild-embedding-index'),
+          content: t('if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens'),
+          onConfirm: async () => {
+            ShowRebuildEmbeddingProgressDialog(true);
+            await api.ai.rebuildEmbeddingStart.mutate({ force: true, incremental: false });
+            setRebuildProgress({
+              percentage: 0,
+              isRunning: true,
+            });
+            startPolling();
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check rebuild status:', error);
     }
   };
+
 
   return (
     <CollapsibleCard icon="mingcute:vector-line" title="Embedding Management">
@@ -236,7 +240,7 @@ export const EmbeddingSettingsSection = observer(function EmbeddingSettingsSecti
                 rebuildProgress?.isRunning ? (
                   <div className="flex items-center gap-1">
                     <Icon icon="line-md:loading-twotone-loop" width="16" height="16" />
-                    {rebuildProgress.percentage}%
+                    {rebuildProgress?.percentage || 0}%
                   </div>
                 ) : (
                   <Icon icon="mingcute:refresh-4-ai-line" width="16" height="16" />

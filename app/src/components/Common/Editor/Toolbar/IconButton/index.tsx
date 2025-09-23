@@ -2,6 +2,7 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from "@heroui/react";
 import { motion } from "motion/react";
 import { observer } from "mobx-react-lite";
+import { useTranslation } from 'react-i18next';
 
 export const IconButton = observer(({ tooltip, icon, onClick, classNames, children, size = 20, containerSize }: {
   tooltip: string | React.ReactNode,
@@ -15,14 +16,15 @@ export const IconButton = observer(({ tooltip, icon, onClick, classNames, childr
   size?: number,
   containerSize?: number
 }) => {
+  const { t } = useTranslation()
   return (
-    <Tooltip content={tooltip} placement="bottom" delay={300}>
-      <motion.div 
-        whileTap={{ y: 1 }} 
-        className={`hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center ${classNames?.base}`} 
-        style={{ 
-          width: containerSize || size + 3, 
-          height: containerSize || size + 3 
+    <Tooltip content={typeof tooltip == 'string' ? t(tooltip) : tooltip} placement="bottom" delay={300}>
+      <motion.div
+        whileTap={{ y: 1 }}
+        className={`hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center ${classNames?.base}`}
+        style={{
+          width: containerSize || size + 3,
+          height: containerSize || size + 3
         }}
         onClick={e => {
           onClick?.(e)

@@ -1,6 +1,7 @@
 import { userCaller } from '@server/routerTrpc/_app';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { verifyToken } from '@server/lib/helper';
 
 export const createCommentTool = createTool({
   id: 'create-comment-tool',
@@ -9,12 +10,11 @@ export const createCommentTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("The content of the comment"),
     noteId: z.number().describe("The ID of the note to comment on"),
-    guestName: z.string().optional().describe("Optional guest name if not using an account")
+    guestName: z.string().optional().describe("Optional guest name if not using an account"),
+    token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
-    // Get accountId from runtime context
-    const accountId = runtimeContext?.get('accountId');
-    console.log(`Creating comment on note ${context.noteId}: ${context.content}`);
+    const accountId = runtimeContext?.get('accountId') || (await verifyToken(context.token))?.sub;
     
     try {
       const caller = userCaller({

@@ -16,6 +16,8 @@ import i18n from '@/lib/i18n';
 import { AiEmoji } from '@/components/BlinkoAi/aiEmoji';
 import { StorageState } from './standard/StorageState';
 import { BlinkoItem } from '@/components/BlinkoCard';
+import { AiSettingStore, ModelCapabilities, AiProvider, AiModel, ProviderModel } from './aiSettingStore';
+
 
 type Chat = {
   content: string;
@@ -30,8 +32,23 @@ export type AssisantMessageMetadata = {
   usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
   fristCharDelay?: number;
 };
+export type ToolCall = {
+  toolCallId: string;
+  toolName: string;
+  args: any;
+};
+
+export type ToolResult = {
+  toolCallId: string;
+  toolName: string;
+  args: any;
+  result: any;
+};
+
 export type currentMessageResult = AssisantMessageMetadata & {
   toolcall: string[];
+  toolCalls: ToolCall[];
+  toolResults: ToolResult[];
   content: string;
   id?: number;
 };
@@ -44,6 +61,8 @@ export class AiStore implements Store {
       this.clear();
     });
   }
+
+  selectedProviderId = 0;
   isChatting = false;
   isAnswering = false;
   input = '';
@@ -57,6 +76,8 @@ export class AiStore implements Store {
     usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     fristCharDelay: 0,
     toolcall: [],
+    toolCalls: [],
+    toolResults: [],
     content: '',
   };
 
@@ -120,8 +141,30 @@ export class AiStore implements Store {
 
         for await (const item of res) {
           console.log(JSON.parse(JSON.stringify(item)));
+          if (item.chunk?.type == 'error') {
+            //@ts-ignore
+            const errorMessage = item.chunk?.error?.name || 'error';
+            RootStore.Get(ToastPlugin).error(errorMessage);
+            this.isAnswering = false;
+            return;
+          }
           if (item.chunk?.type == 'tool-call') {
             this.currentMessageResult.toolcall.push(`${item.chunk.toolName}`);
+            // Add to new tool calls array for detailed display
+            this.currentMessageResult.toolCalls.push({
+              toolCallId: item.chunk.toolCallId,
+              toolName: item.chunk.toolName,
+              args: item.chunk.args
+            });
+          }
+          if (item.chunk?.type == 'tool-result') {
+            // Add tool result for detailed display
+            this.currentMessageResult.toolResults.push({
+              toolCallId: item.chunk.toolCallId,
+              toolName: item.chunk.toolName,
+              args: item.chunk.args,
+              result: item.chunk.result
+            });
           }
           if (item.chunk?.type == 'finish') {
             this.currentMessageResult.usage = item?.chunk?.usage;
@@ -161,7 +204,7 @@ export class AiStore implements Store {
         // this.clearCurrentMessageResult()
       }
     } catch (error) {
-      if (!error.message.includes('interrupted')) {
+      if (!error.message.includes('interrupted') && !error.message.includes('aborted') && !error.message.includes('BodyStreamBuffer was aborted')) {
         RootStore.Get(ToastPlugin).error(error.message);
       }
       this.isAnswering = false;
@@ -231,92 +274,6 @@ export class AiStore implements Store {
     }
   };
 
-  modelProviderSelect: { label: string; value: GlobalConfig['aiModelProvider']; icon: React.ReactNode }[] = [
-    {
-      label: 'OpenAI',
-      value: 'OpenAI',
-      icon: (
-        <div className="bg-black w-[22x] h-[22px] rounded-full">
-          <Image src="/images/openai.svg" width={20} height={20} />
-        </div>
-      ),
-    },
-    {
-      label: 'AzureOpenAI',
-      value: 'AzureOpenAI',
-      icon: <Image src="/images/azure.png" width={20} height={20} />,
-    },
-    {
-      label: 'Ollama',
-      value: 'Ollama',
-      icon: <Image src="/images/ollama.png" width={20} height={20} />,
-    },
-    {
-      label: 'Grok',
-      value: 'Grok',
-      icon: (
-        <div className="bg-white w-[20x] h-[20px] rounded-full">
-          <Image src="/images/grok.svg" width={20} height={20} />
-        </div>
-      ),
-    },
-    {
-      label: 'Gemini',
-      value: 'Gemini',
-      icon: <Image src="/images/google.png" width={20} height={20} />,
-    },
-    {
-      label: 'DeepSeek',
-      value: 'DeepSeek',
-      icon: <Image src="/images/deepseek.svg" width={20} height={20} />,
-    },
-    {
-      label: 'Anthropic',
-      value: 'Anthropic',
-      icon: (
-        <div className="bg-white w-[20x] h-[20px] rounded-full">
-          <Image src="/images/anthropic.png" width={18} height={18} />
-        </div>
-      ),
-    },
-    {
-      label: 'OpenRouter',
-      value: 'OpenRouter',
-      icon: (
-        <div className="bg-white w-[20x] h-[20px] rounded-full">
-          <Image src="/images/openrouter.svg" width={18} height={18} />
-        </div>
-      ),
-    },
-  ];
-
-  modelSelectUILabel = {
-    OpenAI: {
-      modelTitle: i18n.t('ai-model'),
-      modelTooltip: i18n.t('ai-model-tooltip'),
-      endpointTitle: i18n.t('api-endpoint'),
-      endpointTooltip: i18n.t('must-start-with-http-s-or-use-api-openai-as-default'),
-    },
-    OpenRouter: {
-      modelTitle: i18n.t('ai-model'),
-      modelTooltip: i18n.t('openrouter-ai-model-tooltip'),
-      endpointTitle: i18n.t('api-endpoint'),
-      endpointTooltip: i18n.t('openrouter-endpoint-is-https-openrouter-ai-api-v1'),
-    },
-    AzureOpenAI: {
-      modelTitle: i18n.t('user-custom-azureopenai-api-deployment'),
-      modelTooltip: i18n.t('user-custom-azureopenai-api-deployment-tooltip'),
-      endpointTitle: i18n.t('user-custom-azureopenai-api-instance'),
-      endpointTooltip: i18n.t('your-azure-openai-instance-name'), //Your Azure OpenAI instance name
-    },
-    Ollama: {
-      modelTitle: i18n.t('ai-model'),
-      modelTooltip: i18n.t('ollama-ai-model-tooltip'),
-      endpointTitle: i18n.t('api-endpoint'),
-      endpointTooltip: i18n.t('ollama-default-endpoint-is-http-localhost-11434'), //Ollama default endpoint is http://localhost:11434
-    },
-  };
-
   scrollTicker = 0;
   chatHistory = new StorageListState<Chat>({ key: 'chatHistory' });
   private aiChatabortController = new AbortController();
@@ -348,10 +305,19 @@ export class AiStore implements Store {
         { signal: this.aiWriteAbortController.signal },
       );
       for await (const item of res) {
-        // console.log(item)
+
+        if (item.type == 'error') {
+          const errorMessage = (item.error as any)?.name || 'ai error';
+          RootStore.Get(ToastPlugin).error(errorMessage);
+          this.isLoading = false;
+          this.isWriting = false;
+          return;
+        }
         if (item.type == 'text-delta') {
           //@ts-ignore
           this.writingResponseText += item.textDelta;
+        } else {
+          console.log(JSON.stringify(item))
         }
         this.scrollTicker++;
       }
@@ -360,7 +326,9 @@ export class AiStore implements Store {
       this.isLoading = false;
     } catch (error) {
       console.log('writeStream error', error);
+      RootStore.Get(ToastPlugin).error(error?.message || 'AI写作服务连接失败');
       this.isLoading = false;
+      this.isWriting = false;
     }
   }
 
@@ -432,6 +400,8 @@ export class AiStore implements Store {
       notes: [],
       content: '',
       toolcall: [],
+      toolCalls: [],
+      toolResults: [],
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       fristCharDelay: 0,
       id: 0,
@@ -457,11 +427,21 @@ export class AiStore implements Store {
         metadata: this.currentMessageResult.notes,
       });
     }
+    // Add interruption notification message
+    await api.message.create.mutate({
+      conversationId: this.currentConversationId,
+      content: '[Request interrupted by user]',
+      role: 'system',
+      metadata: {},
+    });
     this.clearCurrentMessageResult();
     await this.currentConversation.call();
   }
 
+
+
   private clear() {
     this.chatHistory.clear();
+    this.selectedProviderId = 0;
   }
 }

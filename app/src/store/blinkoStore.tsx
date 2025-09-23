@@ -439,7 +439,7 @@ export class BlinkoStore implements Store {
   })
 
   get showAi() {
-    return this.config.value?.isUseAI
+    return true
   }
 
   config = new PromiseState({

@@ -79,13 +79,30 @@ router.post('/', async (req, res) => {
     
     const bb = busboy({ headers: req.headers });
     
-    let fileInfo: { 
+    let fileInfo: {
       stream: PassThrough | null,
       filename: string,
       mimeType: string,
-      size: number
+      size: number,
+      isUserVoiceRecording?: boolean,
+      audioDuration?: string,
+      audioDurationSeconds?: number
     } | null = null;
-    
+
+    let isUserVoiceRecording = false;
+    let audioDuration: string | null = null;
+    let audioDurationSeconds: number | null = null;
+
+    bb.on('field', (fieldname, value) => {
+      if (fieldname === 'isUserVoiceRecording' && value === 'true') {
+        isUserVoiceRecording = true;
+      } else if (fieldname === 'audioDuration') {
+        audioDuration = value;
+      } else if (fieldname === 'audioDurationSeconds') {
+        audioDurationSeconds = parseInt(value, 10);
+      }
+    });
+
     bb.on('file', (fieldname, stream, info) => {
       if (fieldname === 'file') {
         const passThrough = new PassThrough();
@@ -103,7 +120,10 @@ router.post('/', async (req, res) => {
             stream: passThrough,
             filename: decodedFilename.replace(/\s+/g, "_"),
             mimeType: info.mimeType,
-            size: fileSize
+            size: fileSize,
+            isUserVoiceRecording,
+            audioDuration: audioDuration || undefined,
+            audioDurationSeconds: audioDurationSeconds || undefined
           };
         });
       }
@@ -117,12 +137,25 @@ router.post('/', async (req, res) => {
       try {
         const webReadableStream = Readable.toWeb(fileInfo.stream) as unknown as ReadableStream;
         
+        // Build metadata object
+        const metadata: any = {};
+        if (fileInfo.isUserVoiceRecording) {
+          metadata.isUserVoiceRecording = true;
+        }
+        if (fileInfo.audioDuration) {
+          metadata.audioDuration = fileInfo.audioDuration;
+        }
+        if (fileInfo.audioDurationSeconds) {
+          metadata.audioDurationSeconds = fileInfo.audioDurationSeconds;
+        }
+
         const filePath = await FileService.uploadFileStream({
           stream: webReadableStream,
           originalName: fileInfo.filename,
           fileSize: fileInfo.size,
           type: fileInfo.mimeType,
-          accountId: Number(token.id)
+          accountId: Number(token.id),
+          metadata: Object.keys(metadata).length > 0 ? metadata : undefined
         });
         
         res.set({

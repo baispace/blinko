@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { PromisePageState, PromiseState } from '@/store/standard/PromiseState';
 import { ScrollArea } from '../Common/ScrollArea';
-import { Notifications, NotificationType } from '@/lib/prismaZodType';
+import { Notifications, NotificationType } from '@shared/lib/prismaZodType';
 import { ShowCommentDialog } from '../BlinkoCard/commentButton';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { UserStore } from '@/store/user';

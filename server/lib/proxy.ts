@@ -19,18 +19,13 @@ interface ExtendedAgentOptions extends http.AgentOptions, https.AgentOptions {
  */
 export async function fetchWithProxy(): Promise<typeof fetch> {
   const proxyUrl = await getProxyUrl();
-  console.log(`[Server] Proxy URL: ${proxyUrl}`);
   if (!proxyUrl) {
     return fetch;
   }
 
-  console.log(`[Server] Creating proxied fetch with proxy: ${proxyUrl}`);
-
   try {
     // Create undici proxy agent
     const proxyAgent = new ProxyAgent(proxyUrl);
-    console.log(`[Server] Undici proxy agent created for: ${proxyUrl}`);
-
     // Return a fetch function that uses the proxy with proper type casting
     const proxiedFetch = ((url: RequestInfo | URL, init?: RequestInit) => {
       const fetchOptions: RequestInit & { dispatcher?: any } = {
@@ -38,8 +33,12 @@ export async function fetchWithProxy(): Promise<typeof fetch> {
         dispatcher: proxyAgent,
         // proxy: proxyUrl //bun env use this
       };
-
-      return fetch(url, fetchOptions);
+      return fetch(url, fetchOptions).catch((error) => {
+        // Handle fetch errors gracefully
+        console.error(`[Server] Proxied fetch error:`, error);
+        const safeError = error instanceof Error ? error : new Error(String(error));
+        return Promise.reject(safeError);
+      });
     }) as typeof fetch;
 
     return proxiedFetch;
@@ -75,7 +74,8 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
     },
     (error) => {
       console.error('[Server] Axios request error:', error);
-      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+      const safeError = error instanceof Error ? error : new Error(String(error));
+      return Promise.reject(safeError);
     }
   );
 
@@ -142,7 +142,13 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
         let errorCode = '';
         let errorDetails = {};
 
-        const safeError = error instanceof Error ? error : new Error(String(error));
+        // Create a proper Error object first
+        let safeError: Error;
+        if (error instanceof Error) {
+          safeError = error;
+        } else {
+          safeError = new Error(String(error));
+        }
 
         if (error.response) {
           statusCode = error.response.status;
@@ -177,15 +183,22 @@ export async function createAxiosWithProxy(options?: { ctx?: Context; useAdmin?:
           port: globalConfig.httpProxyPort,
         };
 
-        return Promise.reject(Object.assign(safeError, {
-          status: statusCode,
-          code: errorCode,
-          details: errorDetails,
-          proxyInfo
-        }));
+        // Create a new error with enhanced properties instead of using Object.assign
+        const enhancedError = new Error(errorMessage);
+        enhancedError.name = safeError.name;
+        enhancedError.stack = safeError.stack;
+        (enhancedError as any).status = statusCode;
+        (enhancedError as any).code = errorCode;
+        (enhancedError as any).details = errorDetails;
+        (enhancedError as any).proxyInfo = proxyInfo;
+        (enhancedError as any).response = error.response;
+        (enhancedError as any).config = error.config;
+
+        return Promise.reject(enhancedError);
       } catch (handlerError) {
         console.error('[Server] Error in error handler:', handlerError);
-        return Promise.reject(error instanceof Error ? error : new Error('Failed to process network request'));
+        const fallbackError = new Error('Failed to process network request');
+        return Promise.reject(fallbackError);
       }
     }
   );
@@ -208,13 +221,14 @@ export async function getWithProxy(
     return await axiosInstance.get(url, config);
   } catch (error) {
     console.error(`[Server] getWithProxy error for URL ${url}:`, error);
+    const safeError = error instanceof Error ? error : new Error(String(error));
     return {
       error: true,
       data: null,
-      status: error.response?.status || 500,
-      statusText: error.response?.statusText || 'Error',
-      message: error.message || 'Unknown error',
-      proxyInfo: error.proxyInfo || {},
+      status: (error as any)?.response?.status || 500,
+      statusText: (error as any)?.response?.statusText || 'Error',
+      message: safeError.message || 'Unknown error',
+      proxyInfo: (error as any)?.proxyInfo || {},
       url
     };
   }
@@ -235,13 +249,14 @@ export async function postWithProxy(
     return await axiosInstance.post(url, data, config);
   } catch (error) {
     console.error(`[Server] postWithProxy error for URL ${url}:`, error);
+    const safeError = error instanceof Error ? error : new Error(String(error));
     return {
       error: true,
       data: null,
-      status: error.response?.status || 500,
-      statusText: error.response?.statusText || 'Error',
-      message: error.message || 'Unknown error',
-      proxyInfo: error.proxyInfo || {},
+      status: (error as any)?.response?.status || 500,
+      statusText: (error as any)?.response?.statusText || 'Error',
+      message: safeError.message || 'Unknown error',
+      proxyInfo: (error as any)?.proxyInfo || {},
       url
     };
   }

@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { BasicSetting } from '@/components/BlinkoSettings/BasicSetting';
-import { AiSetting } from '@/components/BlinkoSettings/AiSetting';
+import AiSetting from '@/components/BlinkoSettings/AiSetting/AiSetting';
 import { PerferSetting } from '@/components/BlinkoSettings/PerferSetting';
 import { TaskSetting } from '@/components/BlinkoSettings/TaskSetting';
 import { ImportSetting } from '@/components/BlinkoSettings/ImportSetting';
@@ -36,14 +36,6 @@ type SettingItem = {
 };
 export const allSettings: SettingItem[] = [
   {
-    key: 'all',
-    title: ('all'),
-    icon: 'tabler:settings',
-    component: <></>,
-    requireAdmin: false,
-    keywords: ['all', 'settings', '全部', '设置'],
-  },
-  {
     key: 'basic',
     title: ('basic-information'),
     icon: 'tabler:tool',
@@ -78,7 +70,7 @@ export const allSettings: SettingItem[] = [
   {
     key: 'ai',
     title: 'AI',
-    icon: 'hugeicons:ai-magic',
+    icon: 'hugeicons:ai-beautify',
     component: <AiSetting />,
     requireAdmin: true,
     keywords: ['ai', 'artificial intelligence', '人工智能'],
@@ -86,7 +78,7 @@ export const allSettings: SettingItem[] = [
   {
     key: 'httpproxy',
     title: ('http-proxy'),
-    icon: 'mdi:connection',
+    icon: 'tabler:cloud-network',
     component: <HttpProxySetting />,
     requireAdmin: true,
     keywords: ['proxy', 'http', 'connection', '代理', 'HTTP代理'],
@@ -160,7 +152,7 @@ const Page = observer(() => {
   const user = RootStore.Get(UserStore);
   const blinkoStore = RootStore.Get(BlinkoStore);
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<string>('all');
+  const [selected, setSelected] = useState<string>('basic');
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const getVisibleSettings = () => {
@@ -188,11 +180,6 @@ const Page = observer(() => {
   };
 
   const getCurrentComponent = () => {
-    if (selected === 'all') {
-      return getVisibleSettings()
-        .filter((setting) => setting.key !== 'all')
-        .map((setting) => <div key={setting.key}>{setting.component}</div>);
-    }
     const setting = allSettings.find((s) => s.key === selected);
     return setting ? <div key={setting.key}>{setting.component}</div> : null;
   };
@@ -206,20 +193,20 @@ const Page = observer(() => {
   return (
     <div className="h-full flex flex-col">
       <ImportAIDialog onSelectTab={setSelected} />
-      
+
       {isMobile ? (
         <div className="w-full">
           <div className="sticky top-0 z-10 w-full">
             <div className="mx-1 backdrop-blur-md bg-background rounded-2xl">
-              <ScrollableTabs 
-                items={tabItems} 
-                selectedKey={selected} 
-                onSelectionChange={setSelected} 
-                color="primary" 
+              <ScrollableTabs
+                items={tabItems}
+                selectedKey={selected}
+                onSelectionChange={setSelected}
+                color="primary"
               />
             </div>
           </div>
-          <ScrollArea onBottom={() => {}} className="flex-1">
+          <ScrollArea onBottom={() => { }} className="flex-1">
             <div className="max-w-[1024px] mx-auto flex flex-col gap-6 px-2 py-4">
               {getCurrentComponent()}
             </div>
@@ -235,11 +222,10 @@ const Page = observer(() => {
                     <button
                       key={item.key}
                       onClick={() => setSelected(item.key)}
-                      className={`cursor-pointer flex items-center px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selected === item.key
-                          ? 'bg-primary text-primary-foreground font-medium'
-                          : 'hover:bg-muted/50 text-foreground/80 hover:text-foreground'
-                      }`}
+                      className={`cursor-pointer flex items-center px-3 py-2 rounded-lg text-sm transition-colors ${selected === item.key
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'hover:bg-muted/50 text-foreground/80 hover:text-foreground'
+                        }`}
                     >
                       {item.icon && (
                         <span className="flex-shrink-0 mr-2">
@@ -253,7 +239,7 @@ const Page = observer(() => {
               </ScrollArea>
             </div>
           </div>
-          
+
           <div className="flex-1 overflow-hidden">
             <ScrollArea onBottom={() => { }} className="h-full">
               <div className="max-w-[900px] mx-auto flex flex-col gap-6">

@@ -82,7 +82,7 @@ export const UserSetting = observer(() => {
       <Item
         leftContent={<>{t('user-list')}</>}
         rightContent={
-          <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width="18" height="18" />}
+          <Button size="sm" color="primary" startContent={<Icon icon="humbleicons:user-add" width="18" height="18" />}
             onPress={e => {
               RootStore.Get(DialogStore).setData({
                 isOpen: true,

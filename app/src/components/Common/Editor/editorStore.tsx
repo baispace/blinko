@@ -168,35 +168,86 @@ export class EditorStore {
     this.focus()
   }
 
-  speechToText = async (filePath) => {
-    if (!this.blinko.showAi) {
-      return
-    }
-    //|| filePath.endsWith('.mp3') || filePath.endsWith('.wav')
-    if (filePath.endsWith('.webm')) {
-      try {
-        const doc = await api.ai.speechToText.mutate({ filePath })
-        this.insertMarkdown(doc[0]?.pageContent)
-      } catch (error) { }
-    }
+
+  // Get audio duration from file
+  getAudioDuration = (file: File): Promise<{ duration: string, durationSeconds: number } | null> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('audio/')) {
+        resolve(null);
+        return;
+      }
+
+      const audio = new Audio();
+      const url = URL.createObjectURL(file);
+
+      audio.addEventListener('loadedmetadata', () => {
+        const durationSeconds = Math.floor(audio.duration);
+        const minutes = Math.floor(durationSeconds / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(durationSeconds % 60).toString().padStart(2, '0');
+        const duration = `${minutes}:${seconds}`;
+
+        URL.revokeObjectURL(url);
+        resolve({ duration, durationSeconds });
+      });
+
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      });
+
+      audio.src = url;
+    });
   }
 
   uploadFiles = async (acceptedFiles) => {
     const uploadFileType = {}
 
-    const _acceptedFiles = acceptedFiles.map(file => {
+    const _acceptedFiles = await Promise.all(acceptedFiles.map(async file => {
       const extension = helper.getFileExtension(file.name)
       const previewType = helper.getFileType(file.type, file.name)
+      const isUserVoiceRecording = file.isUserVoiceRecording || false
+      const isAudioFile = file.type.startsWith('audio/')
+
+      // Get audio duration - either from file properties (user recordings) or by analyzing the file
+      let audioDuration = file.audioDuration || null
+      let audioDurationSeconds = file.audioDurationSeconds || null
+
+      if (isAudioFile && !audioDuration) {
+        const durationInfo = await this.getAudioDuration(file)
+        if (durationInfo) {
+          audioDuration = durationInfo.duration
+          audioDurationSeconds = durationInfo.durationSeconds
+        }
+      }
+
       return {
         name: file.name,
         size: file.size,
         previewType,
         extension: extension ?? '',
         preview: URL.createObjectURL(file),
+        isUserVoiceRecording,
+        audioDuration,
+        audioDurationSeconds,
+        isAudioFile,
         uploadPromise: new PromiseState({
           function: async () => {
             const formData = new FormData();
             formData.append('file', file)
+
+            // Add metadata for user voice recordings
+            if (isUserVoiceRecording) {
+              formData.append('isUserVoiceRecording', 'true')
+            }
+
+            // Add audio duration for all audio files
+            if (audioDuration) {
+              formData.append('audioDuration', audioDuration)
+            }
+            if (audioDurationSeconds) {
+              formData.append('audioDurationSeconds', audioDurationSeconds.toString())
+            }
+
             const { onUploadProgress } = RootStore.Get(ToastPlugin)
               .setSizeThreshold(40)
               .uploadProgress(file);
@@ -211,7 +262,7 @@ export class EditorStore {
                 this.files[fileIndex]!.name = data.fileName;
               }
             }
-            this.speechToText(data.filePath)
+
             if (data.filePath) {
               uploadFileType[file.name] = data.type
               return data.filePath
@@ -220,7 +271,7 @@ export class EditorStore {
         }),
         type: file.type
       }
-    })
+    }))
     this.files.push(..._acceptedFiles)
     await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
     if (this.mode == 'create') {
@@ -238,7 +289,7 @@ export class EditorStore {
         path: i.uploadPromise.value,
         type: uploadFileType?.[i.name],
         size: i.size,
-        id: this.blinko.curSelectedNote!.id
+        id: this.blinko.curSelectedNote?.id!
       })).map(t => {
         RootStore.Get(BlinkoStore).editAttachmentsStorage.push(t)
       })

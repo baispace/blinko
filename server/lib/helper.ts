@@ -170,17 +170,17 @@ export const getTokenFromRequest = async (req: ExpressRequest) => {
   try {
     if (req.headers && typeof req.headers === 'object') {
       const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7);
+      if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
         const tokenData = await verifyToken(token);
-        if (tokenData) return { ...tokenData, id: tokenData.sub };
+        if (tokenData) return { ...tokenData, id: tokenData.sub, token };
       }
     }
 
     if (req.query && req.query.token) {
       const token = req.query.token as string;
       const tokenData = await verifyToken(token);
-      if (tokenData) return { ...tokenData, id: tokenData.sub };
+      if (tokenData) return { ...tokenData, id: tokenData.sub, token };
     }
 
     return null;

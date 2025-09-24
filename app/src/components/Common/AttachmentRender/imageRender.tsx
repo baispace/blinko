@@ -3,7 +3,7 @@ import { FileType } from '../Editor/type';
 import { Image } from '@heroui/react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { DeleteIcon, DownloadIcon, InsertConextButton } from './icons';
+import { DeleteIcon, DownloadIcon, InsertConextButton, CopyIcon } from './icons';
 import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { DraggableFileGrid } from './DraggableFileGrid';
@@ -25,7 +25,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
 
   useEffect(() => {
     let objectUrl = '';
-    
+
     const fetchImage = async () => {
       setLoading(true);
       try {
@@ -33,7 +33,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
         const response = await axiosInstance.get(getBlinkoEndpoint(`${src}?thumbnail=true`), {
           responseType: 'blob'
         });
-        
+
         objectUrl = URL.createObjectURL(response.data);
         setCurrentSrc(objectUrl);
       } catch (error) {
@@ -42,7 +42,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
           const response = await axiosInstance.get(src, {
             responseType: 'blob'
           });
-          
+
           objectUrl = URL.createObjectURL(response.data);
           setCurrentSrc(objectUrl);
         } catch (error) {
@@ -53,9 +53,9 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
         setLoading(false);
       }
     };
-    
+
     fetchImage();
-    
+
     // Clean up created object URLs when component unmounts
     return () => {
       if (objectUrl) {
@@ -135,7 +135,12 @@ const ImageRender = observer((props: IProps) => {
       {!file.uploadPromise?.loading?.value && !preview &&
         <DeleteIcon className='absolute z-10 right-[5px] top-[5px]' files={files} file={file} />
       }
-      {preview && <DownloadIcon file={file} />}
+      {preview && (
+        <>
+          <CopyIcon file={file} />
+          <DownloadIcon file={file} />
+        </>
+      )}
     </div>
   )
 

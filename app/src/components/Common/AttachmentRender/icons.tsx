@@ -67,3 +67,77 @@ export const DownloadIcon = observer(({ className, file, size = 20 }: { classNam
     }} icon="tabler:download" width="15" height="15" />
   </div>
 })
+
+export const CopyIcon = observer(({ className, file, size = 20 }: { className?: string, file: FileType, size?: number }) => {
+  const { t } = useTranslation()
+
+  const copyImageToClipboard = async () => {
+    try {
+      const src = file.uploadPromise?.value || file.preview;
+      if (!src) return;
+
+      // Get the image as a blob
+      const response = await axiosInstance.get(getBlinkoEndpoint(src), {
+        responseType: 'blob'
+      });
+
+      // Convert to canvas and then to PNG format for better clipboard support
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      return new Promise((resolve, reject) => {
+        img.onload = async () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+
+          canvas.toBlob(async (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to convert image to blob'));
+              return;
+            }
+
+            try {
+              // Try to write PNG blob to clipboard
+              await navigator.clipboard.write([
+                new ClipboardItem({
+                  'image/png': blob
+                })
+              ]);
+
+              RootStore.Get(ToastPlugin).success(t('operation-success'));
+              resolve(true);
+            } catch (clipboardError) {
+              console.error('Clipboard write failed, trying fallback:', clipboardError);
+
+              // Fallback: copy image URL as text
+              try {
+                await navigator.clipboard.writeText(getBlinkoEndpoint(src));
+                RootStore.Get(ToastPlugin).success(t('operation-success'));
+                resolve(true);
+              } catch (textError) {
+                console.error('Text fallback also failed:', textError);
+                RootStore.Get(ToastPlugin).error(t('operation-failed'));
+                reject(textError);
+              }
+            }
+          }, 'image/png');
+        };
+
+        img.onerror = () => {
+          reject(new Error('Failed to load image'));
+        };
+
+        img.src = URL.createObjectURL(response.data);
+      });
+    } catch (error) {
+      console.error('Failed to copy image to clipboard:', error);
+      RootStore.Get(ToastPlugin).error(t('operation-failed'));
+    }
+  };
+
+  return <div className={`hidden p-1 group-hover:block !transition-all absolute z-10 right-[30px] top-[5px] !text-background opacity-70 hover:opacity-100 !bg-foreground cursor-pointer rounded-sm !transition-all ${className}`}>
+    <Icon onClick={copyImageToClipboard} icon="si:copy-duotone" width="15" height="15" />
+  </div>
+})

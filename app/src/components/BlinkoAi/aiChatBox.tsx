@@ -304,6 +304,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
 
   return (
     <ScrollArea
+      fixMobileTopBar
       ref={scrollAreaRef}
       onBottom={() => { }}
       className="h-full"

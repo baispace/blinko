@@ -23,6 +23,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { BlinkoCard } from '@/components/BlinkoCard';
+import { ScrollArea } from '@/components/Common/ScrollArea';
 const App = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   const swiperRef = useRef(null);
@@ -59,7 +60,7 @@ const App = observer(() => {
     : blinko.dailyReviewNoteList.value ?? []
 
   return (
-    <div className="App h-full overflow-hidden">
+    <ScrollArea fixMobileTopBar className="App h-full overflow-hidden mt-2">
       <div className="flex justify-center mb-2">
         <Button
           color={store.isRandomReviewMode ? "primary" : "default"}
@@ -214,7 +215,7 @@ const App = observer(() => {
         <Icon icon="line-md:coffee-half-empty-twotone-loop" width="24" height="24" />
         <div className='text-md text-ignore font-bold'>{t('congratulations-youve-reviewed-everything-today')}</div>
       </div>}
-    </div >
+    </ScrollArea>
 
   );
 })

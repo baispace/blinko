@@ -36,7 +36,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
 
   return (
     <motion.div
-      className="h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
+      className="blinko-bottom-bar h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
       animate={{ y: isVisible ? 0 : 100 }}
       transition={{
         type: "tween",

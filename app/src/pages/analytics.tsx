@@ -9,6 +9,7 @@ import { TagDistributionChart } from "@/components/BlinkoAnalytics/TagDistributi
 import dayjs from "dayjs"
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react"
 import { Icon } from '@/components/Common/Iconify/icons'
+import { ScrollArea } from '@/components/Common/ScrollArea'
 
 const Analytics = observer(() => {
   const analyticsStore = RootStore.Get(AnalyticsStore)
@@ -33,7 +34,7 @@ const Analytics = observer(() => {
   const stats = analyticsStore.monthlyStats.value
 
   return (
-    <div className="p-6 space-y-6 mx-auto max-w-7xl">
+    <ScrollArea onBottom={() => { }} fixMobileTopBar className="px-6 space-y-2 md:p-6 md:space-y-6  mx-auto max-w-7xl" >
       <div className="w-72">
         <Dropdown>
           <DropdownTrigger>
@@ -77,10 +78,12 @@ const Analytics = observer(() => {
         description={t('heatMapDescription')}
       />
 
-      {stats?.tagStats && stats.tagStats.length > 0 && (
-        <TagDistributionChart tagStats={stats.tagStats} />
-      )}
-    </div>
+      {
+        stats?.tagStats && stats.tagStats.length > 0 && (
+          <TagDistributionChart tagStats={stats.tagStats} />
+        )
+      }
+    </ScrollArea >
   )
 })
 

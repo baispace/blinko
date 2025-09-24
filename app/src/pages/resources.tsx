@@ -47,6 +47,7 @@ const Page = observer(() => {
     <>
       <DragDropContext onDragEnd={resourceStore.handleDragEnd}>
         <ScrollArea
+          fixMobileTopBar
           onBottom={resourceStore.loadNextPage}
           className="md:px-6 h-[calc(100%_-_5px)] md:h-[calc(100vh_-_100px)] px-2 md:max-w-[1000px] w-full overflow-x-hidden mx-auto"
         >

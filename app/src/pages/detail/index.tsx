@@ -12,7 +12,7 @@ const Detail = observer(() => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const blinko = RootStore.Get(BlinkoStore);
-  
+
   useEffect(() => {
     if (searchParams.get('id')) {
       blinko.noteDetail.call({ id: Number(searchParams.get('id')) });
@@ -20,16 +20,16 @@ const Detail = observer(() => {
   }, [location.pathname, searchParams.get('id'), blinko.updateTicker, blinko.forceQuery]);
 
   return (
-    <ScrollArea onBottom={() => {}}>
+    <ScrollArea fixMobileTopBar>
       <div className="max-w-[800px] mx-auto p-4">
         <LoadingAndEmpty
           isLoading={blinko.noteDetail.loading.value}
           isEmpty={!blinko.noteDetail.value}
         />
-        
+
         {blinko.noteDetail.value && (
-          <BlinkoCard 
-            blinkoItem={blinko.noteDetail.value} 
+          <BlinkoCard
+            blinkoItem={blinko.noteDetail.value}
             defaultExpanded={false}
             glassEffect={false}
           />

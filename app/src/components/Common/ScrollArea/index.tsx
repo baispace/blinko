@@ -7,29 +7,31 @@ import { useMediaQuery } from "usehooks-ts";
 type IProps = {
   style?: any;
   className?: any;
-  onBottom: () => void;
+  onBottom?: () => void;
   onRefresh?: () => Promise<any>;
   children: any;
   pullDownThreshold?: number;
   maxPullDownDistance?: number;
+  fixMobileTopBar?: boolean
 };
 
 export type ScrollAreaHandles = {
   scrollToBottom: () => void;
 }
 
-export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({ 
-  style, 
-  className, 
-  children, 
+export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
+  style,
+  className,
+  children,
   onBottom,
   onRefresh,
   pullDownThreshold = 60,
-  maxPullDownDistance = 100
+  maxPullDownDistance = 100,
+  fixMobileTopBar = false
 }, ref) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isPc = useMediaQuery('(min-width: 768px)');
-  
+
   // Pull to refresh states
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -39,7 +41,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   const startYRef = useRef(0);
   const canPullRef = useRef(true); // Initialize as true for initial state
   const currentInstanceRef = useRef(Math.random().toString(36)); // Unique identifier for this ScrollArea instance
-  
+
   let debounceBottom;
   if (onBottom) {
     debounceBottom = _.debounce(onBottom!, 500, { leading: true, trailing: false });
@@ -57,7 +59,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
     if (bottom) {
       debounceBottom?.();
     }
-    
+
     // Update can pull state
     canPullRef.current = target.scrollTop === 0;
   };
@@ -149,19 +151,19 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   useEffect(() => {
     const divElement = scrollRef.current;
     if (!divElement) return;
-    
+
     // Initialize canPull state
     canPullRef.current = divElement.scrollTop === 0;
-    
+
     divElement.addEventListener("scroll", handleScroll);
-    
+
     // Add pull-to-refresh listeners only if onRefresh exists AND device is mobile
     if (onRefresh && !isPc) {
       divElement.addEventListener('touchstart', handleTouchStart, { passive: false });
       divElement.addEventListener('touchmove', handleTouchMove, { passive: false });
       divElement.addEventListener('touchend', handleTouchEnd, { passive: true });
     }
-    
+
     return () => {
       divElement.removeEventListener("scroll", handleScroll);
       if (onRefresh && !isPc) {
@@ -176,32 +178,32 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   const pullProgress = Math.min(pullDistance / pullDownThreshold, 1);
   const arrowRotation = pullProgress * 180; // 0 to 180 degrees
   const isReadyToRefresh = pullDistance >= pullDownThreshold;
-  
+
   const showRefreshIndicator = onRefresh && !isPc && (pullDistance > 0 || isRefreshing);
-  const refreshText = isRefreshing 
-    ? i18n.t('common.refreshing') 
-    : isReadyToRefresh 
-      ? i18n.t('common.releaseToRefresh') 
+  const refreshText = isRefreshing
+    ? i18n.t('common.refreshing')
+    : isReadyToRefresh
+      ? i18n.t('common.releaseToRefresh')
       : i18n.t('common.pullToRefresh');
 
   // Arrow Icon Component
   const ArrowIcon = () => (
-    <svg 
-      width="16" 
-      height="16" 
-      viewBox="0 0 24 24" 
-      fill="none" 
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
       className={`transition-transform duration-150 ${isDragging ? '' : 'duration-300'}`}
-      style={{ 
+      style={{
         transform: `rotate(${arrowRotation}deg)`,
         opacity: pullProgress
       }}
     >
-      <path 
-        d="M12 5l0 14m-7-7l7-7 7 7" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
+      <path
+        d="M12 5l0 14m-7-7l7-7 7 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
@@ -218,14 +220,13 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
       }}
       className={`${className} overflow-y-scroll overflow-x-hidden ${isPc ? '' : 'scrollbar-hide'} scroll-smooth scroll-area`}
     >
+      {fixMobileTopBar && !isPc && <div className="h-16"></div>}
       {/* Pull to refresh indicator */}
       {showRefreshIndicator && (
-        <div 
-          className={`flex items-center justify-center transition-all duration-150 ${
-            isDragging ? '' : 'duration-300'
-          } ${isReadyToRefresh ? 'text-primary' : 'text-gray-500'} ${
-            isReadyToRefresh ? 'bg-primary/5' : 'bg-gray-50/80'
-          }`}
+        <div
+          className={`flex items-center justify-center transition-all duration-150 ${isDragging ? '' : 'duration-300'
+            } ${isReadyToRefresh ? 'text-primary' : 'text-gray-500'} ${isReadyToRefresh ? 'bg-primary/5' : 'bg-gray-50/80'
+            }`}
           style={{
             height: `${pullDistance}px`,
             marginTop: `-${pullDistance}px`,
@@ -239,10 +240,9 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
             ) : (
               <ArrowIcon />
             )}
-            <span 
-              className={`text-sm font-medium transition-all duration-200 ${
-                isReadyToRefresh ? 'scale-105' : 'scale-100'
-              }`}
+            <span
+              className={`text-sm font-medium transition-all duration-200 ${isReadyToRefresh ? 'scale-105' : 'scale-100'
+                }`}
               style={{ opacity: Math.max(pullProgress, 0.6) }}
             >
               {refreshText}
@@ -250,7 +250,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
           </div>
         </div>
       )}
-      
+
       {children}
     </div>
   );

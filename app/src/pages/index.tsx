@@ -96,7 +96,7 @@ const Home = observer(() => {
       style={{
         maxWidth: blinko.config.value?.maxHomePageWidth ? `${blinko.config.value?.maxHomePageWidth}px` : '100%'
       }}
-      className={`md:p-0 relative h-full flex flex-col-reverse md:flex-col mx-auto w-full`}>
+      className={`p-2 md:p-0 relative h-full flex flex-col-reverse md:flex-col mx-auto w-full`}>
 
       {store.showEditor && isPc && !blinko.config.value?.hidePcEditor && <div className='px-2 md:px-6' >
         <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
@@ -112,7 +112,9 @@ const Home = observer(() => {
       />
 
       {
-        !currentListState.isEmpty && <ScrollArea
+        !currentListState.isEmpty &&
+        <ScrollArea
+          fixMobileTopBar
           onRefresh={async () => {
             await currentListState.resetAndCall({})
           }}
@@ -124,14 +126,13 @@ const Home = observer(() => {
 
           {isTodoView ? (
             <div className="timeline-view relative">
-              <div className="absolute left-1 top-4 bottom-4 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
               {Object.entries(todosByDate).map(([date, { displayDate, todos }]) => (
                 <div key={date} className="mb-6 relative">
                   <div className="flex items-center mb-2 relative z-10">
-                    <div className="w-4 h-2 rounded-sm bg-primary absolute left-[4.5px] transform translate-x-[-50%]"></div>
+                    <div className="w-4 h-4 rounded-sm bg-primary absolute left-[4.5px] transform translate-x-[-50%]"></div>
                     <h3 className="text-base font-bold ml-5">{displayDate}</h3>
                   </div>
-                  <div className="pl-6">
+                  <div className="md:pl-4">
                     {todos.map(todo => (
                       <div key={todo.id} className="mb-3">
                         <BlinkoCard blinkoItem={todo} />

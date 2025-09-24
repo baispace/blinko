@@ -24,8 +24,6 @@ import { BarSearchInput } from './BarSearchInput';
 import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
 import { useLocation, useSearchParams, Link } from 'react-router-dom';
-import { isDesktop } from '@/lib/tauriHelper';
-import { useSwipeable } from 'react-swipeable';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
 
@@ -44,6 +42,13 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
   user.use();
   base.useInitApp();
 
+  const getFixedHeaderBackground = () => {
+    if (document?.documentElement?.classList?.contains('dark')) {
+      return '#00000080';
+    }
+    return '#ffffff80';
+  };
+
   useEffect(() => {
     if (isPc) setisOpen(false);
   }, [isPc]);
@@ -55,21 +60,6 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
     });
   }, []);
 
-  const swipeHandlers = useSwipeable({
-    onSwipedRight: () => {
-      if (!isPc) {
-        setisOpen(true);
-      }
-    },
-    onSwipedLeft: () => {
-      if (!isPc) {
-        setisOpen(false);
-      }
-    },
-    trackMouse: false,
-    swipeDuration: 500,
-    delta: 50,
-  });
 
   if (!isClient) return <></>;
 
@@ -103,16 +93,27 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
       {isPc && <Sidebar />}
 
       <main
-        {...swipeHandlers}
         id="page-wrap"
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
         className={`flex !transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-secondbackground`}
       >
         {/* nav bar  */}
-        <header className="relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 rounded-medium px-2 md:px:4 pt-2 md:pb-2 overflow-hidden">
-          <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
+        <header
+          className="blinko-mobile-header relative flex md:h-16 md:min-h-16 h-14 min-h-14 items-center justify-between gap-2 px-2 md:px:4 pt-2 md:pb-2 overflow-hidden"
+          style={!isPc ? {
+            position: 'fixed',
+            top: 0,
+            borderRadius:'0 0 12px 12px',
+            zIndex: 11,
+            width: '100%',
+            background: getFixedHeaderBackground(),
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)'
+          } : undefined}
+        >
+          {/* <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
             <div className="w-full h-[100%] bg-[#9936e6] opacity-20" style={{ clipPath: 'circle(50% at 50% 50%)' }} />
-          </div>
+          </div> */}
           <div className="flex max-w-full items-center gap-2 md:p-2 w-full z-[1]">
             {!isPc && (
               <Button isIconOnly className="flex" size="sm" variant="light" onPress={() => setisOpen(!isOpen)}>
@@ -196,9 +197,11 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
           </div>
           {header}
         </header>
-        {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
 
-        <ScrollArea onBottom={() => { }} className="h-[calc(100%_-_70px)] !overflow-y-auto overflow-x-hidden mt-[-4px]">
+
+
+        {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
+        <ScrollArea onBottom={() => { }} className={`${isPc ? 'h-[calc(100%_-_70px)]' : 'h-full'} !overflow-y-auto overflow-x-hidden mt-[-4px]`}>
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container">
             <div className="hidden md:block absolute top-[-37%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
               <div className="w-full h-[356px] bg-[#9936e6] opacity-20" style={{ clipPath: 'circle(50% at 50% 50%)' }} />

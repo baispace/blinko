@@ -1,7 +1,9 @@
+import { eventBus } from "@/lib/event";
 import { useIsIOS } from "@/lib/hooks";
 import { motion } from "motion/react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useMediaQuery } from "usehooks-ts";
 
 interface ExpandableContainerProps {
   isExpanded: boolean;
@@ -25,7 +27,6 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
   } as const;
 
   const isIOS = useIsIOS()
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isExpanded) {
@@ -33,10 +34,26 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
       }
     };
 
+    // Hide/show mobile navigation bars when expanded/collapsed
+    const mobileHeader = document.querySelector('.blinko-mobile-header') as HTMLElement;
+    const bottomBar = document.querySelector('.blinko-bottom-bar') as HTMLElement;
+
+    if (isExpanded) {
+      if (mobileHeader) mobileHeader.style.display = 'none';
+      if (bottomBar) bottomBar.style.display = 'none';
+    } else {
+      if (mobileHeader) mobileHeader.style.display = '';
+      if (bottomBar) bottomBar.style.display = '';
+    }
+
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      // Restore navigation bars when component unmounts
+      if (mobileHeader) mobileHeader.style.display = '';
+      if (bottomBar) bottomBar.style.display = '';
     };
+
   }, [isExpanded, onClose]);
 
   if (isIOS) {

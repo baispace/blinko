@@ -61,7 +61,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
             variant='flat'
             size='sm'
             className='mr-2'
-            onPress={() => {
+            onPress={(e) => {
               window.history.back();
             }}
           >

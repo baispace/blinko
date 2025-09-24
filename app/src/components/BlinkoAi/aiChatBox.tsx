@@ -152,14 +152,14 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="overflow-y-auto">
-                    <div className="flex flex-col gap-2 p-2">
+                    <ScrollArea className="flex flex-col gap-2 p-2 h-[400px]" onBottom={() => { }}>
                       {
                         //@ts-ignore
                         metadata?.notes?.map((item: BlinkoItem) => (
-                          <BlinkoCard className='w-[300px]' blinkoItem={item!} withoutHoverAnimation />
+                          <BlinkoCard className='w-[300px] md:w-[600px]' blinkoItem={item!} withoutHoverAnimation />
                         ))
                       }
-                    </div>
+                    </ScrollArea>
                   </PopoverContent>
                 </Popover>
               )

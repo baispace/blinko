@@ -761,5 +761,6 @@
   "enter-api-base-url": "Ssekcem tansaɣbal n yisekla, amedya https://api.openapi.com/v1",
   "tool-call-details": "Tudert n usnulfu",
   "input-parameters": "Agrud n unekcam",
-  "output-result": "Paramètres de sortie"
+  "output-result": "Paramètres de sortie",
+  "version-info-description": "Tansa n usqedac yettwassen s teqdimt n Docker/ineqqasen n ugafa, maca tansa n umseqdac yettwassen s ufran/aẓarur amecṭuḥ. Tis snat-a ur tt-yeǧǧin ara ad d-yessen, acku tenɣil ɣef yirgazen d imezdaɣ."
 }

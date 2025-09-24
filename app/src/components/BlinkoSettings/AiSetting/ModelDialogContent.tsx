@@ -212,8 +212,8 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
           }
         }}
         classNames={{
-          base: "bg-sencondbackground",
-          trigger: "bg-sencondbackground"
+          base: "bg-secondbackground",
+          trigger: "bg-secondbackground"
         }}
         isInvalid={!!errors.providerId}
         errorMessage={errors.providerId}
@@ -240,8 +240,8 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
           }
         }}
         classNames={{
-          base: "bg-sencondbackground",
-          inputWrapper: "bg-sencondbackground"
+          base: "bg-secondbackground",
+          inputWrapper: "bg-secondbackground"
         }}
         isInvalid={!!errors.title}
         errorMessage={errors.title}
@@ -303,9 +303,9 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
           }}
           allowsCustomValue
           classNames={{
-            base: "bg-sencondbackground",
-            popoverContent: "bg-sencondbackground",
-            listboxWrapper: "bg-sencondbackground"
+            base: "bg-secondbackground",
+            popoverContent: "bg-secondbackground",
+            listboxWrapper: "bg-secondbackground"
           }}
           isInvalid={!!errors.modelKey}
           errorMessage={errors.modelKey}
@@ -404,8 +404,8 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
             }}
             description="Common values: 384, 512, 768, 1024, 1536, 3072. Set to 0 for auto-detection."
             classNames={{
-              base: "bg-sencondbackground",
-              inputWrapper: "bg-sencondbackground"
+              base: "bg-secondbackground",
+              inputWrapper: "bg-secondbackground"
             }}
           />
         </div>

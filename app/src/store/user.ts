@@ -192,7 +192,7 @@ export class UserStore implements Store {
       stateFlag: 'isHubInitialized' | 'isUseAIInitialized'
     ) => {
       const savedValue = localStorage.getItem(storageKey);
-      const configKey = featureKey === 'ai' ? 'isUseAI' : `isUseBlinkoHub`;
+      const configKey = featureKey === 'ai' ? 'mainModelId' : `isUseBlinkoHub`;
       const configValue = config?.[configKey];
       const currentValue = configValue ?? (savedValue === 'true');
 

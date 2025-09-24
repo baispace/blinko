@@ -1,7 +1,6 @@
 import express from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { sseHandlers } from 'express-mcp-handler';
-import { z } from 'zod';
 import { getTokenFromRequest } from '@server/lib/helper';
 import { searchBlinkoTool } from "@server/aiServer/tools/searchBlinko";
 import { upsertBlinkoTool } from "@server/aiServer/tools/createBlinko";

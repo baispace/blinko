@@ -1,7 +1,7 @@
 import { getGlobalConfig } from '@server/routerTrpc/config';
 import { createTool } from '@mastra/core/tools';
 import { tavily } from '@tavily/core';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 export const webExtra = createTool({
   id: 'jina-web-crawler-tool',

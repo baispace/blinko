@@ -74,7 +74,7 @@ body {
   height: var(--doc-height);
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
 }
 
 .h-mobile-full {
@@ -134,7 +134,7 @@ body {
 }
 
 .contextmenu .contextmenu__item:hover {
-  background-color: var(--sencondbackground) !important;
+  background-color: var(--secondbackground) !important;
 }
 
 .PhotoView-Portal {
@@ -164,7 +164,7 @@ body {
     --swiper-3d-shadow: rgba(0, 0, 0, .15);
     --background: hsl(0 0% 100%);
     --foreground: hsl(222.2 47.4% 11.2%);
-    --sencondbackground: #f8f8f8;
+    --secondbackground: #f8f8f8;
 
     --hover: #efeee7d9;
     --hover-foreground: hsl(215.4 16.3% 46.9%);
@@ -218,7 +218,7 @@ body {
     --swiper-3d-shadow: rgb(241 241 241 / 15%);
     --background: #0B0B0C;
     --foreground: #E1E1E1;
-    --sencondbackground: #1C1C1E;
+    --secondbackground: #1C1C1E;
 
     --hover: #292929;
     --hover-foreground: hsl(215.4 16.3% 46.9%);
@@ -330,7 +330,7 @@ body {
   margin: 1rem 0;
   padding: 1rem;
   border-radius: 0.5rem;
-  background: var(--sencondbackground);
+  background: var(--secondbackground);
 }
 
 .group[data-focus-visible="true"] .group-data-\[focus-visible\=true\]\:ring-2 {

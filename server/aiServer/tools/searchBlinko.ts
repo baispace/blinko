@@ -1,7 +1,7 @@
 import { userCaller } from '@server/routerTrpc/_app';
 import { NoteType } from '@shared/lib/types';
 import { createTool } from '@mastra/core/tools';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { verifyToken } from '@server/lib/helper';
 
 export const searchBlinkoTool = createTool({

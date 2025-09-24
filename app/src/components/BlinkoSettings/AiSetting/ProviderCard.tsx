@@ -109,7 +109,7 @@ export default observer(function ProviderCard({ provider }: ProviderCardProps) {
   };
 
   return (
-    <Card className="mb-4 bg-sencondbackground group" shadow='none'>
+    <Card className="mb-4 bg-secondbackground group" shadow='none'>
       <CardBody>
         <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-between items-start'} mb-3`}>
           <div className="flex items-center gap-3">

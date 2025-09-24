@@ -25,7 +25,7 @@ module.exports = {
         tag: 'var(--tag)',
         ring: 'var(--ring)',
         background: 'var(--background)',
-        sencondbackground: 'var(--sencondbackground)',
+        secondbackground: 'var(--secondbackground)',
         foreground: 'var(--foreground)',
         primary: {
           DEFAULT: 'var(--primary)',

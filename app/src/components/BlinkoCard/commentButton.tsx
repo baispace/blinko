@@ -314,7 +314,7 @@ export const SimpleCommentList = observer(({ blinkoItem }: { blinkoItem: BlinkoI
   }
 
   return (
-    <div className="bg-sencondbackground rounded-lg px-1 py-2 mt-1">
+    <div className="bg-secondbackground rounded-lg px-1 py-2 mt-1">
       {commentList.map((comment: Comment['items'][0]) => (
         <div key={comment.id} className="pb-[2px] ">
           <div className="ml-1 text-xs flex-1">

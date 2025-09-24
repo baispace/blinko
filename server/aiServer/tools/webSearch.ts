@@ -1,5 +1,5 @@
 import { createTool } from '@mastra/core/tools';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { tavily } from '@tavily/core';
 import { getGlobalConfig } from '@server/routerTrpc/config';
 

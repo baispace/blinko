@@ -39,7 +39,7 @@ export const LinkPreview = ({ href, text }: LinkPreviewProps) => {
       {store.previewData?.value?.title && (
         <div 
           onClick={handleCardClick} 
-          className='p-2 my-1 bg-sencondbackground rounded-xl select-none cursor-pointer'
+          className='p-2 my-1 bg-secondbackground rounded-xl select-none cursor-pointer'
         >
           <div className='flex items-center gap-2 w-full'>
             <div className='font-bold truncate text-sm'>{store.previewData.value?.title}</div>

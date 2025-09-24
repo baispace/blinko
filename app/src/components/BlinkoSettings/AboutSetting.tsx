@@ -156,6 +156,23 @@ export const AboutSetting = observer(() => {
         </div>
       </div>
 
+      {/* Version info explanation */}
+      {isInTauri() && (
+        <div className="mb-6 p-4 bg-secondbackground  rounded-lg">
+          <div className="flex items-start gap-3">
+            <Icon icon="mdi:information" className="text-blue-600 mt-0.5" width="20" height="20" />
+            <div className="flex-1">
+              <h4 className="font-medium text-blue-800 mb-1">
+                {t('version-info-title')}
+              </h4>
+              <p className="text-sm text-blue-700">
+                {t('version-info-description')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <h3 className="font-medium text-gray-500 mb-2">{t('community')}</h3>
         <Item

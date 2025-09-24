@@ -73,7 +73,7 @@ const AttachmentsRender = observer((props: IProps) => {
         renderItem={(file) => (
           <div 
             className={`relative mt-2 flex p-2 items-center gap-2 cursor-pointer 
-              bg-sencondbackground hover:bg-hover !transition-all rounded-md group
+              bg-secondbackground hover:bg-hover !transition-all rounded-md group
               ${!preview ? 'min-w-[200px] flex-shrink-0' : 'w-full'}`}
             onClick={() => {
               if (preview) {

@@ -23,7 +23,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
   return (
     <Dropdown
       classNames={{
-        content: 'bg-sencondbackground',
+        content: 'bg-secondbackground',
       }}
     >
       <DropdownTrigger>

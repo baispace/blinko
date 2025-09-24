@@ -1,6 +1,6 @@
 import { userCaller } from '@server/routerTrpc/_app';
 import { createTool } from '@mastra/core/tools';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { verifyToken } from '@server/lib/helper';
 
 export const deleteBlinkoTool = createTool({

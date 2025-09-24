@@ -730,5 +730,6 @@
   "enter-api-base-url": "Ingrese la URL base, por ejemplo, https://api.openapi.com/v1",
   "tool-call-details": "Detalles de la llamada de herramienta",
   "input-parameters": "Parámetros de entrada",
-  "output-result": "Parámetros de salida"
+  "output-result": "Parámetros de salida",
+  "version-info-description": "La versión del servidor se refiere a la versión de implementación de Docker/backend, mientras que la versión del cliente se refiere a la versión de aplicación de escritorio/móvil. Estas dos versiones no necesitan coincidir, ya que sirven para diferentes propósitos."
 }

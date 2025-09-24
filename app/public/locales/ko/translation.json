@@ -725,5 +725,6 @@
   "enter-api-base-url": "기본 URL을 입력하세요. 예: https://api.openapi.com/v1",
   "tool-call-details": "도구 호출 세부 정보",
   "input-parameters": "입력 매개변수",
-  "output-result": "출력 매개변수"
+  "output-result": "출력 매개변수",
+  "version-info-description": "서버 버전은 Docker/백엔드 배포 버전을 의미하며, 클라이언트 버전은 데스크탑/모바일 앱 버전을 의미합니다. 이 두 가지 버전은 서로 다른 목적으로 서비스되기 때문에 일치할 필요가 없습니다."
 }

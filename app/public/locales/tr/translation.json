@@ -730,5 +730,6 @@
   "enter-api-base-url": "Temel URL'yi girin, örneğin https://api.openapi.com/v1",
   "tool-call-details": "Araç çağrı detayları",
   "input-parameters": "Giriş parametreleri",
-  "output-result": "Çıktı parametreleri"
+  "output-result": "Çıktı parametreleri",
+  "version-info-description": "Sunucu sürümü, Docker/arka uç dağıtım sürümünü ifade ederken, istemci sürümü masaüstü/mobil uygulama sürümünü ifade eder. Bu iki sürümün eşleşmesi gerekmez çünkü farklı amaçlara hizmet ederler."
 }

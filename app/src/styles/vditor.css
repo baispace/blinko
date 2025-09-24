@@ -166,7 +166,7 @@
 } */
 .vditor-hint--current,
 .vditor-hint button:not(.vditor-menu--disabled):hover {
-  background-color: var(--sencondbackground) !important;
+  background-color: var(--secondbackground) !important;
   border-radius: 6px;
   transition: all 0.3s;
   color: var(--desc) !important;
@@ -212,7 +212,7 @@
 }
 
 .vditor-input:focus {
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
 }
 
 .vditor-ir pre.vditor-reset {
@@ -243,7 +243,7 @@
 .vditor-outline {
   margin-top: 16px;
   border-radius: 14px;
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
 }
 
 .vditor-outline__title {

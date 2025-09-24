@@ -83,10 +83,10 @@ export default observer(function AiSetting() {
             <div>
               <label className="text-sm font-medium text-default-700">Endpoint URL</label>
               <Input
-                value={`${getBlinkoEndpoint() ?? window.location.origin}api/mcp/sse`}
+                value={`${getBlinkoEndpoint() ?? window.location.origin}sse`}
                 readOnly
                 className="mt-1"
-                endContent={<Copy size={20} content={`${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse`} />}
+                endContent={<Copy size={20} content={`${getBlinkoEndpoint() ?? window.location.origin}sse`} />}
               />
             </div>
 
@@ -107,7 +107,7 @@ export default observer(function AiSetting() {
                 <Copy size={20} content={`{
   "mcpServers": {
     "blinko": {
-      "url": "${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse",
+      "url": "${getBlinkoEndpoint() ?? window.location.origin}sse",
       "headers": {
         "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
       }
@@ -118,7 +118,7 @@ export default observer(function AiSetting() {
 {
   "mcpServers": {
     "blinko": {
-      "url": "${getBlinkoEndpoint() ?? window.location.origin}/api/mcp/sse",
+      "url": "${getBlinkoEndpoint() ?? window.location.origin}sse",
       "headers": {
         "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
       }
@@ -127,13 +127,6 @@ export default observer(function AiSetting() {
 }
 \`\`\``} />
               </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <Icon icon="hugeicons:info-circle" width="14" height="14" className="inline mr-2" />
-                Available tools: searchBlinko, upsertBlinko, updateBlinko, deleteBlinko, createComment, webSearch, webExtra
-              </p>
             </div>
           </div>
         </div>

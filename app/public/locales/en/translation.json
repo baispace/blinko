@@ -143,6 +143,8 @@
   "client": "Client",
   "new-server-version-available": "New server version available",
   "new-client-version-available": "New client version available",
+  "version-info-title": "About Version Numbers",
+  "version-info-description": "Server version refers to the Docker/backend deployment version, while client version refers to the desktop/mobile app version. These don't need to match as they serve different purposes.",
   "storage": "Storage",
   "local-file-system": "Local File System",
   "object-storage": "Object storage",

@@ -357,7 +357,7 @@ menu {
 }
 
 .markdown-body table th {
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
   font-weight: var(--base-text-weight-semibold);
   white-space: nowrap;
 }
@@ -381,7 +381,7 @@ menu {
 }
 
 .markdown-body table tbody tr:hover {
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
   transition: all 0.3s ease;
 } */
 
@@ -527,7 +527,7 @@ ol {
   margin: 0;
   padding: 2px 1em;
   color: var(--foreground);
-  background-color: var(--sencondbackground);
+  background-color: var(--secondbackground);
   border-left: .25em solid #EAB308;
 }
 

@@ -190,7 +190,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 <HashtagButton store={store} content={content} />
                 <ReferenceButton store={store} />
                 <ResourceReferenceButton store={store} />
-                {blinko.config.value?.isUseAI && (
+                {blinko.config.value?.mainModelId && (
                   <AIWriteButton />
                 )}
                 <UploadButtons

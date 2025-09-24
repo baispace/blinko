@@ -58,8 +58,8 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
       .getPropertyValue('--card')
       .trim()
 
-    const sencondbackground = getComputedStyle(document.documentElement)
-      .getPropertyValue('--sencondbackground')
+    const secondbackground = getComputedStyle(document.documentElement)
+      .getPropertyValue('--secondbackground')
       .trim()
 
     const option = {
@@ -97,7 +97,7 @@ export const HeatMap = ({ data, title, description }: HeatMapProps) => {
           borderWidth: isPc ? 5 : 2,
           borderColor: backgroundColor,
           borderRadius: 5,
-          color: sencondbackground
+          color: secondbackground
         },
         yearLabel: { show: false },
         dayLabel: {

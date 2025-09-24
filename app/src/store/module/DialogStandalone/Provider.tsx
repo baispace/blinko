@@ -103,7 +103,7 @@ const Dialog = observer(() => {
         >
           {!onlyContent && (
             <motion.div
-              className="w-full bg-background border-sencondbackground p-1 rounded-t-lg shadow-lg pointer-events-auto"
+              className="w-full bg-background border-secondbackground p-1 rounded-t-lg shadow-lg pointer-events-auto"
               {...motionConfig}
             >
               <div className="flex flex-col justify-between items-center p-4 gap-2">

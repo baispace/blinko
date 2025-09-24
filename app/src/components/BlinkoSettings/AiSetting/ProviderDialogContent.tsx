@@ -111,7 +111,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
       <Card
         shadow='none'
         isPressable
-        className="hover:bg-default-50 transition-colors cursor-pointer bg-sencondbackground w-full"
+        className="hover:bg-default-50 transition-colors cursor-pointer bg-secondbackground w-full"
         onPress={() => handleTemplateSelect('custom')}
       >
         <CardBody className="flex flex-row items-center gap-4 p-4">
@@ -140,7 +140,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
                 shadow='none'
                 key={template.value}
                 isPressable
-                className="hover:bg-default-50 transition-colors cursor-pointer bg-sencondbackground"
+                className="hover:bg-default-50 transition-colors cursor-pointer bg-secondbackground"
                 onPress={() => handleTemplateSelect(template.value)}
               >
                 <CardBody className="flex flex-row items-center gap-3 p-4">

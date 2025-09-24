@@ -730,5 +730,6 @@
   "enter-api-base-url": "基本URLを入力してください。例：https://api.openapi.com/v1",
   "tool-call-details": "ツールの呼び出し詳細",
   "input-parameters": "入力パラメータ",
-  "output-result": "出力パラメータ"
+  "output-result": "出力パラメータ",
+  "version-info-description": "サーバー版はDocker/バックエンドのデプロイメント版を指し、クライアント版はデスクトップ/モバイルアプリの版を指します。これら二つの版は一致する必要がないです。それぞれ異なる目的で使用されています。"
 }

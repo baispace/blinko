@@ -673,6 +673,8 @@
   "client": "客户端",
   "new-server-version-available": "服务器有新版本可用",
   "new-client-version-available": "客户端有新版本可用",
+  "version-info-title": "关于版本号",
+  "version-info-description": "服务器版本指的是 Docker/后端部署版本，而客户端版本指的是桌面端/移动端应用版本。这两个版本不需要匹配，因为它们服务于不同的目的。",
   "todo": "待办",
   "restore": "恢复",
   "complete": "完成",

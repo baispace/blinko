@@ -689,5 +689,6 @@
   "enter-api-base-url": "შეიყვანე საბაზო URL, მაგ: https://api.openapi.com/v1",
   "tool-call-details": "ინსტრუმენტის გამოძაծო  Georgia",
   "input-parameters": "შესაყვანი პარამეტრebi",
-  "output-result": "გამოსახულები  параметри"
+  "output-result": "გამოსახულები  параметри",
+  "version-info-description": "სერვერის ვერსია მოიხმო  Docker/Backend-  ի տեղադրմա,   ,   ,    .     -      /       .        ,          ."
 }

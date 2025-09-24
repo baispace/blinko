@@ -92,7 +92,7 @@
     "ws": "^8.14.2",
     "yauzl-promise": "^4.0.0",
     "zod": "^4.1.11",
-    "zod-openapi": "^5.0.1"   
+    "zod-openapi": "^5.0.1"
   },
   "resolutions": {
     "@langchain/core": "^0.3.40",

@@ -737,5 +737,6 @@
   "enter-api-base-url": "Voer de basis-URL in, bijvoorbeeld https://api.openapi.com/v1",
   "tool-call-details": "Gereedschap oproepdetails",
   "input-parameters": "Invoerparameters",
-  "output-result": "uitvoerparameters"
+  "output-result": "uitvoerparameters",
+  "version-info-description": "De serverversie verwijst naar de Docker/backend-implementatieversie, terwijl de clientversie verwijst naar de desktop-/mobiele app-versie. Deze twee versies hoeven niet overeen te komen, omdat ze voor verschillende doeleinden dienen."
 }

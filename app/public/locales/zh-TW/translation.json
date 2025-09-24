@@ -730,5 +730,6 @@
   "enter-api-base-url": "輸入基礎網址，例如https://api.openapi.com/v1",
   "tool-call-details": "工具調用詳情",
   "input-parameters": "輸入參數",
-  "output-result": "輸出參數"
+  "output-result": "輸出參數",
+  "version-info-description": "伺服器版本指的是 Docker/後端部署版本，而客戶端版本指的是桌面端/移動端應用版本。這兩個版本不需要匹配，因為它們服務於不同的目的。"
 }

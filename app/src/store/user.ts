@@ -228,7 +228,7 @@ export class UserStore implements Store {
     handleFeatureRoute('hub', 'hubEnabled', {
       title: "hub",
       href: '/hub',
-      icon: 'fluent:people-community-16-regular'
+      icon: 'hugeicons:pacman-02'
     }, 'isHubInitialized');
 
     const savedLanguage = localStorage.getItem('userLanguage');

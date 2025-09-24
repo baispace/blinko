@@ -27,6 +27,13 @@ import { useLocation, useSearchParams, Link } from 'react-router-dom';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
 
+export const getFixedHeaderBackground = () => {
+  if (document?.documentElement?.classList?.contains('dark')) {
+    return '#00000080';
+  }
+  return '#ffffff80';
+};
+
 export const CommonLayout = observer(({ children, header }: { children?: React.ReactNode; header?: React.ReactNode }) => {
   const [isClient, setClient] = useState(false);
   const [isOpen, setisOpen] = useState(false);
@@ -42,12 +49,6 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
   user.use();
   base.useInitApp();
 
-  const getFixedHeaderBackground = () => {
-    if (document?.documentElement?.classList?.contains('dark')) {
-      return '#00000080';
-    }
-    return '#ffffff80';
-  };
 
   useEffect(() => {
     if (isPc) setisOpen(false);

@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BaseStore } from "@/store/baseStore";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { SideBarItem } from "./index";
+import { getFixedHeaderBackground, SideBarItem } from "./index";
 import { useTranslation } from "react-i18next";
 import { useSwiper } from "@/lib/hooks";
 import { motion } from "framer-motion";
@@ -36,28 +36,52 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
 
   return (
     <motion.div
-      className="blinko-bottom-bar h-[70px] flex w-full px-4 py-2 gap-2 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
+      className="blinko-bottom-bar h-[60px] flex w-full px-3 py-2 gap-1 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
       animate={{ y: isVisible ? 0 : 100 }}
       transition={{
-        type: "tween",
-        duration: 0.3,
-        ease: [0.25, 0.1, 0.25, 1]
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+        mass: 0.8,
+        bounce: 0.3
+      }}
+      style={{
+        background: getFixedHeaderBackground(),
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)'
       }}
     >
-      {mobileItems.map(i => (
-        <Link
-          className={`flex-1 items-center justify-center flex !flex-col group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!text-foreground' : '!text-desc'
-            }`}
+      {mobileItems.map((i, index) => (
+        <motion.div
           key={i.title}
-          to={i.href}
-          onClick={() => {
-            base.currentRouter = i;
-            onItemClick?.();
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            type: "spring",
+            damping: 20,
+            stiffness: 400,
+            delay: index * 0.1
           }}
+          className="flex-1"
         >
-          {/* <Icon className={`text-center`} icon={i.icon} width="20" height="20" /> */}
-          <div className="text-center font-bold text-md mt-[-4px]">{t(i.title)}</div>
-        </Link>
+          <Link
+            className={`w-full h-full items-center justify-center flex !flex-col group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!text-foreground' : '!text-desc'
+              } transition-all duration-200 hover:scale-110 active:scale-95`}
+            to={i.href}
+            onClick={() => {
+              base.currentRouter = i;
+              onItemClick?.();
+            }}
+          >
+            <motion.div
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Icon className={`text-center`} icon={i.icon} width="24" height="24" />
+            </motion.div>
+          </Link>
+        </motion.div>
       ))}
     </motion.div>
   );

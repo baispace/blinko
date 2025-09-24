@@ -14,23 +14,34 @@ import android.content.Context
 class Blinko {
     fun setcolor(hex: String, activity: Activity) {
         val color = Color.parseColor(hex)
-
-        activity.window.statusBarColor = color
-        activity.window.navigationBarColor = color
-
         val isLightColor = isColorLight(color)
 
-        // Save theme preference
+        // Use CSS background colors for consistency
+        val finalColor = if (!isLightColor) {
+            Color.parseColor("#0B0B0C") // Dark theme background color
+        } else {
+            Color.WHITE // Light theme background color (hsl(0 0% 100%))
+        }
+
+        activity.window.statusBarColor = finalColor
+        activity.window.navigationBarColor = finalColor
+
+        // Save theme preference with original hex but apply pure black
         saveThemePreference(activity, !isLightColor, hex)
 
+        // For dark mode with pure black, always use dark appearance (light text/icons)
+        // For light mode, use the original color-based logic
+        val isDarkMode = !isLightColor
+        val useLightAppearance = !isDarkMode && isColorLight(finalColor)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val statusAppearance = if (isLightColor) {
+            val statusAppearance = if (useLightAppearance) {
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             } else {
                 0
             }
 
-            val navAppearance = if (isLightColor) {
+            val navAppearance = if (useLightAppearance) {
                 WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
             } else {
                 0
@@ -49,11 +60,11 @@ class Blinko {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             var flags = 0
 
-            if (isLightColor) {
+            if (useLightAppearance) {
                 flags = flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isLightColor) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && useLightAppearance) {
                 flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             }
 

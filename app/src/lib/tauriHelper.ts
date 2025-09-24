@@ -118,7 +118,7 @@ export async function downloadFromLink(uri: string, filename?: string) {
 export async function setTauriTheme(theme: any) {
     if (isAndroid()) {
         const lightColor = '#f8f8f8';
-        const darkColor = '#1C1C1E';
+        const darkColor = '#000000';
         setStatusBarColor(theme === 'light' ? lightColor : darkColor);
     } else if (isDesktop()) {
         try {
@@ -134,6 +134,13 @@ export async function setTauriTheme(theme: any) {
 
 export const requestMicrophonePermission = async (): Promise<boolean> => {
     try {
+        // Check cached permission first
+        const cachedPermission = localStorage.getItem('microphone_permission_granted');
+        if (cachedPermission === 'true') {
+            console.log('Using cached microphone permission');
+            return true;
+        }
+
         // Check current platform
         const currentPlatform = isInTauri() ? platform() : 'web';
         
@@ -152,6 +159,8 @@ export const requestMicrophonePermission = async (): Promise<boolean> => {
         if (stream) {
             // Permission granted, stop the stream immediately
             stream.getTracks().forEach(track => track.stop());
+            // Cache the granted permission
+            localStorage.setItem('microphone_permission_granted', 'true');
             return true;
         }
         
@@ -195,22 +204,34 @@ export const requestMicrophonePermission = async (): Promise<boolean> => {
             );
         }
         
+        // Clear cache when permission denied
+        localStorage.removeItem('microphone_permission_granted');
         return false;
     } catch (error) {
         console.error('Failed to request microphone permission:', error);
+        localStorage.removeItem('microphone_permission_granted');
         return false;
     }
 };
 
 export const checkMicrophonePermission = async (): Promise<boolean> => {
     try {
+        // Check cached permission first
+        const cachedPermission = localStorage.getItem('microphone_permission_granted');
+        if (cachedPermission === 'true') {
+            console.log('Using cached microphone permission');
+            return true;
+        }
+
         // Check if the permission API is available (mainly for web)
         if ('permissions' in navigator) {
             try {
                 const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
                 if (permission.state === 'granted') {
+                    localStorage.setItem('microphone_permission_granted', 'true');
                     return true;
                 } else if (permission.state === 'denied') {
+                    localStorage.removeItem('microphone_permission_granted');
                     return false;
                 }
                 // If prompt, fall through to test actual access
@@ -219,19 +240,22 @@ export const checkMicrophonePermission = async (): Promise<boolean> => {
                 console.log('Permission API not supported for microphone:', e);
             }
         }
-        
+
         // Fallback: Try to access the microphone
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
             .catch(() => null);
-        
+
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
+            localStorage.setItem('microphone_permission_granted', 'true');
             return true;
         }
-        
+
+        localStorage.removeItem('microphone_permission_granted');
         return false;
     } catch (error) {
         console.error('Error checking microphone permission:', error);
+        localStorage.removeItem('microphone_permission_granted');
         return false;
     }
 };

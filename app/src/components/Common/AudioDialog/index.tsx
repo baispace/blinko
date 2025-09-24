@@ -18,7 +18,10 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
   const [milliseconds, setMilliseconds] = useState<number>(0);
   const millisecondTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [audioPermissionGranted, setAudioPermissionGranted] = useState<boolean>(false);
+  const [audioPermissionGranted, setAudioPermissionGranted] = useState<boolean>(() => {
+    // Initialize with cached permission status
+    return localStorage.getItem('microphone_permission_granted') === 'true';
+  });
   const [audioLevel, setAudioLevel] = useState<number[]>(Array(30).fill(0));
   const animationFrameRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -132,23 +135,28 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
   useEffect(() => {
     const initRecording = async () => {
       try {
-        // First check/request permission
-        const hasPermission = await checkMicrophonePermission();
-        if (!hasPermission) {
-          const granted = await requestMicrophonePermission();
-          if (!granted) {
-            setAudioPermissionGranted(false);
-            console.error('Microphone permission denied');
-            return;
+        // If we already have cached permission, skip permission check
+        const cachedPermission = localStorage.getItem('microphone_permission_granted') === 'true';
+
+        if (!cachedPermission) {
+          // First check/request permission
+          const hasPermission = await checkMicrophonePermission();
+          if (!hasPermission) {
+            const granted = await requestMicrophonePermission();
+            if (!granted) {
+              setAudioPermissionGranted(false);
+              console.error('Microphone permission denied');
+              return;
+            }
           }
+          // Permission granted, update state
+          setAudioPermissionGranted(true);
         }
 
         const stream = await startRecording();
         if (stream) {
           setupAudioAnalyser(stream);
-          setAudioPermissionGranted(true);
         } else {
-          setAudioPermissionGranted(false);
           console.error('Failed to start recording');
           return;
         }
@@ -167,6 +175,9 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         millisecondTimerRef.current = msTimer;
       } catch (error) {
         console.error("Failed to start recording:", error);
+        // Clear cached permission on error
+        localStorage.removeItem('microphone_permission_granted');
+        setAudioPermissionGranted(false);
       }
     };
 
@@ -268,36 +279,16 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
   }, [recordingBlob, onComplete, recordingTime]);
 
   const handleDelete = useCallback(() => {
-    setLastRecordingBlob(null);
-    setRecordingTime(0);
-    setMilliseconds(0);
+    // Stop current recording
+    stopRecording();
 
-    const initNewRecording = async () => {
-      try {
-        const stream = await startRecording();
-        if (stream) {
-          setupAudioAnalyser(stream);
-        }
-        setIsRecording(true);
+    // Clean up timers
+    if (timerId) clearInterval(timerId);
+    if (millisecondTimerRef.current) clearInterval(millisecondTimerRef.current);
 
-        // Restart timer
-        const timer = setInterval(() => {
-          setRecordingTime(prev => prev + 1);
-        }, 1000);
-        setTimerId(timer);
-
-        // Restart milliseconds timer
-        const msTimer = setInterval(() => {
-          setMilliseconds(prev => (prev + 1) % 100);
-        }, 10);
-        millisecondTimerRef.current = msTimer;
-      } catch (error) {
-        console.error("Failed to restart recording:", error);
-      }
-    };
-
-    initNewRecording();
-  }, [startRecording, setupAudioAnalyser]);
+    // Close the dialog
+    RootStore.Get(DialogStandaloneStore).close();
+  }, [stopRecording, timerId]);
 
   // Format time display as MM:SS.XX
   const formattedTime = useMemo(() => {
@@ -310,7 +301,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
   const { t } = useTranslation();
 
   return (
-    <div className="relative flex flex-col items-center overflow-hidden">
+    <div className="relative flex flex-col items-center overflow-hidden w-full h-[450px]">
       {!audioPermissionGranted ? (
         // Permission Request UI - Clean and Professional
         <div className="flex flex-col items-center justify-center w-full h-full p-8 rounded-lg">
@@ -345,15 +336,13 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         </div>
       ) : (
         // Recording UI - Original design when permission is granted
-        <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-neutral-900 rounded-lg">
-          <div className="w-full">
-            <div className="flex items-center">
-              <span className="text-white font-bold">REC</span>
-              <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            </div>
+        <div className="flex flex-col items-center w-full h-full p-4 bg-neutral-900 rounded-lg">
+          <div className="w-full h-8 flex items-center">
+            <span className="text-white font-bold">REC</span>
+            <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
           </div>
 
-          <div className="w-full flex-1 flex flex-col items-center justify-center my-4">
+          <div className="w-full flex-1 flex flex-col items-center justify-center py-4 min-h-[200px]">
             <div className="my-4 w-full">
               <div className="w-full h-[40px] flex items-center justify-center rounded">
                 <div className="w-full h-full flex items-end justify-center space-x-1 px-2">
@@ -378,7 +367,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
             </div>
           </div>
 
-          <div className="flex justify-center mt-4 w-full">
+          <div className="flex justify-center mt-4 w-full h-16">
             {isRecording ? (
               <button
                 className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
@@ -387,7 +376,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
                 <div className="w-6 h-6 bg-white rounded"></div>
               </button>
             ) : (
-              <div className="flex gap-5">
+              <div className="flex gap-5 items-center justify-center h-full">
                 <button
                   className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
                   onClick={handleDelete}

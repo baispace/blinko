@@ -9,14 +9,33 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { CancelIcon } from "@/components/Common/Icons";
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
-  <div
+  <motion.div
     onClick={onClose}
-    className={`cursor-pointer hover:scale-110 !transition-all absolute 
-    md:top-[-12px] md:right-[-12px] top-[-20px] right-[calc(50%-17.5px)] bg-[#FFCC00] z-[2002] text-black p-2 rounded-full 
-    !w-[35px] !h-[35px] flex items-center justify-center`}
+    className={`cursor-pointer absolute
+    md:top-[-12px] md:right-[-12px] top-[-20px] right-[calc(50%-17.5px)] bg-background border-2 border-border z-[2002] text-foreground p-2 rounded-full
+    !w-[35px] !h-[35px] flex items-center justify-center shadow-lg`}
+    whileTap={{
+      scale: 0.85,
+      backgroundColor: "var(--heroui-colors-default-100)"
+    }}
+    whileHover={{
+      scale: 1.1,
+      backgroundColor: "var(--heroui-colors-default-50)"
+    }}
+    transition={{
+      type: "spring",
+      stiffness: 400,
+      damping: 17
+    }}
   >
-    <CancelIcon className='primary-foreground group-hover:rotate-[180deg] !transition-all' />
-  </div>
+    <motion.div
+      whileTap={{ rotate: 90 }}
+      whileHover={{ rotate: 45 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <CancelIcon className='primary-foreground !transition-all' />
+    </motion.div>
+  </motion.div>
 );
 
 

@@ -99,7 +99,10 @@ const useAudioRecorder: (
       
       // Save stream reference for later cleanup
       mediaStreamRef.current = stream;
-      
+
+      // Cache microphone permission
+      localStorage.setItem('microphone_permission_granted', 'true');
+
       console.log("Microphone access granted, tracks:", stream.getAudioTracks().length);
       const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
@@ -173,6 +176,10 @@ const useAudioRecorder: (
       return stream;
     } catch (err: any) {
       console.error("Failed to get microphone access:", err.name, err.message);
+
+      // Clear cached permission on any error
+      localStorage.removeItem('microphone_permission_granted');
+
       // Provide more detailed error information
       if (err.name === 'NotAllowedError') {
         console.error("User denied microphone permission");
@@ -181,7 +188,7 @@ const useAudioRecorder: (
       } else if (err.name === 'NotReadableError') {
         console.error("Microphone may be in use by another application");
       }
-      
+
       onNotAllowedOrFound?.(err);
       throw err; // Rethrow error for UI handling
     }

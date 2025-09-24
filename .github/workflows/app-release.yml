@@ -163,6 +163,10 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: Increase Node.js memory limit
+        run: |
+          echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
+
       - name: Install bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -244,6 +248,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
+
+      - name: Increase Node.js memory limit for Android build
+        run: |
+          echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable

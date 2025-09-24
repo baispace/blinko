@@ -81,8 +81,8 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
       return;
     }
 
-    // Check if at top position
-    if (scrollElement.scrollTop > 0) return;
+    // Check if at top position - allow small tolerance for bounce effect
+    if (scrollElement.scrollTop > 5) return;
 
     const clientY = e instanceof TouchEvent ? e.touches[0].clientY : e.clientY;
     startYRef.current = clientY;
@@ -109,11 +109,16 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
     const deltaY = clientY - startYRef.current;
 
     if (deltaY > 0) {
-      // Only prevent default if we're at the top and pulling down
+      // Only prevent default if we're at the top and pulling down WITH SUFFICIENT FORCE
       if (scrollElement.scrollTop === 0) {
-        e.preventDefault();
-        const distance = Math.min(deltaY * 0.5, maxPullDownDistance);
-        setPullDistance(distance);
+        // Only prevent default and trigger refresh UI when pull distance is significant
+        // This allows small bounces to work naturally while still enabling pull-to-refresh
+        if (deltaY > 80) { // Require at least 30px pull before interfering
+          e.preventDefault();
+          const distance = Math.min(deltaY * 0.5, maxPullDownDistance);
+          setPullDistance(distance);
+        }
+        // For smaller pulls, let native bounce effect work
       }
     }
   };
@@ -225,8 +230,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
       {showRefreshIndicator && (
         <div
           className={`flex items-center justify-center transition-all duration-150 ${isDragging ? '' : 'duration-300'
-            } ${isReadyToRefresh ? 'text-primary' : 'text-gray-500'} ${isReadyToRefresh ? 'bg-primary/5' : 'bg-gray-50/80'
-            }`}
+            } ${isReadyToRefresh ? 'text-primary' : 'text-gray-500'} `}
           style={{
             height: `${pullDistance}px`,
             marginTop: `-${pullDistance}px`,

@@ -19,6 +19,7 @@ class MainActivity : TauriActivity() {
         // Apply saved theme before super.onCreate to prevent flash
         blinko.applyStartupTheme(this)
         super.onCreate(savedInstanceState)
+        enableWebViewBounceEffect()
         handleShortcutIntent()
         handleShareIntent()
     }
@@ -33,6 +34,20 @@ class MainActivity : TauriActivity() {
         handleShareIntent()
     }
 
+    private fun enableWebViewBounceEffect() {
+        // Use a small delay to ensure WebView is initialized
+        window.decorView.postDelayed({
+            try {
+                findWebView(window.decorView)?.let { webView ->
+                    // Enable bounce/overscroll effect
+                    webView.overScrollMode = View.OVER_SCROLL_ALWAYS
+                    Log.i("BlinkoApp", "WebView bounce effect enabled")
+                }
+            } catch (e: Exception) {
+                Log.e("BlinkoApp", "Failed to enable WebView bounce effect: ${e.message}")
+            }
+        }, 500L) // Short delay to ensure WebView is ready
+    }
 
     private fun handleShortcutIntent() {
         if (hasInjectedShortcut) return

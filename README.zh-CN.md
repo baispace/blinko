@@ -5,6 +5,7 @@
 
 <div align="center">
 
+![Docker Pulls](https://img.shields.io/docker/pulls/blinkospace/blinko?color=ff4444&labelColor=black&logo=docker&logoColor=white&style=flat-square)
 ![GitHub issues](https://img.shields.io/github/v/release/blinko-space/blinko?color=369eff&labelColor=black&logo=github&style=flat-square)
 ![Docker Release](https://img.shields.io/docker/v/blinkospace/blinko?color=369eff&label=docker&labelColor=black&logo=docker&logoColor=white&style=flat-square&sort=semver)
 ![Release Data](https://img.shields.io/github/release-date/blinko-space/blinko?labelColor=black&style=flat-square)

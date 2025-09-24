@@ -527,13 +527,13 @@ export const BlinkoRightClickMenu = observer(() => {
       </ContextMenuItem>
     ) : <></>}
 
-    {blinko.config.value?.isUseAI ? (
+    {blinko.config.value?.mainModelId ? (
       <ContextMenuItem onClick={handleAITag}>
         <AITagItem />
       </ContextMenuItem>
     ) : <></>}
 
-    {blinko.config.value?.isUseAI ? (
+    {blinko.config.value?.mainModelId ? (
       <ContextMenuItem onClick={handleRelatedNotes}>
         <RelatedNotesItem />
       </ContextMenuItem>
@@ -612,13 +612,13 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
         </DropdownItem>
       ) : <></>}
 
-      {blinko.config.value?.isUseAI ? (
+      {blinko.config.value?.mainModelId ? (
         <DropdownItem key="AITagItem" onPress={handleAITag}>
           <AITagItem />
         </DropdownItem>
       ) : <></>}
 
-      {blinko.config.value?.isUseAI ? (
+      {blinko.config.value?.mainModelId ? (
         <DropdownItem key="RelatedNotesItem" onPress={handleRelatedNotes}>
           <RelatedNotesItem />
         </DropdownItem>

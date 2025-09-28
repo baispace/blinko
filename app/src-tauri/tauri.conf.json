@@ -25,7 +25,8 @@
         "resizable": true,
         "focus": true,
         "hiddenTitle": true,
-        "decorations": true
+        "decorations": true,
+        "visible": false
       },
       {
         "label": "quicknote",

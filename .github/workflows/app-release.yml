@@ -140,6 +140,12 @@ jobs:
           method: 'network'
           sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev" ]'
 
+      - name: Set CUDA environment variables (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          echo "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1" >> $GITHUB_ENV
+          echo "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" >> $GITHUB_PATH
+
       - name: Fix version format for Windows MSI
         if: matrix.platform == 'windows-latest'
         run: |
@@ -212,9 +218,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Add CUDA environment variables for Windows
-          CUDA_PATH: ${{ matrix.platform == 'windows-latest' && env.CUDA_PATH || '' }}
-          CUDA_ROOT: ${{ matrix.platform == 'windows-latest' && env.CUDA_PATH || '' }}
         with:
           projectPath: 'app'
           tauriScript: '../node_modules/.bin/tauri'

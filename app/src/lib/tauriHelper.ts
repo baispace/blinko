@@ -37,6 +37,14 @@ export function isDesktop() {
     }
 }
 
+export function isWindows() {
+    try {
+        return platform() === 'windows';
+    } catch (error) {
+        return false
+    }
+}
+
 export function isInTauri() {
     try {
         // @ts-ignore

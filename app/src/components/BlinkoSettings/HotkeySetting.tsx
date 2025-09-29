@@ -10,7 +10,7 @@ import { Item, ItemWithTooltip } from './Item';
 import { useEffect, useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
-import { isDesktop, isInTauri } from '@/lib/tauriHelper';
+import { isDesktop, isInTauri, isWindows } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { HotkeyConfig, DEFAULT_HOTKEY_CONFIG, TextSelectionToolbarConfig, DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG } from '@/../../shared/lib/types';
@@ -687,7 +687,7 @@ export const HotkeySetting = observer(() => {
         </div>
       </CollapsibleCard>
 
-      <VoiceSetting />
+      {isWindows() && <VoiceSetting />}
     </div>
   );
 });

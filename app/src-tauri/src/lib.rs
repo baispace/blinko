@@ -1,10 +1,10 @@
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod desktop;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), target_os = "windows"))]
 mod voice;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), target_os = "windows"))]
 use voice::*;
 use tauri::Manager;
 
@@ -77,12 +77,18 @@ pub fn run() {
                 show_quicktool,
                 set_desktop_theme,
                 set_desktop_colors,
-                // Voice recognition commands
+                // Voice recognition commands (Windows only)
+                #[cfg(target_os = "windows")]
                 get_voice_config,
+                #[cfg(target_os = "windows")]
                 save_voice_config_cmd,
+                #[cfg(target_os = "windows")]
                 initialize_voice_recognition,
+                #[cfg(target_os = "windows")]
                 start_voice_recognition,
+                #[cfg(target_os = "windows")]
                 stop_voice_recognition,
+                #[cfg(target_os = "windows")]
                 get_voice_status
             ])
             .setup(|app| {

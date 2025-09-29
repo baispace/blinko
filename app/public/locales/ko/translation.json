@@ -726,5 +726,10 @@
   "tool-call-details": "도구 호출 세부 정보",
   "input-parameters": "입력 매개변수",
   "output-result": "출력 매개변수",
-  "version-info-description": "서버 버전은 Docker/백엔드 배포 버전을 의미하며, 클라이언트 버전은 데스크탑/모바일 앱 버전을 의미합니다. 이 두 가지 버전은 서로 다른 목적으로 서비스되기 때문에 일치할 필요가 없습니다."
+  "version-info-description": "서버 버전은 Docker/백엔드 배포 버전을 의미하며, 클라이언트 버전은 데스크탑/모바일 앱 버전을 의미합니다. 이 두 가지 버전은 서로 다른 목적으로 서비스되기 때문에 일치할 필요가 없습니다.",
+  "audio-tips": "길게 누르고 단축키를 입력하고, 손을 떼면 텍스트 상자에 삽입하세요.",
+  "voice-recognition-hotkey": "음성 입력 단축키",
+  "local-voice-recognition": "현지 음성 전사",
+  "cuda-acceleration": "CUDA 가속",
+  "voice-tip": "길게 누르고 단축키를 말하면 음성을 텍스트로 변환하고, 손을 떼면 변환된 내용이 텍스트 상자에 삽입됩니다."
 }

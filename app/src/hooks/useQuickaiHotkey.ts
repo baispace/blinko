@@ -11,16 +11,18 @@ export const useQuickaiHotkey = () => {
   useEffect(() => {
     if (!isInTauri() || !isDesktop()) return;
 
-    let unlistenQuickai: any;
-    let unlistenNavigation: any;
+    let isMounted = true;
+    const unlisteners: (() => void)[] = [];
     let isProcessing = false; // Prevent duplicate processing
 
     const setupEventListeners = async () => {
       try {
         const { listen } = await import('@tauri-apps/api/event');
-        
+
+        if (!isMounted) return;
+
         // Listen for quick AI events (legacy support)
-        unlistenQuickai = await listen('quickai-triggered', () => {
+        const unlistenQuickai = await listen('quickai-triggered', () => {
           try {
             // Navigate to AI page to continue the conversation
             navigate('/ai');
@@ -30,24 +32,30 @@ export const useQuickaiHotkey = () => {
           }
         });
 
+        if (isMounted && unlistenQuickai) {
+          unlisteners.push(unlistenQuickai);
+        }
+
+        if (!isMounted) return;
+
         // Listen for navigation events from quickai window with prompt
-        unlistenNavigation = await listen<string>('navigate-to-ai-with-prompt', async (event) => {
+        const unlistenNavigation = await listen<string>('navigate-to-ai-with-prompt', async (event) => {
           const prompt = event.payload;
           console.log('Received navigation event with prompt:', prompt);
-          
+
           // Prevent duplicate processing
           if (isProcessing) {
             console.log('Already processing, ignoring duplicate event');
             return;
           }
-          
+
           isProcessing = true;
-          
+
           try {
             // Start AI chat with the prompt
             await aiStore.newChat();
             await aiStore.newChatWithSuggestion(prompt);
-            
+
             // Navigate to AI page
             navigate('/ai');
           } catch (error) {
@@ -60,6 +68,10 @@ export const useQuickaiHotkey = () => {
           }
         });
 
+        if (isMounted && unlistenNavigation) {
+          unlisteners.push(unlistenNavigation);
+        }
+
       } catch (error) {
         console.error('Failed to setup Tauri event listeners:', error);
       }
@@ -69,12 +81,18 @@ export const useQuickaiHotkey = () => {
 
     // Cleanup function
     return () => {
-      if (unlistenQuickai) {
-        unlistenQuickai().catch(console.error);
-      }
-      if (unlistenNavigation) {
-        unlistenNavigation().catch(console.error);
-      }
+      isMounted = false;
+
+      // Clean up all listeners
+      unlisteners.forEach(unlisten => {
+        try {
+          if (unlisten && typeof unlisten === 'function') {
+            unlisten();
+          }
+        } catch (error) {
+          console.error('Error cleaning up event listener:', error);
+        }
+      });
     };
   }, [navigate, aiStore]);
 };

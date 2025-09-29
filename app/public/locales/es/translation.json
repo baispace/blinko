@@ -731,5 +731,10 @@
   "tool-call-details": "Detalles de la llamada de herramienta",
   "input-parameters": "Parámetros de entrada",
   "output-result": "Parámetros de salida",
-  "version-info-description": "La versión del servidor se refiere a la versión de implementación de Docker/backend, mientras que la versión del cliente se refiere a la versión de aplicación de escritorio/móvil. Estas dos versiones no necesitan coincidir, ya que sirven para diferentes propósitos."
+  "version-info-description": "La versión del servidor se refiere a la versión de implementación de Docker/backend, mientras que la versión del cliente se refiere a la versión de aplicación de escritorio/móvil. Estas dos versiones no necesitan coincidir, ya que sirven para diferentes propósitos.",
+  "audio-tips": "Mantén presionada la tecla de acceso rápido para ingresar, suelta para insertar en el cuadro de texto.",
+  "voice-recognition-hotkey": "Teclas de acceso rápido para entrada de voz",
+  "local-voice-recognition": "Transcripción de voz local",
+  "cuda-acceleration": "Aceleración CUDA",
+  "voice-tip": "Mantén presionada la tecla de acceso rápido para hablar y realizar la transcripción por voz. Al soltar, el contenido transcrito se insertará en el cuadro de texto."
 }

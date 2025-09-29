@@ -729,5 +729,10 @@
   "tool-call-details": "Werkzeugaufrufdetails",
   "input-parameters": "Eingabeparameter",
   "output-result": "Ausgabeparameter",
-  "version-info-description": "Die Serverversion bezieht sich auf die Docker-/Backend-Bereitstellungsversion, während die Clientversion sich auf die Desktop-/Mobile-App-Version bezieht. Diese beiden Versionen müssen nicht übereinstimmen, da sie unterschiedlichen Zwecken dienen."
+  "version-info-description": "Die Serverversion bezieht sich auf die Docker-/Backend-Bereitstellungsversion, während die Clientversion sich auf die Desktop-/Mobile-App-Version bezieht. Diese beiden Versionen müssen nicht übereinstimmen, da sie unterschiedlichen Zwecken dienen.",
+  "audio-tips": "Lange auf die Schnelltaste drücken, um einzugeben, loslassen, um in das Textfeld einzufügen.",
+  "voice-recognition-hotkey": "Spracheingabe-Hotkey",
+  "local-voice-recognition": "Lokale Sprachtranskription",
+  "cuda-acceleration": "CUDA-Beschleunigung",
+  "voice-tip": "Halten Sie die Schnelltaste gedrückt, um zu sprechen und eine Sprachtranskription durchzuführen. Wenn Sie loslassen, wird der transkribierte Inhalt in das Textfeld eingefügt."
 }

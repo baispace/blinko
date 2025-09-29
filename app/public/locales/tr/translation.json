@@ -731,5 +731,10 @@
   "tool-call-details": "Araç çağrı detayları",
   "input-parameters": "Giriş parametreleri",
   "output-result": "Çıktı parametreleri",
-  "version-info-description": "Sunucu sürümü, Docker/arka uç dağıtım sürümünü ifade ederken, istemci sürümü masaüstü/mobil uygulama sürümünü ifade eder. Bu iki sürümün eşleşmesi gerekmez çünkü farklı amaçlara hizmet ederler."
+  "version-info-description": "Sunucu sürümü, Docker/arka uç dağıtım sürümünü ifade ederken, istemci sürümü masaüstü/mobil uygulama sürümünü ifade eder. Bu iki sürümün eşleşmesi gerekmez çünkü farklı amaçlara hizmet ederler.",
+  "audio-tips": "Uzun basma kısayolu ile kaydet, bırakınca metin kutusuna ekler.",
+  "voice-recognition-hotkey": "Ses kaydı kısayol tuşu",
+  "local-voice-recognition": "Yerel ses dökümü",
+  "cuda-acceleration": "CUDA hızlandırma",
+  "voice-tip": "Kısayol tuşuna uzun basarak konuşun, sesli diktat yapın, bıraktığınızda diktat içeriği metin kutusuna eklenecektir."
 }

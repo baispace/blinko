@@ -722,5 +722,10 @@
   "tool-call-details": "Szczegóły wywołania narzędzia",
   "input-parameters": "Parametry wejściowe",
   "output-result": "parametry wyjściowe",
-  "version-info-description": "Wersja serwera odnosi się do wersji Docker / backend, podczas gdy wersja klienta odnosi się do aplikacji na komputery stacjonarne / urządzenia mobilne. Te dwie wersje nie muszą być zgodne, ponieważ służą różnym celom."
+  "version-info-description": "Wersja serwera odnosi się do wersji Docker / backend, podczas gdy wersja klienta odnosi się do aplikacji na komputery stacjonarne / urządzenia mobilne. Te dwie wersje nie muszą być zgodne, ponieważ służą różnym celom.",
+  "audio-tips": "Przytrzymaj skrót klawiszowy, aby wprowadzić dane, puść, aby wstawić do pola tekstowego.",
+  "voice-recognition-hotkey": "Skrót klawiszowy do wprowadzania głosowego",
+  "local-voice-recognition": "Lokalne przepisywanie głosu",
+  "cuda-acceleration": "CUDA przyspieszenie",
+  "voice-tip": "Przytrzymaj długo skrót klawiszowy, aby mówić i przeprowadzić transkrypcję głosu. Po zwolnieniu zostanie wstawiona zawartość transkrypcji do pola tekstowego."
 }

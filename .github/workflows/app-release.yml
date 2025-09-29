@@ -132,21 +132,29 @@ jobs:
           name: tauri-config
           path: app/src-tauri/
 
+      - name: Install CUDA Toolkit (Windows)
+        if: matrix.platform == 'windows-latest'
+        uses: Jimver/cuda-toolkit@v0.2.15
+        with:
+          cuda: '12.1.0'
+          method: 'network'
+          sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev" ]'
+
       - name: Fix version format for Windows MSI
         if: matrix.platform == 'windows-latest'
         run: |
           $versionJson = Get-Content -Path app/src-tauri/tauri.conf.json | ConvertFrom-Json
           $currentVersion = $versionJson.version
-          
+
           if ($currentVersion -match '-(.+)$') {
             $newVersion = $currentVersion -replace '-(.+)$', ''
-            
+
             $versionJson.version = $newVersion
-            
+
             $jsonContent = Get-Content -Path app/src-tauri/tauri.conf.json -Raw
             $jsonContent = $jsonContent -replace '"version": "([^"]+)"', "`"version`": `"$newVersion`""
             $jsonContent | Set-Content -Path app/src-tauri/tauri.conf.json -NoNewline
-            
+
             echo "Windows version $currentVersion changed to $newVersion"
           } else {
             echo "Version $currentVersion does not need to be modified"
@@ -204,10 +212,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Add CUDA environment variables for Windows
+          CUDA_PATH: ${{ matrix.platform == 'windows-latest' && env.CUDA_PATH || '' }}
+          CUDA_ROOT: ${{ matrix.platform == 'windows-latest' && env.CUDA_PATH || '' }}
         with:
           projectPath: 'app'
           tauriScript: '../node_modules/.bin/tauri'
-          args: ${{ matrix.args }}
+          args: ${{ matrix.platform == 'windows-latest' && '--features cuda' || matrix.args }}
           tagName: ${{ needs.set-version.outputs.version }}
           releaseName: Blinko ${{ needs.set-version.outputs.version }}
           releaseBody: "Under construction, full changelog will be updated after build completion..."

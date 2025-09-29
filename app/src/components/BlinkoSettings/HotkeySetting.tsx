@@ -14,6 +14,7 @@ import { isDesktop, isInTauri } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { HotkeyConfig, DEFAULT_HOTKEY_CONFIG, TextSelectionToolbarConfig, DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG } from '@/../../shared/lib/types';
+import { VoiceSetting } from './VoiceSetting';
 
 const HOTKEY_EXAMPLES = {
   'Shift+Space': 'Shift+Space (Recommended)',
@@ -45,6 +46,7 @@ export const HotkeySetting = observer(() => {
   const [autoStartEnabled, setAutoStartEnabled] = useState(false);
   const recordingRef = useRef<HTMLInputElement>(null);
   const recordingAIRef = useRef<HTMLInputElement>(null);
+
 
   // Check if running on Tauri desktop
   const isTauriDesktop = isInTauri() && isDesktop();
@@ -245,6 +247,7 @@ export const HotkeySetting = observer(() => {
     }
   };
 
+
   // Keyboard event handling for quicknote
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (!isRecording) return;
@@ -349,6 +352,8 @@ export const HotkeySetting = observer(() => {
     }
   };
 
+
+
   // Format shortcut display
   const formatShortcut = (shortcut: string) => {
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -391,6 +396,8 @@ export const HotkeySetting = observer(() => {
   // Check if shortcut is not default
   const isQuickNoteNotDefault = hotkeyConfig.quickNote !== DEFAULT_HOTKEY_CONFIG.quickNote;
   const isQuickAINotDefault = hotkeyConfig.quickAI !== DEFAULT_HOTKEY_CONFIG.quickAI;
+
+
 
   // Initialize
   useEffect(() => {
@@ -565,7 +572,7 @@ export const HotkeySetting = observer(() => {
       <CollapsibleCard
         icon="material-symbols:select-all"
         title={t('text-selection-toolbar')}
-        className="w-full mt-6"
+        className="w-full my-6"
       >
         <div className="flex flex-col gap-4">
           {/* Text selection toolbar enable switch */}
@@ -679,6 +686,8 @@ export const HotkeySetting = observer(() => {
 
         </div>
       </CollapsibleCard>
+
+      <VoiceSetting />
     </div>
   );
 });

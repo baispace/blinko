@@ -795,5 +795,18 @@
   "ai-is-thinking": "AI正在思考...",
   "tool-call-details": "工具调用详情",
   "input-parameters": "输入参数",
-  "output-result": "输出参数"
+  "output-result": "输出参数",
+  "autostart": "开机自启",
+  "quick-ai": "快捷AI",
+  "enable-text-selection-toolbar": "开启划词工具栏",
+  "enable-quick-ai": "开启快捷AI",
+  "enable-hotkey-to-quickly-open-ai-input-dialog": "通过按下快捷键开启快捷AI工具栏",
+  "enable-voice-recognition": "开启语音转写",
+  "voice-recognition": "语音识别",
+  "speech-tooltip": "使用本地离线语音大模型进行实时语音转写",
+  "voice-recognition-hotkey": "语音录入快捷键",
+  "audio-tips": "长按快捷键录入，松开插入文本框中",
+  "local-voice-recognition": "本地语音转写",
+  "cuda-acceleration": "CUDA加速",
+  "voice-tip": "长按快捷键说话，进行语音转写，松开的时候会将转写内容插入到文本框中"
 }

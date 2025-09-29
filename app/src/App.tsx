@@ -140,34 +140,56 @@ function AppRoutes() {
   useEffect(() => {
     if (!isInTauri()) return;
 
-    const unlistenNavigation = listen('navigate-to-route', (event) => {
-      const { route, replace = false, targetWindow } = event.payload as {
-        route: string;
-        replace?: boolean;
-        targetWindow?: string;
-      };
+    let isMounted = true;
+    let unlistenNavigation: (() => void) | null = null;
 
-      // Only handle navigation for current window type or if no target specified
-      if (!targetWindow || targetWindow === windowType) {
-        console.log(`🔄 [${windowType}] Received navigation command:`, route, 'replace:', replace);
+    const setupListener = async () => {
+      try {
+        if (!isMounted) return;
 
-        if (replace) {
-          navigate(route, { replace: true });
-        } else {
-          navigate(route);
-        }
+        unlistenNavigation = await listen('navigate-to-route', (event) => {
+          const { route, replace = false, targetWindow } = event.payload as {
+            route: string;
+            replace?: boolean;
+            targetWindow?: string;
+          };
 
-        // Emit event to notify components to refresh configuration
-        if (windowType === 'quicktool') {
-          console.log("🔄 Emitting config refresh event for quicktool");
-          // This will be picked up by quicktool component to refresh its config
-          window.dispatchEvent(new CustomEvent('quicktool-config-refresh'));
-        }
+          // Only handle navigation for current window type or if no target specified
+          if (!targetWindow || targetWindow === windowType) {
+            console.log(`🔄 [${windowType}] Received navigation command:`, route, 'replace:', replace);
+
+            if (replace) {
+              navigate(route, { replace: true });
+            } else {
+              navigate(route);
+            }
+
+            // Emit event to notify components to refresh configuration
+            if (windowType === 'quicktool') {
+              console.log("🔄 Emitting config refresh event for quicktool");
+              // This will be picked up by quicktool component to refresh its config
+              window.dispatchEvent(new CustomEvent('quicktool-config-refresh'));
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Failed to setup navigation listener:', error);
       }
-    });
+    };
+
+    setupListener();
 
     return () => {
-      unlistenNavigation.then((fn) => fn());
+      isMounted = false;
+
+      // Only try to unlisten if we have a valid function
+      try {
+        if (unlistenNavigation && typeof unlistenNavigation === 'function') {
+          unlistenNavigation();
+        }
+      } catch (error) {
+        console.error('Error cleaning up navigation listener:', error);
+      }
     };
   }, [navigate, windowType]);
 

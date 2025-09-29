@@ -731,5 +731,10 @@
   "tool-call-details": "工具調用詳情",
   "input-parameters": "輸入參數",
   "output-result": "輸出參數",
-  "version-info-description": "伺服器版本指的是 Docker/後端部署版本，而客戶端版本指的是桌面端/移動端應用版本。這兩個版本不需要匹配，因為它們服務於不同的目的。"
+  "version-info-description": "伺服器版本指的是 Docker/後端部署版本，而客戶端版本指的是桌面端/移動端應用版本。這兩個版本不需要匹配，因為它們服務於不同的目的。",
+  "audio-tips": "長按快捷鍵錄入，鬆開插入文字框中",
+  "voice-recognition-hotkey": "語音錄入快捷鍵",
+  "local-voice-recognition": "本地語音轉寫",
+  "cuda-acceleration": "CUDA加速",
+  "voice-tip": "長按快捷鍵說話，進行語音轉寫，鬆開的時候會將轉寫內容插入到文字框中。"
 }

@@ -731,5 +731,10 @@
   "tool-call-details": "Détails de l'appel d'outil",
   "input-parameters": "Paramètres d'entrée",
   "output-result": "paramètres de sortie",
-  "version-info-description": "La version du serveur fait référence à la version de déploiement Docker/backend, tandis que la version du client fait référence à la version de l'application pour desktop/mobile. Ces deux versions n'ont pas besoin de correspondre car elles servent des objectifs différents."
+  "version-info-description": "La version du serveur fait référence à la version de déploiement Docker/backend, tandis que la version du client fait référence à la version de l'application pour desktop/mobile. Ces deux versions n'ont pas besoin de correspondre car elles servent des objectifs différents.",
+  "audio-tips": "Appuyez longuement sur le raccourci pour saisir, relâchez pour insérer dans la zone de texte.",
+  "voice-recognition-hotkey": "Raccourci de saisie vocale",
+  "local-voice-recognition": "Transcription vocale locale",
+  "cuda-acceleration": "Accélération CUDA",
+  "voice-tip": "Maintenez enfoncé le raccourci pour parler et effectuer la transcription vocale. Lorsque vous relâchez, le contenu transcrit sera inséré dans la zone de texte."
 }

@@ -235,6 +235,21 @@ export interface HotkeyConfig {
   systemTrayEnabled: boolean;  // Enable system tray
   windowBehavior: 'show' | 'hide' | 'minimize'; // Window behavior
   textSelectionToolbar: TextSelectionToolbarConfig; // Text selection toolbar config
+  voiceRecognition?: VoiceRecognitionConfig; // Voice recognition config
+}
+
+// Voice Recognition Configuration
+export interface VoiceRecognitionConfig {
+  enabled: boolean;            // Enable voice recognition
+  hotkey: string;              // Voice recognition hotkey
+  gpuAcceleration: boolean;    // Enable GPU acceleration
+  modelPath: string;           // Model file path
+  language: string;            // Recognition language
+  sensitivity: number;         // Recognition sensitivity (0.0 - 1.0)
+  minDuration: number;         // Minimum audio duration (seconds)
+  maxDuration: number;         // Maximum audio duration (seconds)
+  sampleRate: number;          // Audio sample rate
+  autoGpuDetection: boolean;   // Auto-detect GPU capabilities
 }
 
 // Text Selection Toolbar Configuration
@@ -264,6 +279,19 @@ export const DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG: TextSelectionToolbarConfig =
   }
 };
 
+export const DEFAULT_VOICE_RECOGNITION_CONFIG: VoiceRecognitionConfig = {
+  enabled: false,
+  hotkey: 'F2',
+  gpuAcceleration: typeof window !== 'undefined' && navigator.platform.indexOf('Win') > -1, // Windows default
+  modelPath: '', // User must select model path
+  language: 'auto',
+  sensitivity: 0.6,
+  minDuration: 0.1,
+  maxDuration: 30.0,
+  sampleRate: 16000,
+  autoGpuDetection: true,
+};
+
 export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
   quickNote: 'Shift+Space',
   quickAI: 'Alt+Space',
@@ -271,7 +299,8 @@ export const DEFAULT_HOTKEY_CONFIG: HotkeyConfig = {
   aiEnabled: true,
   systemTrayEnabled: true,
   windowBehavior: 'show',
-  textSelectionToolbar: DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG
+  textSelectionToolbar: DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+  voiceRecognition: DEFAULT_VOICE_RECOGNITION_CONFIG
 };
 
 // System Tray Configuration

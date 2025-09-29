@@ -80,6 +80,10 @@ export const useInitialHotkeySetup = () => {
             console.warn('Failed to setup text selection monitoring:', error);
           }
         }
+
+        // Note: Voice recognition is initialized automatically in Rust during app startup
+        // based on the configuration loaded from voice_config.json
+        console.log('Voice recognition will be initialized automatically if enabled in configuration');
         
       } catch (error) {
         console.error('Failed to setup initial hotkeys:', error);

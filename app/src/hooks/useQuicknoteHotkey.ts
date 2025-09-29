@@ -11,15 +11,17 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
   useEffect(() => {
     if (!isInTauri() || !isCreateMode) return;
 
-    let unlistenQuicknote: any;
-    let unlistenNavigateSettings: any;
+    let isMounted = true;
+    const unlisteners: (() => void)[] = [];
 
     const setupEventListeners = async () => {
       try {
         const { listen } = await import('@tauri-apps/api/event');
-        
+
+        if (!isMounted) return;
+
         // Listen for quick note events
-        unlistenQuicknote = await listen('quicknote-triggered', () => {
+        const unlistenQuicknote = await listen('quicknote-triggered', () => {
           try {
             // Focus to editor
             const editorElement = document.getElementById('global-editor');
@@ -27,7 +29,7 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
               // Try to focus to editor internal text area
               const textArea = editorElement.querySelector('textarea');
               const contentEditable = editorElement.querySelector('[contenteditable="true"]');
-              
+
               if (textArea) {
                 textArea.focus();
                 // Move cursor to end of text
@@ -46,18 +48,24 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
                 editorElement.focus();
               }
             }
-            
+
             // Ensure in create mode
             blinko.isCreateMode = true;
-            
+
             console.log('Quick note triggered - editor focused');
           } catch (error) {
             console.error('Error handling quicknote event:', error);
           }
         });
 
+        if (isMounted && unlistenQuicknote) {
+          unlisteners.push(unlistenQuicknote);
+        }
+
+        if (!isMounted) return;
+
         // Listen for navigate to settings page events
-        unlistenNavigateSettings = await listen('navigate-to-settings', () => {
+        const unlistenNavigateSettings = await listen('navigate-to-settings', () => {
           try {
             navigate('/settings?tab=hotkey');
             console.log('Navigating to hotkey settings');
@@ -65,6 +73,10 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
             console.error('Error navigating to settings:', error);
           }
         });
+
+        if (isMounted && unlistenNavigateSettings) {
+          unlisteners.push(unlistenNavigateSettings);
+        }
 
       } catch (error) {
         console.error('Failed to setup Tauri event listeners:', error);
@@ -75,12 +87,18 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
 
     // Cleanup function
     return () => {
-      if (unlistenQuicknote) {
-        unlistenQuicknote().catch(console.error);
-      }
-      if (unlistenNavigateSettings) {
-        unlistenNavigateSettings().catch(console.error);
-      }
+      isMounted = false;
+
+      // Clean up all listeners
+      unlisteners.forEach(unlisten => {
+        try {
+          if (unlisten && typeof unlisten === 'function') {
+            unlisten();
+          }
+        } catch (error) {
+          console.error('Error cleaning up event listener:', error);
+        }
+      });
     };
   }, [isCreateMode, navigate, blinko]);
 };

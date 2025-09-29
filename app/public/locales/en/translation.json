@@ -779,5 +779,17 @@
   "ai-is-thinking": "AI is thinking...",
   "tool-call-details": "Tool Call Details",
   "input-parameters": "Input Parameters",
-  "output-result": "Output Result"
+  "output-result": "Output Result",
+  "autostart": "Autostart",
+  "quick-ai": "Quick AI",
+  "enable-text-selection-toolbar": "Enable Text Selection Toolbar",
+  "enable-quick-ai": "Enable Quick AI",
+  "enable-hotkey-to-quickly-open-ai-input-dialog": "Enable hotkey to quickly open AI input dialog",
+  "enable-voice-recognition": "Enable Voice Transcription",
+  "voice-recognition": "Voice Recognition",
+  "voice-recognition-hotkey": "Voice Recognition Hotkey",
+  "audio-tips": "Press and hold the shortcut key to enter, release to insert into the text box.",
+  "local-voice-recognition": "Local Voice Recognition",
+  "cuda-acceleration": "CUDA Acceleration",
+  "voice-tip": "Press and hold the shortcut key to speak for voice transcription, and release it to insert the transcribed content into the text box."
 }

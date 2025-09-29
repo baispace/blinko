@@ -20,7 +20,6 @@ interface LLMConfig {
 export class LLMProvider extends BaseProvider {
   async getLanguageModel(config: LLMConfig): Promise<LanguageModelV1> {
     await this.ensureInitialized();
-
     switch (config.provider.toLowerCase()) {
       case 'openai':
         return createOpenAI({
@@ -45,7 +44,7 @@ export class LLMProvider extends BaseProvider {
 
       case 'ollama':
         return createOllama({
-          baseURL: config.baseURL?.trim() || undefined,
+          baseURL: config.baseURL?.trim().replace(/\/api$/, '') + '/api' || undefined,
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 

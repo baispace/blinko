@@ -44,6 +44,42 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
   return globalConfig as GlobalConfig;
 };
 
+export const getAiModelConfig = async (type: 'mainModel' | 'embeddingModel' | 'voiceModel' | 'rerankModel' | 'imageModel' | 'audioModel', ctx?: Context) => {
+  // Map type to config key
+  const configKey = `${type}Id`;
+
+  // Get global config to find the model ID
+  const globalConfig = await getGlobalConfig({ ctx });
+  const modelId = globalConfig[configKey];
+
+  if (!modelId) {
+    return null;
+  }
+
+  // Get the model with provider information directly from prisma
+  const model = await prisma.aiModels.findUnique({
+    where: { id: modelId },
+    include: { provider: true }
+  });
+
+  if (!model) {
+    return null;
+  }
+
+  return {
+    title: model.title,
+    modelKey: model.modelKey,
+    capabilities: model.capabilities,
+    provider: {
+      id: model.provider.id,
+      title: model.provider.title,
+      provider: model.provider.provider,
+      baseURL: model.provider.baseURL,
+      apiKey: model.provider.apiKey
+    }
+  };
+};
+
 export const configRouter = router({
   list: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/config/list', summary: 'Query user config list', protect: true, tags: ['Config'] } })
@@ -167,5 +203,29 @@ export const configRouter = router({
         acc[key] = (item.config as { value: any }).value;
         return acc;
       }, {} as Record<string, any>);
+    }),
+
+  ai: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/config/ai', summary: 'Get AI model configuration by type', protect: true, tags: ['Config'] } })
+    .input(z.object({
+      type: z.enum(['mainModel', 'embeddingModel', 'voiceModel', 'rerankModel', 'imageModel', 'audioModel'])
+    }))
+    .output(z.object({
+      title: z.string(),
+      modelKey: z.string(),
+      capabilities: z.any(),
+      provider: z.object({
+        id: z.number(),
+        title: z.string(),
+        provider: z.string(),
+        baseURL: z.string().nullable(),
+        apiKey: z.string().nullable()
+      })
+    }).nullable())
+    .query(async function ({ input, ctx }) {
+      const { type } = input;
+      console.log(123)
+      const model = await getAiModelConfig(type, ctx);
+      return model;
     })
 })

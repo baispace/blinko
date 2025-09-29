@@ -6,6 +6,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{ShortcutState, ShortcutEvent};
 
 use crate::desktop::{HotkeyConfig, setup_system_tray, toggle_quicknote_window, toggle_quickai_window, toggle_quicktool_window, restore_main_window_state, setup_window_state_monitoring};
+#[cfg(target_os = "windows")]
 use crate::voice::{load_voice_config, VoiceProcessor, VOICE_STATE};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {

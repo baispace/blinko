@@ -1,10 +1,10 @@
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod desktop;
-#[cfg(all(not(any(target_os = "android", target_os = "ios")), target_os = "windows"))]
+#[cfg(target_os = "windows")]
 mod voice;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
-#[cfg(all(not(any(target_os = "android", target_os = "ios")), target_os = "windows"))]
+#[cfg(target_os = "windows")]
 use voice::*;
 use tauri::Manager;
 

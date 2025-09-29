@@ -33,7 +33,10 @@
       "mcp__ide__getDiagnostics",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Read(//e/code/mastra/packages/mcp/src/server/**)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:crates.io)",
+      "WebFetch(domain:lib.rs)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

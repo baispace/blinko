@@ -738,5 +738,10 @@
   "tool-call-details": "Gereedschap oproepdetails",
   "input-parameters": "Invoerparameters",
   "output-result": "uitvoerparameters",
-  "version-info-description": "De serverversie verwijst naar de Docker/backend-implementatieversie, terwijl de clientversie verwijst naar de desktop-/mobiele app-versie. Deze twee versies hoeven niet overeen te komen, omdat ze voor verschillende doeleinden dienen."
+  "version-info-description": "De serverversie verwijst naar de Docker/backend-implementatieversie, terwijl de clientversie verwijst naar de desktop-/mobiele app-versie. Deze twee versies hoeven niet overeen te komen, omdat ze voor verschillende doeleinden dienen.",
+  "audio-tips": "Houd de sneltoets ingedrukt om in te voeren, laat los om in het tekstvak in te voegen.",
+  "voice-recognition-hotkey": "Spraakopname sneltoets",
+  "local-voice-recognition": "lokale spraaktranscriptie",
+  "cuda-acceleration": "CUDA-versnelling",
+  "voice-tip": "Houd de sneltoets ingedrukt om te spreken en voer spraak-naar-tekst uit. Wanneer je loslaat, wordt de getranscribeerde inhoud in het tekstvak ingevoegd."
 }

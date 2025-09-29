@@ -762,5 +762,10 @@
   "tool-call-details": "Tudert n usnulfu",
   "input-parameters": "Agrud n unekcam",
   "output-result": "Paramètres de sortie",
-  "version-info-description": "Tansa n usqedac yettwassen s teqdimt n Docker/ineqqasen n ugafa, maca tansa n umseqdac yettwassen s ufran/aẓarur amecṭuḥ. Tis snat-a ur tt-yeǧǧin ara ad d-yessen, acku tenɣil ɣef yirgazen d imezdaɣ."
+  "version-info-description": "Tansa n usqedac yettwassen s teqdimt n Docker/ineqqasen n ugafa, maca tansa n umseqdac yettwassen s ufran/aẓarur amecṭuḥ. Tis snat-a ur tt-yeǧǧin ara ad d-yessen, acku tenɣil ɣef yirgazen d imezdaɣ.",
+  "audio-tips": "Adfel akked uzemmur, sbeddel deg uṭeṭṭu n umeskar.",
+  "voice-recognition-hotkey": "Tansaḍt n usnulfu n tujjut",
+  "local-voice-recognition": "Tutlayt tamezgant n temda",
+  "cuda-acceleration": "CUDA asersi",
+  "voice-tip": "Sserḥed tamara n umernu ara ad tettalkem, ad d-yeqqen amagrad nniṣnen, ma yella tebdaḍ ad tt-inserteɣ-d aɣbalu yettwakcem deg udrum n tefyar."
 }

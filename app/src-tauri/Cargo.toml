@@ -38,9 +38,21 @@ tauri-plugin-autostart = "2"
 get-selected-text = "0.1"
 arboard = { version = "3", default-features = false }
 mouse_position = "0.1"
+# Voice recognition dependencies - CUDA enabled conditionally
+whisper-rs = { version = "0.15.1" }
+cpal = "0.16.0"
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+enigo = "0.3"
+rdev = "0.3"
+sys-locale = "0.3"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 macos-accessibility-client = "0.0.1"
+
+[features]
+default = []
+cuda = ["whisper-rs/cuda"]

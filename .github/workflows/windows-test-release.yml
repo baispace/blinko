@@ -1,0 +1,191 @@
+name: Windows Test Release
+
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch' && format('Windows Test Release - v{0}', github.event.inputs.tag) ||
+    format('Windows Test Release - {0}', github.ref_name)
+  }}
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag Version (e.g. 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  # Set version first
+  set-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Version Variable
+        id: set_version
+        run: |
+          # Print debug info
+          echo "Event name: ${{ github.event_name }}"
+
+          # Always use version number without v prefix
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.tag }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            VERSION="test-${{ github.event.number }}"
+          else
+            # Get version from tag (remove v prefix if present)
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+          fi
+
+          # Ensure VERSION is not empty, default to 1.0.0
+          if [ -z "$VERSION" ]; then
+            echo "WARNING: Empty version, using default test-1.0.0"
+            VERSION="test-1.0.0"
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Set version: $VERSION"
+
+  # Update Tauri Config Version
+  update-version:
+    runs-on: ubuntu-latest
+    needs: set-version
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update Tauri Config Version
+        run: |
+          echo "Current version: ${{ needs.set-version.outputs.version }}"
+          # Update version using jq
+          jq '.version = "${{ needs.set-version.outputs.version }}"' app/src-tauri/tauri.conf.json > tmp.json && mv tmp.json app/src-tauri/tauri.conf.json
+          echo "Updated tauri.conf.json:"
+          cat app/src-tauri/tauri.conf.json
+
+      - name: Commit and Push Updated Version
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add app/src-tauri/tauri.conf.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "[ci skip] Update version to ${{ needs.set-version.outputs.version }}"
+            git push
+          fi
+
+      - name: Upload tauri.conf.json as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-config
+          path: app/src-tauri/tauri.conf.json
+
+  # Windows Platform Build Task
+  publish-windows:
+    needs: [set-version, update-version]
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download tauri.conf.json
+        uses: actions/download-artifact@v4
+        with:
+          name: tauri-config
+          path: app/src-tauri/
+
+      - name: Install CUDA Toolkit (Windows)
+        uses: Jimver/cuda-toolkit@v0.2.15
+        with:
+          cuda: '12.1.0'
+          method: 'network'
+          sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev" ]'
+
+      - name: Set CUDA environment variables (Windows)
+        run: |
+          echo "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1" >> $GITHUB_ENV
+          echo "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" >> $GITHUB_PATH
+
+      - name: Fix version format for Windows MSI
+        run: |
+          $versionJson = Get-Content -Path app/src-tauri/tauri.conf.json | ConvertFrom-Json
+          $currentVersion = $versionJson.version
+
+          if ($currentVersion -match '-(.+)$') {
+            $newVersion = $currentVersion -replace '-(.+)$', ''
+
+            $versionJson.version = $newVersion
+
+            $jsonContent = Get-Content -Path app/src-tauri/tauri.conf.json -Raw
+            $jsonContent = $jsonContent -replace '"version": "([^"]+)"', "`"version`": `"$newVersion`"" -replace '"version": "([^"]+)"', "`"version`": `"$newVersion`""
+            $jsonContent | Set-Content -Path app/src-tauri/tauri.conf.json -NoNewline
+
+            echo "Windows version $currentVersion changed to $newVersion"
+          } else {
+            echo "Version $currentVersion does not need to be modified"
+          }
+
+      - name: Setup Node Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Increase Node.js memory limit
+        run: |
+          echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+          cache-on-failure: true
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/bun.lockb', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
+
+      - name: Install Dependencies
+        run: |
+          bun install
+          cd app && bun install
+
+      # Build Windows App (without publishing)
+      - name: Build Windows App
+        run: |
+          cd app
+          echo "Starting Windows build..."
+          ../node_modules/.bin/tauri build --no-bundle
+          echo "Windows build completed successfully!"
+          echo "Build artifacts location: src-tauri/target/release/"
+          ls -la src-tauri/target/release/

@@ -248,6 +248,14 @@
         "typescript": "^5.1.6",
       },
     },
+    "shared": {
+      "name": "@blinko/shared",
+      "version": "1.0.0",
+      "dependencies": {
+        "superjson": "^2.2.3",
+        "zod": "^4.1.12",
+      },
+    },
   },
   "packages": {
     "@a2a-js/sdk": ["@a2a-js/sdk@0.2.5", "", { "dependencies": { "@types/cors": "^2.8.17", "@types/express": "^4.17.23", "body-parser": "^2.2.0", "cors": "^2.8.5", "express": "^4.21.2", "uuid": "^11.1.0" } }, "sha512-VTDuRS5V0ATbJ/LkaQlisMnTAeYKXAK6scMguVBstf+KIBQ7HIuKhiXLv+G/hvejkV+THoXzoNifInAkU81P1g=="],
@@ -599,6 +607,8 @@
     "@blinko/backend": ["@blinko/backend@workspace:server"],
 
     "@blinko/frontend": ["@blinko/frontend@workspace:app"],
+
+    "@blinko/shared": ["@blinko/shared@workspace:shared"],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.2.0", "", {}, "sha512-X999CKBxGwX8wW+4gFibsbiNdwqmdQEXmUejIWaIqdrHBgS5ARIOOeyiQbHjP9G58xVEPcuvP6VwwH3A0OFTOA=="],
 

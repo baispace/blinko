@@ -233,7 +233,6 @@ jobs:
       - name: Increase Node.js memory limit
         run: |
           echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
-        shell: bash
 
       - name: Install bun
         uses: oven-sh/setup-bun@v1
@@ -253,19 +252,19 @@ jobs:
           workspaces: app/src-tauri
           cache-on-failure: true
 
-      # Temporarily disable cache for debugging
-      # - name: Cache Dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       **/node_modules
-      #     key: ${{ runner.os }}-modules-${{ hashFiles('**/bun.lockb', '**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-modules-
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/bun.lockb', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
 
       - name: Install Dependencies
         run: |
-          bun install --frozen-lockfile
+          bun install
+          cd app && bun install
 
 
       # Copy CUDA config for CUDA builds (with installer checks)
@@ -329,7 +328,6 @@ jobs:
       - name: Increase Node.js memory limit for Android build
         run: |
           echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
-        shell: bash
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -343,15 +341,14 @@ jobs:
           workspaces: app/src-tauri
           cache-on-failure: true
 
-      # Temporarily disable cache for debugging
-      # - name: Cache Dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       **/node_modules
-      #     key: ${{ runner.os }}-modules-${{ hashFiles('**/bun.lockb', '**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-modules-
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/bun.lockb', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
 
       - name: Install bun
         uses: oven-sh/setup-bun@v1
@@ -360,7 +357,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install --frozen-lockfile
+          bun install
+          cd app && bun install
 
       - name: Run Prisma Generate
         run: bun run prisma:generate

@@ -109,6 +109,7 @@
         "usehooks-ts": "^3.1.1",
         "vanilla-tilt": "^1.8.1",
         "vditor": "3.11.2",
+        "zod": "^4.1.12",
       },
       "devDependencies": {
         "@headlessui/tailwindcss": "^0.2.2",

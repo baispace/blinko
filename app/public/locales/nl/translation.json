@@ -448,7 +448,6 @@
   "sign-in-with-provider": "Aanmelden met {{ provider }}",
   "community": "Gemeenschap",
   "theme-color": "Themakleur",
-  "rest-user-info": "Gebruikersinformatie herstellen",
   "link-account": "Account koppelen",
   "select-account": "Account selecteren",
   "link-account-warning": "Houd er rekening mee dat als je jouw accounts koppelt, geen gegevens van het huidige account worden gesynchroniseerd met het gekoppelde account.",
@@ -743,5 +742,6 @@
   "voice-recognition-hotkey": "Spraakopname sneltoets",
   "local-voice-recognition": "lokale spraaktranscriptie",
   "cuda-acceleration": "CUDA-versnelling",
-  "voice-tip": "Houd de sneltoets ingedrukt om te spreken en voer spraak-naar-tekst uit. Wanneer je loslaat, wordt de getranscribeerde inhoud in het tekstvak ingevoegd."
+  "voice-tip": "Houd de sneltoets ingedrukt om te spreken en voer spraak-naar-tekst uit. Wanneer je loslaat, wordt de getranscribeerde inhoud in het tekstvak ingevoegd.",
+  "dragging": "Bezig met slepen..."
 }

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Item, ItemWithTooltip } from './Item';
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { isDesktop, isInTauri } from '@/lib/tauriHelper';
+import { isDesktop, isInTauri, isWindows } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { VoiceRecognitionConfig } from '@/../../shared/lib/types';
@@ -46,6 +46,7 @@ export const VoiceSetting = observer(() => {
   const [voiceConfig, setVoiceConfig] = useState<VoiceRecognitionConfig | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<any>(null);
   const [isVoiceInitializing, setIsVoiceInitializing] = useState(false);
+  const [isCudaAvailable, setIsCudaAvailable] = useState<boolean>(false);
 
   // Check if running on Tauri desktop
   const isTauriDesktop = isInTauri() && isDesktop();
@@ -61,6 +62,11 @@ export const VoiceSetting = observer(() => {
       // Load voice status
       const status = await invoke('get_voice_status');
       setVoiceStatus(status);
+
+      // Check CUDA availability
+      const cudaAvailable = await invoke<boolean>('is_cuda_available');
+      setIsCudaAvailable(cudaAvailable);
+      console.log('CUDA support available:', cudaAvailable);
     } catch (error) {
       console.error('Failed to load voice config:', error);
     }
@@ -263,8 +269,8 @@ export const VoiceSetting = observer(() => {
           type="col"
         />
 
-        {/* CUDA acceleration switch (Windows only) */}
-        {typeof window !== 'undefined' && navigator.platform.indexOf('Win') > -1 && (
+        {/* CUDA acceleration switch (Windows only, when CUDA feature is available) */}
+        {isWindows() && isCudaAvailable && (
           <Item
             leftContent={
               <div className="flex flex-col gap-1">

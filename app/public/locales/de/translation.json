@@ -571,7 +571,6 @@
   "operation-in-progress": "Opearation in Arbeit",
   "prompt-used-for-post-processing-notes": "Eingabeaufforderung für Notizen nach der Verarbeitung",
   "rebuild-in-progress": "In Arbeit wieder aufbauen",
-  "rest-user-info": "REST -Benutzerinformationen",
   "select-model": "Modell auswählen",
   "setting": "",
   "spotify-consumer-key": "Spotify -API -Schlüssel",
@@ -636,7 +635,7 @@
   "import-from-markdown": "Aus Markdown-Datei importieren",
   "import-from-markdown-tip": "Importieren Sie aus einer einzelnen .md-Datei oder einem .zip-Archiv, das .md-Dateien enthält.",
   "not-a-markdown-or-zip-file": "Keine Markdown- oder Zip-Datei. Bitte wählen Sie eine .md- oder .zip-Datei aus.",
-  "todo": "Vertretung",
+  "todo": "To-do",
   "restore": "Wiederherstellung",
   "complete": "Fertigstellung",
   "today": "Heute",
@@ -734,5 +733,6 @@
   "voice-recognition-hotkey": "Spracheingabe-Hotkey",
   "local-voice-recognition": "Lokale Sprachtranskription",
   "cuda-acceleration": "CUDA-Beschleunigung",
-  "voice-tip": "Halten Sie die Schnelltaste gedrückt, um zu sprechen und eine Sprachtranskription durchzuführen. Wenn Sie loslassen, wird der transkribierte Inhalt in das Textfeld eingefügt."
+  "voice-tip": "Halten Sie die Schnelltaste gedrückt, um zu sprechen und eine Sprachtranskription durchzuführen. Wenn Sie loslassen, wird der transkribierte Inhalt in das Textfeld eingefügt.",
+  "dragging": "Wird gerade gezogen..."
 }

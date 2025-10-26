@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{ShortcutState, ShortcutEvent};
 
 use crate::desktop::{HotkeyConfig, setup_system_tray, toggle_quicknote_window, toggle_quickai_window, toggle_quicktool_window, restore_main_window_state, setup_window_state_monitoring};
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
 use crate::voice::{load_voice_config, VoiceProcessor, VOICE_STATE};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -63,50 +63,72 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Initialize voice recognition if enabled (Windows only, non-blocking)
         #[cfg(target_os = "windows")]
         {
-            let voice_config = load_voice_config(&app_handle);
-            if voice_config.enabled && std::path::Path::new(&voice_config.model_path).exists() {
-                println!("🎤 Voice recognition enabled, initializing in background...");
+            // Check if whisper-rs is available (either CUDA or CPU version)
+            #[cfg(any(feature = "whisper-cuda", feature = "whisper-cpu"))]
+            {
+                let voice_config = load_voice_config(&app_handle);
 
-                // Clone voice config for the background thread
-                let voice_config_clone = voice_config.clone();
+                // Print build configuration info
+                #[cfg(feature = "whisper-cuda")]
+                println!("🚀 Voice recognition built with CUDA acceleration support");
+                #[cfg(all(feature = "whisper-cpu", not(feature = "whisper-cuda")))]
+                println!("🖥️ Voice recognition built with CPU-only support");
 
-                // Use std::thread::spawn instead of tokio::spawn to avoid runtime issues
-                std::thread::spawn(move || {
-                    match VoiceProcessor::new(voice_config_clone.clone()) {
-                        Ok(processor) => {
-                            println!("✅ Voice recognition initialized successfully");
+                if voice_config.enabled && std::path::Path::new(&voice_config.model_path).exists() {
+                    println!("🎤 Voice recognition enabled, initializing in background...");
 
-                            // Update global state
-                            {
-                                let mut state = VOICE_STATE.lock();
-                                state.processor = Some(std::sync::Arc::new(processor));
-                                state.is_initialized = true;
-                                *state.config.lock() = voice_config_clone.clone();
-                            }
+                    // Clone voice config for the background thread
+                    let voice_config_clone = voice_config.clone();
 
-                            // Start the voice recognition service
-                            if let Some(ref processor) = VOICE_STATE.lock().processor {
-                                if let Err(e) = processor.start() {
-                                    eprintln!("❌ Failed to start voice recognition: {}", e);
-                                    println!("💡 Voice recognition failed to start, but application will continue normally");
-                                } else {
-                                    println!("🚀 Voice recognition service started successfully");
+                    // Use std::thread::spawn instead of tokio::spawn to avoid runtime issues
+                    std::thread::spawn(move || {
+                        match VoiceProcessor::new(voice_config_clone.clone()) {
+                            Ok(processor) => {
+                                #[cfg(feature = "whisper-cuda")]
+                                println!("✅ Voice recognition initialized successfully with CUDA support");
+                                #[cfg(all(feature = "whisper-cpu", not(feature = "whisper-cuda")))]
+                                println!("✅ Voice recognition initialized successfully with CPU support");
+
+                                // Update global state
+                                {
+                                    let mut state = VOICE_STATE.lock();
+                                    state.processor = Some(std::sync::Arc::new(processor));
+                                    state.is_initialized = true;
+                                    *state.config.lock() = voice_config_clone.clone();
+                                }
+
+                                // Start the voice recognition service
+                                if let Some(ref processor) = VOICE_STATE.lock().processor {
+                                    if let Err(e) = processor.start() {
+                                        eprintln!("❌ Failed to start voice recognition: {}", e);
+                                        println!("💡 Voice recognition failed to start, but application will continue normally");
+                                    } else {
+                                        println!("🚀 Voice recognition service started successfully");
+                                    }
                                 }
                             }
+                            Err(e) => {
+                                eprintln!("❌ Failed to initialize voice recognition: {}", e);
+                                #[cfg(feature = "whisper-cuda")]
+                                println!("💡 If you see CUDA errors, try the CPU-only version or install CUDA toolkit");
+                                println!("💡 Please check model path and configuration in voice settings");
+                                println!("💡 Application will continue to run normally without voice recognition");
+                            }
                         }
-                        Err(e) => {
-                            eprintln!("❌ Failed to initialize voice recognition: {}", e);
-                            println!("💡 Please check model path and configuration in voice settings");
-                            println!("💡 Application will continue to run normally without voice recognition");
-                        }
-                    }
-                });
-            } else if voice_config.enabled && !std::path::Path::new(&voice_config.model_path).exists() {
-                println!("⚠️ Voice recognition enabled but model file not found: {}", voice_config.model_path);
-                println!("💡 Please download a model file and update the path in voice settings");
-                println!("💡 Application will continue to run normally without voice recognition");
-            } else {
-                println!("🔇 Voice recognition disabled in configuration");
+                    });
+                } else if voice_config.enabled && !std::path::Path::new(&voice_config.model_path).exists() {
+                    println!("⚠️ Voice recognition enabled but model file not found: {}", voice_config.model_path);
+                    println!("💡 Please download a model file and update the path in voice settings");
+                    println!("💡 Application will continue to run normally without voice recognition");
+                } else {
+                    println!("🔇 Voice recognition disabled in configuration");
+                }
+            }
+
+            // If whisper-rs is not available in this build
+            #[cfg(not(any(feature = "whisper-cuda", feature = "whisper-cpu")))]
+            {
+                println!("🔇 Voice recognition not available in this build (no whisper features enabled)");
             }
         }
         #[cfg(not(target_os = "windows"))]

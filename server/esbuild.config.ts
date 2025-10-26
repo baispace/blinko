@@ -33,6 +33,7 @@ async function build() {
         'onnxruntime-web',
         '@langchain/community',
         'sharp',
+        'esbuild',
         'sqlite3',
         '@libsql/linux-x64-musl',
         '@libsql/linux-x64-gnu',

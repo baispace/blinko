@@ -563,7 +563,6 @@
   "record-tip": "O dispositivo não suporta gravação",
   "redo": "Refazer",
   "remove": "Remover",
-  "rest-user-info": "REST Informações do usuário",
   "row": "Linha",
   "setting": "",
   "spin": "Rodar",
@@ -729,5 +728,6 @@
   "audio-tips": "Pressione e segure a tecla de atalho para gravar, solte para inserir na caixa de texto.",
   "voice-recognition-hotkey": "Teclas de atalho para entrada de voz",
   "local-voice-recognition": "Transcrição de voz local",
-  "cuda-acceleration": "Aceleração CUDA"
+  "cuda-acceleration": "Aceleração CUDA",
+  "dragging": "Arrastando..."
 }

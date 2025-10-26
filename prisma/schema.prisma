@@ -82,6 +82,7 @@ model notes {
   shareViewCount    Int?            @default(0)
   metadata          Json?           @db.Json
   accountId         Int?
+  sortOrder         Int             @default(0)
   createdAt         DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(6)
   attachments       attachments[]

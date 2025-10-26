@@ -449,7 +449,6 @@
   "sign-in-with-provider": "Zaloguj się za pomocą {{ provider }}",
   "community": "Społeczność",
   "theme-color": "Kolor motywu",
-  "rest-user-info": "Zresetuj informacje o użytkowniku",
   "link-account": "Połącz konto",
   "select-account": "Wybierz konto",
   "link-account-warning": "Proszę pamiętać, że po połączeniu kont bieżące dane nie zostaną zsynchronizowane z połączonym kontem.",
@@ -727,5 +726,6 @@
   "voice-recognition-hotkey": "Skrót klawiszowy do wprowadzania głosowego",
   "local-voice-recognition": "Lokalne przepisywanie głosu",
   "cuda-acceleration": "CUDA przyspieszenie",
-  "voice-tip": "Przytrzymaj długo skrót klawiszowy, aby mówić i przeprowadzić transkrypcję głosu. Po zwolnieniu zostanie wstawiona zawartość transkrypcji do pola tekstowego."
+  "voice-tip": "Przytrzymaj długo skrót klawiszowy, aby mówić i przeprowadzić transkrypcję głosu. Po zwolnieniu zostanie wstawiona zawartość transkrypcji do pola tekstowego.",
+  "dragging": "Trwa przeciąganie..."
 }

@@ -585,7 +585,6 @@
   "enter-custom-prompt-for-post-processing": "輸入自定義提示進行發布處理",
   "prompt-used-for-post-processing-notes": "用於後處理筆記的提示词",
   "rebuild-in-progress": "重建正在進行中",
-  "rest-user-info": "修改用戶信息",
   "setting": "",
   "spotify-consumer-key": "Spotify API密鑰",
   "enable-ai-post-processing": "啟用AI後處理",
@@ -736,5 +735,6 @@
   "voice-recognition-hotkey": "語音錄入快捷鍵",
   "local-voice-recognition": "本地語音轉寫",
   "cuda-acceleration": "CUDA加速",
-  "voice-tip": "長按快捷鍵說話，進行語音轉寫，鬆開的時候會將轉寫內容插入到文字框中。"
+  "voice-tip": "長按快捷鍵說話，進行語音轉寫，鬆開的時候會將轉寫內容插入到文字框中。",
+  "dragging": "正在拖曳..."
 }

@@ -569,8 +569,7 @@
   "record-tip": "L'appareil ne prend pas en charge l'enregistrement",
   "redo": "Refaire",
   "remove": "Retirer",
-  "rest-user-info": "Informations sur l'utilisateur de repos",
-  "role": "Rôle",
+    "role": "Rôle",
   "row": "Rangée",
   "setting": "",
   "spin": "Rotation",
@@ -637,7 +636,7 @@
   "import-from-markdown": "Importer à partir d'un fichier Markdown",
   "import-from-markdown-tip": "Importer à partir d'un simple fichier .md ou d'une archive .zip contenant des fichiers .md",
   "not-a-markdown-or-zip-file": "Ce n'est pas un fichier Markdown ou zip. Veuillez sélectionner un fichier .md ou .zip.",
-  "todo": "Procuration",
+  "todo": "Tâches",
   "restore": "Rétablissement",
   "complete": "terminé",
   "today": "Aujourd'hui",
@@ -736,5 +735,6 @@
   "voice-recognition-hotkey": "Raccourci de saisie vocale",
   "local-voice-recognition": "Transcription vocale locale",
   "cuda-acceleration": "Accélération CUDA",
-  "voice-tip": "Maintenez enfoncé le raccourci pour parler et effectuer la transcription vocale. Lorsque vous relâchez, le contenu transcrit sera inséré dans la zone de texte."
+  "voice-tip": "Maintenez enfoncé le raccourci pour parler et effectuer la transcription vocale. Lorsque vous relâchez, le contenu transcrit sera inséré dans la zone de texte.",
+  "dragging": "En train de glisser..."
 }

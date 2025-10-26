@@ -459,7 +459,6 @@
   "sign-in-with-provider": "Sign in with {{ provider }}",
   "community": "Community",
   "theme-color": "Theme Color",
-  "rest-user-info": "Rest User Info",
   "link-account": "Link Account",
   "select-account": "Select Account",
   "link-account-warning": "Please note that if you link your accounts, any data from the current account will not be synced to the linked account.",
@@ -791,5 +790,6 @@
   "audio-tips": "Press and hold the shortcut key to enter, release to insert into the text box.",
   "local-voice-recognition": "Local Voice Recognition",
   "cuda-acceleration": "CUDA Acceleration",
-  "voice-tip": "Press and hold the shortcut key to speak for voice transcription, and release it to insert the transcribed content into the text box."
+  "voice-tip": "Press and hold the shortcut key to speak for voice transcription, and release it to insert the transcribed content into the text box.",
+  "dragging": "Dragging..."
 }

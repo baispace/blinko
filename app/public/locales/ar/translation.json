@@ -582,8 +582,7 @@
   "music-settings": "إعدادات الموسيقى",
   "prompt-used-for-post-processing-notes": "موجه يستخدم لملاحظات المعالجة بعد ذلك",
   "rebuild-in-progress": "إعادة البناء في التقدم",
-  "rest-user-info": "راحة معلومات المستخدم",
-  "setting": "",
+    "setting": "",
   "spotify-consumer-key": "سبوتيفي مفتاح API",
   "spotify-consumer-secret": "Spotify API Secret",
   "enable-ai-post-processing": "تمكين معالجة ما بعد الذكاء الاصطناعي",
@@ -734,5 +733,6 @@
   "voice-recognition-hotkey": "مفتاح الإدخال الصوتي السريع",
   "local-voice-recognition": "التفريغ الصوتي المحلي",
   "cuda-acceleration": "تسريع CUDA",
-  "voice-tip": "اضغط مع الاستمرار على مفتاح الاختصار للتحدث، لإجراء التحويل الصوتي إلى نص، وعند تحريره سيتم إدراج المحتوى المُحول في صندوق النص."
+  "voice-tip": "اضغط مع الاستمرار على مفتاح الاختصار للتحدث، لإجراء التحويل الصوتي إلى نص، وعند تحريره سيتم إدراج المحتوى المُحول في صندوق النص.",
+  "dragging": "جاري السحب..."
 }

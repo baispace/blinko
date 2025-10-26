@@ -569,7 +569,6 @@
   "public-share": "Beṭṭu azayaz",
   "go-to-share-page": "",
   "edit-time": "Ẓreg asrag",
-  "rest-user-info": "",
   "blinko-endpoint": "",
   "common.releaseToRefresh": "",
   "enter-custom-prompt-for-post-processing": "",
@@ -767,5 +766,6 @@
   "voice-recognition-hotkey": "Tansaḍt n usnulfu n tujjut",
   "local-voice-recognition": "Tutlayt tamezgant n temda",
   "cuda-acceleration": "CUDA asersi",
-  "voice-tip": "Sserḥed tamara n umernu ara ad tettalkem, ad d-yeqqen amagrad nniṣnen, ma yella tebdaḍ ad tt-inserteɣ-d aɣbalu yettwakcem deg udrum n tefyar."
+  "voice-tip": "Sserḥed tamara n umernu ara ad tettalkem, ad d-yeqqen amagrad nniṣnen, ma yella tebdaḍ ad tt-inserteɣ-d aɣbalu yettwakcem deg udrum n tefyar.",
+  "dragging": "Dduklen..."
 }

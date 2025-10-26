@@ -46,7 +46,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const pluginApi = RootStore.Get(PluginApiStore);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { pathname } = useLocation();
-
+  
   useHistoryBack({
     state: isExpanded,
     onStateChange: () => setIsExpanded(false),
@@ -112,9 +112,9 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               shadow='none'
               className={`
                 flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
-                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''} 
-                ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''} 
-                ${blinkoItem.isBlog ? 'cursor-pointer' : ''} 
+                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''}
+                ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
+                ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
                 ${className}
               `}

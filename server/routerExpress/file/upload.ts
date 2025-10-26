@@ -67,6 +67,9 @@ router.options('/', cors({
  */
 router.post('/', async (req, res) => {
   try {
+    req.setTimeout(0); // 0 = no timeout
+    res.setTimeout(0); // 0 = no timeout
+
     const token = await getTokenFromRequest(req);
     if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -77,7 +80,9 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "Content type must be multipart/form-data" });
     }
     
-    const bb = busboy({ headers: req.headers });
+    const bb = busboy({
+      headers: req.headers
+    });
     
     let fileInfo: {
       stream: PassThrough | null,

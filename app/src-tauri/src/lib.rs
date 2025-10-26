@@ -1,10 +1,10 @@
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod desktop;
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
 mod voice;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
 use voice::*;
 use tauri::Manager;
 
@@ -77,19 +77,21 @@ pub fn run() {
                 show_quicktool,
                 set_desktop_theme,
                 set_desktop_colors,
-                // Voice recognition commands (Windows only)
-                #[cfg(target_os = "windows")]
+                // Voice recognition commands (Windows only with whisper features)
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
                 get_voice_config,
-                #[cfg(target_os = "windows")]
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
                 save_voice_config_cmd,
-                #[cfg(target_os = "windows")]
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
                 initialize_voice_recognition,
-                #[cfg(target_os = "windows")]
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
                 start_voice_recognition,
-                #[cfg(target_os = "windows")]
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
                 stop_voice_recognition,
-                #[cfg(target_os = "windows")]
-                get_voice_status
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
+                get_voice_status,
+                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
+                is_cuda_available
             ])
             .setup(|app| {
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]

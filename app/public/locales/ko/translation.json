@@ -561,8 +561,7 @@
   "record-tip": "장치는 녹음을 지원하지 않습니다",
   "redo": "다시 하다",
   "remove": "제거하다",
-  "rest-user-info": "휴식 사용자 정보",
-  "row": "열",
+    "row": "열",
   "select-model": "모델을 선택하십시오",
   "set-as-public": "대중으로 설정합니다",
   "setting": "",
@@ -731,5 +730,6 @@
   "voice-recognition-hotkey": "음성 입력 단축키",
   "local-voice-recognition": "현지 음성 전사",
   "cuda-acceleration": "CUDA 가속",
-  "voice-tip": "길게 누르고 단축키를 말하면 음성을 텍스트로 변환하고, 손을 떼면 변환된 내용이 텍스트 상자에 삽입됩니다."
+  "voice-tip": "길게 누르고 단축키를 말하면 음성을 텍스트로 변환하고, 손을 떼면 변환된 내용이 텍스트 상자에 삽입됩니다.",
+  "dragging": "드래그 중..."
 }

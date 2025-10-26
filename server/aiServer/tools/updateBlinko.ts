@@ -49,7 +49,7 @@ export const updateBlinkoTool = createTool({
       })
       return await caller.notes.upsert({
         content: context.content,
-        type: typeStr,
+        type: noteType,
         id: context.id
       })
     } catch (error) {

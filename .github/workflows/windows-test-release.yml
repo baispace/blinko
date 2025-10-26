@@ -96,6 +96,14 @@ jobs:
     needs: [set-version, update-version]
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: 'cpu'
+            features: '--features whisper-cpu'
+          - variant: 'cuda'
+            features: '--features whisper-cuda'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -108,17 +116,61 @@ jobs:
           name: tauri-config
           path: app/src-tauri/
 
-      - name: Install CUDA Toolkit (Windows)
-        uses: Jimver/cuda-toolkit@v0.2.15
+      - name: Install CUDA Toolkit (Windows CUDA)
+        if: matrix.variant == 'cuda'
+        uses: Jimver/cuda-toolkit@v0.2.24
+        id: cuda-toolkit
         with:
-          cuda: '12.1.0'
+          cuda: '12.5.0'
           method: 'network'
-          sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev" ]'
+          sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev", "nvrtc", "nvrtc_dev", "visual_studio_integration", "thrust" ]'
 
-      - name: Set CUDA environment variables (Windows)
+      - name: Set CUDA environment variables (Windows CUDA)
+        if: matrix.variant == 'cuda'
         run: |
-          echo "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1" >> $GITHUB_ENV
-          echo "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" >> $GITHUB_PATH
+          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
+          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
+          echo "CUDA_PATH=${{steps.cuda-toolkit.outputs.CUDA_PATH}}" >> $GITHUB_ENV
+          echo "${{steps.cuda-toolkit.outputs.CUDA_PATH}}\bin" >> $GITHUB_PATH
+          nvcc -V
+
+
+      - name: Fix CUDA Visual Studio Integration
+        if: matrix.variant == 'cuda'
+        run: |
+          $cudaPath = "${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
+          echo "CUDA Path: $cudaPath"
+
+          # Source: CUDA Visual Studio integration files
+          $sourceDir = "$cudaPath\extras\visual_studio_integration\MSBuildExtensions"
+          echo "Source: $sourceDir"
+
+          # Find Visual Studio installation
+          $vsPaths = @(
+            "C:\Program Files\Microsoft Visual Studio\2022\Enterprise",
+            "C:\Program Files\Microsoft Visual Studio\2022\Community",
+            "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+          )
+
+          foreach ($vsPath in $vsPaths) {
+            $destDir = "$vsPath\MSBuild\Microsoft\VC\v170\BuildCustomizations"
+            if (Test-Path $destDir) {
+              echo "Found VS at: $vsPath"
+              echo "Destination: $destDir"
+
+              if (Test-Path $sourceDir) {
+                echo "Copying CUDA integration files..."
+                Copy-Item "$sourceDir\*" $destDir -Force -Verbose
+                echo "Successfully copied CUDA integration files to $destDir"
+              } else {
+                echo "ERROR: Source directory not found: $sourceDir"
+              }
+              break
+            }
+          }
+
+          # Set environment variable for CMake to use CUDA toolset
+          echo "CMAKE_GENERATOR_TOOLSET=cuda=$cudaPath" >> $GITHUB_ENV
 
       - name: Fix version format for Windows MSI
         run: |
@@ -155,6 +207,8 @@ jobs:
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -176,12 +230,20 @@ jobs:
           bun install
           cd app && bun install
 
+
+      # Copy CUDA config for CUDA builds (with installer checks)
+      - name: Use CUDA config (Windows CUDA)
+        if: matrix.variant == 'cuda'
+        run: |
+          Copy-Item "app\src-tauri\tauri.cuda.conf.json" "app\src-tauri\tauri.conf.json" -Force
+          echo "Using CUDA configuration with installer CUDA detection"
+
       # Build Windows App (without publishing)
-      - name: Build Windows App
+      - name: Build Windows App (${{ matrix.variant }})
         run: |
           cd app
-          echo "Starting Windows build..."
-          ../node_modules/.bin/tauri build --no-bundle
-          echo "Windows build completed successfully!"
+          echo "Starting Windows ${{ matrix.variant }} build..."
+          ../node_modules/.bin/tauri build --no-bundle ${{ matrix.features }}
+          echo "Windows ${{ matrix.variant }} build completed successfully!"
           echo "Build artifacts location: src-tauri/target/release/"
-          ls -la src-tauri/target/release/
+          Get-ChildItem src-tauri/target/release/

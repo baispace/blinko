@@ -78,6 +78,7 @@ export const notesSchema = z.object({
   shareMaxView: z.number().nullable().optional(),
   shareViewCount: z.number().nullable().optional(),
   metadata: z.any(),
+  sortOrder: z.number().nullable().optional(),
   accountId: z.union([z.number().int(), z.null()]),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

@@ -566,8 +566,7 @@
   "record-tip": "El dispositivo no admite la grabación",
   "redo": "Rehacer",
   "remove": "Eliminar",
-  "rest-user-info": "Información de usuario de descanso",
-  "role": "Role",
+    "role": "Role",
   "row": "Fila",
   "select-model": "Modelo seleccionado",
   "setting": "",
@@ -736,5 +735,6 @@
   "voice-recognition-hotkey": "Teclas de acceso rápido para entrada de voz",
   "local-voice-recognition": "Transcripción de voz local",
   "cuda-acceleration": "Aceleración CUDA",
-  "voice-tip": "Mantén presionada la tecla de acceso rápido para hablar y realizar la transcripción por voz. Al soltar, el contenido transcrito se insertará en el cuadro de texto."
+  "voice-tip": "Mantén presionada la tecla de acceso rápido para hablar y realizar la transcripción por voz. Al soltar, el contenido transcrito se insertará en el cuadro de texto.",
+  "dragging": "Arrastrando..."
 }

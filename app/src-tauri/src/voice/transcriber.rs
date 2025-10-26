@@ -19,8 +19,13 @@ impl WhisperTranscriber {
     }
 
     /// Transcribe audio data to text
-    pub fn transcribe(&self, audio_data: &[f32], language: Option<&str>) -> Result<String, Box<dyn Error>> {
-        if audio_data.len() < 1600 { // At least 0.1 seconds of audio at 16kHz
+    pub fn transcribe(
+        &self,
+        audio_data: &[f32],
+        language: Option<&str>,
+    ) -> Result<String, Box<dyn Error>> {
+        if audio_data.len() < 1600 {
+            // At least 0.1 seconds of audio at 16kHz
             return Ok(String::new());
         }
 
@@ -66,17 +71,21 @@ fn detect_cuda_support() -> (bool, String) {
         match std::process::Command::new("nvidia-smi")
             .arg("--query-gpu=name")
             .arg("--format=csv,noheader,nounits")
-            .output() {
+            .output()
+        {
             Ok(output) if output.status.success() => {
                 let gpu_names = String::from_utf8_lossy(&output.stdout);
                 let gpu_list: Vec<&str> = gpu_names.lines().collect();
                 if !gpu_list.is_empty() {
                     (true, format!("NVIDIA GPU: {}", gpu_list.join(", ")))
                 } else {
-                    (false, "NVIDIA driver installed but no GPU detected".to_string())
+                    (
+                        false,
+                        "NVIDIA driver installed but no GPU detected".to_string(),
+                    )
                 }
             }
-            _ => (false, "NVIDIA GPU or driver not detected".to_string())
+            _ => (false, "NVIDIA GPU or driver not detected".to_string()),
         }
     }
     #[cfg(not(target_os = "windows"))]
@@ -125,7 +134,11 @@ fn detect_gpu_capabilities() -> (bool, String) {
 
     let has_gpu = !gpu_info.is_empty();
     let info = if has_gpu {
-        format!("GPU support detected: {} | {}", gpu_info.join(", "), detailed_info.join(" | "))
+        format!(
+            "GPU support detected: {} | {}",
+            gpu_info.join(", "),
+            detailed_info.join(" | ")
+        )
     } else {
         "No GPU support detected".to_string()
     };
@@ -134,7 +147,10 @@ fn detect_gpu_capabilities() -> (bool, String) {
 }
 
 /// Create WhisperContext with automatic GPU/CPU fallback
-fn create_whisper_context_with_auto_fallback(model_path: &str, prefer_gpu: bool) -> Result<(WhisperContext, String), Box<dyn Error>> {
+fn create_whisper_context_with_auto_fallback(
+    model_path: &str,
+    prefer_gpu: bool,
+) -> Result<(WhisperContext, String), Box<dyn Error>> {
     let (has_gpu, gpu_info) = detect_gpu_capabilities();
     println!("🔍 {}", gpu_info);
 
@@ -143,34 +159,28 @@ fn create_whisper_context_with_auto_fallback(model_path: &str, prefer_gpu: bool)
         println!("🚀 GPU support detected, attempting to enable GPU acceleration...");
 
         // Check which GPU features are compiled in
-        #[cfg(feature = "cuda")]
-        {
-            let mut ctx_params = WhisperContextParameters::default();
-            ctx_params.use_gpu(true);
+        let mut ctx_params = WhisperContextParameters::default();
+        ctx_params.use_gpu(true);
 
-            match WhisperContext::new_with_params(model_path, ctx_params) {
-                Ok(ctx) => {
-                    println!("✅ GPU mode enabled successfully (CUDA acceleration)");
-                    return Ok((ctx, "GPU (CUDA)".to_string()));
-                }
-                Err(e) => {
-                    println!("⚠️ GPU mode failed: {}", e);
-                    println!("💡 Possible reasons:");
-                    println!("   - Incompatible CUDA runtime version");
-                    println!("   - Insufficient GPU memory");
-                    println!("   - Model file incompatible with GPU version");
-                    println!("🔄 Auto-fallback to CPU mode");
-                }
+        match WhisperContext::new_with_params(model_path, ctx_params) {
+            Ok(ctx) => {
+                println!("✅ GPU mode enabled successfully (CUDA acceleration)");
+                return Ok((ctx, "GPU (CUDA)".to_string()));
+            }
+            Err(e) => {
+                println!("⚠️ GPU mode failed: {}", e);
+                println!("💡 Possible reasons:");
+                println!("   - Incompatible CUDA runtime version");
+                println!("   - Insufficient GPU memory");
+                println!("   - Model file incompatible with GPU version");
+                println!("🔄 Auto-fallback to CPU mode");
             }
         }
-        #[cfg(not(feature = "cuda"))]
-        {
-            if prefer_gpu && has_gpu {
-                println!("⚡ GPU hardware detected, but CUDA feature not enabled");
-                println!("💡 To enable GPU acceleration on Windows:");
-                println!("   Add 'cuda' feature to build");
-                println!("🔄 Using CPU mode");
-            }
+        if prefer_gpu && has_gpu {
+            println!("⚡ GPU hardware detected, but CUDA feature not enabled");
+            println!("💡 To enable GPU acceleration on Windows:");
+            println!("   Add 'cuda' feature to build");
+            println!("🔄 Using CPU mode");
         }
     } else if prefer_gpu && !has_gpu {
         println!("🔧 GPU acceleration requested but no GPU support detected, using CPU mode");

@@ -1,5 +1,5 @@
 # Build Stage
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.2.8 AS builder
 
 # Add Build Arguments
 ARG USE_MIRROR=false

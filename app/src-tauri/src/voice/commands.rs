@@ -152,3 +152,14 @@ pub async fn get_voice_status() -> Result<VoiceStatus, String> {
     })
 }
 
+/// Check if CUDA support is available in this build
+#[tauri::command]
+pub async fn is_cuda_available() -> Result<bool, String> {
+    // Return true if built with CUDA feature, false otherwise
+    #[cfg(feature = "whisper-cuda")]
+    return Ok(true);
+
+    #[cfg(not(feature = "whisper-cuda"))]
+    return Ok(false);
+}
+

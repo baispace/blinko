@@ -195,7 +195,7 @@ export const noteRouter = router({
 
       const notes = await prisma.notes.findMany({
         where,
-        orderBy: [{ isTop: 'desc' }, timeOrderBy],
+        orderBy: [{ isTop: 'desc' }, { sortOrder: 'asc' }, timeOrderBy],
         skip: (page - 1) * size,
         take: size,
         include: {
@@ -1765,6 +1765,36 @@ export const noteRouter = router({
         canEdit: note.internalShares[0]?.canEdit || false,
         internalShares: undefined, // Remove this field from the response
       })));
+    }),
+  updateNotesOrder: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/update-order', summary: 'Update notes order', protect: true, tags: ['Note'] } })
+    .input(
+      z.object({
+        updates: z.array(
+          z.object({
+            id: z.number(),
+            sortOrder: z.number(),
+          }),
+        ),
+      }),
+    )
+    .output(z.object({ success: z.boolean() }))
+    .mutation(async function ({ input, ctx }) {
+      const { updates } = input;
+
+      await Promise.all(
+        updates.map(({ id, sortOrder }) =>
+          prisma.notes.updateMany({
+            where: {
+              id,
+              accountId: Number(ctx.id),
+            },
+            data: { sortOrder },
+          }),
+        ),
+      );
+
+      return { success: true };
     }),
 });
 

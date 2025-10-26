@@ -1,4 +1,3 @@
-import '../lib/pdf-parse-wrapper';
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
 import { AiModelFactory } from './aiModelFactory';

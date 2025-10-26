@@ -6,6 +6,6 @@
   "types": "index.ts",
   "dependencies": {
     "zod": "^4.1.12",
-    "superjson": "^2.2.5"
+    "superjson": "^2.2.3"
   }
 }

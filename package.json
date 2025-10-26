@@ -5,7 +5,8 @@
   "packageManager": "bun@1.2.8",
   "workspaces": [
     "app",
-    "server"
+    "server",
+    "shared"
   ],
   "scripts": {
     "dev": "cd app && bun run tauri dev",

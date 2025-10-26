@@ -47,6 +47,7 @@
     "axios": "^1.12.2",
     "boring-avatars": "^1.11.2",
     "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
     "copy-to-clipboard": "^3.3.3",
     "dayjs": "^1.11.18",
     "echarts": "^5.6.0",

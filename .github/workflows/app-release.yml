@@ -263,8 +263,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install
-          cd app && bun install
+          bun install --frozen-lockfile
 
 
       # Copy CUDA config for CUDA builds (with installer checks)
@@ -357,8 +356,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install
-          cd app && bun install
+          bun install --frozen-lockfile
 
       - name: Run Prisma Generate
         run: bun run prisma:generate

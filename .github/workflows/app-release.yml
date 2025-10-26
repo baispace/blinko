@@ -265,7 +265,6 @@ jobs:
         run: |
           bun install
           cd app && bun install
-          cd server && bun install
 
 
       # Copy CUDA config for CUDA builds (with installer checks)
@@ -360,7 +359,6 @@ jobs:
         run: |
           bun install
           cd app && bun install
-          cd server && bun install
 
       - name: Run Prisma Generate
         run: bun run prisma:generate

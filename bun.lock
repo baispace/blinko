@@ -51,6 +51,7 @@
         "@tauri-apps/plugin-upload": "^2.2.1",
         "@trpc/client": "^11.1.0",
         "@types/nprogress": "^0.2.3",
+        "axios": "^1.12.2",
         "boring-avatars": "^1.11.2",
         "canvas-confetti": "^1.9.3",
         "copy-to-clipboard": "^3.3.3",

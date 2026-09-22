@@ -132,22 +132,28 @@ export class FileService {
   
   public static async getS3Client() {
     const config = await getGlobalConfig({ useAdmin: true });
-    return cache.wrap(`${config.s3Endpoint}-${config.s3Region}-${config.s3Bucket}-${config.s3AccessKeyId}-${config.s3AccessKeySecret}`, async () => {
+    // S3 SDK requires a full URL; tolerate endpoint values entered without the protocol prefix
+    const endpoint = config.s3Endpoint && !/^https?:\/\//i.test(config.s3Endpoint)
+      ? `https://${config.s3Endpoint}`
+      : config.s3Endpoint;
+    return cache.wrap(`${endpoint}-${config.s3Region}-${config.s3Bucket}-${config.s3AccessKeyId}-${config.s3AccessKeySecret}-${config.s3CdnDomain ?? ''}`, async () => {
       const s3ClientInstance = new S3Client({
-        endpoint: config.s3Endpoint,
+        endpoint,
         region: config.s3Region,
         credentials: {
           accessKeyId: config.s3AccessKeyId,
           secretAccessKey: config.s3AccessKeySecret,
         },
-        forcePathStyle: true,
+        // Aliyun OSS only accepts virtual-hosted style (bucket.endpoint/key);
+        // path-style triggers SecondLevelDomainForbidden. Other S3-compatible
+        // stores (MinIO, AWS) keep path-style for compatibility.
+        forcePathStyle: !/aliyuncs\.com/i.test(endpoint ?? ''),
       });
       return { s3ClientInstance, config };
     }, { ttl: 60 * 60 * 86400 * 1000 })
   }
 
-  private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer, attempt: number = 0) {
-    const MAX_ATTEMPTS = 20;
+  private static async writeFileSafe(baseName: string, extension: string, buffer: Buffer, attempt: number = 0) {    const MAX_ATTEMPTS = 20;
     const config = await getGlobalConfig({ useAdmin: true });
 
     if (attempt >= MAX_ATTEMPTS) {
@@ -217,13 +223,14 @@ export class FileService {
         customPath = customPath.endsWith('/') ? customPath : customPath + '/';
       }
 
-      const timestampedFileName = `${baseName}_${timestamp}${extension}`;
+      const timestampedFileName = FileService.generateStorageFileName(extension);
       const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
 
       const command = new PutObjectCommand({
         Bucket: config.s3Bucket,
         Key: s3Key,
         Body: buffer,
+        ContentType: this.getContentType(extension, type),
       });
 
       await s3ClientInstance.send(command);
@@ -231,14 +238,14 @@ export class FileService {
       if (!withOutAttachment) {
         await FileService.createAttachment({
           path: s3Url,
-          name: FileService.getOriginFilename(timestampedFileName),
+          name: originalName,
           size: buffer.length,
           type,
           accountId,
           metadata
         });
       }
-      return { filePath: s3Url, fileName: FileService.getOriginFilename(timestampedFileName) };
+      return { filePath: s3Url, fileName: originalName };
     } else {
       const filename = await this.writeFileSafe(baseName, extension, buffer);
       await FileService.createAttachment({
@@ -256,6 +263,30 @@ export class FileService {
   static getOriginFilename(name: string) {
     const match = name.match(/-[^-]+(\.[^.]+)$/);
     return match ? match[0].substring(1) : name;
+  }
+
+  /**
+   * 生成对象存储文件名：yyyymmdd-5位随机数字 + 扩展名（如 20260923-48392.png）
+   * 仅用于 S3/OSS 存储键，本地存储沿用原命名逻辑
+   */
+  static generateStorageFileName(extension: string) {
+    const now = new Date();
+    const yyyymmdd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const rand = Math.floor(10000 + Math.random() * 90000);
+    return `${yyyymmdd}-${rand}${extension.toLowerCase() || ''}`;
+  }
+
+  private static getContentType(extension: string, fallbackType?: string) {
+    if (fallbackType && fallbackType !== 'application/octet-stream') {
+      return fallbackType;
+    }
+    const mimeMap: Record<string, string> = {
+      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
+      '.pdf': 'application/pdf', '.mp4': 'video/mp4', '.mp3': 'audio/mpeg',
+      '.txt': 'text/plain', '.md': 'text/markdown',
+    };
+    return mimeMap[extension.toLowerCase()] ?? 'application/octet-stream';
   }
 
   static async deleteFile(api_attachment_path: string) {
@@ -359,10 +390,7 @@ export class FileService {
     }) {
     const config = await getGlobalConfig({ useAdmin: true });
     const extension = path.extname(originalName);
-    const rawBaseName = path.basename(originalName, extension);
-    const baseName = sanitizeUploadFileName(rawBaseName);
-    const timestamp = Date.now();
-    const timestampedFileName = `${baseName}_${timestamp}${extension}`;
+    const timestampedFileName = FileService.generateStorageFileName(extension);
 
     try {
       if (config.objectStorage === 's3') {
@@ -392,6 +420,7 @@ export class FileService {
             Bucket: config.s3Bucket,
             Key: s3Key,
             Body: passThrough,
+            ContentType: FileService.getContentType(extension, type),
           },
         });
 
@@ -412,13 +441,13 @@ export class FileService {
 
         await FileService.createAttachment({
           path: s3Url,
-          name: timestampedFileName,
+          name: originalName,
           size: fileSize,
           type,
           accountId,
           metadata
         });
-        return { filePath: s3Url, fileName: timestampedFileName };
+        return { filePath: s3Url, fileName: originalName };
 
       } else {
         let customPath = config.localCustomPath || '';

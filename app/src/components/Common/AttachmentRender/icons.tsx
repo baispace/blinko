@@ -10,6 +10,7 @@ import { helper } from '@/lib/helper';
 import { FileType } from '../Editor/type';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 import { Tooltip } from '@heroui/react';
+import { toContentFileUrl } from '@/components/Common/Editor/editorStore';
 import { eventBus } from '@/lib/event';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import axiosInstance from '@/lib/axios';
@@ -52,7 +53,7 @@ export const InsertConextButton = observer(({ className, file, files, size = 20 
     <Tooltip content={t('insert-context')}>
       <div onClick={(e) => {
         e.stopPropagation()
-        eventBus.emit('editor:insert', `![${file.name}](${file.preview})`)
+        eventBus.emit('editor:insert', `![](${toContentFileUrl(file.preview)})`)
       }} className={`opacity-70 hover:opacity-100 bg-black cursor-pointer rounded-sm transition-al ${className}`}>
         <Icon className='!text-white' icon="material-symbols:variable-insert-outline-rounded" width={size} height={size} />
       </div>

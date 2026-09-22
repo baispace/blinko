@@ -19,6 +19,23 @@ import { eventBus } from '@/lib/event';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import axiosInstance from '@/lib/axios';
 
+/**
+ * Convert an internal file path to the full URL written into note content.
+ * When a CDN acceleration domain is configured (s3CdnDomain), /api/s3file/*
+ * paths are rewritten to the CDN origin URL so notes embed absolute,
+ * auth-free image links.
+ */
+export const toContentFileUrl = (filePath: string): string => {
+  try {
+    const cdn = RootStore.Get(BlinkoStore).config.value?.s3CdnDomain
+    if (cdn && filePath.startsWith('/api/s3file/')) {
+      const base = /^https?:\/\//i.test(cdn) ? cdn.replace(/\/+$/, '') : `https://${cdn}`
+      return `${base}/${filePath.replace(/^\/api\/s3file\//, '').replace(/^\/+/, '')}`
+    }
+  } catch { /* config not ready, fall back to the internal path */ }
+  return filePath
+}
+
 export class EditorStore {
   files: FileType[] = []
   lastRange: Range | null = null
@@ -306,9 +323,9 @@ export class EditorStore {
         <Button variant='flat' className="ml-auto" color='default'
           onPress={e => {
             if (type.includes('image')) {
-              this.vditor?.insertValue(`![${fileName}](${filePath})`)
+              this.vditor?.insertMD(`![](${toContentFileUrl(filePath)})`)
             } else {
-              this.vditor?.insertValue(`[${fileName}](${filePath})`)
+              this.vditor?.insertMD(`[${fileName}](${toContentFileUrl(filePath)})`)
             }
             RootStore.Get(DialogStandaloneStore).close()
           }}>{i18n.t('context')}</Button>

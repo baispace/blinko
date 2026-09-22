@@ -60,9 +60,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=custom
+            # tag = 分支名：custom 分支 → :custom（服务器用），feature 分支 → :feat-xxx
+            # 这样在 feature 分支上手动触发构建也不会覆盖 :custom 镜像
+            type=ref,event=branch
             type=sha,prefix=sha-,format=short
-            type=raw,value=v${{ steps.ver.outputs.blinko_version }}-custom
 
       # 注意：官方 Dockerfile 文件名是小写的 dockerfile，必须显式指定
       # 构建用 bun（bun install + next build），内存需求高 —— 所以绝不要在 2核2G 服务器上本地构建

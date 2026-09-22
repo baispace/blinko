@@ -68,6 +68,29 @@ git commit -m "feat(custom): 卡片显示封面图"
 git push origin custom        # 触发 CI 构建镜像
 ```
 
+### 正式功能：开 feature 分支（推荐）
+
+稍大的改动不要直接提交 `custom`，从它切一条功能分支，验证后再合回：
+
+```bash
+git checkout custom && git checkout -b feat/cover-image   # 从 custom 切出
+# ... 本地改代码、bun run dev 调试 ...
+git add -A && git commit -m "feat: 卡片显示封面图"
+git push origin feat/cover-image
+# 在 Actions 页对该分支手动触发 Build Custom Image，
+# 得到测试镜像 ghcr.io/baispace/blinko:feat-cover-image，本地起容器验证
+# 确认没问题后合回：
+git checkout custom && git merge feat/cover-image
+git push origin custom           # CI 构建 :custom 镜像 → 服务器 pull 上线
+git branch -d feat/cover-image   # 清理
+```
+
+> 因为「上线」永远是服务器上**手动** `docker compose pull`，custom 上的镜像更新并不会自动跑到线上——所以小改动直接提交 custom 风险也很低，feature 分支属于更严谨的可选项。
+
+### ⛔ 红线：custom 永远不能合并进 main
+
+方向必须永远是 `main → custom`（同步上游），**绝不反向**。main 一旦混入定制内容，就不再是上游的纯净镜像，「每周自动同步」会从零冲突变成次次冲突，整个模型失效。你的定制内容长期保存在 `custom` 分支上，不需要 main 承载。
+
 ### 同步上游更新
 
 **日常方式（推荐）：GitHub Actions 自动同步**

@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
-import { AiModelFactory } from './aiModelFactory';
+import { AiModelFactory, extractValidTags } from './aiModelFactory';
 import { ProgressResult } from '@shared/lib/types';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
@@ -490,13 +490,14 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
           const result = await tagAgent.generate(
             `Existing tags list:  [${tags.join(', ')}]\n Note content:\n${note.content}`
           )
-          suggestedTags = result.text.split(',').map((tag) => tag.trim());
-          // Filter out empty tags and limit to 5 tags max
-          suggestedTags = suggestedTags.filter(Boolean).slice(0, 5);
-          caller.notes.upsert({
-            id: noteId,
-            content: note.content + '\n' + suggestedTags.join(' '),
-          });
+          // 仅提取合法 #tag，过滤推理型模型输出的分析文字
+          suggestedTags = extractValidTags(result.text);
+          if (suggestedTags.length > 0) {
+            caller.notes.upsert({
+              id: noteId,
+              content: note.content + '\n' + suggestedTags.join(' '),
+            });
+          }
         } catch (error) {
           console.error('Error processing tags:', error);
         }

@@ -4,7 +4,7 @@ import { AiService } from '@server/aiServer';
 import { prisma } from '../prisma';
 import { TRPCError } from '@trpc/server';
 import { CoreMessage } from '@mastra/core';
-import { AiModelFactory } from '@server/aiServer/aiModelFactory';
+import { AiModelFactory, extractValidTags } from '@server/aiServer/aiModelFactory';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
@@ -193,7 +193,8 @@ export const aiRouter = router({
       const result = await tagAgent.generate(
         `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}\nPlease suggest appropriate tags for this content. Include full hierarchical paths for tags like #Parent/Child instead of just #Child.`
       )
-      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
+      // 仅提取合法 #tag，过滤推理型模型输出的分析文字
+      return extractValidTags(result?.text ?? '')
     }),
   autoEmoji: authProcedure
     .input(z.object({

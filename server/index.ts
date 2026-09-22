@@ -39,6 +39,13 @@ import ViteExpress from 'vite-express';
 
 // Process error handling
 process.on('uncaughtException', (error) => {
+  // Bun 运行时与 axios 1.x 的已知兼容问题：出站请求超时时，AxiosError 构造函数内
+  // Error.captureStackTrace 抛 "First argument must be an Error object"（经 follow-redirects
+  // 的 socket 事件触发）。服务本身不受影响，仅需记录超时事实，无需整屏错误帧。
+  if (error?.message?.includes('First argument must be an Error object')) {
+    console.warn(`[axios-timeout] outbound request timed out (bun/axios compat) at ${new Date().toISOString()}`);
+    return;
+  }
   console.error('uncaughtException:', error);
 });
 

@@ -26,6 +26,23 @@ import { ModelCapabilities } from './types';
 import { aiModels } from '@shared/index';
 import { MastraVoice } from '@mastra/core/voice';
 
+/**
+ * 从模型输出中提取合法标签。
+ * 推理型模型会先输出大段分析文字再给出标签，这里只认 "#标签" 格式，
+ * 且优先取最后一段含 # 的文本（推理在前、结论在后），避免把分析过程写进笔记。
+ */
+export function extractValidTags(text: string, max = 3): string[] {
+  // 剥离推理型模型的 <think>...</think> 思考块，防止分析文字被当作内容处理
+  const cleanedText = String(text ?? '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*$/i, '');
+  const lines = cleanedText.split('\n').map(l => l.trim()).filter(Boolean);
+  const tagLine = [...lines].reverse().find(l => l.includes('#')) ?? '';
+  const raw = tagLine.match(/#[\p{L}\p{N}_.\-/]+/gu) ?? [];
+  const cleaned = raw
+    .map(t => t.replace(/[.。,，、]+$/u, ''))
+    .filter(t => t.length > 1 && t.length <= 100);
+  return Array.from(new Set(cleaned)).slice(0, max);
+}
+
 export class AiModelFactory {
   static async queryAndDeleteVectorById(targetId: number) {
     const { VectorStore } = await AiModelFactory.GetProvider();
@@ -444,14 +461,15 @@ export class AiModelFactory {
       if (customPrompt) {
         return customPrompt;
       }
-      return `You are a precise label classification expert, and you will generate precisely matched content labels based on the content. Rules:
-      1. **Core Selection Principle**: Select 5 to 8 tags from the existing tag list that are most relevant to the content theme. Carefully compare the key information, technical types, application scenarios, and other elements of the content to ensure that the selected tags accurately reflect the main idea of the content.
-      2. **Language Matching Strategy**: If the language of the existing tags does not match the language of the content, give priority to using the language of the existing tags to maintain the consistency of the language style of the tag system.
-      3. **Tag Structure Requirements**: When using existing tags, it is necessary to construct a parent-child hierarchical structure. For example, place programming language tags under parent tags such as #Code or #Programming, like #Code/JavaScript, #Programming/Python. When adding new tags, try to classify them under appropriate existing parent tags as well.
-      4. **New Tag Generation Rules**: If there are no tags in the existing list that match the content, create new tags based on the key technologies, business fields, functional features, etc. of the content. The language of the new tags should be consistent with that of the content.
-      5. **Response Format Specification**: Only return tags separated by commas. There should be no spaces between tags, and no formatting or code blocks should be used. Each tag should start with #, such as #JavaScript.
-      6. **Example**: For JavaScript content related to web development, a reference response could be #Programming/Languages, #Web/Development, #Code/JavaScript, #Front-End Development/Frameworks (if applicable), #Browser Compatibility. It is strictly prohibited to respond in formats such as code blocks, JSON, or Markdown. Just provide the tags directly. 
-          `;
+      return `你是个人博客的标签分类专家，根据笔记内容从现有标签列表中选择或生成标签。
+
+规则：
+1. 【数量硬性限制】最多输出 3 个标签，宁缺毋滥。若 1-2 个标签已能精准覆盖核心主题，就只输出 1-2 个。
+2. 【精准优先】只选与内容核心主题直接相关的标签，禁止为凑数添加宽泛、弱相关或无区分度的标签。
+3. 【优先复用】优先从现有标签列表中选择，能覆盖主题时不要新建同义或近似标签。
+4. 【层级结构】选择已有标签时使用其完整层级路径（如 #技术/数据库 而非 #数据库）；需要新建标签时，也尽量挂到合适的已有父标签下。
+5. 【语言一致】新标签的语言与笔记内容语言保持一致（中文笔记用中文标签）。
+6. 【输出格式】只输出标签本身，以空格分隔（示例：#技术/数据库 #产品思考），不要编号、不要解释、不要输出任何其他文字。`;
     },
     'BlinkoTag',
   );

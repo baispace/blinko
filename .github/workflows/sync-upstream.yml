@@ -1,0 +1,88 @@
+name: Sync Upstream
+
+# 在 GitHub 服务器上同步上游（GitHub 内部互联，速度和稳定性都远超本地）
+# 同步成功后自动触发镜像构建；有冲突时自动开 Issue 提醒
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # 每周一 03:00 UTC = 北京时间周一 11:00
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '可选：只同步到上游某个发布版本（如 v1.9.0），留空则同步 main 最新'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 必须完整历史才能做 merge；CI 内拉取很快
+      - name: 检出 custom 分支（完整历史）
+        uses: actions/checkout@v4
+        with:
+          ref: custom
+          fetch-depth: 0
+
+      - name: 配置上游 remote
+        run: git remote add upstream https://github.com/blinkospace/blinko.git
+
+      - name: 同步 main（纯净镜像，只快进）
+        run: |
+          git fetch upstream main --tags
+          git checkout main
+          if [ -n "${{ inputs.tag }}" ]; then
+            git merge --ff-only "refs/tags/${{ inputs.tag }}"
+          else
+            git merge --ff-only upstream/main
+          fi
+          git push origin main
+
+      - name: 预警：双方都改过的文件
+        id: warn
+        run: |
+          BASE=$(git merge-base custom upstream/main)
+          comm -12 \
+            <(git diff --name-only "$BASE"..upstream/main | sort -u) \
+            <(git diff --name-only "$BASE"..custom | sort -u) | tee hotfiles.txt
+          echo "上游新增提交数: $(git rev-list --count "$BASE"..upstream/main)"
+
+      - name: 合并进 custom
+        run: |
+          git checkout custom
+          git merge main --no-edit
+
+      - name: 冲突时自动开 Issue 提醒
+        if: failure()
+        run: |
+          git merge --abort 2>/dev/null || true
+          HOTFILES=$(cat hotfiles.txt 2>/dev/null | head -20 || echo "无")
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "上游同步冲突，需要手动处理" \
+            --body "自动同步上游时产生冲突，请本地处理：
+          \`\`\`
+          git fetch origin
+          git checkout custom
+          git merge origin/main
+          \`\`\`
+          高危文件（双方都改过）：
+          \`\`\`
+          $HOTFILES
+          \`\`\`" || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 触发镜像构建
+        if: success()
+        run: gh workflow run build-custom-image.yml --ref custom
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

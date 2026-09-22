@@ -307,7 +307,11 @@ export class AiStore implements Store {
       for await (const item of res) {
 
         if (item.type == 'error') {
-          const errorMessage = (item.error as any)?.name || 'ai error';
+          // Stream-level error (provider failure during generation).
+          // Prefer message (real cause like "Incorrect API key"); fall back to name then a generic label.
+          const err = item.error as any;
+          const errorMessage = err?.message || err?.name || 'ai error';
+          console.error('[aiStore.writeStream] stream error:', err);
           RootStore.Get(ToastPlugin).error(errorMessage);
           this.isLoading = false;
           this.isWriting = false;
@@ -325,8 +329,13 @@ export class AiStore implements Store {
       eventBus.emit('editor:focus');
       this.isLoading = false;
     } catch (error) {
-      console.log('writeStream error', error);
-      RootStore.Get(ToastPlugin).error(error?.message || i18n.t('ai-writing-service-connection-failed'));
+      console.error('[aiStore.writeStream] caught error:', error);
+      // tRPC errors carry .message; raw fetch / network errors may not.
+      const msg =
+        (error as any)?.data?.message ||
+        (error as any)?.message ||
+        i18n.t('ai-writing-service-connection-failed');
+      RootStore.Get(ToastPlugin).error(msg);
       this.isLoading = false;
       this.isWriting = false;
     }

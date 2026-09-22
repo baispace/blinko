@@ -39,6 +39,27 @@ async function main() {
     await Promise.all([fs.mkdir(".blinko/files"), fs.mkdir(".blinko/vector"), fs.mkdir(".blinko/pgdump")])
   } catch (error) { }
 
+  // Copy demo seed files (pic01-06.png, story.txt) into .blinko/files so that
+  // the attachments seeded by migrations can be served. Without this, /api/file/*
+  // would return 404 in a fresh environment.
+  try {
+    const seedFilesDir = path.resolve(__dirname, 'seedfiles');
+    const seedEntries = await fs.readdir(seedFilesDir);
+    for (const entry of seedEntries) {
+      const src = path.join(seedFilesDir, entry);
+      const stat = await fs.stat(src);
+      if (!stat.isFile()) continue;
+      const dest = path.join(".blinko/files", entry);
+      try {
+        await fs.access(dest);
+        // already exists, skip
+      } catch {
+        await fs.copyFile(src, dest);
+      }
+    }
+  } catch (error) {
+    console.warn('seedfiles copy skipped:', (error as Error).message);
+  }
   //Compatible with users prior to v0.2.9
   const account = await prisma.accounts.findFirst({ orderBy: { id: 'asc' } })
   if (account) {

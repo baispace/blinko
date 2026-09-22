@@ -159,13 +159,24 @@ export const aiRouter = router({
     }))
     .mutation(async function* ({ input }) {
       const { question, type = 'custom', content } = input
-      const agent = await AiModelFactory.WritingAgent(type)
-      const result = await agent.stream([
-        {
-          role: 'user',
-          content: `${question}\n\nThis is the user's note content: ${content || ''}`
-        }
-      ]);
+      // Wrap agent creation/initialization so that configuration errors
+      // (e.g. missing AI provider, invalid model) yield a meaningful
+      // { type: 'error', error } chunk with a readable message instead
+      // of propagating an empty Error that surfaces as "Unknown error"
+      // on the client.
+      let result: any
+      try {
+        const agent = await AiModelFactory.WritingAgent(type)
+        result = await agent.stream([
+          {
+            role: 'user',
+            content: `${question}\n\nThis is the user's note content: ${content || ''}`
+          }
+        ])
+      } catch (err: any) {
+        yield { type: 'error', error: new Error(err?.message || 'Failed to initialize AI writing agent') }
+        return
+      }
       for await (const chunk of result.fullStream) {
         yield chunk
       }

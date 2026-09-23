@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
-import { AiModelFactory, extractValidTags } from './aiModelFactory';
+import { AiModelFactory, extractValidTags, stripThinkText } from './aiModelFactory';
 import { ProgressResult } from '@shared/lib/types';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
@@ -326,7 +326,7 @@ export class AiService {
 
       const comment = await prisma.comments.create({
         data: {
-          content: result.text.trim(),
+          content: stripThinkText(result.text),
           noteId,
           guestName: 'Blinko AI',
           guestIP: '',
@@ -450,7 +450,7 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
         },
       ]);
 
-      const aiResponse = result.text.trim();
+      const aiResponse = stripThinkText(result.text);
 
       // Handle based on the processing mode
       if (processingMode === 'comment' || processingMode === 'both') {
@@ -520,7 +520,7 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
           });
           const comment = await prisma.comments.create({
             data: {
-              content: result.text,
+              content: stripThinkText(result.text),
               noteId,
               guestName: 'Blinko AI',
               guestIP: '',

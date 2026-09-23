@@ -2,6 +2,7 @@ import { userCaller } from '@server/routerTrpc/_app';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod/v3';
 import { verifyToken } from '@server/lib/helper';
+import { stripThinkText } from '../aiModelFactory';
 
 export const createCommentTool = createTool({
   id: 'create-comment-tool',
@@ -27,7 +28,7 @@ export const createCommentTool = createTool({
       });
       
       const result = await caller.comments.create({
-        content: context.content,
+        content: stripThinkText(context.content),
         noteId: context.noteId,
         guestName: context.guestName || 'Blinko AI'
       });

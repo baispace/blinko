@@ -31,9 +31,20 @@ import { MastraVoice } from '@mastra/core/voice';
  * 推理型模型会先输出大段分析文字再给出标签，这里只认 "#标签" 格式，
  * 且优先取最后一段含 # 的文本（推理在前、结论在后），避免把分析过程写进笔记。
  */
+/**
+ * 剥离推理型模型输出的 <think>...</think> 思考块（含未闭合的 <think>...），
+ * 用于所有把模型原文写入用户可见内容（评论/笔记）的场景。
+ */
+export function stripThinkText(text: string): string {
+  return String(text ?? '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/<think>[\s\S]*$/i, '')
+    .trim();
+}
+
 export function extractValidTags(text: string, max = 3): string[] {
   // 剥离推理型模型的 <think>...</think> 思考块，防止分析文字被当作内容处理
-  const cleanedText = String(text ?? '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*$/i, '');
+  const cleanedText = stripThinkText(text);
   const lines = cleanedText.split('\n').map(l => l.trim()).filter(Boolean);
   const tagLine = [...lines].reverse().find(l => l.includes('#')) ?? '';
   const raw = tagLine.match(/#[\p{L}\p{N}_.\-/]+/gu) ?? [];

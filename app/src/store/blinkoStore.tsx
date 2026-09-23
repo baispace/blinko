@@ -432,14 +432,22 @@ export class BlinkoStore implements Store {
 
   tagList = new PromiseState({
     function: async () => {
-      const falttenTags = await api.tags.list.query(undefined, { context: { skipBatch: true } });
+      const res = await api.tags.listWithCount.query(undefined, { context: { skipBatch: true } });
+      const falttenTags = res.tags.map(i => i.tag);
+      const tagCounts: Record<number, number> = {};
+      res.tags.forEach(i => { tagCounts[i.tag.id] = i.noteCount; });
       const listTags = helper.buildHashTagTreeFromDb(falttenTags)
-      console.log(falttenTags, 'listTags')
       let pathTags: string[] = [];
       listTags.forEach(node => {
         pathTags = pathTags.concat(helper.generateTagPaths(node));
       });
-      return { falttenTags, listTags, pathTags }
+      return {
+        falttenTags,
+        listTags,
+        pathTags,
+        tagCounts,
+        viewCounts: { blinko: res.blinkoCount, note: res.noteCount, todo: res.todoCount }
+      }
     }
   })
 

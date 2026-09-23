@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@server/prisma';
 import { userCaller } from './_app';
 import { tagSchema } from '@shared/lib/prismaZodType';
+import { NoteType } from '@shared/lib/types';
 
 export const tagRouter = router({
   list: authProcedure
@@ -20,6 +21,56 @@ export const tagRouter = router({
         distinct: ['id']
       });
       return tags;
+    }),
+
+  listWithCount: authProcedure
+    .meta({ openapi: { method: 'GET', path: '/v1/tags/list-with-count', summary: 'Get user tags with note count', protect: true, tags: ['Tag'] } })
+    .input(z.void())
+    .output(z.object({
+      tags: z.array(z.object({
+        tag: tagSchema,
+        noteCount: z.number().int()
+      })),
+      blinkoCount: z.number().int(),
+      noteCount: z.number().int(),
+      todoCount: z.number().int()
+    }))
+    .query(async function ({ ctx }) {
+      const accountId = Number(ctx.id);
+      const visibleNoteWhere = { isRecycle: false, isArchived: false };
+      const [tags, blinkoCount, noteCount, todoCount] = await Promise.all([
+        prisma.tag.findMany({
+          where: { accountId },
+          orderBy: { sortOrder: 'asc' },
+          distinct: ['id'],
+          include: {
+            tagsToNote: {
+              where: { note: visibleNoteWhere },
+              select: { noteId: true }
+            }
+          }
+        }),
+        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.BLINKO } }),
+        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.NOTE } }),
+        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.TODO } })
+      ]);
+      return {
+        tags: tags.map(tag => ({
+          tag: {
+            id: tag.id,
+            name: tag.name,
+            icon: tag.icon,
+            parent: tag.parent,
+            sortOrder: tag.sortOrder,
+            createdAt: tag.createdAt,
+            updatedAt: tag.updatedAt
+          },
+          noteCount: tag.tagsToNote.length
+        })),
+        blinkoCount,
+        noteCount,
+        todoCount
+      };
     }),
 
   fullTagNameById: authProcedure

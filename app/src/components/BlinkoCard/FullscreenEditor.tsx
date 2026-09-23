@@ -246,7 +246,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
             >
               <MarkdownRender
                 content={blinko.noteDetail.value?.content ?? blinkoItem.content}
-                onChange={(newContent) => {
+                onChange={(updater) => {
+                  const newContent = updater(blinko.noteDetail.value?.content ?? blinkoItem.content);
                   blinkoItem.content = newContent;
                   blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false });
                 }}

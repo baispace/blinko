@@ -33,6 +33,24 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
 3. 检查 `document.querySelector('vite-error-overlay')`
 4. 注入 token 复现登录态，用 agent-browser eval 看 `location.pathname` / `root.innerHTML.length`
 
+## agent-browser 自动化技巧（本项目实测有效）
+- React Aria Popover（HeroUI trigger）对 `.click()` 无响应 → eval 派发完整事件序列：
+  pointerdown/pointerup/mousedown/mouseup/click（带 clientX/Y/pointerId/bubbles）
+- 普通 onClick 的 div 用 `.click()` 即可；复杂图标按钮用 svg path d 前缀定位
+- eval 变量跨调用残留（`Identifier already declared`）→ 全部 IIFE 包裹
+- 编辑器 store 直读：Card 元素挂了 `__storeInstance`（`[...document.querySelectorAll('div')].find(d => d.__storeInstance)`）
+- Tiptap 注意：失焦后 focus() 恢复上次选区——全选状态下经 Popover 插入会替换选区（惯例语义非 bug）
+
+## Tiptap 编辑器（已替换 Vditor，适配器冒充 vditor 接口）
+- 代码在 `app/src/components/Common/Editor/Tiptap/`：adapter/extensions/ToolbarButtons/Callout/CalloutIconMenu/tiptap.css
+- **Callout（高亮块）**：自研 Node 扩展，markdown 以 HTML 块保真存储
+  `<div data-callout-type="warning" data-callout-icon="📌" data-type="callout"><p>...</p></div>`
+- 颜色（type）与图标（icon）两个独立 attr；icon 为 null 时 renderHTML 按 type 回退默认 emoji
+- emoji 显示用 CSS `content: attr(data-callout-icon)`（编辑端 tiptap.css `.tiptap` + 查看端 github-markdown.css `.markdown-body` **两处都要改**）
+- 查看端卡片走 react-markdown + rehypeRaw 渲染 HTML；命令用 wrapIn/lift 实现 toggle（setNode 对 block 容器无效）
+- **Callout 交互**：CalloutClickOutside 插件（点下方空白补段落 + 点击图标区派发 callout-icon-click 事件）；CalloutIconMenu 浮动面板；Enter 空尾块跳出 / Backspace 开头 lift
+- **任务清单删除线**：MarkdownRender 的 ListItem 检测 checked 必须递归找 input（loose list 时 input 在 `<p>` 内，直接 find 拿不到）
+
 ## 图标体系（本地与线上站点是两套，勿混用）
 - **本地仓库代码（旧版）**：`app/src/components/Common/Iconify/icons.tsx`，由 `buildIcons.js` 扫描生成，
   打包 46 个 Iconify 集合（hugeicons / solar / tabler / lucide / mingcute …），缺失时 fallback 到 `@iconify/react` 在线渲染。

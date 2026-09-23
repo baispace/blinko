@@ -62,8 +62,9 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
     <>
       <MarkdownRender
         content={displayContent}
-        onChange={(newContent) => {
+        onChange={(updater) => {
           if (isShareMode) return;
+          const newContent = updater(blinkoItem.content);
           blinkoItem.content = newContent
           blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
         }}

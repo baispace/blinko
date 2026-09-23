@@ -9,7 +9,7 @@ import { CommentCount } from './commentButton';
 import { BlinkoItem } from '.';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 import { helper } from '@/lib/helper';
 import { getNoteTagPaths } from './noteContent';
@@ -23,6 +23,7 @@ interface CardFooterProps {
 /** 卡片左下角标签区：正文里的 #标签 提取出来单独展示 */
 const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isShareMode?: boolean }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const tagPaths = useMemo(() => getNoteTagPaths(blinkoItem), [blinkoItem.tags]);
 
   if (tagPaths.length === 0) return null;
@@ -36,7 +37,12 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
           onClick={(e) => {
             if (isShareMode) return;
             e.stopPropagation();
-            navigate(`/?path=all&searchText=${encodeURIComponent('#' + path)}`);
+            // 保持当前所在视图（闪念/笔记/待办），仅做标签搜索，不跳离当前页面
+            const currentPath = new URLSearchParams(location.search).get('path');
+            const searchText = encodeURIComponent('#' + path);
+            navigate(currentPath
+              ? `/?path=${currentPath}&searchText=${searchText}`
+              : `/?searchText=${searchText}`);
             RootStore.Get(BlinkoStore).forceQuery++;
           }}
         >

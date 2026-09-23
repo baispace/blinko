@@ -56,6 +56,9 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('defaultHomePage'),
   z.literal('desktopHotkeys'),
   z.literal('systemTray'),
+  z.literal('cardSpacing'),
+  z.literal('noteListStyle'),
+  z.literal('noteListSortBy'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -195,7 +198,10 @@ export const ZConfigSchema = z.object({
   fontStyle: z.string().optional(),
   signinFooterEnabled: z.boolean().optional(),
   signinFooterText: z.string().optional(),
-  customTitle: z.string().optional()
+  customTitle: z.string().optional(),
+  cardSpacing: z.number().optional(),
+  noteListStyle: z.string().optional(),
+  noteListSortBy: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

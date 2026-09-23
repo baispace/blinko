@@ -3,6 +3,7 @@ import { Button } from "@heroui/react";
 
 const colors = [
   { name: 'default', background: '', foreground: '' },
+  { name: 'yellow', background: '#fbe573', foreground: '#1c1c1e' },
   { name: 'rose', background: '#e11d48', foreground: '#ffffff' },
   { name: 'orange', background: '#ea580c', foreground: '#ffffff' },
   { name: 'lime', background: '#65a30d', foreground: '#ffffff' },

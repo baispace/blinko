@@ -39,9 +39,15 @@ export const TagFilterChips = observer(() => {
   }, [tagList?.viewCounts, path]);
 
   // 展平标签树为完整路径 + 计数，过滤无笔记的标签
+  // 计数随当前视图变化：闪念/笔记/待办视图只统计该 type 的笔记数，「全部」视图统计跨类型总数
   const tagItems = useMemo<TagItem[]>(() => {
     const tree = tagList?.listTags ?? [];
-    const counts = tagList?.tagCounts ?? {};
+    // 选择与当前视图匹配的计数表
+    const counts =
+      path === 'notes' ? (tagList?.tagNoteCounts ?? {}) :
+      path === 'todo' ? (tagList?.tagTodoCounts ?? {}) :
+      path === 'all' ? (tagList?.tagCounts ?? {}) :
+      (tagList?.tagBlinkoCounts ?? {});
     const items: TagItem[] = [];
     const walk = (nodes: any[], parentPath: string) => {
       nodes.forEach(node => {
@@ -52,9 +58,9 @@ export const TagFilterChips = observer(() => {
     };
     walk(tree, '');
     return items.filter(i => i.count > 0);
-  }, [tagList?.listTags, tagList?.tagCounts]);
+  }, [tagList?.listTags, tagList?.tagCounts, tagList?.tagBlinkoCounts, tagList?.tagNoteCounts, tagList?.tagTodoCounts, path]);
 
-  const activeTagId = path === 'all' ? blinko.noteListFilterConfig.tagId : null;
+  const activeTagId = blinko.noteListFilterConfig.tagId;
 
   const goAll = () => {
     navigate(path ? `/?path=${path}` : '/');
@@ -64,7 +70,8 @@ export const TagFilterChips = observer(() => {
     // 与侧边栏 TagListPanel 一致：先写入筛选配置并发起查询，再更新地址栏
     // （blinkoStore.useQuery 有守卫：tagId 相同时不重复 reset，保证筛选生效）
     blinko.updateTagFilter(id);
-    navigate('/?path=all&tagId=' + id);
+    // 保持当前所在视图（闪念/笔记/待办），仅追加 tagId 筛选，不跳离当前页面
+    navigate(path ? `/?path=${path}&tagId=${id}` : `/?tagId=${id}`);
   };
 
   if (hidden) return null;
@@ -77,7 +84,7 @@ export const TagFilterChips = observer(() => {
 
   return (
     <div
-      className="sticky top-0 z-10 flex items-center gap-2 overflow-x-auto hide-scrollbar py-1.5 bg-secondbackground"
+      className="sticky top-0 z-20 flex items-center gap-2 overflow-x-auto hide-scrollbar py-1.5 bg-secondbackground"
       data-testid="tag-filter-chips"
     >
       <button type="button" onClick={goAll} className={`${chipBase} ${activeTagId == null ? chipActive : chipIdle}`}>

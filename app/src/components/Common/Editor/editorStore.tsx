@@ -5,9 +5,9 @@ import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
-import { getEditorElements, type ViewMode } from './editorUtils';
+import { type ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
-import Vditor from 'vditor';
+import { TiptapEditorAdapter } from './Tiptap/adapter';
 import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
@@ -65,7 +65,7 @@ export class EditorStore {
     }
   }
   lastSelection: Selection | null = null
-  vditor: Vditor | null = null
+  vditor: TiptapEditorAdapter | null = null
   onChange: ((markdown: string) => void) | null = null
   mode: 'edit' | 'create' | 'comment' = 'edit'
   references: number[] = []
@@ -154,29 +154,9 @@ export class EditorStore {
 
 
   focus = () => {
-    this.vditor?.focus();
-    const editorElement = getEditorElements(this.viewMode, this.vditor!)
     try {
-      const range = document.createRange()
-      const selection = window.getSelection()
-      const walker = document.createTreeWalker(
-        editorElement!,
-        NodeFilter.SHOW_TEXT,
-        null
-      )
-      let lastNode: any = null
-      while (walker.nextNode()) {
-        lastNode = walker.currentNode
-      }
-      if (lastNode) {
-        range.setStart(lastNode, lastNode?.length)
-        range.setEnd(lastNode, lastNode?.length)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-        editorElement!.focus()
-      }
-    } catch (error) {
-    }
+      this.vditor?.editor?.commands.focus('end')
+    } catch (error) { }
   }
 
   clearMarkdown = () => {
@@ -418,16 +398,6 @@ export class EditorStore {
 
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
-    //remove listener on pc
-    const ir = document.querySelector('.vditor-ir .vditor-reset')
-    if (ir) {
-      ir.addEventListener('ondragstart', (e) => {
-        if (ir.contains(e.target as Node)) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
-    }
   }
 
   isShowEditorToolbar(isPc: boolean) {
@@ -444,7 +414,7 @@ export class EditorStore {
   }
 
   adjustMobileEditorHeight = () => {
-    const editor = document.getElementsByClassName('vditor-reset')
+    const editor = document.querySelectorAll('.vditor-reset, .tiptap')
     try {
       for (let i = 0; i < editor?.length; i++) {
         //@ts-ignore

@@ -3,7 +3,6 @@ import { Attachment } from "@shared/lib/types"
 import { FileType } from "./type"
 import { PromiseState } from "@/store/standard/PromiseState"
 import { IsTagSelectVisible } from "../PopoverFloat/tagSelectPop"
-import Vditor from "vditor"
 
 export type ViewMode = "wysiwyg" | "sv" | "ir" | "raw"
 
@@ -47,24 +46,16 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   return res
 }
 
-export const getEditorElements = (mode: ViewMode, editor: Vditor) => {
+export const getEditorElements = (mode: ViewMode, editor: any) => {
   if (!editor) return
-  switch (mode) {
-    case 'sv':
-      return editor.vditor.sv?.element
-    case 'ir':
-      return editor.vditor.ir?.element
-    case 'wysiwyg':
-      return editor.vditor.wysiwyg?.element
-    default:
-      return editor.vditor.wysiwyg?.element
-  }
+  // TiptapEditorAdapter: return the ProseMirror root DOM
+  return editor?.editor?.view?.dom ?? null
 }
 
 export const FocusEditorFixMobile = () => {
   try {
     requestAnimationFrame(() => {
-      const editorElements = document.querySelectorAll('.vditor-ir .vditor-reset') as NodeListOf<HTMLElement>
+      const editorElements = document.querySelectorAll('.tiptap-wrap .tiptap') as NodeListOf<HTMLElement>
       if (editorElements.length === 0) return
 
       if (editorElements.length > 0) {

@@ -117,7 +117,8 @@ export const TagListPanel = observer(() => {
               onClick={e => {
                 //@ts-ignore
                 base.currentRouter = blinko.allTagRouter
-                blinko.updateTagFilter(Number(element.id))
+                blinko.updateTagFilter(Number(element.id), -1)
+                // 「所有标签」面板：点击标签跨类型筛选（不限闪念/笔记/待办），跳转到全部视图
                 navigate('/?path=all&tagId=' + element.id, { replace: true })
               }}
             >

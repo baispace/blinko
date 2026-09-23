@@ -29,7 +29,10 @@ export const tagRouter = router({
     .output(z.object({
       tags: z.array(z.object({
         tag: tagSchema,
-        noteCount: z.number().int()
+        noteCount: z.number().int(),
+        blinkoNoteCount: z.number().int(),
+        noteNoteCount: z.number().int(),
+        todoNoteCount: z.number().int()
       })),
       blinkoCount: z.number().int(),
       noteCount: z.number().int(),
@@ -46,7 +49,7 @@ export const tagRouter = router({
           include: {
             tagsToNote: {
               where: { note: visibleNoteWhere },
-              select: { noteId: true }
+              select: { noteId: true, note: { select: { type: true } } }
             }
           }
         }),
@@ -55,18 +58,24 @@ export const tagRouter = router({
         prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.TODO } })
       ]);
       return {
-        tags: tags.map(tag => ({
-          tag: {
-            id: tag.id,
-            name: tag.name,
-            icon: tag.icon,
-            parent: tag.parent,
-            sortOrder: tag.sortOrder,
-            createdAt: tag.createdAt,
-            updatedAt: tag.updatedAt
-          },
-          noteCount: tag.tagsToNote.length
-        })),
+        tags: tags.map(tag => {
+          const relations = tag.tagsToNote;
+          return {
+            tag: {
+              id: tag.id,
+              name: tag.name,
+              icon: tag.icon,
+              parent: tag.parent,
+              sortOrder: tag.sortOrder,
+              createdAt: tag.createdAt,
+              updatedAt: tag.updatedAt
+            },
+            noteCount: relations.length,
+            blinkoNoteCount: relations.filter(r => r.note.type === NoteType.BLINKO).length,
+            noteNoteCount: relations.filter(r => r.note.type === NoteType.NOTE).length,
+            todoNoteCount: relations.filter(r => r.note.type === NoteType.TODO).length
+          };
+        }),
         blinkoCount,
         noteCount,
         todoCount

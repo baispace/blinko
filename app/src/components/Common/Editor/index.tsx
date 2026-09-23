@@ -1,5 +1,3 @@
-import "vditor/dist/index.css";
-import '@/styles/vditor.css';
 import { RootStore } from '@/store';
 import React, { ReactElement, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -12,11 +10,9 @@ import { useMediaQuery } from 'usehooks-ts';
 import { type Attachment } from '@shared/lib/types';
 import { Card, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
-import { UploadButtons } from './Toolbar/UploadButtons';
 import { ReferenceButton } from './Toolbar/ReferenceButton';
 import { NoteTypeButton } from './Toolbar/NoteTypeButton';
 import { HashtagButton } from './Toolbar/HashtagButton';
-import { ViewModeButton } from './Toolbar/ViewModeButton';
 import { SendButton } from './Toolbar/SendButton';
 import {
   useEditorInit,
@@ -25,13 +21,13 @@ import {
   useEditorHeight
 } from './hooks/useEditor';
 import { EditorStore } from "./editorStore";
-import { AIWriteButton } from "./Toolbar/AIWriteButton";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { eventBus } from "@/lib/event";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
-import { ResourceReferenceButton } from "./Toolbar/ResourceReferenceButton";
+import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
+import { ToolbarDivider, FormatMenuButton, ListToggleButton, TaskListButton, CalloutButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -71,7 +67,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     };
   }, [openPopover]);
 
-  // Render toolbar to top when showTopToolbar is true
+  // High-frequency toolbar: NoteType / #tag / image | Aa / lists | @reference
   const renderToolbar = () => {
     if (!hiddenToolbar) {
       return (
@@ -83,16 +79,19 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             }}
           />
           <HashtagButton store={store} content={content} />
-          <ReferenceButton store={store} />
-          <ResourceReferenceButton store={store} />
-          {blinko.config.value?.mainModelId && (
-            <AIWriteButton />
-          )}
-          <UploadButtons
+          <UploadImageButton
             getInputProps={getInputProps}
             open={open}
-            onFileUpload={store.uploadFiles}
+            store={store}
           />
+          <ToolbarDivider />
+          <FormatMenuButton editor={store.vditor?.editor ?? null} />
+          <ListToggleButton editor={store.vditor?.editor ?? null} type="bullet" />
+          <ListToggleButton editor={store.vditor?.editor ?? null} type="ordered" />
+          <TaskListButton editor={store.vditor?.editor ?? null} />
+          <CalloutButton editor={store.vditor?.editor ?? null} />
+          <ToolbarDivider />
+          <ReferenceButton store={store} iconButton={<IconButton tooltip="reference" icon="mdi:at" />} />
           {pluginApi.customToolbarIcons
             .map((item) => (
               item.content ? (
@@ -128,7 +127,6 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   const renderRightToolbar = () => (
     <div className='flex items-center gap-1 ml-auto'>
       {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
-      <ViewModeButton viewMode={store.viewMode} />
       <SendButton store={store} isSendLoading={isSendLoading} />
     </div>
   );
@@ -212,11 +210,11 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
         </div>,
         topToolbarElement
       )}
-      
+
       <div {...getRootProps()} className={`${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} ${showTopToolbar ? 'h-full flex flex-col' : ''}`}>
       <Card
         shadow='none'
-        className={`${showTopToolbar ? 'h-full flex flex-col flex-1 min-h-0' : 'p-2'} relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all ${showTopToolbar ? 'overflow-hidden' : 'overflow-visible'} 
+        className={`${showTopToolbar ? 'h-full flex flex-col flex-1 min-h-0' : 'p-2'} relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all ${showTopToolbar ? 'overflow-hidden' : 'overflow-visible'}
         ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}`}
         ref={el => {
           if (el) {
@@ -233,8 +231,13 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             store.adjustMobileEditorHeight()
           }}>
 
-            <div className={`relative ${store.isFullscreen ? 'flex-1 min-h-0' : ''}`}>
-              <div id={`vditor-${mode}`} className={`vditor ${showTopToolbar ? 'flex-1 overflow-hidden flex flex-col fullscreen-editor' : ''}`} />
+            <div className={`relative ${store.isFullscreen ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
+              <div
+                id={`vditor-${mode}`}
+                className={`tiptap-editor-root ${store.isFullscreen ? 'flex-1 min-h-0 flex flex-col' : ''}`}
+              >
+                <TiptapEditorContent store={store} />
+              </div>
               {isPc && !showTopToolbar && (
                 <div
                   onClick={handleFullScreenToggle}

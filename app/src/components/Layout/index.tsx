@@ -124,7 +124,6 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             )}
             <div className="flex flex-1 items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-[4px] h-[16px] bg-primary rounded-xl hidden md:block" />
                 <div className="flex flex-row items-center gap-1">
                   <div className="font-black select-none">
                     {location.pathname == '/ai'
@@ -134,18 +133,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                       : t(base.currentTitle)}
                   </div>
                   {base.currentRouter?.title === 'blinko' && isPc && <BlinkoHomeSettingsPop />}
-                  {searchParams.get('path') != 'trash' ? (
-                    <Icon
-                      className="cursor-pointer hover:rotate-180 !transition-all hidden md:block"
-                      onClick={() => {
-                        blinkoStore.refreshData();
-                        blinkoStore.updateTicker++;
-                      }}
-                      icon="fluent:arrow-sync-12-filled"
-                      width="20"
-                      height="20"
-                    />
-                  ) : (
+                  {searchParams.get('path') != 'trash' ? null : (
                     <Icon
                       className="cursor-pointer !transition-all text-red-500"
                       onClick={() => {

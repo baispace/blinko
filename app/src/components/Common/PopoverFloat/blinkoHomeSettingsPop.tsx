@@ -144,7 +144,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
     ?? (WIDTH_OPTIONS.find(o => o.value === 0)?.value as WidthKey);
 
   return (
-    <Popover placement="bottom-start" backdrop="opaque" isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Popover placement="bottom-start" backdrop="transparent" isOpen={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger>
         <button
           type="button"

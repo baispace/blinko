@@ -311,6 +311,17 @@ export class UserStore implements Store {
       this.initializeFonts(config.fontStyle);
     }
 
+    // Apply global typography (font size / weight)
+    {
+      const fontSize = Number(config?.fontSize) >= 12 && Number(config?.fontSize) <= 20 ? Number(config.fontSize) : 16;
+      const fontWeight = Number(config?.fontWeight) >= 300 && Number(config?.fontWeight) <= 700 ? Number(config.fontWeight) : 400;
+      const typographyTargets = [...document.querySelectorAll('.dark, .light')] as HTMLElement[];
+      for (const el of typographyTargets) {
+        el.style.setProperty('--app-font-size', `${fontSize}px`);
+        el.style.setProperty('--app-font-weight', String(fontWeight));
+      }
+    }
+
     if (this.isLogin) {
       try {
         if (config) {

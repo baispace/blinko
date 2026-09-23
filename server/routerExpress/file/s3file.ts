@@ -17,6 +17,21 @@ function isImage(filename: string): boolean {
   return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 }
 
+/**
+ * Build the CDN-accelerated URL for an object when a CDN domain is configured
+ * (config key: s3CdnDomain). Returns null when not configured.
+ * Requires the CDN origin to be authorized for the private bucket
+ * (Aliyun CDN: 回源配置 -> OSS 私有 Bucket 回源) or a public-read bucket.
+ */
+function buildCdnUrl(config: any, key: string): string | null {
+  const domain: string | undefined = config?.s3CdnDomain;
+  if (!domain) return null;
+  const base = /^https?:\/\//i.test(domain)
+    ? domain.replace(/\/+$/, '')
+    : `https://${domain}`;
+  return `${base}/${key.replace(/^\/+/, '')}`;
+}
+
 async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: string) {
   try {
     const command = new GetObjectCommand({
@@ -185,6 +200,10 @@ router.get(/.*/, async (req: Request, res: Response) => {
         return res.send(thumbnail);
       } catch (error) {
         console.error('Failed to generate thumbnail, falling back to original:', error);
+        const cdnUrl = buildCdnUrl(config, decodeURIComponent(fullPath));
+        if (cdnUrl) {
+          return res.redirect(cdnUrl);
+        }
         const command = new GetObjectCommand({
           Bucket: config.s3Bucket,
           Key: decodeURIComponent(fullPath),
@@ -203,6 +222,15 @@ router.get(/.*/, async (req: Request, res: Response) => {
       }
     }
     console.log('fullPath!!', decodeURIComponent(fullPath));
+    // Prefer CDN-accelerated delivery when a CDN domain is configured
+    const cdnUrl = buildCdnUrl(config, decodeURIComponent(fullPath));
+    if (cdnUrl) {
+      res.set({
+        'Cache-Control': `public, max-age=${CACHE_DURATION}, immutable`,
+        'Expires': new Date(Date.now() + CACHE_DURATION * 1000).toUTCString()
+      });
+      return res.redirect(cdnUrl);
+    }
     //@important if @aws-sdk/client-s3 is not 3.693.0, has 403 error
     const command = new GetObjectCommand({
       Bucket: config.s3Bucket,

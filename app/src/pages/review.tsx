@@ -136,7 +136,8 @@ const App = observer(() => {
                           </div>
                       }
                     </div>
-                    <MarkdownRender content={i.content} onChange={(newContent) => {
+                    <MarkdownRender content={i.content} onChange={(updater) => {
+                      const newContent = updater(i.content);
                       i.content = newContent
                       blinko.upsertNote.call({ id: i.id, content: newContent, refresh: false })
                     }} />

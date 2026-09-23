@@ -19,7 +19,7 @@ class GradientErrorBoundary extends Component<{ children: ReactNode }> {
   
   render() {
     if (this.state.hasError) {
-      return <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-blue-500 to-purple-600" />;
+      return <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-[#7454fc] to-[#a78bfa]" />;
     }
     
     return this.props.children;
@@ -65,9 +65,9 @@ export const GradientBackground = ({ children, className }: GradientBackgroundPr
                 rotationX={0}
                 rotationY={0}
                 rotationZ={235}
-                color1="#4603ff"
-                color2="#FE8989"
-                color3="#000000"
+                color1="#7454fc"
+                color2="#a78bfa"
+                color3="#1e1b4b"
                 reflection={0.1}
                 wireframe={false}
                 cAzimuthAngle={180}

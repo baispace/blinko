@@ -14,8 +14,8 @@
     "test": "turbo run test",
     "start:server:production": "ncp dist/public server/public && cd server && bun run start",
     "clean": "turbo run clean && rm -rf node_modules",
-    "dev:backend": "dotenv turbo run dev --filter=@blinko/backend",
-    "dev:frontend": "dotenv turbo run dev --filter=@blinko/frontend",
+    "dev:backend": "turbo run dev --filter=@blinko/backend",
+    "dev:frontend": "turbo run dev --filter=@blinko/frontend",
     "postinstall": "turbo run prisma:generate --filter=@blinko/backend",
     "setup": "bun install",
     "prisma:generate": "cd prisma && prisma generate",
@@ -41,6 +41,9 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@tiptap/extension-table-cell": "2.27.3",
+    "@tiptap/extension-table-header": "2.27.3",
+    "@tiptap/extension-table-row": "2.27.3",
     "dotenv": "^16.5.0",
     "lru-cache": "^11.1.0",
     "react-i18next": "^15.4.1",

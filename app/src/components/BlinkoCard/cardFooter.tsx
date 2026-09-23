@@ -9,6 +9,10 @@ import { CommentCount } from './commentButton';
 import { BlinkoItem } from '.';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
+import { helper } from '@/lib/helper';
+import { getNoteTagPaths } from './noteContent';
 
 interface CardFooterProps {
   blinkoItem: BlinkoItem;
@@ -16,12 +20,48 @@ interface CardFooterProps {
   isShareMode?: boolean;
 }
 
+/** 卡片左下角标签区：正文里的 #标签 提取出来单独展示 */
+const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isShareMode?: boolean }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const tagPaths = useMemo(() => getNoteTagPaths(blinkoItem), [blinkoItem.tags]);
+
+  if (tagPaths.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0 mr-2">
+      {tagPaths.map(path => (
+        <span
+          key={path}
+          className={`text-desc text-xs blinko-tag whitespace-nowrap font-bold select-none !transition-all ${isShareMode ? '' : 'cursor-pointer hover:opacity-80'}`}
+          onClick={(e) => {
+            if (isShareMode) return;
+            e.stopPropagation();
+            // 保持当前所在视图（闪念/笔记/待办），仅做标签搜索，不跳离当前页面
+            const currentPath = new URLSearchParams(location.search).get('path');
+            const searchText = encodeURIComponent('#' + path);
+            navigate(currentPath
+              ? `/?path=${currentPath}&searchText=${searchText}`
+              : `/?searchText=${searchText}`);
+            RootStore.Get(BlinkoStore).forceQuery++;
+          }}
+        >
+          #{path}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps) => {
   const { t } = useTranslation();
   return (
     <div className="flex items-center">
-      <ConvertTypeButton blinkoItem={blinkoItem} />
-      <RightContent blinkoItem={blinkoItem} t={t} />
+      <CardTagChips blinkoItem={blinkoItem} isShareMode={isShareMode} />
+      <div className="ml-auto flex items-center gap-2 shrink-0">
+        <ConvertTypeButton blinkoItem={blinkoItem} />
+        <RightContent blinkoItem={blinkoItem} t={t} />
+      </div>
     </div>
   );
 };

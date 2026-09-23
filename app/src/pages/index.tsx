@@ -9,6 +9,7 @@ import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
+import { TagFilterChips } from '@/components/Common/TagFilterChips';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import dayjs from '@/lib/dayjs';
@@ -28,6 +29,10 @@ const Home = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.use()
   blinko.useQuery();
+
+  // 卡片间距（来自全局设置）
+  const cardSpacing = (blinko.config.value?.cardSpacing as number | undefined) ?? 16;
+  const noteListStyle = ((blinko.config.value?.noteListStyle as string | undefined) ?? 'continuous');
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const isTodoView = searchParams.get('path') === 'todo';
@@ -124,14 +129,16 @@ const Home = observer(() => {
     }
   }, [location.key]);
 
+  // 限宽层：内容限宽居中，滚动容器保持全宽，使滚动条贴窗口右缘
+  const maxWidthStyle = {
+    maxWidth: blinko.config.value?.maxHomePageWidth ? `${blinko.config.value?.maxHomePageWidth}px` : '100%'
+  } as const;
+
   return (
     <div
-      style={{
-        maxWidth: blinko.config.value?.maxHomePageWidth ? `${blinko.config.value?.maxHomePageWidth}px` : '100%'
-      }}
-      className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col mx-auto w-full`}>
+      className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col w-full`}>
 
-      {store.showEditor && isPc && !blinko.config.value?.hidePcEditor && <div className='px-2 md:px-6' >
+      {store.showEditor && isPc && !blinko.config.value?.hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
         <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
           if (!isPc) return
           store.editorHeight = height
@@ -156,8 +163,9 @@ const Home = observer(() => {
             blinko.onBottom();
           }}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
-          className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
-
+          className={`mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
+          <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
+          <TagFilterChips />
           {isTodoView ? (
             <div className="timeline-view relative">
               {Object.entries(todosByDate).map(([date, { displayDate, todos }]) => (
@@ -183,51 +191,89 @@ const Home = observer(() => {
               )}
             </div>
           ) : (
-            <>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-              >
-                <Masonry
-                  breakpointCols={{
-                    default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
-                    1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
-                    768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
-                  }}
-                  className="card-masonry-grid"
-                  columnClassName="card-masonry-grid_column">
-                  {
-                    localNotes?.map((i, index) => {
-                      const showInsertLine = insertPosition === i.id && activeId !== i.id;
-                      return (
-                        <DraggableBlinkoCard
-                          key={i.id}
-                          blinkoItem={i}
-                          showInsertLine={showInsertLine}
-                          insertPosition="top"
-                          isDragForbidden={isDragForbidden && showInsertLine}
-                        />
-                      );
-                    })
-                  }
-                </Masonry>
-                <DragOverlay>
-                  {activeId ? (
-                    <div className="rotate-3 scale-105 opacity-90 max-w-sm shadow-xl">
-                      <BlinkoCard
-                        blinkoItem={localNotes.find(n => n.id === activeId)}
-                      />
+            noteListStyle === 'byDay' || noteListStyle === 'byWeek' ? (
+              <div className="timeline-view relative">
+                {(() => {
+                  const grouped: Record<string, { displayDate: string; notes: typeof localNotes }> = {};
+                  const fmt = noteListStyle === 'byWeek' ? 'YYYY-[W]WW' : 'YYYY-MM-DD';
+                  localNotes?.forEach((n: any) => {
+                    const key = dayjs(n.createdAt).format(fmt);
+                    const isToday = dayjs().isSame(dayjs(n.createdAt), 'day');
+                    const isYesterday = dayjs().subtract(1, 'day').isSame(dayjs(n.createdAt), 'day');
+                    let displayDate;
+                    if (isToday) displayDate = t('today');
+                    else if (isYesterday) displayDate = t('yesterday');
+                    else if (noteListStyle === 'byWeek') displayDate = dayjs(n.createdAt).format('YYYY [W]WW');
+                    else displayDate = dayjs(n.createdAt).format('MM/DD (ddd)');
+                    if (!grouped[key]) grouped[key] = { displayDate, notes: [] as any };
+                    grouped[key].notes!.push(n);
+                  });
+                  return Object.entries(grouped).map(([date, { displayDate, notes }]) => (
+                    <div key={date} className="mb-6 relative">
+                      <div className="flex items-center mb-2 relative z-10">
+                        <div className="w-4 h-4 rounded-sm bg-primary absolute left-[4.5px] transform translate-x-[-50%]"></div>
+                        <h3 className="text-base font-bold ml-5">{displayDate}</h3>
+                      </div>
+                      <div className="md:pl-4">
+                        {notes!.map((note: any) => (
+                          <div key={note.id} className="mb-3">
+                            <BlinkoCard blinkoItem={note} />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </>
+                  ));
+                })()}
+              </div>
+            ) : (
+              <>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                >
+                  <Masonry
+                    breakpointCols={{
+                      default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
+                      1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
+                      768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
+                    }}
+                    style={{ ['--blinko-card-spacing' as any]: `${cardSpacing}px` }}
+                    className="card-masonry-grid"
+                    columnClassName="card-masonry-grid_column">
+                    {
+                      localNotes?.map((i, index) => {
+                        const showInsertLine = insertPosition === i.id && activeId !== i.id;
+                        return (
+                          <DraggableBlinkoCard
+                            key={i.id}
+                            blinkoItem={i}
+                            showInsertLine={showInsertLine}
+                            insertPosition="top"
+                            isDragForbidden={isDragForbidden && showInsertLine}
+                          />
+                        );
+                      })
+                    }
+                  </Masonry>
+                  <DragOverlay>
+                    {activeId ? (
+                      <div className="rotate-3 scale-105 opacity-90 max-w-sm shadow-xl">
+                        <BlinkoCard
+                          blinkoItem={localNotes.find(n => n.id === activeId)}
+                        />
+                      </div>
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
+              </>
+            )
           )}
 
           {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: currentListState.value?.length })}</div>}
+          </div>
         </ScrollArea>
       }
     </div>

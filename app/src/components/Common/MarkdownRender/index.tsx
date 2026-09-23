@@ -40,7 +40,12 @@ const HighlightTags = observer(({ text, }: { text: any }) => {
               className={`select-none blinko-tag px-1 font-bold cursor-pointer hover:opacity-80 !transition-all ${isShareMode ? 'pointer-events-none' : ''}`}
               onClick={async () => {
                 if (isShareMode) return;
-                navigate(`/?path=all&searchText=${encodeURIComponent(part)}`);
+                // 保持当前所在视图（闪念/笔记/待办），仅做标签搜索，不跳离当前页面
+                const currentPath = new URLSearchParams(location.search).get('path');
+                const searchText = encodeURIComponent(part);
+                navigate(currentPath
+                  ? `/?path=${currentPath}&searchText=${searchText}`
+                  : `/?searchText=${searchText}`);
                 RootStore.Get(BlinkoStore).forceQuery++
               }}>
               {part + " "}
@@ -61,7 +66,7 @@ const Table = ({ children }: { children: React.ReactNode }) => {
   return <div className="table-container">{children}</div>;
 };
 
-export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false }: { content?: string, onChange?: (newContent: string) => void, isShareMode?: boolean, largeSpacing?: boolean }) => {
+export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false }: { content?: string, onChange?: (updater: (current: string) => string) => void, isShareMode?: boolean, largeSpacing?: boolean }) => {
   const { theme } = useTheme()
   const contentRef = useRef(null);
 
@@ -187,11 +192,17 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
             li: ({ node, children, className }) => {
               const isTaskListItem = className?.includes('task-list-item');
               if (isTaskListItem && onChange && !isShareMode) {
+                // remark-task-list 会给每个任务项注入 id="task-list-item-N"，
+                // N 是 DFS 全局递增序号，用它精确定位源 markdown 中的任务项。
+                const id = node?.properties?.id as string | undefined;
+                const taskIndex = typeof id === 'string' && id.startsWith('task-list-item-')
+                  ? parseInt(id.slice('task-list-item-'.length), 10)
+                  : -1;
                 return (
                   <ListItem
-                    content={content}
                     onChange={onChange}
                     className={className}
+                    taskIndex={taskIndex}
                   >
                     {children}
                   </ListItem>

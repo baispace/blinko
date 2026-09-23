@@ -4,7 +4,7 @@ import { AiService } from '@server/aiServer';
 import { prisma } from '../prisma';
 import { TRPCError } from '@trpc/server';
 import { CoreMessage } from '@mastra/core';
-import { AiModelFactory } from '@server/aiServer/aiModelFactory';
+import { AiModelFactory, extractValidTags } from '@server/aiServer/aiModelFactory';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
@@ -159,13 +159,24 @@ export const aiRouter = router({
     }))
     .mutation(async function* ({ input }) {
       const { question, type = 'custom', content } = input
-      const agent = await AiModelFactory.WritingAgent(type)
-      const result = await agent.stream([
-        {
-          role: 'user',
-          content: `${question}\n\nThis is the user's note content: ${content || ''}`
-        }
-      ]);
+      // Wrap agent creation/initialization so that configuration errors
+      // (e.g. missing AI provider, invalid model) yield a meaningful
+      // { type: 'error', error } chunk with a readable message instead
+      // of propagating an empty Error that surfaces as "Unknown error"
+      // on the client.
+      let result: any
+      try {
+        const agent = await AiModelFactory.WritingAgent(type)
+        result = await agent.stream([
+          {
+            role: 'user',
+            content: `${question}\n\nThis is the user's note content: ${content || ''}`
+          }
+        ])
+      } catch (err: any) {
+        yield { type: 'error', error: new Error(err?.message || 'Failed to initialize AI writing agent') }
+        return
+      }
       for await (const chunk of result.fullStream) {
         yield chunk
       }
@@ -182,7 +193,8 @@ export const aiRouter = router({
       const result = await tagAgent.generate(
         `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}\nPlease suggest appropriate tags for this content. Include full hierarchical paths for tags like #Parent/Child instead of just #Child.`
       )
-      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
+      // 仅提取合法 #tag，过滤推理型模型输出的分析文字
+      return extractValidTags(result?.text ?? '')
     }),
   autoEmoji: authProcedure
     .input(z.object({

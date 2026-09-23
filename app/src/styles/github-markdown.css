@@ -145,7 +145,8 @@ menu {
   -webkit-text-size-adjust: 100%;
   margin: 0;
   font-family: var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji");
-  font-size: 16px;
+  font-size: var(--app-font-size, 16px);
+  font-weight: var(--app-font-weight, 400);
   line-height: 1.5;
   word-wrap: break-word;
   scroll-behavior: auto !important;
@@ -153,7 +154,7 @@ menu {
 
 @media (max-width: 768px) {
   .markdown-body {
-    font-size: 15px;
+    font-size: calc(var(--app-font-size, 16px) - 1px);
     line-height: 1.4;
   }
 }
@@ -1454,4 +1455,50 @@ iframe {
 .markdown-large-spacing td {
   padding: 0.5rem 0.75rem !important;
   line-height: 1.5 !important;
+}
+/* ---------- callout (Notion-style highlight block, editor parity) ---------- */
+.markdown-body div[data-type="callout"] {
+  position: relative;
+  border-left: 3px solid var(--callout-accent, #7454fc);
+  background-color: var(--callout-bg, rgba(116, 84, 252, 0.08));
+  border-radius: 8px;
+  padding: 10px 14px 10px 44px;
+  margin: 8px 0;
+}
+
+.markdown-body div[data-type="callout"]::before {
+  content: attr(data-callout-icon);
+  position: absolute;
+  left: 13px;
+  top: 9px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.markdown-body div[data-type="callout"] p {
+  margin-bottom: 4px;
+}
+
+.markdown-body div[data-type="callout"] p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body div[data-type="callout"][data-callout-type="info"] {
+  --callout-accent: #7454fc;
+  --callout-bg: rgba(116, 84, 252, 0.08);
+}
+
+.markdown-body div[data-type="callout"][data-callout-type="warning"] {
+  --callout-accent: #EAB308;
+  --callout-bg: rgba(234, 179, 8, 0.12);
+}
+
+.markdown-body div[data-type="callout"][data-callout-type="success"] {
+  --callout-accent: #22c55e;
+  --callout-bg: rgba(34, 197, 94, 0.1);
+}
+
+.markdown-body div[data-type="callout"][data-callout-type="danger"] {
+  --callout-accent: #ef4444;
+  --callout-bg: rgba(239, 68, 68, 0.1);
 }

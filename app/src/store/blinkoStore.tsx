@@ -432,14 +432,33 @@ export class BlinkoStore implements Store {
 
   tagList = new PromiseState({
     function: async () => {
-      const falttenTags = await api.tags.list.query(undefined, { context: { skipBatch: true } });
+      const res = await api.tags.listWithCount.query(undefined, { context: { skipBatch: true } });
+      const falttenTags = res.tags.map(i => i.tag);
+      const tagCounts: Record<number, number> = {};
+      const tagBlinkoCounts: Record<number, number> = {};
+      const tagNoteCounts: Record<number, number> = {};
+      const tagTodoCounts: Record<number, number> = {};
+      res.tags.forEach(i => {
+        tagCounts[i.tag.id] = i.noteCount;
+        tagBlinkoCounts[i.tag.id] = i.blinkoNoteCount;
+        tagNoteCounts[i.tag.id] = i.noteNoteCount;
+        tagTodoCounts[i.tag.id] = i.todoNoteCount;
+      });
       const listTags = helper.buildHashTagTreeFromDb(falttenTags)
-      console.log(falttenTags, 'listTags')
       let pathTags: string[] = [];
       listTags.forEach(node => {
         pathTags = pathTags.concat(helper.generateTagPaths(node));
       });
-      return { falttenTags, listTags, pathTags }
+      return {
+        falttenTags,
+        listTags,
+        pathTags,
+        tagCounts,
+        tagBlinkoCounts,
+        tagNoteCounts,
+        tagTodoCounts,
+        viewCounts: { blinko: res.blinkoCount, note: res.noteCount, todo: res.todoCount }
+      }
     }
   })
 
@@ -686,9 +705,22 @@ export class BlinkoStore implements Store {
     this.updateTicker++;
   }
 
-  updateTagFilter(tagId: number) {
+  updateTagFilter(tagId: number, type?: number) {
     this.noteListFilterConfig.tagId = tagId;
-    this.noteListFilterConfig.type = -1
-    this.noteList.resetAndCall({});
+    // 传入 type 时显式指定视图类型（如侧边栏「所有标签」传 -1 表示跨类型），
+    // 否则保持当前视图 type（顶部 chips 在闪念/笔记/待办内点击时限制当前类型）。
+    if (type !== undefined) {
+      this.noteListFilterConfig.type = type;
+    }
+    const t = this.noteListFilterConfig.type;
+    if (t === NoteType.NOTE) {
+      this.noteOnlyList.resetAndCall({});
+    } else if (t === NoteType.TODO) {
+      this.todoList.resetAndCall({});
+    } else if (t === -1) {
+      this.noteList.resetAndCall({});
+    } else {
+      this.blinkoList.resetAndCall({});
+    }
   }
 }

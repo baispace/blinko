@@ -76,6 +76,8 @@ body {
   -webkit-overflow-scrolling: touch;
   background-color: var(--secondbackground);
   font-family: var(--font-family);
+  font-size: var(--app-font-size, 16px);
+  font-weight: var(--app-font-weight, 400);
 }
 
 .h-mobile-full {

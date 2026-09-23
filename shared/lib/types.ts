@@ -59,6 +59,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('cardSpacing'),
   z.literal('noteListStyle'),
   z.literal('noteListSortBy'),
+  z.literal('fontSize'),
+  z.literal('fontWeight'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -201,7 +203,9 @@ export const ZConfigSchema = z.object({
   customTitle: z.string().optional(),
   cardSpacing: z.number().optional(),
   noteListStyle: z.string().optional(),
-  noteListSortBy: z.string().optional()
+  noteListSortBy: z.string().optional(),
+  fontSize: z.number().optional(),
+  fontWeight: z.number().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

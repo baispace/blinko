@@ -186,7 +186,8 @@ export default function Component() {
             )}
             <Input
               label={t('username')}
-              name={t('username')}
+              name="username"
+              autoComplete="username"
               placeholder={t('enter-your-name')}
               type="text"
               variant="bordered"
@@ -211,6 +212,7 @@ export default function Component() {
               }
               label={t('password')}
               name="password"
+              autoComplete="current-password"
               placeholder={t('enter-your-password')}
               type={isVisible ? "text" : "password"}
               variant="bordered"
@@ -220,7 +222,7 @@ export default function Component() {
                   login();
                 }
               }}
-              onChange={e => setPassword(e.target.value?.trim())}
+              onChange={e => setPassword(e.target.value)}
             />
             <div className="flex items-center justify-between px-1 pl-2 pr-2">
               <Checkbox defaultSelected name="remember" size="sm">

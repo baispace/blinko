@@ -26,7 +26,7 @@ import {
 } from './hooks/useEditor';
 import { EditorStore } from "./editorStore";
 import { AIWriteButton } from "./Toolbar/AIWriteButton";
-import { FullScreenButton } from "./Toolbar/FullScreenButton";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { eventBus } from "@/lib/event";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from '@/store/plugin/pluginRender';
@@ -128,7 +128,6 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   const renderRightToolbar = () => (
     <div className='flex items-center gap-1 ml-auto'>
       {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
-      {isPc && !showTopToolbar && <FullScreenButton isFullscreen={store.isFullscreen} onClick={handleFullScreenToggle} />}
       <ViewModeButton viewMode={store.viewMode} />
       <SendButton store={store} isSendLoading={isSendLoading} />
     </div>
@@ -234,7 +233,18 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             store.adjustMobileEditorHeight()
           }}>
 
-            <div id={`vditor-${mode}`} className={`vditor ${showTopToolbar ? 'flex-1 overflow-hidden flex flex-col fullscreen-editor' : ''}`} />
+            <div className={`relative ${store.isFullscreen ? 'flex-1 min-h-0' : ''}`}>
+              <div id={`vditor-${mode}`} className={`vditor ${showTopToolbar ? 'flex-1 overflow-hidden flex flex-col fullscreen-editor' : ''}`} />
+              {isPc && !showTopToolbar && (
+                <div
+                  onClick={handleFullScreenToggle}
+                  title={store.isFullscreen ? t('exit-fullscreen') : t('fullscreen')}
+                  className={`absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg cursor-pointer !transition-all ${store.isFullscreen ? 'bg-primary text-white border border-primary hover:bg-primary/90 hover:border-primary/70 shadow-md' : 'bg-background text-default-500 border border-border heo-shadow-card hover:text-primary hover:border-primary/50'}`}
+                >
+                  <Icon icon={store.isFullscreen ? 'lucide:minimize' : 'lucide:maximize'} width={16} height={16} className="!stroke-current" />
+                </div>
+              )}
+            </div>
           {store.files.length > 0 && (
             <div className='w-full my-2 attachment-container'>
               <AttachmentsRender files={store.files} onReorder={handleFileReorder} />

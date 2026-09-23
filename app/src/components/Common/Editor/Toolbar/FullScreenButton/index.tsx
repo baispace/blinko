@@ -15,7 +15,7 @@ export const FullScreenButton = ({ isFullscreen, onClick }: Props) => {
     <div className='' onClick={onClick}>
       <IconButton
         tooltip={isFullscreen ? t('exit-fullscreen') : t('fullscreen')}
-        icon={isFullscreen ? 'radix-icons:exit-full-screen' : 'basil:expand-outline'}
+        icon={isFullscreen ? 'lucide:minimize' : 'lucide:maximize'}
       />
     </div>
   );

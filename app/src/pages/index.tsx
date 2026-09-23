@@ -9,6 +9,7 @@ import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
+import { TagFilterChips } from '@/components/Common/TagFilterChips';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import dayjs from '@/lib/dayjs';
@@ -164,6 +165,7 @@ const Home = observer(() => {
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
           <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
+          <TagFilterChips />
           {isTodoView ? (
             <div className="timeline-view relative">
               {Object.entries(todosByDate).map(([date, { displayDate, todos }]) => (

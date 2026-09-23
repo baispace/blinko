@@ -3,6 +3,7 @@ import { NoteType } from '@shared/lib/types';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod/v3';
 import { verifyToken } from '@server/lib/helper';
+import { stripThinkText } from '../aiModelFactory';
 
 export const updateBlinkoTool = createTool({
   id: 'update-blinko-tool',
@@ -48,7 +49,7 @@ export const updateBlinkoTool = createTool({
         role: 'superadmin'
       })
       return await caller.notes.upsert({
-        content: context.content,
+        content: stripThinkText(context.content),
         type: noteType,
         id: context.id
       })

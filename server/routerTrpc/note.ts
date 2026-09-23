@@ -191,7 +191,10 @@ export const noteRouter = router({
         ];
       }
       const config = await getGlobalConfig({ ctx });
-      let timeOrderBy = config?.isOrderByCreateTime ? { createdAt: orderBy } : { updatedAt: orderBy };
+      // 排序键优先级：noteListSortBy（新） > isOrderByCreateTime（旧） > 默认 updatedAt
+      const sortKey = config?.noteListSortBy
+        || (config?.isOrderByCreateTime ? 'createdAt' : 'updatedAt');
+      let timeOrderBy: any = { [sortKey]: orderBy };
 
       const notes = await prisma.notes.findMany({
         where,

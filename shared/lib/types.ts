@@ -56,6 +56,11 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('defaultHomePage'),
   z.literal('desktopHotkeys'),
   z.literal('systemTray'),
+  z.literal('cardSpacing'),
+  z.literal('noteListStyle'),
+  z.literal('noteListSortBy'),
+  z.literal('fontSize'),
+  z.literal('fontWeight'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -81,6 +86,7 @@ export const ZConfigKey = z.union([
   z.literal('s3Bucket'),
   z.literal('s3Region'),
   z.literal('s3CustomPath'),
+  z.literal('s3CdnDomain'),
   z.literal('localCustomPath'),
   z.literal('spotifyConsumerKey'),
   z.literal('spotifyConsumerSecret'),
@@ -150,6 +156,7 @@ export const ZConfigSchema = z.object({
   s3Endpoint: z.any().optional(),
   s3Bucket: z.any().optional(),
   s3CustomPath: z.any().optional(),
+  s3CdnDomain: z.any().optional(),
   s3Region: z.any().optional(),
   localCustomPath: z.any().optional(),
   embeddingDimensions: z.number().nullable().optional(),
@@ -193,7 +200,12 @@ export const ZConfigSchema = z.object({
   fontStyle: z.string().optional(),
   signinFooterEnabled: z.boolean().optional(),
   signinFooterText: z.string().optional(),
-  customTitle: z.string().optional()
+  customTitle: z.string().optional(),
+  cardSpacing: z.number().optional(),
+  noteListStyle: z.string().optional(),
+  noteListSortBy: z.string().optional(),
+  fontSize: z.number().optional(),
+  fontWeight: z.number().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

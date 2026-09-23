@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tiptap 类 Notion 编辑器 Demo</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.2.0",
+        "react/": "https://esm.sh/react@19.2.0/",
+        "react-dom": "https://esm.sh/react-dom@19.2.0?external=react",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client?external=react",
+        "react-dom/": "https://esm.sh/react-dom@19.2.0/",
+        "@tiptap/react": "https://esm.sh/@tiptap/react@2.11.5?external=react,react-dom",
+        "@tiptap/core": "https://esm.sh/@tiptap/core@2.11.5?external=react,react-dom",
+        "@tiptap/pm": "https://esm.sh/@tiptap/pm@2.11.5",
+        "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.11.5?external=react,react-dom",
+        "@tiptap/suggestion": "https://esm.sh/@tiptap/suggestion@2.11.5?external=react,react-dom",
+        "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.11.5?external=react,react-dom",
+        "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@2.11.5?external=react,react-dom",
+        "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@2.11.5?external=react,react-dom",
+        "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@2.11.5?external=react,react-dom",
+        "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.11.5?external=react,react-dom"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://esm.sh/tippy.js@6.3.7/dist/tippy.css" />
+  <style>
+    :root {
+      --main: #7454fc;
+      --bg: #f7f9fe;
+      --card: #ffffff;
+      --text: #1c1c1e;
+      --muted: #8a8a94;
+      --border: #e6e8ef;
+      --shadow: 0 3px 8px 6px rgba(7, 17, 27, .06);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 720px; margin: 0 auto; padding: 40px 20px 120px; }
+    .page h1 { font-size: 22px; margin: 0 0 6px; }
+    .page .sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+    .editor-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding-bottom: 14px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar button {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .toolbar button:hover { border-color: var(--main); color: var(--main); }
+    .toolbar button.is-active { background: var(--main); color: #fff; border-color: var(--main); }
+    .toolbar .sep { width: 1px; background: var(--border); margin: 0 4px; }
+
+    /* ---------- Tiptap 内容区 ---------- */
+    .tiptap { min-height: 320px; outline: none; font-size: 16px; line-height: 1.75; }
+    .tiptap p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      color: var(--muted);
+      float: left;
+      height: 0;
+      pointer-events: none;
+    }
+    .tiptap h1 { font-size: 1.9em; margin: .8em 0 .4em; }
+    .tiptap h2 { font-size: 1.5em; margin: .8em 0 .4em; }
+    .tiptap h3 { font-size: 1.25em; margin: .8em 0 .4em; }
+    .tiptap blockquote {
+      border-left: 3px solid var(--main);
+      padding-left: 14px; margin: .6em 0;
+      color: var(--muted);
+    }
+    .tiptap pre {
+      background: #1e1b4b; color: #e7e7f5;
+      padding: 14px; border-radius: 8px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 13px; overflow-x: auto;
+    }
+    .tiptap code { background: #f0f1f6; padding: 2px 5px; border-radius: 4px; font-size: .9em; }
+    .tiptap pre code { background: none; padding: 0; }
+    .tiptap ul, .tiptap ol { padding-left: 24px; }
+    .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+    .tiptap ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; }
+    .tiptap ul[data-type="taskList"] li > label { margin-top: 3px; user-select: none; }
+    .tiptap ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; color: var(--muted); }
+    .tiptap mark { background: #fbe573; border-radius: 3px; padding: 0 2px; }
+    .tiptap hr { border: none; border-top: 2px solid var(--border); margin: 20px 0; }
+
+    /* ---------- 斜杠菜单 ---------- */
+    .slash-menu {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.12);
+      min-width: 240px; max-height: 340px; overflow-y: auto;
+      padding: 6px;
+    }
+    .slash-menu .item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14px;
+    }
+    .slash-menu .item:hover, .slash-menu .item.is-selected { background: #f2efff; }
+    .slash-menu .item .ico { width: 24px; text-align: center; font-size: 13px; font-weight: 700; color: var(--main); }
+    .slash-menu .item .label { font-weight: 500; }
+    .slash-menu .item .hint { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .slash-menu .group-title {
+      padding: 6px 10px 2px; font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    /* ---------- 气泡菜单 ---------- */
+    .bubble {
+      display: flex; gap: 2px;
+      background: #1c1c1e; border-radius: 10px; padding: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .bubble button {
+      border: none; background: transparent; color: #fff;
+      padding: 5px 9px; border-radius: 7px; cursor: pointer; font-size: 13px;
+    }
+    .bubble button:hover { background: rgba(255,255,255,.14); }
+    .bubble button.is-active { background: var(--main); }
+
+    /* ---------- 拖拽手柄 ---------- */
+    .drag-handle {
+      position: absolute; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      color: #b6b8c2; cursor: grab; user-select: none;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+    .drag-handle:hover { color: var(--main); background: #f2efff; }
+
+    /* ---------- 输出面板 ---------- */
+    .output-panel {
+      margin-top: 20px; background: var(--card);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+    }
+    .output-panel h3 { margin: 0 0 10px; font-size: 15px; }
+    .output-panel pre {
+      background: #f6f7fb; border-radius: 8px; padding: 12px;
+      font-size: 12.5px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      white-space: pre-wrap; word-break: break-all; margin: 0;
+      max-height: 220px; overflow-y: auto; color: #444;
+    }
+    .err-box {
+      margin-top: 16px; background: #fff1f0; border: 1px solid #ffccc7;
+      color: #cf1322; border-radius: 10px; padding: 12px 16px;
+      font-size: 13px; display: none; white-space: pre-wrap; word-break: break-all;
+    }
+
+    .hint-row { margin-top: 16px; font-size: 13px; color: var(--muted); line-height: 1.8; }
+    .hint-row b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>类 Notion 编辑器 · Tiptap Demo</h1>
+    <p class="sub">斜杠菜单 <b>/</b> · 块拖拽手柄 · 气泡菜单 · Markdown 快捷输入 · 任务清单 · 高亮</p>
+    <div class="editor-card">
+      <div id="root"></div>
+    </div>
+    <div class="err-box" id="errbox"></div>
+    <div class="output-panel">
+      <h3>📄 实时 HTML 输出（editor.getHTML()，可直接存库）</h3>
+      <pre id="htmlout">（编辑器内容将实时同步到这里）</pre>
+    </div>
+    <div class="hint-row">
+      💡 试试：输入 <b>/</b> 呼出斜杠菜单（↑↓ 选择、回车确认、继续输入可过滤） · 输入 <b># + 空格</b> 转标题 ·
+      <b>- + 空格</b> 转列表 · <b>[] + 空格</b> 转任务 · <b>&gt; + 空格</b> 转引用 · <b>``` + 空格</b> 转代码块 ·
+      <b>---</b> 回车插分割线 · <b>~~文字~~</b> 删除线 · <b>`code`</b> 行内代码 · 悬浮段落左侧 <b>⠿</b> 拖拽整块
+    </div>
+  </div>
+
+  <script>
+    // 全局错误显示（诊断用）
+    window.addEventListener('error', e => {
+      const box = document.getElementById('errbox');
+      box.style.display = 'block';
+      box.textContent += '[Error] ' + e.message + ' @ ' + (e.filename||'').split('/').pop() + ':' + e.lineno + '\n';
+    });
+    window.addEventListener('unhandledrejection', e => {
+      const box = document.getElementById('errbox');
+      box.style.display = 'block';
+      box.textContent += '[Promise] ' + (e.reason && e.reason.message || e.reason) + '\n';
+    });
+  </script>
+
+  <script type="module">
+    import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { useEditor, EditorContent, BubbleMenu, ReactRenderer } from '@tiptap/react';
+    import { Extension } from '@tiptap/core';
+    import StarterKit from '@tiptap/starter-kit';
+    import Placeholder from '@tiptap/extension-placeholder';
+    import TaskList from '@tiptap/extension-task-list';
+    import TaskItem from '@tiptap/extension-task-item';
+    import Highlight from '@tiptap/extension-highlight';
+    import Underline from '@tiptap/extension-underline';
+    import * as SuggestionNS from '@tiptap/suggestion';
+    const Suggestion = SuggestionNS.Suggestion || SuggestionNS.default;
+    import tippy from 'https://esm.sh/tippy.js@6.3.7';
+
+    const syncOutput = (editor) => {
+      document.getElementById('htmlout').textContent = editor.getHTML();
+    };
+
+    // ---------- 斜杠命令清单 ----------
+    const SLASH_COMMANDS = [
+      { title: '文本', icon: '¶', group: '基础块', hint: '普通段落',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setParagraph().run() },
+      { title: '标题 1', icon: 'H1', group: '基础块', hint: '#',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleHeading({ level: 1 }).run() },
+      { title: '标题 2', icon: 'H2', group: '基础块', hint: '##',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleHeading({ level: 2 }).run() },
+      { title: '标题 3', icon: 'H3', group: '基础块', hint: '###',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleHeading({ level: 3 }).run() },
+      { title: '无序列表', icon: '•', group: '列表', hint: '-',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
+      { title: '有序列表', icon: '1.', group: '列表', hint: '1.',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
+      { title: '任务清单', icon: '☑', group: '列表', hint: '[ ]',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleTaskList().run() },
+      { title: '引用', icon: '❝', group: '基础块', hint: '>',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
+      { title: '代码块', icon: '{}', group: '基础块', hint: '```',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
+      { title: '分割线', icon: '—', group: '基础块', hint: '---',
+        command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
+    ];
+
+    // ---------- 斜杠菜单列表（Suggestion 渲染器） ----------
+    const SlashList = forwardRef(({ items, command }, ref) => {
+      const [sel, setSel] = useState(0);
+      const listRef = useRef(null);
+
+      useEffect(() => { setSel(0); }, [items.length]);
+      useEffect(() => {
+        const el = listRef.current?.querySelector('.is-selected');
+        el?.scrollIntoView({ block: 'nearest' });
+      }, [sel]);
+
+      useImperativeHandle(ref, () => ({
+        onKeyDown: ({ event }) => {
+          if (event.key === 'ArrowDown') { setSel(s => (s + 1) % Math.max(items.length, 1)); return true; }
+          if (event.key === 'ArrowUp') { setSel(s => (s - 1 + items.length) % Math.max(items.length, 1)); return true; }
+          if (event.key === 'Enter') { const it = items[sel]; if (it) command(it); return true; }
+          return false;
+        },
+      }));
+
+      if (!items.length) return React.createElement('div', { className: 'slash-menu', ref: listRef },
+        React.createElement('div', { className: 'group-title' }, '无匹配命令'));
+
+      let lastGroup = null;
+      return React.createElement('div', { className: 'slash-menu', ref: listRef },
+        items.map((item, i) => {
+          const showGroup = item.group !== lastGroup;
+          lastGroup = item.group;
+          return React.createElement(React.Fragment, { key: item.title },
+            showGroup && React.createElement('div', { className: 'group-title' }, item.group),
+            React.createElement('div', {
+              className: 'item' + (i === sel ? ' is-selected' : ''),
+              onMouseDown: (e) => { e.preventDefault(); command(item); },
+            },
+              React.createElement('span', { className: 'ico' }, item.icon),
+              React.createElement('span', { className: 'label' }, item.title),
+              React.createElement('span', { className: 'hint' }, item.hint),
+            ),
+          );
+        }),
+      );
+    });
+
+    // ---------- 斜杠命令扩展（官方 Suggestion 插件 + Extension 封装） ----------
+    const SlashCommand = Extension.create({
+      name: 'slashCommand',
+      addProseMirrorPlugins() {
+        const editor = this.editor;
+        return [Suggestion({
+          editor,
+          char: '/',
+          command: ({ editor: e, range, props }) => {
+            // props 即 SlashList command(item) 传入的命令项
+            props.command({ editor: e, range });
+          },
+          items: ({ query }) => SLASH_COMMANDS.filter(c =>
+            c.title.toLowerCase().includes(query.toLowerCase()) || c.hint.toLowerCase().includes(query.toLowerCase())),
+          render: () => {
+            let component = null;
+            let popup = null;
+            return {
+              onStart: (props) => {
+                component = new ReactRenderer(SlashList, { props, editor });
+                popup = tippy(document.body, {
+                  getReferenceClientRect: props.clientRect,
+                  appendTo: () => document.body,
+                  content: component.element,
+                  showOnCreate: true,
+                  interactive: true,
+                  trigger: 'manual',
+                  placement: 'bottom-start',
+                });
+              },
+              onUpdate: (props) => {
+                component.updateProps(props);
+                popup[0]?.setProps({ getReferenceClientRect: props.clientRect });
+              },
+              onKeyDown: (props) => {
+                if (props.event.key === 'Escape') { popup[0]?.hide(); return true; }
+                return component.ref?.onKeyDown(props);
+              },
+              onExit: () => { popup[0]?.destroy(); component.destroy(); },
+            };
+          },
+        })];
+      },
+    });
+
+    // ---------- 块拖拽手柄（直接 DOM 定位，不经 React 状态，避免与气泡菜单的更新风暴冲突） ----------
+    function DragHandle({ editor }) {
+      const ref = useRef(null);
+      const stateRef = useRef({ top: -1, nodeStart: null });
+
+      useEffect(() => {
+        if (!editor) return;
+        const el = ref.current;
+        const update = () => {
+          const { from, empty } = editor.state.selection;
+          if (!empty) { el.style.display = 'none'; stateRef.current.nodeStart = null; return; }
+          const $pos = editor.state.doc.resolve(from);
+          if ($pos.depth < 1) { el.style.display = 'none'; stateRef.current.nodeStart = null; return; }
+          const start = $pos.before(1);
+          const dom = editor.view.nodeDOM(start);
+          if (!dom || !(dom instanceof HTMLElement)) { el.style.display = 'none'; return; }
+          const editorRect = editor.view.dom.getBoundingClientRect();
+          const nodeRect = dom.getBoundingClientRect();
+          const top = nodeRect.top - editorRect.top + 3;
+          if (stateRef.current.top !== top || stateRef.current.nodeStart !== start) {
+            stateRef.current = { top, nodeStart: start };
+            el.style.display = 'flex';
+            el.style.top = top + 'px';
+          }
+        };
+        editor.on('selectionUpdate', update);
+        editor.on('transaction', update);
+        return () => { editor.off('selectionUpdate', update); editor.off('transaction', update); };
+      }, [editor]);
+
+      const onDragStart = (e) => {
+        const nodeStart = stateRef.current.nodeStart;
+        const node = nodeStart != null && editor.state.doc.nodeAt(nodeStart);
+        if (!node) return;
+        // 选中该块，drop 时 ProseMirror 按「移动」处理
+        editor.commands.setNodeSelection(nodeStart);
+        const slice = editor.state.doc.slice(nodeStart, nodeStart + node.nodeSize);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', node.toHTML ? node.toHTML() : node.textContent);
+        editor.view.dragging = { slice, move: true };
+      };
+
+      return React.createElement('div', {
+        ref,
+        className: 'drag-handle',
+        style: { display: 'none', left: -32, top: 0 },
+        title: '拖拽移动该块',
+        draggable: true,
+        onDragStart,
+      }, React.createElement('svg', { viewBox: '0 0 24 24', width: 15, height: 15, fill: 'currentColor' },
+        [6, 12, 18].flatMap(y => [8.5, 15.5].map(x =>
+          React.createElement('circle', { key: x + '-' + y, cx: x, cy: y, r: 1.7 }))),
+      ));
+    }
+
+    // ---------- 气泡菜单（选中文字） ----------
+    function BubbleToolbar({ editor }) {
+      if (!editor) return null;
+      const c = () => editor.chain().focus();
+      const B = ({ label, active, onClick, title }) =>
+        React.createElement('button', {
+          className: active ? 'is-active' : '', onClick, title,
+          // 防止 mousedown 抢走编辑器焦点导致选区丢失
+          onMouseDown: (e) => e.preventDefault(),
+        }, label);
+      return React.createElement(BubbleMenu, { editor, tippyOptions: { duration: 120 } },
+        React.createElement('div', { className: 'bubble' },
+          React.createElement(B, { label: 'B', title: '加粗', active: editor.isActive('bold'), onClick: () => c().toggleBold().run() }),
+          React.createElement(B, { label: 'I', title: '斜体', active: editor.isActive('italic'), onClick: () => c().toggleItalic().run() }),
+          React.createElement(B, { label: 'U', title: '下划线', active: editor.isActive('underline'), onClick: () => c().toggleUnderline().run() }),
+          React.createElement(B, { label: 'S', title: '删除线', active: editor.isActive('strike'), onClick: () => c().toggleStrike().run() }),
+          React.createElement(B, { label: '🟡', title: '高亮', active: editor.isActive('highlight'), onClick: () => c().toggleHighlight().run() }),
+          React.createElement(B, { label: '{}', title: '行内代码', active: editor.isActive('code'), onClick: () => c().toggleCode().run() }),
+        ),
+      );
+    }
+
+    // ---------- 顶部工具栏 ----------
+    function Toolbar({ editor }) {
+      if (!editor) return null;
+      const Btn = ({ label, active, onClick, title }) =>
+        React.createElement('button', { className: active ? 'is-active' : '', onClick, title }, label);
+      const Sep = () => React.createElement('div', { className: 'sep' });
+      const c = () => editor.chain().focus();
+      return React.createElement('div', { className: 'toolbar' },
+        React.createElement(Btn, { label: 'H1', title: '标题1', active: editor.isActive('heading', { level: 1 }), onClick: () => c().toggleHeading({ level: 1 }).run() }),
+        React.createElement(Btn, { label: 'H2', title: '标题2', active: editor.isActive('heading', { level: 2 }), onClick: () => c().toggleHeading({ level: 2 }).run() }),
+        React.createElement(Btn, { label: 'H3', title: '标题3', active: editor.isActive('heading', { level: 3 }), onClick: () => c().toggleHeading({ level: 3 }).run() }),
+        React.createElement(Sep),
+        React.createElement(Btn, { label: 'B', title: '加粗', active: editor.isActive('bold'), onClick: () => c().toggleBold().run() }),
+        React.createElement(Btn, { label: 'I', title: '斜体', active: editor.isActive('italic'), onClick: () => c().toggleItalic().run() }),
+        React.createElement(Btn, { label: 'U', title: '下划线', active: editor.isActive('underline'), onClick: () => c().toggleUnderline().run() }),
+        React.createElement(Btn, { label: '🟡 高亮', title: '高亮', active: editor.isActive('highlight'), onClick: () => c().toggleHighlight().run() }),
+        React.createElement(Sep),
+        React.createElement(Btn, { label: '• 列表', active: editor.isActive('bulletList'), onClick: () => c().toggleBulletList().run() }),
+        React.createElement(Btn, { label: '1. 列表', active: editor.isActive('orderedList'), onClick: () => c().toggleOrderedList().run() }),
+        React.createElement(Btn, { label: '☑ 任务', active: editor.isActive('taskList'), onClick: () => c().toggleTaskList().run() }),
+        React.createElement(Btn, { label: '❝ 引用', active: editor.isActive('blockquote'), onClick: () => c().toggleBlockquote().run() }),
+        React.createElement(Btn, { label: '{} 代码块', active: editor.isActive('codeBlock'), onClick: () => c().toggleCodeBlock().run() }),
+        React.createElement(Sep),
+        React.createElement(Btn, { label: '↩', title: '撤销', onClick: () => c().undo().run() }),
+        React.createElement(Btn, { label: '↪', title: '重做', onClick: () => c().redo().run() }),
+      );
+    }
+
+    // ---------- 主应用 ----------
+    const FLAGS = new URLSearchParams(location.search); // ?noBubble=1 &noSlash=1 &noDrag=1
+    function App() {
+      const editor = useEditor({
+        extensions: [
+          StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+          Placeholder.configure({ placeholder: '写下你的想法，或输入 / 选择块类型…' }),
+          TaskList,
+          TaskItem.configure({ nested: true }),
+          Highlight,
+          Underline,
+          ...(FLAGS.get('noSlash') ? [] : [SlashCommand]),
+        ],
+        content: '<h2>欢迎体验 Tiptap</h2><p>这是一个<strong>类 Notion</strong> 的块级编辑器，试试<mark>选中这段文字</mark>弹出深色气泡菜单，或把光标放到任意段落左侧拖拽 <b>⠿</b> 手柄。</p><ul data-type="taskList"><li data-type="taskItem" data-checked="true"><label><input type="checkbox" checked="checked"><span></span></label><div><p>输入 / 呼出斜杠菜单</p></div></li><li data-type="taskItem" data-checked="false"><label><input type="checkbox"><span></span></label><div><p>悬浮段落左侧手柄拖拽整块</p></div></li></ul><blockquote><p>Markdown 快捷输入都可用：# 空格、- 空格、[] 空格、> 空格、``` 空格</p></blockquote>',
+        onUpdate: ({ editor }) => syncOutput(editor),
+        onCreate: ({ editor }) => { syncOutput(editor); window.__editor = editor; },
+      });
+
+      return React.createElement(React.Fragment, null,
+        React.createElement(Toolbar, { editor }),
+        React.createElement('div', { style: { position: 'relative', marginLeft: 34 } },
+          React.createElement(EditorContent, { editor }),
+          editor && !FLAGS.get('noDrag') && React.createElement(DragHandle, { editor }),
+          editor && !FLAGS.get('noBubble') && React.createElement(BubbleToolbar, { editor }),
+        ),
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>

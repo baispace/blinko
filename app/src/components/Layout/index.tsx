@@ -16,6 +16,7 @@ import AiWritePop from '../Common/PopoverFloat/aiWritePop';
 import { Sidebar } from './Sidebar';
 import { MobileNavBar } from './MobileNavBar';
 import FilterPop from '../Common/PopoverFloat/filterPop';
+import BlinkoHomeSettingsPop from '../Common/PopoverFloat/blinkoHomeSettingsPop';
 import { api } from '@/lib/trpc';
 import { showTipsDialog } from '../Common/TipsDialog';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
@@ -123,7 +124,6 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             )}
             <div className="flex flex-1 items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-[4px] h-[16px] bg-primary rounded-xl hidden md:block" />
                 <div className="flex flex-row items-center gap-1">
                   <div className="font-black select-none">
                     {location.pathname == '/ai'
@@ -132,18 +132,8 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                         : t(base.currentTitle)
                       : t(base.currentTitle)}
                   </div>
-                  {searchParams.get('path') != 'trash' ? (
-                    <Icon
-                      className="cursor-pointer hover:rotate-180 !transition-all hidden md:block"
-                      onClick={() => {
-                        blinkoStore.refreshData();
-                        blinkoStore.updateTicker++;
-                      }}
-                      icon="fluent:arrow-sync-12-filled"
-                      width="20"
-                      height="20"
-                    />
-                  ) : (
+                  {base.currentRouter?.title === 'blinko' && isPc && <BlinkoHomeSettingsPop />}
+                  {searchParams.get('path') != 'trash' ? null : (
                     <Icon
                       className="cursor-pointer !transition-all text-red-500"
                       onClick={() => {
@@ -204,9 +194,6 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
         <ScrollArea onBottom={() => { }} className={`${isPc ? 'h-[calc(100%_-_70px)]' : 'h-full'} !overflow-y-auto overflow-x-hidden mt-[-4px]`}>
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container">
-            <div className="hidden md:block absolute top-[-37%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
-              <div className="w-full h-[356px] bg-[#9936e6] opacity-20" style={{ clipPath: 'circle(50% at 50% 50%)' }} />
-            </div>
             {children}
           </div>
         </ScrollArea>

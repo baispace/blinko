@@ -24,6 +24,7 @@ export const StorageSetting = observer(() => {
     s3Region: "",
     s3Bucket: "",
     s3CustomPath: "",
+    s3CdnDomain: "",
     localCustomPath: "",
   }))
 
@@ -34,6 +35,7 @@ export const StorageSetting = observer(() => {
     store.s3Region = blinko.config.value?.s3Region!
     store.s3Bucket = blinko.config.value?.s3Bucket!
     store.s3CustomPath = blinko.config.value?.s3CustomPath!
+    store.s3CdnDomain = blinko.config.value?.s3CdnDomain ?? ''
     store.localCustomPath = blinko.config.value?.localCustomPath!
   }, [blinko.config.value])
 
@@ -146,6 +148,20 @@ export const StorageSetting = observer(() => {
             onBlur={async (e) => {
               await PromiseCall(api.config.update.mutate({
                 key: 's3CustomPath',
+                value: e.target.value
+              }), { autoAlert: false })
+            }} />} />
+        <Item
+          leftContent={<>
+            <div>{t('cdn-domain')}</div>
+          </>}
+          rightContent={<Input
+            value={store.s3CdnDomain}
+            onChange={e => store.s3CdnDomain = e.target.value}
+            placeholder="cdn.example.com"
+            onBlur={async (e) => {
+              await PromiseCall(api.config.update.mutate({
+                key: 's3CdnDomain',
                 value: e.target.value
               }), { autoAlert: false })
             }} />} />

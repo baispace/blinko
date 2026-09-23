@@ -159,6 +159,17 @@ export const cdnFonts: FontSeed[] = [
   },
   // === Chinese Fonts ===
   {
+    name: 'HarmonyOS Sans',
+    displayName: 'HarmonyOS Sans',
+    url: null,
+    fileData: null,
+    isLocal: false,
+    weights: [400, 500, 600, 700],
+    category: 'sans-serif',
+    isSystem: false,
+    sortOrder: 115,
+  },
+  {
     name: 'Noto Sans SC',
     displayName: '思源黑体 (Noto Sans SC)',
     url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;200;300;400;500;600;700;800;900&display=swap',

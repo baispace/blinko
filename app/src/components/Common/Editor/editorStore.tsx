@@ -5,9 +5,9 @@ import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
-import { getEditorElements, type ViewMode } from './editorUtils';
+import { type ViewMode } from './editorUtils';
 import { makeAutoObservable } from 'mobx';
-import Vditor from 'vditor';
+import { TiptapEditorAdapter } from './Tiptap/adapter';
 import { showTipsDialog } from '../TipsDialog';
 import i18n from '@/lib/i18n';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
@@ -18,6 +18,23 @@ import { NoteType } from '@shared/lib/types';
 import { eventBus } from '@/lib/event';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import axiosInstance from '@/lib/axios';
+
+/**
+ * Convert an internal file path to the full URL written into note content.
+ * When a CDN acceleration domain is configured (s3CdnDomain), /api/s3file/*
+ * paths are rewritten to the CDN origin URL so notes embed absolute,
+ * auth-free image links.
+ */
+export const toContentFileUrl = (filePath: string): string => {
+  try {
+    const cdn = RootStore.Get(BlinkoStore).config.value?.s3CdnDomain
+    if (cdn && filePath.startsWith('/api/s3file/')) {
+      const base = /^https?:\/\//i.test(cdn) ? cdn.replace(/\/+$/, '') : `https://${cdn}`
+      return `${base}/${filePath.replace(/^\/api\/s3file\//, '').replace(/^\/+/, '')}`
+    }
+  } catch { /* config not ready, fall back to the internal path */ }
+  return filePath
+}
 
 export class EditorStore {
   files: FileType[] = []
@@ -48,7 +65,7 @@ export class EditorStore {
     }
   }
   lastSelection: Selection | null = null
-  vditor: Vditor | null = null
+  vditor: TiptapEditorAdapter | null = null
   onChange: ((markdown: string) => void) | null = null
   mode: 'edit' | 'create' | 'comment' = 'edit'
   references: number[] = []
@@ -137,29 +154,9 @@ export class EditorStore {
 
 
   focus = () => {
-    this.vditor?.focus();
-    const editorElement = getEditorElements(this.viewMode, this.vditor!)
     try {
-      const range = document.createRange()
-      const selection = window.getSelection()
-      const walker = document.createTreeWalker(
-        editorElement!,
-        NodeFilter.SHOW_TEXT,
-        null
-      )
-      let lastNode: any = null
-      while (walker.nextNode()) {
-        lastNode = walker.currentNode
-      }
-      if (lastNode) {
-        range.setStart(lastNode, lastNode?.length)
-        range.setEnd(lastNode, lastNode?.length)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-        editorElement!.focus()
-      }
-    } catch (error) {
-    }
+      this.vditor?.editor?.commands.focus('end')
+    } catch (error) { }
   }
 
   clearMarkdown = () => {
@@ -306,9 +303,9 @@ export class EditorStore {
         <Button variant='flat' className="ml-auto" color='default'
           onPress={e => {
             if (type.includes('image')) {
-              this.vditor?.insertValue(`![${fileName}](${filePath})`)
+              this.vditor?.insertMD(`![](${toContentFileUrl(filePath)})`)
             } else {
-              this.vditor?.insertValue(`[${fileName}](${filePath})`)
+              this.vditor?.insertMD(`[${fileName}](${toContentFileUrl(filePath)})`)
             }
             RootStore.Get(DialogStandaloneStore).close()
           }}>{i18n.t('context')}</Button>
@@ -401,16 +398,6 @@ export class EditorStore {
 
   init = (args: Partial<EditorStore>) => {
     Object.assign(this, args)
-    //remove listener on pc
-    const ir = document.querySelector('.vditor-ir .vditor-reset')
-    if (ir) {
-      ir.addEventListener('ondragstart', (e) => {
-        if (ir.contains(e.target as Node)) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
-    }
   }
 
   isShowEditorToolbar(isPc: boolean) {
@@ -427,7 +414,7 @@ export class EditorStore {
   }
 
   adjustMobileEditorHeight = () => {
-    const editor = document.getElementsByClassName('vditor-reset')
+    const editor = document.querySelectorAll('.vditor-reset, .tiptap')
     try {
       for (let i = 0; i < editor?.length; i++) {
         //@ts-ignore

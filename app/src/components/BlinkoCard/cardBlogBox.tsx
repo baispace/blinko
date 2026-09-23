@@ -2,7 +2,7 @@ import { Image } from '@heroui/react';
 import { Note } from '@shared/lib/types';
 import { helper } from '@/lib/helper';
 import { RootStore } from '@/store/root';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
@@ -29,6 +29,7 @@ const gradientPairs: [string, string][] = [
 
 export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(112);
 
@@ -82,7 +83,12 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
                 return uniquePaths.map((path) => (
                   <div key={path} className='text-desc text-xs blinko-tag whitespace-nowrap font-bold hover:opacity-80 !transition-all cursor-pointer' onClick={(e) => {
                     e.stopPropagation()
-                    navigate(`/?path=all&searchText=${encodeURIComponent("#" + path)}`)
+                    // 保持当前所在视图，仅做标签搜索，不跳离当前页面
+                    const currentPath = new URLSearchParams(location.search).get('path');
+                    const searchText = encodeURIComponent("#" + path);
+                    navigate(currentPath
+                      ? `/?path=${currentPath}&searchText=${searchText}`
+                      : `/?searchText=${searchText}`)
                     RootStore.Get(BlinkoStore).forceQuery++
                   }}>
                     #{path}

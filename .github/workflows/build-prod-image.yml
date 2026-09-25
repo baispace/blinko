@@ -1,0 +1,84 @@
+name: Build Prod Image
+# 生产镜像构建：main_baispace 分支 → ghcr.io/baispace/blinko:prod（附 sha-xxxxxxx）
+# 设计意图：构建全部在 GitHub 机器上完成，服务器只 pull 镜像，不参与构建
+
+on:
+  push:
+    branches:
+      - main_baispace
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: '构建平台（服务器用 linux/amd64；本机 Mac 调试可改 linux/arm64）'
+        required: false
+        default: 'linux/amd64'
+        type: string
+
+# 同分支并发构建时取消旧的，省 Actions 额度
+concurrency:
+  group: prod-image-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 确定构建平台
+        id: plat
+        run: echo "value=${{ inputs.platforms || 'linux/amd64' }}" >> "$GITHUB_OUTPUT"
+
+      - name: 配置 Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 生成镜像标签
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # prod = 服务器固定引用的tag；sha-xxxxxxx = 精确版本，用于回滚
+            type=raw,value=prod
+            type=sha,prefix=sha-,format=short
+
+      # 注意：官方 Dockerfile 文件名是小写的 dockerfile，必须显式指定 file
+      - name: 构建并推送
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./dockerfile
+          platforms: ${{ steps.plat.outputs.value }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            USE_MIRROR=true
+
+      - name: 输出结果
+        run: |
+          echo "### 镜像已推送" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "平台: ${{ steps.plat.outputs.value }}" >> "$GITHUB_STEP_SUMMARY"

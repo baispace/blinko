@@ -27,7 +27,8 @@ const Home = observer(() => {
   const { t } = useTranslation();
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
-  blinko.use()
+  // NOTE: blinko.use() is already called by CommonLayout (root layout),
+  // calling it here causes firstLoad() to run twice on first paint.
   blinko.useQuery();
 
   // 卡片间距（来自全局设置）

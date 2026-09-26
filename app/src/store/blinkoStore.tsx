@@ -432,7 +432,7 @@ export class BlinkoStore implements Store {
 
   tagList = new PromiseState({
     function: async () => {
-      const res = await api.tags.listWithCount.query(undefined, { context: { skipBatch: true } });
+      const res = await api.tags.listWithCount.query();
       const falttenTags = res.tags.map(i => i.tag);
       const tagCounts: Record<number, number> = {};
       const tagBlinkoCounts: Record<number, number> = {};

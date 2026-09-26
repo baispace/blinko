@@ -289,7 +289,11 @@ export class AiStore implements Store {
     return RootStore.Get(BlinkoStore);
   }
 
-  async writeStream(writeType: 'expand' | 'polish' | 'custom' | undefined, content: string | undefined) {
+  async writeStream(
+    writeType: 'expand' | 'polish' | 'custom' | undefined,
+    content: string | undefined,
+    onComplete?: (text: string) => void,
+  ) {
     try {
       this.currentWriteType = writeType;
       this.isLoading = true;
@@ -328,6 +332,9 @@ export class AiStore implements Store {
       this.writeQuestion = '';
       eventBus.emit('editor:focus');
       this.isLoading = false;
+      // Hand the finished text back to the caller (slash menu / quick actions).
+      // Errors and aborts return earlier, so this only fires on a real completion.
+      onComplete?.(this.writingResponseText);
     } catch (error) {
       console.error('[aiStore.writeStream] caught error:', error);
       // tRPC errors carry .message; raw fetch / network errors may not.

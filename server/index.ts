@@ -273,6 +273,63 @@ async function setupApiRoutes(app: express.Application) {
 }
 
 /**
+ * Serve pre-compressed (.gz) static assets without re-compressing them.
+ *
+ * Why: the app ships no compression middleware and vite does not emit
+ * pre-compressed bundles. Every first visit therefore pushed ~2.5MB of
+ * uncompressed JS while the browser was also firing API calls, which showed
+ * up as multi-second "Waiting"/"Stalled" in DevTools on a 2-core box.
+ * start.sh generates the matching *.gz files at container start, and this
+ * middleware hands them straight to the client — compression cost is zero.
+ */
+const servePrecompressed = (publicPath: string) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      const acceptsGzip = String(req.headers['accept-encoding'] || '').includes('gzip');
+      if (!acceptsGzip || req.method !== 'GET') return next();
+
+      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (!/\.(js|css|html|json|svg|woff2?)(\?|$)/i.test(urlPath)) return next();
+
+      const relPath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '').replace(/^[/\\]+/, '');
+      const filePath = path.join(publicPath, relPath);
+      const gzPath = `${filePath}.gz`;
+
+      // Path traversal guard: resolved path must stay inside publicPath
+      if (!filePath.startsWith(publicPath + path.sep)) return next();
+
+      if (!fs.existsSync(gzPath)) return next();
+      const srcStat = fs.statSync(filePath);
+      const gzStat = fs.statSync(gzPath);
+      // Only serve the .gz when it is not older than the source file
+      if (gzStat.mtimeMs < srcStat.mtimeMs) return next();
+
+      // NOTE: the MIME type must stay correct — serving JS/CSS as
+      // application/octet-stream makes the browser download instead of execute.
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = ext === '.css' ? 'text/css'
+        : ext === '.html' ? 'text/html; charset=utf-8'
+          : ext === '.json' ? 'application/json; charset=utf-8'
+            : ext === '.svg' ? 'image/svg+xml'
+              : ext === '.woff' || ext === '.woff2' ? 'font/woff2'
+                : ext === '.js' || ext === '.mjs' ? 'text/javascript; charset=utf-8'
+                  : 'application/octet-stream';
+
+      res.set({
+        'Content-Encoding': 'gzip',
+        'Vary': 'Accept-Encoding',
+        'Cache-Control': 'public, max-age=604800, immutable',
+        'Content-Type': contentType
+      });
+      fs.createReadStream(gzPath).pipe(res);
+      return;
+    } catch {
+      return next();
+    }
+  };
+};
+
+/**
  * Bootstrap the server
  * Sets up middleware, auth, API routes and starts the server
  */
@@ -300,6 +357,7 @@ async function bootstrap() {
     };
 
     const publicPath = path.resolve(appRootProd, 'public');
+    app.use(servePrecompressed(publicPath));
     app.use(express.static(publicPath, staticOptions));
 
     // Add body parsers for JSON and form data

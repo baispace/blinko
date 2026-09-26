@@ -5,6 +5,9 @@ import { FocusEditorFixMobile, HandleFileType } from '../editorUtils';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { OnSendContentType } from '../type';
 import { RootStore } from '@/store';
+import { AiStore } from '@/store/aiStore';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
+import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { NoteType, toNoteTypeEnum } from '@shared/lib/types';
@@ -71,7 +74,19 @@ export const useEditorInit = (
           transformPastedText: false,
           transformCopiedText: false,
         }),
-        SlashCommand.configure({ slashMenu: adapter.slashMenu }),
+        SlashCommand.configure({
+          slashMenu: adapter.slashMenu,
+          aiRunner: (writeType, content, onComplete) => {
+            const ai = RootStore.Get(AiStore)
+            // writeStream funnels into a single shared writingResponseText;
+            // a second concurrent run would interleave into the wrong block.
+            if (ai.isLoading) {
+              RootStore.Get(ToastPlugin).error(i18n.t('ai-writing-in-progress'))
+              return
+            }
+            ai.writeStream(writeType, content, onComplete)
+          },
+        }),
         TaskListInputRules,
         SendShortcut.configure({ onSend: () => store.handleSend() }),
       ],

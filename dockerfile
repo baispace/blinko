@@ -41,8 +41,9 @@ RUN bunx prisma generate
 RUN bun run build:web
 RUN bun run build:seed
 
-RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
-    chmod +x start.sh
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh && \
+    ls -la start.sh
 
 
 FROM node:20-alpine as init-downloader

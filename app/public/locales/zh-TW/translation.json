@@ -45,6 +45,7 @@
   "ai-model-desc": "如果所選模型支持視覺（多模態），Blinko將自動索引圖像。",
   "ai-model-tooltip": "输入要使用的型号名称，例如 gpt-3.5-turbo、gpt-4、gpt-4o、gpt-4o-mini",
   "ai-polish": "AI润色",
+  "ai-slash-no-text": "當前段落為空，AI 無內容可處理 —— 先寫一段；或用工具列 AI 按鈕（基於整篇筆記）",
   "ai-writing-in-progress": "AI 正在生成中，請稍候",
   "ai-post-processing": "AI後處理",
   "ai-post-processing-mode": "AI後處理模式",

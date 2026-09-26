@@ -193,6 +193,7 @@
   "speech-recognition-requires-the-use-of": "Speech recognition requires the use of",
   "ai-expand": "AI Expand",
   "ai-polish": "AI Polish",
+  "ai-slash-no-text": "The paragraph is empty - write something first, or use the toolbar AI buttons (those work on the whole note)",
   "ai-writing-in-progress": "AI is still generating, please wait",
   "accept": "Accept",
   "reject": "Reject",

@@ -28,7 +28,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import { TiptapEditorAdapter } from '../Tiptap/adapter';
-import { SlashCommand, SendShortcut, TaskListInputRules } from '../Tiptap/extensions';
+import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } from '../Tiptap/extensions';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 
 export const useEditorInit = (
@@ -76,17 +76,22 @@ export const useEditorInit = (
         }),
         SlashCommand.configure({
           slashMenu: adapter.slashMenu,
-          aiRunner: (writeType, content, onComplete) => {
-            const ai = RootStore.Get(AiStore)
-            // writeStream funnels into a single shared writingResponseText;
-            // a second concurrent run would interleave into the wrong block.
-            if (ai.isLoading) {
-              RootStore.Get(ToastPlugin).error(i18n.t('ai-writing-in-progress'))
-              return
-            }
-            ai.writeStream(writeType, content, onComplete)
+          aiBridge: {
+            run: (writeType, content, onComplete) => {
+              const ai = RootStore.Get(AiStore)
+              // writeStream funnels into a single shared writingResponseText;
+              // a second concurrent run would interleave into the wrong block.
+              if (ai.isLoading) {
+                RootStore.Get(ToastPlugin).error(i18n.t('ai-writing-in-progress'))
+                return
+              }
+              ai.writeStream(writeType, content, onComplete)
+            },
+            notify: (message) => RootStore.Get(ToastPlugin).error(i18n.t(message)),
+            abort: () => RootStore.Get(AiStore).abortAiWrite(),
           },
         }),
+        AiPendingIndicator,
         TaskListInputRules,
         SendShortcut.configure({ onSend: () => store.handleSend() }),
       ],

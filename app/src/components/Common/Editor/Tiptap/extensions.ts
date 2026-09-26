@@ -1,5 +1,7 @@
 import { Extension, InputRule } from '@tiptap/core';
 import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { SlashMenuState } from './slashMenuState';
 
 export type SlashItem = {
@@ -16,8 +18,99 @@ export type SlashItem = {
 export type AiSlashRunner = (
   writeType: 'expand' | 'polish',
   content: string,
-  onComplete: (text: string) => void
+  onComplete: (text: string) => void,
+  /** Called on every exit path, including error and abort. */
+  onSettled?: () => void
 ) => void
+
+export type AiSlashBridge = {
+  run: AiSlashRunner
+  notify: (message: string) => void
+  /** Kill the in-flight generation. Backs the ✕ on the pending chip. */
+  abort: () => void
+}
+
+/**
+ * "AI is still working" chip, rendered right after the paragraph that is being
+ * rewritten. A generation takes 10-20s, and without this the click looks like
+ * it did nothing at all.
+ *
+ * It is a ProseMirror *widget* decoration on purpose: the chip never becomes
+ * part of the document, so it cannot leak into the note, break the markdown
+ * round-trip, or pollute undo history.
+ */
+export type AiPending = { pos: number; onCancel?: () => void }
+
+const AiPendingKey = new PluginKey<AiPending | null>('aiPending')
+
+export const AiPendingIndicator = Extension.create({
+  name: 'aiPendingIndicator',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin<AiPending | null>({
+        key: AiPendingKey,
+        state: {
+          init: () => null,
+          apply(tr, pending) {
+            const meta = tr.getMeta(AiPendingKey)
+            if (meta !== undefined) return meta as AiPending | null
+            if (!pending) return null
+            // The block the chip sits in can vanish (deleted, merged by an
+            // undo, split in two) -- take the chip with it instead of drawing
+            // it at a stale position.
+            try {
+              tr.doc.resolve(pending.pos)
+            } catch {
+              return null
+            }
+            return pending
+          },
+        },
+        props: {
+          decorations(state) {
+            const pending = AiPendingKey.getState(state)
+            if (!pending) return null
+
+            const at = Math.min(pending.pos, state.doc.content.size)
+            const dom = document.createElement('span')
+            dom.className = 'ai-pending'
+            dom.setAttribute('aria-hidden', 'true')
+            for (let i = 0; i < 3; i++) dom.appendChild(document.createElement('i'))
+
+            if (pending.onCancel) {
+              const cancel = document.createElement('button')
+              cancel.type = 'button'
+              cancel.className = 'ai-pending-cancel'
+              cancel.textContent = '✕'
+              cancel.addEventListener('mousedown', (e) => e.preventDefault())
+              cancel.addEventListener('click', (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                pending.onCancel?.()
+              })
+              dom.appendChild(cancel)
+            }
+
+            return DecorationSet.create(state.doc, [
+              Decoration.widget(at, dom, { side: 1, ignoreSelection: true }),
+            ])
+          },
+        },
+      }),
+    ]
+  },
+})
+
+export const showAiPending = (editor: any, pending: AiPending) => {
+  hideAiPending(editor)
+  editor.view.dispatch(editor.state.tr.setMeta(AiPendingKey, pending))
+}
+
+export const hideAiPending = (editor: any) => {
+  if (!editor) return
+  editor.view.dispatch(editor.state.tr.setMeta(AiPendingKey, null))
+}
 
 /**
  * The block the caret currently sits in. Used as the input scope for slash
@@ -34,33 +127,70 @@ const currentBlock = (editor: any) => {
     return {
       start: $from.before(),
       end: $from.after(),
+      // Inside the textblock, unlike `end` which is the block boundary. A
+      // widget decoration placed at a block edge lands outside the paragraph
+      // in the DOM (or is dropped outright); placed inside it, ProseMirror
+      // always renders it as inline content at the end of the line.
+      inlineEnd: $from.end(),
       text: state.doc.textBetween($from.start(), $from.end(), '\n'),
     }
   } catch {
-    return { start: 0, end: 0, text: '' }
+    return { start: 0, end: 0, inlineEnd: 0, text: '' }
   }
 }
 
 const runAiSlash = (
   editor: any,
   range: any,
-  run: AiSlashRunner,
+  bridge: AiSlashBridge,
   writeType: 'expand' | 'polish',
   mode: 'insert' | 'replace'
 ) => {
   // Drop the "/ai-xxx" token first; it lies inside the block, so re-read the
   // block afterwards instead of reusing positions captured before deletion.
   editor.chain().focus().deleteRange(range).run()
-  const { start, end, text } = currentBlock(editor)
-  if (!text.trim()) return
-  run(writeType, text, (result) => {
-    if (!result?.trim()) return
-    if (mode === 'replace') {
-      editor.chain().focus().insertContentAt({ from: start, to: end }, result).run()
-    } else {
-      editor.chain().focus().insertContentAt({ from: end, to: end }, result).run()
-    }
+  const { start, end, inlineEnd, text } = currentBlock(editor)
+
+  // Empty paragraph: bail out for *both* actions.
+  //
+  // An expand used to be allowed to fire with an empty seed, on the theory that
+  // the model could just "write a fresh paragraph". It cannot -- the expand
+  // prompt is literally "## Original Content\n{content}", so with nothing to
+  // expand the model answers with meta-commentary ("It looks like you haven't
+  // provided any content for me to expand yet...") instead of a paragraph,
+  // which then lands in the note as garbage. Polishing air has no meaning at
+  // all either. So: tell the user, keep the paragraph empty.
+  if (!text.trim()) {
+    bridge.notify('ai-slash-no-text')
+    return
+  }
+
+  // Acknowledge the click immediately: the chip appears at the end of the
+  // block and clears itself when the run settles (aiStore.writeStream calls
+  // onSettled on success, error and abort alike).
+  // An abort never reaches onComplete/onSettled, so clear the chip here too.
+  showAiPending(editor, {
+    pos: inlineEnd,
+    onCancel: () => {
+      hideAiPending(editor)
+      bridge.abort()
+    },
   })
+
+  bridge.run(
+    writeType,
+    text,
+    (result) => {
+      hideAiPending(editor)
+      if (!result?.trim()) return
+      if (mode === 'replace') {
+        editor.chain().focus().insertContentAt({ from: start, to: end }, result).run()
+      } else {
+        editor.chain().focus().insertContentAt({ from: end, to: end }, result).run()
+      }
+    },
+    () => hideAiPending(editor)
+  )
 }
 
 export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
@@ -135,16 +265,16 @@ export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
     title: 'ai-expand',
     icon: 'hugeicons:ai-beautify',
     keywords: 'ai expand 扩写 展开 详细 续写',
-    command: ({ editor, range }, runner) => {
-      if (runner) runAiSlash(editor, range, runner, 'expand', 'insert')
+    command: ({ editor, range }, bridge) => {
+      if (bridge) runAiSlash(editor, range, bridge, 'expand', 'insert')
     },
   },
   {
     title: 'ai-polish',
     icon: 'hugeicons:ai-beautify',
     keywords: 'ai polish 润色 优化 改进 改写',
-    command: ({ editor, range }, runner) => {
-      if (runner) runAiSlash(editor, range, runner, 'polish', 'replace')
+    command: ({ editor, range }, bridge) => {
+      if (bridge) runAiSlash(editor, range, bridge, 'polish', 'replace')
     },
   },
 ]
@@ -156,7 +286,7 @@ export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
 export const SlashCommand = Extension.create<{
   slashMenu: SlashMenuState
   items: SlashItem[]
-  aiRunner?: AiSlashRunner
+  aiBridge?: AiSlashBridge
 }>({
   name: 'slashCommand',
 
@@ -164,17 +294,19 @@ export const SlashCommand = Extension.create<{
     return {
       slashMenu: undefined as unknown as SlashMenuState,
       items: DEFAULT_SLASH_ITEMS,
-      aiRunner: undefined as AiSlashRunner | undefined,
+      aiBridge: undefined as AiSlashBridge | undefined,
     }
   },
 
   addProseMirrorPlugins() {
-    const { slashMenu, items, aiRunner } = this.options
+    const { slashMenu, items, aiBridge } = this.options
     if (!slashMenu) return []
 
-    // Bound once here so the AI slash items never touch the store directly.
-    const slashAi: AiSlashRunner = (writeType, content, onComplete) => {
-      aiRunner?.(writeType, content, onComplete)
+    const slashAi: AiSlashBridge = {
+      run: (writeType, content, onComplete, onSettled) =>
+        aiBridge?.run(writeType, content, onComplete, onSettled),
+      notify: (message) => aiBridge?.notify(message),
+      abort: () => aiBridge?.abort(),
     }
 
     return [

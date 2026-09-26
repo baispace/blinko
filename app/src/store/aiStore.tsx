@@ -278,6 +278,8 @@ export class AiStore implements Store {
   chatHistory = new StorageListState<Chat>({ key: 'chatHistory' });
   private aiChatabortController = new AbortController();
   private aiWriteAbortController = new AbortController();
+  /** Set by abortAiWrite so the resulting AbortError is not reported as a failure. */
+  private isAbortRequested = false;
   writingResponseText = '';
   isWriting = false;
 
@@ -293,8 +295,16 @@ export class AiStore implements Store {
     writeType: 'expand' | 'polish' | 'custom' | undefined,
     content: string | undefined,
     onComplete?: (text: string) => void,
+    /**
+     * Fires on *every* exit path -- success, stream error and thrown error.
+     * Callers use it to tear down UI that `onComplete` cannot reach (onComplete
+     * is skipped when a generation fails), otherwise a pending indicator would
+     * stay on screen forever.
+     */
+    onSettled?: () => void,
   ) {
     try {
+      this.isAbortRequested = false;
       this.currentWriteType = writeType;
       this.isLoading = true;
       this.scrollTicker++;
@@ -319,6 +329,7 @@ export class AiStore implements Store {
           RootStore.Get(ToastPlugin).error(errorMessage);
           this.isLoading = false;
           this.isWriting = false;
+          onSettled?.();
           return;
         }
         if (item.type == 'text-delta') {
@@ -335,7 +346,17 @@ export class AiStore implements Store {
       // Hand the finished text back to the caller (slash menu / quick actions).
       // Errors and aborts return earlier, so this only fires on a real completion.
       onComplete?.(this.writingResponseText);
+      onSettled?.();
     } catch (error) {
+      // The ✕ on the pending chip aborts the request; that is a cancellation,
+      // not a failure. Report nothing and leave the store idle.
+      if (this.isAbortRequested) {
+        this.isAbortRequested = false;
+        this.isLoading = false;
+        this.isWriting = false;
+        onSettled?.();
+        return;
+      }
       console.error('[aiStore.writeStream] caught error:', error);
       // tRPC errors carry .message; raw fetch / network errors may not.
       const msg =
@@ -345,6 +366,7 @@ export class AiStore implements Store {
       RootStore.Get(ToastPlugin).error(msg);
       this.isLoading = false;
       this.isWriting = false;
+      onSettled?.();
     }
   }
 
@@ -425,9 +447,15 @@ export class AiStore implements Store {
   };
 
   abortAiWrite() {
+    this.isAbortRequested = true;
     this.aiWriteAbortController.abort();
     this.aiWriteAbortController = new AbortController();
+    // Clear the busy flag here rather than waiting for the aborted request to
+    // reject: callers guard on isLoading, so leaving it raised would block
+    // every later generation behind a run the user just cancelled.
+    this.isLoading = false;
     this.isWriting = false;
+    this.writeQuestion = '';
   }
 
   async abortAiChat() {

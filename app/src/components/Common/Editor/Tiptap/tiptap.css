@@ -370,3 +370,83 @@
 .dark .tiptap mark {
   background-color: rgba(250, 204, 21, 0.28);
 }
+
+/* "AI is still generating" chip. Rendered as a ProseMirror widget decoration,
+   so it sits in the document's DOM but is not document content -- it will not
+   be saved with the note and cannot be undo-ed into it.
+   Deliberately colour-agnostic: currentColor + opacity works on the light
+   theme, the dark theme and inside callouts alike. */
+.ai-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 2px 0 6px;
+  vertical-align: middle;
+  line-height: 1;
+  user-select: none;
+  pointer-events: auto;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.ai-pending > i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: ai-pending-blink 1.3s ease-in-out infinite;
+}
+
+.ai-pending > i:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.ai-pending > i:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes ai-pending-blink {
+  0%,
+  70%,
+  100% {
+    opacity: 0.22;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-pending > i {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+.ai-pending-cancel {
+  margin-left: 2px;
+  padding: 0;
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: inherit;
+  background: transparent;
+  opacity: 0.6;
+  transition: opacity 0.12s, background-color 0.12s;
+}
+
+.ai-pending:hover {
+  opacity: 1;
+}
+
+.ai-pending-cancel:hover {
+  opacity: 1;
+  background-color: rgba(127, 127, 127, 0.22);
+}

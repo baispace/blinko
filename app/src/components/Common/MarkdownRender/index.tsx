@@ -1,15 +1,12 @@
 import { helper } from '@/lib/helper';
 import { useTheme } from 'next-themes';
-import React, { useRef } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { observer } from 'mobx-react-lite';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store';
 import rehypeRaw from 'rehype-raw';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 import { Code } from './Code';
 import { LinkPreview } from './LinkPreview';
 import { ImageWrapper } from './ImageWrapper';
@@ -18,9 +15,52 @@ import { TableWrapper } from './TableWrapper';
 import { useNavigate, useLocation } from 'react-router-dom';
 import remarkTaskList from 'remark-task-list';
 import { Skeleton } from '@heroui/react';
-import { MermaidWrapper } from './MermaidWrapper';
-import { MarkmapWrapper } from './MarkmapWrapper';
-import { EchartsWrapper } from './EchartsWrapper';
+// Heavy renderers are loaded on demand: mermaid pulls its own diagram chunks,
+// echarts bundles zrender, and markmap-lib is only needed for ```mindmap blocks.
+// Keeping them static added ~3MB (uncompressed) to the first-load bundle.
+const MermaidWrapper = lazy(() => import('./MermaidWrapper').then(m => ({ default: m.MermaidWrapper })));
+const MarkmapWrapper = lazy(() => import('./MarkmapWrapper').then(m => ({ default: m.MarkmapWrapper })));
+const EchartsWrapper = lazy(() => import('./EchartsWrapper').then(m => ({ default: m.EchartsWrapper })));
+
+const DiagramFallback = () => <Skeleton className="w-full h-40 my-4 rounded-lg" />;
+
+// KaTeX is ~535 KB minified. Most notes contain no math at all, so the plugins
+// and their stylesheet are only pulled in once a `$` shows up in the content.
+const useMathPlugins = (content: string) => {
+  const [plugins, setPlugins] = useState<{ remark: any[], rehype: any[] }>({ remark: [], rehype: [] });
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+    if (!content?.includes('$')) return;
+    let cancelled = false;
+    (async () => {
+      const [{ default: remarkMath }, { default: rehypeKatex }] = await Promise.all([
+        import('remark-math'),
+        import('rehype-katex')
+      ]);
+      await import('katex/dist/katex.min.css');
+      if (cancelled) return;
+      loadedRef.current = true;
+      setPlugins({
+        remark: [[remarkMath, {
+          singleDollarTextMath: true,
+          inlineMath: [['$', '$']],
+          blockMath: [['$$', '$$']]
+        }]],
+        rehype: [[rehypeKatex, {
+          throwOnError: false,
+          output: 'html',
+          trust: true,
+          strict: false
+        }]]
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [content]);
+
+  return plugins;
+};
 
 const HighlightTags = observer(({ text, }: { text: any }) => {
   const location = useLocation();
@@ -69,6 +109,7 @@ const Table = ({ children }: { children: React.ReactNode }) => {
 export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false }: { content?: string, onChange?: (updater: (current: string) => string) => void, isShareMode?: boolean, largeSpacing?: boolean }) => {
   const { theme } = useTheme()
   const contentRef = useRef(null);
+  const mathPlugins = useMathPlugins(content);
 
   return (
     <div className={`markdown-body ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
@@ -77,20 +118,11 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
           remarkPlugins={[
             [remarkGfm, { table: false }],
             remarkTaskList,
-            [remarkMath, {
-              singleDollarTextMath: true,
-              inlineMath: [['$', '$']],
-              blockMath: [['$$', '$$']]
-            }]
+            ...mathPlugins.remark
           ]}
           rehypePlugins={[
             rehypeRaw,
-            [rehypeKatex, {
-              throwOnError: false,
-              output: 'html',
-              trust: true,
-              strict: false
-            }]
+            ...mathPlugins.rehype
           ]}
           components={{
             p: ({ node, children }) => {
@@ -168,15 +200,15 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
               const language = match ? match[1] : '';
 
               if (language === 'mermaid') {
-                return <MermaidWrapper content={String(children || '')} />;
+                return <Suspense fallback={<DiagramFallback />}><MermaidWrapper content={String(children || '')} /></Suspense>;
               }
 
               if (language === 'mindmap') {
-                return <MarkmapWrapper content={String(children || '')} />;
+                return <Suspense fallback={<DiagramFallback />}><MarkmapWrapper content={String(children || '')} /></Suspense>;
               }
 
               if (language === 'echarts') {
-                return <EchartsWrapper options={String(children || '').trim()} />;
+                return <Suspense fallback={<DiagramFallback />}><EchartsWrapper options={String(children || '').trim()} /></Suspense>;
               }
 
               return <Code node={node} className={className} {...props}>{children}</Code>;

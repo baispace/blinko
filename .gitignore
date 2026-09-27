@@ -37,3 +37,10 @@ dev-dist
 .claude/settings.local.json
 target
 server/public
+
+# local runtime artifacts
+/db/
+/data/
+.workbuddy/tmp/
+.workbuddy/outputs/cover-adjust/
+.workbuddy/outputs/blinko-deploy/

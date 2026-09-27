@@ -3,10 +3,18 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger, Slider, Switch } from "@heroui/react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { api } from "@/lib/trpc";
 import { PromiseCall } from "@/store/standard/PromiseState";
+import {
+  getPageViewScope,
+  getPageViewSetting,
+  updatePageViewSetting,
+  updatePageViewColumns,
+  type PageViewScope,
+} from "@/lib/pageViewConfig";
 
 /**
  * "视图设置" trigger glyph — reproduces the Iconly `view` icon used by the
@@ -61,30 +69,18 @@ const SORT_OPTIONS = [
 type ColStyleKey = typeof COL_STYLE_OPTIONS[number]['key'];
 type SortKey = typeof SORT_OPTIONS[number]['key'];
 
-const updateConfig = async (key: string, value: any) => {
-  await PromiseCall(
-    api.config.update.mutate({ key, value }),
-    { autoAlert: false }
-  );
-  // 触发 config 重新拉取，让 BlinkoStore.config.value 立刻更新
-  RootStore.Get(BlinkoStore).config.call();
-};
+// 视图设置按页面作用域读写（pageViewSettings[scope]），页面间互不影响
+const updateScopedConfig = (blinko: BlinkoStore, scope: PageViewScope, key: string, value: any) =>
+  updatePageViewSetting(blinko, scope, key as any, value, async (k, v) => {
+    await PromiseCall(api.config.update.mutate({ key: k, value: v }), { autoAlert: false });
+    blinko.config.call();
+  });
 
-// 列数同步更新三档（PC/Mobile），保持视觉一致
-const updateColumns = async (n: number) => {
-  const blinko = RootStore.Get(BlinkoStore);
-  blinko.config.value = {
-    ...blinko.config.value,
-    smallDeviceCardColumns: Math.min(n, 2),  // 小屏最多 2 列
-    mediumDeviceCardColumns: n,
-    largeDeviceCardColumns: n,
-  };
-  await Promise.all([
-    PromiseCall(api.config.update.mutate({ key: 'smallDeviceCardColumns', value: Math.min(n, 2) }), { autoAlert: false }),
-    PromiseCall(api.config.update.mutate({ key: 'mediumDeviceCardColumns', value: n }), { autoAlert: false }),
-    PromiseCall(api.config.update.mutate({ key: 'largeDeviceCardColumns', value: n }), { autoAlert: false }),
-  ]);
-};
+const updateScopedColumns = (blinko: BlinkoStore, scope: PageViewScope, n: number) =>
+  updatePageViewColumns(blinko, scope, n, async (k, v) => {
+    await PromiseCall(api.config.update.mutate({ key: k, value: v }), { autoAlert: false });
+    blinko.config.call();
+  });
 
 /** 宽度档位示意：宽度递增的小圆角矩形，颜色随选中态走 currentColor */
 const WidthGlyph = ({ w }: { w: number }) => (
@@ -128,15 +124,19 @@ const SegmentedButtons = <T extends string | number>({
 export const BlinkoHomeSettingsPop = observer(() => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
+  const location = useLocation();
+  // 当前页面作用域：闪念 / 笔记 / 全部…各自独立记忆视图设置
+  const scope = getPageViewScope(new URLSearchParams(location.search));
   const [isOpen, setIsOpen] = useState(false);
 
-  const hidePcEditor = !!blinko.config.value?.hidePcEditor;
-  const maxHomePageWidth = (blinko.config.value?.maxHomePageWidth as number | null | undefined) ?? 0;
-  const cardSpacing = (blinko.config.value?.cardSpacing as number | undefined) ?? 16;
-  const noteListStyle = ((blinko.config.value?.noteListStyle as ColStyleKey | undefined) ?? 'continuous');
+  const hidePcEditor = !!getPageViewSetting(blinko, scope, 'hidePcEditor');
+  const maxHomePageWidth = (getPageViewSetting(blinko, scope, 'maxHomePageWidth') as number | null | undefined) ?? 0;
+  const cardSpacing = (getPageViewSetting(blinko, scope, 'cardSpacing') as number | undefined) ?? 16;
+  const noteListStyle = ((getPageViewSetting(blinko, scope, 'noteListStyle') as ColStyleKey | undefined) ?? 'continuous');
   // 列数取大屏档作为单一真相源
-  const noteListColumnCount = Number(blinko.config.value?.largeDeviceCardColumns ?? 1);
-  const noteListSortBy = ((blinko.config.value?.noteListSortBy as SortKey | undefined) ?? 'createdAt');
+  const noteListColumnCount = Number(getPageViewSetting(blinko, scope, 'largeDeviceCardColumns') ?? 1);
+  const noteListSortBy = ((getPageViewSetting(blinko, scope, 'noteListSortBy') as SortKey | undefined) ?? 'createdAt');
+  const scopeLabel = { blinko: t('blinko'), notes: t('notes'), all: t('all'), todo: t('todo'), archived: t('archived'), trash: t('trash') }[scope] ?? scope;
 
   // 把当前宽度值归一到 4 档（兼容历史 xs/sm/md/lg 值）；0 = 全宽
   const matchedWidth: WidthKey = (WIDTH_OPTIONS.find(o => o.value === maxHomePageWidth)?.value)
@@ -159,6 +159,9 @@ export const BlinkoHomeSettingsPop = observer(() => {
           <div>
             <div className="font-semibold text-base">{t('blinko-view-settings')}</div>
             <div className="text-xs text-default-400 mt-0.5">{t('blinko-view-settings-subtitle')}</div>
+            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-secondbackground px-2 py-0.5 text-[11px] text-default-500">
+              {t('view-scope-current')}：{scopeLabel}
+            </div>
           </div>
 
           {/* 隐藏桌面编辑器 */}
@@ -170,7 +173,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             <Switch
               size="sm"
               isSelected={hidePcEditor}
-              onValueChange={(v) => updateConfig('hidePcEditor', v)}
+              onValueChange={(v) => updateScopedConfig(blinko, scope, 'hidePcEditor', v)}
             />
           </section>
 
@@ -179,7 +182,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             <span className="text-sm text-default-400">{t('content-width')}</span>
             <SegmentedButtons
               value={matchedWidth}
-              onChange={(v) => updateConfig('maxHomePageWidth', v)}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'maxHomePageWidth', v)}
               options={WIDTH_OPTIONS.map(o => ({
                 key: o.value,
                 label: o.value === 0 ? t('full-width') : o.label,
@@ -201,7 +204,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
               maxValue={24}
               step={2}
               value={cardSpacing}
-              onChange={(v) => updateConfig('cardSpacing', Array.isArray(v) ? v[0] : v)}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'cardSpacing', Array.isArray(v) ? v[0] : v)}
               classNames={{ track: '!bg-default-300/50', filler: '!bg-[#fbe573]', thumb: '!bg-[#fbe573] !shadow-small' }}
             />
             <div className="flex justify-between px-1 text-[11px] text-default-400">
@@ -218,7 +221,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </div>
             <SegmentedButtons
               value={noteListStyle}
-              onChange={(v) => updateConfig('noteListStyle', v)}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListStyle', v)}
               options={COL_STYLE_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
             />
           </section>
@@ -235,7 +238,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
               maxValue={4}
               step={1}
               value={noteListColumnCount}
-              onChange={(v) => updateColumns(Array.isArray(v) ? v[0] : v)}
+              onChange={(v) => updateScopedColumns(blinko, scope, Array.isArray(v) ? v[0] : v)}
               marks={[
                 { value: 1, label: '1' },
                 { value: 2, label: '2' },
@@ -251,7 +254,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             <span className="text-sm text-default-400">{t('sort-by')}</span>
             <SegmentedButtons
               value={noteListSortBy}
-              onChange={(v) => updateConfig('noteListSortBy', v)}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListSortBy', v)}
               options={SORT_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
             />
           </section>

@@ -24,6 +24,7 @@ import { useLocation } from "react-router-dom";
 import { ShowCommentDialog } from "../BlinkoCard/commentButton";
 import { useMediaQuery } from "usehooks-ts";
 import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
+import NoteHistoryModal from "../BlinkoNoteHistory/NoteHistoryModal";
 
 
 export const ShowEditTimeModel = (showExpired: boolean = false) => {
@@ -299,6 +300,36 @@ const handleTrash = () => {
   PromiseCall(api.notes.trashMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
 }
 
+/** 复制正文 + 附件链接（compact 卡片把该操作从 header 收进菜单后仍需可达） */
+const handleCopyContent = async () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  const note = blinko.curSelectedNote
+  if (!note) return
+  const text = [
+    note.content ?? '',
+    ...(note.attachments?.map(i => window.location.origin + i.path) ?? [])
+  ].join('\n').trim()
+  try {
+    await navigator.clipboard.writeText(text)
+    RootStore.Get(ToastPlugin).success(i18n.t('copy-success'))
+  } catch (e) {
+    RootStore.Get(ToastPlugin).error(i18n.t('copy-failed'))
+  }
+}
+
+/** 查看历史版本（compact 卡片把该操作从 header 收进菜单后仍需可达） */
+const handleShowHistory = () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  const noteId = blinko.curSelectedNote?.id
+  if (!noteId) return
+  RootStore.Get(DialogStore).setData({
+    isOpen: true,
+    size: '2xl',
+    title: i18n.t('Note History'),
+    content: <NoteHistoryModal noteId={noteId} />
+  })
+}
+
 const handleDelete = async () => {
   const blinko = RootStore.Get(BlinkoStore)
   PromiseCall(api.notes.deleteMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
@@ -471,6 +502,22 @@ export const EditTimeItem = observer(() => {
   </div>
 })
 
+export const CopyItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="mingcute:copy-2-line" width="20" height="20" />
+    <div>{t('copy-content')}</div>
+  </div>
+})
+
+export const HistoryItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="lucide:history" width="20" height="20" />
+    <div>{t('Note History')}</div>
+  </div>
+})
+
 export const BlinkoRightClickMenu = observer(() => {
   const [isDetailPage, setIsDetailPage] = useState(false)
   const location = useLocation()
@@ -502,6 +549,16 @@ export const BlinkoRightClickMenu = observer(() => {
     <ContextMenuItem onClick={() => ShowEditTimeModel()}>
       <EditTimeItem />
     </ContextMenuItem>
+
+    <ContextMenuItem onClick={handleCopyContent}>
+      <CopyItem />
+    </ContextMenuItem>
+
+    {!!blinko.curSelectedNote?._count?.histories ? (
+      <ContextMenuItem onClick={handleShowHistory}>
+        <HistoryItem />
+      </ContextMenuItem>
+    ) : <></>}
 
     <ContextMenuItem onClick={ConvertItemFunction}>
       <ConvertItem />
@@ -594,6 +651,10 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
         </>
       ) : null}
       <DropdownItem key="EditTimeItem" onPress={() => ShowEditTimeModel()}> <EditTimeItem /></DropdownItem>
+      <DropdownItem key="CopyItem" onPress={handleCopyContent}> <CopyItem /> </DropdownItem>
+      {!!blinko.curSelectedNote?._count?.histories ? (
+        <DropdownItem key="HistoryItem" onPress={handleShowHistory}> <HistoryItem /> </DropdownItem>
+      ) : <></>}
       <DropdownItem key="ConvertItem" onPress={ConvertItemFunction}> <ConvertItem /></DropdownItem>
       <DropdownItem key="TopItem" onPress={handleTop}> <TopItem />  </DropdownItem>
       <DropdownItem key="ArchivedItem" onPress={handleArchived}>

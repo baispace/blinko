@@ -7,7 +7,7 @@ import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
-import { type Attachment } from '@shared/lib/types';
+import { type Attachment, NoteType } from '@shared/lib/types';
 import { Card, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
 import { ReferenceButton } from './Toolbar/ReferenceButton';
@@ -27,6 +27,7 @@ import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
 import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
+import { NoteCoverHeader } from './NoteCover';
 import { ToolbarDivider, FormatMenuButton, ListToggleButton, TaskListButton, CalloutButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
@@ -236,6 +237,8 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 id={`vditor-${mode}`}
                 className={`tiptap-editor-root ${store.isFullscreen ? 'flex-1 min-h-0 flex flex-col' : ''}`}
               >
+                {/* Cover & icon are a "note" feature; flashes (BLINKO) and todos stay clean. */}
+                {mode !== 'comment' && store.noteType === NoteType.NOTE && <NoteCoverHeader store={store} />}
                 <TiptapEditorContent store={store} />
               </div>
               {isPc && !showTopToolbar && (

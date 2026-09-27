@@ -17,6 +17,7 @@ import { NoteType } from '@shared/lib/types';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { useDragCard, DraggableBlinkoCard } from '@/hooks/useDragCard';
+import { getPageViewScope, getPageViewSetting } from '@/lib/pageViewConfig';
 
 interface TodoGroup {
   displayDate: string;
@@ -30,12 +31,17 @@ const Home = observer(() => {
   // NOTE: blinko.use() is already called by CommonLayout (root layout),
   // calling it here causes firstLoad() to run twice on first paint.
   blinko.useQuery();
-
-  // 卡片间距（来自全局设置）
-  const cardSpacing = (blinko.config.value?.cardSpacing as number | undefined) ?? 16;
-  const noteListStyle = ((blinko.config.value?.noteListStyle as string | undefined) ?? 'continuous');
   const [searchParams] = useSearchParams();
   const location = useLocation();
+
+  // 视图设置按页面作用域读取（闪念 / 笔记各自独立记忆）
+  const pageScope = getPageViewScope(searchParams);
+
+  // 卡片间距 / 列表样式 / 内容宽度（页面级覆盖 → 全局兜底）
+  const cardSpacing = (getPageViewSetting(blinko, pageScope, 'cardSpacing') as number | undefined) ?? 16;
+  const noteListStyle = ((getPageViewSetting(blinko, pageScope, 'noteListStyle') as string | undefined) ?? 'continuous');
+  const pageWidth = (getPageViewSetting(blinko, pageScope, 'maxHomePageWidth') as number | null | undefined) ?? blinko.config.value?.maxHomePageWidth;
+  const hidePcEditor = getPageViewSetting(blinko, pageScope, 'hidePcEditor') ?? blinko.config.value?.hidePcEditor;
   const isTodoView = searchParams.get('path') === 'todo';
   const isNotesView = searchParams.get('path') === 'notes';
   const isArchivedView = searchParams.get('path') === 'archived';
@@ -132,20 +138,20 @@ const Home = observer(() => {
 
   // 限宽层：内容限宽居中，滚动容器保持全宽，使滚动条贴窗口右缘
   const maxWidthStyle = {
-    maxWidth: blinko.config.value?.maxHomePageWidth ? `${blinko.config.value?.maxHomePageWidth}px` : '100%'
+    maxWidth: pageWidth ? `${pageWidth}px` : '100%'
   } as const;
 
   return (
     <div
       className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col w-full`}>
 
-      {store.showEditor && isPc && !blinko.config.value?.hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
+      {store.showEditor && isPc && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
         <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
           if (!isPc) return
           store.editorHeight = height
         }} />
       </div>}
-      {(!isPc || blinko.config.value?.hidePcEditor) && <BlinkoAddButton />}
+      {(!isPc || hidePcEditor) && <BlinkoAddButton />}
 
       <LoadingAndEmpty
         isLoading={currentListState.isLoading}
@@ -164,7 +170,7 @@ const Home = observer(() => {
             blinko.onBottom();
           }}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
-          className={`mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
+          className={`mt-0 md:${hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
           <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
           <TagFilterChips />
           {isTodoView ? (
@@ -237,9 +243,9 @@ const Home = observer(() => {
                 >
                   <Masonry
                     breakpointCols={{
-                      default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
-                      1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
-                      768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
+                      default: getPageViewSetting(blinko, pageScope, 'largeDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'largeDeviceCardColumns')) : 2,
+                      1280: getPageViewSetting(blinko, pageScope, 'mediumDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'mediumDeviceCardColumns')) : 2,
+                      768: getPageViewSetting(blinko, pageScope, 'smallDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'smallDeviceCardColumns')) : 1
                     }}
                     style={{ ['--blinko-card-spacing' as any]: `${cardSpacing}px` }}
                     className="card-masonry-grid"

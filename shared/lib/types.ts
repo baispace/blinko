@@ -32,6 +32,8 @@ export function toNoteTypeEnum(v?: number, fallback: NoteType = NoteType.BLINKO)
 
 export const ZUserPerferConfigKey = z.union([
   z.literal('textFoldLength'),
+  z.literal('cardFoldLength'),
+  z.literal('pageViewSettings'),
   z.literal('smallDeviceCardColumns'),
   z.literal('mediumDeviceCardColumns'),
   z.literal('largeDeviceCardColumns'),
@@ -150,6 +152,9 @@ export const ZConfigSchema = z.object({
   mediumDeviceCardColumns: z.any().optional(),
   largeDeviceCardColumns: z.any().optional(),
   textFoldLength: z.number().nullable().optional(),
+  cardFoldLength: z.number().nullable().optional(),
+  /** Per-page view settings: Record<'blinko'|'notes'|..., Partial<ViewSettings>> */
+  pageViewSettings: z.any().optional(),
   objectStorage: z.any().optional(),
   s3AccessKeyId: z.any().optional(),
   s3AccessKeySecret: z.any().optional(),

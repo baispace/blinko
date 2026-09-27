@@ -97,6 +97,7 @@ router.post('/', async (req, res) => {
     let isUserVoiceRecording = false;
     let audioDuration: string | null = null;
     let audioDurationSeconds: number | null = null;
+    let targetFolder: string | null = null;
 
     bb.on('field', (fieldname, value) => {
       if (fieldname === 'isUserVoiceRecording' && value === 'true') {
@@ -105,6 +106,9 @@ router.post('/', async (req, res) => {
         audioDuration = value;
       } else if (fieldname === 'audioDurationSeconds') {
         audioDurationSeconds = parseInt(value, 10);
+      } else if (fieldname === 'folder' && value) {
+        // Accept either 'a/b' or 'a,b' (the comma form used by the move API)
+        targetFolder = value.split(',').join('/');
       }
     });
 
@@ -169,7 +173,8 @@ router.post('/', async (req, res) => {
           fileSize: fileInfo.size,
           type: fileInfo.mimeType,
           accountId: Number(token.id),
-          metadata: Object.keys(metadata).length > 0 ? metadata : undefined
+          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+          folder: targetFolder || undefined
         });
         
         res.set({
@@ -188,14 +193,18 @@ router.post('/', async (req, res) => {
         });
       } catch (error) {
         console.error('Upload error:', error);
-        res.status(500).json({ error: "Upload failed" });
+        // Surface the underlying reason (e.g. missing S3 settings) instead of a
+        // generic 500 — without it the caller has nothing to act on.
+        const detail = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ error: "Upload failed", detail });
       }
     });
-    
+
     req.pipe(bb);
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: "Upload failed" });
+    const detail = error instanceof Error ? error.message : String(error);
+    res.status(500).json({ error: "Upload failed", detail });
   }
 });
 

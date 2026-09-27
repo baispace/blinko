@@ -121,7 +121,16 @@ export const useEditorInit = (
     })
 
     adapter.editor = editor
-    store.init({ onChange, onSend, mode, vditor: adapter })
+    store.init({
+      onChange,
+      onSend,
+      mode,
+      vditor: adapter,
+      // Edit mode edits an existing note, so icon/cover already stored in
+      // metadata have to be visible in the header instead of starting blank.
+      metadata: mode === 'create' ? {} : (blinko.curSelectedNote?.metadata ?? {}),
+      noteId: mode === 'create' ? undefined : blinko.curSelectedNote?.id,
+    })
 
     // Normalize initial markdown if serialization differs from source content
     if (adapter.getValue() !== initialContent) {
@@ -145,6 +154,19 @@ export const useEditorInit = (
       store.noteListByIds.call({ ids: store.references })
     }
   }, []);
+
+  // Switching notes must repopulate icon/cover; the init effect above only
+  // runs when mode/isPc change.
+  useEffect(() => {
+    if (mode === 'create') {
+      store.metadata = {}
+      store.noteId = undefined
+      return
+    }
+    store.metadata = blinko.curSelectedNote?.metadata ?? {}
+    store.noteId = blinko.curSelectedNote?.id
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, blinko.curSelectedNote?.id]);
 
   useEffect(() => {
     if (mode == 'create') {

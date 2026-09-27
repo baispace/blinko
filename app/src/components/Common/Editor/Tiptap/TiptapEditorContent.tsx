@@ -1,22 +1,19 @@
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from 'usehooks-ts';
 import { EditorContent, BubbleMenu } from '@tiptap/react';
 import type { Editor } from '@tiptap/core';
 import type { EditorStore } from '../editorStore';
-import { DragHandle } from './DragHandle';
 import { SlashMenuView } from './ToolbarButtons';
 import { CalloutIconMenu } from './CalloutIconMenu';
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 
 /**
- * Renders the Tiptap document + drag handle + bubble menu + slash menu,
+ * Renders the Tiptap document + bubble menu + slash menu,
  * driven by the adapter stored on EditorStore.
  */
 export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) => {
   const { t } = useTranslation();
-  const pc = useMediaQuery('(min-width: 768px)');
   const adapter = store.vditor;
   const editor = adapter?.editor ?? null;
 
@@ -25,7 +22,6 @@ export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) 
   return (
     <div className={`tiptap-wrap ${store.isFullscreen ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
       <EditorContent editor={editor} />
-      {pc && <DragHandle editor={editor} />}
       <BubbleMenu
         editor={editor}
         tippyOptions={{ duration: 120, maxWidth: 'none' }}

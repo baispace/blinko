@@ -384,16 +384,41 @@ export class FileService {
 
   static async uploadFileStream(
     {
-      stream, originalName, fileSize, type, accountId, metadata
+      stream, originalName, fileSize, type, accountId, metadata, folder
     }: {
-      stream: ReadableStream, originalName: string, fileSize: number, type: string, accountId: number, metadata?: any
+      stream: ReadableStream, originalName: string, fileSize: number, type: string, accountId: number, metadata?: any,
+      /** Optional target subfolder, '/'-separated, e.g. "photos/2026". */
+      folder?: string
     }) {
     const config = await getGlobalConfig({ useAdmin: true });
     const extension = path.extname(originalName);
     const timestampedFileName = FileService.generateStorageFileName(extension);
+    // Normalize the folder prefix: strip stray slashes, reject traversal segments
+    const folderPrefix = folder
+      ? folder.split('/').filter(Boolean).map(s => s.trim()).filter(Boolean).join('/') + '/'
+      : '';
+    if (folderPrefix.includes('..')) {
+      throw new Error('Invalid folder: path traversal detected');
+    }
 
     try {
       if (config.objectStorage === 's3') {
+        // Fail with a readable message instead of letting the AWS SDK throw
+        // "Region is missing" deep inside smithy — that surfaced as a bare
+        // HTTP 500 with no hint about which setting was left empty.
+        const missing = [
+          !config.s3Region && 's3Region',
+          !config.s3Bucket && 's3Bucket',
+          !config.s3AccessKeyId && 's3AccessKeyId',
+          !config.s3AccessKeySecret && 's3AccessKeySecret',
+        ].filter(Boolean) as string[];
+        if (missing.length > 0) {
+          throw new Error(
+            `Object storage is set to "s3" but ${missing.join(', ')} is/are not configured. ` +
+            `Fill them in Settings → Object Storage, or switch back to "local".`
+          );
+        }
+
         const { s3ClientInstance } = await this.getS3Client();
 
         let customPath = config.s3CustomPath || '';
@@ -402,7 +427,7 @@ export class FileService {
           customPath = customPath.endsWith('/') ? customPath : customPath + '/';
         }
 
-        const s3Key = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+        const s3Key = `${folderPrefix}${customPath.replace(/^\//, '')}${timestampedFileName}`.replace(/^\//, '');
 
         const passThrough = new PassThrough();
         const nodeReadable = Readable.fromWeb(stream as any);
@@ -456,7 +481,7 @@ export class FileService {
           customPath = customPath.endsWith('/') ? customPath : customPath + '/';
         }
 
-        const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+        const relativePath = `${folderPrefix}${customPath.replace(/^\//, '')}${timestampedFileName}`.replace(/^\//, '');
         const fullPath = this.validateAndResolvePath(relativePath);
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
 

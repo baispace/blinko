@@ -18,6 +18,7 @@ import { NoteType } from '@shared/lib/types';
 import { eventBus } from '@/lib/event';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import axiosInstance from '@/lib/axios';
+import { normalizeOffset, type CoverOffset } from './NoteCover/coverOffset';
 
 /**
  * Convert an internal file path to the full URL written into note content.
@@ -75,6 +76,42 @@ export class EditorStore {
   noteType!: NoteType;
   currentTagLabel: string = ''
   metadata: any = {};
+  /**
+   * Set in edit mode so metadata tweaks (cover / icon / framing) can be
+   * persisted immediately without forcing a full note re-send.
+   */
+  noteId?: number;
+
+  get cover(): string | undefined {
+    return this.metadata?.cover
+  }
+
+  get icon(): string | undefined {
+    return this.metadata?.icon
+  }
+
+  /** Optional note title, shown next to the icon (notes only). */
+  get title(): string | undefined {
+    return this.metadata?.title
+  }
+
+  /** Framing of the cover; only meaningful together with a cover. */
+  get coverOffset(): CoverOffset {
+    return normalizeOffset(this.metadata?.coverOffset)
+  }
+
+  /** Replacing the whole object keeps metadata a single observable unit. */
+  patchMetadata = (patch: Record<string, unknown>) => {
+    this.metadata = { ...(this.metadata ?? {}), ...patch }
+  }
+
+  setCover = (cover?: string) => { this.patchMetadata({ cover: cover ?? null }) }
+  setIcon = (icon?: string) => { this.patchMetadata({ icon: icon ?? null }) }
+  setTitle = (title?: string) => { this.patchMetadata({ title: title ?? null }) }
+
+  setCoverOffset = (offset: CoverOffset) => {
+    this.patchMetadata({ coverOffset: { ...normalizeOffset(offset) } })
+  }
 
   get showIsEditText() {
     if (this.mode == 'edit') {
@@ -196,79 +233,96 @@ export class EditorStore {
     });
   }
 
+  /**
+   * Uploads one file and returns its FileType entry (not pushed to `files`),
+   * so the cover picker can reuse the exact same pipeline without polluting
+   * the note's attachment list.
+   */
+  uploadSingleFile = async (file: any, uploadFileType: Record<string, string> = {}) => {
+    const extension = helper.getFileExtension(file.name)
+    const previewType = helper.getFileType(file.type, file.name)
+    const isUserVoiceRecording = file.isUserVoiceRecording || false
+    const isAudioFile = file.type.startsWith('audio/')
+
+    // Get audio duration - either from file properties (user recordings) or by analyzing the file
+    let audioDuration = file.audioDuration || null
+    let audioDurationSeconds = file.audioDurationSeconds || null
+
+    if (isAudioFile && !audioDuration) {
+      const durationInfo = await this.getAudioDuration(file)
+      if (durationInfo) {
+        audioDuration = durationInfo.duration
+        audioDurationSeconds = durationInfo.durationSeconds
+      }
+    }
+
+    return {
+      name: file.name,
+      size: file.size,
+      previewType,
+      extension: extension ?? '',
+      preview: URL.createObjectURL(file),
+      isUserVoiceRecording,
+      audioDuration,
+      audioDurationSeconds,
+      isAudioFile,
+      uploadPromise: new PromiseState({
+        function: async () => {
+          const formData = new FormData();
+          formData.append('file', file)
+
+          // Add metadata for user voice recordings
+          if (isUserVoiceRecording) {
+            formData.append('isUserVoiceRecording', 'true')
+          }
+
+          // Add audio duration for all audio files
+          if (audioDuration) {
+            formData.append('audioDuration', audioDuration)
+          }
+          if (audioDurationSeconds) {
+            formData.append('audioDurationSeconds', audioDurationSeconds.toString())
+          }
+
+          const { onUploadProgress } = RootStore.Get(ToastPlugin)
+            .setSizeThreshold(40)
+            .uploadProgress(file);
+
+          const response = await axiosInstance.post(getBlinkoEndpoint('/api/file/upload'), formData, {
+            onUploadProgress
+          });
+          const data = response.data;
+          if (data.fileName) {
+            const fileIndex = this.files.findIndex(f => f.name === file.name);
+            if (fileIndex !== -1) {
+              this.files[fileIndex]!.name = data.fileName;
+            }
+          }
+
+          if (data.filePath) {
+            uploadFileType[file.name] = data.type
+            return data.filePath
+          }
+          return null
+        }
+      }),
+      type: file.type
+    }
+  }
+
+  /** Covers must not become attachments, so this only returns the upload path. */
+  uploadCoverFile = async (file: File): Promise<string | null> => {
+    const entry = await this.uploadSingleFile(file);
+    const path = await entry.uploadPromise.call();
+    return path ?? entry.uploadPromise.value ?? null;
+  }
+
   uploadFiles = async (acceptedFiles) => {
     const uploadFileType = {}
 
-    const _acceptedFiles = await Promise.all(acceptedFiles.map(async file => {
-      const extension = helper.getFileExtension(file.name)
-      const previewType = helper.getFileType(file.type, file.name)
-      const isUserVoiceRecording = file.isUserVoiceRecording || false
-      const isAudioFile = file.type.startsWith('audio/')
-
-      // Get audio duration - either from file properties (user recordings) or by analyzing the file
-      let audioDuration = file.audioDuration || null
-      let audioDurationSeconds = file.audioDurationSeconds || null
-
-      if (isAudioFile && !audioDuration) {
-        const durationInfo = await this.getAudioDuration(file)
-        if (durationInfo) {
-          audioDuration = durationInfo.duration
-          audioDurationSeconds = durationInfo.durationSeconds
-        }
-      }
-
-      return {
-        name: file.name,
-        size: file.size,
-        previewType,
-        extension: extension ?? '',
-        preview: URL.createObjectURL(file),
-        isUserVoiceRecording,
-        audioDuration,
-        audioDurationSeconds,
-        isAudioFile,
-        uploadPromise: new PromiseState({
-          function: async () => {
-            const formData = new FormData();
-            formData.append('file', file)
-
-            // Add metadata for user voice recordings
-            if (isUserVoiceRecording) {
-              formData.append('isUserVoiceRecording', 'true')
-            }
-
-            // Add audio duration for all audio files
-            if (audioDuration) {
-              formData.append('audioDuration', audioDuration)
-            }
-            if (audioDurationSeconds) {
-              formData.append('audioDurationSeconds', audioDurationSeconds.toString())
-            }
-
-            const { onUploadProgress } = RootStore.Get(ToastPlugin)
-              .setSizeThreshold(40)
-              .uploadProgress(file);
-
-            const response = await axiosInstance.post(getBlinkoEndpoint('/api/file/upload'), formData, {
-              onUploadProgress
-            });
-            const data = response.data;
-            if (data.fileName) {
-              const fileIndex = this.files.findIndex(f => f.name === file.name);
-              if (fileIndex !== -1) {
-                this.files[fileIndex]!.name = data.fileName;
-              }
-            }
-
-            if (data.filePath) {
-              uploadFileType[file.name] = data.type
-              return data.filePath
-            }
-          }
-        }),
-        type: file.type
-      }
-    }))
+    const _acceptedFiles = await Promise.all(
+      acceptedFiles.map(file => this.uploadSingleFile(file, uploadFileType))
+    )
     this.files.push(..._acceptedFiles)
     await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
     if (this.mode == 'create') {

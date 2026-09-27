@@ -11,6 +11,8 @@ import { t } from "i18next";
 import { ToastPlugin } from "./module/Toast/Toast";
 import { DialogStore } from "./module/Dialog";
 import { Button, Input } from "@heroui/react";
+import axiosInstance from "@/lib/axios";
+import { UserStore } from "./user";
 
 export class ResourceStore implements Store {
   sid = 'resourceStore';
@@ -19,6 +21,13 @@ export class ResourceStore implements Store {
   contextMenuResource: ResourceType | null = null;
   refreshTicker = 0
   clipboard: { type: 'cut' | 'copy', items: ResourceType[] } | null = null;
+  /** Grid (card wall) or list (drag-sort rows) presentation. */
+  viewMode: 'grid' | 'list' = 'grid';
+  /** Client-side name search, applied to the current page of resources. */
+  searchText = '';
+  /** Client-side type filter. */
+  filterType: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other' = 'all';
+  uploading = 0;
 
   constructor() {
     makeAutoObservable(this);
@@ -26,6 +35,36 @@ export class ResourceStore implements Store {
 
   get blinko() {
     return RootStore.Get(BlinkoStore);
+  }
+
+  setViewMode = (mode: 'grid' | 'list') => { this.viewMode = mode; }
+  setSearchText = (text: string) => { this.searchText = text; }
+  setFilterType = (type: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other') => { this.filterType = type; }
+
+  /** Upload files straight into the current folder via /api/file/upload. */
+  uploadFiles = async (files: File[] | FileList) => {
+    const list = Array.from(files);
+    if (!list.length) return;
+    const token = RootStore.Get(UserStore).tokenData?.value?.token;
+    this.uploading += list.length;
+    try {
+      for (const file of list) {
+        const form = new FormData();
+        form.append('file', file);
+        if (this.currentFolder) {
+          form.append('folder', this.currentFolder);
+        }
+        const res = await axiosInstance.post('/api/file/upload', form);
+        if (res.data?.error) throw new Error(res.data.detail || res.data.error);
+        this.uploading = Math.max(0, this.uploading - 1);
+      }
+      RootStore.Get(ToastPlugin).success(t('upload-success'));
+    } catch (error: any) {
+      RootStore.Get(ToastPlugin).error(error?.response?.data?.detail || error?.message || t('upload-failed'));
+    } finally {
+      this.uploading = 0;
+      this.refreshTicker++;
+    }
   }
 
   setCurrentFolder = (folder: string | null) => {

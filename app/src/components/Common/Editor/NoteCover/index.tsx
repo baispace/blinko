@@ -189,15 +189,24 @@ interface NoteCoverDisplayProps {
   coverOffset?: unknown
   /** Optional wrapper className; useful for limiting height on large viewports. */
   className?: string
+  /**
+   * Upper bound for the banner height (px). The 2.35:1 aspect box otherwise
+   * scales its height linearly with card width, so a full-width single-column
+   * card inflates the cover to ~640px and pushes the body off screen.
+   */
+  maxHeight?: number
 }
 
 /** Read-only cover banner used by the card list and the note detail page. */
-export const NoteCoverDisplay = ({ cover, coverOffset, className }: NoteCoverDisplayProps) => {
+export const NoteCoverDisplay = ({ cover, coverOffset, className, maxHeight = 300 }: NoteCoverDisplayProps) => {
   const coverUrl = toAuthenticatedCoverUrl(cover);
   if (!coverUrl) return null;
 
   return (
-    <div className={`w-full mb-2 overflow-hidden rounded-lg aspect-[2.35/1] ${className ?? ''}`}>
+    <div
+      style={{ maxHeight }}
+      className={`w-full mb-2 overflow-hidden rounded-lg aspect-[2.35/1] ${className ?? ''}`}
+    >
       <img
         src={coverUrl}
         alt=""

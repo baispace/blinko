@@ -248,7 +248,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               <NoteCoverDisplay
                 cover={blinko.noteDetail.value?.metadata?.cover ?? blinkoItem.metadata?.cover}
                 coverOffset={blinko.noteDetail.value?.metadata?.coverOffset ?? blinkoItem.metadata?.coverOffset}
-                className="max-h-[180px] sm:max-h-[220px]"
+                maxHeight={220}
               />
               <MarkdownRender
                 content={blinko.noteDetail.value?.content ?? blinkoItem.content}

@@ -1,7 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger, Slider, Switch } from "@heroui/react";
-import { Icon } from "@/components/Common/Iconify/icons";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { RootStore } from "@/store";
@@ -55,18 +54,11 @@ type WidthKey = typeof WIDTH_OPTIONS[number]['value'];
 // 历史档位（xs/sm/md/lg → 1200/1600/2100/2800）迁移到新四档
 const LEGACY_WIDTH_MAP: Record<number, WidthKey> = { 1200: 860, 1600: 1120, 2100: 1440, 2800: 0 };
 
-const COL_STYLE_OPTIONS = [
-  { key: 'continuous', label: 'continuous' },
-  { key: 'byDay', label: 'by-day' },
-  { key: 'byWeek', label: 'by-week' },
-] as const;
-
 const SORT_OPTIONS = [
   { key: 'updatedAt', label: 'updated-at' },
   { key: 'createdAt', label: 'created-at' },
 ] as const;
 
-type ColStyleKey = typeof COL_STYLE_OPTIONS[number]['key'];
 type SortKey = typeof SORT_OPTIONS[number]['key'];
 
 // 视图设置按页面作用域读写（pageViewSettings[scope]），页面间互不影响
@@ -132,7 +124,6 @@ export const BlinkoHomeSettingsPop = observer(() => {
   const hidePcEditor = !!getPageViewSetting(blinko, scope, 'hidePcEditor');
   const maxHomePageWidth = (getPageViewSetting(blinko, scope, 'maxHomePageWidth') as number | null | undefined) ?? 0;
   const cardSpacing = (getPageViewSetting(blinko, scope, 'cardSpacing') as number | undefined) ?? 16;
-  const noteListStyle = ((getPageViewSetting(blinko, scope, 'noteListStyle') as ColStyleKey | undefined) ?? 'continuous');
   // 列数取大屏档作为单一真相源
   const noteListColumnCount = Number(getPageViewSetting(blinko, scope, 'largeDeviceCardColumns') ?? 1);
   const noteListSortBy = ((getPageViewSetting(blinko, scope, 'noteListSortBy') as SortKey | undefined) ?? 'createdAt');
@@ -211,19 +202,6 @@ export const BlinkoHomeSettingsPop = observer(() => {
               <span>{t('compact')}</span>
               <span>{t('loose')}</span>
             </div>
-          </section>
-
-          {/* 单栏样式 */}
-          <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-default-400">{t('single-column-style')}</span>
-              <Icon className="text-default-400" icon="tabler:timeline" width={16} height={16} />
-            </div>
-            <SegmentedButtons
-              value={noteListStyle}
-              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListStyle', v)}
-              options={COL_STYLE_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
-            />
           </section>
 
           {/* 卡片列数 */}

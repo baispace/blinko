@@ -18,7 +18,7 @@ type IProps = {
   columns?: number
   onReorder?: (newFiles: FileType[]) => void
 }
-export const ImageThumbnailRender = ({ src, className }: { src: string, className?: string }) => {
+export const ImageThumbnailRender = ({ src, className, wrapperClassName }: { src: string, className?: string, wrapperClassName?: string }) => {
   const [isOriginalError, setIsOriginalError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState('');
   const [loading, setLoading] = useState(true);
@@ -81,7 +81,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
         <Image
           src={currentSrc}
           classNames={{
-            wrapper: '!max-w-full',
+            wrapper: `!max-w-full ${wrapperClassName ?? ''}`,
           }}
           draggable={false}
           onError={() => {

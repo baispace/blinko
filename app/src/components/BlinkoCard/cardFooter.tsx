@@ -13,11 +13,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 import { helper } from '@/lib/helper';
 import { getNoteTagPaths } from './noteContent';
+import { NoteTime } from './cardHeader';
 
 interface CardFooterProps {
   blinkoItem: BlinkoItem;
   blinko: BlinkoStore;
   isShareMode?: boolean;
+  /** HEO-blog-style blinko cards show the timestamp here instead of the header. */
+  showTime?: boolean;
+  /** Weibo-style: tags live inline in the body, so the footer skips the chips. */
+  hideTags?: boolean;
 }
 
 /** 卡片左下角标签区：正文里的 #标签 提取出来单独展示 */
@@ -53,11 +58,16 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
   );
 };
 
-export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps) => {
+export const CardFooter = ({ blinkoItem, blinko, isShareMode, showTime, hideTags }: CardFooterProps) => {
   const { t } = useTranslation();
   return (
     <div className="flex items-center">
-      <CardTagChips blinkoItem={blinkoItem} isShareMode={isShareMode} />
+      {showTime && (
+        <div className="flex items-center mr-2 shrink-0">
+          <NoteTime blinkoItem={blinkoItem} blinko={blinko} />
+        </div>
+      )}
+      {!hideTags && <CardTagChips blinkoItem={blinkoItem} isShareMode={isShareMode} />}
       <div className="ml-auto flex items-center gap-2 shrink-0">
         <ConvertTypeButton blinkoItem={blinkoItem} />
         <RightContent blinkoItem={blinkoItem} t={t} />

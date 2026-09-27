@@ -59,7 +59,8 @@ export const PerferSetting = observer(() => {
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
   const base = RootStore.Get(BaseStore)
-  const [textLength, setTextLength] = useState(blinko.config.value?.textFoldLength?.toString() || '500');
+  const [textLength, setTextLength] = useState(blinko.config.value?.textFoldLength?.toString() || '1000');
+  const [foldLength, setFoldLength] = useState(blinko.config.value?.cardFoldLength?.toString() || '300');
   const [maxHomePageWidth, setMaxHomePageWidth] = useState(blinko.config.value?.maxHomePageWidth?.toString() || '0');
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
   const [signinFooterText, setSigninFooterText] = useState(blinko.config.value?.signinFooterText || '');
@@ -72,7 +73,8 @@ export const PerferSetting = observer(() => {
 
   useEffect(() => {
     blinko.config.call();
-    setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
+    setTextLength(blinko.config.value?.textFoldLength?.toString() || '1000');
+    setFoldLength(blinko.config.value?.cardFoldLength?.toString() || '300');
     setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
     setSigninFooterText(blinko.config.value?.signinFooterText || '');
@@ -348,6 +350,31 @@ export const PerferSetting = observer(() => {
               min={0}
             />
             <span className="text-sm text-default-400">px</span>
+          </div>
+        }
+      />
+      <Item
+        leftContent={<ItemLabel title={t('card-fold-length')} desc={t('card-fold-length-desc')} />}
+        rightContent={
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              size='sm'
+              className='w-20'
+              value={foldLength}
+              onChange={e => setFoldLength(e.target.value)}
+              onBlur={e => {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value)) {
+                  PromiseCall(api.config.update.mutate({
+                    key: 'cardFoldLength',
+                    value: value
+                  }));
+                }
+              }}
+              min={0}
+            />
+            <span className="text-sm text-default-400">{t('chars')}</span>
           </div>
         }
       />

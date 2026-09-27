@@ -3,7 +3,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { Card } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ContextMenuTrigger } from '@/components/Common/ContextMenu';
-import { Note } from '@shared/lib/types';
+import { Note, NoteType } from '@shared/lib/types';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
@@ -21,6 +21,8 @@ import { useLocation } from "react-router-dom";
 import { SwipeableCard } from "./SwipeableCard";
 import { api } from "@/lib/trpc";
 import { FullscreenEditor } from "./FullscreenEditor";
+import { NoteCoverDisplay, NoteTitleDisplay } from "../Common/Editor/NoteCover";
+import { BlinkoImageGallery } from "./imageGallery";
 
 
 export type BlinkoItem = Note & {
@@ -52,10 +54,16 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   // Set isExpand flag to prevent drag when fullscreen editor is open for this note
   blinkoItem.isExpand = blinko.fullscreenEditorNoteId === blinkoItem.id;
 
+  // Three-tier card model (per user threshold config):
+  //   normal card  < cardFoldLength (300)
+  //   folded card  cardFoldLength ~ textFoldLength (300-999, Weibo-style
+  //                truncation with expand toggle, media still visible)
+  //   article card ≥ textFoldLength (1000, cover card + fullscreen editor)
+  const contentLength = blinkoItem.content?.length ?? 0;
   if (forceBlog) {
     blinkoItem.isBlog = true
   } else {
-    blinkoItem.isBlog = ((blinkoItem.content?.length ?? 0) > (blinko.config.value?.textFoldLength ?? 1000)) && !pathname.includes('/share/')
+    blinkoItem.isBlog = contentLength >= (blinko.config.value?.textFoldLength ?? 1000) && !pathname.includes('/share/')
   }
   blinkoItem.title = blinkoItem.content?.split('\n').find(line => {
     if (!line.trim()) return false;
@@ -108,6 +116,14 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
       />
 
       {(() => {
+        // Weibo-style blinko cards: header → text → image gallery (below
+        // content, natural ratio for single image) → footer. Non-image
+        // attachments stay in the content flow. Only applies to compact cards.
+        const isCompactBlinko = blinkoItem.type === NoteType.BLINKO && !blinkoItem.isBlog;
+        const allAttachments = blinkoItem.attachments ?? [];
+        const imageAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) === 'image');
+        const otherAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) !== 'image');
+
         const cardContent = (
           <div
             {...(!isShareMode && {
@@ -128,13 +144,51 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               `}
             >
               <div className="w-full">
-                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={defaultExpanded} account={account} />
+                <NoteCoverDisplay
+                  cover={blinkoItem.metadata?.cover}
+                  coverOffset={blinkoItem.metadata?.coverOffset}
+                />
+
+                {/* Icon + title belong to notes; blog cards already derive their heading. */}
+                {!blinkoItem.isBlog && blinkoItem.type === NoteType.NOTE && (
+                  <NoteTitleDisplay
+                    icon={blinkoItem.metadata?.icon}
+                    title={blinkoItem.metadata?.title}
+                  />
+                )}
+
+                <CardHeader
+                  blinkoItem={blinkoItem}
+                  blinko={blinko}
+                  isShareMode={isShareMode}
+                  isExpanded={defaultExpanded}
+                  account={account}
+                  hideTime={isCompactBlinko}
+                  compactActions={isCompactBlinko}
+                />
 
                 {blinkoItem.isBlog && (
                   <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
                 )}
 
-                {!blinkoItem.isBlog && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={defaultExpanded} isShareMode={isShareMode} />}
+                {!blinkoItem.isBlog && (
+                  <NoteContent
+                    blinkoItem={blinkoItem}
+                    blinko={blinko}
+                    isExpanded={defaultExpanded}
+                    isShareMode={isShareMode}
+                    attachments={isCompactBlinko ? otherAttachments : undefined}
+                    foldable={isCompactBlinko}
+                    foldLength={blinko.config.value?.cardFoldLength ?? 300}
+                    inlineTags={isCompactBlinko}
+                  />
+                )}
+
+                {isCompactBlinko && imageAttachments.length > 0 && (
+                  <div className="mt-2">
+                    <BlinkoImageGallery files={imageAttachments} />
+                  </div>
+                )}
 
                 {/* Custom Footer Slots */}
                 {pluginApi.customCardFooterSlots
@@ -160,7 +214,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     </div>
                   ))}
 
-                <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} showTime={isCompactBlinko} hideTags={isCompactBlinko} />
                 {!blinko.config.value?.isHideCommentInCard && blinkoItem.comments && blinkoItem.comments.length > 0 && (
                   <SimpleCommentList blinkoItem={blinkoItem} />
                 )}

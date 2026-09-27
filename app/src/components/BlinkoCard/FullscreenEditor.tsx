@@ -14,6 +14,7 @@ import { MarkdownRender } from "@/components/Common/MarkdownRender";
 import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { ReferencesContent } from "./referencesContent";
 import { useTranslation } from "react-i18next";
+import { NoteCoverDisplay } from "../Common/Editor/NoteCover";
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
@@ -244,6 +245,11 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               style={{ height: isPc ? 'calc(100vh - 100px)' : 'calc(100vh - 80px)' }}
               onDoubleClick={handleSwitchToEdit}
             >
+              <NoteCoverDisplay
+                cover={blinko.noteDetail.value?.metadata?.cover ?? blinkoItem.metadata?.cover}
+                coverOffset={blinko.noteDetail.value?.metadata?.coverOffset ?? blinkoItem.metadata?.coverOffset}
+                className="max-h-[180px] sm:max-h-[220px]"
+              />
               <MarkdownRender
                 content={blinko.noteDetail.value?.content ?? blinkoItem.content}
                 onChange={(updater) => {

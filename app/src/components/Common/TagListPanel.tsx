@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
 import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
@@ -6,7 +6,7 @@ import { BlinkoStore } from "@/store/blinkoStore";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { SideBarItem } from "../Layout";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Button } from "@heroui/react";
-import EmojiPicker, { EmojiStyle, Theme } from 'emoji-picker-react';
+import { Skeleton } from "@heroui/react";
 import { useTheme } from "next-themes";
 import { ShowUpdateTagDialog } from "./UpdateTagPop";
 import { api } from "@/lib/trpc";
@@ -35,16 +35,18 @@ const Emoji = ({ icon }: { icon: string }) => {
   </>
 }
 
+const EmojiPickerPanel = lazy(() => import('./EmojiPickerPanel').then(m => ({ default: m.EmojiPickerPanel })));
+
 const ShowEmojiPicker = (element, theme) => {
   RootStore.Get(DialogStore).setData({
     isOpen: true,
     title: 'Emoji Picker',
-    content: <div className='w-full'>
-      <EmojiPicker width='100%' className='border-none' emojiStyle={EmojiStyle.NATIVE} theme={theme == 'dark' ? Theme.DARK : Theme.LIGHT} onEmojiClick={async e => {
-        await PromiseCall(api.tags.updateTagIcon.mutate({ id: element.id, icon: e.emoji }))
+    content: <Suspense fallback={<Skeleton className="w-full h-[300px] rounded-lg" />}>
+      <EmojiPickerPanel theme={theme} onSelect={async emoji => {
+        await PromiseCall(api.tags.updateTagIcon.mutate({ id: element.id, icon: emoji }))
         RootStore.Get(DialogStore).close()
       }} />
-    </div>
+    </Suspense>
   })
 }
 

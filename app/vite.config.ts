@@ -83,12 +83,40 @@ export default defineConfig({
         workbox: {
           // Maximum file size to cache (10MB)
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          // Only precache what the first paint actually needs. Previously the
+          // default glob pulled in every lazily-imported chunk (mermaid diagrams,
+          // cytoscape, ...) — 10MB+ downloaded in the background on first visit,
+          // competing with the entry bundle for bandwidth.
+          globPatterns: [
+            'index.html',
+            'registerSW.js',
+            'manifest.webmanifest',
+            'icons/**/*.png',
+            'assets/entry-*.js',
+            'assets/react-vendor-*.js',
+            'assets/ui-components-*.js',
+            'assets/utils-*.js',
+            'assets/*.css'
+          ],
           // Don't cache API requests
           navigateFallbackDenylist: [/^\/api\/.*/],
           // Clean old caches automatically
           cleanupOutdatedCaches: true,
           // Runtime caching strategy for better update control
           runtimeCaching: [
+            {
+              // Lazily-imported chunks (mermaid, echarts, route pages) are fetched
+              // on demand — cache them after the first use instead of precaching.
+              urlPattern: /\/assets\/.*\.(?:js|css)$/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'static-assets',
+                expiration: {
+                  maxEntries: 120,
+                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                },
+              },
+            },
             {
               // Cache API responses with network-first strategy
               urlPattern: /^https:\/\/api\..*/i,
@@ -131,6 +159,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
+        // Give the entry chunk its own prefix: async chunks also get auto-named
+        // "index-*.js", which made the PWA precache glob pick up 1MB+ of
+        // lazily-loaded code (echarts, ...) that never should be precached.
+        entryFileNames: 'assets/entry-[hash].js',
         manualChunks: (id) => {
           if (id.includes('node_modules/react') || 
               id.includes('node_modules/react-dom') || 
@@ -151,6 +183,13 @@ export default defineConfig({
               id.includes('node_modules/date-fns')) {
             return 'utils';
           }
+
+          // NOTE: do NOT hand-name chunks for the heavy renderers (mermaid,
+          // echarts, markmap, katex, emoji-picker). They are only reached through
+          // dynamic imports, so rollup already splits them into async chunks —
+          // forcing a chunk name made vite host shared helpers (e.g. the
+          // __vitePreload helper) inside them, which turned them back into static
+          // dependencies of the entry chunk and put them in the HTML preload list.
         }
       }
     }

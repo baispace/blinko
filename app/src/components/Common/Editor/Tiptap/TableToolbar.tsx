@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
-import { findTableDom, moveRow, moveColumn } from './tableUtils';
+import { clearCellFormat, findTableDom, getSelectedCellsRect, isTableActive, setCellAttrs } from './tableUtils';
 
 /** Cell background swatches. Soft tints so text stays readable in both themes. */
 const CELL_COLORS = [
@@ -15,21 +15,19 @@ const CELL_COLORS = [
   { value: '#e2e8f0', label: 'table-color-gray' },
 ];
 
-type Rect = { top: number; left: number; width: number };
-
-const TOOLBAR_HEIGHT = 34;
+const TOOLBAR_HEIGHT = 42;
 
 /**
- * Floating toolbar shown above the table whenever the cursor is inside one.
- * Position is viewport-based so it works with the scrolling editor container.
+ * Feishu-style floating toolbar shown above the selected table cells.
+ * Buttons are icon + text so users don't have to guess the meaning of icons.
  */
 export const TableToolbar = ({ editor }: { editor: Editor | null | undefined }) => {
   const { t } = useTranslation();
-  const [rect, setRect] = useState<Rect | null>(null);
+  const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null);
   const [showColors, setShowColors] = useState(false);
 
   const update = useCallback(() => {
-    if (!editor || !editor.isEditable || !editor.isActive('table')) {
+    if (!editor || !editor.isEditable || !isTableActive(editor)) {
       setRect(null);
       setShowColors(false);
       return;
@@ -39,16 +37,19 @@ export const TableToolbar = ({ editor }: { editor: Editor | null | undefined }) 
       setRect(null);
       return;
     }
-    const box = table.getBoundingClientRect();
-    if (box.bottom < 0 || box.top > window.innerHeight) {
+    const tableBox = table.getBoundingClientRect();
+    if (tableBox.bottom < 0 || tableBox.top > window.innerHeight) {
       setRect(null);
       return;
     }
-    const above = box.top - TOOLBAR_HEIGHT - 6;
-    const top = above < 8 ? box.bottom + 6 : above;
+
+    const selected = getSelectedCellsRect(editor, table);
+    const box = selected ?? tableBox;
+    const above = box.top - TOOLBAR_HEIGHT - 32;
+    const top = above < 8 ? box.bottom + 32 : above;
     setRect({
       top: Math.max(8, top),
-      left: Math.min(Math.max(8, box.left), Math.max(8, window.innerWidth - 60)),
+      left: Math.min(Math.max(8, box.left), Math.max(8, window.innerWidth - 120)),
       width: box.width,
     });
   }, [editor]);
@@ -82,17 +83,12 @@ export const TableToolbar = ({ editor }: { editor: Editor | null | undefined }) 
 
   const chain = (name: string) => run((e) => (e.chain().focus() as any)[name]().run());
 
-  const setAlign = (align: string | null) =>
-    run((e) => {
-      e.chain().focus().updateAttributes('tableCell', { textAlign: align }).run();
-      e.chain().focus().updateAttributes('tableHeader', { textAlign: align }).run();
-    });
+  const setAlign = (align: string | null) => run((e) => setCellAttrs(e, { textAlign: align }));
 
-  const setColor = (color: string | null) =>
-    run((e) => {
-      e.chain().focus().updateAttributes('tableCell', { backgroundColor: color }).run();
-      e.chain().focus().updateAttributes('tableHeader', { backgroundColor: color }).run();
-    });
+  const setColor = (color: string | null) => run((e) => setCellAttrs(e, { backgroundColor: color }));
+
+  const canMerge = (editor.can()?.mergeCells ? editor.can().mergeCells() : false) as boolean;
+  const canSplit = (editor.can()?.splitCell ? editor.can().splitCell() : false) as boolean;
 
   return (
     <div
@@ -100,77 +96,126 @@ export const TableToolbar = ({ editor }: { editor: Editor | null | undefined }) 
       style={{ top: rect.top, left: rect.left }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <TbBtn icon="mdi:table-row-plus-before" title={t('table-row-above')} onClick={chain('addRowBefore')} />
-      <TbBtn icon="mdi:table-row-plus-after" title={t('table-row-below')} onClick={chain('addRowAfter')} />
-      <TbBtn icon="mdi:arrow-up" title={t('table-move-row-up')} onClick={run((e) => moveRow(e, -1))} />
-      <TbBtn icon="mdi:arrow-down" title={t('table-move-row-down')} onClick={run((e) => moveRow(e, 1))} />
-      <TbBtn icon="mdi:table-row-remove" title={t('table-delete-row')} onClick={chain('deleteRow')} />
-
-      <span className="tiptap-table-toolbar-divider" />
-
-      <TbBtn icon="mdi:table-column-plus-before" title={t('table-column-left')} onClick={chain('addColumnBefore')} />
-      <TbBtn icon="mdi:table-column-plus-after" title={t('table-column-right')} onClick={chain('addColumnAfter')} />
-      <TbBtn icon="mdi:arrow-left" title={t('table-move-column-left')} onClick={run((e) => moveColumn(e, -1))} />
-      <TbBtn icon="mdi:arrow-right" title={t('table-move-column-right')} onClick={run((e) => moveColumn(e, 1))} />
-      <TbBtn icon="mdi:table-column-remove" title={t('table-delete-column')} onClick={chain('deleteColumn')} />
-
-      <span className="tiptap-table-toolbar-divider" />
-
-      <TbBtn icon="mdi:table-merge-cells" title={t('table-merge-cells')} onClick={chain('mergeCells')} />
-      <TbBtn icon="mdi:table-split-cell" title={t('table-split-cell')} onClick={chain('splitCell')} />
-      <TbBtn icon="mdi:table-headings" title={t('table-toggle-header')} onClick={chain('toggleHeaderRow')} />
-
-      <span className="tiptap-table-toolbar-divider" />
-
-      <TbBtn icon="mdi:format-align-left" title={t('align-left')} onClick={() => setAlign('left')} />
-      <TbBtn icon="mdi:format-align-center" title={t('align-center')} onClick={() => setAlign('center')} />
-      <TbBtn icon="mdi:format-align-right" title={t('align-right')} onClick={() => setAlign('right')} />
       <TbBtn
-        icon="mdi:format-color-fill"
-        title={t('table-cell-color')}
-        active={showColors}
-        onClick={() => setShowColors((v) => !v)}
+        icon="mdi:table-merge-cells"
+        label={t('table-merge-cells')}
+        disabled={!canMerge}
+        title={t('table-merge-cells')}
+        onClick={chain('mergeCells')}
+      />
+      <TbBtn
+        icon="mdi:table-split-cell"
+        label={t('table-split-cell')}
+        disabled={!canSplit}
+        title={t('table-split-cell')}
+        onClick={chain('splitCell')}
       />
 
       <span className="tiptap-table-toolbar-divider" />
 
-      <TbBtn icon="mdi:table-remove" title={t('table-delete')} danger onClick={chain('deleteTable')} />
+      <TbBtn
+        icon="mdi:format-align-left"
+        label={t('table-align-left')}
+        title={t('table-align-left')}
+        onClick={() => setAlign('left')}
+      />
+      <TbBtn
+        icon="mdi:format-align-center"
+        label={t('table-align-center')}
+        title={t('table-align-center')}
+        onClick={() => setAlign('center')}
+      />
+      <TbBtn
+        icon="mdi:format-align-right"
+        label={t('table-align-right')}
+        title={t('table-align-right')}
+        onClick={() => setAlign('right')}
+      />
 
-      {showColors && (
-        <div className="tiptap-table-colors">
-          {CELL_COLORS.map((color) => (
-            <button
-              key={color.label}
-              className="tiptap-table-color-swatch"
-              style={{ background: color.value || 'transparent' }}
-              title={t(color.value ? color.label : 'default')}
-              onClick={() => setColor(color.value || null)}
-            />
-          ))}
-        </div>
-      )}
+      <span className="tiptap-table-toolbar-divider" />
+
+      <div className="relative">
+        <TbBtn
+          icon="mdi:format-color-fill"
+          label={t('table-cell-color')}
+          active={showColors}
+          title={t('table-cell-color')}
+          onClick={() => setShowColors((v) => !v)}
+        />
+        {showColors && (
+          <div className="tiptap-table-colors">
+            {CELL_COLORS.map((color) => (
+              <button
+                key={color.label}
+                className="tiptap-table-color-swatch"
+                style={{ background: color.value || 'transparent' }}
+                title={t(color.value ? color.label : 'default')}
+                onClick={() => setColor(color.value || null)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <TbBtn
+        icon="mdi:format-clear"
+        label={t('table-clear-format')}
+        title={t('table-clear-format')}
+        onClick={run(clearCellFormat)}
+      />
+
+      <span className="tiptap-table-toolbar-divider" />
+
+      <TbBtn
+        icon="mdi:table-row-remove"
+        label={t('table-delete-row')}
+        title={t('table-delete-row')}
+        onClick={chain('deleteRow')}
+      />
+      <TbBtn
+        icon="mdi:table-column-remove"
+        label={t('table-delete-column')}
+        title={t('table-delete-column')}
+        onClick={chain('deleteColumn')}
+      />
+
+      <span className="tiptap-table-toolbar-divider" />
+
+      <TbBtn
+        icon="mdi:table-remove"
+        label={t('table-delete')}
+        title={t('table-delete')}
+        danger
+        onClick={chain('deleteTable')}
+      />
     </div>
   );
 };
 
 const TbBtn = ({
   icon,
+  label,
   title,
   onClick,
   active,
   danger,
+  disabled,
 }: {
   icon: string;
+  label: string;
   title: string;
   onClick: () => void;
   active?: boolean;
   danger?: boolean;
+  disabled?: boolean;
 }) => (
   <button
-    className={`tiptap-table-btn${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}`}
+    className={`tiptap-table-btn has-label${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}`}
     title={title}
+    disabled={disabled}
     onClick={onClick}
   >
-    <Icon icon={icon} width={16} height={16} />
+    <Icon icon={icon} width={14} height={14} />
+    <span>{label}</span>
   </button>
 );

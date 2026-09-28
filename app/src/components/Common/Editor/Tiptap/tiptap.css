@@ -488,6 +488,26 @@
 
 .tiptap-table-handles > * {
   pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+}
+
+.tiptap-table-handles.is-visible > *:not(.tiptap-table-highlight) {
+  opacity: 1;
+}
+
+.tiptap-table-handles.is-visible .tiptap-row-handle,
+.tiptap-table-handles.is-visible .tiptap-col-handle,
+.tiptap-table-handles.is-visible .tiptap-table-corner {
+  opacity: 0.5;
+}
+
+.tiptap-table-handles.is-visible .tiptap-row-handle:hover,
+.tiptap-table-handles.is-visible .tiptap-col-handle:hover,
+.tiptap-table-handles.is-visible .tiptap-table-corner:hover,
+.tiptap-table-handles.is-visible .tiptap-row-handle.is-hover,
+.tiptap-table-handles.is-visible .tiptap-col-handle.is-hover {
+  opacity: 1;
 }
 
 .tiptap-table-highlight {
@@ -499,40 +519,111 @@
 }
 
 .tiptap-row-handle,
-.tiptap-col-handle {
+.tiptap-col-handle,
+.tiptap-table-corner,
+.tiptap-table-add {
   position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px;
-  background-color: rgba(127, 127, 127, 0.28);
-  transition: background-color 0.12s;
+  color: #7454fc;
+  background-color: rgba(116, 84, 252, 0.12);
+  box-shadow: 0 0 0 1px rgba(116, 84, 252, 0.2);
+  transition: background-color 0.12s, transform 0.12s, opacity 0.12s;
+}
+
+.tiptap-row-handle,
+.tiptap-col-handle,
+.tiptap-table-corner {
+  width: 20px;
+  height: 20px;
+  opacity: 0.35;
 }
 
 .tiptap-row-handle:hover,
 .tiptap-col-handle:hover,
+.tiptap-table-corner:hover,
 .tiptap-row-handle.is-hover,
 .tiptap-col-handle.is-hover {
-  background-color: #7454fc;
+  opacity: 1;
+  background-color: rgba(116, 84, 252, 0.24);
 }
 
 .tiptap-table-add {
-  position: fixed;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #7454fc;
-  background-color: rgba(116, 84, 252, 0.12);
+  width: 18px;
+  height: 18px;
 }
 
 .tiptap-table-add:hover {
-  background-color: rgba(116, 84, 252, 0.24);
+  background-color: rgba(116, 84, 252, 0.28);
+}
+
+/* Feishu-style text menu for rows / columns / table. */
+.tiptap-table-menu {
+  position: fixed;
+  z-index: 9997;
+  opacity: 1 !important;
+  min-width: 160px;
+  max-width: 240px;
+  padding: 4px;
+  border-radius: 10px;
+  background-color: var(--background, #fff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.tiptap-table-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--foreground, #111);
+  background-color: transparent;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.tiptap-table-menu-item:hover:not(:disabled) {
+  background-color: rgba(116, 84, 252, 0.1);
+  color: #7454fc;
+}
+
+.tiptap-table-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.tiptap-table-menu-item.is-danger {
+  color: #dc2626;
+}
+
+.tiptap-table-menu-item.is-danger:hover:not(:disabled) {
+  background-color: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.tiptap-table-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.tiptap-table-menu-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background-color: rgba(127, 127, 127, 0.2);
 }
 
 .tiptap-table-toolbar {
@@ -541,30 +632,36 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 3px 4px;
+  padding: 4px 6px;
   border-radius: 10px;
   background-color: var(--background, #fff);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .tiptap-table-btn {
-  width: 24px;
-  height: 24px;
+  height: 28px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0;
+  gap: 4px;
+  padding: 0 7px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
   color: var(--desc, #666);
   background-color: transparent;
   transition: background-color 0.12s, color 0.12s;
 }
 
-.tiptap-table-btn:hover {
+.tiptap-table-btn:hover:not(:disabled) {
   background-color: rgba(116, 84, 252, 0.12);
   color: #7454fc;
+}
+
+.tiptap-table-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .tiptap-table-btn.is-active {
@@ -572,7 +669,7 @@
   color: #7454fc;
 }
 
-.tiptap-table-btn.is-danger:hover {
+.tiptap-table-btn.is-danger:hover:not(:disabled) {
   background-color: rgba(220, 38, 38, 0.12);
   color: #dc2626;
 }
@@ -603,4 +700,8 @@
   cursor: pointer;
   border-radius: 5px;
   border: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+.tiptap-table-color-swatch:hover {
+  transform: scale(1.05);
 }

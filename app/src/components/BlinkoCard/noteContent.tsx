@@ -107,7 +107,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
             content={displayContent}
             onChange={(updater) => {
               if (isShareMode) return;
-              const newContent = updater(blinkoItem.content);
+              const newContent = updater(blinkoItem.content ?? '');
               blinkoItem.content = newContent
               blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
             }}
@@ -119,7 +119,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
           <>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background via-background/80 to-transparent" />
             <button
-              className="absolute bottom-1.5 right-2 text-primary text-sm font-medium flex items-center gap-0.5 bg-background/70 rounded px-1.5 py-0.5 hover:opacity-80"
+              className="absolute bottom-1.5 right-2 text-[color:var(--tag)] text-sm font-medium flex items-center gap-0.5 bg-background/70 rounded px-1.5 py-0.5 hover:opacity-80"
               onClick={(e) => { e.stopPropagation(); setTextExpanded(true); }}
             >
               {t('expand')}
@@ -130,7 +130,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
       </div>
       {foldable && isLongText && isTextExpanded && (
         <button
-          className="text-primary text-sm font-medium mt-1 flex items-center gap-0.5 hover:opacity-80"
+          className="text-[color:var(--tag)] text-sm font-medium mt-1 flex items-center gap-0.5 hover:opacity-80"
           onClick={(e) => { e.stopPropagation(); setTextExpanded(false); }}
         >
           {t('collapse')}

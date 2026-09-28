@@ -3,13 +3,28 @@ import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from 
 import { Pagination } from "@heroui/react";
 
 export const TableWrapper = ({ children }: { children?: React.ReactNode }) => {
+  const childrenArray = React.Children.toArray(children);
+
+  // HTML tables emitted by the editor (e.g. merged/colored/resized tables)
+  // come through as raw <table><colgroup><tbody>... with no <thead>. Fall back
+  // to a native <table> so colspan/rownum, inline styles and col widths survive.
+  const hasNativeThead = childrenArray.some(
+    (child) => React.isValidElement(child) && (child as any).type === 'thead'
+  );
+  if (!hasNativeThead) {
+    return (
+      <div className="overflow-x-auto my-4">
+        <table className="w-full border-collapse">{children}</table>
+      </div>
+    );
+  }
+
     //@ts-ignore
   const parseTableData = () => {
     if (!children) {
       return { headers: [], rows: [] };
     }
 
-    const childrenArray = React.Children.toArray(children);
     if (childrenArray.length < 2) {
       return { headers: [], rows: [] };
     }

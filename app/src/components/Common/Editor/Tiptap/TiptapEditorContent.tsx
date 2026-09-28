@@ -5,6 +5,8 @@ import type { Editor } from '@tiptap/core';
 import type { EditorStore } from '../editorStore';
 import { SlashMenuView } from './ToolbarButtons';
 import { CalloutIconMenu } from './CalloutIconMenu';
+import { TableToolbar } from './TableToolbar';
+import { TableHandles } from './TableHandles';
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 
@@ -17,7 +19,7 @@ export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) 
   const adapter = store.vditor;
   const editor = adapter?.editor ?? null;
 
-  if (!editor) return null;
+  if (!adapter || !editor) return null;
 
   return (
     <div className={`tiptap-wrap ${store.isFullscreen ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
@@ -44,6 +46,8 @@ export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) 
       </BubbleMenu>
       <SlashMenuView state={adapter.slashMenu} />
       <CalloutIconMenu editor={editor} />
+      <TableToolbar editor={editor} />
+      <TableHandles editor={editor} />
     </div>
   );
 });

@@ -283,12 +283,17 @@ export class UserStore implements Store {
         darkElement.style.setProperty('--primary', config.themeColor)
         //@ts-ignore
         darkElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+        // Tag chips follow the custom theme colour instead of the default purple
+        //@ts-ignore
+        darkElement.style.setProperty('--tag', config.themeColor)
       }
       if (lightElement) {
         //@ts-ignore
         lightElement.style.setProperty('--primary', config.themeColor)
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+        //@ts-ignore
+        lightElement.style.setProperty('--tag', config.themeColor)
       }
     } else {
       if (darkElement) {
@@ -296,12 +301,16 @@ export class UserStore implements Store {
         darkElement.style.setProperty('--primary', '#f9f9f9')
         //@ts-ignore
         darkElement.style.setProperty('--primary-foreground', '#000000')
+        //@ts-ignore
+        darkElement.style.removeProperty('--tag')
       }
       if (lightElement) {
         //@ts-ignore
         lightElement.style.setProperty('--primary', '#000000')
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', 'hsl(210 40% 98%)')
+        //@ts-ignore
+        lightElement.style.removeProperty('--tag')
       }
     }
 

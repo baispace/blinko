@@ -22,10 +22,8 @@ import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
-import { Table } from '@tiptap/extension-table';
+import { MarkdownTable, MarkdownTableCell, MarkdownTableHeader, TablePreserveHtml } from '../Tiptap/tableExtension';
 import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import { TiptapEditorAdapter } from '../Tiptap/adapter';
 import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } from '../Tiptap/extensions';
@@ -63,10 +61,15 @@ export const useEditorInit = (
         Underline,
         Link.configure({ openOnClick: false, autolink: true }),
         Image,
-        Table.configure({ resizable: false }),
+        MarkdownTable.configure({
+          resizable: true,
+          lastColumnResizable: true,
+          allowTableNodeSelection: true,
+        }),
         TableRow,
-        TableHeader,
-        TableCell,
+        MarkdownTableHeader,
+        MarkdownTableCell,
+        TablePreserveHtml,
         Markdown.configure({
           html: true,
           linkify: true,

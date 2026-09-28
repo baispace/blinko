@@ -94,11 +94,15 @@ body {
   list-style: none !important;
 }
 
+/* Tag chips / inline #tags. Uses the dedicated --tag brand colour instead of
+   --primary, which is black in light mode by default and leaves tags looking
+   colourless. When the user picks a custom theme colour, user.ts overwrites
+   --tag so tags stay consistent with it. */
 .blinko-tag {
   margin-right: 4px;
   margin-left: 4px;
-  color: var(--primary) !important;
-  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--tag) !important;
+  background-color: color-mix(in srgb, var(--tag) 12%, transparent);
   border-radius: 7px;
   font-size: 13px;
   padding: 3px;

@@ -18,7 +18,9 @@ import { api } from '@/lib/trpc';
 import { PromiseCall } from '@/store/standard/PromiseState';
 
 interface CardHeaderProps {
-  blinkoItem: Note;
+  /** `isBlog` is assigned by BlinkoCard (article-tier cards); it decides whether
+      the title row already owns the icon. */
+  blinkoItem: Note & { isBlog?: boolean };
   blinko: BlinkoStore;
   isShareMode: boolean;
   isExpanded?: boolean;
@@ -134,7 +136,10 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           <UserAvatar account={account} blinkoItem={blinkoItem} />
         )}
 
-        {blinkoItem.metadata?.icon && (
+        {/* Skip when the icon is already shown in the NoteTitleDisplay row
+            (non-blog NOTE cards with an icon or a title) — otherwise it
+            renders twice, once above and once next to the timestamp. */}
+        {blinkoItem.metadata?.icon && (blinkoItem.isBlog || blinkoItem.type !== NoteType.NOTE) && (
           <span className="text-base leading-none select-none">{blinkoItem.metadata.icon}</span>
         )}
 

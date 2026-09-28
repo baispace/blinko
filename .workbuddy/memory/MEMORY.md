@@ -21,10 +21,11 @@
   - `ZConfigKey` = 全局配置
   - 新增配置项需同时补 `ZConfigSchema`（字段）与对应 key 白名单，否则读不到
 - **tRPC 探测**：query 用 GET、mutation 用 POST；向 query 发 POST 返回 405 METHOD_NOT_SUPPORTED（属正常响应，可用于探活）
-- **类型检查代价极高**：`tsc --noEmit --skipLibCheck -p app/tsconfig.json` 本机要 ~13-15 分钟；
-  `--max-old-space-size` 给到 8192 会直接打 V8 栈转储崩掉，得给到 14336 才跑完。
-  **app/ 目前有 51 个既有类型错误**（ShareDialog / McpServers / Tiptap / pages/index 等），
-  所以正确做法是**只看日志里是否出现你改动的文件名**，而不是追求零报错；跑完把结果 grep 一下即可
+- **类型检查**：在 `app/` 下跑 `NODE_OPTIONS="--max-old-space-size=8192" bunx tsc --noEmit -p tsconfig.json`
+  约 **2m15s** 完成（不加内存参数会在 ~1m35s 时 V8 OOM 打栈转储）。**app/ + server 共有 54 个既有类型错误**
+  （server 侧 TS2589/pgBoss、ShareDialog、McpServers、framer-motion variants、pages/index 等），
+  所以正确做法是**只看日志里是否出现你改动的文件名**，不追求零报错：
+  `tsc ... > /tmp/tsc.log 2>&1; grep "error TS" /tmp/tsc.log | grep -v "\.\./server"`
 
 ## 笔记封面 + 图标（全部走 notes.metadata，不改库不加接口）
 - 存 `metadata.icon`（emoji）、`metadata.cover`、`metadata.coverOffset`；`notes.metadata` 是 `Json?` 且 upsert 会 merge
@@ -76,6 +77,12 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
 - 查看端卡片走 react-markdown + rehypeRaw 渲染 HTML；命令用 wrapIn/lift 实现 toggle（setNode 对 block 容器无效）
 - **Callout 交互**：CalloutClickOutside 插件（点下方空白补段落 + 点击图标区派发 callout-icon-click 事件）；CalloutIconMenu 浮动面板；Enter 空尾块跳出 / Backspace 开头 lift
 - **任务清单删除线**：MarkdownRender 的 ListItem 检测 checked 必须递归找 input（loose list 时 input 在 `<p>` 内，直接 find 拿不到）
+- **表格（飞书手感，2026-09-28 落地）**：`Tiptap/tableExtension.ts`（resizable + preserveHtml + 覆盖 markdown serialize）、
+  `tableUtils.ts`（moveRow/moveColumn = delete+insert + `tr.mapping.map`）、`TableToolbar.tsx`、`TableHandles.tsx`
+  - 存储策略「按需 HTML 化」：普通表仍是 GFM 管道表；一旦出现合并/列宽/对齐/底色，`TablePreserveHtml`
+    插件自动置 `preserveHtml` → 整表序列化为 HTML `<table>`（查看端 rehypeRaw 渲染，样式在 github-markdown.css）
+  - 坑：`@tiptap/pm/tables` 只导出 CellSelection，TextSelection 要从 `@tiptap/pm/state` 导入；
+    单元格多 attr 必须在 renderHTML 里合并成一条 style，否则互相覆盖
 
 ## 本地测 AI 功能的前置条件
 - 本地 `aiProviders` / `aiModels` 表**是空的** → 任何 AI 调用都会失败，

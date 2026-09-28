@@ -1,5 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import { CellSelection } from '@tiptap/pm/tables';
+import { Node as PMNode } from '@tiptap/pm/model';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
 /** DOM table element the current selection lives in, if any. */
@@ -101,30 +102,38 @@ export const selectRowOrColumn = (editor: Editor, scope: 'row' | 'col', index: n
  * target offset and the original removed. Net length change is 0, so the
  * surrounding positions stay valid.
  */
+/**
+ * Moves the row the cursor sits in by one slot.
+ * Tiptap has no built-in command, so we rebuild the table JSON with the two
+ * adjacent rows swapped and replace the whole table node in one step. Building
+ * from JSON (instead of `node.copy`) sidesteps a ProseMirror quirk where
+ * `copy` dropped the content when given an array, yielding a node with no size.
+ */
 export const moveRow = (editor: Editor, direction: -1 | 1) => {
   const { state, view } = editor;
-  const rowDepth = findSingleDepth(editor, 'tableRow');
-  if (rowDepth < 0) return;
-  const tableDepth = rowDepth - 1;
-  const tableNode = state.selection.$from.node(tableDepth);
-  const rowIndex = state.selection.$from.index(rowDepth);
+  const table = currentCellGeometry(editor);
+  if (!table) return;
+  const { tableNode, rowIndex } = table;
   const target = rowIndex + direction;
   if (target < 0 || target >= tableNode.childCount) return;
 
-  const rowPos = state.selection.$from.before(rowDepth);
-  const rowNode = state.selection.$from.node(rowDepth);
-  const sibling = tableNode.child(target);
-  const insertAt = direction > 0 ? rowPos + sibling.nodeSize : rowPos - sibling.nodeSize;
+  const json: any = tableNode.toJSON();
+  const rows = json.content;
+  const moved = rows[rowIndex];
+  rows[rowIndex] = rows[target];
+  rows[target] = moved;
 
   const tr = state.tr;
-  tr.delete(rowPos, rowPos + rowNode.nodeSize);
-  const mapped = tr.mapping.map(insertAt);
-  tr.insert(mapped, state.schema.nodeFromJSON(rowNode.toJSON()));
-  tr.setSelection(TextSelection.near(tr.doc.resolve(mapped + 2)));
+  tr.replaceWith(table.tablePos, table.tablePos + tableNode.nodeSize, PMNode.fromJSON(state.schema, json));
   view.dispatch(tr.scrollIntoView());
 };
 
-/** Moves the column the cursor sits in by one slot (same technique, per row). */
+/**
+ * Moves the column the cursor sits in by one slot. The table JSON is rebuilt
+ * with the two adjacent columns swapped per row, then the whole table node is
+ * replaced in a single step. Merged cells make column geometry ambiguous, so
+ * we bail out rather than corrupt the table.
+ */
 export const moveColumn = (editor: Editor, direction: -1 | 1) => {
   const { state, view } = editor;
   const table = currentCellGeometry(editor);
@@ -134,24 +143,22 @@ export const moveColumn = (editor: Editor, direction: -1 | 1) => {
   const target = colIndex + direction;
   if (target < 0 || target >= colCount) return;
 
+  // Bail out on merged cells (column geometry is ambiguous).
+  for (let i = 0; i < tableNode.childCount; i++) {
+    if (tableNode.child(i).childCount !== colCount) return;
+  }
+
+  const json: any = tableNode.toJSON();
+  for (const row of json.content) {
+    const cells = row.content;
+    if (!Array.isArray(cells) || cells.length !== colCount) continue;
+    const moved = cells[colIndex];
+    cells[colIndex] = cells[target];
+    cells[target] = moved;
+  }
+
   const tr = state.tr;
-  let rowPos = table.tablePos + 1;
-
-  tableNode.forEach((row: any) => {
-    const cells: any[] = [];
-    row.forEach((cell: any) => cells.push(cell));
-    const cell = cells[colIndex];
-    if (cell) {
-      const offset = cells.slice(0, colIndex).reduce((sum, c) => sum + c.nodeSize, 0);
-      const cellPos = rowPos + 1 + offset;
-      const sibling = cells[target];
-      const insertAt = direction > 0 ? cellPos + sibling.nodeSize : cellPos - sibling.nodeSize;
-      tr.delete(cellPos, cellPos + cell.nodeSize);
-      tr.insert(tr.mapping.map(insertAt), state.schema.nodeFromJSON(cell.toJSON()));
-    }
-    rowPos += row.nodeSize;
-  });
-
+  tr.replaceWith(table.tablePos, table.tablePos + tableNode.nodeSize, PMNode.fromJSON(state.schema, json));
   view.dispatch(tr.scrollIntoView());
 };
 

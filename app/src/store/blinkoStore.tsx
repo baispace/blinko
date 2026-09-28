@@ -347,6 +347,24 @@ export class BlinkoStore implements Store {
     }
   })
 
+  // 「已完成」标签页：已归档的 TODO 笔记（勾选即归档 = 完成）
+  doneTodoList = new PromisePageState({
+    function: async ({ page, size }) => {
+      return this.getFilteredNotes({
+        page,
+        size,
+        filterConfig: {
+          type: NoteType.TODO,
+          isArchived: true,
+          isRecycle: false
+        },
+        offlineFilter: (note: OfflineNote) => {
+          return Boolean(note.type === NoteType.TODO && note.isArchived && !note.isRecycle);
+        }
+      });
+    }
+  })
+
   archivedList = new PromisePageState({
     function: async ({ page, size }) => {
       return this.getFilteredNotes({

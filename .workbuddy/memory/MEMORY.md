@@ -126,3 +126,21 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
 - 前端 resources.tsx 过滤 `name !== '.folder'` 隐藏占位记录
 - 不一致点：create 纯虚拟；**rename/delete 会真实操作存储**（`FileService.moveFile` / `deleteFile`）
 - 坑：占位记录 path 写死 `/api/file/` 前缀，S3 模式下进入该文件夹上传的文件是 `/api/s3file/`，SQL 的 `CASE WHEN path LIKE '/api/s3file/%'` 可能取到占位行 → 前缀判断不准（仅影响文件夹项 path，暂无功能影响）
+
+## 待办模块（基于现有 `/?path=todo` 视图，2026-09-28 落地）
+- 现有 TODO 模型：`NoteType.TODO`(type=2)，完成=`isArchived=true`，截止日=`metadata.expireAt`(ISO)，
+  优先级=`metadata.priorityUrgent × priorityImportant`（两布尔 → 四象限）
+- **入口**：折叠「+ 加一条任务」→ 展开表单（`TodoQuickAdd.tsx`）
+  - 优先级入口：旗子按钮（红/黄/蓝/灰 outline，对应 高/中/低/无）+ 点击弹出 4 选项面板（仿 Apple Reminders）
+  - 旗子是内联 SVG，color 由 `PRIORITY_OPTIONS` 数组统一管理
+  - outside-click 用 `mousedown` 监听器关闭（学 `PopoverFloat/index.tsx`）
+- **视图**：`pages/index.tsx` 在 `path=todo` 时渲染
+  - 顶部逾期 banner（纯前端算逾期数）
+  - 项目 chips（按 `note.tags` 分组，含 done/total 进度）
+  - 标签页：今天/逾期/即将到来/全部/完成，每个带计数徽标
+- **卡片**：`BlinkoCard/TodoCard.tsx` 替换默认 BlinkoCard，含：左侧优先级色条 / 四象限 chip / 逾期天数 / 顺延次数 / 项目标签 / 悬浮操作图标（编辑/删除）
+- **store**：`blinkoStore` 新增 `doneTodoList`（type=TODO & isArchived=true）
+- **翻译键**：`priority-high/medium/low/none` + `priority`（旧的 4 个 urgent-important/important/urgent/normal 已不用，但保留以防万一）
+- **验证**：Playwright + 系统 Chrome `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+  - `page.addInitScript` 注入 token（必须在页面脚本前）
+  - 验证 outside-click 要点空白处，不要点 sidebar/侧栏

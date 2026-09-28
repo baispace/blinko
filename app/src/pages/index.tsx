@@ -4,8 +4,10 @@ import Masonry from 'react-masonry-css';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
 import { BlinkoEditor } from '@/components/BlinkoEditor';
+import { TodoQuickAdd } from '@/components/Common/TodoQuickAdd';
 import { ScrollArea } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
+import { TodoCard } from '@/components/BlinkoCard/TodoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
@@ -51,6 +53,7 @@ const Home = observer(() => {
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<string>('today');
 
   const currentListState = useMemo(() => {
     if (isNotesView) {
@@ -121,6 +124,74 @@ const Home = observer(() => {
       }, {} as Record<string, TodoGroup>);
   }, [currentListState.value, isTodoView, t]);
 
+  // 待办视图：标签页（今天 / 接下来几天 / 已完成）
+  const TABS = useMemo(() => ([
+    { key: 'today', label: t('today-list') },
+    { key: 'upcoming', label: t('upcoming-list') },
+    { key: 'done', label: t('done-list') },
+  ]), [t]);
+
+  // 已完成的「当日完成」也算当前列表：updatedAt 是今天
+  // - 今天列表：未完成 + 当日完成（due ≤ 今天）
+  // - 接下来几天：未完成 + 当日完成（due > 今天）
+  // - 已完成列表：只显示「完成日期非当天」的历史已完成
+  const isCompletedToday = (todo: any): boolean => {
+    if (!todo.isArchived || !todo.updatedAt) return false;
+    return dayjs().isSame(dayjs(todo.updatedAt), 'day');
+  };
+
+  // 三个 section 的 todo 列表
+  const todayList = useMemo(() => {
+    if (!isTodoView) return [];
+    const todayStart = dayjs().startOf('day');
+    const source: any[] = [
+      ...(currentListState.value ?? []),
+      ...(blinko.doneTodoList.value ?? []).filter(isCompletedToday),
+    ];
+    return source.filter((todo: any) => {
+      const due = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt).startOf('day') : null;
+      return !due || !due.isAfter(todayStart, 'day'); // 今天到期 + 逾期
+    });
+  }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
+
+  const upcomingList = useMemo(() => {
+    if (!isTodoView) return [];
+    const todayStart = dayjs().startOf('day');
+    const source: any[] = [
+      ...(currentListState.value ?? []),
+      ...(blinko.doneTodoList.value ?? []).filter(isCompletedToday),
+    ];
+    return source
+      .filter((todo: any) => {
+        const due = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt).startOf('day') : null;
+        return due && due.isAfter(todayStart, 'day');
+      })
+      .sort((a: any, b: any) => {
+        const da = dayjs(a.metadata.expireAt).valueOf();
+        const db = dayjs(b.metadata.expireAt).valueOf();
+        return da - db;
+      });
+  }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
+
+  // 「已完成」只显示历史完成（updatedAt 非今天）
+  const doneList = useMemo(
+    () => (blinko.doneTodoList.value ?? []).filter((n: any) => !isCompletedToday(n)),
+    [blinko.doneTodoList.value]
+  );
+
+  const doneLoadedRef = useRef(false);
+  useEffect(() => {
+    if (isTodoView) {
+      // 不论 activeTab 都要拉，避免 today/upcoming 列表缺当日完成项
+      if (!doneLoadedRef.current) {
+        doneLoadedRef.current = true;
+        blinko.doneTodoList.resetAndCall({});
+      }
+    } else {
+      doneLoadedRef.current = false;
+    }
+  }, [isTodoView, blinko]);
+
   // Restore scroll position when returning from editor
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('restore-scroll-position');
@@ -145,13 +216,14 @@ const Home = observer(() => {
     <div
       className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col w-full`}>
 
-      {store.showEditor && isPc && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
-        <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
-          if (!isPc) return
-          store.editorHeight = height
-        }} />
-      </div>}
-      {(!isPc || hidePcEditor) && <BlinkoAddButton />}
+      {!isTodoView && store.showEditor && isPc && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
+          <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
+            if (!isPc) return
+            store.editorHeight = height
+          }} />
+        </div>
+      }
+      {(!isPc || hidePcEditor) && !isTodoView && <BlinkoAddButton />}
 
       <LoadingAndEmpty
         isLoading={currentListState.isLoading}
@@ -172,29 +244,119 @@ const Home = observer(() => {
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`mt-0 md:${hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
           <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
-          <TagFilterChips />
+          {!isTodoView && <TagFilterChips />}
           {isTodoView ? (
-            <div className="timeline-view relative">
-              {Object.entries(todosByDate).map(([date, { displayDate, todos }]) => (
-                <div key={date} className="mb-6 relative">
-                  <div className="flex items-center mb-2 relative z-10">
-                    <div className="w-4 h-4 rounded-sm bg-primary absolute left-[4.5px] transform translate-x-[-50%]"></div>
-                    <h3 className="text-base font-bold ml-5">{displayDate}</h3>
-                  </div>
-                  <div className="md:pl-4">
-                    {todos.map(todo => (
-                      <div key={todo.id} className="mb-3">
-                        <BlinkoCard blinkoItem={todo} />
+            <div className="flex flex-col gap-4">
+              {/* 全局唯一新增入口：放在 tabs 上方，三个 section 共用一份 */}
+              <TodoQuickAdd />
+
+              {/* Tab 栏（今天 / 接下来几天 / 已完成） */}
+              <div className="sticky top-0 z-20 flex items-center gap-1 bg-secondbackground py-1.5">
+                {TABS.map((tab) => {
+                  const isActive = activeTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`inline-flex items-center rounded-full px-3 h-8 text-[13px] font-medium transition-colors ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-default-600 hover:text-foreground'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeTab === 'today' && (
+                <>
+                  {/* Section: 今天的清单 */}
+                  <section>
+                    <header className="flex items-center justify-between gap-3 px-1 pb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon icon="mdi:white-balance-sunny" width={18} height={18} className="text-amber-500 shrink-0" />
+                        <span className="text-[15px] font-semibold text-foreground shrink-0">{t('today-list')}</span>
+                        <span className="text-[12px] text-default-400 truncate">{t('today-list-subtitle')}</span>
                       </div>
-                    ))}
+                    </header>
+                    <div className="flex flex-col gap-3">
+                      {todayList.length === 0 ? (
+                        <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
+                      ) : (
+                        todayList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Section: 接下来几天 */}
+                  {upcomingList.length > 0 && (
+                    <section>
+                      <header className="flex items-center justify-between gap-3 px-1 pb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon icon="mdi:chevron-double-right" width={18} height={18} className="text-primary shrink-0" />
+                          <span className="text-[15px] font-semibold text-foreground shrink-0">{t('upcoming-list')}</span>
+                          <span className="text-[12px] text-default-400 truncate">{t('upcoming-list-subtitle')}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('upcoming')}
+                          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600 hover:text-foreground hover:border-primary/50 transition-colors"
+                        >
+                          {t('all')} {upcomingList.length} {t('items-suffix')}
+                        </button>
+                      </header>
+                      <div className="flex flex-col gap-3">
+                        {upcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
+                      </div>
+                    </section>
+                  )}
+                </>
+              )}
+
+              {activeTab === 'upcoming' && (
+                <section>
+                  <header className="flex items-center justify-between gap-3 px-1 pb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon icon="mdi:chevron-double-right" width={18} height={18} className="text-primary shrink-0" />
+                      <span className="text-[15px] font-semibold text-foreground shrink-0">{t('upcoming-list')}</span>
+                      <span className="text-[12px] text-default-400 truncate">{t('upcoming-list-subtitle')}</span>
+                    </div>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600">
+                      {t('all')} {upcomingList.length} {t('items-suffix')}
+                    </span>
+                  </header>
+                  <div className="flex flex-col gap-3">
+                    {upcomingList.length === 0 ? (
+                      <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
+                    ) : (
+                      upcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+                    )}
                   </div>
-                </div>
-              ))}
-              {Object.keys(todosByDate).length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Icon icon="mdi:clipboard-text-outline" width="48" height="48" className="mx-auto mb-2 opacity-50" />
-                  <p>{t('no-data-here-well-then-time-to-write-a-note')}</p>
-                </div>
+                </section>
+              )}
+
+              {activeTab === 'done' && (
+                <section>
+                  <header className="flex items-center justify-between gap-3 px-1 pb-2">
+<div className="flex items-center gap-2 min-w-0">
+                    <Icon icon="mdi:check-circle-outline" width={18} height={18} className="text-emerald-500 shrink-0" />
+                    <span className="text-[15px] font-semibold text-foreground shrink-0">{t('done-list')}</span>
+                  </div>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600">
+                      {t('all')} {doneList.length} {t('items-suffix')}
+                    </span>
+                  </header>
+                  <div className="flex flex-col gap-3">
+                    {doneList.length === 0 ? (
+                      <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
+                    ) : (
+                      doneList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+                    )}
+                  </div>
+                </section>
               )}
             </div>
           ) : (

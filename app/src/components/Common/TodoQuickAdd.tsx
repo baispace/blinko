@@ -1,0 +1,182 @@
+import { observer } from 'mobx-react-lite';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
+import { NoteType } from '@shared/lib/types';
+import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState } from 'react';
+import dayjs from '@/lib/dayjs';
+import { Icon } from '@/components/Common/Iconify/icons';
+
+type PrioKey = 'ui' | 'in' | 'un' | 'nn';
+
+const PRIORITY_OPTIONS: { key: PrioKey; u: boolean; i: boolean; labelKey: string; color: string }[] = [
+  { key: 'ui', u: true,  i: true,  labelKey: 'priority-urgent-important', color: '#ef4444' },
+  { key: 'in', u: false, i: true,  labelKey: 'priority-important',        color: '#f59e0b' },
+  { key: 'un', u: true,  i: false, labelKey: 'priority-urgent',           color: '#3b82f6' },
+  { key: 'nn', u: false, i: false, labelKey: 'priority-normal',           color: '#9ca3af' },
+];
+
+// Inline flag SVG — tinted by the priority color; outline for "none"
+const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill={outline ? 'none' : color}
+    stroke={color}
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 22V3" />
+    <path d="M4 4h13l-2.5 5L20 14H4" />
+  </svg>
+);
+
+export const TodoQuickAdd = observer(() => {
+  const { t } = useTranslation();
+  const blinko = RootStore.Get(BlinkoStore);
+  const [content, setContent] = useState('');
+  const [priorityKey, setPriorityKey] = useState<PrioKey>('nn');
+  const [due, setDue] = useState(dayjs().format('YYYY-MM-DD'));
+  const [prioOpen, setPrioOpen] = useState(false);
+  const prioWrapRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  const cur = PRIORITY_OPTIONS.find((p) => p.key === priorityKey)!;
+
+  // auto-grow textarea so the input stays the visual focus
+  useEffect(() => {
+    const el = taRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [content]);
+
+  // outside-click closes the priority popover
+  useEffect(() => {
+    if (!prioOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (prioWrapRef.current && !prioWrapRef.current.contains(e.target as Node)) {
+        setPrioOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [prioOpen]);
+
+  const resetContent = () => {
+    setContent('');
+    // 提交后保留日期+优先级，方便连续添加同类任务
+    // 想要重置也可以清：setPriorityKey('nn'); setDue(dayjs().format('YYYY-MM-DD'));
+  };
+
+  const submit = () => {
+    if (!content.trim()) return;
+    blinko.upsertNote
+      .call({
+        content: content.trim(),
+        type: NoteType.TODO,
+        metadata: {
+          priorityUrgent: cur.u,
+          priorityImportant: cur.i,
+          expireAt: due ? dayjs(due).toISOString() : undefined,
+        },
+      })
+      .then(resetContent);
+  };
+
+  return (
+    <div className="rounded-xl border border-default-200 bg-background p-4 shadow-sm">
+      {/* Top: due date on the left, priority flag on the right, separated from the hero input by a divider */}
+      <div className="flex items-center justify-between gap-2 pb-3 border-b border-default-200">
+        <label className="inline-flex items-center gap-1.5 h-7">
+          <Icon icon="mdi:calendar-outline" width={15} height={15} className="text-default-500 shrink-0 self-center" />
+          <input
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            className="cursor-pointer bg-transparent text-[13px] text-default-700 outline-none border border-default-200 rounded-md px-2 h-7 leading-none transition-colors hover:border-primary/50 focus:border-primary"
+          />
+        </label>
+
+        <div ref={prioWrapRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setPrioOpen((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2 h-7 text-[13px] leading-none transition-colors ${
+              prioOpen
+                ? 'border-primary/50 text-foreground'
+                : 'border-default-200 text-default-700 hover:border-primary/50'
+            }`}
+            aria-label={t('priority')}
+            aria-haspopup="listbox"
+            aria-expanded={prioOpen}
+          >
+            <FlagIcon color={cur.color} outline={priorityKey === 'nn'} />
+            <span>{t(cur.labelKey)}</span>
+          </button>
+          {prioOpen && (
+            <div
+              role="listbox"
+              className="absolute right-0 top-full mt-1.5 z-30 min-w-[180px] rounded-lg border border-default-200 bg-background shadow-lg p-1"
+            >
+              {PRIORITY_OPTIONS.map((p) => {
+                const active = p.key === priorityKey;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      setPriorityKey(p.key);
+                      setPrioOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-default-700 hover:bg-hover transition-colors ${
+                      active ? 'bg-hover' : ''
+                    }`}
+                  >
+                    <FlagIcon color={p.color} outline={p.key === 'nn'} />
+                    <span className="flex-1 text-left">{t(p.labelKey)}</span>
+                    {active && (
+                      <Icon icon="mdi:check" width={14} height={14} className="text-primary" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hero input — the divider above makes it the visual focus */}
+      <textarea
+        ref={taRef}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
+        }}
+        placeholder={t('what-to-do')}
+        rows={1}
+        className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-default-400 pt-3"
+        style={{ overflow: 'hidden' }}
+      />
+
+      <div className="mt-2 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!content.trim()}
+          className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+        >
+          <Icon icon="mdi:plus" width={14} height={14} />
+          {t('add')}
+        </button>
+      </div>
+    </div>
+  );
+});

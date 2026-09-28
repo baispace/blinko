@@ -6,7 +6,7 @@ import type { EditorStore } from '../editorStore';
 import { SlashMenuView } from './ToolbarButtons';
 import { CalloutIconMenu } from './CalloutIconMenu';
 import { TableToolbar } from './TableToolbar';
-import { TableHandles } from './TableHandles';
+import { TableHandles } from './TableHandles'; // Feishu-style table controls
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 

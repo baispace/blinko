@@ -1,16 +1,29 @@
 import type { Editor } from '@tiptap/core';
 import { CellSelection } from '@tiptap/pm/tables';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
 /** DOM table element the current selection lives in, if any. */
 export const findTableDom = (editor: Editor): HTMLElement | null => {
   try {
+    // Whole-table node selection: resolve the node's own DOM.
+    const selection = editor.state.selection as any;
+    if (selection instanceof NodeSelection && selection.node?.type?.name === 'table') {
+      const dom = editor.view.nodeDOM(selection.from);
+      if (dom instanceof HTMLElement) return dom;
+    }
     const { node } = editor.view.domAtPos(editor.state.selection.from);
     const element = node instanceof HTMLElement ? node : node.parentElement;
     return element?.closest('table') ?? null;
   } catch {
     return null;
   }
+};
+
+/** True when the cursor, a cell range or the table node itself is selected. */
+export const isTableActive = (editor: Editor) => {
+  const selection = editor.state.selection as any;
+  if (selection instanceof NodeSelection) return selection.node?.type?.name === 'table';
+  return editor.isActive('table');
 };
 
 /** Depth of the closest ancestor whose type is in `types`. */
@@ -140,4 +153,90 @@ export const moveColumn = (editor: Editor, direction: -1 | 1) => {
   });
 
   view.dispatch(tr.scrollIntoView());
+};
+
+/** Whether the current selection spans more than one cell. */
+export const isCellSelection = (editor: Editor) =>
+  editor.state.selection instanceof CellSelection;
+
+/** Bounding rect of the currently selected cell(s). Falls back to the first cell the cursor is in. */
+export const getSelectedCellsRect = (editor: Editor, tableEl?: HTMLElement | null): DOMRect | null => {
+  try {
+    const table = tableEl ?? findTableDom(editor);
+    if (!table) return null;
+    const cells = Array.from(table.querySelectorAll<HTMLElement>('td.selectedCell, th.selectedCell'));
+    if (cells.length) {
+      const rects = cells.map((c) => c.getBoundingClientRect());
+      const top = Math.min(...rects.map((r) => r.top));
+      const left = Math.min(...rects.map((r) => r.left));
+      const right = Math.max(...rects.map((r) => r.right));
+      const bottom = Math.max(...rects.map((r) => r.bottom));
+      return new DOMRect(left, top, right - left, bottom - top);
+    }
+    // Single cursor: return the cell the cursor is in.
+    const { node } = editor.view.domAtPos(editor.state.selection.from);
+    const el = node instanceof HTMLElement ? node : node.parentElement;
+    return el?.closest('td, th')?.getBoundingClientRect() ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/** Select the whole table (node selection). */
+export const selectTable = (editor: Editor) => {
+  const table = currentCellGeometry(editor);
+  if (!table) return;
+  editor.view.dispatch(
+    editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, table.tablePos))
+  );
+  editor.view.focus();
+};
+
+/** Insert a copy of the current row directly below it. */
+export const duplicateRow = (editor: Editor) => {
+  const { state, view } = editor;
+  const rowDepth = findSingleDepth(editor, 'tableRow');
+  if (rowDepth < 0) return;
+  const rowPos = state.selection.$from.before(rowDepth);
+  const rowNode = state.selection.$from.node(rowDepth);
+  const insertAt = rowPos + rowNode.nodeSize;
+  view.dispatch(
+    state.tr
+      .insert(insertAt, state.schema.nodeFromJSON(rowNode.toJSON()))
+      .setSelection(TextSelection.near(state.tr.doc.resolve(insertAt + 2)))
+      .scrollIntoView()
+  );
+};
+
+/** Clear alignment and background for selected cells. */
+export const clearCellFormat = (editor: Editor) => {
+  setCellAttrs(editor, { textAlign: null, backgroundColor: null });
+};
+
+/**
+ * Sets attributes on every cell in the selection (or the cell holding the cursor).
+ * `updateAttributes` aborts the chain when the selection only contains headers
+ * (or only body cells), so we patch the nodes directly instead.
+ */
+export const setCellAttrs = (editor: Editor, attrs: Record<string, unknown>) => {
+  const { state, view } = editor;
+  const selection = state.selection as any;
+  const tr = state.tr;
+
+  const apply = (pos: number, node: any) => {
+    if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
+    tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...attrs });
+  };
+
+  if (typeof selection.forEachCell === 'function') {
+    selection.forEachCell((node: any, pos: number) => apply(pos, node));
+  } else {
+    const cellDepth = findDepth(editor, ['tableCell', 'tableHeader']);
+    if (cellDepth > 0) apply(state.selection.$from.before(cellDepth), state.selection.$from.node(cellDepth));
+  }
+
+  if (tr.steps.length) {
+    view.dispatch(tr);
+    view.focus();
+  }
 };

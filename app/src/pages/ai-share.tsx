@@ -6,7 +6,7 @@ import { RootStore } from "@/store";
 import { AiStore } from "@/store/aiStore";
 import { BlinkoChatBox } from "@/components/BlinkoAi/aiChatBox";
 import i18n from "@/lib/i18n";
-import { Icon } from "@iconify/react";
+import { Icon } from '@/components/Common/Iconify/icons';
 import { api } from "@/lib/trpc";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 

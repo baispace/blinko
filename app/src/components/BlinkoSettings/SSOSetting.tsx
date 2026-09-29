@@ -32,7 +32,7 @@ const OAUTH_TEMPLATES = {
   google: {
     id: 'google',
     name: 'Google',
-    icon: 'logos:google-icon',
+    icon: 'logos:google',
   },
   facebook: {
     id: 'facebook',
@@ -47,12 +47,12 @@ const OAUTH_TEMPLATES = {
   spotify: {
     id: 'spotify',
     name: 'Spotify',
-    icon: 'logos:spotify-icon',
+    icon: 'logos:spotify',
   },
   discord: {
     id: 'discord',
     name: 'Discord',
-    icon: 'logos:discord-icon',
+    icon: 'logos:discord',
   },
   twitter: {
     id: 'twitter',
@@ -62,7 +62,7 @@ const OAUTH_TEMPLATES = {
   slack: {
     id: 'slack',
     name: 'Slack',
-    icon: 'logos:slack-icon',
+    icon: 'logos:slack',
   },
   twitch: {
     id: 'twitch',
@@ -72,7 +72,7 @@ const OAUTH_TEMPLATES = {
   line: {
     id: 'line',
     name: 'LINE',
-    icon: 'logos:line',
+    icon: 'cib:line',
   },
   instagram: {
     id: 'instagram',
@@ -82,7 +82,7 @@ const OAUTH_TEMPLATES = {
   coinbase: {
     id: 'coinbase',
     name: 'Coinbase',
-    icon: 'cryptocurrency:cb',
+    icon: 'simple-icons:coinbase',
   },
   yandex: {
     id: 'yandex',

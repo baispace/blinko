@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Checkbox, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
+import { Button, Checkbox, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, useDisclosure } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -8,7 +8,7 @@ import { api } from "@/lib/trpc";
 import { Item } from "./Item";
 import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "usehooks-ts";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PasswordInput } from "@/components/Common/PasswordInput";
 import { CollapsibleCard } from "@/components/Common/CollapsibleCard";
 
@@ -32,6 +32,12 @@ export const StorageSetting = observer(() => {
     staticCdnEnabled: false,
     uploading: false,
     uploadResult: "",
+    uploadTotal: 0,
+    uploadDone: 0,
+    uploadFailed: 0,
+    uploadSkipped: 0,
+    uploadCurrent: "",
+    uploadFinished: true,
   }))
 
   useEffect(() => {
@@ -55,10 +61,26 @@ export const StorageSetting = observer(() => {
     store.staticCdnEnabled = rawStaticCdn === true || rawStaticCdn === 'true'
   }, [blinko.config.value])
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: originalOnClose } = useDisclosure();
   const [fileList, setFileList] = useState<{ path: string; size: number }[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+
+  const onClose = () => {
+    clearPoll();
+    originalOnClose();
+    // Reset upload progress state when the dialog closes so it reopens clean.
+    store.uploading = false;
+    store.uploadTotal = 0;
+    store.uploadDone = 0;
+    store.uploadFailed = 0;
+    store.uploadSkipped = 0;
+    store.uploadCurrent = '';
+    store.uploadFinished = true;
+  };
 
   const openUploadDialog = async () => {
     setLoadingFiles(true);
@@ -115,14 +137,54 @@ export const StorageSetting = observer(() => {
     }
     store.uploading = true;
     store.uploadResult = '';
+    store.uploadTotal = selected.length;
+    store.uploadDone = 0;
+    store.uploadFailed = 0;
+    store.uploadSkipped = 0;
+    store.uploadCurrent = '';
+    store.uploadFinished = false;
+    clearPoll();
+
     try {
-      const res = await PromiseCall(api.attachments.uploadStaticAssetsToCdn.mutate({ files: selected }), { autoAlert: false });
-      store.uploadResult = `${t('upload-static-success')} ${res.uploaded}${res.failed ? ` · ${res.failed} ${t('upload-static-fail')}` : ''}`;
-      onClose();
+      const startRes = await PromiseCall(api.attachments.startStaticCdnUpload.mutate({ files: selected }), { autoAlert: false });
+      const jobId = (startRes as any).jobId;
+      if (!jobId) throw new Error('no jobId returned');
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const p = await api.attachments.staticCdnUploadProgress.query({ jobId }) as any;
+          store.uploadTotal = p.total ?? selected.length;
+          store.uploadDone = p.done ?? 0;
+          store.uploadFailed = p.failed ?? 0;
+          store.uploadSkipped = p.skipped ?? 0;
+          store.uploadCurrent = p.current ?? '';
+          store.uploadFinished = p.finished ?? true;
+
+          if (p.finished || p.notFound) {
+            clearPoll();
+            store.uploading = false;
+            if (p.error) {
+              store.uploadResult = `${t('upload-static-fail')}: ${p.error}`;
+            } else {
+              store.uploadResult = `${t('upload-static-success')} ${p.done}${p.failed ? ` · ${p.failed} ${t('upload-static-fail')}` : ''}${p.skipped ? ` · ${p.skipped} skipped` : ''}`;
+              // The backend auto-enables staticCdnEnabled on success; mirror that in the UI.
+              if (p.done > 0 && !store.staticCdnEnabled) {
+                store.staticCdnEnabled = true;
+                await PromiseCall(api.config.update.mutate({ key: 'staticCdnEnabled', value: true }), { autoAlert: false });
+                store.uploadResult += ` · ${t('static-cdn-auto-enabled')}`;
+              }
+            }
+          }
+        } catch (e: any) {
+          clearPoll();
+          store.uploading = false;
+          store.uploadResult = `${t('upload-static-fail')}: ${e?.message ?? e}`;
+        }
+      }, 600);
     } catch (e: any) {
-      store.uploadResult = `${t('upload-static-fail')}: ${e?.message ?? e}`;
-    } finally {
+      clearPoll();
       store.uploading = false;
+      store.uploadResult = `${t('upload-static-fail')}: ${e?.message ?? e}`;
     }
   };
 
@@ -383,16 +445,32 @@ export const StorageSetting = observer(() => {
             </>
           )}
 
+          {store.uploading && (
+            <div className="flex flex-col gap-2">
+              <Progress
+                value={store.uploadTotal > 0 ? Math.round((store.uploadDone / store.uploadTotal) * 100) : 0}
+                size="sm"
+                color={store.uploadFailed > 0 ? 'warning' : 'primary'}
+                showValueLabel
+                label={store.uploadCurrent ? `${t('uploading')}: ${store.uploadCurrent}` : t('uploading-static')}
+              />
+              <div className="flex justify-between text-xs text-default-400">
+                <span>{t('upload-cdn-progress', { done: store.uploadDone, total: store.uploadTotal, failed: store.uploadFailed })}</span>
+                {store.uploadSkipped > 0 && <span>{store.uploadSkipped} skipped</span>}
+              </div>
+            </div>
+          )}
+
           {store.uploadResult && <div className="text-xs text-default-500">{store.uploadResult}</div>}
         </div>
       </ModalBody>
       <ModalFooter>
-        <Button variant="light" onPress={onClose}>{t('cancel')}</Button>
+        <Button variant="light" onPress={onClose} isDisabled={store.uploading}>{t('cancel')}</Button>
         <Button
           color="primary"
           isLoading={store.uploading}
           onPress={handleConfirmUpload}
-          isDisabled={loadingFiles || fileList.length === 0}
+          isDisabled={loadingFiles || fileList.length === 0 || store.uploading}
         >
           {t('confirm-upload')}{selected.length > 0 ? ` (${selected.length})` : ''}
         </Button>

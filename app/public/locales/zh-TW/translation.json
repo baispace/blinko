@@ -260,6 +260,8 @@
   "upload-cdn-selected": "已選 {{n}} / {{total}} 個檔案",
   "upload-static-empty": "請至少選擇一個檔案",
   "confirm-upload": "確認上傳",
+  "upload-cdn-progress": "已上傳 {{done}} / {{total}} · 失敗 {{failed}}",
+  "static-cdn-auto-enabled": "已自動啟用靜態資源 CDN",
   "cut": "剪辑",
   "daily-review": "每日回顧",
   "dark-mode": "黑暗模式",

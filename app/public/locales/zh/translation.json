@@ -253,6 +253,8 @@
   "upload-cdn-selected": "已选 {{n}} / {{total}} 个文件",
   "upload-static-empty": "请至少选择一个文件",
   "confirm-upload": "确认上传",
+  "upload-cdn-progress": "已上传 {{done}} / {{total}} · 失败 {{failed}}",
+  "static-cdn-auto-enabled": "已自动启用静态资源 CDN",
   "page-size": "每页加载数",
   "font-size": "字体大小",
   "font-style": "字体样式",

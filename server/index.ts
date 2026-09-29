@@ -372,6 +372,8 @@ async function readIndexHtmlWithCdnRewrite(fallbackPublicPath: string): Promise<
 const cdnStaticRewrite = (fallbackPublicPath: string) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+      // Dev mode: never rewrite — let ViteExpress serve the live source build.
+      if (process.env.NODE_ENV !== 'production') return next();
       if (req.method !== 'GET' && req.method !== 'HEAD') return next();
       const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
       if (urlPath !== '/' && urlPath !== '/index.html') return next();
@@ -410,6 +412,8 @@ const cdnStaticRewrite = (fallbackPublicPath: string) => {
 const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+      // Dev mode: never rewrite — let ViteExpress serve the live source build.
+      if (process.env.NODE_ENV !== 'production') return next();
       if (req.method !== 'GET' && req.method !== 'HEAD') return next();
       if (res.headersSent) return next();
 
@@ -447,6 +451,8 @@ const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
 const cdnManifestRewrite = (fallbackPublicPath: string) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+      // Dev mode: never rewrite — let ViteExpress serve the live source build.
+      if (process.env.NODE_ENV !== 'production') return next();
       if (req.method !== 'GET' && req.method !== 'HEAD') return next();
 
       const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);

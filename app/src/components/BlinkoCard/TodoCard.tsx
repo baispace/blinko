@@ -68,7 +68,9 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
   const quad = getQuadrant(todo);
   const quadMeta = QUADRANT[quad];
 
-  const due = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
+  // expireAt 可能被脏数据/旧版本写成非法值，这里做有效性校验，避免出现 "Invalid Date"
+  const rawDue = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
+  const due = rawDue && rawDue.isValid() ? rawDue : null;
   const todayStart = dayjs().startOf('day');
   const isOverdue = !done && due != null && due.isBefore(todayStart, 'day');
   const overdueDays = isOverdue ? todayStart.diff(due!.startOf('day'), 'day') : 0;

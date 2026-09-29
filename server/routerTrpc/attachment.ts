@@ -8,87 +8,8 @@ import { TRPCError } from '@trpc/server';
 import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
 import { buildStaticCdnBase, buildStaticCdnKeyPrefix } from '@shared/lib/pathConstant';
-
-/**
- * Locate the built static-asset directory (the frontend build the server serves
- * under `/assets`, `/fonts`, `/icons`, `/locales`). The on-disk path varies a lot
- * by deployment:
- *   - local prod: `ncp dist/public server/public`  → server/public
- *   - docker build: app default outDir is `app/dist`, copied into the image
- *   - container WORKDIR is /app, server bundle at /app/server/index.js (or /app/dist)
- *   - dev source: app/dist
- * Rather than guess one offset, do a bounded BFS from a handful of likely roots
- * and return the first directory that actually looks like a built Vite app
- * (contains `index.html` AND an `assets/` folder). Failing that, accept any dir
- * with `index.html`. This keeps the upload dialog aligned with whatever the
- * server is really serving, regardless of build layout.
- */
-function resolveStaticPublicDir(): string | null {
-  const isDir = (p: string) => { try { return fs.existsSync(p) && fs.statSync(p).isDirectory(); } catch { return false; } };
-  const hasIndex = (dir: string) => isDir(dir) && (() => { try { return fs.existsSync(path.join(dir, 'index.html')); } catch { return false; } })();
-  const hasAssets = (dir: string) => isDir(path.join(dir, 'assets'));
-
-  // Seed BFS roots with the most likely locations across every known layout.
-  const roots = new Set<string>([
-    process.cwd(),
-    __dirname,
-    path.dirname(__dirname),
-    path.resolve(__dirname, '..'),
-    path.resolve(__dirname, '..', '..'),
-    path.resolve(__dirname, '..', 'server'),
-    path.resolve(__dirname, '..', 'app', 'dist'),
-    path.resolve(__dirname, '..', 'app', 'dist', 'public'),
-    path.resolve(process.cwd(), 'server', 'public'),
-    path.resolve(process.cwd(), 'app', 'dist'),
-    path.resolve(process.cwd(), 'app', 'dist', 'public'),
-    path.resolve(process.cwd(), 'app', 'public'),
-    '/app',
-    '/app/server',
-    '/app/server/public',
-    '/app/dist',
-    '/app/dist/public',
-    '/app/app/dist',
-    '/app/app/dist/public',
-    '/app/public',
-  ]);
-
-  const SKIP = new Set(['node_modules', '.git', '.vite', 'src', 'src-tauri']);
-  const seen = new Set<string>();
-  const queue: string[] = [...roots];
-  let depth = 0;
-  const MAX_DEPTH = 4;
-
-  // Strict pass first (index.html + assets/), then loose pass (index.html only).
-  let looseHit: string | null = null;
-  while (queue.length && depth <= MAX_DEPTH) {
-    const level: string[] = [];
-    while (queue.length) {
-      const dir = queue.shift()!;
-      if (seen.has(dir)) continue;
-      seen.add(dir);
-      if (!isDir(dir)) continue;
-
-      if (hasIndex(dir)) {
-        if (hasAssets(dir)) return dir;           // strict hit
-        if (!looseHit) looseHit = dir;            // remember for loose fallback
-      }
-      // Enqueue one level of children for the next BFS iteration.
-      if (depth < MAX_DEPTH) {
-        try {
-          for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-            if (e.isDirectory() && !SKIP.has(e.name) && !e.name.startsWith('.')) {
-              level.push(path.join(dir, e.name));
-            }
-          }
-        } catch { /* ignore */ }
-      }
-    }
-    for (const d of level) queue.push(d);
-    depth++;
-  }
-
-  return looseHit;
-}
+import { resolveStaticPublicDir } from '../lib/cdnStaticDir';
+import { randomUUID } from 'crypto';
 
 /**
  * Only these top-level directories are actually fetched from the CDN (see
@@ -635,54 +556,136 @@ export const attachmentsRouter = router({
    * layout so HTML references (rewritten by the cdnStaticRewrite middleware) resolve
    * to the CDN domain. The OSS path prefix is fixed to the saved `staticCdnPath`
    * config so upload keys and browser URLs stay aligned — the dialog cannot override it.
-   * Failures are counted, not fatal.
+   *
+   * The upload runs as a background job so the UI can poll progress (the S3 puts
+   * are sequential and can take a while for a few hundred files). This mutation
+   * only kicks off the job and returns its id; use `staticCdnUploadProgress`.
+   * Failures are counted, not fatal. On a successful (uploaded > 0) run we also
+   * auto-enable `staticCdnEnabled` so the CDN rewrite actually takes effect —
+   * previously uploading alone left the switch off, which is why the site kept
+   * serving assets from the origin even after a successful push.
    */
-  uploadStaticAssetsToCdn: authProcedure
+  startStaticCdnUpload: authProcedure
     .input(z.object({ files: z.array(z.string()) }))
     .mutation(async ({ input }) => {
-      const config = await getGlobalConfig({ useAdmin: true });
-      if (config.objectStorage !== 's3') {
-        throw new TRPCError({ code: 'badRequest', message: '请先在「对象存储」中启用 S3 并配置好 AccessKey / Bucket' });
-      }
-      const base = buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath);
-      if (!base) {
-        throw new TRPCError({ code: 'badRequest', message: '请先在「静态资源 CDN」配置 CDN 域名 (staticCdnBaseUrl)' });
-      }
-      // OSS key prefix is fixed to the saved default path (staticCdnPath). The HTML
-      // rewrite middleware uses the same value, so upload keys and browser URLs stay aligned.
-      const keyPrefix = buildStaticCdnKeyPrefix(config.staticCdnPath ?? '');
-
-      const publicPath = resolveStaticPublicDir();
-      if (!publicPath) {
-        throw new TRPCError({ code: 'badRequest', message: `未找到静态资源构建目录（server/public）。请确认已在生产 / 构建环境执行；当前工作目录：${process.cwd()}` });
-      }
-
-      const allowed = new Set(input.files);
-      let uploaded = 0, failed = 0, skipped = 0;
-      const walk = async (dir: string, rel: string) => {
-        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-        for (const entry of entries) {
-          const full = path.join(dir, entry.name);
-          const r = rel ? `${rel}/${entry.name}` : entry.name;
-          if (entry.isDirectory()) {
-            // At the top level, only descend into CDN-relevant directories.
-            if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
-            await walk(full, r);
-          } else {
-            if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
-            if (!allowed.has(r)) { skipped++; continue; }
-            try {
-              const body = await fs.promises.readFile(full);
-              await FileService.uploadBufferToS3(keyPrefix + r, body);
-              uploaded++;
-            } catch (err) {
-              failed++;
-              console.error(`[staticCdn] upload failed: ${keyPrefix}${r}`, err);
-            }
-          }
-        }
+      const jobId = randomUUID();
+      const job: StaticCdnJob = {
+        total: input.files.length, done: 0, failed: 0, skipped: 0,
+        current: '', finished: false, error: undefined,
       };
-      await walk(publicPath, '');
-      return { uploaded, failed, skipped, baseUrl: base, prefix: keyPrefix };
+      staticCdnJobs.set(jobId, job);
+      // Fire-and-forget: report progress via the query endpoint.
+      void runStaticCdnUpload(job, input.files);
+      return { jobId };
+    }),
+
+  /**
+   * Poll the progress of a static-CDN upload job started by `startStaticCdnUpload`.
+   */
+  staticCdnUploadProgress: authProcedure
+    .input(z.object({ jobId: z.string() }))
+    .query(async ({ input }) => {
+      const job = staticCdnJobs.get(input.jobId);
+      if (!job) {
+        return { notFound: true, finished: true, total: 0, done: 0, failed: 0, skipped: 0, current: '', error: undefined };
+      }
+      return { notFound: false, ...job };
     }),
 });
+
+interface StaticCdnJob {
+  total: number;
+  done: number;        // successfully uploaded
+  failed: number;
+  skipped: number;
+  current: string;     // file being uploaded right now
+  finished: boolean;
+  error?: string;
+}
+
+// In-memory registry of running upload jobs. Single-process (admin-only) feature,
+// so a plain Map is sufficient; jobs are short-lived and not persisted.
+const staticCdnJobs = new Map<string, StaticCdnJob>();
+
+async function runStaticCdnUpload(job: StaticCdnJob, files: string[]) {
+  try {
+    const config = await getGlobalConfig({ useAdmin: true });
+    if (config.objectStorage !== 's3') {
+      job.error = '请先在「对象存储」中启用 S3 并配置好 AccessKey / Bucket';
+      job.finished = true;
+      return;
+    }
+    const base = buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath);
+    if (!base) {
+      job.error = '请先在「静态资源 CDN」配置 CDN 域名 (staticCdnBaseUrl)';
+      job.finished = true;
+      return;
+    }
+    // OSS key prefix is fixed to the saved default path (staticCdnPath). The HTML
+    // rewrite middleware uses the same value, so upload keys and browser URLs stay aligned.
+    const keyPrefix = buildStaticCdnKeyPrefix(config.staticCdnPath ?? '');
+
+    const publicPath = resolveStaticPublicDir();
+    if (!publicPath) {
+      job.error = `未找到静态资源构建目录（server/public）。请确认已在生产 / 构建环境执行；当前工作目录：${process.cwd()}`;
+      job.finished = true;
+      return;
+    }
+
+    // Build a fast set of the actually-present files (filter input against disk).
+    const allowed = new Set(files);
+    const present = new Set<string>();
+    const collect = async (dir: string, rel: string) => {
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        const r = rel ? `${rel}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
+          await collect(full, r);
+        } else {
+          if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
+          if (allowed.has(r)) present.add(r);
+        }
+      }
+    };
+    await collect(publicPath, '');
+    const toUpload = [...present];
+
+    for (const r of toUpload) {
+      job.current = r;
+      const full = path.join(publicPath, r);
+      try {
+        const body = await fs.promises.readFile(full);
+        await FileService.uploadBufferToS3(keyPrefix + r, body);
+        job.done++;
+      } catch (err: any) {
+        job.failed++;
+        console.error(`[staticCdn] upload failed: ${keyPrefix}${r}`, err);
+      }
+    }
+    job.skipped = allowed.size - present.size;
+    job.current = '';
+
+    // Auto-enable the CDN switch on a successful push so the rewrite takes effect.
+    // `config.key` is NOT unique in the schema, so we find-by-key then update by id
+    // (mirrors the config.update router) rather than upserting on `key`.
+    if (job.done > 0 && config.staticCdnEnabled !== true && config.staticCdnEnabled !== 'true') {
+      try {
+        const existing = await prisma.config.findFirst({ where: { key: 'staticCdnEnabled' } });
+        if (existing) {
+          await prisma.config.update({ where: { id: existing.id }, data: { config: { type: 'boolean', value: true } } });
+        } else {
+          await prisma.config.create({ data: { key: 'staticCdnEnabled', config: { type: 'boolean', value: true } } });
+        }
+        console.log('[staticCdn] auto-enabled staticCdnEnabled after successful upload');
+      } catch (err) {
+        console.error('[staticCdn] failed to auto-enable staticCdnEnabled', err);
+      }
+    }
+  } catch (err: any) {
+    job.error = err?.message ?? String(err);
+  } finally {
+    job.finished = true;
+  }
+}

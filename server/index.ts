@@ -35,6 +35,7 @@ import openaiRouter from './routerExpress/openai';
 import mcpRouter from './routerExpress/mcp';
 import { getGlobalConfig } from './routerTrpc/config';
 import { buildStaticCdnBase } from '@shared/lib/pathConstant';
+import { resolveStaticPublicDir } from './lib/cdnStaticDir';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -345,37 +346,151 @@ function rewriteCdnRefs(html: string, base: string): string {
   return html.replace(/(["'(`])\.{0,2}\/(assets|fonts|icons|locales)\//g, `$1${base}/$2/`);
 }
 
-const cdnStaticRewrite = (publicPath: string) => {
+// Common prefixes that should never be treated as SPA HTML pages.
+const CDN_HTML_SKIP_PREFIXES = ['/api/', '/trpc/', '/v1/', '/plugins/', '/dist/', '/uploads/', '/health', '/src/'];
+// File extensions that should be served by express.static as real files.
+const CDN_STATIC_FILE_EXT = /\.(js|mjs|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|otf|pdf|mp4|webm|ogg|mp3|wav|zip|gz)(\?.*)?$/i;
+
+async function readIndexHtmlWithCdnRewrite(fallbackPublicPath: string): Promise<{ html: string; base: string; publicPath: string } | null> {
+  const cfg = await getGlobalConfig({ useAdmin: true });
+  const enabled = cfg.staticCdnEnabled === true || cfg.staticCdnEnabled === 'true';
+  if (!enabled) return null;
+  const base = buildStaticCdnBase(cfg.staticCdnBaseUrl, cfg.staticCdnPath);
+  if (!base) return null;
+  const publicPath = resolveStaticPublicDir() ?? fallbackPublicPath;
+  const filePath = path.join(publicPath, 'index.html');
+  if (!fs.existsSync(filePath)) return null;
+  let html = await fs.promises.readFile(filePath, 'utf-8');
+  html = rewriteCdnRefs(html, base);
+  return { html, base, publicPath };
+}
+
+/**
+ * Fast-path rewrite for the root/index.html document.
+ * This runs before express.static so the CDN toggle takes effect immediately.
+ */
+const cdnStaticRewrite = (fallbackPublicPath: string) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (urlPath !== '/' && urlPath !== '/index.html') return next();
+
+      const result = await readIndexHtmlWithCdnRewrite(fallbackPublicPath);
+      if (!result) {
+        if (urlPath === '/') {
+          const cfg = await getGlobalConfig({ useAdmin: true });
+          const enabled = cfg.staticCdnEnabled === true || cfg.staticCdnEnabled === 'true';
+          if (!enabled) console.log('[staticCdn] rewrite skipped: staticCdnEnabled is off');
+          else console.log(`[staticCdn] rewrite skipped: index.html not found (cwd=${process.cwd()})`);
+        }
+        return next();
+      }
+      const replaced = countCdnReplacements(result.html, result.base);
+      console.log(`[staticCdn] rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+      });
+      res.send(result.html);
+    } catch (err) {
+      console.error('[staticCdn] rewrite error', err);
+      return next();
+    }
+  };
+};
+
+/**
+ * SPA fallback rewrite.
+ * In production, express.static cannot serve /notes /settings etc. because those
+ * paths have no matching files. This middleware sits AFTER express.static and
+ * returns the CDN-rewritten index.html for any HTML page request that fell through.
+ * In dev it simply next()s (server/public is absent) so ViteExpress keeps serving.
+ */
+const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      if (res.headersSent) return next();
+
+      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (CDN_HTML_SKIP_PREFIXES.some(p => urlPath.startsWith(p))) return next();
+      if (CDN_STATIC_FILE_EXT.test(urlPath)) return next();
+      if (urlPath === '/' || urlPath === '/index.html') return next(); // already handled above
+
+      // Only fall back for browser HTML navigation requests.
+      const accept = String(req.headers.accept || '');
+      if (!accept.includes('text/html')) return next();
+
+      const result = await readIndexHtmlWithCdnRewrite(fallbackPublicPath);
+      if (!result) return next();
+
+      const replaced = countCdnReplacements(result.html, result.base);
+      console.log(`[staticCdn] SPA fallback rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+      });
+      res.send(result.html);
+    } catch (err) {
+      return next();
+    }
+  };
+};
+
+/**
+ * PWA manifest CDN rewrite.
+ * The manifest is a real JSON file, so express.static would serve it as-is.
+ * We intercept it and rewrite the icon/shortcut /icons/ and /assets/ references
+ * to the CDN so that PWA install prompts also fetch icons from the CDN.
+ */
+const cdnManifestRewrite = (fallbackPublicPath: string) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (urlPath !== '/manifest.json' && urlPath !== '/manifest.webmanifest') return next();
+
       const cfg = await getGlobalConfig({ useAdmin: true });
       const enabled = cfg.staticCdnEnabled === true || cfg.staticCdnEnabled === 'true';
       if (!enabled) return next();
       const base = buildStaticCdnBase(cfg.staticCdnBaseUrl, cfg.staticCdnPath);
       if (!base) return next();
 
-      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-      const isHtml = urlPath === '/' || urlPath === '/index.html';
-      if (!isHtml) return next();
-
-      const relPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+      const publicPath = resolveStaticPublicDir() ?? fallbackPublicPath;
+      const relPath = urlPath.replace(/^\/+/, '');
       const filePath = path.join(publicPath, relPath);
-      // Path traversal guard
-      if (!filePath.startsWith(publicPath + path.sep)) return next();
-      if (!fs.existsSync(filePath)) return next();
+      if (!filePath.startsWith(publicPath + path.sep) || !fs.existsSync(filePath)) return next();
 
-      let html = await fs.promises.readFile(filePath, 'utf-8');
-      html = rewriteCdnRefs(html, base);
+      let content = await fs.promises.readFile(filePath, 'utf-8');
+      content = rewriteCdnRefs(content, base);
       res.set({
-        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Type': urlPath.endsWith('.webmanifest')
+          ? 'application/manifest+json; charset=utf-8'
+          : 'application/json; charset=utf-8',
         'Cache-Control': 'public, max-age=300',
       });
-      res.send(html);
-    } catch {
+      res.send(content);
+    } catch (err) {
       return next();
     }
   };
 };
+
+// Count how many CDN base URLs ended up in the HTML — a cheap sanity signal for
+// whether the rewrite actually fired (0 means the references weren't matched).
+function countCdnReplacements(html: string, base: string): number {
+  if (!base) return 0;
+  try {
+    const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(escaped, 'g');
+    const m = html.match(re);
+    return m ? m.length : 0;
+  } catch {
+    return 0;
+  }
+}
 
 /**
  * Bootstrap the server
@@ -406,8 +521,10 @@ async function bootstrap() {
 
     const publicPath = path.resolve(appRootProd, 'public');
     app.use(cdnStaticRewrite(publicPath));
+    app.use(cdnManifestRewrite(publicPath));
     app.use(servePrecompressed(publicPath));
     app.use(express.static(publicPath, staticOptions));
+    app.use(cdnSpaFallbackRewrite(publicPath));
 
     // Add body parsers for JSON and form data
     app.use(express.json({ limit: '50mb' }));

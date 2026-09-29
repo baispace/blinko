@@ -149,7 +149,8 @@ const Home = observer(() => {
       ...(blinko.doneTodoList.value ?? []).filter(isCompletedToday),
     ];
     return source.filter((todo: any) => {
-      const due = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt).startOf('day') : null;
+      const d = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
+      const due = d && d.isValid() ? d.startOf('day') : null;
       return !due || !due.isAfter(todayStart, 'day'); // 今天到期 + 逾期
     });
   }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
@@ -163,7 +164,8 @@ const Home = observer(() => {
     ];
     return source
       .filter((todo: any) => {
-        const due = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt).startOf('day') : null;
+        const d = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
+        const due = d && d.isValid() ? d.startOf('day') : null;
         return due && due.isAfter(todayStart, 'day');
       })
       .sort((a: any, b: any) => {
@@ -225,13 +227,15 @@ const Home = observer(() => {
       }
       {(!isPc || hidePcEditor) && !isTodoView && <BlinkoAddButton />}
 
+      {/* 待办视图永远渲染自身外壳（新增入口 + Tabs + 空列表提示），
+          否则列表为空时 isEmpty 会把整个待办模块连带「加一条任务」一起隐藏 */}
       <LoadingAndEmpty
         isLoading={currentListState.isLoading}
-        isEmpty={currentListState.isEmpty}
+        isEmpty={!isTodoView && currentListState.isEmpty}
       />
 
       {
-        !currentListState.isEmpty &&
+        (!currentListState.isEmpty || isTodoView) &&
         <ScrollArea
           ref={scrollAreaRef}
           fixMobileTopBar

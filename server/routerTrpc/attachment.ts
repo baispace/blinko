@@ -9,6 +9,96 @@ import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
 import { buildStaticCdnBase, buildStaticCdnKeyPrefix } from '@shared/lib/pathConstant';
 
+/**
+ * Locate the built static-asset directory (the frontend build the server serves
+ * under `/assets`, `/fonts`, `/icons`, `/locales`). The on-disk path varies a lot
+ * by deployment:
+ *   - local prod: `ncp dist/public server/public`  → server/public
+ *   - docker build: app default outDir is `app/dist`, copied into the image
+ *   - container WORKDIR is /app, server bundle at /app/server/index.js (or /app/dist)
+ *   - dev source: app/dist
+ * Rather than guess one offset, do a bounded BFS from a handful of likely roots
+ * and return the first directory that actually looks like a built Vite app
+ * (contains `index.html` AND an `assets/` folder). Failing that, accept any dir
+ * with `index.html`. This keeps the upload dialog aligned with whatever the
+ * server is really serving, regardless of build layout.
+ */
+function resolveStaticPublicDir(): string | null {
+  const isDir = (p: string) => { try { return fs.existsSync(p) && fs.statSync(p).isDirectory(); } catch { return false; } };
+  const hasIndex = (dir: string) => isDir(dir) && (() => { try { return fs.existsSync(path.join(dir, 'index.html')); } catch { return false; } })();
+  const hasAssets = (dir: string) => isDir(path.join(dir, 'assets'));
+
+  // Seed BFS roots with the most likely locations across every known layout.
+  const roots = new Set<string>([
+    process.cwd(),
+    __dirname,
+    path.dirname(__dirname),
+    path.resolve(__dirname, '..'),
+    path.resolve(__dirname, '..', '..'),
+    path.resolve(__dirname, '..', 'server'),
+    path.resolve(__dirname, '..', 'app', 'dist'),
+    path.resolve(__dirname, '..', 'app', 'dist', 'public'),
+    path.resolve(process.cwd(), 'server', 'public'),
+    path.resolve(process.cwd(), 'app', 'dist'),
+    path.resolve(process.cwd(), 'app', 'dist', 'public'),
+    path.resolve(process.cwd(), 'app', 'public'),
+    '/app',
+    '/app/server',
+    '/app/server/public',
+    '/app/dist',
+    '/app/dist/public',
+    '/app/app/dist',
+    '/app/app/dist/public',
+    '/app/public',
+  ]);
+
+  const SKIP = new Set(['node_modules', '.git', '.vite', 'src', 'src-tauri']);
+  const seen = new Set<string>();
+  const queue: string[] = [...roots];
+  let depth = 0;
+  const MAX_DEPTH = 4;
+
+  // Strict pass first (index.html + assets/), then loose pass (index.html only).
+  let looseHit: string | null = null;
+  while (queue.length && depth <= MAX_DEPTH) {
+    const level: string[] = [];
+    while (queue.length) {
+      const dir = queue.shift()!;
+      if (seen.has(dir)) continue;
+      seen.add(dir);
+      if (!isDir(dir)) continue;
+
+      if (hasIndex(dir)) {
+        if (hasAssets(dir)) return dir;           // strict hit
+        if (!looseHit) looseHit = dir;            // remember for loose fallback
+      }
+      // Enqueue one level of children for the next BFS iteration.
+      if (depth < MAX_DEPTH) {
+        try {
+          for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+            if (e.isDirectory() && !SKIP.has(e.name) && !e.name.startsWith('.')) {
+              level.push(path.join(dir, e.name));
+            }
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    for (const d of level) queue.push(d);
+    depth++;
+  }
+
+  return looseHit;
+}
+
+/**
+ * Only these top-level directories are actually fetched from the CDN (see
+ * rewriteCdnRefs in server/index.ts, which rewrites /assets, /fonts, /icons,
+ * /locales references). Restricting the upload to them keeps the dialog focused
+ * on real static resources and avoids pushing server runtime files if the
+ * resolved directory happens to also contain the backend bundle.
+ */
+const CDN_STATIC_DIRS = ['assets', 'fonts', 'icons', 'locales'];
+
 export interface AttachmentResult {
   id: number | null;
   path: string;
@@ -513,17 +603,21 @@ export const attachmentsRouter = router({
     .query(async () => {
       const config = await getGlobalConfig({ useAdmin: true });
       const base = buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath);
-      const publicPath = path.resolve(__dirname, '../../server/public');
+      const publicPath = resolveStaticPublicDir();
       const files: { path: string; size: number }[] = [];
-      if (fs.existsSync(publicPath)) {
+      if (publicPath && fs.existsSync(publicPath)) {
         const walk = async (dir: string, rel: string) => {
           const entries = await fs.promises.readdir(dir, { withFileTypes: true });
           for (const entry of entries) {
             const full = path.join(dir, entry.name);
             const r = rel ? `${rel}/${entry.name}` : entry.name;
             if (entry.isDirectory()) {
+              // At the top level, only descend into CDN-relevant directories.
+              if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
               await walk(full, r);
             } else {
+              // Skip stray files at the top level (index.html, favicon, etc. stay on origin).
+              if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
               let size = 0;
               try { size = (await fs.promises.stat(full)).size; } catch { /* ignore */ }
               files.push({ path: r, size });
@@ -558,9 +652,9 @@ export const attachmentsRouter = router({
       // rewrite middleware uses the same value, so upload keys and browser URLs stay aligned.
       const keyPrefix = buildStaticCdnKeyPrefix(config.staticCdnPath ?? '');
 
-      const publicPath = path.resolve(__dirname, '../../server/public');
-      if (!fs.existsSync(publicPath)) {
-        throw new TRPCError({ code: 'badRequest', message: '未找到静态资源目录 server/public（请在生产 / 构建环境执行）' });
+      const publicPath = resolveStaticPublicDir();
+      if (!publicPath) {
+        throw new TRPCError({ code: 'badRequest', message: `未找到静态资源构建目录（server/public）。请确认已在生产 / 构建环境执行；当前工作目录：${process.cwd()}` });
       }
 
       const allowed = new Set(input.files);
@@ -571,8 +665,11 @@ export const attachmentsRouter = router({
           const full = path.join(dir, entry.name);
           const r = rel ? `${rel}/${entry.name}` : entry.name;
           if (entry.isDirectory()) {
+            // At the top level, only descend into CDN-relevant directories.
+            if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
             await walk(full, r);
           } else {
+            if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
             if (!allowed.has(r)) { skipped++; continue; }
             try {
               const body = await fs.promises.readFile(full);

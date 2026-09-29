@@ -132,10 +132,12 @@ export class FileService {
   
   public static async getS3Client() {
     const config = await getGlobalConfig({ useAdmin: true });
-    // S3 SDK requires a full URL; tolerate endpoint values entered without the protocol prefix
-    const endpoint = config.s3Endpoint && !/^https?:\/\//i.test(config.s3Endpoint)
-      ? `https://${config.s3Endpoint}`
-      : config.s3Endpoint;
+    // S3 SDK requires a full URL; tolerate endpoint values entered without the protocol prefix.
+    // Trim whitespace (e.g. a trailing tab from copy-paste) which would otherwise break DNS resolution.
+    const endpointRaw = (config.s3Endpoint || '').trim();
+    const endpoint = endpointRaw && !/^https?:\/\//i.test(endpointRaw)
+      ? `https://${endpointRaw}`
+      : endpointRaw;
     return cache.wrap(`${endpoint}-${config.s3Region}-${config.s3Bucket}-${config.s3AccessKeyId}-${config.s3AccessKeySecret}-${config.s3CdnDomain ?? ''}`, async () => {
       const s3ClientInstance = new S3Client({
         endpoint,
@@ -263,6 +265,25 @@ export class FileService {
   static getOriginFilename(name: string) {
     const match = name.match(/-[^-]+(\.[^.]+)$/);
     return match ? match[0].substring(1) : name;
+  }
+
+  /**
+   * Upload an arbitrary buffer to S3/OSS under an explicit key (no random
+   * suffix). Used by the static-asset CDN push, where keys must mirror the
+   * original publicPath layout so HTML references resolve to the CDN domain.
+   */
+  static async uploadBufferToS3(key: string, body: Buffer, contentType?: string) {
+    const { s3ClientInstance, config } = await this.getS3Client();
+    if (!config.s3Bucket) {
+      throw new Error('S3 bucket is not configured');
+    }
+    const command = new PutObjectCommand({
+      Bucket: config.s3Bucket,
+      Key: key.replace(/^\/+/, ''),
+      Body: body,
+      ContentType: contentType || this.getContentType(path.extname(key), ''),
+    });
+    await s3ClientInstance.send(command);
   }
 
   /**

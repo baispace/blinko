@@ -3,7 +3,11 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { Prisma } from '@prisma/client';
 import path from 'path';
+import fs from 'fs';
+import { TRPCError } from '@trpc/server';
+import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
+import { buildStaticCdnBase, buildStaticCdnKeyPrefix } from '@shared/lib/pathConstant';
 
 export interface AttachmentResult {
   id: number | null;
@@ -498,5 +502,90 @@ export const attachmentsRouter = router({
       }
 
       return { success: true, message: 'Files deleted successfully' };
+    }),
+
+  /**
+   * List the site's built static assets (dist/public -> server/public) so the
+   * upload dialog can present a file checklist. Returns relative paths (matching
+   * the publicPath layout) plus each file's size and the resolved CDN base URL.
+   */
+  listStaticAssets: authProcedure
+    .query(async () => {
+      const config = await getGlobalConfig({ useAdmin: true });
+      const base = buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath);
+      const publicPath = path.resolve(__dirname, '../../server/public');
+      const files: { path: string; size: number }[] = [];
+      if (fs.existsSync(publicPath)) {
+        const walk = async (dir: string, rel: string) => {
+          const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            const r = rel ? `${rel}/${entry.name}` : entry.name;
+            if (entry.isDirectory()) {
+              await walk(full, r);
+            } else {
+              let size = 0;
+              try { size = (await fs.promises.stat(full)).size; } catch { /* ignore */ }
+              files.push({ path: r, size });
+            }
+          }
+        };
+        await walk(publicPath, '');
+      }
+      return { files, baseUrl: base };
+    }),
+
+  /**
+   * Push selected static assets (server/public) to the configured object storage
+   * under the CDN base URL's path prefix. Keys mirror the original publicPath
+   * layout so HTML references (rewritten by the cdnStaticRewrite middleware) resolve
+   * to the CDN domain. The OSS path prefix is fixed to the saved `staticCdnPath`
+   * config so upload keys and browser URLs stay aligned — the dialog cannot override it.
+   * Failures are counted, not fatal.
+   */
+  uploadStaticAssetsToCdn: authProcedure
+    .input(z.object({ files: z.array(z.string()) }))
+    .mutation(async ({ input }) => {
+      const config = await getGlobalConfig({ useAdmin: true });
+      if (config.objectStorage !== 's3') {
+        throw new TRPCError({ code: 'badRequest', message: '请先在「对象存储」中启用 S3 并配置好 AccessKey / Bucket' });
+      }
+      const base = buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath);
+      if (!base) {
+        throw new TRPCError({ code: 'badRequest', message: '请先在「静态资源 CDN」配置 CDN 域名 (staticCdnBaseUrl)' });
+      }
+      // OSS key prefix is fixed to the saved default path (staticCdnPath). The HTML
+      // rewrite middleware uses the same value, so upload keys and browser URLs stay aligned.
+      const keyPrefix = buildStaticCdnKeyPrefix(config.staticCdnPath ?? '');
+
+      const publicPath = path.resolve(__dirname, '../../server/public');
+      if (!fs.existsSync(publicPath)) {
+        throw new TRPCError({ code: 'badRequest', message: '未找到静态资源目录 server/public（请在生产 / 构建环境执行）' });
+      }
+
+      const allowed = new Set(input.files);
+      let uploaded = 0, failed = 0, skipped = 0;
+      const walk = async (dir: string, rel: string) => {
+        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const full = path.join(dir, entry.name);
+          const r = rel ? `${rel}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            await walk(full, r);
+          } else {
+            if (!allowed.has(r)) { skipped++; continue; }
+            try {
+              const body = await fs.promises.readFile(full);
+              await FileService.uploadBufferToS3(keyPrefix + r, body);
+              uploaded++;
+            } catch (err) {
+              failed++;
+              console.error(`[staticCdn] upload failed: ${keyPrefix}${r}`, err);
+            }
+          }
+        }
+      };
+      await walk(publicPath, '');
+      return { uploaded, failed, skipped, baseUrl: base, prefix: keyPrefix };
     }),
 });

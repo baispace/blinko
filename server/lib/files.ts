@@ -306,6 +306,14 @@ export class FileService {
       '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
       '.pdf': 'application/pdf', '.mp4': 'video/mp4', '.mp3': 'audio/mpeg',
       '.txt': 'text/plain', '.md': 'text/markdown',
+      // Web 静态资源（设置页「静态资源 CDN」上传 JS/CSS/字体必须带正确 MIME，
+      // 否则浏览器对 ES Module 强制校验 Content-Type 会直接拒绝执行 → 白屏）
+      '.js': 'application/javascript', '.mjs': 'application/javascript', '.cjs': 'application/javascript',
+      '.css': 'text/css', '.json': 'application/json', '.map': 'application/json',
+      '.html': 'text/html', '.xml': 'application/xml',
+      '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf',
+      '.eot': 'application/vnd.ms-fontobject',
+      '.ico': 'image/x-icon', '.avif': 'image/avif',
     };
     return mimeMap[extension.toLowerCase()] ?? 'application/octet-stream';
   }

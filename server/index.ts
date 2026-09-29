@@ -33,6 +33,8 @@ import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
 import mcpRouter from './routerExpress/mcp';
+import { getGlobalConfig } from './routerTrpc/config';
+import { buildStaticCdnBase } from '@shared/lib/pathConstant';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -330,6 +332,52 @@ const servePrecompressed = (publicPath: string) => {
 };
 
 /**
+ * Static-asset CDN rewrite.
+ * When `staticCdnEnabled` is on, HTML responses (index.html / `/`) have their
+ * same-origin /assets/, /fonts/, /icons/, /locales/ references rewritten to the
+ * configured CDN base URL, so the browser fetches JS/CSS/fonts from the CDN
+ * instead of the origin. CSS fetched from the CDN then resolves its relative
+ * font/image URLs against the CDN domain automatically. This makes the CDN
+ * toggle take effect immediately without a rebuild.
+ */
+function rewriteCdnRefs(html: string, base: string): string {
+  // Match a quote / ' / `, 0-2 leading dots, then /(assets|fonts|icons|locales)/
+  return html.replace(/(["'(`])\.{0,2}\/(assets|fonts|icons|locales)\//g, `$1${base}/$2/`);
+}
+
+const cdnStaticRewrite = (publicPath: string) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      const cfg = await getGlobalConfig({ useAdmin: true });
+      const enabled = cfg.staticCdnEnabled === true || cfg.staticCdnEnabled === 'true';
+      if (!enabled) return next();
+      const base = buildStaticCdnBase(cfg.staticCdnBaseUrl, cfg.staticCdnPath);
+      if (!base) return next();
+
+      const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      const isHtml = urlPath === '/' || urlPath === '/index.html';
+      if (!isHtml) return next();
+
+      const relPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+      const filePath = path.join(publicPath, relPath);
+      // Path traversal guard
+      if (!filePath.startsWith(publicPath + path.sep)) return next();
+      if (!fs.existsSync(filePath)) return next();
+
+      let html = await fs.promises.readFile(filePath, 'utf-8');
+      html = rewriteCdnRefs(html, base);
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+      });
+      res.send(html);
+    } catch {
+      return next();
+    }
+  };
+};
+
+/**
  * Bootstrap the server
  * Sets up middleware, auth, API routes and starts the server
  */
@@ -357,6 +405,7 @@ async function bootstrap() {
     };
 
     const publicPath = path.resolve(appRootProd, 'public');
+    app.use(cdnStaticRewrite(publicPath));
     app.use(servePrecompressed(publicPath));
     app.use(express.static(publicPath, staticOptions));
 

@@ -22,8 +22,16 @@ function isImage(filename: string): boolean {
  * (config key: s3CdnDomain). Returns null when not configured.
  * Requires the CDN origin to be authorized for the private bucket
  * (Aliyun CDN: 回源配置 -> OSS 私有 Bucket 回源) or a public-read bucket.
+ * Honors the `cdnEnabled` config flag (default true) — when false, falls back
+ * to the S3 presigned URL even if `s3CdnDomain` is set (lets users temporarily
+ * disable CDN without clearing the domain).
  */
 function buildCdnUrl(config: any, key: string): string | null {
+  // cdnEnabled defaults to true so existing installs keep their CDN behavior;
+  // users can flip the Settings → Storage toggle to fall back to presigned URLs.
+  // cdnEnabled is stored as either a boolean or the string 'false'/'true'
+  // (frontend sends a boolean, but legacy writes may be strings) — accept both.
+  if (config?.cdnEnabled === false || config?.cdnEnabled === 'false') return null;
   const domain: string | undefined = config?.s3CdnDomain;
   if (!domain) return null;
   const base = /^https?:\/\//i.test(domain)

@@ -19,6 +19,11 @@ import { randomUUID } from 'crypto';
  * resolved directory happens to also contain the backend bundle.
  */
 const CDN_STATIC_DIRS = ['assets', 'fonts', 'icons', 'locales'];
+// start.sh pre-compresses static files into sibling *.gz at container start, but
+// those are only ever read by the local servePrecompressed() middleware. When the
+// CDN is enabled the browser fetches the plain file from OSS/CDN (which applies
+// its own gzip), so uploading the .gz twins just doubles the object count.
+const CDN_SKIP_SUFFIXES = ['.gz', '.gz.tmp', '.br'];
 
 export interface AttachmentResult {
   id: number | null;
@@ -539,6 +544,7 @@ export const attachmentsRouter = router({
             } else {
               // Skip stray files at the top level (index.html, favicon, etc. stay on origin).
               if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
+              if (CDN_SKIP_SUFFIXES.some(s => entry.name.endsWith(s))) continue;
               let size = 0;
               try { size = (await fs.promises.stat(full)).size; } catch { /* ignore */ }
               files.push({ path: r, size });
@@ -645,6 +651,7 @@ async function runStaticCdnUpload(job: StaticCdnJob, files: string[]) {
           await collect(full, r);
         } else {
           if (rel === '' && !CDN_STATIC_DIRS.includes(entry.name)) continue;
+          if (CDN_SKIP_SUFFIXES.some(s => entry.name.endsWith(s))) continue;
           if (allowed.has(r)) present.add(r);
         }
       }

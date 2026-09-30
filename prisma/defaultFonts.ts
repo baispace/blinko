@@ -157,18 +157,9 @@ export const cdnFonts: FontSeed[] = [
     isSystem: false,
     sortOrder: 110,
   },
-  // === Chinese Fonts ===
-  {
-    name: 'HarmonyOS Sans',
-    displayName: 'HarmonyOS Sans',
-    url: null,
-    fileData: null,
-    isLocal: false,
-    weights: [400, 500, 600, 700],
-    category: 'sans-serif',
-    isSystem: false,
-    sortOrder: 115,
-  },
+  // NOTE: 'HarmonyOS Sans' used to be seeded here and resolved to the bundled
+  // CJK TTFs in app/public/fonts (12 MB). Both the files and this entry were
+  // removed; prisma/seed.ts deletes any leftover row from existing databases.
   {
     name: 'Noto Sans SC',
     displayName: '思源黑体 (Noto Sans SC)',

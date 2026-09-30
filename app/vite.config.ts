@@ -8,11 +8,42 @@ const host = process.env.TAURI_DEV_HOST || '0.0.0.0';
 const EXPRESS_PORT = 1111;
 const isDev = process.env.NODE_ENV === 'development';
 
+/**
+ * Drop KaTeX's legacy webfont formats.
+ *
+ * katex.min.css declares every face three times — woff2, woff, ttf — and Vite
+ * emits all of them, which is ~59 font files (a third of the whole asset
+ * count). The `src` list puts woff2 first, so any browser from the last decade
+ * (Chrome 36+, Firefox 39+, Safari 10+, Edge) resolves it and never requests
+ * the other two; they are dead weight that still gets uploaded to the CDN.
+ * The CSS keeps referencing them, which only matters for browsers old enough
+ * to lack woff2 — there the math glyphs fall back instead of loading.
+ */
+function dropKatexLegacyFonts() {
+  return {
+    name: 'drop-katex-legacy-fonts',
+    generateBundle(_options: unknown, bundle: Record<string, { fileName?: string }>) {
+      let dropped = 0;
+      for (const key of Object.keys(bundle)) {
+        const fileName = bundle[key].fileName ?? key;
+        if (/^assets\/KaTeX_.+\.(woff|ttf)$/.test(fileName)) {
+          delete bundle[key];
+          dropped++;
+        }
+      }
+      if (dropped > 0) {
+        console.log(`[drop-katex-legacy-fonts] removed ${dropped} legacy KaTeX font(s)`);
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
+    dropKatexLegacyFonts(),
     // PWA: Only enabled in production, disabled in development to avoid caching issues
     ...(!isDev && !process.env.DISABLE_PWA ? [
       VitePWA({

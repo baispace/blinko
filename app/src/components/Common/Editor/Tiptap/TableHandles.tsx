@@ -266,7 +266,7 @@ export const TableHandles = ({ editor }: { editor: Editor | null | undefined }) 
     {
       key: 'table-header',
       label: t('table-toggle-header'),
-      icon: 'mdi:table-headings',
+      icon: 'mdi:table-headers-eye',
       onClick: chain('toggleHeaderRow'),
     },
     {

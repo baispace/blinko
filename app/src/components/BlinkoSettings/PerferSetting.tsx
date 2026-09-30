@@ -280,7 +280,7 @@ export const PerferSetting = observer(() => {
 
     {/* ============ 导航与阅读 ============ */}
     <SettingSection
-      icon="solar:routes-linear"
+      icon="solar:route-linear"
       title={t('navigation-and-reading')}
       desc={t('navigation-and-reading-desc')}
     >

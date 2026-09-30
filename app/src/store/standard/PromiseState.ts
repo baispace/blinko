@@ -214,7 +214,10 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
 
     try {
       if (this.loadingLock && this.loading.value == true) {
-        console.warn('loadingLock', this.loading.value);
+        // Re-entrant call while a request is in flight — intentionally skipped.
+        // Kept at debug level: this is expected during fast navigation, and a
+        // warning here floods the console.
+        console.debug('loadingLock', this.loading.value);
         return
       };
       this.loading.setValue(true);

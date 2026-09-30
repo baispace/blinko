@@ -73,7 +73,23 @@ function scanProjectIcons() {
     const jsxIconRegex = /icon=["']([a-zA-Z0-9_-]+:[a-zA-Z0-9_\-\.]+)["']/g;
     // 2. Match JS/TS object properties: icon: "collection:name-with-hyphen" or icon: 'collection:name-with-hyphen'
     const jsIconRegex = /icon:\s*["']([a-zA-Z0-9_-]+:[a-zA-Z0-9_\-\.]+)["']/g;
-    
+    // 3. Loose match: any "collection:name" string literal.
+    //    The two patterns above only catch `icon="..."` / `icon: "..."`; they miss
+    //    ternaries (`icon={cond ? 'mdi:chevron-left' : 'mdi:chevron-right'}`),
+    //    arrays, lookup tables and other indirection — which silently produced
+    //    empty icons at runtime. We accept a literal only when its prefix is a
+    //    real Iconify collection, so URLs / CSS values are not swallowed.
+    const looseIconRegex = /["']([a-zA-Z0-9_-]+):([a-zA-Z0-9_\-\.]+)["']/g;
+    const collectionExistsCache = new Map();
+    const collectionExists = (prefix) => {
+      if (!collectionExistsCache.has(prefix)) {
+        let ok = false;
+        try { require.resolve(`@iconify/json/json/${prefix}.json`); ok = true; } catch { ok = false; }
+        collectionExistsCache.set(prefix, ok);
+      }
+      return collectionExistsCache.get(prefix);
+    };
+
     const iconMatches = [];
     
     // Iterate through all files
@@ -89,6 +105,13 @@ function scanProjectIcons() {
       // Scan for JS/TS object icon properties
       while ((match = jsIconRegex.exec(content)) !== null) {
         iconMatches.push(match[1]);
+      }
+
+      // Scan for icon names written outside a strict `icon=` / `icon:` context
+      while ((match = looseIconRegex.exec(content)) !== null) {
+        if (collectionExists(match[1])) {
+          iconMatches.push(`${match[1]}:${match[2]}`);
+        }
       }
     }
     

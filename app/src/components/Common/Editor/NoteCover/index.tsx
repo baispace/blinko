@@ -98,7 +98,7 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
                   onClick={(e) => { e.stopPropagation(); setAdjusting(true); }}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs backdrop-blur-sm hover:bg-black/70 !transition-colors"
                 >
-                  <Icon icon="mingcute:move-2-line" width={13} height={13} />
+                  <Icon icon="mingcute:move-line" width={13} height={13} />
                   {t('adjust-cover-position')}
                 </button>
                 <button

@@ -45,6 +45,14 @@ class FontManagerClass {
   private initialized: boolean = false;
   private observer: MutationObserver | null = null;
   private currentFontFamily: string = '';
+  /** Fonts that were requested but no longer exist, so we only warn once each. */
+  private missingFontsWarned: Set<string> = new Set();
+
+  private warnUnknownFont(fontName: string) {
+    if (this.missingFontsWarned.has(fontName)) return;
+    this.missingFontsWarned.add(fontName);
+    console.warn(`FontManager: Font "${fontName}" is no longer available; using the system font stack instead`);
+  }
 
   private constructor() {
     // Initialize with default font
@@ -212,7 +220,7 @@ class FontManagerClass {
     // Get font config
     const fontConfig = this.fontRegistry.get(fontName);
     if (!fontConfig) {
-      console.warn(`FontManager: Font "${fontName}" not found in registry`);
+      this.warnUnknownFont(fontName);
       // Font not found, return false to indicate load failure
       return false;
     }
@@ -491,8 +499,11 @@ class FontManagerClass {
     // Get font config to build font family string
     const fontConfig = this.fontRegistry.get(fontName);
     if (!fontConfig) {
-      console.warn(`FontManager: Font "${fontName}" not found in registry`);
-      return false;
+      // The font is no longer offered (e.g. HarmonyOS Sans was removed) but the
+      // user's saved preference still points at it. Fall back to the system stack
+      // instead of leaving the UI pinned to a font that can never resolve.
+      this.warnUnknownFont(fontName);
+      return this.applyFont('default');
     }
     
     const fallback = this.getFallbackStack(fontConfig.category || 'sans-serif');

@@ -143,6 +143,16 @@ export async function seedDefaultFonts() {
       create: fontData,
     });
   }
+
+  // Fonts removed from the app still linger in databases seeded by older
+  // versions, and the font dropdown is driven purely by this table — so the
+  // option would stay selectable while pointing at files that no longer exist.
+  // upsert() only ever inserts/updates, hence the explicit cleanup.
+  const removedFonts = ['HarmonyOS Sans'];
+  const { count } = await prisma.fonts.deleteMany({ where: { name: { in: removedFonts } } });
+  if (count > 0) {
+    console.log(`   🧹 Removed ${count} retired font(s): ${removedFonts.join(', ')}`);
+  }
 }
 /**
  * Scan the fonts directory and discover all local font families

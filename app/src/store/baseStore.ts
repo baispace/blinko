@@ -91,20 +91,7 @@ export class BaseStore implements Store {
   locales = [
     { value: 'en', label: 'English' },
     { value: 'zh', label: '简体中文' },
-    { value: 'zh-tw', label: '繁體中文' },
-    { value: 'vi', label: 'Tiếng Việt' },
-    { value: 'tr', label: 'Türkçe' },
-    { value: 'ka', label: 'ქართული' },
-    { value: 'de', label: 'Deutsch' },
-    { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' },
-    { value: 'pt', label: 'Português' },
-    { value: 'pl', label: 'Polish' },
-    { value: 'ru', label: 'Русский' },
-    { value: 'uk', label: 'Українська' },
-    { value: 'ko', label: '한국어' },
-    { value: 'ja', label: '日本語' },
-    { value: 'nl', label: 'Nederlands' },
+    { value: 'zh-TW', label: '繁體中文' },
   ];
 
   changeLanugage(i18n, locale) {

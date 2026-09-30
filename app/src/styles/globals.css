@@ -167,39 +167,18 @@ body {
 }
 
 /* ============================================================
-   HarmonyOS Sans — default UI font (aligned with app.blinko.space)
-   - Latin / Greek / Cyrillic face: narrow unicode-range, always active
-   - CJK SC / TC faces: heavy files, promoted to --font-family
-     only after lib/harmonyFont.ts confirms the glyphs are loaded
+   Default UI font stack (system-first)
+
+   HarmonyOS Sans used to be bundled here (12 MB of CJK TTF: SC ≈ 8 MB,
+   TC ≈ 4 MB). It was removed because shipping a full CJK face costs far
+   more than it buys — every Chinese-speaking visitor had to pull an 8 MB
+   font before text looked right. The system stack below resolves to the
+   platform's own CJK face (PingFang / Microsoft YaHei / Noto Sans CJK),
+   which is already installed locally and therefore free.
    ============================================================ */
-@font-face {
-  font-family: HarmonyOS Sans;
-  src: local(HarmonyOS Sans), url(/fonts/HarmonyOSSans/HarmonyOS_Sans_Regular.ttf) format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  unicode-range: U+0-24F, U+370-3FF, U+400-52F, U+1E??, U+2000-206F, U+20A0-20CF, U+2100-214F, U+2150-218F, U+2190-21FF, U+22??;
-}
-
-@font-face {
-  font-family: HarmonyOS Sans SC;
-  src: local(HarmonyOS Sans SC), url(/fonts/HarmonyOSSans/HarmonyOS_Sans_SC_Regular.ttf) format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: optional;
-}
-
-@font-face {
-  font-family: HarmonyOS Sans TC;
-  src: local(HarmonyOS Sans TC), url(/fonts/HarmonyOSSans/HarmonyOS_Sans_TC_Regular.ttf) format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: optional;
-}
-
 @layer base {
   :root {
-    --font-family: "HarmonyOS Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Arial, sans-serif;
+    --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     --swiper-3d-shadow: rgba(0, 0, 0, .15);
     --background: hsl(0 0% 100%);
     --foreground: hsl(222.2 47.4% 11.2%);
@@ -251,19 +230,6 @@ body {
     --md-editor-separator: #bcbcbe;
     --md-editor-border: #e5e7eb;
     --shadow: 1px 1px 7px 3px #b1b1b142;
-  }
-
-  /* CJK faces take over once the lazy loader (lib/harmonyFont.ts) has
-     confirmed the glyphs are available, so CJK text never renders with a
-     fallback face first. */
-  :root.harmony-cjk-sc-ready:lang(zh) {
-    --font-family: "HarmonyOS Sans SC", "HarmonyOS Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
-  }
-
-  :root.harmony-cjk-tc-ready:lang(zh-TW),
-  :root.harmony-cjk-tc-ready:lang(zh-HK),
-  :root.harmony-cjk-tc-ready:lang(zh-MO) {
-    --font-family: "HarmonyOS Sans TC", "HarmonyOS Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK TC", "PingFang TC", Arial, sans-serif;
   }
 
   .dark {

@@ -274,7 +274,9 @@ ${Object.keys(iconsByCollection).map(c => `    ${c.replace(/-/g, '_')},`).join('
 };
 
 // Icon component
-export const Icon = ({ 
+// 必须用 forwardRef：HeroUI 的 Tooltip / Badge / Popover 等会给子元素挂 ref，
+// 函数组件不转发 ref 会触发 React 告警，且触发器定位失效（tooltip 位置偏移）。
+export const Icon = React.forwardRef<SVGSVGElement, IconProps>(({ 
   icon, 
   width = 24, 
   height = 24, 
@@ -282,7 +284,7 @@ export const Icon = ({
   className = '', 
   style = {},
   onClick 
-}: IconProps) => {
+}, ref) => {
   // Return null if icon name is empty
   if (!icon) return null;
   
@@ -316,8 +318,10 @@ export const Icon = ({
   };
   
   // Render SVG
-  return <svg {...svgAttributes} />;
-};
+  return <svg {...svgAttributes} ref={ref} />;
+});
+
+Icon.displayName = 'Icon';
 
 export default Icon;
 `;

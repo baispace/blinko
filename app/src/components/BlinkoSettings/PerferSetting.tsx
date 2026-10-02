@@ -223,6 +223,7 @@ export const PerferSetting = observer(() => {
           maxValue={20}
           step={1}
           value={fontSize}
+          aria-label={t('font-size')}
           onChange={(v) => {
             const next = Array.isArray(v) ? v[0] : v;
             setFontSize(next);
@@ -246,6 +247,7 @@ export const PerferSetting = observer(() => {
           maxValue={700}
           step={100}
           value={fontWeight}
+          aria-label={t('font-weight')}
           onChange={(v) => {
             const next = Array.isArray(v) ? v[0] : v;
             setFontWeight(next);

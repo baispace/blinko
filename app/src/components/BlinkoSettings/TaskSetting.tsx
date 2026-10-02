@@ -248,7 +248,7 @@ const AITasksPanel = observer(() => {
 const TasksPanel = observer(() => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore)
-  return <> {blinko.task.value && <Table shadow="none" className="mb-2">
+  return <> {blinko.task.value && <Table shadow="none" aria-label={t('schedule-task')} className="mb-2">
     <TableHeader>
       <TableColumn>{t('name-db')}</TableColumn>
       <TableColumn>{t('schedule')}</TableColumn>
@@ -260,10 +260,11 @@ const TasksPanel = observer(() => {
       {
         blinko.task.value!.filter(i => i.name != 'rebuildEmbedding').map(i => {
           const progress = i.output?.progress;
-          return <TableRow>
+          return <TableRow key={i.name}>
             <TableCell>{t(`task-name-${i.name}`)}</TableCell>
             <TableCell>
               <Select
+                aria-label={t('schedule')}
                 selectedKeys={[i.schedule]}
                 onChange={async e => {
                   await PromiseCall(api.task.upsertTask.mutate({

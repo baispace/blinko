@@ -604,6 +604,7 @@ export const HotkeySetting = observer(() => {
             rightContent={
               <Select
                 size="sm"
+                aria-label={t('trigger-modifier')}
                 selectedKeys={[hotkeyConfig.textSelectionToolbar?.triggerModifier ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.triggerModifier]}
                 onSelectionChange={(keys) => {
                   const modifier = Array.from(keys)[0] as 'ctrl' | 'shift' | 'alt';
@@ -632,6 +633,7 @@ export const HotkeySetting = observer(() => {
               <div className="flex gap-2">
                 <Select
                   size="sm"
+                  aria-label={t('translation-languages')}
                   selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationFromLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationFromLang]}
                   onSelectionChange={(keys) => {
                     const fromLang = Array.from(keys)[0] as string;
@@ -657,6 +659,7 @@ export const HotkeySetting = observer(() => {
                 <span className="text-sm text-gray-500 self-center">→</span>
                 <Select
                   size="sm"
+                  aria-label={t('translation-languages')}
                   selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationToLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationToLang]}
                   onSelectionChange={(keys) => {
                     const toLang = Array.from(keys)[0] as string;

@@ -16,6 +16,13 @@ export const DefaultModelsSection = observer(() => {
   const aiSettingStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
 
+  // 模型列表是异步加载的：首帧 items 还是空，而 config 里已有 id，
+  // 直接把 id 塞进 selectedKeys 会触发 HeroUI 告警
+  // "Keys \"x\" passed to \"selectedKeys\" are not present in the collection"。
+  // 只有当该 id 确实存在于候选列表时才回显，避免这个时序告警。
+  const selectedKeyIfPresent = (id: number | null | undefined, list: { id: number }[] = []) =>
+    id != null && list.some(m => m.id === id) ? [String(id)] : [];
+
   useEffect(() => {
     blinko.config.call();
     aiSettingStore.aiProviders.call();
@@ -48,8 +55,9 @@ export const DefaultModelsSection = observer(() => {
               classNames={{
                 trigger: "h-12",
               }}
+              aria-label="Main Chat Model"
               placeholder={'select'}
-              selectedKeys={blinko.config.value?.mainModelId ? [String(blinko.config.value.mainModelId)] : []}
+              selectedKeys={selectedKeyIfPresent(blinko.config.value?.mainModelId, aiSettingStore.inferenceModels)}
               renderValue={(items) => {
                 return items.map((item) => {
                   const model = aiSettingStore.inferenceModels.find(m => m.id === Number(item.key));
@@ -107,8 +115,9 @@ export const DefaultModelsSection = observer(() => {
               classNames={{
                 trigger: "h-12",
               }}
+              aria-label="Embedding Model"
               placeholder="Select embedding model"
-              selectedKeys={blinko.config.value?.embeddingModelId ? [String(blinko.config.value.embeddingModelId)] : []}
+              selectedKeys={selectedKeyIfPresent(blinko.config.value?.embeddingModelId, aiSettingStore.embeddingModels)}
               renderValue={(items) => {
                 return items.map((item) => {
                   const model = aiSettingStore.embeddingModels.find(m => m.id === Number(item.key));
@@ -166,8 +175,9 @@ export const DefaultModelsSection = observer(() => {
               classNames={{
                 trigger: "h-12",
               }}
+              aria-label="Voice Model"
               placeholder="Select voice model"
-              selectedKeys={blinko.config.value?.voiceModelId ? [String(blinko.config.value.voiceModelId)] : []}
+              selectedKeys={selectedKeyIfPresent(blinko.config.value?.voiceModelId, aiSettingStore.voiceModels)}
               renderValue={(items) => {
                 return items.map((item) => {
                   const model = aiSettingStore.voiceModels.find(m => m.id === Number(item.key));
@@ -225,8 +235,9 @@ export const DefaultModelsSection = observer(() => {
               classNames={{
                 trigger: "h-12",
               }}
+              aria-label="Vision Model"
               placeholder="Select vision model"
-              selectedKeys={blinko.config.value?.imageModelId ? [String(blinko.config.value.imageModelId)] : []}
+              selectedKeys={selectedKeyIfPresent(blinko.config.value?.imageModelId, aiSettingStore.imageModels)}
               renderValue={(items) => {
                 return items.map((item) => {
                   const model = aiSettingStore.imageModels.find(m => m.id === Number(item.key));

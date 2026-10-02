@@ -471,17 +471,20 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             (() => {
               const systemMessage = aiStore.currentConversation.value?.messages.find((item) => item.role == 'system');
               return systemMessage && (
-                <div className="mx-auto text-desc text-xs text-center font-bold select-none line-clamp-1 p-3 border-2 border-ignore rounded-lg">
+                <div
+                  key="system-message"
+                  className="mx-auto text-desc text-xs text-center font-bold select-none line-clamp-1 p-3 border-2 border-ignore rounded-lg"
+                >
                   {systemMessage.content}
                 </div>
               );
             })()
           }
           {
-            aiStore.currentConversation.value?.messages.map((item) => (
+            aiStore.currentConversation.value?.messages.map((item, index) => (
               item.role == 'user' ? (
                 <UserMessage
-                  key={`user-${item.id}`}
+                  key={`user-${item.id ?? index}`}
                   content={item.content}
                   time={item.createdAt.toLocaleString()}
                   id={item.id}
@@ -490,7 +493,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
                 />
               ) : item.role == 'assistant' ? (
                 <AiMessage
-                  key={`assistant-${item.id}`}
+                  key={`assistant-${item.id ?? index}`}
                   id={item.id}
                   metadata={item.metadata as AssisantMessageMetadata}
                   content={item.content}
@@ -505,14 +508,14 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             aiStore.isAnswering &&
             !aiStore.currentMessageResult.content &&
             aiStore.currentConversation.value?.messages?.at(-1)?.role === 'user' && (
-              <Icon className="text-desc" icon="eos-icons:three-dots-loading" width="40" height="40" />
+              <Icon key="answer-loading" className="text-desc" icon="eos-icons:three-dots-loading" width="40" height="40" />
             )
           }
 
 
           {
             aiStore.currentMessageResult.toolCalls.length > 0 && (
-              <div className="my-2">
+              <div key="stream-tool-calls" className="my-2">
                 <StreamToolRenderer
                   toolCalls={aiStore.currentMessageResult.toolCalls}
                   toolResults={aiStore.currentMessageResult.toolResults}
@@ -521,7 +524,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             )
           }
 
-          <StreamingAiMessage shareMode={shareMode} />
+          <StreamingAiMessage key="streaming-message" shareMode={shareMode} />
         </AnimatePresence>
 
         {/* Bottom anchor for scroll detection */}

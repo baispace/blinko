@@ -115,7 +115,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
   const aiStore = RootStore.Get(AiStore);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const handleSubmit = () => {
     if (onSubmit) {
@@ -186,7 +186,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
             {cardIcons.map(
               (icon, index) =>
                 !icon.isHidden?.() && (
-                  <IconButton onClick={icon.onClick} tooltip={icon.tooltip} icon={icon.icon} size={icon.size} containerSize={icon.containerSize} classNames={icon.classNames?.()} />
+                  <IconButton key={icon.icon ?? index} onClick={icon.onClick} tooltip={icon.tooltip} icon={icon.icon} size={icon.size} containerSize={icon.containerSize} classNames={icon.classNames?.()} />
                 ),
             )}
           </>

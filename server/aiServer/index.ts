@@ -35,6 +35,37 @@ export function isAudio(filePath: string): boolean {
   return audioExtensions.some((ext) => filePath.toLowerCase().endsWith(ext));
 }
 
+/**
+ * 把 AI SDK / provider 抛出的错误展开成可读信息。
+ * 原始的 `AI_APICallError: Bad Request` 只有一句，看不出是哪个端点、为什么 400；
+ * 真实原因在 `responseBody` 里（如 `{"code":"InvalidParameter","message":"url error"}`），
+ * 这里把它一并带上，方便定位是模型名不对、端点不支持还是参数非法。
+ */
+export function formatAiError(error: any): string {
+  if (!error) return 'Unknown AI error';
+  const base = String(error?.message ?? error);
+  const src = error?.cause && typeof error.cause === 'object' ? error.cause : {};
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = error?.[k] ?? src?.[k];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return undefined;
+  };
+  const status = pick('statusCode', 'status');
+  const url = pick('url');
+  let body = pick('responseBody', 'responseText', 'data');
+  if (body && typeof body !== 'string') {
+    try { body = JSON.stringify(body); } catch { body = String(body); }
+  }
+  const parts = [
+    status != null ? `HTTP ${status}` : '',
+    url ? String(url) : '',
+    body ? String(body).slice(0, 500) : '',
+  ].filter(Boolean);
+  return parts.length ? `${base} :: ${parts.join(' | ')}` : base;
+}
+
 export class AiService {
   static isImage = isImage;
   static isAudio = isAudio;
@@ -131,8 +162,8 @@ export class AiService {
 
       return { ok: true };
     } catch (error) {
-      console.log(error, 'embeddingUpsert error');
-      return { ok: false, error: error?.message };
+      console.error('[AI] embeddingUpsert error:', error);
+      return { ok: false, error: formatAiError(error) };
     }
   }
 
@@ -269,9 +300,22 @@ export class AiService {
       let ragNote: any[] = [];
       let ragNoteString = '';
       if (withRAG) {
-        let { notes, aiContext } = await AiModelFactory.queryVector(question, Number(ctx.id));
-        ragNote = notes;
-        ragNoteString = `This is the note content ${ragNote.map((i) => i.content).join('\n')} ${aiContext}`;
+        // RAG 只是增强项：向量检索失败（provider 不支持 /embeddings、模型不是嵌入模型、
+        // 没配 embeddingModel 等）不应该让整段对话直接挂掉，降级为普通聊天即可。
+        try {
+          const globalConfig = await AiModelFactory.globalConfig();
+          if (!globalConfig?.embeddingModelId) {
+            console.warn('[AI] RAG skipped: no embedding model configured');
+          } else {
+            const { notes, aiContext } = await AiModelFactory.queryVector(question, Number(ctx.id));
+            ragNote = notes ?? [];
+            ragNoteString = `This is the note content ${ragNote.map((i) => i.content).join('\n')} ${aiContext}`;
+          }
+        } catch (ragError: any) {
+          console.warn('[AI] RAG query failed, continuing without note context:', formatAiError(ragError));
+          ragNote = [];
+          ragNoteString = '';
+        }
       }
 
       const contextParts = [
@@ -296,8 +340,8 @@ export class AiService {
       const result = await agent.stream(cleanedConversations, { runtimeContext });
       return { result, notes: ragNote };
     } catch (error) {
-      console.log(error);
-      throw new Error(error);
+      console.error('[AI] completions failed:', error);
+      throw new Error(formatAiError(error));
     }
   }
 

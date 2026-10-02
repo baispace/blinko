@@ -14,16 +14,24 @@ import './tiptap.css';
  * Renders the Tiptap document + bubble menu + slash menu,
  * driven by the adapter stored on EditorStore.
  */
-export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) => {
+export const TiptapEditorContent = observer(({ store, readOnly = false, fill = false, pageScroll = false }: { store: EditorStore, readOnly?: boolean, fill?: boolean, pageScroll?: boolean }) => {
   const { t } = useTranslation();
   const adapter = store.vditor;
   const editor = adapter?.editor ?? null;
 
   if (!adapter || !editor) return null;
 
+  /* pageScroll: the fullscreen reading/editing page scrolls at the window level
+     (cover + title + body scroll away together, scrollbar at the viewport edge),
+     so the editor body must grow naturally instead of scrolling internally. */
   return (
-    <div className={`tiptap-wrap ${store.isFullscreen ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
+    <div className={`tiptap-wrap ${readOnly ? 'is-readonly' : ''} ${pageScroll ? 'page-scroll' : ''} ${!pageScroll && (fill || store.isFullscreen) ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
       <EditorContent editor={editor} />
+      {/*
+        这些浮层都不做条件卸载：Tiptap 的 BubbleMenu 在卸载时会去移除 tippy 节点，
+        阅读态 ↔ 编辑态频繁切换容易触发 removeChild 崩溃。它们内部各自按
+        editor.isEditable 决定是否显示，交给它们自己判断即可。
+      */}
       <BubbleMenu
         editor={editor}
         tippyOptions={{ duration: 120, maxWidth: 'none' }}
@@ -42,7 +50,7 @@ export const TiptapEditorContent = observer(({ store }: { store: EditorStore }) 
             onClick={() => editor.chain().focus().toggleHighlight().run()} />
           <BubbleBtn editor={editor} title={t('inline-code')} icon="mdi:code-tags" active={editor.isActive('code')}
             onClick={() => editor.chain().focus().toggleCode().run()} />
-        </div>
+          </div>
       </BubbleMenu>
       <SlashMenuView state={adapter.slashMenu} />
       <CalloutIconMenu editor={editor} />

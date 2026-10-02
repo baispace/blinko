@@ -10,11 +10,10 @@ import { eventBus } from "@/lib/event";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from "@/lib/lodash";
 import { BlinkoItem } from "./index";
-import { MarkdownRender } from "@/components/Common/MarkdownRender";
-import { FilesAttachmentRender } from "../Common/AttachmentRender";
-import { ReferencesContent } from "./referencesContent";
+import { PageWidthButton } from "@/components/Common/PageWidthButton";
 import { useTranslation } from "react-i18next";
-import { NoteCoverDisplay } from "../Common/Editor/NoteCover";
+import type { Editor } from "@tiptap/core";
+import { PageWidthStore, PAGE_WIDTH_PAD_CLASS } from "@/store/pageWidthStore";
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
@@ -25,21 +24,57 @@ interface FullscreenEditorProps {
 export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: FullscreenEditorProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
+  const pageWidth = RootStore.Get(PageWidthStore);
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<string>('wysiwyg');
   const [editorMode, setEditorMode] = useState<'preview' | 'edit'>('preview');
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  
+  /** 「打开即阅读、点一下即编辑」靠的是同一棵 Tiptap 树，这里持有它的实例 */
+  const tiptapRef = useRef<Editor | null>(null);
+  /** 远端笔记内容就绪后才挂载编辑器，避免先闪一屏旧内容 */
+  const [dataReady, setDataReady] = useState(false);
+
+  const handleEditorReady = (editor: Editor) => { tiptapRef.current = editor; };
+
   // Clean up fullscreen editor state when closing
   const handleClose = () => {
     blinko.fullscreenEditorNoteId = null;
     setEditorMode('preview');
+    setDataReady(false);
     onClose();
+  };
+
+  /**
+   * 进入编辑态并把光标放到用户点的位置 —— 飞书式的「点哪儿就从哪儿写」。
+   * 不重新挂载编辑器，只是把同一棵树 setEditable(true)。
+   */
+  const enterEdit = (x?: number, y?: number) => {
+    const editor = tiptapRef.current;
+    // 立刻置为可编辑，不等 React 状态回流，否则这一帧光标落不下去
+    editor?.setEditable?.(true);
+    setEditorMode('edit');
+    requestAnimationFrame(() => {
+      if (!editor) return;
+      const pos = (x != null && y != null)
+        ? editor.view?.posAtCoords?.({ left: x, top: y })
+        : null;
+      editor.commands.focus(pos ? pos.pos : 'end');
+    });
+  };
+
+  // 阅读态点击正文 = 进入编辑；链接 / 图片 / 勾选框 / 附件保留各自的阅读交互
+  const handleSurfaceClick = (e: React.MouseEvent) => {
+    if (editorMode === 'edit') return;
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('a')) return;
+    if (['IMG', 'VIDEO', 'INPUT', 'BUTTON', 'TEXTAREA', 'SELECT', 'SVG', 'PATH'].includes(target.tagName)) return;
+    enterEdit(e.clientX, e.clientY);
   };
 
   // Switch to edit mode
   const handleSwitchToEdit = () => {
-    setEditorMode('edit');
+    enterEdit();
   };
 
   // Switch back to preview mode
@@ -74,20 +109,25 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
 
   // Set curSelectedNote when opening editor
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    let cancelled = false;
+    setDataReady(false);
+    const load = async () => {
       // Load fresh note data from server
       if (blinkoItem.id) {
-        blinko.noteDetail.call({ id: blinkoItem.id }).then(() => {
-          if (blinko.noteDetail.value) {
-            blinko.curSelectedNote = _.cloneDeep(blinko.noteDetail.value);
-          }
-        });
+        await blinko.noteDetail.call({ id: blinkoItem.id });
+        if (blinko.noteDetail.value) {
+          blinko.curSelectedNote = _.cloneDeep(blinko.noteDetail.value);
+        }
       } else {
         // Fallback to prop data if no id
         blinko.curSelectedNote = _.cloneDeep(blinkoItem);
         blinko.noteDetail.value = _.cloneDeep(blinkoItem);
       }
-    }
+      if (!cancelled) setDataReady(true);
+    };
+    load();
+    return () => { cancelled = true; };
   }, [isOpen, blinkoItem.id]);
 
   // Handle ESC key to close editor
@@ -152,15 +192,13 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
     handleClose();
   };
 
-  // Determine max width based on view mode
-  const maxWidth = viewMode === 'sv' ? '1200px' : '1000px';
   const isLongText = (blinkoItem?.content?.length ?? 0) > 1000;
 
   if (!isOpen) return null;
 
   const editorContent = (
-    <div 
-      className="fixed inset-0 z-[9999] bg-background overflow-hidden"
+    <div
+      className={`fixed inset-0 z-[9999] bg-background ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
       onPointerDownCapture={(e) => {
         // Only stop propagation if event is not from editor container (to prevent drag on background)
         // Allow events from editor container to work normally
@@ -169,33 +207,33 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
         }
       }}
       onTouchStartCapture={(e) => {
-        // Only stop propagation if event is not from editor container (to prevent drag on background)
-        // Allow events from editor container to work normally
         if (editorContainerRef.current && !editorContainerRef.current.contains(e.target as Node)) {
           e.stopPropagation();
         }
       }}
-      style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
         bottom: 0
       }}
     >
-      <div className="h-full flex">
-        <div 
+      {/* PC: window-level scrolling — cover, title and body scroll away together
+          (Feishu behaviour), scrollbar sits at the viewport's right edge.
+          Mobile keeps the previous internal-scroll layout. */}
+      <div className={`${isPc ? 'min-h-full' : 'h-full'} flex justify-center`}>
+        <div
           ref={editorContainerRef}
-          className={`w-full mx-auto  h-full flex ${isPc ? 'flex-col px-4' : 'flex-col p-2'}`} 
-          style={{ maxWidth }}
+          className={`w-full mx-auto ${isPc ? 'min-h-full' : 'h-full'} flex ${isPc ? 'flex-col ' + PAGE_WIDTH_PAD_CLASS[pageWidth.mode] : 'flex-col p-2'}`}
+          style={{ maxWidth: pageWidth.maxWidth }}
           onClick={(e) => {
-            // Stop propagation to prevent closing when clicking inside editor
             e.stopPropagation();
           }}
         >
-          {/* Top header with back button and toolbar (PC only) */}
+          {/* Top header with back button and toolbar (PC only, sticky while scrolling) */}
           {isPc && (
-            <div className="flex items-center justify-between py-4 flex-shrink-0 border-b border-border">
+            <div className="sticky top-0 z-10 flex items-center justify-between py-4 flex-shrink-0 border-b border-border bg-background">
               <Button
                 isIconOnly
                 variant="light"
@@ -231,58 +269,43 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                     </Button>
                   </Tooltip>
                 )}
-                {editorMode === 'edit' && (
-                  <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
-                )}
+                {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
+                    否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
+                <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
+                {/* 页宽：默认 / 较宽 / 全宽 —— 飞书一样放在最右侧 */}
+                <PageWidthButton />
               </div>
-            </div>
-          )}
-          
-          {editorMode === 'preview' ? (
-            /* Preview mode - render with MarkdownRender */
-            <div
-              className="flex-1 overflow-y-auto min-h-0 py-4"
-              style={{ height: isPc ? 'calc(100vh - 100px)' : 'calc(100vh - 80px)' }}
-              onDoubleClick={handleSwitchToEdit}
-            >
-              <NoteCoverDisplay
-                cover={blinko.noteDetail.value?.metadata?.cover ?? blinkoItem.metadata?.cover}
-                coverOffset={blinko.noteDetail.value?.metadata?.coverOffset ?? blinkoItem.metadata?.coverOffset}
-                maxHeight={220}
-              />
-              <MarkdownRender
-                content={blinko.noteDetail.value?.content ?? blinkoItem.content}
-                onChange={(updater) => {
-                  const newContent = updater(blinko.noteDetail.value?.content ?? blinkoItem.content);
-                  blinkoItem.content = newContent;
-                  blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false });
-                }}
-                largeSpacing={true}
-              />
-              <ReferencesContent blinkoItem={blinko.noteDetail.value ?? blinkoItem} className="my-4" />
-              <div className={blinkoItem.attachments?.length != 0 ? 'my-2' : ''}>
-                <FilesAttachmentRender files={blinko.noteDetail.value?.attachments ?? blinkoItem.attachments ?? []} preview />
-              </div>
-            </div>
-          ) : (
-            /* Edit mode - render with BlinkoEditor */
-            <div 
-              className={`flex-1 overflow-hidden flex flex-col min-h-0 ${isLongText ? 'editor-long-text' : ''}`} 
-              style={{ height: isPc ? 'calc(100vh - 100px)' : 'calc(100vh - 80px)', paddingBottom: isPc ? '20px' : '0' }}
-            >
-              <BlinkoEditor
-                key={`editor-${blinkoItem.id}`}
-                mode="edit"
-                onSended={handleEditorSended}
-                withoutOutline={true}
-                showTopToolbar={true}
-              />
             </div>
           )}
 
-          {/* Bottom toolbar with back button (Mobile only) */}
+          {/*
+            阅读态与编辑态是同一棵 Tiptap 树，只切 setEditable：
+            打开是阅读，点正文任意处就能接着写，切换不再重新 mount、不丢光标。
+          */}
+          <div
+            className={`${isPc ? 'flex flex-col' : 'flex-1 flex flex-col min-h-0'} ${!isPc && isLongText ? 'editor-long-text' : ''}`}
+            style={{ height: isPc ? undefined : 'calc(100vh - 80px)', paddingBottom: isPc ? '20px' : '0' }}
+            onClick={handleSurfaceClick}
+          >
+            {dataReady ? (
+              <BlinkoEditor
+                key={`editor-${blinkoItem.id}`}
+                mode="edit"
+                editable={editorMode === 'edit'}
+                onEditorReady={handleEditorReady}
+                onSended={handleEditorSended}
+                withoutOutline={true}
+                showTopToolbar={true}
+                pageScroll={isPc}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-desc text-sm">{t('loading')}</div>
+            )}
+          </div>
+
+          {/* Bottom toolbar with back button (Mobile only, sticky above the keyboard area) */}
           {!isPc && (
-            <div className="flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+            <div className="sticky bottom-0 flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
               <Button
                 isIconOnly
                 variant="light"
@@ -318,9 +341,9 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                     </Button>
                   </Tooltip>
                 )}
-                {editorMode === 'edit' && (
-                  <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
-                )}
+                {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
+                    否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
+                <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
               </div>
             </div>
           )}

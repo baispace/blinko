@@ -48,7 +48,7 @@ export const BlinkoSiteUser = observer(
           </Link>
           <div className="flex items-center gap-1">
             {tags?.map((tag) => (
-              <div className="blinko-tag !text-xs mt-2">{tag}</div>
+              <div key={tag} className="blinko-tag !text-xs mt-2">{tag}</div>
             ))}
           </div>
         </div>
@@ -125,6 +125,7 @@ export const BlinkoFollowDialog = observer(({ onConfirm }: { onConfirm: () => vo
       <ScrollArea onBottom={() => {}} className="flex flex-col items-center gap-2 text-ignore text-bold mx-auto mt-4 max-h-[400px]">
         {store.siteList.value?.map((item) => (
           <BlinkoSiteUser
+            key={item.url}
             item={{
               id: item.url,
               siteName: item.title,

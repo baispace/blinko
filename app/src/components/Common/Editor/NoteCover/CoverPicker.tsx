@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
 import {
-  Button,
   Image,
   Modal,
   ModalBody,
@@ -14,7 +13,7 @@ import {
   Tabs,
 } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { DEFAULT_COVERS, randomDefaultCoverKey } from './defaultCovers';
+import { DEFAULT_COVERS, COVER_CATEGORIES, randomDefaultCoverKey, type CoverCategory } from './defaultCovers';
 import { toAuthenticatedCoverUrl } from './coverUrl';
 
 interface CoverPickerProps {
@@ -38,6 +37,10 @@ export const CoverPicker = ({
   const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  /** Default to the category the current cover belongs to, else "official". */
+  const [activeCat, setActiveCat] = useState<CoverCategory>(
+    () => DEFAULT_COVERS.find((c) => `cover:${c.key}` === cover)?.category ?? 'official',
+  );
 
   const activeUrl = toAuthenticatedCoverUrl(cover);
 
@@ -72,13 +75,15 @@ export const CoverPicker = ({
   });
 
   return (
+    /* z-[10000]: must sit above the fullscreen editor overlay (z-[9999]),
+       otherwise the picker opens behind it and looks unresponsive. */
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       hideCloseButton
       size="4xl"
       placement="center"
-      classNames={{ wrapper: 'z-[9998]' }}
+      classNames={{ wrapper: 'z-[10000]' }}
     >
       <ModalContent>
         <ModalHeader className="pb-2">
@@ -91,14 +96,34 @@ export const CoverPicker = ({
             aria-label={t('cover')}
           >
             <Tab key="gallery" title={t('cover-gallery')}>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pb-2">
-                {DEFAULT_COVERS.map((item) => {
+              {/* Category chips (Feishu-style tabs) */}
+              <div className="flex items-center gap-1.5 flex-wrap pb-3">
+                {COVER_CATEGORIES.map((cat) => {
+                  const active = activeCat === cat.key;
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setActiveCat(cat.key)}
+                      className={`px-3 py-1 rounded-full text-xs !transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-primary text-white'
+                          : 'bg-default-100 text-default-600 hover:bg-default-200'
+                      }`}
+                    >
+                      {t(cat.labelKey)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pb-2 max-h-[46vh] overflow-y-auto">
+                {DEFAULT_COVERS.filter((item) => item.category === activeCat).map((item) => {
                   const selected = cover === `cover:${item.key}`;
                   return (
                     <button
                       key={item.key}
                       type="button"
-                      className={`relative aspect-video overflow-hidden rounded-lg border-2 transition-all ${
+                      className={`relative aspect-[2.35/1] overflow-hidden rounded-lg border-2 transition-all ${
                         selected ? 'border-primary' : 'border-transparent hover:border-default-300'
                       }`}
                       onClick={() => { onPick(`cover:${item.key}`); onClose(); }}
@@ -147,29 +172,34 @@ export const CoverPicker = ({
         <ModalFooter className="justify-between">
           <div className="flex items-center gap-2">
             {activeUrl && (
-              <Button
-                size="sm"
-                variant="flat"
-                color="danger"
-                startContent={<Icon icon="mingcute:delete-2-line" width={15} height={15} />}
-                onPress={() => { onRemove(); onClose(); }}
+              /* Native buttons: HeroUI <Button onPress> silently no-ops inside
+                 modals in this app (same root cause as the page-width popover). */
+              <button
+                type="button"
+                onClick={() => { onRemove(); onClose(); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-danger bg-danger/10 hover:bg-danger/20 !transition-colors cursor-pointer"
               >
+                <Icon icon="mingcute:delete-2-line" width={15} height={15} />
                 {t('remove-cover')}
-              </Button>
+              </button>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="light"
-              startContent={<Icon icon="mingcute:shuffle-line" width={15} height={15} />}
-              onPress={() => { onPick(randomDefaultCoverKey(cover)); onClose(); }}
+            <button
+              type="button"
+              onClick={() => { onPick(randomDefaultCoverKey(cover)); onClose(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-foreground hover:bg-default-100 !transition-colors cursor-pointer"
             >
+              <Icon icon="mingcute:shuffle-line" width={15} height={15} />
               {t('random-cover')}
-            </Button>
-            <Button size="sm" color="primary" onPress={onClose}>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center px-4 py-1.5 rounded-md text-sm text-white bg-primary hover:bg-primary/90 !transition-colors cursor-pointer"
+            >
               {t('finish')}
-            </Button>
+            </button>
           </div>
         </ModalFooter>
       </ModalContent>

@@ -159,7 +159,7 @@ export const TagListPanel = observer(() => {
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Static Actions">
                   {
-                    blinko.showAi ? <DropdownItem key="aiEmoji" onPress={async () => {
+                    blinko.showAi ? <DropdownItem key="aiEmoji" textValue={t('ai-emoji')} onPress={async () => {
                       if (!isPc) {
                         eventBus.emit('close-sidebar')
                       }
@@ -171,7 +171,7 @@ export const TagListPanel = observer(() => {
                       </div>
                     </DropdownItem> : <></>
                   }
-                  <DropdownItem key="aiEmoji" onPress={async () => {
+                  <DropdownItem key="customIcon" textValue={t('custom-icon')} onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -182,7 +182,7 @@ export const TagListPanel = observer(() => {
                       {t('custom-icon')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="updateIcon" onPress={async () => {
+                  <DropdownItem key="updateIcon" textValue={t('update-tag-icon')} onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -193,7 +193,7 @@ export const TagListPanel = observer(() => {
                       {t('update-tag-icon')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="Update" onPress={async () => {
+                  <DropdownItem key="Update" textValue={t('update-name')} onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -214,7 +214,7 @@ export const TagListPanel = observer(() => {
                       {t('update-name')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="moveUp" onPress={async () => {
+                  <DropdownItem key="moveUp" textValue={t('move-up')} onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -249,7 +249,7 @@ export const TagListPanel = observer(() => {
                       {t('move-up')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="moveDown" onPress={async () => {
+                  <DropdownItem key="moveDown" textValue={t('move-down')} onPress={async () => {
                     if (!isPc) {
                       eventBus.emit('close-sidebar')
                     }
@@ -284,7 +284,7 @@ export const TagListPanel = observer(() => {
                       {t('move-down')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="deletetag" className="text-danger" color="danger" onPress={async () => {
+                  <DropdownItem key="deletetag" textValue={t('delete-only-tag')} className="text-danger" color="danger" onPress={async () => {
                     PromiseCall(api.tags.deleteOnlyTag.mutate(({ id: element.id as number })))
                   }}>
                     <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export const TagListPanel = observer(() => {
                       {t('delete-only-tag')}
                     </div>
                   </DropdownItem>
-                  <DropdownItem key="delete" className="text-danger" color="danger" onPress={async () => {
+                  <DropdownItem key="delete" textValue={t('delete-tag-with-note')} className="text-danger" color="danger" onPress={async () => {
                     PromiseCall(api.tags.deleteTagWithAllNote.mutate(({ id: element.id as number })))
                   }}>
                     <div className="flex items-center gap-2">

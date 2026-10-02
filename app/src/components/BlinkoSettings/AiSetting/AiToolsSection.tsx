@@ -70,6 +70,7 @@ export const AiToolsSection = observer(() => {
         rightContent={
           <div className="flex md:w-[300px] w-full ml-auto justify-start">
             <Slider
+              aria-label="Tavily max results"
               onChangeEnd={(value) => {
                 updateConfig('tavilyMaxResult', Number(value));
               }}

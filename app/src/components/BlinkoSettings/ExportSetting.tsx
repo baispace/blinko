@@ -72,6 +72,7 @@ export const ExportSetting = observer(() => {
             <Select
               selectedKeys={[exportFormat]}
               onChange={e => setExportFormat(e.target.value)}
+              aria-label={t('export-format')}
               className="w-[200px]"
             >
               {formatOptions.map((item) => (

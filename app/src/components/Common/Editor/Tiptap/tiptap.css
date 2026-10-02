@@ -14,12 +14,27 @@
   outline: none;
   color: var(--foreground);
   width: 100%;
+  /* Feishu reading metrics: 16px body on a 26px baseline (1.625) */
+  font-size: 16px;
+  line-height: 1.625;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Tahoma,
+    "PingFang SC", "Microsoft YaHei", Arial, "Hiragino Sans GB", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
 }
 
 /* fullscreen (edit note page) */
 .tiptap-wrap.tiptap-fullscreen .tiptap {
   max-height: none;
   height: 100%;
+}
+
+/* Page-level scroll (fullscreen reading/editing page): the window scrolls,
+   the cover scrolls away with the content — so the editor body must grow
+   naturally instead of clipping itself at 70vh with its own scrollbar. */
+.tiptap-wrap.page-scroll .tiptap {
+  max-height: none;
+  height: auto;
+  overflow-y: visible;
 }
 
 /* ---------- placeholder ---------- */
@@ -32,16 +47,43 @@
   opacity: 0.6;
 }
 
-/* ---------- typography ---------- */
+/* ---------- typography (Feishu scale: 26/22/20/18/16) ---------- */
 .tiptap p {
+  margin-top: 8px;
   margin-bottom: 8px;
 }
 
 .tiptap h1, .tiptap h2, .tiptap h3,
 .tiptap h4, .tiptap h5, .tiptap h6 {
-  margin-top: 12px;
-  margin-bottom: 8px;
   font-weight: 600;
+  line-height: 1.4;
+}
+
+.tiptap h1 { font-size: 26px; margin-top: 26px; margin-bottom: 10px; }
+.tiptap h2 { font-size: 22px; margin-top: 22px; margin-bottom: 8px; }
+.tiptap h3 { font-size: 20px; margin-top: 20px; margin-bottom: 8px; }
+.tiptap h4 { font-size: 18px; margin-top: 18px; margin-bottom: 8px; }
+.tiptap h5, .tiptap h6 { font-size: 16px; margin-top: 16px; margin-bottom: 8px; }
+
+.tiptap h1:first-child, .tiptap h2:first-child, .tiptap h3:first-child,
+.tiptap h4:first-child, .tiptap h5:first-child, .tiptap h6:first-child,
+.tiptap p:first-child {
+  margin-top: 0;
+}
+
+.tiptap ul, .tiptap ol {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.tiptap li {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.tiptap li > p {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .tiptap a {
@@ -704,4 +746,32 @@
 
 .tiptap-table-color-swatch:hover {
   transform: scale(1.05);
+}
+
+/* ================= 只读态（阅读模式） =================
+   与编辑态是同一棵 Tiptap 树，只是 setEditable(false)。
+   这里只做「阅读视图」的呈现差异：交给外层容器滚动、放开图片高度、
+   保留文本可选中，同时去掉节点被选中时的编辑态描边。 */
+
+.tiptap-wrap.is-readonly .tiptap {
+  max-height: none;
+  min-height: auto;
+  overflow: visible;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.tiptap-wrap.is-readonly .tiptap .ProseMirror-selectednode {
+  outline: none;
+}
+
+.tiptap-wrap.is-readonly .tiptap img {
+  max-height: 420px;
+  cursor: zoom-in;
+}
+
+/* 只读态下 checkbox 已能直接勾选（onReadOnlyChecked），保持手型光标提示可点 */
+.tiptap-wrap.is-readonly .tiptap ul[data-type="taskList"] input[type="checkbox"] {
+  cursor: pointer;
 }

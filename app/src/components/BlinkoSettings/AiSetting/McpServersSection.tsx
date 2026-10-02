@@ -181,6 +181,7 @@ const McpServerDialogContent = observer(({ server, onClose }: { server?: McpServ
 
       <div className="flex items-center gap-2">
         <Switch
+          aria-label={t('enabled')}
           isSelected={formData.isEnabled}
           onValueChange={(checked) => setFormData({ ...formData, isEnabled: checked })}
         >
@@ -347,6 +348,7 @@ const McpServerCard = observer(({ server }: { server: McpServer }) => {
 
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end sm:justify-start">
             <Switch
+              aria-label={t('enabled')}
               size="sm"
               isSelected={server.isEnabled}
               onValueChange={handleToggle}

@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import dayjs from '@/lib/dayjs';
 import { Icon } from '@/components/Common/Iconify/icons';
+import Editor from '@/components/Common/Editor';
+import type { OnSendContentType } from '@/components/Common/Editor/type';
 
 type PrioKey = 'ui' | 'in' | 'un' | 'nn';
 
@@ -42,18 +44,8 @@ export const TodoQuickAdd = observer(() => {
   const [due, setDue] = useState(dayjs().format('YYYY-MM-DD'));
   const [prioOpen, setPrioOpen] = useState(false);
   const prioWrapRef = useRef<HTMLDivElement>(null);
-  const taRef = useRef<HTMLTextAreaElement>(null);
 
   const cur = PRIORITY_OPTIONS.find((p) => p.key === priorityKey)!;
-
-  // auto-grow textarea so the input stays the visual focus
-  useEffect(() => {
-    const el = taRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }, [content]);
 
   // outside-click closes the priority popover
   useEffect(() => {
@@ -67,25 +59,30 @@ export const TodoQuickAdd = observer(() => {
     return () => document.removeEventListener('mousedown', handler);
   }, [prioOpen]);
 
-  const resetContent = () => {
-    setContent('');
-    // 提交后保留日期+优先级，方便连续添加同类任务
-    // 想要重置也可以清：setPriorityKey('nn'); setDue(dayjs().format('YYYY-MM-DD'));
-  };
+  // 提交后只清正文，保留日期+优先级，方便连续添加同类任务
+  const resetContent = () => setContent('');
 
-  const submit = () => {
-    if (!content.trim()) return;
-    blinko.upsertNote
-      .call({
-        content: content.trim(),
-        type: NoteType.TODO,
-        metadata: {
-          priorityUrgent: cur.u,
-          priorityImportant: cur.i,
-          expireAt: due ? dayjs(due).toISOString() : undefined,
-        },
-      })
-      .then(resetContent);
+  // 编辑器（Cmd/Ctrl+Enter）与工具栏发送按钮都会走到这里
+  const submit = async (args: OnSendContentType) => {
+    const text = (args?.content ?? content).trim();
+    if (!text) return;
+    await blinko.upsertNote.call({
+      content: text,
+      type: NoteType.TODO,
+      references: args?.references ?? [],
+      attachments: (args?.files ?? []).map((i) => ({
+        name: i.name,
+        path: i.uploadPath ?? (i as any).preview,
+        size: i.size,
+        type: i.type,
+      })) as any,
+      metadata: {
+        priorityUrgent: cur.u,
+        priorityImportant: cur.i,
+        expireAt: due ? dayjs(due).toISOString() : undefined,
+      },
+    });
+    resetContent();
   };
 
   return (
@@ -152,30 +149,21 @@ export const TodoQuickAdd = observer(() => {
         </div>
       </div>
 
-      {/* Hero input — the divider above makes it the visual focus */}
-      <textarea
-        ref={taRef}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
-        }}
-        placeholder={t('what-to-do')}
-        rows={1}
-        className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-default-400 pt-3"
-        style={{ overflow: 'hidden' }}
-      />
-
-      <div className="mt-2 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!content.trim()}
-          className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-        >
-          <Icon icon="mdi:plus" width={14} height={14} />
-          {t('add')}
-        </button>
+      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器（富文本、#标签、@引用、附件、AI 斜杠菜单），
+          但锁定为待办类型、隐藏类型切换与全屏，避免误操作 */}
+      <div className="pt-3">
+        <Editor
+          mode="create"
+          content={content}
+          onChange={setContent}
+          onSend={submit}
+          isSendLoading={blinko.upsertNote.loading.value}
+          fixedNoteType={NoteType.TODO}
+          hideNoteTypeButton
+          hideFullscreenButton
+          withoutOutline
+          bottomSlot={<div className="text-xs text-default-400 ml-2">支持富文本 · 拖入文件上传 · ⌘/Ctrl + Enter 添加</div>}
+        />
       </div>
     </div>
   );

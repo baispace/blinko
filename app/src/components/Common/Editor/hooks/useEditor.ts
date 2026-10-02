@@ -35,7 +35,14 @@ export const useEditorInit = (
   onSend: (args: OnSendContentType) => Promise<any>,
   mode: 'create' | 'edit' | 'comment',
   originReference: number[] = [],
-  content: string
+  content: string,
+  /** 显式锁定类型（待办场景固定 TODO），非空时覆盖下方基于 searchParams 的推断 */
+  fixedNoteType?: NoteType,
+  /**
+   * 是否可编辑。只读态与编辑态共用同一棵 Tiptap 树，只靠 setEditable 切换，
+   * 这样「打开即阅读、点一下即编辑」不会重新 mount、不会丢光标、不会闪烁。
+   */
+  editable: boolean = true
 ) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
@@ -54,7 +61,26 @@ export const useEditorInit = (
           showOnlyWhenEditable: true,
         }),
         TaskList,
-        TaskItem.configure({ nested: true }),
+        TaskItem.configure({
+          nested: true,
+          /**
+           * 只读态勾选任务：Tiptap 默认会把这次勾选撤销。这里手动派发一次
+           * transaction 让它真正落到文档里 —— onUpdate 随之触发，自动保存接手，
+           * 于是「阅读时也能打勾」不需要先切进编辑态。
+           */
+          onReadOnlyChecked: (node, checked) => {
+            const ed = adapter.editor
+            if (!ed) return false
+            let pos = -1
+            ed.state.doc.descendants((n, p) => {
+              if (pos === -1 && n === node) { pos = p; return false }
+              return true
+            })
+            if (pos < 0) return false
+            ed.view.dispatch(ed.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked }))
+            return true
+          },
+        }),
         Callout,
         CalloutClickOutside,
         Highlight,
@@ -96,9 +122,11 @@ export const useEditorInit = (
         }),
         AiPendingIndicator,
         TaskListInputRules,
-        SendShortcut.configure({ onSend: () => store.handleSend() }),
+        // Edit mode has an onDone: ⌘+Enter should flush + close, not re-save.
+        SendShortcut.configure({ onSend: () => (store.onDone ? store.handleDone() : store.handleSend()) }),
       ],
       content: initialContent,
+      editable,
       editorProps: {
         handlePaste: (_view, event) => {
           const files = Array.from(event.clipboardData?.files ?? [])
@@ -140,7 +168,10 @@ export const useEditorInit = (
       adapter.setValue(initialContent)
     }
 
-    isPc ? store.focus() : FocusEditorFixMobile()
+    // 只读态只是「不能输入」，不该抢焦点，否则会出现一个没有输入能力的空光标
+    if (editable) {
+      isPc ? store.focus() : FocusEditorFixMobile()
+    }
 
     return () => {
       adapter.slashMenu.close()
@@ -173,7 +204,9 @@ export const useEditorInit = (
 
   useEffect(() => {
     if (mode == 'create') {
-      if (searchParams.get('path') == 'notes') {
+      if (fixedNoteType != null) {
+        store.noteType = fixedNoteType
+      } else if (searchParams.get('path') == 'notes') {
         store.noteType = NoteType.NOTE
       } else if (searchParams.get('path') == 'todo') {
         store.noteType = NoteType.TODO
@@ -194,7 +227,7 @@ export const useEditorInit = (
     } else {
       store.noteType = toNoteTypeEnum(blinko.curSelectedNote?.type)
     }
-  }, [mode, searchParams.get('path'), searchParams.get('tagId')]);
+  }, [mode, searchParams.get('path'), searchParams.get('tagId'), fixedNoteType]);
 
   // Update editor content when content prop changes (e.g. switching notes in edit mode)
   useEffect(() => {
@@ -207,6 +240,15 @@ export const useEditorInit = (
       }
     }
   }, [content, store.vditor]);
+
+  // 阅读态 ↔ 编辑态：同一棵树原地切换，不重建、不丢光标
+  useEffect(() => {
+    const ed = store.vditor?.editor
+    if (!ed) return
+    if (ed.isEditable !== editable) {
+      ed.setEditable(editable)
+    }
+  }, [editable, store.vditor]);
 };
 
 
@@ -243,7 +285,6 @@ export const useEditorFiles = (
 ) => {
   useEffect(() => {
     if (originFiles?.length) {
-      console.log({ originFiles })
       store.files = HandleFileType(originFiles);
     }
   }, [originFiles]);

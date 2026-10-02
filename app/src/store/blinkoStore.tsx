@@ -11,7 +11,7 @@ import i18n from '@/lib/i18n';
 import { api } from '@/lib/trpc';
 import { Attachment, NoteType, type Note } from '@shared/lib/types';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@shared/lib/sharedConstant';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
 import { UserStore } from './user';
 import { BaseStore } from './baseStore';
 import { StorageState } from './standard/StorageState';
@@ -182,7 +182,6 @@ export class BlinkoStore implements Store {
   upsertNote = new PromiseState({
     eventKey: 'upsertNote',
     function: async (params: UpsertNoteParams) => {
-      console.log("upsertNote", params)
       const {
         content = null,
         isArchived,
@@ -248,6 +247,93 @@ export class BlinkoStore implements Store {
       return res
     }
   })
+
+  /**
+   * Autosave status, shown next to the send button so the user can tell whether
+   * the last edit actually reached the server.
+   */
+  autosaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle'
+  private autosaveSeq = 0
+  private autosaveChain: Promise<void> = Promise.resolve()
+
+  /**
+   * Silent, content-only save used by autosave.
+   *
+   * Deliberately not routed through `upsertNote`: that PromiseState runs with
+   * loadingLock, which silently drops any call made while another is in flight
+   * — with autosave that loses exactly the edit the user just typed. It also
+   * toasts, refreshes the list and emits 'editor:clear', all of which are
+   * wrong while the user is still typing.
+   *
+   * Calls are chained so they reach the server in order, and only the newest
+   * queued version is sent, so a slow response can never resurrect stale text.
+   */
+  autosaveNote = ({ id, content }: { id: number, content: string }) => {
+    const seq = ++this.autosaveSeq
+    this.autosaveChain = this.autosaveChain
+      .then(async () => {
+        // A newer edit was queued in the meantime; drop this stale version.
+        if (seq !== this.autosaveSeq) return
+        runInAction(() => { this.autosaveStatus = 'saving' })
+        await api.notes.upsert.mutate({ id, content })
+        runInAction(() => {
+          this.autosaveStatus = 'saved'
+          // The local draft only exists so a crash mid-edit does not lose text.
+          // Once the server has the content it is stale, and keeping it around
+          // makes the next open overwrite newer server content with it.
+          this.editContentStorage.removeByFind(i => Number(i.id) === Number(id))
+        })
+      })
+      .catch(() => {
+        runInAction(() => {
+          if (this.autosaveStatus === 'saving') this.autosaveStatus = 'error'
+        })
+      })
+    return this.autosaveChain
+  }
+
+  /**
+   * Drops autosave requests that have not reached the server yet. Called before
+   * a manual send so a queued autosave cannot overwrite the manual result.
+   */
+  cancelAutosave = () => {
+    // Bumping the sequence makes queued runs see a stale seq and skip.
+    this.autosaveSeq++
+    this.autosaveStatus = 'idle'
+  }
+
+  private silentChain: Promise<void> = Promise.resolve()
+
+  /**
+   * Silent write for one-off note changes that are not keystrokes: a finished
+   * attachment upload, an added/removed @reference, a note-type switch.
+   *
+   * Unlike `autosaveNote` every queued call runs — these are discrete user
+   * actions, so coalescing them would silently drop one. They are rare enough
+   * that no debounce is needed, but they are still chained so concurrent
+   * writes reach the server in order.
+   *
+   * `content` must be sent along: the server returns early when it is absent
+   * and skips attachment/reference handling entirely (note.ts).
+   */
+  silentUpsertNote = (params: {
+    id: number,
+    content?: string,
+    attachments?: { name: string, path: string, size: number, type: string }[],
+    references?: number[],
+    type?: number,
+    metadata?: any
+  }) => {
+    this.silentChain = this.silentChain
+      .then(async () => {
+        //@ts-ignore tRPC input is a loose union across note shapes
+        await api.notes.upsert.mutate(params)
+      })
+      .catch(() => {
+        runInAction(() => { this.autosaveStatus = 'error' })
+      })
+    return this.silentChain
+  }
 
   shareNote = new PromiseState({
     function: async (params: { id: number, isCancel: boolean, password?: string, expireAt?: Date }) => {
@@ -714,7 +800,9 @@ export class BlinkoStore implements Store {
 
   settingsSearchText: string = '';
   constructor() {
-    makeAutoObservable(this)
+    // autosaveChain / autosaveSeq are plumbing, not UI state: keep them out of
+    // MobX so reassigning the promise chain never triggers a re-render.
+    makeAutoObservable(this, { autosaveChain: false, autosaveSeq: false } as any)
     eventBus.on('user:signout', () => {
       this.clear()
     })

@@ -155,6 +155,7 @@ const NoteHistoryModal = observer(({ noteId }: NoteHistoryModalProps) => {
 
             <Slider
               color="primary"
+              aria-label={t('version')}
               step={1}
               maxValue={Math.max(0, (Store.historyList.value?.length || 1) - 1)}
               minValue={0}

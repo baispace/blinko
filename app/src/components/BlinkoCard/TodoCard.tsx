@@ -11,7 +11,9 @@ import { _ } from '@/lib/lodash';
 import { getNoteTagPaths } from './noteContent';
 import { api } from '@/lib/trpc';
 import { PromiseCall } from '@/store/standard/PromiseState';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { MarkdownRender } from '@/components/Common/MarkdownRender';
+import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
 
 type BlinkoItem = Note & { isBlog?: boolean; title?: string; isExpand?: boolean };
 
@@ -85,6 +87,22 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
   const content = stripContent(todo);
   const contentLines = content.split('\n');
   const isLong = contentLines.length > 3 || content.length > 140;
+
+  // 正文里的任务清单可直接在卡片上勾选。
+  // updater 基于「原始 content」计算（stripContent 只删 #标签# token，任务项序号与原文一致），
+  // 用 ref 持有最新值，避免连续快速点击时用陈旧闭包覆盖前一次结果。
+  const rawContentRef = useRef(todo.content ?? '');
+  rawContentRef.current = todo.content ?? '';
+
+  const handleContentChange = (updater: (current: string) => string) => {
+    if (todo.id == null) return;
+    const next = updater(rawContentRef.current);
+    if (next === rawContentRef.current) return;
+    rawContentRef.current = next;
+    todo.content = next;
+    // refresh: false —— 不重拉列表，避免勾选后卡片跳动
+    blinko.upsertNote.call({ id: todo.id, content: next, refresh: false });
+  };
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -180,12 +198,20 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
       <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 cursor-pointer" onDoubleClick={openEdit}>
           <div
-            className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
+            className={`text-sm leading-relaxed break-words ${
               done ? 'line-through opacity-60' : ''
-            } ${!expanded && isLong ? 'line-clamp-3' : ''}`}
+            } ${!expanded && isLong ? 'max-h-[4.5rem] overflow-hidden' : ''}`}
           >
-            {content || <span className="text-default-400">(空)</span>}
+            {content
+              ? <MarkdownRender content={content} onChange={handleContentChange} />
+              : <span className="text-default-400">(空)</span>}
           </div>
+
+          {(todo.attachments?.length ?? 0) > 0 && (
+            <div className="mt-1.5">
+              <FilesAttachmentRender files={todo.attachments ?? []} columns={3} />
+            </div>
+          )}
 
           {isLong && (
             <button

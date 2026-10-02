@@ -110,9 +110,25 @@ const UpdateSSOProvider = observer(({ provider }: { provider?: z.infer<typeof ZO
       function: async () => {
         const config = blinko.config.value || {}
         const providers = config.oauth2Providers || []
+        const id = store.id.trim()
+
+        if (!id) {
+          RootStore.Get(ToastPlugin).error(t('provider-id-required'))
+          return
+        }
+        // 同 id 只能存在一条：重复会让列表 key 撞车，也会让 /api/auth/callback/:id 回调路由产生歧义
+        if (providers.some(p => p.id === id && p.id !== provider?.id)) {
+          RootStore.Get(ToastPlugin).error(t('provider-id-exists'))
+          return
+        }
+        if (!store.clientId.trim() || !store.clientSecret.trim()) {
+          RootStore.Get(ToastPlugin).error(t('client-id-secret-required'))
+          return
+        }
+
         const newProvider = {
-          id: store.id,
-          name: store.name,
+          id,
+          name: store.name.trim() || id,
           icon: store.icon,
           wellKnown: store.wellKnown,
           scope: store.scope,
@@ -132,6 +148,7 @@ const UpdateSSOProvider = observer(({ provider }: { provider?: z.infer<typeof ZO
           value: newProviders
         })
         RootStore.Get(DialogStore).close()
+        RootStore.Get(ToastPlugin).success(t('your-changes-have-been-saved'))
         await blinko.config.call()
       }
     })
@@ -150,6 +167,7 @@ const UpdateSSOProvider = observer(({ provider }: { provider?: z.infer<typeof ZO
   return <div className="flex flex-col gap-4">
     <Select
       variant="bordered"
+      aria-label="OAuth template"
       selectedKeys={[store.template]}
       onChange={e => handleTemplateChange(e.target.value)}
       startContent={store.icon && <Icon icon={store.icon} width="20" height="20" />}
@@ -309,7 +327,7 @@ export const SSOSetting = observer(() => {
 
       <Item
         leftContent={
-          <Table shadow="none" className="mb-2">
+          <Table shadow="none" aria-label={t('sso-settings')} className="mb-2">
             <TableHeader>
               <TableColumn>{t('provider-id')}</TableColumn>
               <TableColumn>{t('provider-name')}</TableColumn>
@@ -317,8 +335,8 @@ export const SSOSetting = observer(() => {
               <TableColumn>{t('action')}</TableColumn>
             </TableHeader>
             <TableBody>
-              {providers.map(provider => (
-                <TableRow key={provider.id}>
+              {providers.map((provider, index) => (
+                <TableRow key={`${provider.id}-${index}`}>
                   <TableCell>{provider.id}</TableCell>
                   <TableCell>{provider.name}</TableCell>
                   <TableCell>

@@ -43,6 +43,7 @@ export const GlobalPromptSection = observer(() => {
         </div>
 
         <Textarea
+          aria-label={t('global-prompt')}
           radius="lg"
           minRows={4}
           maxRows={8}

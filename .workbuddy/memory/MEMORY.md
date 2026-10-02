@@ -26,6 +26,17 @@
   （server 侧 TS2589/pgBoss、ShareDialog、McpServers、framer-motion variants、pages/index 等），
   所以正确做法是**只看日志里是否出现你改动的文件名**，不追求零报错：
   `tsc ... > /tmp/tsc.log 2>&1; grep "error TS" /tmp/tsc.log | grep -v "\.\./server"`
+- **z-index 层级铁律**：全屏编辑层是 `fixed inset-0 z-[9999]`（FullscreenEditor + isFullscreen Card）；
+  任何 portal 弹窗/浮层 wrapper 必须 **> 9999**（CoverPicker/IconPicker 现为 z-[10000]），
+  否则弹窗渲染成功但被全屏层盖住 = 用户视角"点击无反应"。
+  排查口诀：先 `elementFromPoint(视口中心)` 看被谁盖住，别先怀疑事件没触发
+- **HeroUI Button onPress 在弹窗/Popover 内静默失效**（本项目实测两例：页宽 Popover、CoverPicker/IconPicker Modal）
+  → 弹窗内交互一律用原生 `<button onClick>`，不要用 HeroUI Button 的 onPress
+- **Tiptap 编辑器自身限高**：`.tiptap-wrap .tiptap` 全局 `max-height:70vh; overflow-y:auto`——
+  改滚动结构（如全屏页页面级滚动）必须同步覆盖：`.tiptap-wrap.page-scroll .tiptap { max-height:none; height:auto; overflow-y:visible }`，
+  否则外层怎么改 ProseMirror 都在内部滚
+- **全屏页（PC）已是页面级滚动**：封面+标题+正文一起滚、滚动条贴视口右缘、顶栏 sticky；
+  链路 FullscreenEditor(pageScroll) → BlinkoEditor → Editor → TiptapEditorContent(page-scroll class)
 
 ## 笔记封面 + 图标（全部走 notes.metadata，不改库不加接口）
 - 存 `metadata.icon`（emoji）、`metadata.cover`、`metadata.coverOffset`；`notes.metadata` 是 `Json?` 且 upsert 会 merge
@@ -45,9 +56,14 @@
 ```bash
 TOKEN=$(psql postgresql://baihe@localhost:5432/blinko -t -A -c 'SELECT "apiToken" FROM accounts WHERE id=1;')
 # 浏览器内：
-localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1', name:'admin'}}))
+localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1', name:'admin', role:'superadmin'}}))
 ```
+- **必须带 `role:'superadmin'`**（本地 admin 在 DB 里就是 superadmin）：
+  `UserStore.role` 直接读 `tokenData.value?.user?.role`，缺了就是 `''` → `isSuperAdmin` 为 false
+  → **/settings 只渲染 4 个 tab**（基本信息/偏好/导出/关于），AI/用户列表/存储/插件等 9 个测不到。
+  曾因此误判「本地非超管」，实际是注入数据不完整
 - 前端存储 key：`localStorage.blinkoToken`（StorageState），值结构 `{token, user, requiresTwoFactor?}`
+  要完整复刻 `UserStore.ready()` 里写入的 TokenData（id/name/nickname/image/role/expires/token）
 - 路由守卫要求 `tokenData.user.id` 存在，否则跳 /signin
 - apiToken 可直接作 `Authorization: Bearer <JWT>` 调 tRPC 接口
 
@@ -60,6 +76,22 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
 3. 检查 `document.querySelector('vite-error-overlay')`
 4. 注入 token 复现登录态，用 agent-browser eval 看 `location.pathname` / `root.innerHTML.length`
 
+## 控制台告警定位：用 CDP 抓完整调用栈（无组件栈时唯一可靠手段）
+React/HeroUI 很多告警**没有组件树栈**，且 DOM 上库会补默认属性（扫不到）。
+`msg.location()` 也只返回最外层 console 包装器位置（我们的 devConsole.ts），都没用。
+正确做法：
+```js
+const cdp = await ctx.newCDPSession(page); await cdp.send('Runtime.enable');
+cdp.on('Runtime.consoleAPICalled', e => { /* e.stackTrace.callFrames: functionName/url/line */ });
+```
+能穿透 console 包装层看到真实调用点（例：`useAutocomplete @ @heroui_react.js:19443`）。
+配合「先清空收集器 → 再点击 → 再收集」的顺序（告警只在切换瞬间产生，点完再 clear 会全漏）。
+
+### HeroUI 可访问性告警口径（实测）
+- 会告警：Select / Slider / Textarea / Autocomplete —— **placeholder 不算**，`label={'x'}` 也不算（那是显示文本）
+- 不告警：Input（有 placeholder 即可）、Switch（有 children 即可）
+- `<Table>` 缺 aria-label 会告警，但 DOM 上库会补默认 aria-label → DOM 扫描扫不出来，只能靠静态扫 `<Table` 标签
+
 ## agent-browser 自动化技巧（本项目实测有效）
 - React Aria Popover（HeroUI trigger）对 `.click()` 无响应 → eval 派发完整事件序列：
   pointerdown/pointerup/mousedown/mouseup/click（带 clientX/Y/pointerId/bubbles）
@@ -67,6 +99,13 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
 - eval 变量跨调用残留（`Identifier already declared`）→ 全部 IIFE 包裹
 - 编辑器 store 直读：Card 元素挂了 `__storeInstance`（`[...document.querySelectorAll('div')].find(d => d.__storeInstance)`）
 - Tiptap 注意：失焦后 focus() 恢复上次选区——全选状态下经 Popover 插入会替换选区（惯例语义非 bug）
+- **告警没有组件堆栈时**（如 react-aria 的 "must specify an aria-label"）：在 `addInitScript` 里劫持
+  `console.warn/error`，命中关键词就存 `new Error().stack` → 能直接看到是 `useSlider` 还是别的 hook
+- **不要只测首页**：用户报的都是具体页面。常用巡检路由
+  `/ /ai /settings /resources /review /analytics /all /hub /plugin /?path=todo|notes|archived`
+- 设置页 tab 受 `user.isSuperAdmin` 控制，本地非超管只能看到 basic/prefer/export/about 四个；
+  AI/存储/快捷键/插件等**本地测不到**，需要静态扫描（找 `.map(` 缺 key、`<Slider>`/`<Select>` 缺 label）兜底
+- HeroUI 里 `<Input>`/`<Textarea>` 没 label **不会**告警（placeholder 兜底），只有 **Slider / Select** 会
 
 ## Tiptap 编辑器（已替换 Vditor，适配器冒充 vditor 接口）
 - 代码在 `app/src/components/Common/Editor/Tiptap/`：adapter/extensions/ToolbarButtons/Callout/CalloutIconMenu/tiptap.css
@@ -83,6 +122,22 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
     插件自动置 `preserveHtml` → 整表序列化为 HTML `<table>`（查看端 rehypeRaw 渲染，样式在 github-markdown.css）
   - 坑：`@tiptap/pm/tables` 只导出 CellSelection，TextSelection 要从 `@tiptap/pm/state` 导入；
     单元格多 attr 必须在 renderHTML 里合并成一条 style，否则互相覆盖
+
+## AI 排障（2026-09-30 实战）
+- **"AI_APICallError: Bad Request" 多半是嵌入/RAG 链路，不是聊天模型**：
+  `ai.completions` 的 `withRAG` 默认 true（`aiStore.withRAG` 默认 true，对应输入框「知识库搜索」按钮），
+  每次对话先 `queryVector()` → `embed()` 打 `{baseURL}/embeddings`。
+  快速判定：同一请求加 `withRAG:false` 对比，若正常就是嵌入模型/端点问题
+- **直连 provider 验端点**（比看代码快）：`POST {baseURL}/embeddings` 用已有模型 → 400 表示不支持；
+  用不存在模型 → 404 `Model not exist`；`GET {baseURL}/models` 看有没有嵌入模型
+- 本轮加了 `formatAiError()`（`server/aiServer/index.ts`）：把 `statusCode/url/responseBody` 拼进 message，
+  以后再报 Bad Request 一眼能看出是哪个端点。新增 AI 错误处理都用它，别再 `throw new Error(error)`
+- **RAG 失败要降级**：`AiService.completions` 里 RAG 查询已包 try/catch，失败只 warn 并继续聊天；
+  未配 `embeddingModelId` 也跳过。不要把"增强功能"的失败变成"主功能不可用"
+- 流式 tRPC 路由（generator mutation）用 curl/fetch 打必须带 **`trpc-accept: application/jsonl`**，
+  否则 415 `use httpBatchStreamLink`
+- `framer-motion` 的 `AnimatePresence` 用 `child.key || ''` 取 key →
+  **多个无 key 子节点同时渲染会报 duplicate key `""`**。给每个子节点显式加 key
 
 ## 本地测 AI 功能的前置条件
 - 本地 `aiProviders` / `aiModels` 表**是空的** → 任何 AI 调用都会失败，
@@ -117,6 +172,12 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
   任意 Iconify 名 → 归一化为 Iconly 图标（三层映射：导航 7 / 语义 96 / 品牌 25 + 关键词降级函数）。
   静态 `assets/iconly/flat/*.svg`（132 个，懒加载）+ Lottie 动画 `assets/iconly/{actions,ai,waiting}/*.json`（83 个），依赖 `lottie-web`。
   站点已提取产物（含 83 个标准 Lottie JSON + 22 个内联 SVG + 总览页）→ `.workbuddy/outputs/blinko-icons/`
+- **`icons.tsx` 是自动生成文件**：改 Icon 组件（如加 forwardRef）必须**同时改 `buildIcons.js` 里的模板字符串**
+  （Icon 组件代码是内联在模板里的），否则下次 `bun run build:iconify:icons` 会冲掉改动
+- **Icon 必须保持 `React.forwardRef<SVGSVGElement, IconProps>`**：HeroUI Tooltip/Badge/Popover 会给子元素挂 ref，
+  不转发不但告警，tooltip 定位还会失准
+- 全量核对脚本思路：解析 icons.tsx 的 `export const X: IconCollection` + `"prefix"` + 4 空格缩进的图标键
+  → bundled 集合；再宽松扫源码所有 `'prefix:name'` 字面量 → 求差集（扫描器只认 `icon="..."` 会漏三元/数组写法）
 
 ## 资源模块文件夹模型（虚拟文件夹，2026-09-28 确认）
 - `attachments.createFolder`（server/routerTrpc/attachment.ts）**只在 DB 插占位记录**：name='.folder'、type='folder'、path=`/api/file/{parent}/{name}/.folder`、perfixPath=`parent,name`（逗号分隔）
@@ -140,7 +201,104 @@ localStorage.setItem('blinkoToken', JSON.stringify({token:'<JWT>', user:{id:'1',
   - 标签页：今天/逾期/即将到来/全部/完成，每个带计数徽标
 - **卡片**：`BlinkoCard/TodoCard.tsx` 替换默认 BlinkoCard，含：左侧优先级色条 / 四象限 chip / 逾期天数 / 顺延次数 / 项目标签 / 悬浮操作图标（编辑/删除）
 - **store**：`blinkoStore` 新增 `doneTodoList`（type=TODO & isArchived=true）
+
+## 待办编辑器整合 Tiptap（2026-09-30 落地，全量整合）
+- **待办的两处输入都换成 Tiptap**：`Common/TodoQuickAdd.tsx`（快速添加）、`BlinkoCard/TodoEditModal.tsx`（编辑弹窗）；
+  `BlinkoCard/TodoCard.tsx` 正文改 `MarkdownRender` + `FilesAttachmentRender` 展示附件（原为 `whitespace-pre-wrap` 纯文本）
+- **Editor 新增 3 个 props**（`Common/Editor/index.tsx`）：
+  - `fixedNoteType` —— 强制 noteType，覆盖 `useEditorInit` 里基于 `searchParams.path` 的推断（待办传 `NoteType.TODO`）
+  - `hideNoteTypeButton` —— 隐藏「闪念/笔记/待办」类型切换（避免误切）
+  - `hideFullscreenButton` —— 隐藏右上角全屏（弹窗内不需要）
+  - `fixedNoteType` 需一路透传给 `useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType)`
+- **提交/保存走 `onSend(args: OnSendContentType)`**：`args.content` / `args.files` / `args.references`；
+  工具栏 SendButton 与 ⌘/Ctrl+Enter 都会进来，不要再手写一份 keydown
+- **坑1：attachments 映射**。`args.files` 是 `FileType & { uploadPath }`，但**编辑态下已有附件经 `HandleFileType()` 只有 `preview`（=原 path），没有 `uploadPath`**
+  → 必须 `path: i.uploadPath ?? i.preview`，否则保存会把已有附件路径写成 undefined（BlinkoEditor 也有这个隐患，未改）
+  映射结果需 `as any` 才能过 `Attachment`（= prisma 全字段 & {size}）
+- **坑2：新增 props 忘了解构**。在 `IProps` 里加了字段却在组件参数里漏写 → 运行时 `ReferenceError: xxx is not defined` → 整页白屏崩溃。改完必须实测
+- `useEditorFiles` 里原本有 `console.log({ originFiles })` 调试日志，已删
+- 验证要点：待办页工具栏 svg 数 9（闪念 11，差的是类型切换 + 全屏）；提交后编辑器自动清空、每次只建 1 条、可连续添加
+- **正文任务清单可勾选**：`MarkdownRender` 的 `li` renderer 只有在**传了 `onChange` 且非 `isShareMode`** 时才走
+  `ListItem`（可点击），否则渲染成只读列表 —— 待办卡片忘了传 `onChange` 就是"点不动"。
+  写法照抄 `noteContent.tsx`：`onChange={updater => { const next = updater(raw); todo.content = next;
+  blinko.upsertNote.call({ id, content: next, refresh: false }) }}`
+  - updater（`ListItem.toggleTasksByIndex`）按「源 markdown 里第 N 个任务项」定位，
+    所以要传**原始 content**；卡片显示用的 `stripContent()` 只删 `#标签#`、行结构不变，序号一致
+  - 用 `useRef` 持有最新 content，避免连点时闭包陈旧覆盖前一次
+  - `refresh: false` 避免重拉列表导致卡片跳动；upsert 不传 metadata 时后端**不会**清 metadata
 - **翻译键**：`priority-high/medium/low/none` + `priority`（旧的 4 个 urgent-important/important/urgent/normal 已不用，但保留以防万一）
 - **验证**：Playwright + 系统 Chrome `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
   - `page.addInitScript` 注入 token（必须在页面脚本前）
   - 验证 outside-click 要点空白处，不要点 sidebar/侧栏
+
+## 编辑态自动保存（2026-10-01 落地，P0）
+- **自动保存必须走 `blinko.autosaveNote({id, content})`，不要复用 `blinko.upsertNote`**
+  原因：`PromiseState.call` 有 `loadingLock`，请求在飞时新调用被**静默丢弃** → 自动保存会丢最后一次编辑；
+  且 upsertNote 会 toast / `refresh` / `if (content != null) eventBus.emit('editor:clear')`（清空编辑器！）
+- `autosaveNote` 设计：promise 串行链 + `autosaveSeq` 序号，只发最新一版（跳过中间版本），
+  保证乱序响应不会让旧内容复活；`cancelAutosave()` 递增 seq 作废排队任务（in-flight 的照常完成，无害）
+- 调度在 `BlinkoEditor/index.tsx`：onChange → debounce 800ms → flush；
+  `pendingAutosave` ref 快照 `{id, content}`，切换/卸载时 cleanup 补写（**必须快照 id**，否则会把旧内容写到新笔记上）
+- **空内容不自动保存**（防误清空整篇）；手动发送前 `cancelAutosave()`，
+  成功后 `lastSavedContent.current = 发送前的 content`（因为 upsertNote 成功后会 emit editor:clear 把编辑器清空）
+- 后端护栏（`server/routerTrpc/note.ts`）：
+  - `HISTORY_MERGE_WINDOW_MS = 60_000`：noteHistory 60s 内合并，不新增版本（实测 6 次保存 → 1 条历史）
+  - `EMBEDDING_THROTTLE_MS = 60_000` + `scheduleEmbedding()`：节流且**尾部补偿**（窗口结束补跑一次，用最新内容）
+- 状态指示：Editor 新增 `autosaveStatus?: 'idle'|'saving'|'saved'|'error'`；翻译键 `saving`/`saved`/`save-failed`
+- 已知副作用：`notes.updatedAt` 是 `@updatedAt`，自动保存会刷新它（与手动保存一致）
+- **UI 验证路径**：首页**双击卡片** → 编辑弹窗（BlinkoCard `handleDoubleClick` → `ShowEditBlinkoModel`）。
+  卡片是 `[role=button]` 不是 `<button>`，evaluate 里要用 `querySelectorAll('button,[role=button]')`；
+  右键菜单在首页不生效；`.tiptap` 用 `.last()` 取弹窗内的
+
+## 编辑态「完成按钮」与操作即落库（2026-10-01 落地，P2）
+- **按钮判定**：create 模式 = `SendButton`（纸飞机，唯一落库路径，**必须保留**）；
+  edit 模式 = `DoneButton`（对勾，`title=t('done')`）。判断依据只是 `Editor` 有没有收到 `onDone`
+- **自动保存只写 content**，附件 / @引用 / 类型切换原本全压在手动「发布」上。
+  要把按钮换成「完成」，必须先把这三样改成操作即落库，否则会静默丢数据
+- **后端硬约束（`server/routerTrpc/note.ts`）**：
+  - `content == null` 时 **提前 return**，跳过附件/引用处理 → 即时落库**必须带 content**
+  - 附件 = **追加语义**（difference 后只新增，不删）；引用 = **全量替换**（传 [] 会清空引用）
+- **两条链，不能合并**：
+  - `autosaveNote` —— seq 合并，只发最新一版（击键级，中间版本丢弃无害）
+  - `silentUpsertNote` —— **不合并**，离散操作（上传/引用/类型），合并会丢写入
+- **用 `reaction` 而不是 useEffect deps** 监听 `store.references` / `store.noteType` / `store.files`：
+  这些值在父组件 render 时还没被 `useEditorInit` 填充，用 deps 会在首次填充时误触发一次
+  `references: []` 的全量替换（**会清空引用**）。reaction 在 `useEditorInit` 之后注册，基线是真实值
+- 打开笔记时三个 reaction 各触发一次 → 300ms 合并窗口合成一次幂等空写
+- **`editContentStorage` 本地草稿会在打开编辑态时覆盖服务端内容**。自动保存成功后必须
+  `removeByFind` 清掉，只在"崩溃/未保存"时保留；另外手动保存清理曾用
+  `editAttachmentsStorage` 的 index 去删 `editContentStorage`（两个 list 不同源，错位）→ 改各自 removeByFind
+- **测试注意**：编辑弹窗里有 **2 个 file input**，第一个是首页底部新建编辑器的（create 模式，
+  上传只进 `createAttachmentsStorage`）→ 测附件落库必须 `nth(1)`；
+  清理测试笔记要用 `LIKE '%P2-%'`（内容以 `# ` 开头，前缀匹配不到）
+
+## 页宽设置（2026-10-01 落地，P3）
+- 三档：default=1000px、wide=1400px、full=undefined（铺满容器）
+- 作用于 **全屏编辑器**（`FullscreenEditor`）和 **详情页**（`/detail?id=`）
+- 纯前端偏好，localStorage key：`blinko-note-page-width`
+- **新 store 不要 `extends Store` + `makeAutoObservable`**：MobX 禁止对超类用 `makeAutoObservable`，
+  会抛 `'makeAutoObservable' can only be used for classes that don't have a superclass`，
+  导致整站白屏。应改用 `makeObservable(this, { ... })` 显式注解
+- 自定义 SVG 图标比文字按钮更直观：外框表示窗口，内块表示正文，内块宽度随档位变化
+
+## 编辑态「完成按钮」与操作即落库（2026-10-01 落地，P2）
+- **按钮判定**：create 模式 = `SendButton`（纸飞机，唯一落库路径，**必须保留**）；
+  edit 模式 = `DoneButton`（对勾，`title=t('done')`）。判断依据只是 `Editor` 有没有收到 `onDone`
+- **自动保存只写 content**，附件 / @引用 / 类型切换原本全压在手动「发布」上。
+  要把按钮换成「完成」，必须先把这三样改成操作即落库，否则会静默丢数据
+- **后端硬约束（`server/routerTrpc/note.ts`）**：
+  - `content == null` 时 **提前 return**，跳过附件/引用处理 → 即时落库**必须带 content**
+  - 附件 = **追加语义**（difference 后只新增，不删）；引用 = **全量替换**（传 [] 会清空引用）
+- **两条链，不能合并**：
+  - `autosaveNote` —— seq 合并，只发最新一版（击键级，中间版本丢弃无害）
+  - `silentUpsertNote` —— **不合并**，离散操作（上传/引用/类型），合并会丢写入
+- **用 `reaction` 而不是 useEffect deps** 监听 `store.references` / `store.noteType` / `store.files`：
+  这些值在父组件 render 时还没被 `useEditorInit` 填充，用 deps 会在首次填充时误触发一次
+  `references: []` 的全量替换（**会清空引用**）。reaction 在 `useEditorInit` 之后注册，基线是真实值
+- 打开笔记时三个 reaction 各触发一次 → 300ms 合并窗口合成一次幂等空写
+- **`editContentStorage` 本地草稿会在打开编辑态时覆盖服务端内容**。自动保存成功后必须
+  `removeByFind` 清掉，只在"崩溃/未保存"时保留；另外手动保存清理曾用
+  `editAttachmentsStorage` 的 index 去删 `editContentStorage`（两个 list 不同源，错位）→ 改各自 removeByFind
+- **测试注意**：编辑弹窗里有 **2 个 file input**，第一个是首页底部新建编辑器的（create 模式，
+  上传只进 `createAttachmentsStorage`）→ 测附件落库必须 `nth(1)`；
+  清理测试笔记要用 `LIKE '%P2-%'`（内容以 `# ` 开头，前缀匹配不到）

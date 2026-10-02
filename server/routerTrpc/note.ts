@@ -22,6 +22,46 @@ const extractHashtags = (input: string): string[] => {
   return matches ? matches : [];
 };
 
+/**
+ * Autosave persists the note every time typing pauses, so consecutive writes
+ * are only milliseconds apart. Without a merge window that turns the version
+ * history into one snapshot per burst of keystrokes, which makes the history
+ * panel unusable. Edits landing inside this window reuse the snapshot already
+ * stored, i.e. a burst collapses into a single version.
+ */
+const HISTORY_MERGE_WINDOW_MS = 60_000;
+
+/** Same reason as above, but for the (paid, rate-limited) embedding call. */
+const EMBEDDING_THROTTLE_MS = 60_000;
+const lastEmbeddingAt = new Map<number, number>();
+const pendingEmbedding = new Map<number, ReturnType<typeof setTimeout>>();
+
+/**
+ * Runs `run` at most once per EMBEDDING_THROTTLE_MS per note. Skipped runs are
+ * not dropped: a trailing timer fires at the end of the window so the note
+ * still gets re-embedded with whatever content was last written.
+ */
+const scheduleEmbedding = (noteId: number, run: () => void) => {
+  const now = Date.now();
+  const elapsed = now - (lastEmbeddingAt.get(noteId) ?? 0);
+  if (elapsed >= EMBEDDING_THROTTLE_MS) {
+    lastEmbeddingAt.set(noteId, now);
+    if (lastEmbeddingAt.size > 1000) lastEmbeddingAt.clear();
+    run();
+    return;
+  }
+  const existing = pendingEmbedding.get(noteId);
+  if (existing) clearTimeout(existing);
+  pendingEmbedding.set(
+    noteId,
+    setTimeout(() => {
+      pendingEmbedding.delete(noteId);
+      lastEmbeddingAt.set(noteId, Date.now());
+      run();
+    }, EMBEDDING_THROTTLE_MS - elapsed),
+  );
+};
+
 export const noteRouter = router({
   list: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list', summary: 'Query notes list', protect: true, tags: ['Note'] } })
@@ -979,24 +1019,33 @@ export const noteRouter = router({
           const latestVersion = await prisma.noteHistory.findFirst({
             where: { noteId: id },
             orderBy: { version: 'desc' },
-            select: { version: true },
+            select: { version: true, createdAt: true },
           });
 
-          await prisma.noteHistory.create({
-            data: {
-              noteId: id,
-              content: existingNote.content,
-              version: (latestVersion?.version || 0) + 1,
-              accountId: Number(ctx.id),
-              metadata: {
-                type: existingNote.type,
-                isArchived: existingNote.isArchived,
-                isTop: existingNote.isTop,
-                isShare: existingNote.isShare,
-                isRecycle: existingNote.isRecycle,
+          // Autosave fires far more often than a user means to create a
+          // "version". Collapse writes that land inside the merge window into
+          // the snapshot already stored instead of appending a new one.
+          const withinMergeWindow =
+            !!latestVersion?.createdAt &&
+            Date.now() - new Date(latestVersion.createdAt).getTime() < HISTORY_MERGE_WINDOW_MS;
+
+          if (!withinMergeWindow) {
+            await prisma.noteHistory.create({
+              data: {
+                noteId: id,
+                content: existingNote.content,
+                version: (latestVersion?.version || 0) + 1,
+                accountId: Number(ctx.id),
+                metadata: {
+                  type: existingNote.type,
+                  isArchived: existingNote.isArchived,
+                  isTop: existingNote.isTop,
+                  isShare: existingNote.isShare,
+                  isRecycle: existingNote.isRecycle,
+                },
               },
-            },
-          });
+            });
+          }
         }
 
         // For shared editors, we need to use a different where clause
@@ -1110,10 +1159,12 @@ export const noteRouter = router({
         }
 
         if (config?.embeddingModelId) {
-          AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt });
-          for (const attachment of attachments) {
-            AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
-          }
+          scheduleEmbedding(note.id, () => {
+            AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt });
+            for (const attachment of attachments) {
+              AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
+            }
+          });
         }
 
         SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx);

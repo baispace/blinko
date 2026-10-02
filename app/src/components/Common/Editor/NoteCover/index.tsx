@@ -14,13 +14,15 @@ import { toAuthenticatedCoverUrl } from './coverUrl';
 
 interface NoteCoverHeaderProps {
   store: EditorStore
+  /** 阅读态：封面/图标/标题只展示，不给任何编辑入口 */
+  readOnly?: boolean
 }
 
 /**
  * Sits above the editor body: exposes the note's emoji icon and cover image,
  * both persisted through `metadata` and shipped with the note on send.
  */
-export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
+export const NoteCoverHeader = observer(({ store, readOnly = false }: NoteCoverHeaderProps) => {
   const { t } = useTranslation();
   const [iconOpen, setIconOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
@@ -92,23 +94,27 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
                 onClick={() => setCoverOpen(true)}
               />
               <div className="absolute right-2 bottom-2 flex items-center gap-1.5">
-                <button
-                  type="button"
-                  title={t('adjust-cover-position')}
-                  onClick={(e) => { e.stopPropagation(); setAdjusting(true); }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs backdrop-blur-sm hover:bg-black/70 !transition-colors"
-                >
-                  <Icon icon="mingcute:move-line" width={13} height={13} />
-                  {t('adjust-cover-position')}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setCoverOpen(true); }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs backdrop-blur-sm hover:bg-black/70 !transition-colors"
-                >
-                  <Icon icon="lucide:pencil" width={12} height={12} />
-                  {t('edit-cover')}
-                </button>
+                {!readOnly && (
+                  <>
+                    <button
+                      type="button"
+                      title={t('adjust-cover-position')}
+                      onClick={(e) => { e.stopPropagation(); setAdjusting(true); }}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs backdrop-blur-sm hover:bg-black/70 !transition-colors"
+                    >
+                      <Icon icon="mingcute:move-line" width={13} height={13} />
+                      {t('adjust-cover-position')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setCoverOpen(true); }}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs backdrop-blur-sm hover:bg-black/70 !transition-colors"
+                    >
+                      <Icon icon="lucide:pencil" width={12} height={12} />
+                      {t('edit-cover')}
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -121,14 +127,14 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
           <button
             type="button"
             title={t('select-icon')}
-            onClick={() => setIconOpen(true)}
+            onClick={() => !readOnly && setIconOpen(true)}
             className="flex items-center justify-center w-7 h-7 rounded-full text-base bg-default-100 hover:bg-default-200 !transition-colors"
           >
             {icon}
           </button>
         )}
 
-        {!icon && (
+        {!icon && !readOnly && (
           <button
             type="button"
             title={t('add-icon')}
@@ -139,7 +145,7 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
           </button>
         )}
 
-        {!coverUrl && (
+        {!coverUrl && !readOnly && (
           <button
             type="button"
             title={t('add-cover')}
@@ -153,8 +159,8 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
         {/* Title: stored in metadata like icon/cover, saved on blur / Enter. */}
         <input
           value={store.title ?? ''}
-          onChange={(e) => store.setTitle(e.target.value)}
-          onBlur={() => persistMetadata({ title: store.title ?? null })}
+          onChange={(e) => !readOnly && store.setTitle(e.target.value)}
+          onBlur={() => { if (!readOnly) persistMetadata({ title: store.title ?? null }); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -162,8 +168,9 @@ export const NoteCoverHeader = observer(({ store }: NoteCoverHeaderProps) => {
               store.vditor?.focus?.();
             }
           }}
-          placeholder={t('note-title-placeholder')}
-          className="flex-1 min-w-0 ml-1 bg-transparent text-lg md:text-xl font-semibold text-foreground outline-none placeholder:text-default-300 placeholder:font-normal"
+          readOnly={readOnly}
+          placeholder={readOnly ? undefined : t('note-title-placeholder')}
+          className={`flex-1 min-w-0 ml-1 bg-transparent text-lg md:text-xl font-semibold text-foreground outline-none placeholder:text-default-300 placeholder:font-normal ${readOnly ? 'cursor-default' : ''}`}
         />
       </div>
 

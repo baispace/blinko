@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import dayjs from '@/lib/dayjs';
 import { Icon } from '@/components/Common/Iconify/icons';
+import Editor from '@/components/Common/Editor';
+import type { OnSendContentType } from '@/components/Common/Editor/type';
 
 type PrioKey = 'ui' | 'in' | 'un' | 'nn';
 
@@ -73,18 +75,8 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
   const [prioOpen, setPrioOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const prioWrapRef = useRef<HTMLDivElement>(null);
-  const taRef = useRef<HTMLTextAreaElement>(null);
 
   const cur = PRIORITY_OPTIONS.find((p) => p.key === priorityKey)!;
-
-  // auto-grow textarea
-  useEffect(() => {
-    const el = taRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }, [content]);
 
   // outside-click closes the priority popover
   useEffect(() => {
@@ -100,15 +92,25 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
 
   const close = () => RootStore.Get(DialogStore).close();
 
-  const save = async () => {
-    if (!content.trim() || note.id == null) return;
+  // 编辑器发送（Cmd/Ctrl+Enter 或工具栏按钮）走同一条保存路径
+  const save = async (args: OnSendContentType) => {
+    const text = (args?.content ?? content).trim();
+    if (!text || note.id == null) return;
     setSaving(true);
     try {
       await PromiseCall(
         api.notes.upsert.mutate({
           id: note.id,
-          content: content.trim(),
+          content: text,
           type: NoteType.TODO,
+          references: args?.references ?? [],
+          // 编辑态下已有附件走 HandleFileType，只有 preview（=原 path）没有 uploadPath，需兜底，否则保存会丢附件
+          attachments: (args?.files ?? []).map((i) => ({
+            name: i.name,
+            path: i.uploadPath ?? (i as any).preview,
+            size: i.size,
+            type: i.type,
+          })) as any,
           metadata: {
             ...(note.metadata ?? {}),
             priorityUrgent: cur.u,
@@ -190,30 +192,24 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
         </div>
       </div>
 
-      <textarea
-        ref={taRef}
-        autoFocus
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save();
-          if (e.key === 'Escape') close();
-        }}
-        placeholder={t('what-to-do')}
-        rows={1}
-        className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-default-400 pt-3"
-        style={{ overflow: 'hidden' }}
-      />
+      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器，锁定待办类型 */}
+      <div className="pt-3">
+        <Editor
+          mode="edit"
+          content={content}
+          onChange={setContent}
+          onSend={save}
+          isSendLoading={saving}
+          fixedNoteType={NoteType.TODO}
+          hideNoteTypeButton
+          hideFullscreenButton
+          withoutOutline
+          originFiles={note.attachments ?? []}
+          originReference={note.references?.map((i: any) => i.toNoteId) ?? []}
+        />
+      </div>
 
       <div className="mt-2 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={save}
-          disabled={!content.trim() || saving}
-          className="rounded-lg bg-primary px-4 py-1.5 text-[13px] font-medium text-primary-foreground disabled:opacity-40"
-        >
-          {saving ? '…' : t('save')}
-        </button>
         <button
           type="button"
           onClick={close}

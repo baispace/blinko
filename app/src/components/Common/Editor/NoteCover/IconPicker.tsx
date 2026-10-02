@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Input, Modal, ModalBody, ModalContent, ModalHeader, ScrollShadow } from '@heroui/react';
+import { Input, Modal, ModalBody, ModalContent, ModalHeader, ScrollShadow } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 
 export const EMOJI_GROUPS: Array<{ name: string; emojis: string[] }> = [
@@ -70,13 +70,15 @@ export const IconPicker = ({ isOpen, onClose, onSelect }: IconPickerProps) => {
   };
 
   return (
+    // z-[10000]: above the fullscreen editor overlay (z-[9999]) so the picker
+    // is never hidden behind it.
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       hideCloseButton
       size="lg"
       placement="center"
-      classNames={{ base: 'max-h-[80vh]', wrapper: 'z-[9998]' }}
+      classNames={{ base: 'max-h-[80vh]', wrapper: 'z-[10000]' }}
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1 pb-2">
@@ -115,7 +117,12 @@ export const IconPicker = ({ isOpen, onClose, onSelect }: IconPickerProps) => {
           </ScrollShadow>
         </ModalBody>
         <div className="flex justify-end gap-2 px-6 pb-4">
-          <Button size="sm" variant="light" onPress={onClose}>{t('cancel')}</Button>
+          {/* Native button: HeroUI <Button onPress> no-ops inside modals here. */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-md text-sm text-foreground hover:bg-default-100 !transition-colors cursor-pointer"
+          >{t('cancel')}</button>
         </div>
       </ModalContent>
     </Modal>

@@ -278,7 +278,6 @@ const InstalledPlugins = observer(() => {
 const AllPlugins = observer(() => {
   const { t } = useTranslation();
   const pluginManager = RootStore.Get(PluginManagerStore);
-  const dialog = RootStore.Get(DialogStandaloneStore);
   const [loadingPluginName, setLoadingPluginName] = useState<string | null>(null);
   const [currentAppVersion, setCurrentAppVersion] = useState<string>('0.0.0');
   const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean, plugin?: PluginInfo }>({ isOpen: false });
@@ -331,11 +330,11 @@ const AllPlugins = observer(() => {
   };
 
   const handleInstallFromGithub = () => {
-    dialog.setData({
+    RootStore.Get(DialogStandaloneStore).setData({
       isOpen: true,
       title: t('install-from-github'),
       size: 'md',
-      content: <InstallFromGithubDialog onClose={() => dialog.close()} />
+      content: <InstallFromGithubDialog onClose={() => RootStore.Get(DialogStandaloneStore).close()} />
     });
   };
 
@@ -588,15 +587,14 @@ const InstallFromGithubDialog = observer(({ onClose }: { onClose: () => void }) 
 
 const LocalDevelopment = observer(() => {
   const { t } = useTranslation();
-  const dialog = RootStore.Get(DialogStandaloneStore);
   const pluginManager = RootStore.Get(PluginManagerStore);
 
   const handleAddLocalPlugin = () => {
-    dialog.setData({
+    RootStore.Get(DialogStandaloneStore).setData({
       isOpen: true,
       title: t('add-local-plugin'),
       size: 'md',
-      content: <AddLocalPluginDialog onClose={() => dialog.close()} />
+      content: <AddLocalPluginDialog onClose={() => RootStore.Get(DialogStandaloneStore).close()} />
     });
   };
 

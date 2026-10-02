@@ -415,7 +415,10 @@ export class AiModelFactory {
       "Always respond in the user's language.\n" +
       'Maintain a friendly and professional conversational tone.';
 
-    const baseInstructions = `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt || defaultInstructions;
+    // 注意优先级：`a + b || c` 会把 undefined 拼成字符串 "undefined"，必须是三元判断
+    const baseInstructions = globalConfig.globalPrompt
+      ? `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt
+      : defaultInstructions;
     const instructions = extraInstructions ? `${baseInstructions}\n\n${extraInstructions}` : baseInstructions;
 
     const BlinkoAgent = new Agent({

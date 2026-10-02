@@ -22,6 +22,7 @@ export default function TagSelector({
 
   return (
     <Autocomplete
+      aria-label={t('select-tags')}
       variant={variant}
       placeholder={t('select-tags')}
       defaultItems={blinkoStore.tagList.value?.falttenTags || []}

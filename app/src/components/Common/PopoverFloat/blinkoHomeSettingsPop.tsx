@@ -191,6 +191,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </div>
             <Slider
               size="sm"
+              aria-label={t('card-spacing')}
               minValue={4}
               maxValue={24}
               step={2}
@@ -212,6 +213,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </div>
             <Slider
               size="sm"
+              aria-label={t('card-columns')}
               minValue={1}
               maxValue={4}
               step={1}

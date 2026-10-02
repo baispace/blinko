@@ -72,6 +72,11 @@ export class EditorStore {
   references: number[] = []
   isShowSearch: boolean = false
   onSend!: (args: OnSendContentType) => Promise<any>
+  /**
+   * Set by the container in edit mode. Takes over from `onSend` once autosave
+   * exists: pressing send / ⌘+Enter then only flushes and closes.
+   */
+  onDone?: () => Promise<any>
   isFullscreen: boolean = false;
   noteType!: NoteType;
   currentTagLabel: string = ''
@@ -437,6 +442,20 @@ export class EditorStore {
     } catch (error) {
       console.error('Failed to send content:', error);
     }
+  }
+
+  /**
+   * Edit-mode counterpart of `handleSend`.
+   *
+   * In edit mode there is nothing left to save: content is autosaved and
+   * uploads / references / note type persist on their own. So this only hands
+   * control to the container, which flushes whatever is still queued and then
+   * closes. Create mode has no note id yet and keeps using `handleSend`.
+   */
+  async handleDone() {
+    await this.onDone?.();
+    RootStore.Get(AiStore).isWriting = false;
+    eventBus.emit('editor:setFullScreen', false);
   }
 
   clearEditor = () => {

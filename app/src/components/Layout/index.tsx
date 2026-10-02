@@ -24,7 +24,7 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { BarSearchInput } from './BarSearchInput';
 import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
-import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
 
@@ -45,6 +45,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
   const blinkoStore = RootStore.Get(BlinkoStore);
   const base = RootStore.Get(BaseStore);
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   blinkoStore.use();
   user.use();
@@ -170,17 +171,17 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                 <BarSearchInput isPc={isPc} />
                 <FilterPop />
                 {!blinkoStore.config.value?.isCloseDailyReview && <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
-                  <Link to="/review">
-                    <Button
-                      as="a"
-                      className="mt-[2px]"
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                    >
-                      <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="24" height="24" />
-                    </Button>
-                  </Link>
+                  {/* 之前是 <Link><Button as="a"> —— 两个 <a> 嵌套，HTML 非法且 React 告警。
+                      Button 本身渲染成 <button>，用 onPress 走 SPA 跳转，语义与 DOM 都正确。 */}
+                  <Button
+                    className="mt-[2px]"
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onPress={() => navigate('/review')}
+                  >
+                    <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="24" height="24" />
+                  </Button>
                 </Badge>}
                 <BlinkoNotification />
               </div>

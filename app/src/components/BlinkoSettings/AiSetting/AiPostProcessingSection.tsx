@@ -67,6 +67,7 @@ export const AiPostProcessingSection = observer(() => {
         }
         rightContent={
           <Switch
+            aria-label={t('ai-post-processing')}
             isSelected={isUseAiPostProcessing}
             onChange={(e) => {
               const checked = e.target.checked;
@@ -90,6 +91,7 @@ export const AiPostProcessingSection = observer(() => {
             rightContent={
               <Select
                 radius="lg"
+                aria-label={t('ai-post-processing-mode')}
                 selectedKeys={[aiPostProcessingMode]}
                 onSelectionChange={(keys) => {
                   const value = Array.from(keys)[0] as string;
@@ -140,6 +142,7 @@ export const AiPostProcessingSection = observer(() => {
               }
               rightContent={
                 <Textarea
+                  aria-label={t('comment-prompt')}
                   radius="lg"
                   value={aiCommentPrompt || t('analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary')}
                   onBlur={(e) => {
@@ -168,6 +171,7 @@ export const AiPostProcessingSection = observer(() => {
               }
               rightContent={
                 <Textarea
+                  aria-label={t('tags-prompt')}
                   radius="lg"
                   value={aiTagsPrompt || `You are a precise label classification expert, and you will generate precisely matched content labels based on the content. Rules:
       1. **Core Selection Principle**: Select 5 to 8 tags from the existing tag list that are most relevant to the content theme. Carefully compare the key information, technical types, application scenarios, and other elements of the content to ensure that the selected tags accurately reflect the main idea of the content.
@@ -212,6 +216,7 @@ export const AiPostProcessingSection = observer(() => {
               }
               rightContent={
                 <Textarea
+                  aria-label={t('smart-edit-prompt')}
                   radius="lg"
                   value={aiSmartEditPrompt}
                   onBlur={(e) => {
@@ -263,6 +268,7 @@ export const AiPostProcessingSection = observer(() => {
               }
               rightContent={
                 <Textarea
+                  aria-label={t('custom-ai-prompt')}
                   id="custom-ai-prompt"
                   radius="lg"
                   minRows={4}

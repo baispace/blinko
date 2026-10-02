@@ -94,7 +94,7 @@ export const UserSetting = observer(() => {
       />
 
       <Item
-        leftContent={blinko.userList.value ? <Table shadow="none" className="mb-2 max-h-[300px] overflow-y-auto">
+        leftContent={blinko.userList.value ? <Table shadow="none" aria-label={t('user-list')} className="mb-2 max-h-[300px] overflow-y-auto">
           <TableHeader>
             <TableColumn>{t('name-db')}</TableColumn>
             <TableColumn>{t('nickname')}</TableColumn>
@@ -105,7 +105,7 @@ export const UserSetting = observer(() => {
           <TableBody>
             {
               blinko.userList.value!.map(i => {
-                return <TableRow>
+                return <TableRow key={i.id}>
                   <TableCell>{i.name}</TableCell>
                   <TableCell>{i.nickname}</TableCell>
                   <TableCell>

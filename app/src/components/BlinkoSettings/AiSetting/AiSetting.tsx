@@ -104,6 +104,7 @@ export default observer(function AiSetting() {
             <div>
               <label className="text-sm font-medium text-default-700">Streamable HTTP Endpoint URL</label>
               <Input
+                aria-label="Streamable HTTP Endpoint URL"
                 value={streamableHttpEndpoint}
                 readOnly
                 className="mt-1"
@@ -117,6 +118,7 @@ export default observer(function AiSetting() {
             <div>
               <label className="text-sm font-medium text-default-700">Legacy SSE Endpoint URL</label>
               <Input
+                aria-label="Legacy SSE Endpoint URL"
                 value={sseEndpoint}
                 readOnly
                 className="mt-1"
@@ -130,6 +132,7 @@ export default observer(function AiSetting() {
             <div>
               <label className="text-sm font-medium text-default-700">Authorization Token</label>
               <Input
+                aria-label="Authorization Token"
                 value={user.userInfo.value?.token || ''}
                 readOnly
                 type="password"

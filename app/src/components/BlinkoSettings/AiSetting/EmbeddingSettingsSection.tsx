@@ -120,6 +120,7 @@ export const EmbeddingSettingsSection = observer(function EmbeddingSettingsSecti
           rightContent={
             <div className="flex md:w-[300px] w-full ml-auto justify-start">
               <Slider
+                aria-label="Embedding top K"
                 onChangeEnd={(value) => {
                   PromiseCall(
                     api.config.update.mutate({
@@ -163,6 +164,7 @@ export const EmbeddingSettingsSection = observer(function EmbeddingSettingsSecti
           rightContent={
             <div className="flex md:w-[300px] w-full ml-auto justify-start">
               <Slider
+                aria-label="Embedding score threshold"
                 onChangeEnd={(value) => {
                   PromiseCall(
                     api.config.update.mutate({

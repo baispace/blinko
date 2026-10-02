@@ -35,11 +35,13 @@ export const HttpProxySetting = observer(() => {
   }));
 
   useEffect(() => {
-    store.isUseHttpProxy = blinko.config.value?.isUseHttpProxy!;
-    store.httpProxyHost = blinko.config.value?.httpProxyHost!;
-    store.httpProxyPort = blinko.config.value?.httpProxyPort! || 0;
-    store.httpProxyUsername = blinko.config.value?.httpProxyUsername!;
-    store.httpProxyPassword = blinko.config.value?.httpProxyPassword!;
+    // config 里这些键可能不存在（返回 undefined），直接赋给受控组件会导致
+    // "A component changed from controlled to uncontrolled"，必须给默认值
+    store.isUseHttpProxy = blinko.config.value?.isUseHttpProxy ?? false;
+    store.httpProxyHost = blinko.config.value?.httpProxyHost ?? '';
+    store.httpProxyPort = blinko.config.value?.httpProxyPort ?? 0;
+    store.httpProxyUsername = blinko.config.value?.httpProxyUsername ?? '';
+    store.httpProxyPassword = blinko.config.value?.httpProxyPassword ?? '';
   }, [blinko.config.value]);
 
   const testHttpProxy = async () => {

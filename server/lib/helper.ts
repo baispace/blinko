@@ -341,3 +341,18 @@ export const generateUrlWithToken = async (url: string, user: any) => {
   return `${url}${separator}token=${token}`;
 }
 
+
+/**
+ * 生成短随机串（默认 8 位 [a-z0-9]），用于分享链接 / 发布 ID 这类对外标识。
+ *
+ * 注意：用的是 crypto.randomInt（不是 Math.random），避免可预测性 —— 这些串
+ * 是公开资源的唯一凭证，被猜到等于内容泄露。
+ */
+export const generateShortId = (length: number = 8): string => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars[crypto.randomInt(chars.length)];
+  }
+  return result;
+}

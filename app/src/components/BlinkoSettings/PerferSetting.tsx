@@ -39,7 +39,7 @@ const SettingSection = observer(({
         </div>
         {desc && <div className="text-xs text-default-400 mt-0.5">{desc}</div>}
       </div>
-      <div className="rounded-xl bg-content1 heo-shadow-card px-4 py-1 divide-y divide-default-100">
+      <div className="rounded-xl bg-content1 shadow-sm px-4 py-1 divide-y divide-default-100">
         {children}
       </div>
     </section>

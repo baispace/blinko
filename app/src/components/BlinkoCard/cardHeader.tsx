@@ -25,7 +25,7 @@ interface CardHeaderProps {
   isShareMode: boolean;
   isExpanded?: boolean;
   account?: AvatarAccount;
-  /** HEO-blog-style blinko cards move the timestamp to the footer. */
+  /** Blog-style card layout: hide the timestamp from the header (it moves to the footer). */
   hideTime?: boolean;
   /**
    * Weibo-style compact action bar: only comment / share / pin stay visible

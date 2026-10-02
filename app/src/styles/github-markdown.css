@@ -637,7 +637,7 @@ ol {
 .markdown-body pre,
 .markdown-body details {
   margin-top: 0;
-  margin-bottom: var(--base-size-2);
+  margin-bottom: var(--base-size-2, 0);
 }
 
 .expanded-container .markdown-body p,

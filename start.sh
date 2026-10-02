@@ -4,7 +4,13 @@ echo "Current Environment: $NODE_ENV"
 SERVER_DIR=/app/server
 PUBLIC_DIR="$SERVER_DIR/public"
 
-npx prisma migrate deploy
+# 镜像里不再全局安装 prisma（省 ~60MB），直接用本地 bin；找不到再回退 npx
+PRISMA_BIN=/app/node_modules/.bin/prisma
+if [ -x "$PRISMA_BIN" ]; then
+  "$PRISMA_BIN" migrate deploy
+else
+  npx prisma migrate deploy
+fi
 node server/seed.js
 
 # ---------------------------------------------------------------

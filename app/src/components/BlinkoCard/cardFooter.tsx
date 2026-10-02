@@ -19,7 +19,7 @@ interface CardFooterProps {
   blinkoItem: BlinkoItem;
   blinko: BlinkoStore;
   isShareMode?: boolean;
-  /** HEO-blog-style blinko cards show the timestamp here instead of the header. */
+  /** Blog-style card layout: show the timestamp here instead of the header. */
   showTime?: boolean;
   /** Weibo-style: tags live inline in the body, so the footer skips the chips. */
   hideTags?: boolean;

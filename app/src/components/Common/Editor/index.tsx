@@ -357,7 +357,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
                 <div
                   onClick={handleFullScreenToggle}
                   title={store.isFullscreen ? t('exit-fullscreen') : t('fullscreen')}
-                  className={`absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg cursor-pointer !transition-all ${store.isFullscreen ? 'bg-primary text-white border border-primary hover:bg-primary/90 hover:border-primary/70 shadow-md' : 'bg-background text-default-500 border border-border heo-shadow-card hover:text-primary hover:border-primary/50'}`}
+                  className={`absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg cursor-pointer !transition-all ${store.isFullscreen ? 'bg-primary text-white border border-primary hover:bg-primary/90 hover:border-primary/70 shadow-md' : 'bg-background text-default-500 border border-border shadow-md hover:text-primary hover:border-primary/50'}`}
                 >
                   <Icon icon={store.isFullscreen ? 'lucide:minimize' : 'lucide:maximize'} width={16} height={16} className="!stroke-current" />
                 </div>

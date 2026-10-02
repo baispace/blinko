@@ -15,6 +15,7 @@ import { AiStore } from "@/store/aiStore";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import i18n from "@/lib/i18n";
 import { BlinkoShareDialog } from "../BlinkoShareDialog";
+import { BlinkoPublishDialog } from "../BlinkoPublishDialog";
 import { BaseStore } from "@/store/baseStore";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
@@ -264,6 +265,18 @@ const handlePublic = () => {
   // })
 }
 
+const handlePublish = () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  if (!blinko.curSelectedNote) return
+  RootStore.Get(DialogStore).setData({
+    size: 'md' as any,
+    isOpen: true,
+    title: i18n.t('publish-to-home'),
+    isDismissable: false,
+    content: <BlinkoPublishDialog note={blinko.curSelectedNote} />
+  })
+}
+
 const handleArchived = () => {
   const blinko = RootStore.Get(BlinkoStore)
   if (blinko.curSelectedNote?.isRecycle) {
@@ -441,6 +454,15 @@ export const PublicItem = observer(() => {
   </div>
 })
 
+export const PublishItem = observer(() => {
+  const { t } = useTranslation();
+  const blinko = RootStore.Get(BlinkoStore)
+  return <div className="flex items-start gap-2">
+    <Icon icon="tabler:world" width="20" height="20" />
+    <div>{blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+  </div>
+})
+
 export const ArchivedItem = observer(() => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore)
@@ -578,6 +600,12 @@ export const BlinkoRightClickMenu = observer(() => {
     </ContextMenuItem>
     ) : <></>}
 
+    {!blinko.curSelectedNote?.isRecycle ? (
+      <ContextMenuItem onClick={handlePublish}>
+        <PublishItem />
+      </ContextMenuItem>
+    ) : <></>}
+
     {!isPc ? (
       <ContextMenuItem onClick={handleComment}>
         <CommentItem />
@@ -664,6 +692,12 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       {!blinko.curSelectedNote?.isRecycle ? (
         <DropdownItem key="ShareItem" onPress={handlePublic}> 
           <PublicItem />  
+        </DropdownItem>
+      ) : <></>}
+
+      {!blinko.curSelectedNote?.isRecycle ? (
+        <DropdownItem key="PublishItem" onPress={handlePublish}>
+          <PublishItem />
         </DropdownItem>
       ) : <></>}
 

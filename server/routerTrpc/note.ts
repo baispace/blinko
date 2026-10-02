@@ -9,7 +9,7 @@ import { attachmentsSchema, historySchema, notesSchema, tagSchema, tagsToNoteSch
 import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
 import { AiService } from '@server/aiServer';
-import { SendWebhook } from '@server/lib/helper';
+import { SendWebhook, generateShortId } from '@server/lib/helper';
 import { Context } from '../context';
 import { cache } from '@shared/lib/cache';
 import { AiModelFactory } from '@server/aiServer/aiModelFactory';
@@ -778,6 +778,9 @@ export const noteRouter = router({
         isShare: note.isShare,
         isTop: note.isTop,
         isReviewed: note.isReviewed,
+        isPublished: note.isPublished ?? false,
+        publishId: note.publishId ?? null,
+        publishedAt: note.publishedAt ?? null,
         sharePassword: note.sharePassword || '',
         shareEncryptedUrl: note.shareEncryptedUrl,
         shareExpiryDate: note.shareExpiryDate,
@@ -1286,15 +1289,6 @@ export const noteRouter = router({
     .mutation(async function ({ input, ctx }) {
       const { id, isCancel, password, expireAt } = input;
 
-      const generateShareId = () => {
-        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < 8; i++) {
-          result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-      };
-
       const note = await prisma.notes.findFirst({
         where: {
           id,
@@ -1317,7 +1311,7 @@ export const noteRouter = router({
           },
         });
       } else {
-        const shareId = note.shareEncryptedUrl || generateShareId();
+        const shareId = note.shareEncryptedUrl || generateShortId();
         return await prisma.notes.update({
           where: { id },
           data: {
@@ -1329,6 +1323,213 @@ export const noteRouter = router({
         });
       }
     }),
+
+  /**
+   * 发布 / 取消发布到主页。
+   *
+   * 与「分享」是两套独立开关：分享是带密码/过期时间的私密链接（/share/<串>），
+   * 发布是公开内容源（isPublished + publishId），供外部博客服务查询展示。
+   * publishId 是 8 位 [a-z0-9] 随机串，首次发布时生成并保持不变，
+   * 取消发布保留串（重新发布沿用），避免已发出的博客链接失效。
+   */
+  publishNote: authProcedure
+    .meta({ openapi: { method: 'POST', path: '/v1/note/publish', summary: 'Publish note to home', protect: true, tags: ['Note'] } })
+    .input(
+      z.object({
+        id: z.number(),
+        isCancel: z.boolean().default(false),
+      }),
+    )
+    .output(notesSchema)
+    .mutation(async function ({ input, ctx }) {
+      const { id, isCancel } = input;
+
+      const note = await prisma.notes.findFirst({
+        where: { id, accountId: Number(ctx.id) },
+      });
+      if (!note) {
+        throw new Error('Note not found');
+      }
+
+      if (isCancel) {
+        return await prisma.notes.update({
+          where: { id },
+          data: { isPublished: false },
+        });
+      }
+
+      // 冲突概率极低，但仍要兜底：publishId 上有唯一索引，撞了会 500
+      let publishId = note.publishId;
+      if (!publishId) {
+        for (let i = 0; i < 5; i++) {
+          const candidate = generateShortId();
+          const exists = await prisma.notes.findFirst({ where: { publishId: candidate }, select: { id: true } });
+          if (!exists) {
+            publishId = candidate;
+            break;
+          }
+        }
+        if (!publishId) {
+          throw new Error('Failed to allocate a unique publish id');
+        }
+      }
+
+      return await prisma.notes.update({
+        where: { id },
+        data: {
+          isPublished: true,
+          publishId,
+          publishedAt: note.publishedAt ?? new Date(),
+        },
+      });
+    }),
+
+  /** 已发布列表（公开）—— 博客服务的列表数据源 */
+  publicPublishedList: publicProcedure
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/note/published-list',
+        summary: 'Query published notes list',
+        tags: ['Note'],
+      },
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=300',
+      },
+    })
+    .input(
+      z.object({
+        page: z.number().optional().default(1),
+        size: z.number().optional().default(30),
+        searchText: z.string().optional().default(''),
+      }),
+    )
+    .output(
+      z.array(
+        notesSchema.merge(
+          z.object({
+            attachments: z.array(attachmentsSchema),
+            account: z
+              .object({
+                image: z.string().optional(),
+                nickname: z.string().optional(),
+                name: z.string().optional(),
+                id: z.number().optional(),
+              })
+              .nullable()
+              .optional(),
+            tags: z.array(
+              tagsToNoteSchema.merge(
+                z.object({
+                  tag: tagSchema,
+                }),
+              ),
+            ),
+            _count: z.object({
+              comments: z.number(),
+            }),
+          }),
+        ),
+      ),
+    )
+    .mutation(async function ({ input }) {
+      return cache.wrap(
+        '/v1/note/published-list',
+        async () => {
+          const { page, size, searchText } = input;
+          return await prisma.notes.findMany({
+            where: {
+              isPublished: true,
+              isRecycle: false,
+              ...(searchText != '' && { content: { contains: searchText, mode: 'insensitive' } }),
+            },
+            orderBy: [{ publishedAt: 'desc' }, { updatedAt: 'desc' }],
+            skip: (page - 1) * size,
+            take: size,
+            include: {
+              tags: { include: { tag: true } },
+              account: {
+                select: { image: true, nickname: true, name: true, id: true },
+              },
+              attachments: true,
+              _count: { select: { comments: true } },
+            },
+          });
+        },
+        { ttl: 1000 * 5 },
+      );
+    }),
+
+  /** 已发布详情（公开）—— 博客服务的详情数据源，按 publishId 取 */
+  publicPublishedDetail: publicProcedure
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/v1/note/published-detail',
+        summary: 'Query published note detail by publishId',
+        tags: ['Note'],
+      },
+    })
+    .input(z.object({ publishId: z.string() }))
+    .output(
+      z.object({
+        data: z.union([
+          z.null(),
+          notesSchema.merge(
+            z.object({
+              attachments: z.array(attachmentsSchema),
+              references: z
+                .array(
+                  z.object({
+                    toNoteId: z.number(),
+                    toNote: z
+                      .object({
+                        content: z.string().optional(),
+                        createdAt: z.date().optional(),
+                        updatedAt: z.date().optional(),
+                      })
+                      .optional(),
+                  }),
+                )
+                .optional(),
+              account: z
+                .object({
+                  image: z.string().optional(),
+                  nickname: z.string().optional(),
+                  name: z.string().optional(),
+                  id: z.number().optional(),
+                })
+                .nullable()
+                .optional(),
+              _count: z.object({
+                comments: z.number(),
+                histories: z.number(),
+              }),
+            }),
+          ),
+        ]),
+      }),
+    )
+    .mutation(async function ({ input }) {
+      const { publishId } = input;
+      const note = await prisma.notes.findFirst({
+        where: { publishId, isPublished: true, isRecycle: false },
+        include: {
+          account: { select: { image: true, nickname: true, name: true, id: true } },
+          references: {
+            select: {
+              toNoteId: true,
+              toNote: { select: { content: true, createdAt: true, updatedAt: true } },
+            },
+          },
+          tags: true,
+          attachments: true,
+          _count: { select: { comments: true, histories: true } },
+        },
+      });
+      return { data: note };
+    }),
+
   updateMany: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/batch-update', summary: 'Batch update note', protect: true, tags: ['Note'] } })
     .input(

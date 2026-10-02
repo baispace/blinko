@@ -84,6 +84,11 @@ model notes {
   metadata          Json?           @db.Json
   accountId         Int?
   sortOrder         Int             @default(0)
+  // 发布到主页（博客）：与「分享」相互独立 —— 分享是私密链接（可密码/过期），
+  // 发布是公开内容源，供外部博客服务查询展示。publishId 是 8 位 [a-z0-9] 随机串。
+  isPublished       Boolean         @default(false)
+  publishId         String?         @unique @db.VarChar
+  publishedAt       DateTime?       @db.Timestamptz(6)
   createdAt         DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(6)
   attachments       attachments[]
@@ -94,6 +99,8 @@ model notes {
   comments          comments[]      @relation("NoteComments")
   histories         noteHistory[]
   internalShares    noteInternalShare[]
+
+  @@index([isPublished])
 }
 
 model comments {

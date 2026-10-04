@@ -28,6 +28,8 @@ import { Markdown } from 'tiptap-markdown';
 import { TiptapEditorAdapter } from '../Tiptap/adapter';
 import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } from '../Tiptap/extensions';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
+import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
+import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -51,11 +53,21 @@ export const useEditorInit = (
 
   useEffect(() => {
     const adapter = new TiptapEditorAdapter()
-    const initialContent = (content ?? '').replace(/\r\n/g, '\n')
+    const initialContent = normalizeBlankLines((content ?? '').replace(/\r\n/g, '\n'))
 
     const editor = new Editor({
       extensions: [
-        StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }),
+        StarterKit.configure({
+          heading: { levels: [1, 2, 3, 4, 5, 6] },
+          // 自定义 MarkdownHardBreak 接管 hardBreak 序列化（输出裸 \n 而非 \\\n）。
+          // 关闭默认避免与自定义扩展产生 duplicate name 警告。
+          hardBreak: false,
+          // 自定义 MarkdownBlankLine 接管 paragraph 序列化（空段落 → nbsp 占位行，
+          // 解决「编辑器空行保存后消失」）。同样需要关闭默认避免 duplicate name。
+          paragraph: false,
+        }),
+        MarkdownHardBreak,
+        MarkdownBlankLine,
         Placeholder.configure({
           placeholder: t('i-have-a-new-idea'),
           showOnlyWhenEditable: true,
@@ -99,7 +111,13 @@ export const useEditorInit = (
         Markdown.configure({
           html: true,
           linkify: true,
-          breaks: false,
+          // breaks:true —— 决定「单个裸换行」在 markdown 往返中的处理。
+          // 旧值 false 时：源码/Markdown 视图里回车、粘贴或 AI 生成产生的「单换行」(如 "A\nB")
+          // 在 getMarkdown 序列化时会被折叠成一个空格（直接输出 "A B"），再打开即「换行没了」。
+          // 段落(双换行 "A\n\nB") 与反斜杠续行硬换行 ("A\\\nB") 不受该选项影响，故问题只出现在单换行形态。
+          // 改为 true 后：单换行被解析/序列化为硬换行并稳定保留，符合笔记类应用直觉；
+          // 对已有的段落与反斜杠形态完全向后兼容（实测序列化结果不变）。
+          breaks: true,
           transformPastedText: false,
           transformCopiedText: false,
         }),
@@ -233,7 +251,7 @@ export const useEditorInit = (
   useEffect(() => {
     const adapter = store.vditor
     if (adapter?.editor && content !== undefined) {
-      const incoming = content.replace(/\r\n/g, '\n')
+      const incoming = normalizeBlankLines(content.replace(/\r\n/g, '\n'))
       const current = adapter.getValue()
       if (current !== incoming) {
         adapter.setValue(incoming)

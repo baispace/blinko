@@ -9,12 +9,15 @@ import { BlinkoCard } from "@/components/BlinkoCard";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
 import { PageWidthButton } from "@/components/Common/PageWidthButton";
 import { PageWidthStore, PAGE_WIDTH_PAD_CLASS } from "@/store/pageWidthStore";
+import { TableOfContents } from "@/components/Common/TableOfContents";
+import { useMediaQuery } from "usehooks-ts";
 
 const Detail = observer(() => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const blinko = RootStore.Get(BlinkoStore);
   const pageWidth = RootStore.Get(PageWidthStore);
+  const isPc = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     if (searchParams.get('id')) {
@@ -36,11 +39,20 @@ const Detail = observer(() => {
         />
 
         {blinko.noteDetail.value && (
-          <BlinkoCard
-            blinkoItem={blinko.noteDetail.value}
-            defaultExpanded={false}
-            glassEffect={false}
-          />
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <BlinkoCard
+                blinkoItem={blinko.noteDetail.value}
+                defaultExpanded={false}
+                glassEffect={false}
+              />
+            </div>
+            {isPc && blinko.noteDetail.value.content && (
+              <div className="w-48 flex-shrink-0 hidden lg:block">
+                <TableOfContents content={blinko.noteDetail.value.content} />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </ScrollArea>

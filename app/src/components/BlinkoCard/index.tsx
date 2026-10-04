@@ -12,7 +12,7 @@ import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
 import { helper } from "@/lib/helper";
 import { CardHeader } from "./cardHeader";
-import { CardFooter } from "./cardFooter";
+import { CardFooter, BlogCardTopRow, BlogCardBottomRow } from "./cardFooter";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { AvatarAccount, SimpleCommentList } from "./commentButton";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
@@ -157,18 +157,32 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                   />
                 )}
 
-                <CardHeader
-                  blinkoItem={blinkoItem}
-                  blinko={blinko}
-                  isShareMode={isShareMode}
-                  isExpanded={defaultExpanded}
-                  account={account}
-                  hideTime={isCompactBlinko}
-                  compactActions={isCompactBlinko}
-                />
+                {/* Blog cards skip the header row entirely: timestamp, tags
+                    and the action bar all live in the footer (Weibo-style),
+                    otherwise time/icons sit above the title and the type chip
+                    drifts to the footer corner — too scattered. */}
+                {!blinkoItem.isBlog && (
+                  <CardHeader
+                    blinkoItem={blinkoItem}
+                    blinko={blinko}
+                    isShareMode={isShareMode}
+                    isExpanded={defaultExpanded}
+                    account={account}
+                    hideTime={isCompactBlinko}
+                    compactActions={isCompactBlinko}
+                  />
+                )}
 
+                {/* Blog card layout (article-style):
+                      [type | actions]  ← above the title
+                      title
+                      [tags | time]     ← below the title */}
                 {blinkoItem.isBlog && (
-                  <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
+                  <>
+                    <BlogCardTopRow blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                    <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
+                    <BlogCardBottomRow blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                  </>
                 )}
 
                 {!blinkoItem.isBlog && (
@@ -214,7 +228,17 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     </div>
                   ))}
 
-                <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} showTime={isCompactBlinko} hideTags={isCompactBlinko} />
+                {/* Blog cards use BlogCardTopRow/BlogCardBottomRow around the
+                    title instead; compact blinko cards show time here. */}
+                {!blinkoItem.isBlog && (
+                  <CardFooter
+                    blinkoItem={blinkoItem}
+                    blinko={blinko}
+                    isShareMode={isShareMode}
+                    showTime={isCompactBlinko}
+                    hideTags={isCompactBlinko}
+                  />
+                )}
                 {!blinko.config.value?.isHideCommentInCard && blinkoItem.comments && blinkoItem.comments.length > 0 && (
                   <SimpleCommentList blinkoItem={blinkoItem} />
                 )}

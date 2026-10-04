@@ -1,11 +1,11 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from '@heroui/react';
 import { Note, NoteType } from '@shared/lib/types';
-import { ConvertItemFunction, ShowEditTimeModel } from '../BlinkoRightClickMenu';
+import { ConvertItemFunction, LeftCickMenu, ShowEditTimeModel } from '../BlinkoRightClickMenu';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useTranslation } from 'react-i18next';
 import { _ } from '@/lib/lodash';
-import { CommentCount } from './commentButton';
+import { CommentCount, CommentButton } from './commentButton';
 import { BlinkoItem } from '.';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
@@ -13,7 +13,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 import { helper } from '@/lib/helper';
 import { getNoteTagPaths } from './noteContent';
-import { NoteTime } from './cardHeader';
+import { NoteTime, PinButton, ShareButton } from './cardHeader';
+import { useIsIOS } from '@/lib/hooks';
+import { api } from '@/lib/trpc';
+import { PromiseCall } from '@/store/standard/PromiseState';
 
 interface CardFooterProps {
   blinkoItem: BlinkoItem;
@@ -34,11 +37,11 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
   if (tagPaths.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0 mr-2">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0 flex-1 overflow-hidden mr-2">
       {tagPaths.map(path => (
         <span
           key={path}
-          className={`text-desc text-xs blinko-tag whitespace-nowrap font-bold select-none !transition-all ${isShareMode ? '' : 'cursor-pointer hover:opacity-80'}`}
+          className={`text-desc text-xs blinko-tag whitespace-nowrap font-bold select-none !transition-all max-w-full overflow-hidden text-ellipsis ${isShareMode ? '' : 'cursor-pointer hover:opacity-80'}`}
           onClick={(e) => {
             if (isShareMode) return;
             e.stopPropagation();
@@ -54,6 +57,92 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
           #{path}
         </span>
       ))}
+    </div>
+  );
+};
+
+/** 博客卡片 footer 操作栏：与 compact 闪念卡一致（评论/分享/置顶/溢出菜单） */
+const BlogCardActions = ({ blinkoItem, blinko }: { blinkoItem: BlinkoItem; blinko: BlinkoStore }) => {
+  const isIOSDevice = useIsIOS();
+  return (
+    <div className="flex items-center gap-3 shrink-0">
+      {blinkoItem._count?.comments ? (
+        <CommentCount blinkoItem={blinkoItem} />
+      ) : (
+        <CommentButton blinkoItem={blinkoItem} alwaysShow />
+      )}
+      <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />
+      <PinButton blinkoItem={blinkoItem} blinko={blinko} />
+      <LeftCickMenu
+        className="cursor-pointer"
+        onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
+      />
+    </div>
+  );
+};
+
+/** 分享状态图标：从 CardHeader 挪来，博客卡片没有 header 行 */
+const ShareMetaIcons = ({ blinkoItem, iconSize = '16' }: { blinkoItem: Note; iconSize?: string }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      {blinkoItem.isShare && (
+        <Tooltip content={t('shared')} delay={1000}>
+          <Icon icon="prime:eye" width={iconSize} height={iconSize} className="mr-2 shrink-0" />
+        </Tooltip>
+      )}
+      {blinkoItem.isInternalShared && (
+        <Tooltip content={t('internal-shared')} delay={1000}>
+          <Icon icon="prime:users" width={iconSize} height={iconSize} className="mr-2 shrink-0" />
+        </Tooltip>
+      )}
+    </>
+  );
+};
+
+/** 回收站按钮：博客卡片 footer 使用 */
+const TrashButton = ({ blinkoItem, blinko, iconSize = '16' }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; iconSize?: string }) => {
+  const { t } = useTranslation();
+  return (
+    <Tooltip content={t('trash')} delay={1000}>
+      <Icon
+        icon="mingcute:delete-2-line"
+        width={iconSize}
+        height={iconSize}
+        className={`cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
+            blinko.updateTicker++;
+          });
+        }}
+      />
+    </Tooltip>
+  );
+};
+
+/** 博客卡片 · 标题上方行：左=内容类型，右=操作栏（评论/分享/置顶/菜单/垃圾桶） */
+export const BlogCardTopRow = ({ blinkoItem, blinko, isShareMode }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; isShareMode?: boolean }) => {
+  return (
+    <div className="flex items-center justify-between mt-4 mb-2 gap-2">
+      <ConvertTypeButton blinkoItem={blinkoItem} />
+      <div className="flex items-center gap-3 shrink-0">
+        <BlogCardActions blinkoItem={blinkoItem} blinko={blinko} />
+        {!isShareMode && <TrashButton blinkoItem={blinkoItem} blinko={blinko} />}
+      </div>
+    </div>
+  );
+};
+
+/** 博客卡片 · 标题下方行：左=标签，右=分享状态图标+时间 */
+export const BlogCardBottomRow = ({ blinkoItem, blinko, isShareMode }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; isShareMode?: boolean }) => {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <CardTagChips blinkoItem={blinkoItem} isShareMode={isShareMode} />
+      <div className="flex items-center shrink-0 ml-auto">
+        <ShareMetaIcons blinkoItem={blinkoItem} />
+        <NoteTime blinkoItem={blinkoItem} blinko={blinko} />
+      </div>
     </div>
   );
 };

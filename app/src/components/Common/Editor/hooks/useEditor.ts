@@ -124,7 +124,6 @@ export const useEditorInit = (
         }),
         SlashCommand.configure({
           slashMenu: adapter.slashMenu,
-          noteMention: adapter.noteMention,
           aiBridge: {
             run: (writeType, content, onComplete) => {
               const ai = RootStore.Get(AiStore)

@@ -3,7 +3,6 @@ import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { SlashMenuState } from './slashMenuState';
-import { NoteMentionState } from './noteMentionState';
 
 export type SlashItem = {
   title: string
@@ -281,12 +280,11 @@ export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
 ]
 
 /**
- * Unified suggestion extension supporting both "/" commands and "@" note mentions.
- * Menu state lives in SlashMenuState (for /) and NoteMentionState (for @), rendered as React.
+ * Slash menu (" / ") built on the official suggestion plugin.
+ * Menu state lives in SlashMenuState (per editor), rendered as React.
  */
 export const SlashCommand = Extension.create<{
   slashMenu: SlashMenuState
-  noteMention: NoteMentionState
   items: SlashItem[]
   aiBridge?: AiSlashBridge
 }>({
@@ -295,15 +293,14 @@ export const SlashCommand = Extension.create<{
   addOptions() {
     return {
       slashMenu: undefined as unknown as SlashMenuState,
-      noteMention: undefined as unknown as NoteMentionState,
       items: DEFAULT_SLASH_ITEMS,
       aiBridge: undefined as AiSlashBridge | undefined,
     }
   },
 
   addProseMirrorPlugins() {
-    const { slashMenu, noteMention, items, aiBridge } = this.options
-    if (!slashMenu || !noteMention) return []
+    const { slashMenu, items, aiBridge } = this.options
+    if (!slashMenu) return []
 
     const slashAi: AiSlashBridge = {
       run: (writeType, content, onComplete, onSettled) =>
@@ -312,54 +309,18 @@ export const SlashCommand = Extension.create<{
       abort: () => aiBridge?.abort(),
     }
 
-    // Detect which trigger char was used
-    const getTrigger = (props: SuggestionProps): '/' | '@' => {
-      try {
-        const { state } = props.editor
-        const $from = state.selection.$from
-        const textBefore = $from.parent.textBetween(
-          Math.max(0, $from.parentOffset - 10),
-          $from.parentOffset,
-          null,
-          '\uFFFC'
-        )
-        if (textBefore.includes('@')) return '@'
-        return '/'
-      } catch {
-        return '/'
-      }
-    }
-
     return [
       Suggestion({
         editor: this.editor,
-        char: ['/', '@'], // Support both triggers
+        char: '/',
         allowSpaces: false,
-        items: (props) => {
-          const trigger = getTrigger(props)
-          if (trigger === '@') {
-            // For @, return empty - NoteMentionState fetches asynchronously
-            return noteMention.items
-          }
-          // For /, filter slash commands
-          const query = props.query.toLowerCase()
+        items: ({ query }) => {
+          const q = query.toLowerCase()
           return items.filter(i =>
-            i.title.toLowerCase().includes(query) || (i.keywords ?? '').toLowerCase().includes(query)
+            i.title.toLowerCase().includes(q) || (i.keywords ?? '').toLowerCase().includes(q)
           )
         },
-        command: ({ editor, range, props: suggestionProps }) => {
-          const trigger = getTrigger(suggestionProps)
-
-          if (trigger === '@') {
-            // Handle note mention selection
-            const item = suggestionProps as any
-            const text = `[[${item.id}|${item.title}]]`
-            editor.chain().focus().deleteRange(range).insertContent(text).run()
-            noteMention.close()
-            return
-          }
-
-          // Handle slash command (original logic)
+        command: ({ editor, range, props }) => {
           // IME (Chinese input) committed query text may fall outside the
           // suggestion range; widen the deletion up to the nearest '/' so the
           // typed filter text doesn't leak into the document.
@@ -374,36 +335,13 @@ export const SlashCommand = Extension.create<{
               }
             }
           } catch { /* keep original range */ }
-          suggestionProps.command({ editor, range }, slashAi)
+          props.command({ editor, range }, slashAi)
         },
         render: () => ({
-          onStart: (props: SuggestionProps) => {
-            const trigger = getTrigger(props)
-            if (trigger === '@') {
-              noteMention.open(props)
-            } else {
-              slashMenu.open(props)
-            }
-          },
-          onUpdate: (props: SuggestionProps) => {
-            const trigger = getTrigger(props)
-            if (trigger === '@') {
-              noteMention.update(props)
-            } else {
-              slashMenu.update(props)
-            }
-          },
-          onKeyDown: (props: SuggestionKeyDownProps) => {
-            const trigger = slashMenu.isOpen ? slashMenu.trigger : (noteMention.isOpen ? '@' : '/')
-            if (trigger === '@') {
-              return noteMention.onKeyDown(props)
-            }
-            return slashMenu.onKeyDown(props)
-          },
-          onExit: () => {
-            if (noteMention.isOpen) noteMention.close()
-            if (slashMenu.isOpen) slashMenu.close()
-          },
+          onStart: (props: SuggestionProps) => slashMenu.open(props),
+          onUpdate: (props: SuggestionProps) => slashMenu.update(props),
+          onKeyDown: (props: SuggestionKeyDownProps) => slashMenu.onKeyDown(props),
+          onExit: () => slashMenu.close(),
         }),
       }),
     ]

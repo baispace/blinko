@@ -6,6 +6,8 @@ import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion
  * Per-editor slash menu state (one instance per EditorStore).
  * Fed by the SlashCommand suggestion plugin, rendered by SlashMenu.tsx.
  */
+export type SuggestionTrigger = '/' | '@'
+
 export class SlashMenuState {
   isOpen = false
   items: any[] = []
@@ -13,6 +15,7 @@ export class SlashMenuState {
   rect: { top: number; left: number; bottom: number } | null = null
   command: ((item: any) => void) | null = null
   editor: Editor | null = null
+  trigger: SuggestionTrigger = '/'
 
   constructor() {
     makeAutoObservable(this)
@@ -35,6 +38,26 @@ export class SlashMenuState {
     this.rect = this.getRect(props)
     this.command = (item) => props.command(item)
     this.isOpen = true
+    // Detect trigger char from the query
+    const triggerChar = this.detectTrigger(props)
+    this.trigger = triggerChar
+  }
+
+  private detectTrigger(props: SuggestionProps): SuggestionTrigger {
+    try {
+      const { state } = props.editor
+      const $from = state.selection.$from
+      const textBefore = $from.parent.textBetween(
+        Math.max(0, $from.parentOffset - 10),
+        $from.parentOffset,
+        null,
+        '\uFFFC'
+      )
+      if (textBefore.includes('@')) return '@'
+      return '/'
+    } catch {
+      return '/'
+    }
   }
 
   update(props: SuggestionProps) {

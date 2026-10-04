@@ -1,5 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import { SlashMenuState } from './slashMenuState';
+import { normalizeBlankLines } from './markdownBlankLine';
 
 /**
  * Adapter that mimics the (small) Vditor API surface used by EditorStore
@@ -25,7 +26,8 @@ export class TiptapEditorAdapter {
 
   setValue(markdown: string) {
     if (!this.editor) return
-    this.editor.commands.setContent(markdown ?? '', false)
+    // 历史内容的连续空行 → nbsp 占位行，保证编辑器中可见（代码围栏内不动）
+    this.editor.commands.setContent(normalizeBlankLines(markdown ?? ''), false)
   }
 
   insertValue(markdown: string, _clean?: boolean) {

@@ -168,7 +168,9 @@
 }
 
 .tiptap img {
-  max-height: 150px;
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
   margin: 4px 0;
   border-radius: 6px;
 }
@@ -774,4 +776,76 @@
 /* 只读态下 checkbox 已能直接勾选（onReadOnlyChecked），保持手型光标提示可点 */
 .tiptap-wrap.is-readonly .tiptap ul[data-type="taskList"] input[type="checkbox"] {
   cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * 图片操作：对齐 / 尺寸 / 拖拽手柄（Feishu 式）
+ * ------------------------------------------------------------------------- */
+
+/* 图片是块节点，默认与渲染端一致居中；margin auto 只在块级下生效 */
+.tiptap img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tiptap img[data-align="left"] { margin-left: 0; margin-right: auto; }
+.tiptap img[data-align="center"] { margin-left: auto; margin-right: auto; }
+.tiptap img[data-align="right"] { margin-left: auto; margin-right: 0; }
+
+/* 手动调过宽度的图片放行高度上限，否则 contain 会把宽度又压回去，拖拽看起来没效果 */
+.tiptap img[width] { max-height: 620px; }
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tiptap-image-tools > * {
+  position: fixed;
+  z-index: 60;
+}
+
+.tiptap-image-toolbar {
+  transform: translateX(-50%);
+}
+
+.tiptap-image-toolbar button.is-danger:hover {
+  background-color: rgba(239, 68, 68, 0.9);
+  color: #fff;
+}
+
+.tiptap-image-handle {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: ew-resize;
+  transition: transform 0.1s;
+}
+
+.tiptap-image-handle:hover {
+  transform: scale(1.2);
+}
+
+/* 拖拽中：屏蔽工具栏点击、整页禁止选中，避免拖出文字选区 */
+.tiptap-image-tools.is-resizing {
+  cursor: ew-resize;
+}
+
+.tiptap-image-tools.is-resizing .tiptap-image-toolbar {
+  pointer-events: none;
+}
+
+.tiptap-image-size-tag {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 16px;
+  color: #fff;
+  background-color: #1c1c1e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }

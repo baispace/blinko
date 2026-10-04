@@ -7,6 +7,7 @@ import { SlashMenuView } from './ToolbarButtons';
 import { CalloutIconMenu } from './CalloutIconMenu';
 import { TableToolbar } from './TableToolbar';
 import { TableHandles } from './TableHandles'; // Feishu-style table controls
+import { ImageToolbar } from './ImageToolbar'; // Feishu-style image controls
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 
@@ -34,6 +35,15 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
       */}
       <BubbleMenu
         editor={editor}
+        shouldShow={({ editor }) => {
+          if (!editor) return false;
+          const { selection } = editor.state;
+          // 默认行为：只在真正选中了文本内容时才显示；空光标时不显示。
+          if (selection.empty) return false;
+          const node = (selection as any)?.node;
+          // 选中图片时只显示图片专用工具栏，避免文本气泡和图片工具栏重叠
+          return !(node?.type?.name === 'image');
+        }}
         tippyOptions={{ duration: 120, maxWidth: 'none' }}
       >
         <div className="tiptap-bubble">
@@ -56,6 +66,7 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
       <CalloutIconMenu editor={editor} />
       <TableToolbar editor={editor} />
       <TableHandles editor={editor} />
+      <ImageToolbar editor={editor} store={store} />
     </div>
   );
 });

@@ -203,6 +203,14 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
           ]}
           components={{
             p: ({ node, children }) => {
+              // 只含图片的段落：图片是块级展示，直接套在 <p> 里会形成
+              // <div>（HeroUI Image 包裹层）嵌在 <p> 的非法嵌套，React 会告警、
+              // 布局也容易被 margin 规则影响。改成块级容器渲染。
+              const kids = node?.children ?? []
+              const meaningful = kids.filter((c: any) => !(c.type === 'text' && !String(c.value || '').trim()))
+              if (meaningful.length > 0 && meaningful.every((c: any) => c.type === 'element' && c.tagName === 'img')) {
+                return <div className="md-image-block">{children}</div>
+              }
               // Check if paragraph contains only a single link
               if (
                 node &&

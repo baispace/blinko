@@ -28,6 +28,8 @@ import { BlinkoImageGallery } from "./imageGallery";
 export type BlinkoItem = Note & {
   isBlog?: boolean;
   title?: string;
+  /** 标记 title 是 metadata.title 还是 content 第一行提取出来的；用于正文去重 */
+  titleFromMetadata?: boolean;
   originURL?: string;
   isExpand?: boolean;
 }
@@ -65,11 +67,22 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   } else {
     blinkoItem.isBlog = contentLength >= (blinko.config.value?.textFoldLength ?? 1000) && !pathname.includes('/share/')
   }
-  blinkoItem.title = blinkoItem.content?.split('\n').find(line => {
+  // 卡片标题优先级：metadata.title > content 第一行（去掉 markdown 标记和行内 tag）> 空。
+  // 没有标题时直接截断展示正文，由 NoteContent 负责；有标题时显示在 NoteTitleDisplay 行。
+  const rawFirstLine = blinkoItem.content?.split('\n').find(line => {
     if (!line.trim()) return false;
     if (helper.regex.isContainHashTag.test(line)) return false;
     return true;
-  }) || '';
+  });
+  const metadataTitle = blinkoItem.metadata?.title?.trim();
+  const titleFromContent = rawFirstLine ? rawFirstLine
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/^\s*[-*+]\s+/, '')
+    .replace(/\s*#[^#\s]+/g, '')
+    .trim() : undefined;
+
+  blinkoItem.titleFromMetadata = !!metadataTitle;
+  blinkoItem.title = metadataTitle || titleFromContent || '';
 
 
   const handleClick = () => {
@@ -119,6 +132,10 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
         // Weibo-style blinko cards: header → text → image gallery (below
         // content, natural ratio for single image) → footer. Non-image
         // attachments stay in the content flow. Only applies to compact cards.
+        //
+        // 展示侧对应 editorStore.uploadFiles 的存储分流：闪念的图片只存附件、
+        // 不写进正文 markdown，所以这里能把它们整个抽出来做九宫格；
+        // 笔记/待办的图片在正文里，本来就随文流动，不需要（也不能）抽出来。
         const isCompactBlinko = blinkoItem.type === NoteType.BLINKO && !blinkoItem.isBlog;
         const allAttachments = blinkoItem.attachments ?? [];
         const imageAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) === 'image');
@@ -150,12 +167,14 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                 />
 
                 {/* Icon + title belong to notes; blog cards already derive their heading. */}
-                {!blinkoItem.isBlog && blinkoItem.type === NoteType.NOTE && (
-                  <NoteTitleDisplay
-                    icon={blinkoItem.metadata?.icon}
-                    title={blinkoItem.metadata?.title}
-                  />
-                )}
+                {!blinkoItem.isBlog &&
+                  blinkoItem.type === NoteType.NOTE &&
+                  (blinkoItem.title || blinkoItem.metadata?.icon) && (
+                    <NoteTitleDisplay
+                      icon={blinkoItem.metadata?.icon}
+                      title={blinkoItem.title}
+                    />
+                  )}
 
                 {/* Blog cards skip the header row entirely: timestamp, tags
                     and the action bar all live in the footer (Weibo-style),
@@ -195,6 +214,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     foldable={isCompactBlinko}
                     foldLength={blinko.config.value?.cardFoldLength ?? 300}
                     inlineTags={isCompactBlinko}
+                    skipFirstLine={!blinkoItem.titleFromMetadata && !!blinkoItem.title}
                   />
                 )}
 

@@ -21,7 +21,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
+import { ContentImage } from '../Tiptap/contentImage';
 import { MarkdownTable, MarkdownTableCell, MarkdownTableHeader, TablePreserveHtml } from '../Tiptap/tableExtension';
 import TableRow from '@tiptap/extension-table-row';
 import { Markdown } from 'tiptap-markdown';
@@ -98,7 +98,8 @@ export const useEditorInit = (
         Highlight,
         Underline,
         Link.configure({ openOnClick: false, autolink: true }),
-        Image,
+        // 正文图片：渲染时解析内部路径（CDN / ?token=），markdown 仍写原始路径
+        ContentImage,
         MarkdownTable.configure({
           resizable: true,
           lastColumnResizable: true,
@@ -146,6 +147,8 @@ export const useEditorInit = (
       content: initialContent,
       editable,
       editorProps: {
+        // 粘贴/拖放的图片统一交给 store.uploadFiles：分流（闪念→附件，笔记→正文内联）
+        // 只在那里按 noteType 判定一次，这里不做类型判断，避免规则分散。
         handlePaste: (_view, event) => {
           const files = Array.from(event.clipboardData?.files ?? [])
           if (files.length) {
@@ -243,9 +246,14 @@ export const useEditorInit = (
         store.currentTagLabel = ''
       }
     } else {
-      store.noteType = toNoteTypeEnum(blinko.curSelectedNote?.type)
+      // curSelectedNote 可能尚未加载完成。此时 toNoteTypeEnum 会静默 fallback 成 BLINKO，
+      // 导致图片被分流成附件而非直接插入正文。未就绪时先不赋值，等 id 变化后重新判定。
+      const selectedNote = blinko.curSelectedNote
+      if (selectedNote && selectedNote.type != null) {
+        store.noteType = toNoteTypeEnum(selectedNote.type)
+      }
     }
-  }, [mode, searchParams.get('path'), searchParams.get('tagId'), fixedNoteType]);
+  }, [mode, searchParams.get('path'), searchParams.get('tagId'), fixedNoteType, blinko.curSelectedNote?.id]);
 
   // Update editor content when content prop changes (e.g. switching notes in edit mode)
   useEffect(() => {

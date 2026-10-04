@@ -250,7 +250,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
   );
 });
 
-const ShareButton = observer(({ blinkoItem, isIOSDevice, alwaysShow }: { blinkoItem: Note, isIOSDevice: boolean, alwaysShow?: boolean }) => {
+export const ShareButton = observer(({ blinkoItem, isIOSDevice, alwaysShow }: { blinkoItem: Note, isIOSDevice: boolean, alwaysShow?: boolean }) => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore);
   return (

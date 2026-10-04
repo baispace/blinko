@@ -30,6 +30,7 @@ import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } fr
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
+import { NoteMention } from '../Tiptap/noteMention';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -143,6 +144,10 @@ export const useEditorInit = (
         TaskListInputRules,
         // Edit mode has an onDone: ⌘+Enter should flush + close, not re-save.
         SendShortcut.configure({ onSend: () => (store.onDone ? store.handleDone() : store.handleSend()) }),
+        // 双向链接：输入 @ 搜索并链接其他笔记
+        NoteMention.configure({
+          noteMention: adapter.noteMention,
+        }),
       ],
       content: initialContent,
       editable,

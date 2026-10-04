@@ -8,6 +8,7 @@ import { CalloutIconMenu } from './CalloutIconMenu';
 import { TableToolbar } from './TableToolbar';
 import { TableHandles } from './TableHandles'; // Feishu-style table controls
 import { ImageToolbar } from './ImageToolbar'; // Feishu-style image controls
+import { NoteMentionList } from './NoteMentionList'; // Note mention popup
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 
@@ -63,6 +64,7 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
           </div>
       </BubbleMenu>
       <SlashMenuView state={adapter.slashMenu} />
+      <NoteMentionList state={adapter.noteMention} />
       <CalloutIconMenu editor={editor} />
       <TableToolbar editor={editor} />
       <TableHandles editor={editor} />

@@ -12,6 +12,7 @@ import { LinkPreview } from './LinkPreview';
 import { ImageWrapper } from './ImageWrapper';
 import { ListItem } from './ListItem';
 import { TableWrapper } from './TableWrapper';
+import { NoteLink, preprocessNoteLinks } from './NoteLink';
 import { useNavigate, useLocation } from 'react-router-dom';
 import remarkTaskList from 'remark-task-list';
 // 单换行渲染成 <br>（GitHub 评论风格）。没有它时，含行内格式（**加粗**/`代码`/链接）的段落
@@ -185,7 +186,9 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
   const { theme } = useTheme()
   const contentRef = useRef(null);
   const mathPlugins = useMathPlugins(content);
-  const normalizedContent = stripTrailingBackslashes(liftIndentedCallouts(content));
+  // 预处理双向链接 [[id|title]] -> [title](blinko://note/id)
+  const preprocessedContent = preprocessNoteLinks(content);
+  const normalizedContent = stripTrailingBackslashes(liftIndentedCallouts(preprocessedContent));
 
   return (
     <div className={`markdown-body ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
@@ -301,6 +304,15 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
             a: ({ node, children }) => {
               const href = node?.properties?.href;
               if (typeof href === 'string') {
+                // 检测 blinko://note/ 格式的双向链接
+                const noteLinkMatch = href.match(/^blinko:\/\/note\/(\d+)$/);
+                if (noteLinkMatch) {
+                  const noteId = parseInt(noteLinkMatch[1], 10);
+                  const title = Array.isArray(children)
+                    ? children.map(c => typeof c === 'string' ? c : '').join('')
+                    : typeof children === 'string' ? children : '';
+                  return <NoteLink id={noteId} title={title || '笔记链接'} />;
+                }
                 // By default render as inline (isBlock=false)
                 return <LinkPreview href={href} text={children} isBlock={false} />
               }
@@ -328,7 +340,38 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
               return <li className={className}>{children}</li>;
             },
             img: ImageWrapper,
-            table: TableWrapper
+            table: TableWrapper,
+            // 为标题添加 ID 以支持目录跳转
+            h1: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h1 id={id || props.id || ''} {...props}>{children}</h1>;
+            },
+            h2: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h2 id={id || props.id || ''} {...props}>{children}</h2>;
+            },
+            h3: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h3 id={id || props.id || ''} {...props}>{children}</h3>;
+            },
+            h4: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h4 id={id || props.id || ''} {...props}>{children}</h4>;
+            },
+            h5: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h5 id={id || props.id || ''} {...props}>{children}</h5>;
+            },
+            h6: ({ node, children, ...props }) => {
+              const text = Array.isArray(children) ? children.join('') : String(children || '');
+              const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+              return <h6 id={id || props.id || ''} {...props}>{children}</h6>;
+            },
           }}
         >
           {normalizedContent}

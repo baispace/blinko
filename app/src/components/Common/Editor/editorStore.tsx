@@ -19,22 +19,32 @@ import { eventBus } from '@/lib/event';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import axiosInstance from '@/lib/axios';
 import { normalizeOffset, type CoverOffset } from './NoteCover/coverOffset';
+import { toContentFileUrl } from '@/lib/fileUrl';
 
 /**
  * Convert an internal file path to the full URL written into note content.
- * When a CDN acceleration domain is configured (s3CdnDomain), /api/s3file/*
- * paths are rewritten to the CDN origin URL so notes embed absolute,
- * auth-free image links.
+ * 实现已挪到 @/lib/fileUrl（渲染端也要用，避免 lib → 组件 的反向依赖），
+ * 这里保留导出名以兼容既有引用。
  */
-export const toContentFileUrl = (filePath: string): string => {
-  try {
-    const cdn = RootStore.Get(BlinkoStore).config.value?.s3CdnDomain
-    if (cdn && filePath.startsWith('/api/s3file/')) {
-      const base = /^https?:\/\//i.test(cdn) ? cdn.replace(/\/+$/, '') : `https://${cdn}`
-      return `${base}/${filePath.replace(/^\/api\/s3file\//, '').replace(/^\/+/, '')}`
-    }
-  } catch { /* config not ready, fall back to the internal path */ }
-  return filePath
+export { toContentFileUrl } from '@/lib/fileUrl';
+
+/**
+ * 图片处理策略的唯一判定入口：这个类型下，粘贴/拖放/工具栏上传的图片
+ * 是否直接写进正文 markdown（![]()），而不是存成附件。
+ *
+ * | 笔记类型 | 入口                                   | 存储位置              | 展示形态                                   |
+ * |----------|----------------------------------------|-----------------------|--------------------------------------------|
+ * | BLINKO   | uploadFiles（粘贴/拖放/工具栏/分享）   | attachments 附件表    | 正文下方的微博式九宫格（BlinkoImageGallery）|
+ * | NOTE     | uploadFiles                            | 正文 markdown ![]()   | 正文内联（插在光标处，随文流动）            |
+ * | TODO     | uploadFiles                            | 正文 markdown ![]()   | 正文内联                                    |
+ *
+ * 只有闪念走「附件 + 九宫格」；其余类型一律按既有的正文内联行为，不做改动。
+ * 判定只看 noteType，不看 mode，因此评论（comment）跟随其所属笔记的类型。
+ * noteType 为 undefined/null 时（编辑态所选笔记尚未加载完成）同样按正文内联处理：
+ * 只有「明确是闪念」才走附件，避免加载时序把笔记误判成闪念。
+ */
+export const isInlineImageNoteType = (noteType?: NoteType | null): boolean => {
+  return noteType !== NoteType.BLINKO
 }
 
 export class EditorStore {
@@ -175,7 +185,7 @@ export class EditorStore {
     this.focus()
   }
 
-  getEditorRange = (vditor: IVditor) => {
+  getEditorRange = (vditor: any) => {
     let range: Range;
     const element = vditor[vditor.currentMode]!.element;
     if (getSelection()!.rangeCount > 0) {
@@ -328,10 +338,34 @@ export class EditorStore {
     const _acceptedFiles = await Promise.all(
       acceptedFiles.map(file => this.uploadSingleFile(file, uploadFileType))
     )
-    this.files.push(..._acceptedFiles)
+
+    /**
+     * 分流规则见 isInlineImageNoteType 的表格：
+     * 笔记/待办 → 图片写进正文 markdown（![]()），插在光标处；
+     * 闪念     → 图片只做附件（微博式九宫格展示），不进正文。
+     */
+    const inlineImages = isInlineImageNoteType(this.noteType)
+      ? _acceptedFiles.filter(i => i.previewType === 'image')
+      : []
+    const attachmentFiles = _acceptedFiles.filter(i => !inlineImages.includes(i))
+
+    this.files.push(...attachmentFiles)
     await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+
+    if (inlineImages.length > 0) {
+      // 只在内容里写原始路径；CDN / token 由渲染端（ContentImage / ImageWrapper）解析
+      for (const img of inlineImages) {
+        const path = img.uploadPromise.value
+        if (!path) continue
+        this.vditor?.insertMD(`![](${path})`)
+      }
+      this.onChange?.(this.vditor?.getValue() ?? '')
+    }
+
+    if (attachmentFiles.length === 0) return
+
     if (this.mode == 'create') {
-      _acceptedFiles.map(i => ({
+      attachmentFiles.map(i => ({
         name: i.name,
         path: i.uploadPromise.value,
         type: uploadFileType?.[i.name],
@@ -340,7 +374,7 @@ export class EditorStore {
         RootStore.Get(BlinkoStore).createAttachmentsStorage.push(t)
       })
     } else {
-      _acceptedFiles.map(i => ({
+      attachmentFiles.map(i => ({
         name: i.name,
         path: i.uploadPromise.value,
         type: uploadFileType?.[i.name],

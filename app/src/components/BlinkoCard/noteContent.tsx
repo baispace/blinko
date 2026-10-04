@@ -29,6 +29,8 @@ interface NoteContentProps {
    * clickable) instead of extracting them into footer chips.
    */
   inlineTags?: boolean;
+  /** 标题已从 content 第一行提取出来时，正文不再重复渲染第一行 */
+  skipFirstLine?: boolean;
 }
 
 /** Max visible height of folded text (≈ 7 lines, Weibo-style preview). */
@@ -68,7 +70,7 @@ const stripTagTokens = (content: string, tagPaths: string[]) => {
     .join('\n');
 };
 
-export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMode, attachments, foldable, foldLength, inlineTags }: NoteContentProps) => {
+export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMode, attachments, foldable, foldLength, inlineTags, skipFirstLine }: NoteContentProps) => {
   const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
   const [isTextExpanded, setTextExpanded] = useState(!!isExpanded);
@@ -88,11 +90,16 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
   const displayContent = useMemo(
     () => {
       if (!blinkoItem.content) return blinkoItem.content;
-      if (inlineTags) return blinkoItem.content;
+      let content = blinkoItem.content;
+      if (skipFirstLine) {
+        const idx = content.indexOf('\n');
+        content = idx >= 0 ? content.slice(idx + 1) : '';
+      }
+      if (inlineTags) return content;
       const tagPaths = getNoteTagPaths(blinkoItem);
-      return tagPaths.length ? stripTagTokens(blinkoItem.content, tagPaths) : blinkoItem.content;
+      return tagPaths.length ? stripTagTokens(content, tagPaths) : content;
     },
-    [blinkoItem.content, blinkoItem.tags, inlineTags]
+    [blinkoItem.content, blinkoItem.tags, inlineTags, skipFirstLine]
   );
 
   return (

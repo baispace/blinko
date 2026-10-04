@@ -21,6 +21,30 @@ const limit = pLimit(5);
 let refreshTicker = 0;
 let spotifyClient: SpotifyClient | null = null;
 
+/**
+ * favicon 是外链，前端 <img> 直接请求；一旦站点在用户网络里不可达（国内访问 github assets 等）
+ * 浏览器会打出 ERR_TIMED_OUT，且 JS 无法抑制。
+ * 注意：服务端可达 ≠ 浏览器可达（服务端可能走代理），所以不能只做可达性探测。
+ * 这里直接把 favicon 下载成 data URI 返回 —— 前端 src 是 data:image/...，不再发起任何外部请求。
+ */
+const MAX_FAVICON_BYTES = 64 * 1024;
+const fetchFaviconAsDataUri = async (url: string): Promise<string> => {
+  try {
+    if (!/^https?:\/\//i.test(url)) return ''
+    const res: any = await getWithProxy(url, { config: { timeout: 5000, responseType: 'arraybuffer' } })
+    if (res?.error) return ''
+    const status = Number(res?.status ?? 0)
+    if (status < 200 || status >= 400) return ''
+    const type = String(res?.headers?.['content-type'] ?? '')
+    if (type && !/image|svg|octet-stream/i.test(type)) return ''
+    const buf: Buffer = Buffer.from(res?.data ?? [])
+    if (!buf.length || buf.length > MAX_FAVICON_BYTES) return ''
+    return `data:${type || 'image/x-icon'};base64,${buf.toString('base64')}`
+  } catch {
+    return ''
+  }
+}
+
 export const publicRouter = router({
   serverVersion: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/public/server-version', summary: 'Get server version', tags: ['Public'] } })
@@ -164,9 +188,10 @@ export const publicRouter = router({
             });
             const fetchPromise = limit(async () => {
               const result: Metadata = await unfurl(input.url);
+              const rawFavicon = result?.favicon ?? '';
               return {
                 title: result?.title ?? '',
-                favicon: result?.favicon ?? '',
+                favicon: rawFavicon ? await fetchFaviconAsDataUri(rawFavicon) : '',
                 description: result?.description ?? '',
               };
             });

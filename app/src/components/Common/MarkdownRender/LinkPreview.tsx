@@ -73,6 +73,11 @@ export const LinkPreview = observer(({ href, text, isBlock = false }: LinkPrevie
               src={store.previewData.value.favicon} 
               width={16} 
               height={16}
+              // 加载失败（站点不可达/超时）就把 favicon 从缓存里抹掉，下次不再发起注定失败的请求
+              onError={() => {
+                const data = store.previewData.value
+                if (data?.favicon) store.previewData.setValue({ ...data, favicon: '' })
+              }}
             />
           }
         </div>

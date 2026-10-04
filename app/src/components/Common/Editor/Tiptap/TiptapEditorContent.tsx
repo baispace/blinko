@@ -9,6 +9,7 @@ import { TableToolbar } from './TableToolbar';
 import { TableHandles } from './TableHandles'; // Feishu-style table controls
 import { ImageToolbar } from './ImageToolbar'; // Feishu-style image controls
 import { NoteMentionList } from './NoteMentionList'; // Note mention popup
+import { BlockComment } from './BlockComment'; // Block-level comment
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
 
@@ -65,6 +66,7 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
       </BubbleMenu>
       <SlashMenuView state={adapter.slashMenu} />
       <NoteMentionList state={adapter.noteMention} />
+      <BlockComment editor={editor} />
       <CalloutIconMenu editor={editor} />
       <TableToolbar editor={editor} />
       <TableHandles editor={editor} />

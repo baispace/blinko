@@ -77,10 +77,15 @@ type IProps = {
    * 页面级滚动（全屏阅读/编辑页）：封面 + 标题 + 正文一起随窗口滚动，
    * 滚动条贴视口最右（飞书行为）。不传则编辑器内部滚动、封面固定。
    */
-  pageScroll?: boolean
+  pageScroll?: boolean,
+  /**
+   * 初始化时是否自动聚焦。打开既有长文（全屏文章页）传 false：
+   * 自动聚焦会把光标放到文末并滚动过去，正文一打开就被拽到底部。
+   */
+  focusOnMount?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -207,7 +212,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
    */
   const fillHeight = showTopToolbar || store.isFullscreen
 
-  useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType, editable);
+  useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType, editable, focusOnMount);
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
   useEditorHeight(onHeightChange, blinko, content, store);

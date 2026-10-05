@@ -29,10 +29,12 @@ type IProps = {
   /** Tiptap 实例就绪回调，外层靠它把光标定位到用户点击的位置 */
   onEditorReady?: (editor: any) => void,
   /** 页面级滚动：封面随内容滚走、滚动条贴视口右缘（全屏阅读/编辑页用） */
-  pageScroll?: boolean
+  pageScroll?: boolean,
+  /** 初始化时不自动聚焦（全屏文章页打开即编辑，避免视图被拽到文末） */
+  focusOnMount?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -231,6 +233,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       editable={editable}
       onEditorReady={onEditorReady}
       pageScroll={pageScroll}
+      focusOnMount={focusOnMount}
       initialData={initialData}
       showTopToolbar={showTopToolbar}
       onHeightChange={() => {

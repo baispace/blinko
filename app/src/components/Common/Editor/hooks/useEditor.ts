@@ -44,7 +44,13 @@ export const useEditorInit = (
    * 是否可编辑。只读态与编辑态共用同一棵 Tiptap 树，只靠 setEditable 切换，
    * 这样「打开即阅读、点一下即编辑」不会重新 mount、不会丢光标、不会闪烁。
    */
-  editable: boolean = true
+  editable: boolean = true,
+  /**
+   * 初始化时是否自动聚焦。默认 true（新建/编辑弹窗打开就能打字）。
+   * 打开既有长文时关掉它：编辑器会把光标放到文末并 scrollIntoView，
+   * 结果是文章刚打开就被拽到底部。关掉后保持可编辑，点哪儿从哪儿写。
+   */
+  focusOnMount: boolean = true
 ) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
@@ -190,7 +196,7 @@ export const useEditorInit = (
     }
 
     // 只读态只是「不能输入」，不该抢焦点，否则会出现一个没有输入能力的空光标
-    if (editable) {
+    if (editable && focusOnMount) {
       isPc ? store.focus() : FocusEditorFixMobile()
     }
 

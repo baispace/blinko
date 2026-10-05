@@ -27,9 +27,12 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   const pageWidth = RootStore.Get(PageWidthStore);
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<string>('wysiwyg');
-  const [editorMode, setEditorMode] = useState<'preview' | 'edit'>('preview');
+  /** 已存在的笔记（有 id、已落库）默认直接进编辑态；未落库的临时内容仍先给阅读态 */
+  const isExistingNote = !!blinkoItem.id;
+  const defaultEditorMode: 'preview' | 'edit' = isExistingNote ? 'edit' : 'preview';
+  const [editorMode, setEditorMode] = useState<'preview' | 'edit'>(defaultEditorMode);
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  /** 「打开即阅读、点一下即编辑」靠的是同一棵 Tiptap 树，这里持有它的实例 */
+  /** 阅读/编辑共用同一棵 Tiptap 树，这里持有它的实例 */
   const tiptapRef = useRef<Editor | null>(null);
   /** 远端笔记内容就绪后才挂载编辑器，避免先闪一屏旧内容 */
   const [dataReady, setDataReady] = useState(false);
@@ -39,10 +42,16 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   // Clean up fullscreen editor state when closing
   const handleClose = () => {
     blinko.fullscreenEditorNoteId = null;
-    setEditorMode('preview');
+    // 回到「打开即编辑」的默认态，而不是写死 preview，否则下一条笔记会继承上一条的阅读态
+    setEditorMode(defaultEditorMode);
     setDataReady(false);
     onClose();
   };
+
+  // 这个组件常驻在 BlinkoCard 里（isOpen 只是开关），所以每次打开都要按默认态复位
+  useEffect(() => {
+    if (isOpen) setEditorMode(defaultEditorMode);
+  }, [isOpen]);
 
   /**
    * 进入编辑态并把光标放到用户点的位置 —— 飞书式的「点哪儿就从哪儿写」。
@@ -280,7 +289,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
 
           {/*
             阅读态与编辑态是同一棵 Tiptap 树，只切 setEditable：
-            打开是阅读，点正文任意处就能接着写，切换不再重新 mount、不丢光标。
+            打开即可直接写，切回阅读再点正文任意处也能接着写，
+            两种模式来回切不重新 mount、不丢光标。
           */}
           <div
             className={`${isPc ? 'flex flex-col' : 'flex-1 flex flex-col min-h-0'} ${!isPc && isLongText ? 'editor-long-text' : ''}`}
@@ -297,6 +307,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                 withoutOutline={true}
                 showTopToolbar={true}
                 pageScroll={isPc}
+                focusOnMount={false}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-desc text-sm">{t('loading')}</div>

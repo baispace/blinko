@@ -28,8 +28,10 @@ export const ImageWrapper = ({ src = '', width, alt, align }: ImageWrapperProps)
   const justify =
     align === 'left' ? 'justify-start' : align === 'right' ? 'justify-end' : 'justify-center';
 
+  // 这个组件永远不会被 <p> 包：MarkdownRender 的 components.p 已把"只含图片"段落
+  // 重写为 <div className="md-image-block">，见 index.tsx p 映射。
   return (
-    <div className={`markdown-image-wrapper w-full flex ${justify}`}>
+    <div className={`md-image-block w-full flex ${justify}`}>
       {/*
         宽度放在这层容器上而不是 Image 上：HeroUI 的 Image 不一定转发 style，
         而 img 上的 w-full 会把显式宽度又拉满。手动调过宽度的图片放行高度上限，

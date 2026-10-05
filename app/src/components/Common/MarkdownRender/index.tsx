@@ -206,13 +206,13 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
           ]}
           components={{
             p: ({ node, children }) => {
-              // 只含图片的段落：图片是块级展示，直接套在 <p> 里会形成
-              // <div>（HeroUI Image 包裹层）嵌在 <p> 的非法嵌套，React 会告警、
-              // 布局也容易被 margin 规则影响。改成块级容器渲染。
-              const kids = node?.children ?? []
-              const meaningful = kids.filter((c: any) => !(c.type === 'text' && !String(c.value || '').trim()))
-              if (meaningful.length > 0 && meaningful.every((c: any) => c.type === 'element' && c.tagName === 'img')) {
-                return <div className="md-image-block">{children}</div>
+              // 段落里只要含有图片，就不能渲染成 <p>：HeroUI Image + react-photo-view
+              // 注入的内部 <div> 会触发 validateDOMNesting（<div> cannot appear as a
+              // descendant of <p>）。统一升格成块级容器，与 ImageWrapper 内部 div 友好共存。
+              const kids = node?.children ?? [];
+              const hasImg = kids.some((c: any) => c.type === 'element' && c.tagName === 'img');
+              if (hasImg) {
+                return <div className="md-paragraph-with-image my-2">{children}</div>;
               }
               // Check if paragraph contains only a single link
               if (

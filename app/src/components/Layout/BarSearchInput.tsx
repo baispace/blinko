@@ -25,6 +25,8 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [localSearchText, setLocalSearchText] = useState('');
 
+  // ⌘K must work no matter where focus currently is, so the listener lives on
+  // window (not on the search input) and must not be re-bound on every keystroke.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -33,17 +35,21 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
       }
     };
 
-    eventBus.on('open-global-search', () => {
-      setIsGlobalSearchOpen(true);
-    });
+    const handleOpen = () => setIsGlobalSearchOpen(true);
 
-    // Sync with blinkoStore.searchText
-    setLocalSearchText(blinkoStore.searchText || '');
-
+    eventBus.on('open-global-search', handleOpen);
     window.addEventListener('keydown', handleKeyDown);
+
     return () => {
+      eventBus.off('open-global-search', handleOpen);
       window.removeEventListener('keydown', handleKeyDown);
     };
+  }, []);
+
+  // Sync with blinkoStore.searchText (kept separate so typing does not
+  // tear down and rebuild the global listeners above).
+  useEffect(() => {
+    setLocalSearchText(blinkoStore.searchText || '');
   }, [blinkoStore.searchText]);
 
   // Check if there are any active filters

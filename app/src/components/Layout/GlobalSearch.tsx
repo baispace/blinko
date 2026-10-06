@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils';
 import { Note, ResourceType, Tag } from '@shared/lib/types';
 import { ScrollArea } from '../Common/ScrollArea';
 import { ResourceItemPreview } from '@/components/BlinkoResource/ResourceItem';
-import { allSettings } from '@/pages/settings';
+import { allSettings } from '@/components/BlinkoSettings/settingsRegistry';
+import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 import { BlinkoCard } from '../BlinkoCard';
 import { ConvertTypeButton } from '../BlinkoCard/cardFooter';
 import { LoadingAndEmpty } from '../Common/LoadingAndEmpty';
@@ -197,12 +198,22 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
           .filter((setting) => setting.key !== 'all')
           .slice(0, 5);
 
-        // 5. Update search results (filter out .folder placeholder files)
+        // 5. Search tags locally — the full tag list is already in memory, so
+        //    this is a cheap prefix/substring match (strip the leading # like
+        //    resources does).
+        const tagTerm = query.replace(/^[#@]/, '').toLowerCase();
+        const matchingTags = tagTerm
+          ? (blinkoStore.tagList.value?.falttenTags ?? [])
+              .filter((tag) => tag.name.toLowerCase().includes(tagTerm))
+              .slice(0, 8)
+          : [];
+
+        // 6. Update search results (filter out .folder placeholder files)
         store.searchResults = {
           notes: notes || [],
           resources: (resources || []).filter(r => r.name !== '.folder'),
           settings: matchingSettings,
-          tags: [],
+          tags: matchingTags,
         };
 
         blinkoStore.forceQuery++
@@ -240,7 +251,9 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   };
 
   const navigateToSetting = (settingKey: string) => {
-    navigate(`/settings?section=${settingKey}`);
+    // Open the overlay rather than the route — /settings stays reachable via
+    // deep link, but clicking a search hit should not unload the current page.
+    ShowSettingsDialog(settingKey);
     onOpenChange(false);
   };
 
@@ -439,6 +452,20 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
                           </div>
                         </div>
                         <div className="flex flex-col">{store.searchResults.settings.map(renderSettingItem)}</div>
+                      </div>
+                    )}
+
+                    {/* Tags section */}
+                    {store.searchResults.tags.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <Divider className="my-2" />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <Icon icon="solar:tag-outline" className="mr-2 text-primary" />
+                            <h3 className="text-sm font-medium text-default-700">{t('tag')}</h3>
+                          </div>
+                        </div>
+                        <div className="flex flex-col">{store.searchResults.tags.map(renderTagItem)}</div>
                       </div>
                     )}
                   </div>

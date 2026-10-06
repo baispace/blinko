@@ -25,8 +25,10 @@ export const BlinkoImageGallery = observer(({ files }: { files: Attachment[] }) 
   if (!handledFiles.length) return null;
 
   const single = handledFiles.length === 1;
-  // Weibo grid rule: 4 images → 2x2, others → rows of 3 (2 images → 1 row)
-  const cols = !single && handledFiles.length === 4 ? 2 : 3;
+  // Weibo grid rule: 2 / 4 / 7 / 8 images → 2 columns so the last row is
+  // filled as tightly as possible; everything else → rows of 3.
+  // (With 3 columns, 2 images leave a hole and 7 images leave two.)
+  const cols = !single && [2, 4, 7, 8].includes(handledFiles.length) ? 2 : 3;
 
   return (
     <PhotoProvider>

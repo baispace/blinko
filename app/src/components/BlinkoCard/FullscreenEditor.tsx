@@ -1,4 +1,5 @@
 import { observer } from "mobx-react-lite";
+import { when } from "mobx";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Button, Tooltip } from "@heroui/react";
@@ -162,7 +163,16 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
     const load = async () => {
       // Load fresh note data from server
       if (blinkoItem.id) {
-        await blinko.noteDetail.call({ id: blinkoItem.id });
+        // `noteDetail` 是带 loadingLock 的 PromiseState：如果在它 loading 期间
+        // 再 call 一次会被静默丢弃（返回 undefined），于是编辑器会拿上一条笔记
+        // 的内容挂载 —— 表现就是从列表点进来先闪一篇别的笔记。
+        // 先等当前请求落地，再判断数据是不是本条笔记的，是就直接复用。
+        if (blinko.noteDetail.loading.value) {
+          await when(() => !blinko.noteDetail.loading.value);
+        }
+        if (blinko.noteDetail.value?.id !== blinkoItem.id) {
+          await blinko.noteDetail.call({ id: blinkoItem.id });
+        }
         if (blinko.noteDetail.value) {
           blinko.curSelectedNote = _.cloneDeep(blinko.noteDetail.value);
         }
@@ -251,18 +261,16 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
   const editorContent = (
     <div
       className={`fixed inset-0 z-[9999] bg-background ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
-      onPointerDownCapture={(e) => {
-        // Only stop propagation if event is not from editor container (to prevent drag on background)
-        // Allow events from editor container to work normally
-        if (editorContainerRef.current && !editorContainerRef.current.contains(e.target as Node)) {
-          e.stopPropagation();
-        }
-      }}
-      onTouchStartCapture={(e) => {
-        if (editorContainerRef.current && !editorContainerRef.current.contains(e.target as Node)) {
-          e.stopPropagation();
-        }
-      }}
+      /**
+       * 注意：这里曾经用 onPointerDownCapture / onTouchStartCapture 对
+       * "不在 editorContainerRef 内"的事件 stopPropagation()，本意是防止拖到
+       * 背景上触发卡片拖拽。但 portal 的事件是沿 React 树传播的，而 Dropdown /
+       * Dialog 的浮层虽然是挂到 body 上的 DOM 兄弟节点，在 React 树里却是这个
+       * div 的后代 —— 于是菜单、弹窗里的每一次 pointerdown 都被判成"点在背景
+       * 上"而掐断，react-aria 的 usePress 收不到事件，菜单项的 onClick 永远不
+       * 触发（表现就是菜单能开、点了没反应，还会因为"点到外面"自动关闭）。
+       * 卡片拖拽已经由 useDragCard 关掉，这里不再需要拦事件。
+       */
       style={{
         position: 'fixed',
         top: 0,
@@ -299,9 +307,10 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
 
-              {/* 大纲入口：只在阅读态给。编辑态正文由 Tiptap 直接渲染，
-                  .markdown-body 不存在，大纲抽不到标题，按钮会变成死的。 */}
-              {editorMode === 'preview' && !!blinkoItem.content && (
+              {/* 大纲入口：阅读态、编辑态都给。以前只在阅读态给（因为靠
+                  `.markdown-body` 抓 DOM，编辑态抓不到），现在 TableOfContents
+                  直接从 markdown 源文本解析标题，两种模式都能用。 */}
+              {!!blinkoItem.content && (
                 <Tooltip content={t('table-of-contents')}>
                   <Button
                     isIconOnly

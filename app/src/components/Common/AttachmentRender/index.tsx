@@ -145,7 +145,7 @@ const ReferenceRender = observer(({ store }: { store: EditorStore }) => {
   return <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
     {
       store?.currentReferences?.map(i => {
-        return <Popover placement="bottom">
+        return <Popover key={`ref-${i.id}`} placement="bottom">
           <PopoverTrigger>
             <div className="flex items-center gap-1 blinko-tag cursor-pointer hover:opacity-80 group">
               <Icon className="min-w-[20px] max-w-[20px] !text-primary" icon="uim:arrow-up-left" width="20" height="20" />

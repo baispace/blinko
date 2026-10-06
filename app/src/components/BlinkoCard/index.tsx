@@ -159,6 +159,23 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     });
   };
 
+  /**
+   * 全屏编辑器打开时，底下的卡片整块被 z-[9999] 的 portal 盖住，是纯死 UI：
+   * 白白多跑一次 MarkdownRender / 附件 / 评论的渲染，还会被 TableOfContents
+   * 的 heading 查询抓走（点大纲滚的是一个看不见的节点，看着像点了没反应），
+   * 另外从列表切笔记时会先闪一帧上一条笔记的卡片。所以这里只挂编辑器本身。
+   */
+  if (isFullscreenEditorOpen) {
+    return (
+      <FullscreenEditor
+        blinkoItem={blinkoItem}
+        isOpen
+        onClose={() => setIsFullscreenEditorOpen(false)}
+        isDetailPage={isDetailPage}
+      />
+    );
+  }
+
   return (
     <>
       {/* Fullscreen Editor Overlay */}

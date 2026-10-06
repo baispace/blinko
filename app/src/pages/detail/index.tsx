@@ -55,11 +55,17 @@ const Detail = observer(() => {
   }, [noteId]);
 
   const note = blinko.noteDetail.value;
+  /**
+   * 全屏编辑器是 z-[9999] 的 portal，打开时整块盖住这个页面。这里本来还渲染了
+   * 浮动大纲按钮（z-20）和页宽按钮，全被压在下面点不到 —— 大纲入口由
+   * FullscreenEditor 顶栏自己提供，所以打开时直接不渲染，避免死 UI。
+   */
+  const isFullscreenOpen = !!note && blinko.fullscreenEditorNoteId === note.id;
 
   return (
     <ScrollArea fixMobileTopBar>
       <div className={`mx-auto py-4 relative ${PAGE_WIDTH_PAD_CLASS[pageWidth.mode]}`} style={{ maxWidth: pageWidth.maxWidth }}>
-        {note && (
+        {note && !isFullscreenOpen && (
           <div className="flex justify-end mb-1">
             <PageWidthButton />
           </div>
@@ -85,7 +91,7 @@ const Detail = observer(() => {
         {/* Outline trigger sits at the top-left of the body and opens a
             flyout on demand — the note keeps the full page width instead of
             permanently losing 192px to a right-hand rail. */}
-        {note?.content && (
+        {note?.content && !isFullscreenOpen && (
           <button
             onClick={() => setIsTocOpen((v) => !v)}
             className={`absolute top-3 -left-1 z-20 flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
@@ -98,7 +104,7 @@ const Detail = observer(() => {
           </button>
         )}
 
-        {note?.content && isTocOpen && (
+        {note?.content && isTocOpen && !isFullscreenOpen && (
           <TableOfContents
             content={note.content}
             floating

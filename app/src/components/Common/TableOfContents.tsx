@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -9,45 +9,66 @@ export interface TocItem {
   element: HTMLElement | null;
 }
 
+/** 归一化标题文本，用于把 markdown 源文本和渲染后的 DOM 节点对上。 */
+const normalize = (s: string) => (s ?? '').replace(/[#*`~_>\-\[\]()]/g, '').replace(/\s+/g, '');
+
 /**
- * Generate slug ID from heading text (same as MarkdownRender).
+ * 从 markdown 源文本解析标题。
+ *
+ * 以前是从渲染后的 `.markdown-body` DOM 里抓 `h1..h6`，但全屏编辑器用的是
+ * Tiptap（`#global-editor`），根本没有 `.markdown-body` —— 大纲要么抽不到
+ * 标题直接不渲染，要么抓到的是被全屏遮罩盖住的那张卡片，点了滚的是一个
+ * 看不见的元素，表现就是"点了没反应"。直接从源文本解析两种模式都能用。
  */
-const generateSlugId = (text: string): string => {
-  return text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+export const extractHeadingsFromMarkdown = (content: string): TocItem[] => {
+  if (!content) return [];
+  const items: TocItem[] = [];
+  let inFence = false;
+
+  for (const raw of content.split('\n')) {
+    const line = raw.trim();
+    // 代码块里的 # 是注释/代码，不是标题
+    if (/^(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+
+    const m = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (!m) continue;
+    const text = m[2].trim();
+    if (!text) continue;
+
+    items.push({ level: m[1].length, text, element: null });
+  }
+  return items;
 };
 
 /**
- * Extract headings from DOM after markdown is rendered.
+ * 把解析出来的标题和页面上真实渲染的 heading 节点按顺序对齐。
+ * 只认当前可见的节点，避免匹配到被遮罩盖住 / 隐藏的那一份渲染。
  */
-export const extractHeadingsFromDom = (containerSelector: string): TocItem[] => {
-  const container = document.querySelector(containerSelector);
-  if (!container) return [];
+const resolveHeadingElements = (items: TocItem[]): TocItem[] => {
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'))
+    .filter((n) => n.offsetParent !== null || n.getClientRects().length > 0);
 
-  const headings: TocItem[] = [];
-  const elements = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
-
-  elements.forEach((el) => {
-    const htmlEl = el as HTMLElement;
-    const level = parseInt(htmlEl.tagName.slice(1), 10);
-    const text = htmlEl.textContent?.trim() || '';
-
-    // Generate ID using the same method as MarkdownRender
-    const slugId = generateSlugId(text);
-
-    headings.push({
-      level,
-      text: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
-      element: htmlEl,
-    });
+  let cursor = 0;
+  return items.map((item) => {
+    const wanted = normalize(item.text);
+    for (let i = cursor; i < nodes.length; i++) {
+      const nodeText = normalize(nodes[i].textContent ?? '');
+      if (nodeText === wanted || nodeText.startsWith(wanted)) {
+        cursor = i + 1;
+        return { ...item, element: nodes[i] };
+      }
+    }
+    return { ...item, element: null };
   });
-
-  return headings;
 };
 
 /**
- * The detail page scrolls inside a ScrollArea container, not on window, so a
- * window scroll listener never fires. Walk up from the rendered markdown to the
- * nearest scrollable ancestor instead.
+ * 页面滚动可能发生在 ScrollArea 容器里而不是 window 上，所以从标题节点往上
+ * 找最近的可滚动祖先。
  */
 const findScrollParent = (el: HTMLElement | null): HTMLElement | Window => {
   let node = el;
@@ -63,11 +84,10 @@ const findScrollParent = (el: HTMLElement | null): HTMLElement | Window => {
 
 /**
  * Table of Contents panel.
- * Extracts headings from rendered DOM.
  *
- * Rendered as an on-demand flyout anchored beside the note title (Feishu
- * style) rather than a permanent right-hand rail, so the body keeps the full
- * page width. When `floating` is false it falls back to the old inline layout.
+ * Headings come from the markdown source and are matched against the rendered
+ * DOM afterwards, so the outline works both in Tiptap edit mode and in the
+ * read-only markdown view.
  */
 export const TableOfContents = observer(({
   content,
@@ -83,56 +103,49 @@ export const TableOfContents = observer(({
   const { t } = useTranslation();
   const [headings, setHeadings] = useState<TocItem[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Extract headings after content is rendered
+  const parsed = useMemo(() => extractHeadingsFromMarkdown(content), [content]);
+
+  // DOM 渲染完成后再把标题和真实节点对上
   useEffect(() => {
-    const extractHeadings = () => {
-      // Wait for DOM to update
-      setTimeout(() => {
-        const extracted = extractHeadingsFromDom('.markdown-body');
-        setHeadings(extracted);
-        if (extracted.length > 0) {
-          setActiveIndex(0);
-        }
-      }, 100);
+    let disposed = false;
+    const timer = setTimeout(() => {
+      if (disposed) return;
+      setHeadings(resolveHeadingElements(parsed));
+    }, 100);
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
     };
+  }, [parsed]);
 
-    extractHeadings();
+  // 滚动高亮：监听真正滚动的那个容器
+  useEffect(() => {
+    if (headings.length === 0) return;
 
-    // Also set up scroll spy on whichever element actually scrolls.
     const handleScroll = () => {
-      if (headings.length === 0) return;
-
-      // Find the current visible heading
       for (let i = headings.length - 1; i >= 0; i--) {
         const el = headings[i].element;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 100) {
-            setActiveIndex(i);
-            break;
-          }
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= 100) {
+          setActiveIndex(i);
+          return;
         }
       }
     };
 
-    const scrollParent = findScrollParent(document.querySelector('.markdown-body'));
-    scrollParent.addEventListener('scroll', handleScroll);
+    const scrollParent = findScrollParent(headings.find((h) => h.element)?.element ?? null);
+    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => scrollParent.removeEventListener('scroll', handleScroll);
-  }, [content, headings]);
+  }, [headings]);
 
   const scrollToHeading = (index: number) => {
-    const heading = headings[index];
-    if (heading?.element) {
-      // Use the element's ID to scroll
-      const id = heading.element.id;
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setActiveIndex(index);
-      }
-    }
+    const el = headings[index]?.element;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveIndex(index);
   };
 
   if (headings.length === 0) {
@@ -157,7 +170,7 @@ export const TableOfContents = observer(({
       <nav className="space-y-0.5 max-h-[60vh] overflow-y-auto">
         {headings.map((heading, index) => (
           <button
-            key={index}
+            key={`${heading.level}-${heading.text}-${index}`}
             onClick={() => {
               scrollToHeading(index);
               if (floating) onClose?.();
@@ -188,16 +201,3 @@ export const TableOfContents = observer(({
     </>
   );
 });
-
-/**
- * Inject IDs into heading elements for anchor navigation.
- * This should be called after markdown is rendered.
- */
-export const injectHeadingIds = () => {
-  const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6');
-  headings.forEach((heading, index) => {
-    if (!heading.id) {
-      heading.id = `heading-${index}`;
-    }
-  });
-};

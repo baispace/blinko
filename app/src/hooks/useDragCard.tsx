@@ -45,30 +45,25 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
     }
   }, [notes]);
 
-  // Disable sensors when fullscreen editor is open
+  // Disable sensors when fullscreen editor is open.
+  // Previously we used an activationConstraint with both delay and distance,
+  // but @dnd-kit treats that as a delay constraint and expects a tolerance
+  // field – without it, every mousemove throws "Cannot use 'in' operator to
+  // search for 'x' in undefined" and cancels the drag. Removing the sensors
+  // entirely is the cleanest way to disable dragging.
   const shouldEnableDrag = blinko.fullscreenEditorNoteId === null;
-  
+
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: shouldEnableDrag ? {
-        delay: 250,
-        tolerance: 5,
-      } : {
-        // Impossible to activate
-        delay: 999999,
-        distance: 999999,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: shouldEnableDrag ? {
-        delay: 250,
-        tolerance: 5,
-      } : {
-        // Impossible to activate
-        delay: 999999,
-        distance: 999999,
-      },
-    })
+    ...(shouldEnableDrag
+      ? [
+          useSensor(MouseSensor, {
+            activationConstraint: { delay: 250, tolerance: 5 },
+          }),
+          useSensor(TouchSensor, {
+            activationConstraint: { delay: 250, tolerance: 5 },
+          }),
+        ]
+      : [])
   );
 
   const handleDragStart = (event: any) => {

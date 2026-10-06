@@ -78,12 +78,17 @@ export const CardActionMenu = observer(({
   showPageWidth = false,
   editorMode,
   onToggleEditorMode,
+  presentationMode = false,
+  onTogglePresentation,
   isDetailPage = false,
 }: {
   blinkoItem: Note;
   showPageWidth?: boolean;
   editorMode?: 'preview' | 'edit';
   onToggleEditorMode?: () => void;
+  /** 飞书式演示模式：隐藏 chrome、只读正文、浮动退出演示按钮 */
+  presentationMode?: boolean;
+  onTogglePresentation?: () => void;
   isDetailPage?: boolean;
 }) => {
   const { t } = useTranslation();
@@ -121,11 +126,15 @@ export const CardActionMenu = observer(({
           item: "rounded-lg text-[13.5px] gap-2",
         }}
       >
-        {/* ── 视图：页宽 / 分享 / 编辑↔预览（仅全屏编辑器传入） ── */}
+        {/* ── 视图：页宽 / 分享 / 编辑↔预览（仅全屏编辑器传入） ──
+            每个 DropdownItem 都必须带 `textValue`，否则 react-aria 拿不到 plain
+            text，type-to-select 失败 → collection 重初始化时 onPress 不再注册，
+            现象是菜单可见但点了没反应（修复了之前 console 一片 Verbose warning）。 */}
         {showPageWidth && (
           <>
             <DropdownItem
               key="pw-label"
+              textValue={t('page-width')}
               isReadOnly
               classNames={{
                 base: '!min-h-px !py-1 !px-2.5 pointer-events-none',
@@ -137,6 +146,7 @@ export const CardActionMenu = observer(({
             {PAGE_WIDTH_ORDER.map((m) => (
               <DropdownItem
                 key={`pw-${m}`}
+                textValue={t('page-width-' + m)}
                 onPress={() => pageWidth.setMode(m as PageWidthMode)}
                 classNames={{ base: 'pl-8' }}
               >
@@ -146,12 +156,12 @@ export const CardActionMenu = observer(({
                 {t('page-width-' + m)}
               </DropdownItem>
             ))}
-            <DropdownItem key="sep-view" isReadOnly classNames={sepClassNames} />
+            <DropdownItem key="sep-view" textValue=" " isReadOnly classNames={sepClassNames} />
           </>
         )}
 
         {showViewItems && (
-          <DropdownItem key="share" onPress={withNote(handlePublic)}>
+          <DropdownItem key="share" textValue={t('share')} onPress={withNote(handlePublic)}>
             <div className="flex items-center gap-2">
               <Icon icon="tabler:share-2" width="20" height="20" />
               <div>{t('share')}</div>
@@ -160,7 +170,11 @@ export const CardActionMenu = observer(({
         )}
 
         {onToggleEditorMode && (
-          <DropdownItem key="toggle-mode" onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}>
+          <DropdownItem
+            key="toggle-mode"
+            textValue={editorMode === 'preview' ? t('edit') : t('preview')}
+            onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}
+          >
             <div className="flex items-center gap-2">
               <Icon icon={editorMode === 'preview' ? 'tabler:edit' : 'tabler:eye'} width="20" height="20" />
               <div>{editorMode === 'preview' ? t('edit') : t('preview')}</div>
@@ -168,77 +182,133 @@ export const CardActionMenu = observer(({
           </DropdownItem>
         )}
 
-        {showViewItems && (
-          <DropdownItem key="sep-basic" isReadOnly classNames={sepClassNames} />
+        {/* 演示模式 = 飞书"演示"：隐藏 chrome、纯阅读、和编辑态正交。FullscreenEditor
+            顶栏 ⋯ 菜单独有，list / detail 页面不暴露这个项。 */}
+        {onTogglePresentation && (
+          <DropdownItem
+            key="presentation"
+            textValue={presentationMode ? t('exit-presentation') : t('enter-presentation')}
+            onPress={() => onTogglePresentation()}
+          >
+            <div className="flex items-center gap-2">
+              <Icon
+                icon={presentationMode ? 'mdi:arrow-collapse' : 'mdi:presentation-play'}
+                width="20"
+                height="20"
+              />
+              <div>{presentationMode ? t('exit-presentation') : t('enter-presentation')}</div>
+            </div>
+          </DropdownItem>
         )}
 
-        {/* 基本操作 */}
-        <DropdownItem
-          key="edit"
-          onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); handleEdit(isDetailPage); }}
-        >
-          <EditItem />
-        </DropdownItem>
+        {showViewItems && (
+          <DropdownItem key="sep-basic" textValue=" " isReadOnly classNames={sepClassNames} />
+        )}
+
+        {/* 基本操作 —— 详情页只剩「编辑时间」「历史记录」。
+            「编辑」「多选」「全部选择」「复制内容」均加 !isDetailPage 守卫，避免
+            和详情页 header 的固定按钮 / 详情页的多选工具栏重复。 */}
         {!isDetailPage && (
-          <DropdownItem key="multi" onPress={withNote(handleMultiSelect)}>
+          <DropdownItem
+            key="edit"
+            textValue={t('edit')}
+            onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); handleEdit(isDetailPage); }}
+          >
+            <EditItem />
+          </DropdownItem>
+        )}
+        {!isDetailPage && (
+          <DropdownItem key="multi" textValue={t('multiple-select')} onPress={withNote(handleMultiSelect)}>
             <MutiSelectItem />
           </DropdownItem>
         )}
         {!isDetailPage && (
-          <DropdownItem key="select-all" onPress={withNote(handleSelectAll)}>
+          <DropdownItem key="select-all" textValue={t('select-all')} onPress={withNote(handleSelectAll)}>
             <SelectAllItem />
           </DropdownItem>
         )}
-        <DropdownItem key="copy" onPress={withNote(handleCopyContent)}>
-          <CopyItem />
-        </DropdownItem>
-        <DropdownItem key="edittime" onPress={withNote(() => ShowEditTimeModel())}>
+        {!isDetailPage && (
+          <DropdownItem key="copy" textValue={t('copy-content')} onPress={withNote(handleCopyContent)}>
+            <CopyItem />
+          </DropdownItem>
+        )}
+        <DropdownItem
+          key="edittime"
+          textValue={t('edit-time')}
+          onPress={withNote(() => ShowEditTimeModel())}
+        >
           <EditTimeItem />
         </DropdownItem>
         {!!blinkoItem._count?.histories && (
-          <DropdownItem key="history" onPress={withNote(handleShowHistory)}>
+          <DropdownItem
+            key="history"
+            textValue={t('Note History')}
+            onPress={withNote(handleShowHistory)}
+          >
             <HistoryItem />
           </DropdownItem>
         )}
 
-        <DropdownItem key="sep-org" isReadOnly classNames={sepClassNames} />
+        <DropdownItem key="sep-org" textValue=" " isReadOnly classNames={sepClassNames} />
 
         {/* 组织 */}
-        <DropdownItem key="top" onPress={withNote(handleTop)}>
+        <DropdownItem
+          key="top"
+          textValue={blinko.curSelectedNote?.isTop ? t('cancel-top') : t('top')}
+          onPress={withNote(handleTop)}
+        >
           <TopItem />
         </DropdownItem>
-        <DropdownItem key="archived" onPress={withNote(handleArchived)}>
+        <DropdownItem
+          key="archived"
+          textValue={blinko.curSelectedNote?.isArchived || blinko.curSelectedNote?.isRecycle ? t('recovery') : t('archive')}
+          onPress={withNote(handleArchived)}
+        >
           <ArchivedItem />
         </DropdownItem>
-        <DropdownItem key="convert" onPress={withNote(ConvertItemFunction)}>
+        <DropdownItem
+          key="convert"
+          textValue={`${t('convert-to')} ${blinko.curSelectedNote?.type == 1 ? t('blinko') : t('note')}`}
+          onPress={withNote(ConvertItemFunction)}
+        >
           <ConvertItem />
         </DropdownItem>
 
-        {!isRecycle && <DropdownItem key="sep-share" isReadOnly classNames={sepClassNames} />}
+        {!isRecycle && (
+          <DropdownItem key="sep-share" textValue=" " isReadOnly classNames={sepClassNames} />
+        )}
 
         {/* 分发 */}
         {/* 分享已上移到「视图」组，这里只在列表卡片里出现，避免同一菜单里出现两个分享 */}
         {!isRecycle && !showViewItems && (
-          <DropdownItem key="public" onPress={withNote(handlePublic)}>
+          <DropdownItem key="public" textValue={t('share')} onPress={withNote(handlePublic)}>
             <PublicItem />
           </DropdownItem>
         )}
         {!isRecycle && (
-          <DropdownItem key="publish" onPress={withNote(handlePublish)}>
+          <DropdownItem
+            key="publish"
+            textValue={blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}
+            onPress={withNote(handlePublish)}
+          >
             <PublishItem />
           </DropdownItem>
         )}
 
-        {hasAi && <DropdownItem key="sep-ai" isReadOnly classNames={sepClassNames} />}
+        {hasAi && <DropdownItem key="sep-ai" textValue=" " isReadOnly classNames={sepClassNames} />}
 
         {/* 智能 */}
         {hasAi && (
-          <DropdownItem key="aitag" onPress={withNote(handleAITag)}>
+          <DropdownItem key="aitag" textValue={t('ai-tag')} onPress={withNote(handleAITag)}>
             <AITagItem />
           </DropdownItem>
         )}
         {hasAi && (
-          <DropdownItem key="related" onPress={withNote(handleRelatedNotes)}>
+          <DropdownItem
+            key="related"
+            textValue={t('related-notes')}
+            onPress={withNote(handleRelatedNotes)}
+          >
             <RelatedNotesItem />
           </DropdownItem>
         )}
@@ -246,6 +316,7 @@ export const CardActionMenu = observer(({
         {pluginApi.customRightClickMenus.map((menu) => (
           <DropdownItem
             key={menu.name}
+            textValue={menu.label}
             isDisabled={menu.disabled}
             onPress={withNote(() => menu.onClick(blinko.curSelectedNote!))}
           >
@@ -256,11 +327,12 @@ export const CardActionMenu = observer(({
           </DropdownItem>
         ))}
 
-        <DropdownItem key="sep-danger" isReadOnly classNames={sepClassNames} />
+        <DropdownItem key="sep-danger" textValue=" " isReadOnly classNames={sepClassNames} />
 
         {/* 破坏性操作，永远沉底 */}
         <DropdownItem
           key="trash"
+          textValue={isRecycle ? t('delete') : t('trash')}
           onPress={withNote(handleTrash)}
           className="text-danger data-[hover=true]:bg-danger/10 data-[hover=true]:text-danger"
         >

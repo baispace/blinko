@@ -35,6 +35,12 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   const isExistingNote = !!blinkoItem.id;
   const defaultEditorMode: 'preview' | 'edit' = isExistingNote ? 'edit' : 'preview';
   const [editorMode, setEditorMode] = useState<'preview' | 'edit'>(defaultEditorMode);
+  /**
+   * 「演示模式」：飞书式的阅读演示 —— 隐藏所有 chrome（顶栏、底栏、编辑器工具栏、
+   * BubbleMenu 等），只留可滚动正文 + 右上角"退出演示"按钮。与 `editorMode` 是
+   * 正交的两条轴：演示模式只看正文，editorMode 控制 Tiptap editable。
+   */
+  const [presentationMode, setPresentationMode] = useState(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   /** 阅读/编辑共用同一棵 Tiptap 树，这里持有它的实例 */
   const tiptapRef = useRef<Editor | null>(null);
@@ -63,13 +69,17 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
     blinko.fullscreenEditorNoteId = null;
     // 回到「打开即编辑」的默认态，而不是写死 preview，否则下一条笔记会继承上一条的阅读态
     setEditorMode(defaultEditorMode);
+    setPresentationMode(false);
     setDataReady(false);
     onClose();
   };
 
   // 这个组件常驻在 BlinkoCard 里（isOpen 只是开关），所以每次打开都要按默认态复位
   useEffect(() => {
-    if (isOpen) setEditorMode(defaultEditorMode);
+    if (isOpen) {
+      setEditorMode(defaultEditorMode);
+      setPresentationMode(false);
+    }
   }, [isOpen]);
 
   /**
@@ -186,6 +196,11 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
           }
         }
         
+        // 演示模式优先退出 —— 飞书也是这个节奏（演示 → 阅读 → 关闭）
+        if (presentationMode) {
+          setPresentationMode(false);
+          return;
+        }
         // In edit mode, ESC goes back to preview mode first
         if (editorMode === 'edit') {
           setEditorMode('preview');
@@ -209,7 +224,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
       if (mobileHeader) mobileHeader.style.display = '';
       if (bottomBar) bottomBar.style.display = '';
     };
-  }, [isOpen, onClose, editorMode]);
+  }, [isOpen, onClose, editorMode, presentationMode]);
 
   const handleEditorSended = async () => {
     // Refresh the note data after saving
@@ -268,8 +283,9 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
         >
           {/* Top header with back button and toolbar (PC only, sticky while scrolling).
               收纳后的形态：← 大纲 │ 标题 ……… [编辑器工具栏] │ ⋯
-              分享 / 页宽 / 预览切换 全部收进右侧 ⋯ 菜单，顶栏只留一个操作入口。 */}
-          {isPc && (
+              分享 / 页宽 / 预览切换 全部收进右侧 ⋯ 菜单，顶栏只留一个操作入口。
+              演示模式下整条顶栏消失 —— 演示模式不留任何 chrome。 */}
+          {!presentationMode && isPc && (
             <div className="sticky top-0 z-10 flex items-center gap-3 py-3 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
               <Button
                 isIconOnly
@@ -318,6 +334,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                     if (editorMode === 'preview') handleSwitchToEdit();
                     else handleSwitchToPreview();
                   }}
+                  presentationMode={presentationMode}
+                  onTogglePresentation={() => setPresentationMode((v) => !v)}
                 />
               </div>
 
@@ -337,6 +355,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
             阅读态与编辑态是同一棵 Tiptap 树，只切 setEditable：
             打开即可直接写，切回阅读再点正文任意处也能接着写，
             两种模式来回切不重新 mount、不丢光标。
+            演示模式强制 readOnly（无论 editorMode 是什么）。
           */}
           <div
             className={`${isPc ? 'flex flex-col' : 'flex-1 flex flex-col min-h-0'} ${!isPc && isLongText ? 'editor-long-text' : ''}`}
@@ -347,7 +366,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               <BlinkoEditor
                 key={`editor-${blinkoItem.id}`}
                 mode="edit"
-                editable={editorMode === 'edit'}
+                editable={!presentationMode && editorMode === 'edit'}
                 onEditorReady={handleEditorReady}
                 onSended={handleEditorSended}
                 withoutOutline={true}
@@ -360,8 +379,9 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
             )}
           </div>
 
-          {/* Bottom toolbar with back button (Mobile only, sticky above the keyboard area) */}
-          {!isPc && (
+          {/* Bottom toolbar with back button (Mobile only, sticky above the keyboard area).
+              演示模式下整条底栏消失 —— 演示模式不留任何 chrome。 */}
+          {!presentationMode && !isPc && (
             <div className="sticky bottom-0 flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
               <Button
                 isIconOnly
@@ -373,7 +393,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
               <div className="flex-1 flex justify-end items-center ml-2 gap-2">
-                {/* 与 PC 顶栏一致：只留一个 ⋯，预览切换收进菜单。
+                {/* 与 PC 顶栏一致：只留一个 ⋯，预览切换 / 演示模式 收进菜单。
                     移动端不传 showPageWidth —— 窄屏上页宽没有意义。 */}
                 <CardActionMenu
                   blinkoItem={blinkoItem}
@@ -382,6 +402,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                     if (editorMode === 'preview') handleSwitchToEdit();
                     else handleSwitchToPreview();
                   }}
+                  presentationMode={presentationMode}
+                  onTogglePresentation={() => setPresentationMode((v) => !v)}
                 />
                 {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
                     否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
@@ -391,6 +413,20 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
           )}
         </div>
       </div>
+
+      {/* 演示模式浮动退出口：右上角，半透浮于正文之上，点 ESC 也退出。 */}
+      {presentationMode && (
+        <Button
+          isIconOnly
+          variant="flat"
+          size="sm"
+          onPress={() => setPresentationMode(false)}
+          aria-label={t('exit-presentation')}
+          className="fixed top-4 right-4 z-[10000] bg-background/80 backdrop-blur-md text-foreground shadow-md hover:bg-background"
+        >
+          <Icon icon="mdi:arrow-collapse" width={20} height={20} />
+        </Button>
+      )}
     </div>
   );
 

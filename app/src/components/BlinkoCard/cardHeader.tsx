@@ -1,7 +1,7 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from '@heroui/react';
-import { Copy } from "../Common/Copy";
 import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
+import { CardActionMenu } from './cardActionMenu';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note, NoteType } from '@shared/lib/types';
 import { RootStore } from '@/store';
@@ -13,9 +13,6 @@ import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
 import { AvatarAccount, CommentButton, CommentCount, UserAvatar } from './commentButton';
-import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
-import { api } from '@/lib/trpc';
-import { PromiseCall } from '@/store/standard/PromiseState';
 
 interface CardHeaderProps {
   /** `isBlog` is assigned by BlinkoCard (article-tier cards); it decides whether
@@ -33,6 +30,9 @@ interface CardHeaderProps {
    * into the overflow menu so the card header is not crowded with icons.
    */
   compactActions?: boolean;
+  /** Detail-page render suppresses batch actions (multi-select / select-all)
+   *  since they target the surrounding list, not the current note. */
+  isDetailPage?: boolean;
 }
 
 /** 置顶开关：闪念卡常显，未置顶时为弱化的描边图标 */
@@ -76,7 +76,7 @@ export const NoteTime = ({ blinkoItem, blinko, isExpanded }: { blinkoItem: Note;
   );
 };
 
-export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpanded, account, hideTime, compactActions }: CardHeaderProps) => {
+export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpanded, account, hideTime, compactActions, isDetailPage }: CardHeaderProps) => {
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
@@ -176,73 +176,25 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
             />
           </div>
         ) : (
+          /* Expanded (detail page) header: a single labelled dropdown instead of
+             7 bare hover-only icons. Share stays as its own button; everything
+             else lives inside the menu. */
           <>
-            <Copy
-              size={16}
-              className={`ml-auto ${isIOSDevice
-                ? 'opacity-100'
-                : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
-                }`}
-              content={blinkoItem.content + `\n${blinkoItem.attachments?.map(i => window.location.origin + i.path).join('\n')}`}
-            />
-
-            <CommentButton blinkoItem={blinkoItem} />
-
-            {isShareMode && (
-              <Tooltip content="RSS" delay={1000}>
-                <div className="flex items-center gap-2">
-                  <Icon onClick={e => {
-                    window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
-                  }} icon="mingcute:rss-2-fill" className='opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary' width="16" height="16" />
-                </div>
-              </Tooltip>
-            )}
-
-            {!isShareMode && (
-              <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
-            )}
-
-            {/* History button for viewing note versions */}
-            {!isShareMode && !!blinkoItem._count?.histories && blinkoItem._count?.histories > 0 && (
-              <HistoryButton
-                noteId={blinkoItem.id!}
-                className={'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary text-desc mt-[1px]'}
-              />
-            )}
-
-            {/* Trash/Recycle bin button */}
-            {!isShareMode && (
-              <Tooltip content={t('trash')} delay={1000}>
-                <Icon
-                  icon="mingcute:delete-2-line"
-                  width={iconSize}
-                  height={iconSize}
-                  className={`opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500 opacity-100' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
-                      blinko.updateTicker++;
-                    });
-                  }}
-                />
-              </Tooltip>
-            )}
-
-            {blinkoItem.isTop && (
-              <Icon
-                className={isIOSDevice ? 'ml-[10px] text-[#EFC646]' : "ml-auto group-hover/card:ml-2 text-[#EFC646]"}
-                icon="solar:bookmark-bold"
-                width={iconSize}
-                height={iconSize}
-              />
-            )}
-
-            {!isShareMode && (
-              <LeftCickMenu
-                className={isIOSDevice ? 'ml-[10px]' : (blinkoItem.isTop ? "ml-[10px]" : 'ml-auto group-hover/card:ml-2')}
-                onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
-              />
-            )}
+            <div className="ml-auto flex items-center gap-2 shrink-0">
+              {!isShareMode && <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />}
+              {isShareMode && (
+                <Tooltip content="RSS" delay={1000}>
+                  <div className="flex items-center gap-2">
+                    <Icon onClick={e => {
+                      window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
+                    }} icon="mingcute:rss-2-fill" className='cursor-pointer hover:text-primary' width="16" height="16" />
+                  </div>
+                </Tooltip>
+              )}
+              {!isShareMode && (
+                <CardActionMenu blinkoItem={blinkoItem} isDetailPage={!!isDetailPage} />
+              )}
+            </div>
           </>
         )}
       </div>

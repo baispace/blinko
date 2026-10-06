@@ -1,0 +1,272 @@
+import { observer } from "mobx-react-lite";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
+import { useTranslation } from 'react-i18next';
+import { _ } from '@/lib/lodash';
+import { Icon } from '@/components/Common/Iconify/icons';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
+import { PluginApiStore } from '@/store/plugin/pluginApiStore';
+import { PageWidthStore, PAGE_WIDTH_ORDER, type PageWidthMode } from '@/store/pageWidthStore';
+import { Note } from '@shared/lib/types';
+import {
+  handleEdit,
+  handleMultiSelect,
+  handleSelectAll,
+  handleTop,
+  handlePublic,
+  handlePublish,
+  handleArchived,
+  handleAITag,
+  handleTrash,
+  handleCopyContent,
+  handleShowHistory,
+  handleRelatedNotes,
+  ConvertItemFunction,
+  ShowEditTimeModel,
+  EditItem,
+  MutiSelectItem,
+  SelectAllItem,
+  CopyItem,
+  EditTimeItem,
+  HistoryItem,
+  TopItem,
+  ArchivedItem,
+  ConvertItem,
+  PublicItem,
+  PublishItem,
+  AITagItem,
+  RelatedNotesItem,
+  TrashItem,
+  DeleteItem,
+} from '../BlinkoRightClickMenu';
+
+/**
+ * Divider between groups.
+ *
+ * Must be inlined as a real `DropdownItem` instead of wrapped in a helper
+ * component: react-stately builds the menu collection by calling
+ * `child.type.getCollectionNode(...)` on every child, so a plain function
+ * component (`type.getCollectionNode === undefined`) throws
+ * "type.getCollectionNode is not a function" and takes the page down.
+ */
+const sepClassNames = {
+  base: '!h-px !min-h-px !p-0 my-1 !bg-divider',
+  wrapper: '!p-0 pointer-events-none',
+};
+
+/**
+ * Feishu-style action menu for a note.
+ *
+ * The expanded card header used to render 7 bare icons, most of them only
+ * visible on hover (opacity-0 group-hover:opacity-100), and the row shifted
+ * sideways when the note was pinned (ml-auto vs ml-[10px]). Every action here
+ * reuses the handler the right-click menu already uses — this component only
+ * rearranges them into labelled, separated groups and sinks the destructive
+ * action to the bottom.
+ *
+ * 触发器统一为裸「⋯」图标。FullscreenEditor 顶栏 + 移动底栏、detail 页面 header、
+ * 博客卡片头都共用同一份菜单；标签 / chevron 文字样式会因为工具栏旁的"预览"
+ * 切换按钮产生歧义，所以全部去掉。
+ *
+ * `showPageWidth` / `editorMode` 只由 FullscreenEditor 传；detail 页面和列表
+ * 卡片不传，保持原有基础操作菜单。
+ *
+ * Requires `blinko.curSelectedNote` to be set; the trigger does that.
+ */
+export const CardActionMenu = observer(({
+  blinkoItem,
+  showPageWidth = false,
+  editorMode,
+  onToggleEditorMode,
+  isDetailPage = false,
+}: {
+  blinkoItem: Note;
+  showPageWidth?: boolean;
+  editorMode?: 'preview' | 'edit';
+  onToggleEditorMode?: () => void;
+  isDetailPage?: boolean;
+}) => {
+  const { t } = useTranslation();
+  const blinko = RootStore.Get(BlinkoStore);
+  const pluginApi = RootStore.Get(PluginApiStore);
+  const pageWidth = RootStore.Get(PageWidthStore);
+  const isRecycle = !!blinkoItem.isRecycle;
+  const hasAi = !!blinko.config.value?.mainModelId;
+  /** 全屏编辑器才会额外挂「视图」组；列表卡片保持原样，避免和分组里的分享重复 */
+  const showViewItems = showPageWidth || !!onToggleEditorMode;
+
+  /** Every handler reads `blinko.curSelectedNote`, so refresh it right before. */
+  const withNote = (fn: () => void) => () => {
+    blinko.curSelectedNote = _.cloneDeep(blinkoItem);
+    fn();
+  };
+
+  return (
+    <Dropdown
+      placement="bottom-end"
+      onOpenChange={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); }}
+    >
+      <DropdownTrigger>
+        <div className="flex items-center cursor-pointer !transition-colors text-desc hover:text-primary hover:scale-110">
+          <Icon icon="fluent:more-vertical-16-regular" width="18" height="18" />
+        </div>
+      </DropdownTrigger>
+
+      <DropdownMenu
+        aria-label={t('edit')}
+        classNames={{
+          // The fullscreen editor is a portal at z-[9999]; without this the
+          // menu would render underneath it.
+          base: 'z-[10050]',
+          item: "rounded-lg text-[13.5px] gap-2",
+        }}
+      >
+        {/* ── 视图：页宽 / 分享 / 编辑↔预览（仅全屏编辑器传入） ── */}
+        {showPageWidth && (
+          <>
+            <DropdownItem
+              key="pw-label"
+              isReadOnly
+              classNames={{
+                base: '!min-h-px !py-1 !px-2.5 pointer-events-none',
+                wrapper: '!p-0',
+              }}
+            >
+              <span className="text-[11px] text-default-400">{t('page-width')}</span>
+            </DropdownItem>
+            {PAGE_WIDTH_ORDER.map((m) => (
+              <DropdownItem
+                key={`pw-${m}`}
+                onPress={() => pageWidth.setMode(m as PageWidthMode)}
+                classNames={{ base: 'pl-8' }}
+              >
+                {pageWidth.mode === m && (
+                  <Icon icon="mdi:check" width="15" height="15" className="text-primary" />
+                )}
+                {t('page-width-' + m)}
+              </DropdownItem>
+            ))}
+            <DropdownItem key="sep-view" isReadOnly classNames={sepClassNames} />
+          </>
+        )}
+
+        {showViewItems && (
+          <DropdownItem key="share" onPress={withNote(handlePublic)}>
+            <div className="flex items-center gap-2">
+              <Icon icon="tabler:share-2" width="20" height="20" />
+              <div>{t('share')}</div>
+            </div>
+          </DropdownItem>
+        )}
+
+        {onToggleEditorMode && (
+          <DropdownItem key="toggle-mode" onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}>
+            <div className="flex items-center gap-2">
+              <Icon icon={editorMode === 'preview' ? 'tabler:edit' : 'tabler:eye'} width="20" height="20" />
+              <div>{editorMode === 'preview' ? t('edit') : t('preview')}</div>
+            </div>
+          </DropdownItem>
+        )}
+
+        {showViewItems && (
+          <DropdownItem key="sep-basic" isReadOnly classNames={sepClassNames} />
+        )}
+
+        {/* 基本操作 */}
+        <DropdownItem
+          key="edit"
+          onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); handleEdit(isDetailPage); }}
+        >
+          <EditItem />
+        </DropdownItem>
+        {!isDetailPage && (
+          <DropdownItem key="multi" onPress={withNote(handleMultiSelect)}>
+            <MutiSelectItem />
+          </DropdownItem>
+        )}
+        {!isDetailPage && (
+          <DropdownItem key="select-all" onPress={withNote(handleSelectAll)}>
+            <SelectAllItem />
+          </DropdownItem>
+        )}
+        <DropdownItem key="copy" onPress={withNote(handleCopyContent)}>
+          <CopyItem />
+        </DropdownItem>
+        <DropdownItem key="edittime" onPress={withNote(() => ShowEditTimeModel())}>
+          <EditTimeItem />
+        </DropdownItem>
+        {!!blinkoItem._count?.histories && (
+          <DropdownItem key="history" onPress={withNote(handleShowHistory)}>
+            <HistoryItem />
+          </DropdownItem>
+        )}
+
+        <DropdownItem key="sep-org" isReadOnly classNames={sepClassNames} />
+
+        {/* 组织 */}
+        <DropdownItem key="top" onPress={withNote(handleTop)}>
+          <TopItem />
+        </DropdownItem>
+        <DropdownItem key="archived" onPress={withNote(handleArchived)}>
+          <ArchivedItem />
+        </DropdownItem>
+        <DropdownItem key="convert" onPress={withNote(ConvertItemFunction)}>
+          <ConvertItem />
+        </DropdownItem>
+
+        {!isRecycle && <DropdownItem key="sep-share" isReadOnly classNames={sepClassNames} />}
+
+        {/* 分发 */}
+        {/* 分享已上移到「视图」组，这里只在列表卡片里出现，避免同一菜单里出现两个分享 */}
+        {!isRecycle && !showViewItems && (
+          <DropdownItem key="public" onPress={withNote(handlePublic)}>
+            <PublicItem />
+          </DropdownItem>
+        )}
+        {!isRecycle && (
+          <DropdownItem key="publish" onPress={withNote(handlePublish)}>
+            <PublishItem />
+          </DropdownItem>
+        )}
+
+        {hasAi && <DropdownItem key="sep-ai" isReadOnly classNames={sepClassNames} />}
+
+        {/* 智能 */}
+        {hasAi && (
+          <DropdownItem key="aitag" onPress={withNote(handleAITag)}>
+            <AITagItem />
+          </DropdownItem>
+        )}
+        {hasAi && (
+          <DropdownItem key="related" onPress={withNote(handleRelatedNotes)}>
+            <RelatedNotesItem />
+          </DropdownItem>
+        )}
+
+        {pluginApi.customRightClickMenus.map((menu) => (
+          <DropdownItem
+            key={menu.name}
+            isDisabled={menu.disabled}
+            onPress={withNote(() => menu.onClick(blinko.curSelectedNote!))}
+          >
+            <div className="flex items-start gap-2">
+              {menu.icon && <Icon icon={menu.icon} width="20" height="20" />}
+              <div>{menu.label}</div>
+            </div>
+          </DropdownItem>
+        ))}
+
+        <DropdownItem key="sep-danger" isReadOnly classNames={sepClassNames} />
+
+        {/* 破坏性操作，永远沉底 */}
+        <DropdownItem
+          key="trash"
+          onPress={withNote(handleTrash)}
+          className="text-danger data-[hover=true]:bg-danger/10 data-[hover=true]:text-danger"
+        >
+          {isRecycle ? <DeleteItem /> : <TrashItem />}
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
+  );
+});

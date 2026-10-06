@@ -122,12 +122,13 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     // renders already show the note full-bleed, so they no-op here — clicking
     // inside the editor stays inside the editor.
     if (blinkoItem.id == null) return;
-    if (blinkoItem.isBlog) {
-      // 不在这里 setIsFullscreenEditorOpen(true)：list 卡片会随 navigate 一起被卸载，
-      // FullscreenEditor 跟着被销毁。改用 store 信号让 detail 页里的 BlinkoCard
-      // 在 mounted 后接手（见上方 useEffect）。
-      blinko.fullscreenEditorNoteId = blinkoItem.id;
-    }
+    // 列表点击 → 直接进 FullscreenEditor 编辑态，不再分 isBlog。
+    // 老逻辑只在 isBlog 时设 fullscreenEditorNoteId，普通 NOTE 卡片点完
+    // 会停在 detail 页的不可编辑卡片预览（用户看到的就是"中间页"）。
+    // 现在所有 list 点击都设上信号，detail 页面的 BlinkoCard 卡片 useEffect
+    // 看到信号匹配就开 FullscreenEditor；详情页路由 mounted 时也有独立
+    // effect 自动设上信号（pages/detail/index.tsx）。
+    blinko.fullscreenEditorNoteId = blinkoItem.id;
     if (!isDetailPage) {
       navigate(`/detail?id=${blinkoItem.id}`);
     }

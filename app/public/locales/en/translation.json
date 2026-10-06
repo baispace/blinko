@@ -450,6 +450,8 @@
   "over": "over",
   "performance-tip": "Real-time preview requires ${x}ms, you can close it",
   "preview": "Preview",
+  "enter-presentation": "Enter Presentation",
+  "exit-presentation": "Exit Presentation",
   "quote": "Quote",
   "record": "Start Record/End Record",
   "record-tip": "The device does not support recording",

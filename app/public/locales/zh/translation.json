@@ -436,6 +436,8 @@
   "over": "结束",
   "performance-tip": "实时预览需要${x}毫秒，您可以关闭它。",
   "preview": "预览",
+  "enter-presentation": "演示模式",
+  "exit-presentation": "退出演示",
   "record": "开始记录/结束记录",
   "record-tip": "该设备不支持录音",
   "redo": "重做",

@@ -112,7 +112,7 @@ export const BlockComment = observer(({ editor }: { editor: Editor }) => {
               onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
             />
             <Button size="sm" color="primary" onClick={handleAddComment}>
-              <Icon icon="mdi:send" width={14} height={14} />
+              <Icon icon="mdi:arrow-up-bold" width={14} height={14} />
             </Button>
           </div>
         </div>

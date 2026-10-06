@@ -196,18 +196,18 @@ export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit
   })
 }
 
-const handleEdit = (isDetailPage: boolean) => {
+export const handleEdit = (isDetailPage: boolean) => {
   ShowEditBlinkoModel(isDetailPage ? '5xl' : '5xl')
   FocusEditorFixMobile()
 }
 
-const handleMultiSelect = () => {
+export const handleMultiSelect = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.isMultiSelectMode = true
   blinko.onMultiSelectNote(blinko.curSelectedNote?.id!)
 }
 
-const handleSelectAll = () => {
+export const handleSelectAll = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.isMultiSelectMode = true
 
@@ -223,7 +223,7 @@ const handleSelectAll = () => {
   blinko.curMultiSelectIds = Array.from(new Set(ids));
 }
 
-const handleTop = () => {
+export const handleTop = () => {
   const blinko = RootStore.Get(BlinkoStore)
   blinko.upsertNote.call({
     id: blinko.curSelectedNote?.id,
@@ -231,7 +231,7 @@ const handleTop = () => {
   })
 }
 
-const handlePublic = () => {
+export const handlePublic = () => {
   const blinko = RootStore.Get(BlinkoStore)
   RootStore.Get(DialogStore).setData({
     size: 'md' as any,
@@ -252,7 +252,7 @@ const handlePublic = () => {
   // })
 }
 
-const handlePublish = () => {
+export const handlePublish = () => {
   const blinko = RootStore.Get(BlinkoStore)
   if (!blinko.curSelectedNote) return
   RootStore.Get(DialogStore).setData({
@@ -264,7 +264,7 @@ const handlePublish = () => {
   })
 }
 
-const handleArchived = () => {
+export const handleArchived = () => {
   const blinko = RootStore.Get(BlinkoStore)
   if (blinko.curSelectedNote?.isRecycle) {
     return blinko.upsertNote.call({
@@ -289,19 +289,19 @@ const handleArchived = () => {
   }
 }
 
-const handleAITag = () => {
+export const handleAITag = () => {
   const blinko = RootStore.Get(BlinkoStore)
   const aiStore = RootStore.Get(AiStore)
   aiStore.autoTag.call(blinko.curSelectedNote?.id!, blinko.curSelectedNote?.content!)
 }
 
-const handleTrash = () => {
+export const handleTrash = () => {
   const blinko = RootStore.Get(BlinkoStore)
   PromiseCall(api.notes.trashMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
 }
 
 /** 复制正文 + 附件链接（compact 卡片把该操作从 header 收进菜单后仍需可达） */
-const handleCopyContent = async () => {
+export const handleCopyContent = async () => {
   const blinko = RootStore.Get(BlinkoStore)
   const note = blinko.curSelectedNote
   if (!note) return
@@ -318,7 +318,7 @@ const handleCopyContent = async () => {
 }
 
 /** 查看历史版本（compact 卡片把该操作从 header 收进菜单后仍需可达） */
-const handleShowHistory = () => {
+export const handleShowHistory = () => {
   const blinko = RootStore.Get(BlinkoStore)
   const noteId = blinko.curSelectedNote?.id
   if (!noteId) return
@@ -330,13 +330,13 @@ const handleShowHistory = () => {
   })
 }
 
-const handleDelete = async () => {
+export const handleDelete = async () => {
   const blinko = RootStore.Get(BlinkoStore)
   PromiseCall(api.notes.deleteMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
   PromiseCall(api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! }))
 }
 
-const handleRelatedNotes = async () => {
+export const handleRelatedNotes = async () => {
   const blinko = RootStore.Get(BlinkoStore);
   const dialog = RootStore.Get(DialogStore);
   const toast = RootStore.Get(ToastPlugin);
@@ -374,7 +374,7 @@ const handleRelatedNotes = async () => {
   }
 };
 
-const handleComment = () => {
+export const handleComment = () => {
   const blinko = RootStore.Get(BlinkoStore)
   if (blinko.curSelectedNote?.id) {
     ShowCommentDialog(blinko.curSelectedNote.id)

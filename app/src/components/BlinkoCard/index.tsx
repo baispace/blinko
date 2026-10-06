@@ -7,7 +7,7 @@ import { Note, NoteType } from '@shared/lib/types';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
 import { helper } from "@/lib/helper";
@@ -17,7 +17,7 @@ import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { AvatarAccount, SimpleCommentList } from "./commentButton";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from "@/store/plugin/pluginRender";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SwipeableCard } from "./SwipeableCard";
 import { api } from "@/lib/trpc";
 import { FullscreenEditor } from "./FullscreenEditor";
@@ -44,17 +44,41 @@ interface BlinkoCardProps {
   glassEffect?: boolean;
   withoutHoverAnimation?: boolean;
   withoutBoxShadow?: boolean;
+  /** Detail route: always uses the full labelled action menu, even for a
+      compact blinko (otherwise opening a blinko full-screen still shows the
+      Weibo-style compact bar). */
+  isDetailPage?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutBoxShadow = false, withoutHoverAnimation = false, className, defaultExpanded = false }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutBoxShadow = false, withoutHoverAnimation = false, className, defaultExpanded = false, isDetailPage = false }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [isFullscreenEditorOpen, setIsFullscreenEditorOpen] = useState(false);
 
   // Set isExpand flag to prevent drag when fullscreen editor is open for this note
   blinkoItem.isExpand = blinko.fullscreenEditorNoteId === blinkoItem.id;
+
+  /**
+   * 长文（isBlog）从列表点进来要走 FullscreenEditor。
+   * 但 FullscreenEditor 是挂在本组件里的，handleClick setIsFullscreenEditorOpen(true)
+   * 紧跟着 navigate(`/detail?id=...`) 时，list 卡片会被卸载，新 detail 卡片 mounted
+   * 后 useState 默认值把 FullscreenEditor 重置成关闭。
+   *
+   * 修法：list 卡片只把信号写到 store（fullscreenEditorNoteId），
+   * navigate 到 detail 后 detail 卡片接管、用 effect 把 FullscreenEditor 开起来。
+   * 用户在 detail 里点 × 时 handleClose 已经会把 store 清成 null，避免下次进入
+   * 自动重开。
+   */
+  useEffect(() => {
+    if (isDetailPage
+        && blinko.fullscreenEditorNoteId === blinkoItem.id
+        && !isFullscreenEditorOpen) {
+      setIsFullscreenEditorOpen(true);
+    }
+  }, [isDetailPage, blinko.fullscreenEditorNoteId, blinkoItem.id, isFullscreenEditorOpen]);
 
   // Three-tier card model (per user threshold config):
   //   normal card  < cardFoldLength (300)
@@ -88,9 +112,24 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const handleClick = () => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
-    } else if (blinkoItem.isBlog && !isShareMode) {
-      setIsFullscreenEditorOpen(true);
-      blinko.fullscreenEditorNoteId = blinkoItem.id!;
+      return;
+    }
+    if (isShareMode) return;
+    // Long article cards (isBlog) want the fullscreen editor on top of the
+    // detail page (so the body stays full-width instead of dropping into the
+    // regular card layout). For everything else, navigate to the shareable
+    // `/detail` URL so the address bar always carries `?id=`. Detail-page
+    // renders already show the note full-bleed, so they no-op here — clicking
+    // inside the editor stays inside the editor.
+    if (blinkoItem.id == null) return;
+    if (blinkoItem.isBlog) {
+      // 不在这里 setIsFullscreenEditorOpen(true)：list 卡片会随 navigate 一起被卸载，
+      // FullscreenEditor 跟着被销毁。改用 store 信号让 detail 页里的 BlinkoCard
+      // 在 mounted 后接手（见上方 useEffect）。
+      blinko.fullscreenEditorNoteId = blinkoItem.id;
+    }
+    if (!isDetailPage) {
+      navigate(`/detail?id=${blinkoItem.id}`);
     }
   };
 
@@ -188,7 +227,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     isExpanded={defaultExpanded}
                     account={account}
                     hideTime={isCompactBlinko}
-                    compactActions={isCompactBlinko}
+                    compactActions={isCompactBlinko && !isDetailPage}
+                    isDetailPage={isDetailPage}
                   />
                 )}
 
@@ -198,7 +238,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                       [tags | time]     ← below the title */}
                 {blinkoItem.isBlog && (
                   <>
-                    <BlogCardTopRow blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                    <BlogCardTopRow blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isDetailPage={isDetailPage} />
                     <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
                     <BlogCardBottomRow blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
                   </>

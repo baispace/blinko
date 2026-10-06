@@ -15,6 +15,7 @@ import type { Editor } from "@tiptap/core";
 import { PageWidthStore, PAGE_WIDTH_PAD_CLASS } from "@/store/pageWidthStore";
 import { CardActionMenu } from './cardActionMenu';
 import { TableOfContents } from '@/components/Common/TableOfContents';
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
@@ -27,6 +28,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   const blinko = RootStore.Get(BlinkoStore);
   const pageWidth = RootStore.Get(PageWidthStore);
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [viewMode, setViewMode] = useState<string>('wysiwyg');
   /** 已存在的笔记（有 id、已落库）默认直接进编辑态；未落库的临时内容仍先给阅读态 */
   const isExistingNote = !!blinkoItem.id;
@@ -44,6 +47,19 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
 
   // Clean up fullscreen editor state when closing
   const handleClose = () => {
+    // 用户从 list / 详情 / 其他页进来时，希望 ← 是「返回上一页」——
+    // 老逻辑只关 FullscreenEditor，保留在 /detail 路由上，相当于卡在中间。
+    // 现在：
+    //   - 如果是 push 进来的（location.key !== 'default'，history 里还有上一页）
+    //     就 back() 回 list / 上一个来源
+    //   - 如果是直访 detail 页（location.key === 'default'，没有上一页），
+    //     back() 会跳出站点，回 / 走 HomeRedirect 兜底
+    const hasHistory = typeof window !== 'undefined' && window.history.length > 1;
+    if (hasHistory && location.key !== 'default') {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
     blinko.fullscreenEditorNoteId = null;
     // 回到「打开即编辑」的默认态，而不是写死 preview，否则下一条笔记会继承上一条的阅读态
     setEditorMode(defaultEditorMode);

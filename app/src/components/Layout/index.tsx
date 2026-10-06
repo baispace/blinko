@@ -26,7 +26,7 @@ import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
+export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-lg !transition-all';
 
 export const getFixedHeaderBackground = () => {
   if (document?.documentElement?.classList?.contains('dark')) {

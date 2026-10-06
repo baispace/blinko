@@ -296,9 +296,12 @@ export class UserStore implements Store {
         lightElement.style.setProperty('--tag', config.themeColor)
       }
     } else {
+      // No custom theme colour configured — fall back to the brand blue defined
+      // in globals.css. These inline writes are what actually win over the
+      // stylesheet, so they must stay in sync with it.
       if (darkElement) {
         //@ts-ignore
-        darkElement.style.setProperty('--primary', '#f9f9f9')
+        darkElement.style.setProperty('--primary', '#4d8bff')
         //@ts-ignore
         darkElement.style.setProperty('--primary-foreground', '#000000')
         //@ts-ignore
@@ -306,7 +309,7 @@ export class UserStore implements Store {
       }
       if (lightElement) {
         //@ts-ignore
-        lightElement.style.setProperty('--primary', '#000000')
+        lightElement.style.setProperty('--primary', '#2f6feb')
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', 'hsl(210 40% 98%)')
         //@ts-ignore

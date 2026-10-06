@@ -109,6 +109,29 @@ body {
   text-decoration: none !important;
 }
 
+/* 正文/编辑器里的行内标签（flomo 式：只是带色的文字，不加 chip 底色）。
+   编辑器由 HashtagHighlight 的 Decoration 打上，阅读侧由 MarkdownRender 渲染成
+   <a class="blinko-hashtag">，两处共用这条规则。 */
+.blinko-hashtag {
+  color: var(--tag) !important;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.blinko-hashtag:hover {
+  text-decoration: underline;
+}
+
+/* 分享页等无检索能力的场景：只保留颜色，不可点 */
+.blinko-hashtag.is-static {
+  cursor: default;
+}
+
+.blinko-hashtag.is-static:hover {
+  text-decoration: none;
+}
+
 .blinko-reference {
   border: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
   background-color: color-mix(in srgb, var(--primary) 10%, transparent);
@@ -207,7 +230,7 @@ body {
     --border: #E7E7E5;
     --input: hsl(214.3 31.8% 91.4%);
 
-    --primary: black;
+    --primary: #2f6feb;
     --primary-foreground: hsl(210 40% 98%);
 
     --secondary: hsl(253, 53%, 59%);
@@ -229,7 +252,7 @@ body {
     --md-editor-text: hsl(222.2 47.4% 11.2%);
     --md-editor-separator: #bcbcbe;
     --md-editor-border: #e5e7eb;
-    --shadow: 1px 1px 7px 3px #b1b1b142;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.06);
   }
 
   .dark {
@@ -260,7 +283,7 @@ body {
     --border: #0b0b0c;
     --input: hsl(216 34% 17%);
 
-    --primary: #f9f9f9;
+    --primary: #4d8bff;
     --primary-foreground: hsl(0, 0%, 0%);
 
     --secondary: hsl(253, 53%, 59%);
@@ -282,7 +305,7 @@ body {
     --md-editor-text: hsl(210 40% 98%);
     --md-editor-separator: #4b4b4d;
     --md-editor-border: #27272a;
-    --shadow: 0 0 1px 1px #303030;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.5);
   }
 }
 

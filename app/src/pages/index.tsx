@@ -159,7 +159,35 @@ const Home = observer(() => {
       });
   }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
 
-  // 「已完成」只显示历史完成（updatedAt 非今天）
+  const visibleTodayList = useMemo(
+    () => todayList.filter((todo: any) => !todo.metadata?.priorityImportant),
+    [todayList]
+  );
+  const visibleUpcomingList = useMemo(
+    () => upcomingList.filter((todo: any) => !todo.metadata?.priorityImportant),
+    [upcomingList]
+  );
+
+  // 「重要」是跨今天/接下来的一个正交视图：只要打了「重要」旗子就进来，
+  // 不论截止日。数据早已存在（metadata.priorityImportant），只是没有露出来。
+  // 同时从 todayList / upcomingList 里排除，避免同一条被渲染两次。
+  const importantList = useMemo(() => {
+    if (!isTodoView) return [];
+    const seen = new Set<number>();
+    return [...todayList, ...upcomingList]
+      .filter((todo: any) => Boolean(todo.metadata?.priorityImportant))
+      .filter((todo: any) => (seen.has(todo.id) ? false : seen.add(todo.id)))
+      .sort((a: any, b: any) => {
+        // 紧急且重要排最前，其次按截止日
+        const ua = a.metadata?.priorityUrgent ? 0 : 1;
+        const ub = b.metadata?.priorityUrgent ? 0 : 1;
+        if (ua !== ub) return ua - ub;
+        const da = a.metadata?.expireAt ? dayjs(a.metadata.expireAt).valueOf() : Infinity;
+        const db = b.metadata?.expireAt ? dayjs(b.metadata.expireAt).valueOf() : Infinity;
+        return da - db;
+      });
+  }, [isTodoView, todayList, upcomingList]);
+
   const doneList = useMemo(
     () => (blinko.doneTodoList.value ?? []).filter((n: any) => !isCompletedToday(n)),
     [blinko.doneTodoList.value]
@@ -261,6 +289,22 @@ const Home = observer(() => {
 
               {activeTab === 'today' && (
                 <>
+                  {/* Section: 重要（跨今天/接下来，带旗子的优先看） */}
+                  {importantList.length > 0 && (
+                    <section>
+                      <header className="flex items-center justify-between gap-3 px-1 pb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon icon="solar:bookmark-bold" width={18} height={18} className="text-red-500 shrink-0" />
+                          <span className="text-[15px] font-semibold text-foreground shrink-0">{t('important-list')}</span>
+                          <span className="text-[12px] text-default-400 truncate">{t('important-list-subtitle')}</span>
+                        </div>
+                      </header>
+                      <div className="flex flex-col gap-3">
+                        {importantList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
+                      </div>
+                    </section>
+                  )}
+
                   {/* Section: 今天的清单 */}
                   <section>
                     <header className="flex items-center justify-between gap-3 px-1 pb-2">
@@ -271,16 +315,16 @@ const Home = observer(() => {
                       </div>
                     </header>
                     <div className="flex flex-col gap-3">
-                      {todayList.length === 0 ? (
+                      {visibleTodayList.length === 0 ? (
                         <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
                       ) : (
-                        todayList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+                        visibleTodayList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
                       )}
                     </div>
                   </section>
 
                   {/* Section: 接下来几天 */}
-                  {upcomingList.length > 0 && (
+                  {visibleUpcomingList.length > 0 && (
                     <section>
                       <header className="flex items-center justify-between gap-3 px-1 pb-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -293,11 +337,11 @@ const Home = observer(() => {
                           onClick={() => setActiveTab('upcoming')}
                           className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600 hover:text-foreground hover:border-primary/50 transition-colors"
                         >
-                          {t('all')} {upcomingList.length} {t('items-suffix')}
+                          {t('all')} {visibleUpcomingList.length} {t('items-suffix')}
                         </button>
                       </header>
                       <div className="flex flex-col gap-3">
-                        {upcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
+                        {visibleUpcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
                       </div>
                     </section>
                   )}

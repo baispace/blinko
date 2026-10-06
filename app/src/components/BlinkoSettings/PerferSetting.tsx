@@ -134,7 +134,7 @@ export const PerferSetting = observer(() => {
             const darkElement = document.querySelector('.dark')
             if (darkElement) {
               //@ts-ignore
-              darkElement.style.setProperty('--primary', background || "#f9f9f9")
+              darkElement.style.setProperty('--primary', background || "#4d8bff")
               //@ts-ignore
               darkElement.style.setProperty('--primary-foreground', foreground || "#000000")
             }
@@ -142,7 +142,7 @@ export const PerferSetting = observer(() => {
             const lightElement = document.querySelector('.light')
             if (lightElement) {
               //@ts-ignore
-              lightElement.style.setProperty('--primary', background || "black")
+              lightElement.style.setProperty('--primary', background || "#2f6feb")
               //@ts-ignore
               lightElement.style.setProperty('--primary-foreground', foreground || "hsl(210 40% 98%)")
             }

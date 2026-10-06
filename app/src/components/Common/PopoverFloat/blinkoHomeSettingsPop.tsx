@@ -61,6 +61,15 @@ const SORT_OPTIONS = [
 
 type SortKey = typeof SORT_OPTIONS[number]['key'];
 
+// continuous = 瀑布流（默认），byDay = 按天时间线分组。
+// 与 pages/index.tsx:351 的分支判断保持一致。
+const LIST_STYLE_OPTIONS = [
+  { key: 'continuous', label: 'masonry' },
+  { key: 'byDay', label: 'by-day' },
+] as const;
+
+type ListStyleKey = typeof LIST_STYLE_OPTIONS[number]['key'];
+
 // 视图设置按页面作用域读写（pageViewSettings[scope]），页面间互不影响
 const updateScopedConfig = (blinko: BlinkoStore, scope: PageViewScope, key: string, value: any) =>
   updatePageViewSetting(blinko, scope, key as any, value, async (k, v) => {
@@ -127,6 +136,9 @@ export const BlinkoHomeSettingsPop = observer(() => {
   // 列数取大屏档作为单一真相源
   const noteListColumnCount = Number(getPageViewSetting(blinko, scope, 'largeDeviceCardColumns') ?? 1);
   const noteListSortBy = ((getPageViewSetting(blinko, scope, 'noteListSortBy') as SortKey | undefined) ?? 'createdAt');
+  // 「按周」已从 UI 移除；历史配置里的 byWeek 归一到 byDay，避免切换器无选中项
+  const rawListStyle = getPageViewSetting(blinko, scope, 'noteListStyle') as string | undefined;
+  const noteListStyle: ListStyleKey = rawListStyle === 'byWeek' ? 'byDay' : ((rawListStyle as ListStyleKey | undefined) ?? 'continuous');
   const scopeLabel = { blinko: t('blinko'), notes: t('notes'), all: t('all'), todo: t('todo'), archived: t('archived'), trash: t('trash') }[scope] ?? scope;
 
   // 把当前宽度值归一到 4 档（兼容历史 xs/sm/md/lg 值）；0 = 全宽
@@ -227,6 +239,19 @@ export const BlinkoHomeSettingsPop = observer(() => {
               ]}
               classNames={{ track: '!bg-default-300/50', filler: '!bg-[#fbe573]', thumb: '!bg-[#fbe573] !shadow-small' }}
             />
+          </section>
+
+          {/* 列表样式：按天 / 按周时间线，或瀑布流 */}
+          <section className="flex flex-col gap-2">
+            <span className="text-sm text-default-400">{t('list-style')}</span>
+            <SegmentedButtons
+              value={noteListStyle}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListStyle', v)}
+              options={LIST_STYLE_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
+            />
+            {noteListStyle !== 'continuous' && (
+              <p className="mt-0.5 text-[11px] text-default-400">{t('list-style-timeline-desc')}</p>
+            )}
           </section>
 
           {/* 排序方式 */}

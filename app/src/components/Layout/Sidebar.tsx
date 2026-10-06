@@ -12,10 +12,18 @@ import { useEffect, useState } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useLocation, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { eventBus } from '@/lib/event';
+import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 
 interface SidebarProps {
   onItemClick?: () => void;
 }
+
+/** Sidebar sections, in display order. Keys match `BaseStore.routerList[].group`. */
+const NAV_GROUPS = [
+  { key: 'record', label: 'group-record' },
+  { key: 'tidy', label: 'group-tidy' },
+  { key: 'tool', label: 'group-tool' },
+] as const;
 
 export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
@@ -80,8 +88,10 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
               variant="light"
               className="ml-auto"
               onPress={() => {
-                navigate('/settings')
-                eventBus.emit('close-sidebar')
+                // Settings open as an overlay so the current page is not lost;
+                // the /settings route still exists for deep links.
+                ShowSettingsDialog();
+                eventBus.emit('close-sidebar');
               }}
             >
               <Icon icon="hugeicons:settings-01" width="20" height="20" />
@@ -90,32 +100,43 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         </div>
       </div>
 
-      <ScrollShadow className="-mr-[16px] mt-[-5px] h-full max-h-full pr-6 hide-scrollbar">
-        <div className={`flex flex-col gap-1 mt-4 font-semibold ${base.isSidebarCollapsed ? 'items-center gap-4' : ''}`}>
-          {base.routerList
-            .filter((i) => !i.hiddenSidebar)
-            .map((i) => (
-              <Link
-                key={i.title}
-                to={i.href}
-                onClick={() => {
-                  base.currentRouter = i;
-                  onItemClick?.();
-                }}
-                className={`flex items-center gap-1 group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!bg-primary  !text-primary-foreground' : ''}`}
-              >
-                <Icon className={`${base.isSidebarCollapsed ? 'mx-auto' : ''}`} icon={i.icon} width="20" height="20" />
-                {!base.isSidebarCollapsed && <span className="!transition-all">{t(i.title)}</span>}
-              </Link>
-            ))}
+      <ScrollShadow className="-mr-[16px] mt-3 h-full max-h-full pr-6 hide-scrollbar">
+        <div className={`flex flex-col font-semibold ${base.isSidebarCollapsed ? 'items-center gap-4' : ''}`}>
+          {/* Items are grouped by semantic role — record (content types),
+              tidy (content states), tool (standalone pages) — instead of one
+              flat list that mixed all three. Order follows the routerList. */}
+          {NAV_GROUPS.map((group) => {
+            const items = base.routerList.filter((i) => i.group === group.key && !i.hiddenSidebar);
+            if (items.length === 0) return null;
+            return (
+              <div key={group.key} className="mt-5 first:mt-0">
+                {!base.isSidebarCollapsed && (
+                  <div className="px-2 pb-1.5 text-[11px] font-semibold tracking-wide text-default-400">
+                    {t(group.label)}
+                  </div>
+                )}
+                <div className="flex flex-col gap-1">
+                  {items.map((i) => (
+                    <Link
+                      key={i.title}
+                      to={i.href}
+                      onClick={() => {
+                        base.currentRouter = i;
+                        onItemClick?.();
+                      }}
+                      className={`flex items-center gap-1 group ${SideBarItem} ${base.isSideBarActive(routerInfo, i) ? '!bg-primary/10 !text-primary font-medium' : ''}`}
+                    >
+                      <Icon className={`${base.isSidebarCollapsed ? 'mx-auto' : ''}`} icon={i.icon} width="20" height="20" />
+                      {!base.isSidebarCollapsed && <span className="!transition-all">{t(i.title)}</span>}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
           {!base.isSidebarCollapsed && blinkoStore.tagList.value?.listTags.length != 0 && blinkoStore.tagList.value?.listTags && <TagListPanel />}
         </div>
       </ScrollShadow>
-
-      {/* ***** background *****  */}
-      <div className="halation absolute inset-0 h-[250px] w-[250px] overflow-hidden blur-3xl z-[0] pointer-events-none">
-        <div className="w-full h-[100%] bg-[#ffc65c] opacity-20" style={{ clipPath: 'circle(35% at 50% 50%)' }} />
-      </div>
     </div>
   );
 });

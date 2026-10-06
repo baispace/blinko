@@ -192,7 +192,7 @@ export const CardActionMenu = observer(({
           >
             <div className="flex items-center gap-2">
               <Icon
-                icon={presentationMode ? 'mdi:arrow-collapse' : 'mdi:play-box-outline'}
+                icon={presentationMode ? 'mdi:close' : 'mdi:play'}
                 width="20"
                 height="20"
               />

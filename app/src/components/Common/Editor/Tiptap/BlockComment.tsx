@@ -34,6 +34,13 @@ export const BlockComment = observer(({ editor }: { editor: Editor }) => {
       const { selection } = editor.state;
       const { $from } = selection;
 
+      // depth 为 0 表示选区直接在文档顶层（例如 AllSelection / 整个文档的
+      // NodeSelection），此时 $from.before(0) 会抛
+      // "There is no position before the top-level node"。拖拽文本进编辑器时
+      // ProseMirror 的 handleDrop 就会走到这里，异常冒泡后会被
+      // react-beautiful-dnd 的全局监听捕获成「拖拽中出错」，控制台一片红。
+      if ($from.depth === 0) return;
+
       // Get the current block's position
       const blockPos = $from.before($from.depth);
       const blockId = `block-${blockPos}`;

@@ -861,17 +861,26 @@ export const noteRouter = router({
       if (!originalNote) {
         throw new Error('Note not found or you do not have access');
       }
-      const agent = await AiModelFactory.RelatedNotesAgent();
-      const extractionPrompt = `
+      // 相关笔记依赖向量检索，而向量检索必须有一个真正可用的 embedding 模型。
+      // 不少 OpenAI 兼容网关只提供 chat 模型（例如把 qwen3.6-flash 标成
+      // embedding: true），调 /embeddings 会直接被网关返回 400。以前这里是裸抛，
+      // 前端只能拿到 500 "Bad Request"。这里改成软失败：能力缺失或调用失败都
+      // 返回空数组，让用户看到「没有找到相关笔记」而不是一个看不懂的报错。
+      try {
+        const agent = await AiModelFactory.RelatedNotesAgent();
+        const extractionPrompt = `
         Please extract keywords from the following note content:
         
-        ${originalNote.content.substring(0, 2000)}
+        ${originalNote.content?.substring(0, 2000) ?? ''}
       `;
-      const keywordsResult = await agent.generate(extractionPrompt);
-      const keywords = keywordsResult.text.trim();
-      console.log("Extracted keywords:", keywords);
-      const { notes } = await AiModelFactory.queryVector(keywords, Number(ctx.id), 10);
-      return notes;
+        const keywordsResult = await agent.generate(extractionPrompt);
+        const keywords = keywordsResult.text.trim();
+        const { notes } = await AiModelFactory.queryVector(keywords, Number(ctx.id), 10);
+        return notes ?? [];
+      } catch (error) {
+        console.error('[relatedNotes] failed, falling back to empty result:', error);
+        return [];
+      }
     }),
   reviewNote: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/review', summary: 'Review a note', protect: true, tags: ['Note'] } })

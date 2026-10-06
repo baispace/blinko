@@ -12,7 +12,7 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
   <motion.div
     onClick={onClose}
     className={`cursor-pointer absolute
-    md:top-[-12px] md:right-[-12px] top-[-20px] right-[calc(50%-17.5px)] bg-background border-2 border-border z-[2002] text-foreground p-2 rounded-full
+    md:top-[-12px] md:right-[-12px] top-[-20px] right-[calc(50%-17.5px)] bg-background border-2 border-border z-[10062] text-foreground p-2 rounded-full
     !w-[35px] !h-[35px] flex items-center justify-center shadow-lg`}
     whileTap={{
       scale: 0.85,
@@ -68,9 +68,12 @@ const Dialog = observer(() => {
     }
   };
 
+  // 层级必须高于全屏编辑器（z-[9999]）与笔记操作菜单（z-[10050]）：
+  // 从全屏编辑器里点「分享 / 发布 / 编辑时间 / 历史记录 / 关联笔记」都会开弹窗，
+  // 若低于 9999 弹窗会被整块盖住，表现为点了没反应。
   const containerClass = isPc
-    ? "fixed inset-0 z-[2001] flex justify-center items-center pointer-events-none max-w-screen-2xl mx-auto left-0 right-0"
-    : "fixed bottom-0 left-0 right-0 z-[2001] flex flex-col items-center pointer-events-none";
+    ? "fixed inset-0 z-[10061] flex justify-center items-center pointer-events-none max-w-screen-2xl mx-auto left-0 right-0"
+    : "fixed bottom-0 left-0 right-0 z-[10061] flex flex-col items-center pointer-events-none";
 
   const modalSizeClass = (() => {
     const baseClass = 'mx-auto ';
@@ -104,7 +107,7 @@ const Dialog = observer(() => {
     return (
       <>
         <div
-          className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[10060] bg-black/50 backdrop-blur-sm"
           onClick={() => {
             if (isDismissable) {
               modal.close()
@@ -159,7 +162,7 @@ const Dialog = observer(() => {
   return (
     <>
       <Modal
-        style={{ zIndex: 2000 }}
+        style={{ zIndex: 10060 }}
         onClose={() => {
           modal.close();
         }}
@@ -179,7 +182,18 @@ const Dialog = observer(() => {
         }}
         hideCloseButton={(size === 'full' || onlyContent) ? true : false}
         className={`${className} ${transparent ? 'bg-transparent' : ''}`}
-        classNames={classNames}
+        /**
+         * `style={{ zIndex }}` 只落到 ModalContent 上，而 HeroUI 真正盖住全屏的
+         * 是外层 wrapper（`fixed inset-0 z-50`）与 backdrop —— 只抬内层的话
+         * wrapper 仍是 z-50，弹窗被 z-[9999] 的全屏编辑器整块压住，表现为
+         * 「点了菜单没反应」。这里用 !important 变体，避免和主题里的 z-50
+         * 在生成的 CSS 里拼先后顺序。
+         */
+        classNames={{
+          ...classNames,
+          backdrop: `!z-[10059] ${classNames?.backdrop ?? ''}`,
+          wrapper: `!z-[10060] ${classNames?.wrapper ?? ''}`,
+        }}
         isDismissable={isDismissable}
         motionProps={{
           variants: {

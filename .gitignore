@@ -41,5 +41,15 @@ server/public
 # local runtime artifacts
 /db/
 /data/
+/prisma/dev.db
+/prisma/dev.db-journal
 .workbuddy/tmp/
 .workbuddy/outputs/
+
+# playwright-cli session cache (DOM snapshots + console logs)
+.playwright-cli/
+# ad-hoc root snapshots playwright-cli drops in workspace root
+# (e.g. d1.yml, g1.yml, signin.yml, m.yml)
+/[a-z][0-9]*.yml
+/[a-z]*.yml
+!/docker-compose*.yml

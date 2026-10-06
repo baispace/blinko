@@ -7,7 +7,7 @@ import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PluginApiStore } from '@/store/plugin/pluginApiStore';
 import { PageWidthStore, PAGE_WIDTH_ORDER, type PageWidthMode } from '@/store/pageWidthStore';
-import { Note } from '@shared/lib/types';
+import { Note, NoteType } from '@shared/lib/types';
 import {
   handleEdit,
   handleMultiSelect,
@@ -29,11 +29,7 @@ import {
   CopyItem,
   EditTimeItem,
   HistoryItem,
-  TopItem,
-  ArchivedItem,
-  ConvertItem,
   PublicItem,
-  PublishItem,
   AITagItem,
   RelatedNotesItem,
   TrashItem,
@@ -100,17 +96,20 @@ export const CardActionMenu = observer(({
   /** 全屏编辑器才会额外挂「视图」组；列表卡片保持原样，避免和分组里的分享重复 */
   const showViewItems = showPageWidth || !!onToggleEditorMode;
 
-  /** Every handler reads `blinko.curSelectedNote`, so refresh it right before. */
+  /**
+   * Every handler reads `blinko.curSelectedNote`, so refresh it right before.
+   * We intentionally do NOT read `blinko.curSelectedNote` while rendering the
+   * menu labels: it is a MobX observable that changes during open/click and
+   * would re-render this component (and the HeroUI collection) while the user
+   * is hovering, causing flicker and lost presses.
+   */
   const withNote = (fn: () => void) => () => {
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
     fn();
   };
 
   return (
-    <Dropdown
-      placement="bottom-end"
-      onOpenChange={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); }}
-    >
+    <Dropdown placement="bottom-end">
       <DropdownTrigger>
         <div className="flex items-center cursor-pointer !transition-colors text-desc hover:text-primary hover:scale-110">
           <Icon icon="fluent:more-vertical-16-regular" width="18" height="18" />
@@ -254,24 +253,40 @@ export const CardActionMenu = observer(({
         {/* 组织 */}
         <DropdownItem
           key="top"
-          textValue={blinko.curSelectedNote?.isTop ? t('cancel-top') : t('top')}
+          textValue={blinkoItem.isTop ? t('cancel-top') : t('top')}
           onClick={withNote(handleTop)}
         >
-          <TopItem />
+          <div className="flex items-start gap-2">
+            <Icon icon="lets-icons:pin" width="20" height="20" />
+            <div>{blinkoItem.isTop ? t('cancel-top') : t('top')}</div>
+          </div>
         </DropdownItem>
         <DropdownItem
           key="archived"
-          textValue={blinko.curSelectedNote?.isArchived || blinko.curSelectedNote?.isRecycle ? t('recovery') : t('archive')}
+          textValue={blinkoItem.isArchived || blinkoItem.isRecycle ? t('recovery') : t('archive')}
           onClick={withNote(handleArchived)}
         >
-          <ArchivedItem />
+          <div className="flex items-start gap-2">
+            <Icon icon="eva:archive-outline" width="20" height="20" />
+            <div>{blinkoItem.isArchived || blinkoItem.isRecycle ? t('recovery') : t('archive')}</div>
+          </div>
         </DropdownItem>
         <DropdownItem
           key="convert"
-          textValue={`${t('convert-to')} ${blinko.curSelectedNote?.type == 1 ? t('blinko') : t('note')}`}
+          textValue={`${t('convert-to')} ${blinkoItem.type == NoteType.NOTE ? t('blinko') : t('note')}`}
           onClick={withNote(ConvertItemFunction)}
         >
-          <ConvertItem />
+          <div className="flex items-start gap-2">
+            <Icon icon="ri:exchange-2-line" width="20" height="20" />
+            <div>
+              {t('convert-to')}{' '}
+              {blinkoItem.type == NoteType.NOTE ? (
+                <span className="text-yellow-500">{t('blinko')}</span>
+              ) : (
+                <span className="text-blue-500">{t('note')}</span>
+              )}
+            </div>
+          </div>
         </DropdownItem>
 
         {!isRecycle && (
@@ -288,10 +303,13 @@ export const CardActionMenu = observer(({
         {!isRecycle && (
           <DropdownItem
             key="publish"
-            textValue={blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}
+            textValue={blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}
             onClick={withNote(handlePublish)}
           >
-            <PublishItem />
+            <div className="flex items-start gap-2">
+              <Icon icon="tabler:world" width="20" height="20" />
+              <div>{blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+            </div>
           </DropdownItem>
         )}
 

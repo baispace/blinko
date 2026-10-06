@@ -47,6 +47,10 @@ export class ToastPlugin implements Store {
 
   provider = () => (
     <Toaster
+      // react-hot-toast 容器默认 z-index 是 9999，和全屏编辑器同级：全屏编辑器
+      // 后挂载会盖住它，于是「更新成功 / 操作成功」等提示全被遮住，
+      // 明明生效了却看起来像点了没反应。这里抬到弹窗（10060）之上。
+      containerStyle={{ zIndex: 10080 }}
       toastOptions={{
         className: '!bg-[#fff] !rounded-2xl !text-[#000] dark:!bg-[#131218] dark:!text-[#fff] !shadow-md',
       }}

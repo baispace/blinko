@@ -31,6 +31,29 @@ const Detail = observer(() => {
     setIsTocOpen(false);
   }, [searchParams.get('id')]);
 
+  /**
+   * 直访 detail?id=X 时把 fullscreenEditorNoteId 设上，让 BlinkoCard 内的
+   * FullscreenEditor 接手开起来 —— 否则 detail 页只渲染不可编辑的卡片预览，
+   * 看着像"中间页"（用户从 list 点普通 NOTE 卡片也是同一路径：handleClick 设
+   * 同样的 store 信号）。
+   *
+   * detail 页 unmount 时清回 null，避免影响后续从 list 点其他笔记的判断。
+   */
+  const noteId = searchParams.get('id');
+  useEffect(() => {
+    if (noteId) {
+      const id = Number(noteId);
+      if (Number.isFinite(id)) {
+        blinko.fullscreenEditorNoteId = id;
+      }
+    }
+    return () => {
+      if (blinko.fullscreenEditorNoteId === Number(noteId)) {
+        blinko.fullscreenEditorNoteId = null;
+      }
+    };
+  }, [noteId]);
+
   const note = blinko.noteDetail.value;
 
   return (

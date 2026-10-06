@@ -21,9 +21,11 @@ interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
   isOpen: boolean;
   onClose: () => void;
+  /** Detail-page context: hide 编辑/复制内容/多选/全部选择 等 list-only actions */
+  isDetailPage?: boolean;
 }
 
-export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: FullscreenEditorProps) => {
+export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetailPage = false }: FullscreenEditorProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pageWidth = RootStore.Get(PageWidthStore);
@@ -336,6 +338,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                   }}
                   presentationMode={presentationMode}
                   onTogglePresentation={() => setPresentationMode((v) => !v)}
+                  isDetailPage={isDetailPage}
                 />
               </div>
 
@@ -404,6 +407,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                   }}
                   presentationMode={presentationMode}
                   onTogglePresentation={() => setPresentationMode((v) => !v)}
+                  isDetailPage={isDetailPage}
                 />
                 {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
                     否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}

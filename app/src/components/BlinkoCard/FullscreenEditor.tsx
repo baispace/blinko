@@ -10,10 +10,11 @@ import { eventBus } from "@/lib/event";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from "@/lib/lodash";
 import { BlinkoItem } from "./index";
-import { PageWidthButton } from "@/components/Common/PageWidthButton";
 import { useTranslation } from "react-i18next";
 import type { Editor } from "@tiptap/core";
 import { PageWidthStore, PAGE_WIDTH_PAD_CLASS } from "@/store/pageWidthStore";
+import { CardActionMenu } from './cardActionMenu';
+import { TableOfContents } from '@/components/Common/TableOfContents';
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
@@ -36,6 +37,8 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   const tiptapRef = useRef<Editor | null>(null);
   /** 远端笔记内容就绪后才挂载编辑器，避免先闪一屏旧内容 */
   const [dataReady, setDataReady] = useState(false);
+  /** 大纲浮层开关（PC 顶栏 ☰） */
+  const [isTocOpen, setIsTocOpen] = useState(false);
 
   const handleEditorReady = (editor: Editor) => { tiptapRef.current = editor; };
 
@@ -88,6 +91,13 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
 
   // Switch back to preview mode
   const handleSwitchToPreview = () => {
+    // 同步 setEditable 会让 view reconfigure 跟 BubbleMenu tippy 同帧跑，
+    // 触发 insertBefore / removeChild 崩溃 —— 推到 microtask 让 React commit
+    // 先落地，浮层先消化 prop 变化，下个 microtask 再切 editor.isEditable。
+    const ed = tiptapRef.current
+    if (ed && ed.isEditable) {
+      queueMicrotask(() => ed.setEditable?.(false))
+    }
     setEditorMode('preview');
   };
   
@@ -240,50 +250,70 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
             e.stopPropagation();
           }}
         >
-          {/* Top header with back button and toolbar (PC only, sticky while scrolling) */}
+          {/* Top header with back button and toolbar (PC only, sticky while scrolling).
+              收纳后的形态：← 大纲 │ 标题 ……… [编辑器工具栏] │ ⋯
+              分享 / 页宽 / 预览切换 全部收进右侧 ⋯ 菜单，顶栏只留一个操作入口。 */}
           {isPc && (
-            <div className="sticky top-0 z-10 flex items-center justify-between py-4 flex-shrink-0 border-b border-border bg-background">
+            <div className="sticky top-0 z-10 flex items-center gap-3 py-3 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
               <Button
                 isIconOnly
                 variant="light"
                 size="sm"
                 onPress={handleClose}
-                className="text-foreground hover:bg-default-100"
+                className="text-foreground hover:bg-default-100 shrink-0"
               >
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
-              <div className="flex-1 flex justify-end ml-2 gap-2">
-                {editorMode === 'preview' ? (
-                  <Tooltip content={t('edit')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToEdit}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:edit" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <Tooltip content={t('preview')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToPreview}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:eye" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                )}
+
+              {/* 大纲入口：只在阅读态给。编辑态正文由 Tiptap 直接渲染，
+                  .markdown-body 不存在，大纲抽不到标题，按钮会变成死的。 */}
+              {editorMode === 'preview' && !!blinkoItem.content && (
+                <Tooltip content={t('table-of-contents')}>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    onPress={() => setIsTocOpen((v) => !v)}
+                    className={`shrink-0 ${isTocOpen ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-default-100'}`}
+                  >
+                    <Icon icon="mdi:format-list-bulleted" width={20} height={20} />
+                  </Button>
+                </Tooltip>
+              )}
+
+              {/* 标题面包屑：飞书式顶栏左侧，让用户始终知道自己在哪一篇 */}
+              <div className="text-[13.5px] text-default-600 truncate min-w-0 mr-auto">
+                {blinkoItem.title || t('note')}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
                 {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
                     否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
                 <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
-                {/* 页宽：默认 / 较宽 / 全宽 —— 飞书一样放在最右侧 */}
-                <PageWidthButton />
+
+                <span className="w-px h-5 bg-default-200 mx-0.5" />
+
+                {/* 唯一的笔记级操作入口：分享 / 页宽 / 编辑↔预览 + 全部分组操作 */}
+                <CardActionMenu
+                  blinkoItem={blinkoItem}
+                  showPageWidth
+                  editorMode={editorMode}
+                  onToggleEditorMode={() => {
+                    if (editorMode === 'preview') handleSwitchToEdit();
+                    else handleSwitchToPreview();
+                  }}
+                />
               </div>
+
+              {/* 挂在 sticky 栏内，跟着栏一起吸顶；浮层自管遮罩与关闭 */}
+              {isTocOpen && (
+                <TableOfContents
+                  content={blinkoItem.content}
+                  floating
+                  onClose={() => setIsTocOpen(false)}
+                  className="top-full left-1 mt-2"
+                />
+              )}
             </div>
           )}
 
@@ -326,32 +356,17 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               >
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
-              <div className="flex-1 flex justify-end ml-2 gap-2">
-                {editorMode === 'preview' ? (
-                  <Tooltip content={t('edit')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToEdit}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:edit" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <Tooltip content={t('preview')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToPreview}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:eye" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                )}
+              <div className="flex-1 flex justify-end items-center ml-2 gap-2">
+                {/* 与 PC 顶栏一致：只留一个 ⋯，预览切换收进菜单。
+                    移动端不传 showPageWidth —— 窄屏上页宽没有意义。 */}
+                <CardActionMenu
+                  blinkoItem={blinkoItem}
+                  editorMode={editorMode}
+                  onToggleEditorMode={() => {
+                    if (editorMode === 'preview') handleSwitchToEdit();
+                    else handleSwitchToPreview();
+                  }}
+                />
                 {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
                     否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
                 <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>

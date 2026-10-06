@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { helper } from '@/lib/helper';
 import { getNoteTagPaths } from './noteContent';
 import { NoteTime, PinButton, ShareButton } from './cardHeader';
+import { CardActionMenu } from './cardActionMenu';
 import { useIsIOS } from '@/lib/hooks';
 import { api } from '@/lib/trpc';
 import { PromiseCall } from '@/store/standard/PromiseState';
@@ -61,26 +62,6 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
   );
 };
 
-/** 博客卡片 footer 操作栏：与 compact 闪念卡一致（评论/分享/置顶/溢出菜单） */
-const BlogCardActions = ({ blinkoItem, blinko }: { blinkoItem: BlinkoItem; blinko: BlinkoStore }) => {
-  const isIOSDevice = useIsIOS();
-  return (
-    <div className="flex items-center gap-3 shrink-0">
-      {blinkoItem._count?.comments ? (
-        <CommentCount blinkoItem={blinkoItem} />
-      ) : (
-        <CommentButton blinkoItem={blinkoItem} alwaysShow />
-      )}
-      <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />
-      <PinButton blinkoItem={blinkoItem} blinko={blinko} />
-      <LeftCickMenu
-        className="cursor-pointer"
-        onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
-      />
-    </div>
-  );
-};
-
 /** 分享状态图标：从 CardHeader 挪来，博客卡片没有 header 行 */
 const ShareMetaIcons = ({ blinkoItem, iconSize = '16' }: { blinkoItem: Note; iconSize?: string }) => {
   const { t } = useTranslation();
@@ -100,35 +81,15 @@ const ShareMetaIcons = ({ blinkoItem, iconSize = '16' }: { blinkoItem: Note; ico
   );
 };
 
-/** 回收站按钮：博客卡片 footer 使用 */
-const TrashButton = ({ blinkoItem, blinko, iconSize = '16' }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; iconSize?: string }) => {
-  const { t } = useTranslation();
-  return (
-    <Tooltip content={t('trash')} delay={1000}>
-      <Icon
-        icon="mingcute:delete-2-line"
-        width={iconSize}
-        height={iconSize}
-        className={`cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
-            blinko.updateTicker++;
-          });
-        }}
-      />
-    </Tooltip>
-  );
-};
-
-/** 博客卡片 · 标题上方行：左=内容类型，右=操作栏（评论/分享/置顶/菜单/垃圾桶） */
-export const BlogCardTopRow = ({ blinkoItem, blinko, isShareMode }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; isShareMode?: boolean }) => {
+/** 博客卡片 · 标题上方行：左=内容类型，右=操作栏（分享 + 编辑 ▾ 菜单） */
+export const BlogCardTopRow = ({ blinkoItem, blinko, isShareMode, isDetailPage }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; isShareMode?: boolean; isDetailPage?: boolean }) => {
+  const isIOSDevice = useIsIOS();
   return (
     <div className="flex items-center justify-between mt-4 mb-2 gap-2">
       <ConvertTypeButton blinkoItem={blinkoItem} />
-      <div className="flex items-center gap-3 shrink-0">
-        <BlogCardActions blinkoItem={blinkoItem} blinko={blinko} />
-        {!isShareMode && <TrashButton blinkoItem={blinkoItem} blinko={blinko} />}
+      <div className="flex items-center gap-2 shrink-0">
+        {!isShareMode && <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />}
+        {!isShareMode && <CardActionMenu blinkoItem={blinkoItem} isDetailPage={!!isDetailPage} />}
       </div>
     </div>
   );

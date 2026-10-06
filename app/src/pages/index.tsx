@@ -45,31 +45,15 @@ const Home = observer(() => {
   const pageWidth = (getPageViewSetting(blinko, pageScope, 'maxHomePageWidth') as number | null | undefined) ?? blinko.config.value?.maxHomePageWidth;
   const hidePcEditor = getPageViewSetting(blinko, pageScope, 'hidePcEditor') ?? blinko.config.value?.hidePcEditor;
   const isTodoView = searchParams.get('path') === 'todo';
-  const isNotesView = searchParams.get('path') === 'notes';
-  const isArchivedView = searchParams.get('path') === 'archived';
-  const isTrashView = searchParams.get('path') === 'trash';
-  const isAllView = searchParams.get('path') === 'all';
   const [activeId, setActiveId] = useState<number | null>(null);
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<string>('today');
 
-  const currentListState = useMemo(() => {
-    if (isNotesView) {
-      return blinko.noteOnlyList;
-    } else if (isTodoView) {
-      return blinko.todoList;
-    } else if (isArchivedView) {
-      return blinko.archivedList;
-    } else if (isTrashView) {
-      return blinko.trashList;
-    } else if (isAllView) {
-      return blinko.noteList;
-    } else {
-      return blinko.blinkoList;
-    }
-  }, [isNotesView, isTodoView, isArchivedView, isTrashView, isAllView, blinko]);
+  // 当前视图真正渲染的列表。映射收敛到 store，筛选面板 / 批量选择共用同一份，
+  // 避免「改了筛选却刷了别的列表」。
+  const currentListState = blinko.getListByPath(searchParams.get('path'));
 
   // Use drag card hook only for non-todo views
   const { localNotes, sensors, setLocalNotes, handleDragStart, handleDragEnd, handleDragOver } = useDragCard({

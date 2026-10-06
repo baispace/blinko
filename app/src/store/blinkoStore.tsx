@@ -813,6 +813,29 @@ export class BlinkoStore implements Store {
     this.updateTicker++;
   }
 
+  /**
+   * `?path=` → 该视图实际渲染的列表。
+   * 列表页、筛选面板、批量选择三处共用这一份映射：之前筛选面板只刷 noteList，
+   * 而闪念/笔记/待办页渲染的是 blinkoList/noteOnlyList/todoList，
+   * 于是「改了筛选列表不动」——看起来像数据丢了。
+   */
+  getListByPath(path?: string | null) {
+    switch (path) {
+      case 'notes':
+        return this.noteOnlyList;
+      case 'todo':
+        return this.todoList;
+      case 'archived':
+        return this.archivedList;
+      case 'trash':
+        return this.trashList;
+      case 'all':
+        return this.noteList;
+      default:
+        return this.blinkoList;
+    }
+  }
+
   updateTagFilter(tagId: number, type?: number) {
     this.noteListFilterConfig.tagId = tagId;
     // 传入 type 时显式指定视图类型（如侧边栏「所有标签」传 -1 表示跨类型），

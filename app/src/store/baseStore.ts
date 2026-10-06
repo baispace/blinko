@@ -46,7 +46,9 @@ export class BaseStore implements Store {
       title: 'archived',
       href: '/?path=archived',
       icon: 'solar:box-broken',
-      hiddenMobile: true,
+      // 归档是内容视图，移动端必须可达：之前这里 hiddenMobile 为 true 且没进
+      // 头像菜单（那里只渲染 hiddenSidebar 项），手机上等于没有归档入口。
+      hiddenMobile: false,
     },
     {
       title: 'trash',

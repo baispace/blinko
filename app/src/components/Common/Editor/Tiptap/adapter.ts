@@ -1,6 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { SlashMenuState } from './slashMenuState';
 import { NoteMentionState } from './noteMentionState';
+import { HashtagState } from './hashtagState';
 import { normalizeBlankLines } from './markdownBlankLine';
 
 /**
@@ -17,6 +18,7 @@ export class TiptapEditorAdapter {
   editor: Editor | null = null
   slashMenu: SlashMenuState = new SlashMenuState()
   noteMention: NoteMentionState = new NoteMentionState()
+  hashtagMenu: HashtagState = new HashtagState()
 
   getValue(): string {
     try {
@@ -65,5 +67,6 @@ export class TiptapEditorAdapter {
     this.editor = null
     this.slashMenu.close()
     this.noteMention.close()
+    this.hashtagMenu.close()
   }
 }

@@ -280,6 +280,12 @@ export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
 ]
 
 /**
+ * 显式 key，不吃默认单例。见 hashtag.ts 里的同类注释：
+ * 默认 key 被所有 Suggestion 实例共用，第二个实例会让 EditorState 构造抛错白屏。
+ */
+const SlashSuggestionKey = new PluginKey('slashCommand')
+
+/**
  * Slash menu (" / ") built on the official suggestion plugin.
  * Menu state lives in SlashMenuState (per editor), rendered as React.
  */
@@ -312,6 +318,7 @@ export const SlashCommand = Extension.create<{
     return [
       Suggestion({
         editor: this.editor,
+        pluginKey: SlashSuggestionKey,
         char: '/',
         allowSpaces: false,
         items: ({ query }) => {

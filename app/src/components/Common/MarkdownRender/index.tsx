@@ -13,6 +13,8 @@ import { ImageWrapper } from './ImageWrapper';
 import { ListItem } from './ListItem';
 import { TableWrapper } from './TableWrapper';
 import { NoteLink, preprocessNoteLinks } from './NoteLink';
+import { InlineTag } from './InlineTag';
+import { scanHashtagTokens } from '@shared/lib/tags';
 import { useNavigate, useLocation } from 'react-router-dom';
 import remarkTaskList from 'remark-task-list';
 // 单换行渲染成 <br>（GitHub 评论风格）。没有它时，含行内格式（**加粗**/`代码`/链接）的段落
@@ -120,6 +122,32 @@ const Table = ({ children }: { children: React.ReactNode }) => {
 };
 
 /**
+ * 把正文里的 #标签 改写成可渲染的链接，交给下面的 a 组件渲染成蓝色行内标签。
+ *
+ * 判定规则来自 @shared/lib/tags 的 scanHashtagTokens —— 与服务端建标签关系、
+ * 编辑器行内高亮用的是同一份，代码块内的 # 不会被误伤。
+ *
+ * 只改写「安全」的标签名（含中文/字母/数字/下划线/连字符/斜杠）：标签名理论上
+ * 可以包含 ] 或 ( ，那种名字拼进 markdown 链接会把结构写坏，宁可留作普通文字。
+ *
+ * 注意：这里只影响**展示**。任务项勾选走的是调用方传进来的原始 content
+ * （见 ListItem 的 toggleTasksByIndex），不受这里的改写影响。
+ */
+const SAFE_TAG_NAME = /^[\w\p{L}\p{N}\/_-]+$/u;
+const tagifyInlineTags = (content: string): string => {
+  const tokens = scanHashtagTokens(content).filter((t) => SAFE_TAG_NAME.test(t.name));
+  if (tokens.length === 0) return content;
+  let out = '';
+  let cursor = 0;
+  tokens.forEach((token) => {
+    out += content.slice(cursor, token.start);
+    out += `[${token.token}](blinko://tag/${encodeURIComponent(token.name)})`;
+    cursor = token.end;
+  });
+  return out + content.slice(cursor);
+}
+
+/**
  * Callout 是自定义的 HTML 块（<div data-callout-...>）。一旦它在正文里带了缩进
  * （嵌套在列表/引用内、粘贴或 AI 生成时带空格），markdown 会把它当成**缩进代码块**，
  * 于是列表里直接显示 `<div data-callout...>` 这类 HTML 文本。
@@ -187,7 +215,7 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
   const contentRef = useRef(null);
   const mathPlugins = useMathPlugins(content);
   // 预处理双向链接 [[id|title]] -> [title](blinko://note/id)
-  const preprocessedContent = preprocessNoteLinks(content);
+  const preprocessedContent = tagifyInlineTags(preprocessNoteLinks(content));
   const normalizedContent = stripTrailingBackslashes(liftIndentedCallouts(preprocessedContent));
 
   return (
@@ -312,6 +340,13 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
                     ? children.map(c => typeof c === 'string' ? c : '').join('')
                     : typeof children === 'string' ? children : '';
                   return <NoteLink id={noteId} title={title || '笔记链接'} />;
+                }
+                // 检测 blinko://tag/ 格式的行内标签（由 tagifyInlineTags 生成）
+                const tagMatch = href.match(/^blinko:\/\/tag\/(.+)$/);
+                if (tagMatch) {
+                  let tagName = '';
+                  try { tagName = decodeURIComponent(tagMatch[1]); } catch { tagName = tagMatch[1]; }
+                  return <InlineTag name={tagName} isStatic={isShareMode} />;
                 }
                 // By default render as inline (isBlock=false)
                 return <LinkPreview href={href} text={children} isBlock={false} />

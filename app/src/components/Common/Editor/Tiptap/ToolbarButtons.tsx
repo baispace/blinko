@@ -258,6 +258,7 @@ export const CalloutButton = ({ editor }: { editor: Editor | null | undefined })
 export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [showCallout, setShowCallout] = useState(false);
   useEditorTick(editor);
   if (!editor) return null;
 
@@ -277,7 +278,7 @@ export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined
   );
 
   return (
-    <Popover placement="bottom-start" isOpen={open} onOpenChange={setOpen}>
+    <Popover placement="bottom-start" isOpen={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowCallout(false); }}>
       <PopoverTrigger>
         <div
           className="hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center w-[23px] h-[23px] text-default-600"
@@ -286,7 +287,8 @@ export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined
           <Icon icon="tabler:letter-case" width={20} height={20} />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="p-1.5 w-[168px]">
+      {/* 展开标注选择器时需要更宽，否则颜色/表情网格会被挤 */}
+      <PopoverContent className={`p-1.5 ${showCallout ? 'w-[248px]' : 'w-[168px]'}`}>
         <div className="flex flex-col gap-0.5">
           <Item label={t('context')} icon="mdi:format-text" active={editor.isActive('paragraph')} action={() => chain().setParagraph().run()} />
           <Item label={t('heading-1')} icon="mdi:format-header-1" active={editor.isActive('heading', { level: 1 })} action={() => chain().toggleHeading({ level: 1 }).run()} />
@@ -302,6 +304,29 @@ export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined
           <div className="h-[1px] bg-default-200 my-1 mx-2" />
           <Item label={t('quote')} icon="mdi:format-quote-close" active={editor.isActive('blockquote')} action={() => chain().toggleBlockquote().run()} />
           <Item label={t('code-block')} icon="mdi:code-braces" active={editor.isActive('codeBlock')} action={() => chain().toggleCodeBlock().run()} />
+          {/* 列表：原本是顶栏 3 个独立按钮（无序 / 有序 / 任务），收进格式菜单，
+              顶栏因此从 9 个降到 5 个（💬 # 🖼 Aa @），能力一条不少 */}
+          <div className="h-[1px] bg-default-200 my-1 mx-2" />
+          <Item label={t('bullet-list')} icon="mdi:format-list-bulleted" active={editor.isActive('bulletList')} action={() => chain().toggleBulletList().run()} />
+          <Item label={t('ordered-list')} icon="mdi:format-list-numbered" active={editor.isActive('orderedList')} action={() => chain().toggleOrderedList().run()} />
+          <Item label={t('task-list')} icon="mdi:format-list-checks" active={editor.isActive('taskList')} action={() => chain().toggleTaskList().run()} />
+          {/* 标注带类型 / 颜色 / 表情选择器，不能压成一行，展开成子面板保住完整 picker */}
+          <div
+            className={`flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-sm !transition-all cursor-pointer
+              ${editor.isActive('callout') ? 'bg-primary/15 text-primary font-medium' : 'text-default-700 hover:bg-hover'}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setShowCallout((v) => !v)}
+          >
+            <Icon icon="mdi:lightbulb-on-outline" width={17} height={17} />
+            <span className="flex-1 text-left">{t('callout')}</span>
+            <Icon icon={showCallout ? 'tabler:chevron-up' : 'mdi:chevron-down'} width={15} height={15} className="opacity-60" />
+          </div>
+          {showCallout && (
+            <>
+              <div className="h-[1px] bg-default-200 my-1 mx-2" />
+              <CalloutPickerContent editor={editor} onDone={() => setOpen(false)} />
+            </>
+          )}
         </div>
       </PopoverContent>
     </Popover>

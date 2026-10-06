@@ -8,7 +8,8 @@ import { CalloutIconMenu } from './CalloutIconMenu';
 import { TableToolbar } from './TableToolbar';
 import { TableHandles } from './TableHandles'; // Feishu-style table controls
 import { ImageToolbar } from './ImageToolbar'; // Feishu-style image controls
-import { NoteMentionList } from './NoteMentionList'; // Note mention popup
+import { NoteMentionList } from './NoteMentionList'; // 输入 @ 时的笔记引用列表
+import { HashtagList } from './HashtagList'; // 输入 # 时的标签建议列表
 import { BlockComment } from './BlockComment'; // Block-level comment
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
@@ -65,7 +66,10 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
           </div>
       </BubbleMenu>
       <SlashMenuView state={adapter.slashMenu} />
+      {/* 两个 Suggestion 实例（@ 引用笔记、# 标签）共用这一个挂载点，
+          只渲染其中之一会让另一个彻底失灵 */}
       <NoteMentionList state={adapter.noteMention} />
+      <HashtagList state={adapter.hashtagMenu} />
       <BlockComment editor={editor} />
       <CalloutIconMenu editor={editor} />
       <TableToolbar editor={editor} />

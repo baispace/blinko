@@ -28,6 +28,7 @@ export const NoteMention = Extension.create<{
     return [
       Suggestion({
         editor: this.editor,
+        pluginKey: NoteMentionKey,
         char: '@',
         allowSpaces: false,
         items: ({ query }) => {

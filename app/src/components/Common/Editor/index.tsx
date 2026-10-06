@@ -30,7 +30,7 @@ import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
 import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
 import { NoteCoverHeader } from './NoteCover';
-import { ToolbarDivider, FormatMenuButton, ListToggleButton, TaskListButton, CalloutButton, UploadImageButton } from './Tiptap/ToolbarButtons';
+import { ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
 type IProps = {
@@ -126,11 +126,8 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             store={store}
           />
           <ToolbarDivider />
+          {/* 无序 / 有序 / 任务 / 标注 已收进 Aa 格式菜单，顶栏不再各占一个按钮 */}
           <FormatMenuButton editor={store.vditor?.editor ?? null} />
-          <ListToggleButton editor={store.vditor?.editor ?? null} type="bullet" />
-          <ListToggleButton editor={store.vditor?.editor ?? null} type="ordered" />
-          <TaskListButton editor={store.vditor?.editor ?? null} />
-          <CalloutButton editor={store.vditor?.editor ?? null} />
           <ToolbarDivider />
           <ReferenceButton store={store} iconButton={<IconButton tooltip="reference" icon="mdi:at" />} />
           {pluginApi.customToolbarIcons

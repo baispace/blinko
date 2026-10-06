@@ -27,6 +27,8 @@ import TableRow from '@tiptap/extension-table-row';
 import { Markdown } from 'tiptap-markdown';
 import { TiptapEditorAdapter } from '../Tiptap/adapter';
 import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } from '../Tiptap/extensions';
+import { HashtagSuggestion } from '../Tiptap/hashtag';
+import { NoteMention } from '../Tiptap/noteMention';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
@@ -147,6 +149,12 @@ export const useEditorInit = (
         }),
         AiPendingIndicator,
         TaskListInputRules,
+        // 输入 # 弹标签建议 + 正文里 #标签 行内高亮。独立 Suggestion 实例：
+        // char 只接受单字符，@ 提及曾因写成 char: ['/', '@'] 被回滚（b06a9a0f）
+        HashtagSuggestion.configure({ hashtagMenu: adapter.hashtagMenu }),
+        // 输入 @ 引用其它笔记。独立 Suggestion 实例，必须给独立 pluginKey（见 noteMention.ts）。
+        // 之前只写了渲染用的 NoteMentionList，扩展本身从没注册进来，输入 @ 不可能有反应。
+        NoteMention.configure({ noteMention: adapter.noteMention }),
         // Edit mode has an onDone: ⌘+Enter should flush + close, not re-save.
         SendShortcut.configure({ onSend: () => (store.onDone ? store.handleDone() : store.handleSend()) }),
       ],
@@ -277,9 +285,18 @@ export const useEditorInit = (
   useEffect(() => {
     const ed = store.vditor?.editor
     if (!ed) return
-    if (ed.isEditable !== editable) {
+    if (ed.isEditable === editable) return
+    // 把 setEditable 推到下一个 microtask：editable prop 变化来自 React commit
+    // 阶段（FullscreenEditor 的 editorMode / handleSwitch* / 左上角切详情入口都会
+    // 触发），与 setEditable 同步执行会让 view reconfigure 跟浮层 BubbleMenu 的
+    // tippy reposition 撞在同一帧，触发 insertBefore / removeChild 崩溃。
+    // queueMicrotask 让 React commit 先落地、浮层先消化 prop 变化，下个 microtask
+    // 再切 editor.isEditable。
+    queueMicrotask(() => {
+      if (store.vditor?.editor !== ed) return
+      if (ed.isEditable === editable) return
       ed.setEditable(editable)
-    }
+    })
   }, [editable, store.vditor]);
 };
 

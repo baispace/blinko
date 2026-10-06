@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { RangeCalendar } from "@heroui/react";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import dayjs from "@/lib/dayjs";
@@ -12,6 +13,12 @@ import TagSelector from "@/components/Common/TagSelector";
 export default function FilterPop() {
   const { t } = useTranslation();
   const blinkoStore = RootStore.Get(BlinkoStore);
+  const [searchParams] = useSearchParams();
+  // 筛选条件写在全局 noteListFilterConfig 上（getFilteredNotes 会合并），
+  // 但要刷新的是「当前视图真正渲染的那个列表」，否则闪念页改了筛选没反应。
+  const refreshCurrentList = () => {
+    blinkoStore.getListByPath(searchParams.get('path')).resetAndCall({});
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{
@@ -46,7 +53,7 @@ export default function FilterPop() {
       hasTodo: selectedCondition === 'hasTodo',
       isArchived: null
     };
-    blinkoStore.noteList.resetAndCall({});
+    refreshCurrentList();
     setIsOpen(false);
   };
 
@@ -68,7 +75,7 @@ export default function FilterPop() {
       isShare: null,
       hasTodo: false
     };
-    blinkoStore.noteList.resetAndCall({});
+    refreshCurrentList();
     setIsOpen(false);
   };
 

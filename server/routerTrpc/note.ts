@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { Prisma } from '@prisma/client';
 import { helper, TagTreeNode } from '@shared/lib/helper';
+import { extractNoteLinkIds } from '@shared/lib/noteLink';
 import { _ } from '@shared/lib/lodash';
 import { NoteType } from '../../shared/lib/types';
 import { attachmentsSchema, historySchema, notesSchema, tagSchema, tagsToNoteSchema, commentsSchema } from '@shared/lib/prismaZodType';
@@ -165,45 +166,41 @@ export const noteRouter = router({
         isRecycle: isRecycle
       };
 
+      /**
+       * 下面这些条件（搜索命中 / 有链接 / 含待办）彼此并列，必须用 AND 叠加。
+       * 早先 withLink、hasTodo 是直接 `where.OR = [...]`，会把权限和搜索的 OR
+       * 整个覆盖掉 —— 表现是「搜索 + 含待办」返回全部含待办的笔记，搜索词被静默丢弃。
+       */
+      const andConditions: Prisma.notesWhereInput[] = [];
+
       if (searchText != '') {
-        where = {
+        // 命中的字段：正文 / 附件路径 / 标题 / 标签名。
+        // 标题在 metadata.title（JSON），标签名不带 #（# 只在渲染时拼），
+        // 所以带 # 前缀的搜索词要剥掉再匹配标签。
+        const term = searchText ?? '';
+        const tagTerm = term.replace(/^#/, '');
+        andConditions.push({
           OR: [
-            {
-              accountId: Number(ctx.id),
-              content: { contains: searchText, mode: 'insensitive' }
-            },
-            {
-              accountId: Number(ctx.id),
-              attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } }
-            },
-            {
-              internalShares: { some: { accountId: Number(ctx.id) } },
-              content: { contains: searchText, mode: 'insensitive' }
-            },
-            {
-              internalShares: { some: { accountId: Number(ctx.id) } },
-              attachments: { some: { path: { contains: searchText, mode: 'insensitive' } } }
-            }
-          ],
-        };
-        where.isRecycle = isRecycle;
-        if (!isRecycle && isArchived != null) {
-          where.isArchived = isArchived;
-        }
-        if (type != -1) {
-          where.type = type;
-        }
-      } else {
-        where.isRecycle = isRecycle;
-        if (!isRecycle && isArchived != null) {
-          where.isArchived = isArchived;
-        }
-        if (type != -1) {
-          where.type = type;
-        }
-        if (isShare != null) {
-          where.isShare = isShare;
-        }
+            { content: { contains: term, mode: 'insensitive' } },
+            { attachments: { some: { path: { contains: term, mode: 'insensitive' } } } },
+            { metadata: { path: ['title'], string_contains: term } },
+            ...(tagTerm
+              ? [{ tags: { some: { tag: { name: { contains: tagTerm, mode: 'insensitive' as const } } } } }]
+              : []),
+          ]
+        });
+      }
+      if (type != -1) {
+        where.type = type;
+      }
+      // 归档 / 公开状态在搜索与浏览两条路径上都要生效。
+      // 原来只写在非搜索分支里，导致「搜索 + 公开筛选」组合时该筛选被静默忽略。
+      where.isRecycle = isRecycle;
+      if (!isRecycle && isArchived != null) {
+        where.isArchived = isArchived;
+      }
+      if (isShare != null) {
+        where.isShare = isShare;
       }
 
       if (tagId) {
@@ -220,15 +217,25 @@ export const noteRouter = router({
         where.createdAt = { gte: startDate, lte: endDate };
       }
       if (withLink) {
-        where.OR = [{ content: { contains: 'http://', mode: 'insensitive' } }, { content: { contains: 'https://', mode: 'insensitive' } }];
+        andConditions.push({
+          OR: [
+            { content: { contains: 'http://', mode: 'insensitive' } },
+            { content: { contains: 'https://', mode: 'insensitive' } }
+          ]
+        });
       }
       if (hasTodo) {
-        where.OR = [
-          { content: { contains: '- [ ]', mode: 'insensitive' } },
-          { content: { contains: '- [x]', mode: 'insensitive' } },
-          { content: { contains: '* [ ]', mode: 'insensitive' } },
-          { content: { contains: '* [x]', mode: 'insensitive' } },
-        ];
+        andConditions.push({
+          OR: [
+            { content: { contains: '- [ ]', mode: 'insensitive' } },
+            { content: { contains: '- [x]', mode: 'insensitive' } },
+            { content: { contains: '* [ ]', mode: 'insensitive' } },
+            { content: { contains: '* [x]', mode: 'insensitive' } },
+          ]
+        });
+      }
+      if (andConditions.length > 0) {
+        where.AND = andConditions;
       }
       const config = await getGlobalConfig({ ctx });
       // 排序键优先级：noteListSortBy（新） > isOrderByCreateTime（旧） > 默认 updatedAt
@@ -1070,28 +1077,46 @@ export const noteRouter = router({
         const needToBeDeletedRelationTags = _.difference(oldTagsString, newTagsString);
 
         // handle references
+        /**
+         * 引用关系有两个来源：
+         *   ① 正文里的 [[id|title]] 双链 —— 内容派生，正文删掉双链，引用就该跟着消失；
+         *   ② 用户在「关联笔记」里手动选的 —— 显式关系，任何一次保存都不该把它清掉。
+         *
+         * 早先这里只看 references 入参：upsertNote 默认传 []，于是随手一次保存就会
+         * 把手动关联全删掉；反过来若改成「只加不减」，删掉的双链又会留下幽灵反向链接。
+         * 所以按「旧正文里的双链 = 内容派生，其余 = 手动」重新推导目标集合再 diff。
+         */
         const oldReferences = await prisma.noteReference.findMany({ where: { fromNoteId: note.id } });
         const oldReferencesIds = oldReferences.map((ref) => ref.toNoteId);
-        if (references !== undefined) {
-          const needToBeAddedReferences = _.difference(references || [], oldReferencesIds);
-          const needToBeDeletedReferences = _.difference(oldReferencesIds, references || []);
+        const nextLinkIds = extractNoteLinkIds(content).filter((id) => id !== note.id);
+        const derivedFromOldContent = extractNoteLinkIds(existingNote?.content);
+        const manualReferences = references !== undefined
+          ? references.filter((id) => id !== note.id)
+          : _.difference(oldReferencesIds, derivedFromOldContent);
+        // 双链可能指向已删除的笔记，直接建关系会撞外键，先过一遍存在的
+        const validLinkIds = nextLinkIds.length > 0
+          ? (await prisma.notes.findMany({ where: { id: { in: nextLinkIds } }, select: { id: true } })).map((i) => i.id)
+          : [];
+        const targetReferences = [...new Set([...manualReferences, ...validLinkIds])];
 
-          // references delete old references
-          if (needToBeDeletedReferences.length != 0) {
-            await prisma.noteReference.deleteMany({
-              where: {
-                fromNoteId: note.id,
-                toNoteId: { in: needToBeDeletedReferences },
-              },
-            });
-          }
+        const needToBeAddedReferences = _.difference(targetReferences, oldReferencesIds);
+        const needToBeDeletedReferences = _.difference(oldReferencesIds, targetReferences);
 
-          // add new references
-          if (needToBeAddedReferences.length != 0) {
-            await prisma.noteReference.createMany({
-              data: needToBeAddedReferences.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
-            });
-          }
+        // references delete old references
+        if (needToBeDeletedReferences.length != 0) {
+          await prisma.noteReference.deleteMany({
+            where: {
+              fromNoteId: note.id,
+              toNoteId: { in: needToBeDeletedReferences },
+            },
+          });
+        }
+
+        // add new references
+        if (needToBeAddedReferences.length != 0) {
+          await prisma.noteReference.createMany({
+            data: needToBeAddedReferences.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
+          });
         }
 
         if (needToBeDeletedRelationTags.length != 0) {
@@ -1189,10 +1214,18 @@ export const noteRouter = router({
           await handleAddTags(tagTree, undefined, note.id);
           const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: attachments.map((i) => i.path) } } });
           await prisma.attachments.updateMany({ where: { id: { in: attachmentsIds.map((i) => i.id) } }, data: { noteId: note.id } });
-          //add references
-          if (references && references.length > 0) {
+          //add references：手动关联 + 正文里的 [[id|title]] 双链
+          const createLinkIds = extractNoteLinkIds(note.content).filter((id) => id !== note.id);
+          const createValidLinkIds = createLinkIds.length > 0
+            ? (await prisma.notes.findMany({ where: { id: { in: createLinkIds } }, select: { id: true } })).map((i) => i.id)
+            : [];
+          const createReferences = [...new Set([
+            ...(references || []).filter((id) => id !== note.id),
+            ...createValidLinkIds,
+          ])];
+          if (createReferences.length > 0) {
             await prisma.noteReference.createMany({
-              data: references.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
+              data: createReferences.map((toNoteId) => ({ fromNoteId: note.id, toNoteId })),
             });
           }
 

@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { RootStore } from '@/store';
+import { preprocessNoteLinks as preprocessNoteLinksShared } from '@shared/lib/noteLink';
 
 /**
  * Renders note link in the form [[id|title]] as a clickable card.
@@ -34,14 +35,8 @@ export const NoteLink = observer(({ id, title }: { id: number; title: string }) 
 /**
  * Preprocess markdown to convert [[id|title]] to link format that can be rendered.
  * This runs before ReactMarkdown processes the content.
+ *
+ * 格式定义在 @shared/lib/noteLink —— 服务端 upsert 用同一份正则解析双链建立引用关系，
+ * 两边必须一致，否则会出现「渲染成链接但没有反向链接」的情况。
  */
-export const preprocessNoteLinks = (content: string): string => {
-  if (!content) return content;
-
-  // Match [[id|title]] pattern and convert to markdown link
-  // The link text will be parsed to extract id and title
-  return content.replace(/\[\[(\d+)\|([^\]]+)\]\]/g, (_, id, title) => {
-    // Use a special href format that our a renderer can detect
-    return `[${title}](blinko://note/${id})`;
-  });
-};
+export const preprocessNoteLinks = (content: string): string => preprocessNoteLinksShared(content);

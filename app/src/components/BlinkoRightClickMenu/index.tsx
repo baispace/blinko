@@ -212,21 +212,8 @@ const handleSelectAll = () => {
   blinko.isMultiSelectMode = true
 
   const currentPath = new URLSearchParams(window.location.search).get('path');
-  let items: Array<{ id?: number | null }> | undefined;
-
-  if (currentPath === 'notes') {
-    items = blinko.noteOnlyList.value;
-  } else if (currentPath === 'todo') {
-    items = blinko.todoList.value;
-  } else if (currentPath === 'archived') {
-    items = blinko.archivedList.value;
-  } else if (currentPath === 'trash') {
-    items = blinko.trashList.value;
-  } else if (currentPath === 'all') {
-    items = blinko.noteList.value;
-  } else {
-    items = blinko.blinkoList.value;
-  }
+  // 与列表页 / 筛选面板共用同一份 path → 列表映射
+  const items = blinko.getListByPath(currentPath).value as Array<{ id?: number | null }> | undefined;
 
   const ids = (items || [])
     .map(n => n.id)

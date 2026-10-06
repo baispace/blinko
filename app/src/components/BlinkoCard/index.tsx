@@ -166,6 +166,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
         blinkoItem={blinkoItem}
         isOpen={isFullscreenEditorOpen}
         onClose={() => setIsFullscreenEditorOpen(false)}
+        isDetailPage={isDetailPage}
       />
 
       {(() => {

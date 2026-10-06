@@ -147,7 +147,7 @@ export const CardActionMenu = observer(({
               <DropdownItem
                 key={`pw-${m}`}
                 textValue={t('page-width-' + m)}
-                onPress={() => pageWidth.setMode(m as PageWidthMode)}
+                onClick={() => pageWidth.setMode(m as PageWidthMode)}
                 classNames={{ base: 'pl-8' }}
               >
                 {pageWidth.mode === m && (
@@ -161,7 +161,7 @@ export const CardActionMenu = observer(({
         )}
 
         {showViewItems && (
-          <DropdownItem key="share" textValue={t('share')} onPress={withNote(handlePublic)}>
+          <DropdownItem key="share" textValue={t('share')} onClick={withNote(handlePublic)}>
             <div className="flex items-center gap-2">
               <Icon icon="tabler:share-2" width="20" height="20" />
               <div>{t('share')}</div>
@@ -173,7 +173,7 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="toggle-mode"
             textValue={editorMode === 'preview' ? t('edit') : t('preview')}
-            onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}
+            onClick={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}
           >
             <div className="flex items-center gap-2">
               <Icon icon={editorMode === 'preview' ? 'tabler:edit' : 'tabler:eye'} width="20" height="20" />
@@ -188,7 +188,7 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="presentation"
             textValue={presentationMode ? t('exit-presentation') : t('enter-presentation')}
-            onPress={() => onTogglePresentation()}
+            onClick={() => onTogglePresentation()}
           >
             <div className="flex items-center gap-2">
               <Icon
@@ -212,30 +212,30 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="edit"
             textValue={t('edit')}
-            onPress={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); handleEdit(isDetailPage); }}
+            onClick={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); handleEdit(isDetailPage); }}
           >
             <EditItem />
           </DropdownItem>
         )}
         {!isDetailPage && (
-          <DropdownItem key="multi" textValue={t('multiple-select')} onPress={withNote(handleMultiSelect)}>
+          <DropdownItem key="multi" textValue={t('multiple-select')} onClick={withNote(handleMultiSelect)}>
             <MutiSelectItem />
           </DropdownItem>
         )}
         {!isDetailPage && (
-          <DropdownItem key="select-all" textValue={t('select-all')} onPress={withNote(handleSelectAll)}>
+          <DropdownItem key="select-all" textValue={t('select-all')} onClick={withNote(handleSelectAll)}>
             <SelectAllItem />
           </DropdownItem>
         )}
         {!isDetailPage && (
-          <DropdownItem key="copy" textValue={t('copy-content')} onPress={withNote(handleCopyContent)}>
+          <DropdownItem key="copy" textValue={t('copy-content')} onClick={withNote(handleCopyContent)}>
             <CopyItem />
           </DropdownItem>
         )}
         <DropdownItem
           key="edittime"
           textValue={t('edit-time')}
-          onPress={withNote(() => ShowEditTimeModel())}
+          onClick={withNote(() => ShowEditTimeModel())}
         >
           <EditTimeItem />
         </DropdownItem>
@@ -243,7 +243,7 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="history"
             textValue={t('Note History')}
-            onPress={withNote(handleShowHistory)}
+            onClick={withNote(handleShowHistory)}
           >
             <HistoryItem />
           </DropdownItem>
@@ -255,21 +255,21 @@ export const CardActionMenu = observer(({
         <DropdownItem
           key="top"
           textValue={blinko.curSelectedNote?.isTop ? t('cancel-top') : t('top')}
-          onPress={withNote(handleTop)}
+          onClick={withNote(handleTop)}
         >
           <TopItem />
         </DropdownItem>
         <DropdownItem
           key="archived"
           textValue={blinko.curSelectedNote?.isArchived || blinko.curSelectedNote?.isRecycle ? t('recovery') : t('archive')}
-          onPress={withNote(handleArchived)}
+          onClick={withNote(handleArchived)}
         >
           <ArchivedItem />
         </DropdownItem>
         <DropdownItem
           key="convert"
           textValue={`${t('convert-to')} ${blinko.curSelectedNote?.type == 1 ? t('blinko') : t('note')}`}
-          onPress={withNote(ConvertItemFunction)}
+          onClick={withNote(ConvertItemFunction)}
         >
           <ConvertItem />
         </DropdownItem>
@@ -281,7 +281,7 @@ export const CardActionMenu = observer(({
         {/* 分发 */}
         {/* 分享已上移到「视图」组，这里只在列表卡片里出现，避免同一菜单里出现两个分享 */}
         {!isRecycle && !showViewItems && (
-          <DropdownItem key="public" textValue={t('share')} onPress={withNote(handlePublic)}>
+          <DropdownItem key="public" textValue={t('share')} onClick={withNote(handlePublic)}>
             <PublicItem />
           </DropdownItem>
         )}
@@ -289,7 +289,7 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="publish"
             textValue={blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}
-            onPress={withNote(handlePublish)}
+            onClick={withNote(handlePublish)}
           >
             <PublishItem />
           </DropdownItem>
@@ -299,7 +299,7 @@ export const CardActionMenu = observer(({
 
         {/* 智能 */}
         {hasAi && (
-          <DropdownItem key="aitag" textValue={t('ai-tag')} onPress={withNote(handleAITag)}>
+          <DropdownItem key="aitag" textValue={t('ai-tag')} onClick={withNote(handleAITag)}>
             <AITagItem />
           </DropdownItem>
         )}
@@ -307,7 +307,7 @@ export const CardActionMenu = observer(({
           <DropdownItem
             key="related"
             textValue={t('related-notes')}
-            onPress={withNote(handleRelatedNotes)}
+            onClick={withNote(handleRelatedNotes)}
           >
             <RelatedNotesItem />
           </DropdownItem>
@@ -318,7 +318,7 @@ export const CardActionMenu = observer(({
             key={menu.name}
             textValue={menu.label}
             isDisabled={menu.disabled}
-            onPress={withNote(() => menu.onClick(blinko.curSelectedNote!))}
+            onClick={withNote(() => menu.onClick(blinko.curSelectedNote!))}
           >
             <div className="flex items-start gap-2">
               {menu.icon && <Icon icon={menu.icon} width="20" height="20" />}
@@ -333,7 +333,7 @@ export const CardActionMenu = observer(({
         <DropdownItem
           key="trash"
           textValue={isRecycle ? t('delete') : t('trash')}
-          onPress={withNote(handleTrash)}
+          onClick={withNote(handleTrash)}
           className="text-danger data-[hover=true]:bg-danger/10 data-[hover=true]:text-danger"
         >
           {isRecycle ? <DeleteItem /> : <TrashItem />}

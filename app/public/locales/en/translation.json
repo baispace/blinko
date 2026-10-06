@@ -792,6 +792,7 @@
   "restore": "Recover",
   "complete": "Complete",
   "today": "Today",
+  "no-date": "No date",
   "overdue": "Overdue",
   "upcoming": "Upcoming",
   "priority-urgent-important": "Urgent & Important",

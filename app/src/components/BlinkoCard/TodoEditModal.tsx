@@ -70,8 +70,9 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
   const blinko = RootStore.Get(BlinkoStore);
   const [content, setContent] = useState(note.content ?? '');
   const [priorityKey, setPriorityKey] = useState<PrioKey>(quadKeyFromMeta(note));
-  const initialDue = note.metadata?.expireAt ? dayjs(note.metadata.expireAt) : dayjs();
-  const [due, setDue] = useState(initialDue.format('YYYY-MM-DD'));
+  // 没有 expireAt 的旧任务保持「无日期」，不要在打开弹窗时替用户填今天 ——
+  // 一保存就把无期限任务变成了今日到期。
+  const [due, setDue] = useState(note.metadata?.expireAt ? dayjs(note.metadata.expireAt).format('YYYY-MM-DD') : '');
   const [prioOpen, setPrioOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const prioWrapRef = useRef<HTMLDivElement>(null);
@@ -140,6 +141,25 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
             onChange={(e) => setDue(e.target.value)}
             className="cursor-pointer bg-transparent text-[13px] text-default-700 outline-none border border-default-200 rounded-md px-2 h-7 leading-none transition-colors hover:border-primary/50 focus:border-primary"
           />
+          {!due ? (
+            <button
+              type="button"
+              onClick={() => setDue(dayjs().format('YYYY-MM-DD'))}
+              className="shrink-0 rounded-md border border-default-200 px-2 h-7 text-[13px] leading-none text-default-600 transition-colors hover:border-primary/50 hover:text-foreground"
+            >
+              {t('today')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setDue('')}
+              aria-label={t('no-date')}
+              title={t('no-date')}
+              className="shrink-0 rounded-md px-1.5 h-7 inline-flex items-center text-default-500 transition-colors hover:bg-default-100 hover:text-foreground"
+            >
+              <Icon icon="mdi:close" width={14} height={14} />
+            </button>
+          )}
         </label>
 
         <div ref={prioWrapRef} className="relative">

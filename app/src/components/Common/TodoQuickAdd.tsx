@@ -41,7 +41,9 @@ export const TodoQuickAdd = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
   const [content, setContent] = useState('');
   const [priorityKey, setPriorityKey] = useState<PrioKey>('nn');
-  const [due, setDue] = useState(dayjs().format('YYYY-MM-DD'));
+  // 默认「无截止日」：以前固定填今天，于是随手记一条无期限的事会变成今日到期、
+  // 直接落进「今天」列表。要今天就点下面的「今天」，一步可达。
+  const [due, setDue] = useState('');
   const [prioOpen, setPrioOpen] = useState(false);
   const prioWrapRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +99,25 @@ export const TodoQuickAdd = observer(() => {
             onChange={(e) => setDue(e.target.value)}
             className="cursor-pointer bg-transparent text-[13px] text-default-700 outline-none border border-default-200 rounded-md px-2 h-7 leading-none transition-colors hover:border-primary/50 focus:border-primary"
           />
+          {!due ? (
+            <button
+              type="button"
+              onClick={() => setDue(dayjs().format('YYYY-MM-DD'))}
+              className="shrink-0 rounded-md border border-default-200 px-2 h-7 text-[13px] leading-none text-default-600 transition-colors hover:border-primary/50 hover:text-foreground"
+            >
+              {t('today')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setDue('')}
+              aria-label={t('no-date')}
+              title={t('no-date')}
+              className="shrink-0 rounded-md px-1.5 h-7 inline-flex items-center text-default-500 transition-colors hover:bg-default-100 hover:text-foreground"
+            >
+              <Icon icon="mdi:close" width={14} height={14} />
+            </button>
+          )}
         </label>
 
         <div ref={prioWrapRef} className="relative">

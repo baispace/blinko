@@ -122,14 +122,14 @@ export const CardActionMenu = observer(({
           // The fullscreen editor is a portal at z-[9999]; without this the
           // menu would render underneath it.
           base: 'z-[10050]',
-          item: "rounded-lg text-[13.5px] gap-2",
         }}
+        itemClasses={{ base: 'rounded-lg text-[13.5px] gap-2' }}
       >
         {/* ── 视图：页宽 / 分享 / 编辑↔预览（仅全屏编辑器传入） ──
             每个 DropdownItem 都必须带 `textValue`，否则 react-aria 拿不到 plain
             text，type-to-select 失败 → collection 重初始化时 onPress 不再注册，
             现象是菜单可见但点了没反应（修复了之前 console 一片 Verbose warning）。 */}
-        {showPageWidth && (
+        {showPageWidth ? (
           <>
             <DropdownItem
               key="pw-label"
@@ -149,26 +149,26 @@ export const CardActionMenu = observer(({
                 onClick={() => pageWidth.setMode(m as PageWidthMode)}
                 classNames={{ base: 'pl-8' }}
               >
-                {pageWidth.mode === m && (
+                {pageWidth.mode === m ? (
                   <Icon icon="mdi:check" width="15" height="15" className="text-primary" />
-                )}
+                ) : null}
                 {t('page-width-' + m)}
               </DropdownItem>
             ))}
             <DropdownItem key="sep-view" textValue=" " isReadOnly classNames={sepClassNames} />
           </>
-        )}
+        ) : null}
 
-        {showViewItems && (
+        {showViewItems ? (
           <DropdownItem key="share" textValue={t('share')} onClick={withNote(handlePublic)}>
             <div className="flex items-center gap-2">
               <Icon icon="tabler:share-2" width="20" height="20" />
               <div>{t('share')}</div>
             </div>
           </DropdownItem>
-        )}
+        ) : null}
 
-        {onToggleEditorMode && (
+        {onToggleEditorMode ? (
           <DropdownItem
             key="toggle-mode"
             textValue={editorMode === 'preview' ? t('edit') : t('preview')}
@@ -179,11 +179,11 @@ export const CardActionMenu = observer(({
               <div>{editorMode === 'preview' ? t('edit') : t('preview')}</div>
             </div>
           </DropdownItem>
-        )}
+        ) : null}
 
         {/* 演示模式 = 飞书"演示"：隐藏 chrome、纯阅读、和编辑态正交。FullscreenEditor
             顶栏 ⋯ 菜单独有，list / detail 页面不暴露这个项。 */}
-        {onTogglePresentation && (
+        {onTogglePresentation ? (
           <DropdownItem
             key="presentation"
             textValue={presentationMode ? t('exit-presentation') : t('enter-presentation')}
@@ -198,16 +198,16 @@ export const CardActionMenu = observer(({
               <div>{presentationMode ? t('exit-presentation') : t('enter-presentation')}</div>
             </div>
           </DropdownItem>
-        )}
+        ) : null}
 
-        {showViewItems && (
+        {showViewItems ? (
           <DropdownItem key="sep-basic" textValue=" " isReadOnly classNames={sepClassNames} />
-        )}
+        ) : null}
 
         {/* 基本操作 —— 详情页只剩「编辑时间」「历史记录」。
             「编辑」「多选」「全部选择」「复制内容」均加 !isDetailPage 守卫，避免
             和详情页 header 的固定按钮 / 详情页的多选工具栏重复。 */}
-        {!isDetailPage && (
+        {!isDetailPage ? (
           <DropdownItem
             key="edit"
             textValue={t('edit')}
@@ -215,22 +215,22 @@ export const CardActionMenu = observer(({
           >
             <EditItem />
           </DropdownItem>
-        )}
-        {!isDetailPage && (
+        ) : null}
+        {!isDetailPage ? (
           <DropdownItem key="multi" textValue={t('multiple-select')} onClick={withNote(handleMultiSelect)}>
             <MutiSelectItem />
           </DropdownItem>
-        )}
-        {!isDetailPage && (
+        ) : null}
+        {!isDetailPage ? (
           <DropdownItem key="select-all" textValue={t('select-all')} onClick={withNote(handleSelectAll)}>
             <SelectAllItem />
           </DropdownItem>
-        )}
-        {!isDetailPage && (
+        ) : null}
+        {!isDetailPage ? (
           <DropdownItem key="copy" textValue={t('copy-content')} onClick={withNote(handleCopyContent)}>
             <CopyItem />
           </DropdownItem>
-        )}
+        ) : null}
         <DropdownItem
           key="edittime"
           textValue={t('edit-time')}
@@ -238,7 +238,7 @@ export const CardActionMenu = observer(({
         >
           <EditTimeItem />
         </DropdownItem>
-        {!!blinkoItem._count?.histories && (
+        {!!blinkoItem._count?.histories ? (
           <DropdownItem
             key="history"
             textValue={t('Note History')}
@@ -246,7 +246,7 @@ export const CardActionMenu = observer(({
           >
             <HistoryItem />
           </DropdownItem>
-        )}
+        ) : null}
 
         <DropdownItem key="sep-org" textValue=" " isReadOnly classNames={sepClassNames} />
 
@@ -289,18 +289,18 @@ export const CardActionMenu = observer(({
           </div>
         </DropdownItem>
 
-        {!isRecycle && (
+        {!isRecycle ? (
           <DropdownItem key="sep-share" textValue=" " isReadOnly classNames={sepClassNames} />
-        )}
+        ) : null}
 
         {/* 分发 */}
         {/* 分享已上移到「视图」组，这里只在列表卡片里出现，避免同一菜单里出现两个分享 */}
-        {!isRecycle && !showViewItems && (
+        {!isRecycle && !showViewItems ? (
           <DropdownItem key="public" textValue={t('share')} onClick={withNote(handlePublic)}>
             <PublicItem />
           </DropdownItem>
-        )}
-        {!isRecycle && (
+        ) : null}
+        {!isRecycle ? (
           <DropdownItem
             key="publish"
             textValue={blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}
@@ -311,17 +311,17 @@ export const CardActionMenu = observer(({
               <div>{blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
             </div>
           </DropdownItem>
-        )}
+        ) : null}
 
-        {hasAi && <DropdownItem key="sep-ai" textValue=" " isReadOnly classNames={sepClassNames} />}
+        {hasAi ? <DropdownItem key="sep-ai" textValue=" " isReadOnly classNames={sepClassNames} /> : null}
 
         {/* 智能 */}
-        {hasAi && (
+        {hasAi ? (
           <DropdownItem key="aitag" textValue={t('ai-tag')} onClick={withNote(handleAITag)}>
             <AITagItem />
           </DropdownItem>
-        )}
-        {hasAi && (
+        ) : null}
+        {hasAi ? (
           <DropdownItem
             key="related"
             textValue={t('related-notes')}
@@ -329,21 +329,28 @@ export const CardActionMenu = observer(({
           >
             <RelatedNotesItem />
           </DropdownItem>
-        )}
+        ) : null}
 
-        {pluginApi.customRightClickMenus.map((menu) => (
-          <DropdownItem
-            key={menu.name}
-            textValue={menu.label}
-            isDisabled={menu.disabled}
-            onClick={withNote(() => menu.onClick(blinko.curSelectedNote!))}
-          >
-            <div className="flex items-start gap-2">
-              {menu.icon && <Icon icon={menu.icon} width="20" height="20" />}
-              <div>{menu.label}</div>
-            </div>
-          </DropdownItem>
-        ))}
+        {/* Plugin-injected items. HeroUI 的 collection 把 children 收窄成
+            `ReactElement | null`，不接受裸数组；用 fragment 包一层既满足类型，
+            也和 BlinkoRightClickMenu 里的既有写法一致。 */}
+        {pluginApi.customRightClickMenus.length ? (
+          <>
+            {pluginApi.customRightClickMenus.map((menu) => (
+              <DropdownItem
+                key={menu.name}
+                textValue={menu.label}
+                isDisabled={menu.disabled}
+                onClick={withNote(() => menu.onClick(blinko.curSelectedNote!))}
+              >
+                <div className="flex items-start gap-2">
+                  {menu.icon ? <Icon icon={menu.icon} width="20" height="20" /> : null}
+                  <div>{menu.label}</div>
+                </div>
+              </DropdownItem>
+            ))}
+          </>
+        ) : null}
 
         <DropdownItem key="sep-danger" textValue=" " isReadOnly classNames={sepClassNames} />
 

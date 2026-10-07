@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { isInTauri } from '@/lib/tauriHelper';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { ShowSettingsDialog } from '@/components/BlinkoSettings/SettingsDialog';
 
 export const useQuicknoteHotkey = (isCreateMode: boolean) => {
-  const navigate = useNavigate();
   const blinko = RootStore.Get(BlinkoStore);
 
   useEffect(() => {
@@ -65,12 +64,13 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
         if (!isMounted) return;
 
         // Listen for navigate to settings page events
+        // 走弹窗而非 navigate('/settings')，与 PC 端「统一为 1 个入口、统一弹窗」一致。
         const unlistenNavigateSettings = await listen('navigate-to-settings', () => {
           try {
-            navigate('/settings?tab=hotkey');
-            console.log('Navigating to hotkey settings');
+            ShowSettingsDialog('hotkey');
+            console.log('Opening hotkey settings dialog');
           } catch (error) {
-            console.error('Error navigating to settings:', error);
+            console.error('Error opening settings dialog:', error);
           }
         });
 
@@ -100,5 +100,5 @@ export const useQuicknoteHotkey = (isCreateMode: boolean) => {
         }
       });
     };
-  }, [isCreateMode, navigate, blinko]);
+  }, [isCreateMode, blinko]);
 };

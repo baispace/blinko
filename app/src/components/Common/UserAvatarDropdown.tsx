@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { signOut, navigate } from '../Auth/auth-client';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 
 interface UserAvatarDropdownProps {
   onItemClick?: () => void;
@@ -51,8 +52,15 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
                 className='font-bold'
                 startContent={<Icon icon={i.icon} width="20" height="20" />}
                 onPress={() => {
-                  navigate(i.href);
-                  base.currentRouter = i;
+                  // 设置走 overlay 弹窗，不做路由跳转。跳转会把用户从当前页面
+                  // （闪念列表 / 详情页）踢走，而 PC 端设置本来就是弹窗交互；
+                  // 关闭弹窗后应当原样停在原页面。
+                  if (i.href === '/settings') {
+                    ShowSettingsDialog();
+                  } else {
+                    navigate(i.href);
+                    base.currentRouter = i;
+                  }
                   onItemClick?.();
                 }}
               >

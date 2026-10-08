@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom"
 
 interface TagActivity {
   months: string[]
-  tags: Array<{ tag: string; data: number[] }>
+  tags: Array<{ tag: string; id: number; data: number[] }>
 }
 
 interface TagHeatmapProps {
@@ -76,10 +76,9 @@ export const TagHeatmap = observer(({ data }: TagHeatmapProps) => {
     }, true)
     inst.current.on("click", (params: any) => {
       const [mi, ti] = params.value
-      const tag = data.tags[ti]?.tag
-      const month = data.months[mi]
-      if (tag) {
-        navigate(`/?path=notes&searchTag=${encodeURIComponent(tag)}&from=${month}-01&to=${month}-31`)
+      const tagInfo = data.tags[ti]
+      if (tagInfo?.id) {
+        navigate(`/?path=notes&tagId=${tagInfo.id}`)
       }
     })
   }, [data, theme, navigate])

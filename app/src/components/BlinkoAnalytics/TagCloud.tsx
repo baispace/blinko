@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 
 export interface TagNode {
   name: string
+  id?: number
   value: number
   children?: TagNode[]
 }
@@ -26,6 +27,7 @@ function colorize(nodes: TagNode[]): any[] {
   return nodes.map(n => {
     const color = PALETTE[idx++ % PALETTE.length]
     const out: any = { name: n.name, value: n.value, itemStyle: { color, borderColor: "rgba(0,0,0,0.08)" } }
+    if (n.id != null) out.id = n.id
     if (n.children && n.children.length > 0) {
       out.children = colorize(n.children)
     }
@@ -80,8 +82,12 @@ export const TagCloud = observer(({ data }: TagCloudProps) => {
       }],
     }, true)
     inst.current.on("click", (params: any) => {
-      if (params.data?.name) {
-        navigate(`/?path=notes&searchTag=${encodeURIComponent(params.data.name)}`)
+      const id = params.data?.id
+      if (id != null) {
+        navigate(`/?path=notes&tagId=${id}`)
+      } else if (params.data?.name) {
+        // 合成父节点（按 "/" 拆出的虚拟父）没有 id，兜底用 name 跳转已不必要——直接不响应
+        return
       }
     })
   }, [data, theme, navigate])

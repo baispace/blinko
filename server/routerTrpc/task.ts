@@ -2,13 +2,14 @@ import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } f
 import { z } from 'zod';
 import { DBJob } from '@server/jobs/dbjob';
 import { ArchiveJob } from '@server/jobs/archivejob';
-import { UPLOAD_FILE_PATH } from '@shared/lib/pathConstant';
+import { UPLOAD_FILE_PATH, TEMP_PATH } from '@shared/lib/pathConstant';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@shared/lib/sharedConstant';
 import { Memos } from '../jobs/memosJob';
-import { unlink } from 'fs/promises';
+import { unlink, writeFile } from 'fs/promises';
 import { FileService } from '../lib/files';
 import path from 'path';
 import fs from 'fs';
+import AdmZip from 'adm-zip';
 import { MarkdownImporter } from '../jobs/markdownJob';
 import { getPgBoss } from '../lib/pgBoss';
 import { prisma } from '../prisma';
@@ -196,7 +197,7 @@ export const taskRouter = router({
 
   exportMarkdown: authProcedure
     .input(z.object({
-      format: z.enum(['markdown', 'csv', 'json']),
+      format: z.enum(['markdown', 'csv', 'json', 'html', 'docx']),
       baseURL: z.string(),
       startDate: z.date().optional(),
       endDate: z.date().optional(),
@@ -223,5 +224,112 @@ export const taskRouter = router({
         downloadUrl: `/api/file${result.path}`,
         fileCount: result.fileCount
       };
+    }),
+
+  /**
+   * 单条笔记导出：返回 markdown / html / docx 单文件的下载 URL。
+   * 5 分钟后清理临时文件。
+   */
+  exportSingleNote: authProcedure
+    .input(z.object({
+      id: z.number(),
+      format: z.enum(['markdown', 'html', 'docx']),
+      baseURL: z.string(),
+    }))
+    .output(z.object({
+      success: z.boolean(),
+      downloadUrl: z.string().optional(),
+      fileName: z.string().optional(),
+      error: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const result = await DBJob.ExportSingleNote({
+          id: input.id,
+          baseURL: input.baseURL,
+          ctx,
+          format: input.format,
+        });
+        setTimeout(async () => {
+          try {
+            const filePath = path.join(UPLOAD_FILE_PATH, result.path);
+            if (fs.existsSync(filePath)) await unlink(filePath);
+          } catch (e) {
+            console.warn('Failed to cleanup single export:', e);
+          }
+        }, 5 * 60 * 1000);
+        return {
+          success: true,
+          downloadUrl: `/api/file${result.path}`,
+          fileName: result.fileName,
+        };
+      } catch (e: any) {
+        return { success: false, error: e?.message ?? String(e) };
+      }
+    }),
+
+  /**
+   * 从单个 docx 或 zip(docx) 导入笔记。先用 mammoth 抽 markdown，再走 MarkdownImporter。
+   */
+  importFromDocx: authProcedure.use(demoAuthMiddleware)
+    .input(z.object({
+      filePath: z.string(), // .docx or .zip
+    }))
+    .mutation(async function* ({ input, ctx }) {
+      try {
+        const fileResult = await FileService.getFile(input.filePath);
+        const tmpDir = path.join(TEMP_PATH, `docx_import_${Date.now()}`);
+        fs.mkdirSync(tmpDir, { recursive: true });
+
+        const ext = path.extname(fileResult.path).toLowerCase();
+        let mdFiles: string[] = [];
+
+        if (ext === '.docx') {
+          const md = await DBJob.docxToMarkdown(fileResult.path);
+          const out = path.join(tmpDir, 'imported.md');
+          await writeFile(out, md, 'utf-8');
+          mdFiles = [out];
+        } else if (ext === '.zip') {
+          const zip = new AdmZip(fileResult.path);
+          const entries = zip.getEntries();
+          for (const entry of entries) {
+            if (entry.isDirectory) continue;
+            if (!/\.docx$/i.test(entry.entryName)) continue;
+            const tmpFile = path.join(tmpDir, entry.entryName);
+            fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
+            fs.writeFileSync(tmpFile, entry.getData());
+            const md = await DBJob.docxToMarkdown(tmpFile);
+            const out = tmpFile.replace(/\.docx$/i, '.md');
+            await writeFile(out, md, 'utf-8');
+            mdFiles.push(out);
+          }
+        } else {
+          throw new Error('Unsupported file type. Only .docx / .zip are supported');
+        }
+
+        if (mdFiles.length === 0) throw new Error('No docx files found');
+
+        const markdownImporter = new MarkdownImporter();
+        for (const mdPath of mdFiles) {
+          for await (const result of markdownImporter.importMarkdown(mdPath, ctx)) {
+            yield result;
+          }
+        }
+
+        try {
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+          if (fileResult.isTemporary && fileResult.cleanup) {
+            await fileResult.cleanup();
+          } else {
+            await unlink(fileResult.path);
+          }
+          await FileService.deleteFile(input.filePath);
+        } catch (e) {
+          console.error('Failed to cleanup docx import:', e);
+        }
+      } catch (error) {
+        console.error('Error in importFromDocx:', error);
+        throw new Error(error as string);
+      }
     }),
 })

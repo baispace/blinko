@@ -15,6 +15,9 @@ import { NotificationType } from "@shared/lib/prismaZodType";
 import archiver from 'archiver';
 import { createWriteStream } from 'fs';
 import yauzl from 'yauzl-promise';
+import { marked } from 'marked';
+import mammoth from 'mammoth';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 import { FileService } from "../lib/files";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routerTrpc/config";
@@ -406,7 +409,7 @@ export class DBJob extends BaseScheduleJob {
     startDate?: Date;
     endDate?: Date;
     ctx: Context;
-    format: 'markdown' | 'csv' | 'json';
+    format: 'markdown' | 'csv' | 'json' | 'html' | 'docx';
   }) {
     const { baseURL, startDate, endDate, ctx, format } = params;
     const notes = await prisma.notes.findMany({
@@ -449,23 +452,20 @@ export class DBJob extends BaseScheduleJob {
           path.join(exportDir, 'notes.json'),
           JSON.stringify(notes, null, 2)
         );
-      } else {
+      } else if (format === 'markdown' || format === 'html') {
+        // markdown 与 html 共享：先生成单文件 markdown，再在 html 分支整体渲染
         await Promise.all(notes.map(async (note) => {
           let mdContent = note.content;
-
           if (note.attachments?.length) {
             await Promise.all(note.attachments.map(async (attachment) => {
               try {
-                // Fix: Add authentication token to allow downloading private note attachments
                 const tokenParam = ctx.token ? `?token=${ctx.token}` : '';
                 const response = await fetch(`${baseURL}${attachment.path}${tokenParam}`);
                 const buffer = await response.arrayBuffer();
                 const attachmentPath = path.join(attachmentsDir, attachment.name);
                 //@ts-ignore
                 await writeFile(attachmentPath, Buffer.from(buffer));
-
                 const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment.name);
-
                 if (isImage) {
                   mdContent += `\n![${attachment.name}](./files/${attachment.name})`;
                 } else {
@@ -476,9 +476,53 @@ export class DBJob extends BaseScheduleJob {
               }
             }));
           }
-
           const fileName = `note-${note.id}-${note.createdAt.getTime()}.md`;
           await writeFile(path.join(exportDir, fileName), mdContent);
+        }));
+        if (format === 'html') {
+          // 渲染整个目录里所有 .md 为 HTML
+          const mdFiles = fs.readdirSync(exportDir).filter(f => f.endsWith('.md'));
+          for (const f of mdFiles) {
+            const md = fs.readFileSync(path.join(exportDir, f), 'utf-8');
+            const body = await marked.parse(md);
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>${f.replace(/\.md$/, '')}</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:780px;margin:40px auto;padding:0 20px;color:#222;line-height:1.6}img{max-width:100%}pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}code{background:#f6f8fa;padding:2px 4px;border-radius:3px;font-size:0.9em}blockquote{border-left:4px solid #ddd;color:#666;padding-left:12px;margin-left:0}a{color:#0366d6}</style></head><body>${body}</body></html>`;
+            await writeFile(path.join(exportDir, f.replace(/\.md$/, '.html')), html);
+          }
+        }
+      } else if (format === 'docx') {
+        // 每个 note 生成一个 .docx，整批打包成 zip
+        await Promise.all(notes.map(async (note) => {
+          const md = note.content;
+          const lines = md.split('\n');
+          const children: Paragraph[] = [];
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            let level: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
+            if (trimmed.startsWith('######')) level = HeadingLevel.HEADING_6;
+            else if (trimmed.startsWith('#####')) level = HeadingLevel.HEADING_5;
+            else if (trimmed.startsWith('####')) level = HeadingLevel.HEADING_4;
+            else if (trimmed.startsWith('###')) level = HeadingLevel.HEADING_3;
+            else if (trimmed.startsWith('##')) level = HeadingLevel.HEADING_2;
+            else if (trimmed.startsWith('#')) level = HeadingLevel.HEADING_1;
+            const text = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '');
+            children.push(new Paragraph({
+              heading: level,
+              children: [new TextRun(text)],
+            }));
+          }
+          if (note.attachments?.length) {
+            for (const att of note.attachments) {
+              children.push(new Paragraph({
+                children: [new TextRun({ text: `[附件] ${att.name}`, italics: true })],
+              }));
+            }
+          }
+          const doc = new Document({ sections: [{ properties: {}, children }] });
+          const buf = await Packer.toBuffer(doc);
+          const fileName = `note-${note.id}-${note.createdAt.getTime()}.docx`;
+          await writeFile(path.join(exportDir, fileName), buf);
         }));
       }
 
@@ -503,5 +547,91 @@ export class DBJob extends BaseScheduleJob {
       } catch { }
       throw error;
     }
+  }
+
+  /**
+   * 导出单条笔记为 markdown / html / docx 单文件，返回 /api/file/... 相对路径。
+   * markdown: 单 .md；html: 单 .html（带样式）；docx: 单 .docx
+   */
+  static async ExportSingleNote(params: {
+    id: number;
+    baseURL: string;
+    ctx: Context;
+    format: 'markdown' | 'html' | 'docx';
+  }) {
+    const { id, baseURL, ctx, format } = params;
+    const note = await prisma.notes.findFirst({
+      where: { id, accountId: Number(ctx.id) },
+      select: { id: true, content: true, attachments: true, createdAt: true },
+    });
+    if (!note) throw new Error('Note not found');
+
+    const exportDir = path.join(TEMP_PATH, 'single_exports');
+    fs.mkdirSync(exportDir, { recursive: true });
+    const stamp = note.createdAt.getTime();
+
+    let fileName: string;
+    let outputPath: string;
+
+    if (format === 'markdown') {
+      let md = note.content;
+      if (note.attachments?.length) {
+        md += '\n\n## Attachments\n' + note.attachments.map(a => `- ${a.name}`).join('\n');
+      }
+      fileName = `note-${note.id}-${stamp}.md`;
+      outputPath = path.join(exportDir, fileName);
+      await writeFile(outputPath, md, 'utf-8');
+    } else if (format === 'html') {
+      const body = await marked.parse(note.content);
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>note-${note.id}</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:780px;margin:40px auto;padding:0 20px;color:#222;line-height:1.6}img{max-width:100%}pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}code{background:#f6f8fa;padding:2px 4px;border-radius:3px;font-size:0.9em}blockquote{border-left:4px solid #ddd;color:#666;padding-left:12px;margin-left:0}a{color:#0366d6}</style></head><body>${body}</body></html>`;
+      fileName = `note-${note.id}-${stamp}.html`;
+      outputPath = path.join(exportDir, fileName);
+      await writeFile(outputPath, html, 'utf-8');
+    } else {
+      // docx
+      const lines = note.content.split('\n');
+      const children: Paragraph[] = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        let level: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
+        if (trimmed.startsWith('######')) level = HeadingLevel.HEADING_6;
+        else if (trimmed.startsWith('#####')) level = HeadingLevel.HEADING_5;
+        else if (trimmed.startsWith('####')) level = HeadingLevel.HEADING_4;
+        else if (trimmed.startsWith('###')) level = HeadingLevel.HEADING_3;
+        else if (trimmed.startsWith('##')) level = HeadingLevel.HEADING_2;
+        else if (trimmed.startsWith('#')) level = HeadingLevel.HEADING_1;
+        const text = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '');
+        children.push(new Paragraph({ heading: level, children: [new TextRun(text)] }));
+      }
+      if (note.attachments?.length) {
+        for (const att of note.attachments) {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: `[附件] ${att.name}`, italics: true })],
+          }));
+        }
+      }
+      const doc = new Document({ sections: [{ properties: {}, children }] });
+      const buf = await Packer.toBuffer(doc);
+      fileName = `note-${note.id}-${stamp}.docx`;
+      outputPath = path.join(exportDir, fileName);
+      await writeFile(outputPath, buf);
+    }
+
+    return {
+      success: true,
+      path: outputPath.replace(UPLOAD_FILE_PATH, ''),
+      fileName,
+    };
+  }
+
+  /**
+   * 解析 docx 为 markdown（mammoth 提取纯文本，按段落切分）。
+   * 返回 markdown 字符串，调用方写入临时 .md 文件后走 MarkdownImporter。
+   */
+  static async docxToMarkdown(filePath: string): Promise<string> {
+    const result = await mammoth.extractRawText({ path: filePath });
+    return result.value;
   }
 }

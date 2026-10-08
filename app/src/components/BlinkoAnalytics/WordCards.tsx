@@ -41,6 +41,8 @@ export const WordCards = observer(({ data }: WordCardsProps) => {
   const rawDiffPct = data.rawTotal > 0
     ? Math.round(((data.total - data.rawTotal) / data.rawTotal) * 1000) / 10
     : 0
+  // rawDiffPct 为负：清洗后比原始少 → 显示 "-N% 已去 markdown" 表示去掉的量
+  const cleanedPct = Math.abs(rawDiffPct).toFixed(1)
 
   const cards: Array<{
     labelKey: string
@@ -58,7 +60,7 @@ export const WordCards = observer(({ data }: WordCardsProps) => {
       value: fmtNum(data.total),
       diff: totalDiff,
       sub: data.rawTotal !== data.total
-        ? `原始 ${fmtNum(data.rawTotal)} · ${rawDiffPct > 0 ? "-" : "+"}${Math.abs(rawDiffPct)}% ${t("word-cleaned")}`
+        ? `原始 ${fmtNum(data.rawTotal)} · -${cleanedPct}% ${t("word-cleaned")}`
         : `${data.activeDays} ${t("active-days")}`,
     },
     {

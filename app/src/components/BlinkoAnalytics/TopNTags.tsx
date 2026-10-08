@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 
 interface TopNTagsProps {
-  data: Array<{ name: string; count: number }>
+  data: Array<{ name: string; id: number; count: number }>
   topN?: number
   onChangeTopN?: (n: number) => void
 }
@@ -62,8 +62,8 @@ export const TopNTags = observer(({ data, topN = 5, onChangeTopN }: TopNTagsProp
         <div className="flex flex-col gap-1.5">
           {visible.map((row, i) => (
             <div
-              key={row.name}
-              onClick={() => navigate(`/?path=notes&searchTag=${encodeURIComponent(row.name)}`)}
+              key={row.id}
+              onClick={() => row.id && navigate(`/?path=notes&tagId=${row.id}`)}
               className="grid grid-cols-[24px_120px_1fr_60px] gap-3 items-center px-2 py-1.5 rounded-md cursor-pointer hover:bg-default-100 transition-colors"
             >
               <span className="text-xs text-default-500 font-semibold text-center">{i + 1}</span>

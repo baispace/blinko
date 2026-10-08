@@ -232,15 +232,15 @@ export const analyticsRouter = router({
           GROUP BY h ORDER BY h
         `,
         // 5) tag × month for past 12 months (top tags only, limited)
-        prisma.$queryRaw<Array<{ tag_name: string; month: string; count: bigint }>>`
-          SELECT t.name as tag_name, to_char(n."createdAt", 'YYYY-MM') as month, COUNT(*) as count
+        prisma.$queryRaw<Array<{ tag_id: number; tag_name: string; month: string; count: bigint }>>`
+          SELECT t.id as tag_id, t.name as tag_name, to_char(n."createdAt", 'YYYY-MM') as month, COUNT(*) as count
           FROM "tagsToNote" t2n
           JOIN "tag" t ON t.id = t2n."tagId"
           JOIN "notes" n ON n.id = t2n."noteId"
           WHERE t."accountId" = ${accountId}
             AND n."isRecycle" = false AND n."isArchived" = false
             AND n."createdAt" >= NOW() - INTERVAL '12 months'
-          GROUP BY t.name, month
+          GROUP BY t.id, t.name, month
           ORDER BY month ASC
         `,
         // 6) word distribution buckets (current period)
@@ -398,30 +398,34 @@ export const analyticsRouter = router({
       }
       const tagActivity = topTagNames.map(tag => {
         const monthMap = new Map<string, number>()
+        let tagId = 0
         for (const row of tagActivityRows) {
-          if (row.tag_name === tag) monthMap.set(row.month, Number(row.count))
+          if (row.tag_name === tag) {
+            monthMap.set(row.month, Number(row.count))
+            tagId = row.tag_id
+          }
         }
-        return { tag, data: monthList.map(m => monthMap.get(m) || 0) }
+        return { tag, id: tagId, data: monthList.map(m => monthMap.get(m) || 0) }
       })
 
       // ── Tag cloud (all-time, with hierarchy from "/" in name) ──
-      const allTagsData: Array<{ name: string; count: number }> = []
+      const allTagsData: Array<{ name: string; id: number; count: number }> = []
       const seenTag = new Set<string>()
       for (const row of tagActivityRows) {
         const n = row.tag_name
         // Sum across all months for the tag's all-time count
         if (!seenTag.has(n)) {
           seenTag.add(n)
-          allTagsData.push({ name: n, count: tagTotals.get(n) || 0 })
+          allTagsData.push({ name: n, id: row.tag_id, count: tagTotals.get(n) || 0 })
         }
       }
       // Build hierarchy: split on "/"
-      type CloudNode = { name: string; value: number; children?: CloudNode[] }
+      type CloudNode = { name: string; id?: number; value: number; children?: CloudNode[] }
       const rootChildren: CloudNode[] = []
       for (const t of allTagsData) {
         const parts = t.name.split("/")
         if (parts.length === 1) {
-          rootChildren.push({ name: t.name, value: t.count })
+          rootChildren.push({ name: t.name, id: t.id, value: t.count })
         } else {
           // For simplicity in mock: keep flat (no nested) — the treemap library handles nesting via children
           // Find or create parent
@@ -431,7 +435,7 @@ export const analyticsRouter = router({
             parent = { name: parentName, value: 0, children: [] }
             rootChildren.push(parent)
           }
-          parent.children!.push({ name: t.name, value: t.count })
+          parent.children!.push({ name: t.name, id: t.id, value: t.count })
           parent.value += t.count
         }
       }
@@ -445,19 +449,19 @@ export const analyticsRouter = router({
         // Simpler: a quick query for top tags in current period
       }
       // Run the top-tags-for-period query (could parallelize, but we already have current)
-      const topTagsRows = await prisma.$queryRaw<Array<{ tag_name: string; count: bigint }>>`
-        SELECT t.name as tag_name, COUNT(*) as count
+      const topTagsRows = await prisma.$queryRaw<Array<{ tag_id: number; tag_name: string; count: bigint }>>`
+        SELECT t.id as tag_id, t.name as tag_name, COUNT(*) as count
         FROM "tagsToNote" t2n
         JOIN "tag" t ON t.id = t2n."tagId"
         JOIN "notes" n ON n.id = t2n."noteId"
         WHERE t."accountId" = ${accountId}
           AND n."isRecycle" = false AND n."isArchived" = false
           AND n."createdAt" >= ${r.start} AND n."createdAt" <= ${r.end}
-        GROUP BY t.name
+        GROUP BY t.id, t.name
         ORDER BY count DESC
         LIMIT 10
       `
-      const topTags = topTagsRows.map(r => ({ name: r.tag_name, count: Number(r.count) }))
+      const topTags = topTagsRows.map(r => ({ id: r.tag_id, name: r.tag_name, count: Number(r.count) }))
 
       // ── Word distribution ──
       const distMap = new Map<number, number>()

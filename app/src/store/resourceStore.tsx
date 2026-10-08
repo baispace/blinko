@@ -1,5 +1,5 @@
 import { Store } from "./standard/base";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, toJS } from "mobx";
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { BlinkoStore } from "./blinkoStore";
 import { RootStore } from ".";
@@ -67,8 +67,36 @@ export class ResourceStore implements Store {
     if (!list.length) return;
     const UPLOAD_CONCURRENCY = 3;
     this.uploading += list.length;
+
+    // ── 同名去重：当前文件夹内已有 name 时，自动加 " (N)" 后缀 ──
+    // File.name 只读，要改名只能 new File 复制一份
+    const existingNames = new Set<string>()
+    const resources = toJS(this.blinko.resourceList.value) || []
+    for (const r of resources) {
+      if (r.isFolder || r.name === '.folder') continue
+      const rFolder = (r.perfixPath ?? '') as string
+      const curFolder = this.currentFolder ?? ''
+      if (rFolder === curFolder) existingNames.add(r.name)
+    }
+    const renamed: Array<{ from: string; to: string }> = []
+    const finalList: File[] = list.map(file => {
+      if (!existingNames.has(file.name)) return file
+      const dotIdx = file.name.lastIndexOf('.')
+      const base = dotIdx > 0 ? file.name.slice(0, dotIdx) : file.name
+      const ext = dotIdx > 0 ? file.name.slice(dotIdx) : ''
+      let candidate = `${base} (1)${ext}`
+      let n = 1
+      while (existingNames.has(candidate)) {
+        n++
+        candidate = `${base} (${n})${ext}`
+      }
+      existingNames.add(candidate)
+      renamed.push({ from: file.name, to: candidate })
+      return new File([file], candidate, { type: file.type, lastModified: file.lastModified })
+    })
+
     // 初始化每个任务的进度
-    const taskKeys = list.map(f => `${f.name}__${f.size}`)
+    const taskKeys = finalList.map(f => `${f.name}__${f.size}`)
     taskKeys.forEach(k => { this.uploadProgress[k] = 0; this.uploadDone[k] = undefined as any })
     let successCount = 0
     let errorCount = 0
@@ -100,7 +128,14 @@ export class ResourceStore implements Store {
     }
 
     try {
-      await this.runWithConcurrency(list, UPLOAD_CONCURRENCY, worker)
+      await this.runWithConcurrency(finalList, UPLOAD_CONCURRENCY, worker)
+      // 改名提示（同名去重）
+      if (renamed.length > 0) {
+        const summary = renamed.length === 1
+          ? t('upload-renamed-single', { from: renamed[0]!.from, to: renamed[0]!.to })
+          : t('upload-renamed-multi', { count: renamed.length })
+        RootStore.Get(ToastPlugin).loading(summary, { id: 'upload-rename' })
+      }
       if (errorCount === 0) {
         RootStore.Get(ToastPlugin).success(t('upload-success'))
       } else if (successCount === 0) {

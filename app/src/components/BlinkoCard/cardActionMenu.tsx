@@ -21,6 +21,7 @@ import {
   handleCopyContent,
   handleShowHistory,
   handleRelatedNotes,
+  handleExport,
   ConvertItemFunction,
   ShowEditTimeModel,
   EditItem,
@@ -32,6 +33,7 @@ import {
   PublicItem,
   AITagItem,
   RelatedNotesItem,
+  ExportItem,
   TrashItem,
   DeleteItem,
 } from '../BlinkoRightClickMenu';
@@ -310,6 +312,15 @@ export const CardActionMenu = observer(({
               <Icon icon="tabler:world" width="20" height="20" />
               <div>{blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
             </div>
+          </DropdownItem>
+        ) : null}
+        {!isRecycle ? (
+          <DropdownItem
+            key="export"
+            textValue={t('export')}
+            onClick={withNote(handleExport)}
+          >
+            <ExportItem />
           </DropdownItem>
         ) : null}
 

@@ -300,6 +300,77 @@ export const handleTrash = () => {
   PromiseCall(api.notes.trashMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
 }
 
+/**
+ * 单条笔记导出：弹窗选格式 → 后端返回临时文件下载 URL → 浏览器下载。
+ */
+export const handleExport = async () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  const note = blinko.curSelectedNote
+  if (!note) return
+
+  const { DialogStandaloneStore } = await import('@/store/module/DialogStandalone')
+  const dialog = RootStore.Get(DialogStandaloneStore)
+  const { t: tFn } = await import('i18next')
+
+  dialog.setData({
+    isOpen: true,
+    title: tFn('export'),
+    content: () => {
+      const [format, setFormat] = useState<'markdown' | 'html' | 'docx'>('markdown')
+      return (
+        <div className="flex flex-col gap-3 p-2">
+          <div className="flex gap-2 flex-wrap">
+            {(['markdown', 'html', 'docx'] as const).map(f => (
+              <Button
+                key={f}
+                size="sm"
+                variant={format === f ? 'solid' : 'flat'}
+                color={format === f ? 'primary' : 'default'}
+                onPress={() => setFormat(f)}
+              >
+                {f === 'markdown' ? 'Markdown' : f === 'html' ? 'HTML' : 'Word (.docx)'}
+              </Button>
+            ))}
+          </div>
+          <Button
+            color="primary"
+            onPress={async () => {
+              try {
+                RootStore.Get(ToastPlugin).loading(tFn('exporting'), { id: 'export-single' })
+                const res = await PromiseCall(api.task.exportSingleNote.mutate({
+                  id: note.id!,
+                  format,
+                  baseURL: window.location.origin,
+                }))
+                if (res?.success && res.downloadUrl) {
+                  const link = document.createElement('a')
+                  link.href = res.downloadUrl.startsWith('http')
+                    ? res.downloadUrl
+                    : window.location.origin + res.downloadUrl
+                  link.download = res.fileName || `note-${note.id}.${format}`
+                  document.body.appendChild(link)
+                  link.click()
+                  document.body.removeChild(link)
+                  RootStore.Get(ToastPlugin).success(tFn('export-success'))
+                } else {
+                  RootStore.Get(ToastPlugin).error(res?.error || tFn('export-failed'))
+                }
+              } catch (e: any) {
+                RootStore.Get(ToastPlugin).error(e?.message || tFn('export-failed'))
+              } finally {
+                RootStore.Get(ToastPlugin).dismiss('export-single')
+                RootStore.Get(DialogStandaloneStore).close()
+              }
+            }}
+          >
+            {tFn('export')}
+          </Button>
+        </div>
+      )
+    }
+  })
+}
+
 /** 复制正文 + 附件链接（compact 卡片把该操作从 header 收进菜单后仍需可达） */
 export const handleCopyContent = async () => {
   const blinko = RootStore.Get(BlinkoStore)
@@ -524,6 +595,14 @@ export const HistoryItem = observer(() => {
   return <div className="flex items-start gap-2">
     <Icon icon="lucide:history" width="20" height="20" />
     <div>{t('Note History')}</div>
+  </div>
+})
+
+export const ExportItem = observer(() => {
+  const { t } = useTranslation();
+  return <div className="flex items-start gap-2">
+    <Icon icon="tabler:file-export" width="20" height="20" />
+    <div>{t('export')}</div>
   </div>
 })
 

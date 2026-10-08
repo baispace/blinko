@@ -33,6 +33,8 @@ export const ExportSetting = observer(() => {
 
   const formatOptions = [
     { label: "Markdown", value: "markdown" },
+    { label: "HTML", value: "html" },
+    { label: "Word (docx)", value: "docx" },
     { label: "JSON", value: "json" },
     { label: "CSV", value: "csv" }
   ];
@@ -42,7 +44,7 @@ export const ExportSetting = observer(() => {
     RootStore.Get(ToastPlugin).loading(t('exporting'), { id: 'exporting' })
     const exportParams: any = {
       baseURL: window.location.origin,
-      format: exportFormat as 'markdown' | 'csv' | 'json'
+      format: exportFormat as 'markdown' | 'html' | 'docx' | 'csv' | 'json'
     };
 
     if (dateRange.start && dateRange.end) {

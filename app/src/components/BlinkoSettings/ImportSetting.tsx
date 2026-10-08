@@ -8,6 +8,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { ShowMemosProgressDialog } from "../Common/ImportMemosProgress";
 import { ShowBlinkoProgressDialog } from "../Common/ImportBlinkoProgress";
 import { ShowMarkdownProgressDialog } from "../Common/ImportMarkdownProgress";
+import { ShowImportProgressDialog } from "../Common/ImportProgress";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 
 
@@ -59,6 +60,23 @@ export const ImportSetting = observer(() => {
             return RootStore.Get(ToastPlugin).error(t('not-a-markdown-or-zip-file'))
           }
           ShowMarkdownProgressDialog(filePath)
+        }}>
+        </UploadFileWrapper>
+      </div>} />
+
+    <Item
+      type={isPc ? 'row' : 'col'}
+      leftContent={<div className="flex flex-col gap-2">
+        <div>{t('import-from-word')}</div>
+        <div className="text-desc text-xs">{t('import-from-word-tip')}</div>
+      </div>}
+      rightContent={<div className="flex w-full ml-auto justify-end">
+        <UploadFileWrapper onUpload={async ({ filePath, fileName }) => {
+          const lower = fileName.toLowerCase()
+          if (!lower.endsWith('.docx') && !lower.endsWith('.zip')) {
+            return RootStore.Get(ToastPlugin).error(t('not-a-word-or-zip-file'))
+          }
+          ShowImportProgressDialog(filePath, 'docx')
         }}>
         </UploadFileWrapper>
       </div>} />

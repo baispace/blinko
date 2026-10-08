@@ -1,5 +1,5 @@
 import * as echarts from "echarts"
-import { useEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import dayjs from "dayjs"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"
@@ -21,18 +21,24 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
   const ref = useRef<HTMLDivElement>(null)
   const inst = useRef<echarts.ECharts | null>(null)
 
-  useEffect(() => {
+  // Init on layout — before paint, so container size is correct
+  useLayoutEffect(() => {
     if (!ref.current) return
-    if (!inst.current) inst.current = echarts.init(ref.current, undefined, { renderer: "canvas" })
+    if (!inst.current) {
+      inst.current = echarts.init(ref.current, undefined, { renderer: "canvas" })
+    }
+    // Force resize on next frame to ensure size is up to date
+    requestAnimationFrame(() => inst.current?.resize())
+  }, [])
+
+  useEffect(() => {
+    if (!ref.current || !inst.current) return
     const isDark = theme === "dark"
-    const fg = isDark ? "#e9eaee" : "#14171e"
     const muted = isDark ? "#9aa0aa" : "#7c7a72"
     const bg = isDark ? "#181c23" : "#ffffff"
-    const cellEmpty = isDark ? "rgba(255,255,255,0.05)" : "#ebedf0"
+    const cellEmpty = isDark ? "rgba(255,255,255,0.06)" : "#ebedf0"
 
-    // Filter data by range
     const now = dayjs()
-    // "all" 模式：以数据最早一天为起点（最多回看 5 年）避免 2 万格卡死
     const maxLookbackDays = 365 * 5
     const earliestData = data.length > 0
       ? dayjs(data.reduce((min, [d]) => d < min ? d : min, data[0]![0]))
@@ -48,7 +54,6 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
       return dd.isAfter(cutoff) || dd.isSame(cutoff, "day")
     })
 
-    // Build full date range (capped at maxLookbackDays)
     const dates: string[] = []
     const cur = cutoff.clone().startOf("day")
     const end = now.startOf("day")
@@ -61,6 +66,8 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
     const dataMap = new Map(filtered)
     const cells: Array<[string, number]> = dates.map(d => [d, dataMap.get(d) || 0])
     const max = Math.max(1, ...cells.map(c => c[1]))
+    const activeDays = filtered.length
+    const totalChars = filtered.reduce((s, [, v]) => s + v, 0)
 
     inst.current.setOption({
       tooltip: {
@@ -81,19 +88,21 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
         },
       },
       calendar: {
-        top: 24,
-        left: 30,
-        right: 8,
-        cellSize: ["auto", 14],
+        top: 28,
+        left: 40,
+        right: 16,
+        bottom: 12,
+        cellSize: ["auto", 16],
         range: [cutoff.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")],
         itemStyle: { borderColor: bg, borderWidth: 2, borderRadius: 3, color: cellEmpty },
         yearLabel: { show: false },
-        dayLabel: { show: false },
+        dayLabel: { firstDay: 1, color: muted, fontSize: 9, nameMap: ["日", "一", "二", "三", "四", "五", "六"] },
         monthLabel: { color: muted, fontSize: 10, margin: 8 },
         splitLine: { show: false },
       },
       series: [{ type: "heatmap", coordinateSystem: "calendar", data: cells, animation: false }],
     }, true)
+
     inst.current.on("click", (params: any) => {
       if (params.value && Array.isArray(params.value) && params.value[0]) {
         const date = params.value[0] as string
@@ -101,6 +110,13 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
         else navigate(`/?path=notes&from=${date}&to=${date}`)
       }
     })
+
+    // Force a resize after options set (in case container was 0×0 at init)
+    requestAnimationFrame(() => inst.current?.resize())
+
+    // Store active days for the header
+    ;(ref.current as any).__activeDays = activeDays
+    ;(ref.current as any).__totalChars = totalChars
   }, [data, theme, range, metric, t, navigate, onCellClick])
 
   useEffect(() => {
@@ -115,21 +131,31 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
     inst.current = null
   }, [])
 
+  const activeDays = (ref.current as any)?.__activeDays as number | undefined
+  const totalChars = (ref.current as any)?.__totalChars as number | undefined
+
   return (
     <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
       {(title || description) && (
-        <div className="mb-3">
-          {title && <h2 className="text-base font-semibold">{title}</h2>}
-          {description && <p className="text-xs text-default-500 mt-0.5">{description}</p>}
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <div>
+            {title && <h2 className="text-base font-semibold">{title}</h2>}
+            {description && <p className="text-xs text-default-500 mt-0.5">{description}</p>}
+          </div>
+          {activeDays !== undefined && activeDays > 0 && (
+            <div className="text-xs text-default-500 shrink-0">
+              <span className="font-semibold text-foreground">{activeDays}</span> 个活跃日 · {totalChars} 条
+            </div>
+          )}
         </div>
       )}
       <div className="overflow-x-auto">
-        <div ref={ref} className="w-full" style={{ height: 180, minWidth: 720 }} />
+        <div ref={ref} className="w-full" style={{ height: 220, minWidth: 760 }} />
       </div>
       <div className="flex items-center justify-end gap-2 text-[10px] text-default-500 mt-2">
         <span>少</span>
         <div className="flex gap-0.5">
-          {["rgba(0,0,0,0.04)", "#9be9a8", "#40c463", "#30a14e", "#216e39"].map((c, i) => (
+          {["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"].map((c, i) => (
             <span key={i} className="w-2.5 h-2.5 rounded-sm" style={{ background: c }} />
           ))}
         </div>

@@ -64,20 +64,24 @@ export const TypeCards = observer(({ data, onJump }: TypeCardsProps) => {
           <button
             key={c.key}
             onClick={() => onJump?.(c.filter)}
-            className="text-left bg-content1 border border-default-200 rounded-2xl p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 transition-all"
+            title="点击下钻"
+            className="group text-left bg-content1 border border-default-200 rounded-2xl p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
           >
             <div className="flex justify-between items-center mb-2">
               <span className={`flex items-center gap-1.5 text-xs text-default-500 font-medium`}>
                 <Icon icon={c.icon} className={`w-4 h-4 ${c.color}`} />
                 {t(c.labelKey)}
               </span>
-              {d && (
-                <span className={`text-xs font-medium ${
-                  d.sign === "up" ? "text-success" : d.sign === "down" ? "text-danger" : "text-default-500"
-                }`}>
-                  {d.sign === "up" ? "↑" : d.sign === "down" ? "↓" : "·"} {d.text(t)}
-                </span>
-              )}
+              <div className="flex items-center gap-1">
+                {d && (
+                  <span className={`text-xs font-medium ${
+                    d.sign === "up" ? "text-success" : d.sign === "down" ? "text-danger" : "text-default-500"
+                  }`}>
+                    {d.sign === "up" ? "↑" : d.sign === "down" ? "↓" : "·"} {d.text(t)}
+                  </span>
+                )}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-default-300 group-hover:text-primary transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
             </div>
             <div className="text-3xl font-bold leading-tight font-feature-numeric-tnum">
               {fmtNum(v)}<span className="text-sm font-normal text-default-500 ml-1">{t("type-records") === "Records" ? "" : "条"}</span>

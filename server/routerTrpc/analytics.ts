@@ -139,11 +139,36 @@ export function cleanMarkdown(md: string): string {
 export function extractTitle(content: string): string {
   if (!content) return "(无标题)"
   const lines = content.split("\n").map(l => l.trim()).filter(Boolean)
+  if (lines.length === 0) return "(无标题)"
+
+  // 启发式：跳过像 tag 的标题（无空格、单词/标点），优先取像样的 heading
+  const isLikelyTag = (s: string) => /^[A-Za-z0-9_\-\*\u4e00-\u9fa5]{1,12}$/.test(s) && !/\s/.test(s)
+  const chineseCount = (s: string) => (s.match(/[\u4e00-\u9fa5]/g) || []).length
+  const isSubstantive = (s: string) =>
+    chineseCount(s) >= 1 || (s.length >= 8 && /\s/.test(s))
+
+  // 1) 找第一个像样的 heading
   for (const line of lines) {
-    if (line.startsWith("#")) return line.replace(/^#+\s*/, "").slice(0, 60)
+    if (line.startsWith("#")) {
+      const text = line.replace(/^#+\s+/, "").trim()
+      if (text && !isLikelyTag(text) && isSubstantive(text)) {
+        return text.slice(0, 60)
+      }
+    }
+  }
+  // 2) 第一个 heading 即便短也用（兜底）
+  for (const line of lines) {
+    if (line.startsWith("#")) {
+      const text = line.replace(/^#+\s+/, "").trim()
+      if (text) return text.slice(0, 60)
+    }
+  }
+  // 3) 第一行非空内容
+  for (const line of lines) {
+    if (line.startsWith("!") || line.startsWith("```") || line.startsWith("|") || line.startsWith(">") || line.startsWith("<")) continue
     return line.slice(0, 60)
   }
-  return "(无标题)"
+  return lines[0]!.slice(0, 60)
 }
 
 // ────────────────────────────────────────────────────────────────────────────

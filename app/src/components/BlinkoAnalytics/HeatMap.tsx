@@ -1,160 +1,125 @@
-import * as echarts from 'echarts'
+import * as echarts from "echarts"
 import { useEffect, useRef } from "react"
-import { useMediaQuery } from "usehooks-ts"
 import dayjs from "dayjs"
-import { useTranslation } from 'react-i18next'
-import { useTheme } from 'next-themes'
+import { useTranslation } from "react-i18next"
+import { useTheme } from "next-themes"
+import { useNavigate } from "react-router-dom"
 
 interface HeatMapProps {
   data: Array<[string, number]>
   title?: string
   description?: string
+  range?: "6m" | "1y" | "all"
+  metric?: "count" | "words"
+  onCellClick?: (date: string) => void
 }
 
-export const HeatMap = ({ data, title, description }: HeatMapProps) => {
-  const chartRef = useRef<HTMLDivElement>(null)
-  const isPc = useMediaQuery('(min-width: 768px)')
-  const { theme } = useTheme()
+export const HeatMap = ({ data, title, description, range = "1y", metric = "count", onCellClick }: HeatMapProps) => {
   const { t } = useTranslation()
+  const { theme } = useTheme()
+  const navigate = useNavigate()
+  const ref = useRef<HTMLDivElement>(null)
+  const inst = useRef<echarts.ECharts | null>(null)
+
   useEffect(() => {
-    if (!chartRef.current) return
+    if (!ref.current) return
+    if (!inst.current) inst.current = echarts.init(ref.current, undefined, { renderer: "canvas" })
+    const isDark = theme === "dark"
+    const fg = isDark ? "#e9eaee" : "#14171e"
+    const muted = isDark ? "#9aa0aa" : "#7c7a72"
+    const bg = isDark ? "#181c23" : "#ffffff"
+    const cellEmpty = isDark ? "rgba(255,255,255,0.05)" : "#ebedf0"
 
-    const chart = echarts.init(chartRef.current)
+    // Filter data by range
+    const now = dayjs()
+    const cutoff = range === "6m" ? now.subtract(6, "month") : range === "all" ? dayjs(0) : now.subtract(1, "year")
+    const filtered = data.filter(([d]) => dayjs(d).isAfter(cutoff) || dayjs(d).isSame(cutoff, "day"))
 
-    const handleResize = () => {
-      if (!chartRef.current) return
-      chart.resize()
-
-      const width = chartRef.current.clientWidth - 30
-      const height = chartRef.current.clientHeight
-
-      const minCellSize = 14
-
-      let cellSize
-      if (!isPc) {
-        cellSize = minCellSize
-      } else {
-        const cellSizeFromWidth = Math.floor(width / 53)
-        const cellSizeFromHeight = Math.floor((height - 50) / 7)
-        cellSize = Math.min(cellSizeFromWidth, cellSizeFromHeight)
-      }
-
-      chart.setOption({
-        calendar: {
-          cellSize: [cellSize, cellSize],
-          top: 30,
-          left: 0,
-          right: !isPc ? 'auto' : 'auto'
-        }
-      })
+    // Build full date range
+    const dates: string[] = []
+    const cur = cutoff.startOf("day")
+    const end = now.startOf("day")
+    while (cur.isBefore(end) || cur.isSame(end, "day")) {
+      dates.push(cur.format("YYYY-MM-DD"))
+      cur.add(1, "day")
     }
-    window.addEventListener('resize', handleResize)
+    const dataMap = new Map(filtered)
+    const cells: Array<[string, number]> = dates.map(d => [d, dataMap.get(d) || 0])
+    const max = Math.max(1, ...cells.map(c => c[1]))
 
-    const foregroundColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--foreground')
-      .trim()
-
-    const backgroundColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--card')
-      .trim()
-
-    const secondbackground = getComputedStyle(document.documentElement)
-      .getPropertyValue('--secondbackground')
-      .trim()
-
-    const option = {
-      backgroundColor: backgroundColor,
+    inst.current.setOption({
       tooltip: {
-        formatter: function (params: any) {
-          return `${params.value[0]}: ${params.value[1]} ${t('notes')}`
-        }
+        formatter: (p: any) => {
+          const v = p.value[1]
+          if (v === 0) return `${p.value[0]}<br/><span style="color:#9aa0aa">${t("no-data")}</span>`
+          return `${p.value[0]}<br/><strong>${v}</strong> ${t("notes")}`
+        },
       },
       visualMap: {
         show: false,
         min: 0,
-        max: 10,
-        calculable: true,
-        orient: 'horizontal',
-        left: 'center',
-        top: 'top',
-        textStyle: {
-          color: foregroundColor
-        },
+        max: Math.max(3, max),
         inRange: {
-          color: theme === 'dark' 
-          ? ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'] 
-          : ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'] 
-        }
+          color: isDark
+            ? [cellEmpty, "#0e4429", "#006d32", "#26a641", "#39d353"]
+            : [cellEmpty, "#9be9a8", "#40c463", "#30a14e", "#216e39"],
+        },
       },
       calendar: {
-        top: 30,
-        left: 'auto',
-        right: 'auto',
-        aspectScale: 1,
-        gap: 3,
-        range: [dayjs().subtract(1, 'year').format('YYYY-MM-DD'), dayjs().format('YYYY-MM-DD')],
-        itemStyle: {
-          borderWidth: isPc ? 5 : 2,
-          borderColor: backgroundColor,
-          borderRadius: 5,
-          color: secondbackground
-        },
+        top: 24,
+        left: 30,
+        right: 8,
+        cellSize: ["auto", 14],
+        range: [cutoff.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")],
+        itemStyle: { borderColor: bg, borderWidth: 2, borderRadius: 3, color: cellEmpty },
         yearLabel: { show: false },
-        dayLabel: {
-          show: false,
-          color: foregroundColor,
-          nameMap: [t('sun'), t('mon'), t('tue'), t('wed'), t('thu'), t('fri'), t('sat')],
-        },
-        monthLabel: {
-          color: foregroundColor,
-          margin: 8
-        },
-        splitLine: {
-          show: false
-        }
+        dayLabel: { show: false },
+        monthLabel: { color: muted, fontSize: 10, margin: 8 },
+        splitLine: { show: false },
       },
-      series: [{
-        type: 'heatmap',
-        coordinateSystem: 'calendar',
-        data: data,
-        itemStyle: {
-          borderRadius: 3,
-          borderWidth: 1,
-          borderColor: 'rgba(0, 0, 0, 0.05)'
-        },
-        emphasis: {
-          itemStyle: {
-            borderColor: 'rgba(0, 0, 0, 0.15)',
-            borderWidth: 1,
-            shadowBlur: 1,
-            shadowColor: 'rgba(0, 0, 0, 0.1)'
-          }
-        },
-        showEmptyItem: true,
-        animation: false
-      }]
-    }
+      series: [{ type: "heatmap", coordinateSystem: "calendar", data: cells, animation: false }],
+    }, true)
+    inst.current.on("click", (params: any) => {
+      if (params.value && Array.isArray(params.value) && params.value[0]) {
+        const date = params.value[0] as string
+        if (onCellClick) onCellClick(date)
+        else navigate(`/?path=notes&from=${date}&to=${date}`)
+      }
+    })
+  }, [data, theme, range, metric, t, navigate, onCellClick])
 
-    chart.setOption(option)
-    handleResize()
+  useEffect(() => {
+    if (!ref.current) return
+    const ro = new ResizeObserver(() => inst.current?.resize())
+    ro.observe(ref.current)
+    return () => ro.disconnect()
+  }, [])
 
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      chart.dispose()
-    }
-  }, [data, isPc])
+  useEffect(() => () => {
+    inst.current?.dispose()
+    inst.current = null
+  }, [])
 
   return (
-    <div className="rounded-xl bg-card p-6 shadow-sm">
+    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
       {(title || description) && (
-        <div className="mb-4">
-          {title && <h2 className="text-lg font-medium">{title}</h2>}
-          {description && <p className="text-sm text-gray-500">{description}</p>}
+        <div className="mb-3">
+          {title && <h2 className="text-base font-semibold">{title}</h2>}
+          {description && <p className="text-xs text-default-500 mt-0.5">{description}</p>}
         </div>
       )}
-      <div className="overflow-x-auto md:overflow-x-hidden">
-        <div ref={chartRef} className="w-full md:w-full h-[150px] md:h-[240px] min-w-[800px]" />
+      <div className="overflow-x-auto">
+        <div ref={ref} className="w-full" style={{ height: 180, minWidth: 720 }} />
+      </div>
+      <div className="flex items-center justify-end gap-2 text-[10px] text-default-500 mt-2">
+        <span>少</span>
+        <div className="flex gap-0.5">
+          {["rgba(0,0,0,0.04)", "#9be9a8", "#40c463", "#30a14e", "#216e39"].map((c, i) => (
+            <span key={i} className="w-2.5 h-2.5 rounded-sm" style={{ background: c }} />
+          ))}
+        </div>
+        <span>多</span>
       </div>
     </div>
   )
-} 
+}

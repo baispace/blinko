@@ -846,6 +846,8 @@
   "tablet": "平板电脑",
   "tag-distribution": "標籤分佈",
   "tag-status": "标签状态",
+  "tags-pager-forward": "標籤列向右翻頁",
+  "tags-pager-back": "標籤列回到開頭",
   "tags-prompt": "標籤提示",
   "task-name-auto-archive-blinko": "自動歸檔閃念",
   "task-name-backup-database": "資料庫備份",

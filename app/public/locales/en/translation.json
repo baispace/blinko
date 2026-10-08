@@ -776,6 +776,8 @@
   "internal-share": "Internal Share",
   "no-team-members-found": "No team members found",
   "selected-users": "Selected users",
+  "tags-pager-forward": "Scroll tag filters forward",
+  "tags-pager-back": "Back to the first tag filter",
   "tags-prompt": "Tags Prompt",
   "ai-tag-prompt-default": "",
   "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Prompt used for auto-generating tags.If set empty, the default prompt will be used.",

@@ -15,7 +15,6 @@ import {
   Avatar,
   AvatarGroup,
   Checkbox,
-  Chip,
 } from "@heroui/react";
 import { today, getLocalTimeZone, parseDate } from "@internationalized/date";
 import dayjs from "@/lib/dayjs";
@@ -419,14 +418,13 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
                       <Avatar
                         key={user.id}
                         src={user.image ?? undefined}
-                        name={user.nickname || user.name}
+                        name={user.nickname}
                       />
                       <div className="ml-3">
-                        <p className="text-sm font-bold">{user.nickname.toUpperCase() || user.name.toUpperCase()}</p>
+                        {/* publicUserList 自安全修复起只返回 nickname/image/description，
+                            不再返回 name / role —— 读它们会拿到 undefined。 */}
+                        <p className="text-sm font-bold">{user.nickname.toUpperCase()}</p>
                       </div>
-                      <Chip variant="bordered" color="warning" className="ml-auto">
-                        {user.role}
-                      </Chip>
                     </div>
                   ))}
                 </div>
@@ -444,7 +442,7 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
                     <Avatar
                       key={user.id}
                       src={user.image ?? undefined}
-                      name={user.nickname || user.name}
+                      name={user.nickname}
                     />
                   ))
                 }

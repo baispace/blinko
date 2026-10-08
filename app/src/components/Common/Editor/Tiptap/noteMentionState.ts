@@ -2,7 +2,6 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import type { Editor } from '@tiptap/core';
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
 import { api } from '@/lib/trpc';
-import { RootStore } from '@/store';
 
 /**
  * Per-editor note mention state (one instance per EditorStore).
@@ -56,7 +55,13 @@ export class NoteMentionState {
       this.abortController = new AbortController()
 
       try {
-        const result = await RootStore.Get(api).note.list.query({
+        // api 是 tRPC client，不是 MobX store。套 RootStore.Get() 会在
+        // RootStore.get() 里执行 `new api()` → TypeError，被下面的 catch 吞掉，
+        // 表现为输入 @ 永远搜不到任何笔记。
+        // appRouter 里的键是 notes（复数）不是 note；且 note.ts:147 里 list 收尾是
+        // .mutation()，只有 .mutate 没有 .query。写错任一处都会抛 TypeError，
+        // 被下面的 catch 吞掉 —— 表现都是输入 @ 搜不到任何笔记。
+        const result = await api.notes.list.mutate({
           searchText: query,
           size: 10,
           // Exclude current note to avoid self-reference

@@ -354,7 +354,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
               {/* 挂在 sticky 栏内，跟着栏一起吸顶；浮层自管遮罩与关闭 */}
               {isTocOpen && (
                 <TableOfContents
-                  content={blinkoItem.content}
+                  content={blinkoItem.content ?? ''}
                   floating
                   onClose={() => setIsTocOpen(false)}
                   className="top-full left-1 mt-2"

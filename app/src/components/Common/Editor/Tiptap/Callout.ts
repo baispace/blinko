@@ -119,7 +119,7 @@ export const Callout = Node.create<CalloutOptions>({
         ({ chain }) => {
           return chain().focus().updateAttributes('callout', { type }).run();
         },
-    } as any;
+    };
   },
 
   addKeyboardShortcuts() {
@@ -153,6 +153,23 @@ export const Callout = Node.create<CalloutOptions>({
     };
   },
 });
+
+/**
+ * 把 addCommands 的命令登记到 Tiptap 的 Commands 接口。
+ *
+ * 没有这段声明时 `editor.chain().setCalloutType(...)` 会因为命令没进类型表而
+ * 报 "does not exist on type 'ChainedCommands'"（ToolbarButtons.tsx 的
+ * CalloutPickerContent 正是这么调的）。运行时命令是存在的，缺的是类型。
+ */
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    callout: {
+      toggleCallout: (attributes?: { type?: CalloutType; icon?: string }) => ReturnType;
+      setCalloutIcon: (icon: string) => ReturnType;
+      setCalloutType: (type: CalloutType) => ReturnType;
+    };
+  }
+}
 
 /**
  * Click interactions on callout blocks:

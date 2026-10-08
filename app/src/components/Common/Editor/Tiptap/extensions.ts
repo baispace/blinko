@@ -8,7 +8,12 @@ export type SlashItem = {
   title: string
   icon: string
   keywords?: string
-  command: (args: { editor: any; range: any }, runner?: AiSlashRunner) => void
+  /**
+   * 第二个参数是 SlashCommand 插件在 addProseMirrorPlugins 里构造的
+   * AiSlashBridge（extensions.ts 末尾 `props.command({ editor, range }, slashAi)`），
+   * 不是裸的 AiSlashRunner —— 之前标成 runner 导致下面两处 runAiSlash 全部报错。
+   */
+  command: (args: { editor: any; range: any }, bridge?: AiSlashBridge) => void
 }
 
 /**

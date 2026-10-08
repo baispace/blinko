@@ -71,7 +71,7 @@ export class AnalyticsStore implements Store {
   sid = "AnalyticsStore"
   period: PeriodInput = { type: "month", value: new Date().toISOString().slice(0, 7) }
   heatMetric: "count" | "words" = "count"
-  heatRange: "6m" | "1y" | "all" = "1y"
+  heatRange: "6m" | "1y" | "all" = "6m"
   typeChartMode: "stack" | "group" | "100" = "stack"
   tagCloudMode: "all" | "period" = "all"
   topN: number = 5

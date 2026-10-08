@@ -1,5 +1,5 @@
 import * as echarts from "echarts"
-import { useEffect, useLayoutEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import dayjs from "dayjs"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"
@@ -14,25 +14,24 @@ interface HeatMapProps {
   onCellClick?: (date: string) => void
 }
 
-export const HeatMap = ({ data, title, description, range = "1y", metric = "count", onCellClick }: HeatMapProps) => {
+export const HeatMap = ({ data, title, description, range = "6m", metric = "count", onCellClick }: HeatMapProps) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
   const navigate = useNavigate()
   const ref = useRef<HTMLDivElement>(null)
   const inst = useRef<echarts.ECharts | null>(null)
-
-  // Init on layout — before paint, so container size is correct
-  useLayoutEffect(() => {
-    if (!ref.current) return
-    if (!inst.current) {
-      inst.current = echarts.init(ref.current, undefined, { renderer: "canvas" })
-    }
-    // Force resize on next frame to ensure size is up to date
-    requestAnimationFrame(() => inst.current?.resize())
-  }, [])
+  const [stats, setStats] = useState<{ activeDays: number; totalCount: number } | null>(null)
 
   useEffect(() => {
-    if (!ref.current || !inst.current) return
+    if (!ref.current) return
+    // 每次数据/range/theme 变化都 dispose + 重建：保证 HMR 也能拿到新 config
+    if (inst.current) {
+      inst.current.dispose()
+      inst.current = null
+    }
+    const chart = echarts.init(ref.current, undefined, { renderer: "canvas" })
+    inst.current = chart
+
     const isDark = theme === "dark"
     const muted = isDark ? "#9aa0aa" : "#7c7a72"
     const bg = isDark ? "#181c23" : "#ffffff"
@@ -67,9 +66,15 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
     const cells: Array<[string, number]> = dates.map(d => [d, dataMap.get(d) || 0])
     const max = Math.max(1, ...cells.map(c => c[1]))
     const activeDays = filtered.length
-    const totalChars = filtered.reduce((s, [, v]) => s + v, 0)
+    const totalCount = filtered.reduce((s, [, v]) => s + v, 0)
 
-    inst.current.setOption({
+    setStats({ activeDays, totalCount })
+
+    // Cell size: bigger for 6m (fewer weeks → larger cells), smaller for 1y
+    const cellH = 18
+    const cellW = range === "6m" ? 22 : range === "all" ? 14 : 16
+
+    chart.setOption({
       tooltip: {
         formatter: (p: any) => {
           const v = p.value[1]
@@ -92,7 +97,7 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
         left: 40,
         right: 16,
         bottom: 12,
-        cellSize: ["auto", 16],
+        cellSize: [cellW, cellH],
         range: [cutoff.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")],
         itemStyle: { borderColor: bg, borderWidth: 2, borderRadius: 3, color: cellEmpty },
         yearLabel: { show: false },
@@ -101,9 +106,9 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
         splitLine: { show: false },
       },
       series: [{ type: "heatmap", coordinateSystem: "calendar", data: cells, animation: false }],
-    }, true)
+    })
 
-    inst.current.on("click", (params: any) => {
+    chart.on("click", (params: any) => {
       if (params.value && Array.isArray(params.value) && params.value[0]) {
         const date = params.value[0] as string
         if (onCellClick) onCellClick(date)
@@ -111,12 +116,7 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
       }
     })
 
-    // Force a resize after options set (in case container was 0×0 at init)
-    requestAnimationFrame(() => inst.current?.resize())
-
-    // Store active days for the header
-    ;(ref.current as any).__activeDays = activeDays
-    ;(ref.current as any).__totalChars = totalChars
+    requestAnimationFrame(() => chart.resize())
   }, [data, theme, range, metric, t, navigate, onCellClick])
 
   useEffect(() => {
@@ -131,26 +131,23 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
     inst.current = null
   }, [])
 
-  const activeDays = (ref.current as any)?.__activeDays as number | undefined
-  const totalChars = (ref.current as any)?.__totalChars as number | undefined
-
   return (
     <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
-      {(title || description) && (
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <div>
-            {title && <h2 className="text-base font-semibold">{title}</h2>}
-            {description && <p className="text-xs text-default-500 mt-0.5">{description}</p>}
-          </div>
-          {activeDays !== undefined && activeDays > 0 && (
-            <div className="text-xs text-default-500 shrink-0">
-              <span className="font-semibold text-foreground">{activeDays}</span> 个活跃日 · {totalChars} 条
-            </div>
-          )}
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <div>
+          {title && <h2 className="text-base font-semibold">{title}</h2>}
+          {description && <p className="text-xs text-default-500 mt-0.5">{description}</p>}
         </div>
-      )}
+        {stats && stats.activeDays > 0 ? (
+          <div className="text-xs text-default-500 shrink-0">
+            <span className="font-semibold text-foreground">{stats.activeDays}</span> 个活跃日 · {stats.totalCount} 条
+          </div>
+        ) : (
+          <div className="text-xs text-default-400 shrink-0">{t("no-data")}</div>
+        )}
+      </div>
       <div className="overflow-x-auto">
-        <div ref={ref} className="w-full" style={{ height: 220, minWidth: 760 }} />
+        <div ref={ref} className="w-full" style={{ height: 240, minWidth: 700 }} />
       </div>
       <div className="flex items-center justify-end gap-2 text-[10px] text-default-500 mt-2">
         <span>少</span>

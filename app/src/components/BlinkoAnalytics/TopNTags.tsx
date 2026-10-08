@@ -32,17 +32,25 @@ export const TopNTags = observer(({ data, topN = 5, onChangeTopN }: TopNTagsProp
           <span className="text-xs text-default-500">{totalCount} 条 · {sorted.length} 个</span>
           {onChangeTopN && (
             <div className="inline-flex bg-default-100 rounded-md p-0.5">
-              {[3, 5, 8, 10].map(n => (
-                <button
-                  key={n}
-                  onClick={() => onChangeTopN(n)}
-                  className={`px-2 py-0.5 text-[11px] rounded ${
-                    topN === n ? "bg-content1 shadow-sm" : "text-default-500"
-                  }`}
-                >
-                  Top {n}
-                </button>
-              ))}
+              {[3, 5, 8, 10].map(n => {
+                const disabled = n > sorted.length
+                return (
+                  <button
+                    key={n}
+                    onClick={() => !disabled && onChangeTopN(n)}
+                    disabled={disabled}
+                    className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
+                      topN === n
+                        ? "bg-content1 shadow-sm text-foreground"
+                        : disabled
+                          ? "text-default-300 cursor-not-allowed"
+                          : "text-default-500 hover:text-foreground"
+                    }`}
+                  >
+                    Top {n}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>

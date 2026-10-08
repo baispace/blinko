@@ -27,7 +27,27 @@ export class ResourceStore implements Store {
   searchText = '';
   /** Client-side type filter. */
   filterType: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other' = 'all';
+  /** 当前正在上传的文件数（含已完成但尚未 dismiss 的）。 */
   uploading = 0;
+  /** 每个上传任务（key=fileName+size）的进度 0~100。 */
+  uploadProgress: Record<string, number> = {};
+  /** 上传完成/失败的文件名集合（用于进度条显示"X / N"）。 */
+  uploadDone: Record<string, 'success' | 'error'> = {};
+  /** 当前是否处于 drag-over 状态（页面级 drop zone 高亮）。 */
+  isDragOver = false;
+
+  /** 简单的 worker pool：限制并发数。 */
+  private async runWithConcurrency<T>(items: T[], limit: number, worker: (item: T, idx: number) => Promise<void>) {
+    let cursor = 0
+    const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (true) {
+        const idx = cursor++
+        if (idx >= items.length) return
+        await worker(items[idx]!, idx)
+      }
+    })
+    await Promise.all(runners)
+  }
 
   constructor() {
     makeAutoObservable(this);
@@ -41,31 +61,64 @@ export class ResourceStore implements Store {
   setSearchText = (text: string) => { this.searchText = text; }
   setFilterType = (type: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other') => { this.filterType = type; }
 
-  /** Upload files straight into the current folder via /api/file/upload. */
+  /** Upload files straight into the current folder via /api/file/upload. Concurrency limited to UPLOAD_CONCURRENCY. */
   uploadFiles = async (files: File[] | FileList) => {
     const list = Array.from(files);
     if (!list.length) return;
-    const token = RootStore.Get(UserStore).tokenData?.value?.token;
+    const UPLOAD_CONCURRENCY = 3;
     this.uploading += list.length;
-    try {
-      for (const file of list) {
+    // 初始化每个任务的进度
+    const taskKeys = list.map(f => `${f.name}__${f.size}`)
+    taskKeys.forEach(k => { this.uploadProgress[k] = 0; this.uploadDone[k] = undefined as any })
+    let successCount = 0
+    let errorCount = 0
+
+    const worker = async (file: File) => {
+      const key = `${file.name}__${file.size}`
+      try {
         const form = new FormData();
         form.append('file', file);
-        if (this.currentFolder) {
-          form.append('folder', this.currentFolder);
-        }
-        const res = await axiosInstance.post('/api/file/upload', form);
+        if (this.currentFolder) form.append('folder', this.currentFolder);
+        const res = await axiosInstance.post('/api/file/upload', form, {
+          onUploadProgress: (e) => {
+            if (!e.total) return
+            const pct = Math.min(99, Math.round((e.loaded / e.total) * 100))
+            this.uploadProgress[key] = pct
+          },
+        });
         if (res.data?.error) throw new Error(res.data.detail || res.data.error);
-        this.uploading = Math.max(0, this.uploading - 1);
+        this.uploadProgress[key] = 100
+        this.uploadDone[key] = 'success'
+        successCount++
+      } catch (error: any) {
+        this.uploadDone[key] = 'error'
+        errorCount++
+        console.error('[upload] failed', file.name, error)
+      } finally {
+        this.uploading = Math.max(0, this.uploading - 1)
       }
-      RootStore.Get(ToastPlugin).success(t('upload-success'));
-    } catch (error: any) {
-      RootStore.Get(ToastPlugin).error(error?.response?.data?.detail || error?.message || t('upload-failed'));
+    }
+
+    try {
+      await this.runWithConcurrency(list, UPLOAD_CONCURRENCY, worker)
+      if (errorCount === 0) {
+        RootStore.Get(ToastPlugin).success(t('upload-success'))
+      } else if (successCount === 0) {
+        RootStore.Get(ToastPlugin).error(t('upload-failed'))
+      } else {
+        RootStore.Get(ToastPlugin).error(t('upload-partial-failed', { success: successCount, failed: errorCount }))
+      }
     } finally {
-      this.uploading = 0;
-      this.refreshTicker++;
+      this.refreshTicker++
+      // 3s 后清掉进度记录，避免堆积
+      setTimeout(() => {
+        taskKeys.forEach(k => { delete this.uploadProgress[k]; delete this.uploadDone[k] })
+      }, 3000)
     }
   }
+
+  setDragOver = (v: boolean) => { this.isDragOver = v }
+  clearUploadProgress = () => { this.uploadProgress = {}; this.uploadDone = {} }
 
   setCurrentFolder = (folder: string | null) => {
     this.currentFolder = folder;

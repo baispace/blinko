@@ -1,7 +1,7 @@
 import { RootStore } from "@/store";
 import { ResourceStore } from "@/store/resourceStore";
 import { observer } from "mobx-react-lite";
-import { useMemo, useCallback, useRef, useState } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { ScrollArea } from "@/components/Common/ScrollArea";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
@@ -48,7 +48,6 @@ const Page = observer(() => {
   const resourceStore = RootStore.Get(ResourceStore);
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const allResources = useMemo(() => {
     const list = toJS(resourceStore.blinko.resourceList.value) || [];
@@ -97,14 +96,45 @@ const Page = observer(() => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    setIsUploading(true);
-    try {
-      await resourceStore.uploadFiles(files);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    await resourceStore.uploadFiles(files);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // ── 拖拽上传（页面级 drop zone） ──
+  const dragCounter = useRef(0);
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.dataTransfer.types.includes('Files')) return;
+    dragCounter.current += 1;
+    resourceStore.setDragOver(true);
+  };
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      resourceStore.setDragOver(false);
     }
   };
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current = 0;
+    resourceStore.setDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files?.length) await resourceStore.uploadFiles(files);
+  };
+
+  // 上传进度聚合：总数 / 完成 / 当前百分比
+  const uploadEntries = Object.entries(resourceStore.uploadProgress);
+  const totalTasks = uploadEntries.length;
+  const doneTasks = Object.values(resourceStore.uploadDone).filter(v => v === 'success' || v === 'error').length;
+  const overallPct = totalTasks > 0
+    ? Math.round(uploadEntries.reduce((s, [, v]) => s + v, 0) / totalTasks)
+    : 0;
+  const isUploadingNow = totalTasks > 0 && doneTasks < totalTasks;
 
   resourceStore.use();
 
@@ -113,10 +143,25 @@ const Page = observer(() => {
   return (
     <>
       <DragDropContext onDragEnd={resourceStore.handleDragEnd}>
+        <div
+          className="relative md:px-6 h-[calc(100%_-_5px)] md:h-[calc(100vh_-_100px)] px-2 md:max-w-[1100px] w-full overflow-x-hidden mx-auto"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+        {resourceStore.isDragOver && (
+          <div className="pointer-events-none absolute inset-2 z-40 rounded-2xl border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center backdrop-blur-sm transition-all">
+            <div className="flex flex-col items-center gap-2 text-primary">
+              <Icon icon="tabler:cloud-upload" className="w-12 h-12" />
+              <span className="font-medium">松手即可上传到 {resourceStore.currentFolder || '根目录'}</span>
+            </div>
+          </div>
+        )}
         <ScrollArea
           fixMobileTopBar
           onBottom={resourceStore.loadNextPage}
-          className="md:px-6 h-[calc(100%_-_5px)] md:h-[calc(100vh_-_100px)] px-2 md:max-w-[1100px] w-full overflow-x-hidden mx-auto"
+          className="h-full w-full"
         >
           {/* Header: title + count / search / view toggle / filter / actions */}
           <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -195,8 +240,8 @@ const Page = observer(() => {
                 color="primary"
                 className="h-8"
                 onPress={handleUploadClick}
-                isLoading={isUploading}
-                startContent={!isUploading ? <Icon icon="tabler:upload" className="w-4 h-4" /> : undefined}
+                isLoading={isUploadingNow}
+                startContent={!isUploadingNow ? <Icon icon="tabler:upload" className="w-4 h-4" /> : undefined}
               >
                 {t('upload')}
               </Button>
@@ -317,6 +362,42 @@ const Page = observer(() => {
           </PhotoProvider>
 
         </ScrollArea>
+
+        {/* 上传进度条（底部固定；isUploadingNow 时显示） */}
+        {totalTasks > 0 && (
+          <div className="absolute bottom-3 left-3 right-3 z-30 bg-content1/95 border border-default-200 rounded-xl shadow-lg px-4 py-2.5 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2 text-xs">
+                <Icon icon={isUploadingNow ? "tabler:upload" : (Object.values(resourceStore.uploadDone).every(v => v === 'success') ? "tabler:check" : "tabler:alert-triangle")} className={`w-4 h-4 ${isUploadingNow ? 'text-primary animate-pulse' : (Object.values(resourceStore.uploadDone).every(v => v === 'success') ? 'text-success' : 'text-warning')}`} />
+                <span className="font-medium">
+                  {isUploadingNow
+                    ? t('uploading-files', { done: doneTasks, total: totalTasks })
+                    : t('upload-finished', { done: doneTasks, total: totalTasks })}
+                </span>
+              </div>
+              <button
+                className="text-default-400 hover:text-foreground text-xs"
+                onClick={() => resourceStore.clearUploadProgress()}
+                aria-label="dismiss"
+              >
+                <Icon icon="tabler:x" className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="h-1.5 w-full bg-default-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${isUploadingNow ? 'bg-primary' : (Object.values(resourceStore.uploadDone).some(v => v === 'error') ? 'bg-warning' : 'bg-success')}`}
+                style={{ width: `${overallPct}%` }}
+              />
+            </div>
+            {/* 失败文件名提示 */}
+            {Object.keys(resourceStore.uploadDone).filter(k => resourceStore.uploadDone[k] === 'error').length > 0 && (
+              <div className="mt-1.5 text-[10px] text-default-400 truncate">
+                {t('upload-failed-files', { count: Object.keys(resourceStore.uploadDone).filter(k => resourceStore.uploadDone[k] === 'error').length })}
+              </div>
+            )}
+          </div>
+        )}
+        </div>
       </DragDropContext>
       <ResourceMultiSelectPop />
     </>

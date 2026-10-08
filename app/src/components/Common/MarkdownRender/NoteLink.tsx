@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { RootStore } from '@/store';
 import { preprocessNoteLinks as preprocessNoteLinksShared } from '@shared/lib/noteLink';
 
 /**
@@ -14,9 +13,14 @@ export const NoteLink = observer(({ id, title }: { id: number; title: string }) 
 
   const handleClick = () => {
     if (isShareMode) return;
-    // Navigate to the note
-    navigate(`/?id=${id}`);
-    RootStore.Get(BlinkoStore).curSelectedNoteId = id;
+    // 走 /detail?id= —— 和 BlinkoCard 的 handleClick 一致。detail 页自己会
+    // 按 id 拉 noteDetail 并打开 FullscreenEditor。
+    //
+    // 原先是 navigate(`/?id=${id}`) + `RootStore.Get(BlinkoStore).curSelectedNoteId = id`：
+    //   - BlinkoStore 压根没 import，点一下直接 ReferenceError；
+    //   - BlinkoStore 上也没有 curSelectedNoteId 这个字段，写了没人读；
+    //   - pages/index.tsx 从不读 ?id=，所以点了只是回到闪念列表，等于没跳。
+    navigate(`/detail?id=${id}`);
   };
 
   return (

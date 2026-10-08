@@ -24,7 +24,10 @@ export const HourChart = observer(({ data, peak }: HourChartProps) => {
     inst.current.setOption({
       tooltip: {
         trigger: "axis",
-        formatter: (p: any) => `${String(p[0].axisValue).padStart(2, "0")}:00<br/><strong>${p[0].data}</strong>`,
+        formatter: (p: any) => {
+          const v = typeof p[0].data === "object" ? p[0].data.value : p[0].data
+          return `${String(p[0].axisValue).padStart(2, "0")}:00<br/><strong>${v}</strong>`
+        },
       },
       grid: { top: 6, right: 0, bottom: 0, left: 0, containLabel: false },
       xAxis: {

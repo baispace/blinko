@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"
 import * as echarts from "echarts"
+import { Icon } from "@/components/Common/Iconify/icons"
 
 interface HourChartProps {
   data: number[]

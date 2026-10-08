@@ -67,7 +67,7 @@ export const TldrCard = observer(({ snapshot }: TldrCardProps) => {
         )}
         {longest && (
           <>
-            {"，"}最{t("review-longest")}「<strong className="text-foreground">{longest.title}</strong>」
+            {"，"}<strong className="text-foreground">{t("review-longest")}「{longest.title}」</strong>
             <span className="text-default-500"> ({fmtNum(longest.length)} {t("total-words").slice(0, 2)})</span>
           </>
         )}

@@ -32,16 +32,31 @@ export const HeatMap = ({ data, title, description, range = "1y", metric = "coun
 
     // Filter data by range
     const now = dayjs()
-    const cutoff = range === "6m" ? now.subtract(6, "month") : range === "all" ? dayjs(0) : now.subtract(1, "year")
-    const filtered = data.filter(([d]) => dayjs(d).isAfter(cutoff) || dayjs(d).isSame(cutoff, "day"))
+    // "all" 模式：以数据最早一天为起点（最多回看 5 年）避免 2 万格卡死
+    const maxLookbackDays = 365 * 5
+    const earliestData = data.length > 0
+      ? dayjs(data.reduce((min, [d]) => d < min ? d : min, data[0]![0]))
+      : now.subtract(1, "year")
+    const rawCutoff: dayjs.Dayjs = range === "6m" ? now.subtract(6, "month")
+      : range === "all" ? earliestData
+      : now.subtract(1, "year")
+    const cutoff = rawCutoff.isAfter(now.subtract(maxLookbackDays, "day"))
+      ? rawCutoff
+      : now.subtract(maxLookbackDays, "day")
+    const filtered = data.filter(([d]) => {
+      const dd = dayjs(d)
+      return dd.isAfter(cutoff) || dd.isSame(cutoff, "day")
+    })
 
-    // Build full date range
+    // Build full date range (capped at maxLookbackDays)
     const dates: string[] = []
-    const cur = cutoff.startOf("day")
+    const cur = cutoff.clone().startOf("day")
     const end = now.startOf("day")
-    while (cur.isBefore(end) || cur.isSame(end, "day")) {
+    let safety = 0
+    while ((cur.isBefore(end) || cur.isSame(end, "day")) && safety < maxLookbackDays) {
       dates.push(cur.format("YYYY-MM-DD"))
       cur.add(1, "day")
+      safety++
     }
     const dataMap = new Map(filtered)
     const cells: Array<[string, number]> = dates.map(d => [d, dataMap.get(d) || 0])

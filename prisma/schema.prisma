@@ -101,6 +101,7 @@ model notes {
   internalShares    noteInternalShare[]
 
   @@index([isPublished])
+  @@index([accountId, createdAt])
 }
 
 model comments {

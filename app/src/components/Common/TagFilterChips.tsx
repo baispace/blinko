@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
@@ -62,6 +62,50 @@ export const TagFilterChips = observer(() => {
 
   const activeTagId = blinko.noteListFilterConfig.tagId;
 
+  /**
+   * 横向翻页：chips 超出可视宽度时右侧浮一个「»」按钮，点击左移一屏。
+   *
+   * 滚动条被 hide-scrollbar 藏了，光靠鼠标横向滚轮在触屏上完全够不到后面的标签，
+   * 所以给一个显式控件。到底之后同一个按钮变成「«」并回到开头 —— 只做单向的话，
+   * 用户翻到末尾就再也回不去了（滚动条隐藏意味着没有别的回退手段）。
+   */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  const [atEnd, setAtEnd] = useState(false);
+
+  const measure = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setOverflowing(max > 1);
+    setAtEnd(max > 1 && el.scrollLeft >= max - 1);
+  }, []);
+
+  // 标签数量 / 计数会随 notes 增删和 tagList.call() 变化，宽度随之改变；
+  // 这两个值进依赖，保证异步加载完 chips 后重新量一次。
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    measure();
+    el.addEventListener('scroll', measure, { passive: true });
+    window.addEventListener('resize', measure);
+    return () => {
+      el.removeEventListener('scroll', measure);
+      window.removeEventListener('resize', measure);
+    };
+  }, [measure, tagItems.length, viewTotal]);
+
+  const page = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    if (max <= 1) return;
+    // 留 96px 让相邻 chip 露出一点边，暗示"还有内容"，而不是整屏硬切
+    const step = Math.max(200, el.clientWidth - 96);
+    const next = el.scrollLeft >= max - 1 ? 0 : Math.min(max, el.scrollLeft + step);
+    el.scrollTo({ left: next, behavior: 'smooth' });
+  };
+
   const goAll = () => {
     navigate(path ? `/?path=${path}` : '/');
   };
@@ -83,28 +127,62 @@ export const TagFilterChips = observer(() => {
   const chipActive = 'bg-primary text-primary-foreground shadow-sm';
 
   return (
-    <div
-      className="sticky top-0 z-20 flex items-center gap-2 overflow-x-auto hide-scrollbar py-1.5 bg-secondbackground"
-      data-testid="tag-filter-chips"
-    >
-      <button type="button" onClick={goAll} className={`${chipBase} ${activeTagId == null ? chipActive : chipIdle}`}>
-        <span>{t('all')}</span>
-        <span className={`text-[11px] tabular-nums ${activeTagId == null ? 'opacity-80' : 'opacity-60'}`}>{viewTotal}</span>
-      </button>
-      {tagItems.map(item => {
-        const selected = activeTagId === item.id;
-        return (
-          <button key={item.id} type="button" onClick={() => goTag(item.id)} className={`${chipBase} ${selected ? chipActive : chipIdle}`}>
-            {item.icon && (
-              item.icon.includes(':')
-                ? <Icon icon={item.icon} width={14} height={14} />
-                : <span className="text-[13px] leading-none">{item.icon}</span>
-            )}
-            <span>{item.path}</span>
-            <span className={`text-[11px] tabular-nums ${selected ? 'opacity-80' : 'opacity-60'}`}>{item.count}</span>
+    <div className="sticky top-0 z-20 bg-secondbackground" data-testid="tag-filter-chips">
+      <div className="relative">
+        {/* pr-12 无条件预留翻页按钮的横向空间（按钮占 right-1.5 + w-7 = 34px，
+            留 14px 间隙）。不能改成「仅溢出时加」：那样 scrollWidth 会跟着按钮
+            显隐变化，measure() 读到的最大值会漂移，atEnd 判断跟着失准。 */}
+        <div
+          ref={scrollRef}
+          className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-1.5 scroll-smooth pr-12"
+        >
+          <button type="button" onClick={goAll} className={`${chipBase} ${activeTagId == null ? chipActive : chipIdle}`}>
+            <span>{t('all')}</span>
+            <span className={`text-[11px] tabular-nums ${activeTagId == null ? 'opacity-80' : 'opacity-60'}`}>{viewTotal}</span>
           </button>
-        );
-      })}
+          {tagItems.map(item => {
+            const selected = activeTagId === item.id;
+            return (
+              <button key={item.id} type="button" onClick={() => goTag(item.id)} className={`${chipBase} ${selected ? chipActive : chipIdle}`}>
+                {item.icon && (
+                  item.icon.includes(':')
+                    ? <Icon icon={item.icon} width={14} height={14} />
+                    : <span className="text-[13px] leading-none">{item.icon}</span>
+                )}
+                <span>{item.path}</span>
+                <span className={`text-[11px] tabular-nums ${selected ? 'opacity-80' : 'opacity-60'}`}>{item.count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {overflowing && (
+          <>
+            {/* 淡出宽度与 pr-12 对齐：滚到尽头时最后一枚 chip 恰好停在渐变之外，
+                不会被按钮压住；中途滚动时经过按钮下方的 chip 则是柔和淡出，
+                而不是硬生生切断。 */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-secondbackground to-transparent"
+            />
+            <button
+              type="button"
+              onClick={page}
+              aria-label={atEnd ? t('tags-pager-back') : t('tags-pager-forward')}
+              title={atEnd ? t('tags-pager-back') : t('tags-pager-forward')}
+              className="absolute right-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-default-300/60 bg-background/90 text-default-600 shadow-sm backdrop-blur-sm !transition-colors hover:border-primary/50 hover:text-primary"
+            >
+              {/* mdi 只有 chevron-double-right，回退方向靠水平镜像 */}
+              <Icon
+                icon="mdi:chevron-double-right"
+                width={16}
+                height={16}
+                className={atEnd ? 'scale-x-[-1]' : undefined}
+              />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 });

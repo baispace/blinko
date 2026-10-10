@@ -1,16 +1,23 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
+import { EditorContent, useEditor } from '@tiptap/react';
+import { StarterKit } from '@tiptap/starter-kit';
+import { Placeholder } from '@tiptap/extension-placeholder';
+import { Markdown } from 'tiptap-markdown';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { CollapsibleListItem } from '@/components/Common/Editor/Tiptap/collapsibleListItem';
+import '@/components/Common/Editor/Tiptap/tiptap.css';
 
 /**
  * Effie 大纲 ↔ 思维导图 POC
  *
- * 目的：验证 markmap.js 接入成本 + 视觉风格是否对齐
+ * 现场验证三件事：
+ *  1. Tiptap 编辑器 + CollapsibleListItem 折叠手柄（Effie 风格核心交互）
+ *  2. shadcn-aligned bullet 样式 + 嵌套引导线 + hover 加粗
+ *  3. markmap.js 思维导图渲染（基于同一份 markdown 数据）
  *
- * 用法：
- *   - 左侧 textarea 写 markdown（bullet list 或 ```mindmap 代码块均可）
- *   - 右侧实时渲染 markmap
- *   - 顶部 preset 一键切换样本
+ * 三栏布局：左侧 Tiptap 编辑器 / 中间 MarkdownRender 阅读态 / 右侧 markmap
+ * 三者共享同一份 markdown：编辑器 → onUpdate → state → markmap + markdown
  *
  * 访问：/mindmap-poc
  */
@@ -22,12 +29,7 @@ type Preset = {
   content: string;
 };
 
-const PRESETS: Preset[] = [
-  {
-    key: 'effie-bullet',
-    label: 'Effie 大纲风格',
-    desc: 'Markdown bullet list，模拟 Effie 列表',
-    content: `# 产品策略讨论
+const INITIAL_CONTENT = `# 产品策略讨论
 
 - 用户增长
   - 拉新
@@ -43,7 +45,14 @@ const PRESETS: Preset[] = [
 - 体验
   - 性能优化
   - 交互打磨
-  - 文档与社区`,
+  - 文档与社区`;
+
+const PRESETS: Preset[] = [
+  {
+    key: 'effie-bullet',
+    label: 'Effie 大纲风格',
+    desc: 'Markdown bullet list，模拟 Effie 列表',
+    content: INITIAL_CONTENT,
   },
   {
     key: 'markmap-fence',
@@ -83,19 +92,69 @@ const PRESETS: Preset[] = [
 ];
 
 const MindmapPocPage = observer(() => {
-  const [content, setContent] = useState(PRESETS[0].content);
+  const [content, setContent] = useState(INITIAL_CONTENT);
   const [activePreset, setActivePreset] = useState(PRESETS[0].key);
   const [renderMs, setRenderMs] = useState<number | null>(null);
   const [nodeCount, setNodeCount] = useState<number | null>(null);
+
+  /**
+   * Tiptap 编辑器实例 —— 简化版配置
+   *
+   * 只用 bullet / heading / collapsible list / markdown 序列化，省略：
+   * - TaskList / TaskItem（任务列表有自己的 checkbox 场景）
+   * - NoteMention / HashtagSuggestion（笔记专属）
+   * - Callout / Table（演示不需要）
+   * - SlashCommand / AiPendingIndicator（编辑器交互）
+   * - 图片上传 / 附件
+   */
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3, 4, 5, 6] },
+        // 禁用默认 listItem 用自定义 CollapsibleListItem（添加折叠/展开子树）
+        listItem: false,
+        // paragraph / hardBreak 保持 StarterKit 默认，避免 schema 找不到
+      }),
+      CollapsibleListItem,
+      Placeholder.configure({
+        placeholder: '输入 - 然后空格进入列表，然后按 Tab 缩进……',
+        showOnlyWhenEditable: true,
+      }),
+      Markdown.configure({
+        html: true,
+        linkify: true,
+        breaks: true,
+        transformPastedText: false,
+        transformCopiedText: false,
+      }),
+    ],
+    // 注意：content 必须是 ProseMirror JSON，markdown 需要在 onCreate 后用
+    // editor.commands.setContent(md) 设置（tiptap-markdown 在 insertContent 时才解析）
+    content: '',
+    onUpdate: ({ editor }) => {
+      const md = editor.storage.markdown.getMarkdown()
+      setContent(md)
+    },
+    editorProps: {
+      attributes: {
+        class: 'tiptap tiptap-poc-editor',
+        spellcheck: 'false',
+      },
+    },
+  })
+
+  // 编辑器创建后用 markdown 作为初始内容
+  useEffect(() => {
+    if (!editor) return
+    editor.commands.setContent(INITIAL_CONTENT, true)
+  }, [editor])
 
   // 节流：内容变化 200ms 后才计算统计，避免每键击都跑 markdown 解析
   useEffect(() => {
     const handle = setTimeout(() => {
       const t0 = performance.now();
-      // markmap-lib 自带 transformer；这里只跑一次 transform 看耗时
       import('markmap-lib').then(({ Transformer }) => {
         const { root } = new Transformer().transform(content);
-        // 递归统计节点数
         let count = 0;
         const walk = (n: any) => {
           count++;
@@ -112,6 +171,9 @@ const MindmapPocPage = observer(() => {
   const switchPreset = (preset: Preset) => {
     setActivePreset(preset.key);
     setContent(preset.content);
+    // 同步到编辑器：剥掉 ```mindmap 围栏，让 Tiptap 直接接收 bullet 即可
+    const stripped = preset.content.replace(/```mindmap\s*([\s\S]*?)```/g, '$1').trim();
+    editor?.commands.setContent(stripped, false);
   };
 
   return (
@@ -125,7 +187,7 @@ const MindmapPocPage = observer(() => {
               Effie 大纲 ↔ 思维导图 POC
             </div>
             <div className="text-[11px] text-default-400 mt-0.5">
-              验证 markmap.js 接入成本 · 临时页面 ·{' '}
+              现场体验折叠手柄 + 新 bullet 样式 · 临时页面 ·{' '}
               <code className="px-1 py-0.5 rounded bg-default-100">/mindmap-poc</code>
             </div>
           </div>
@@ -163,49 +225,42 @@ const MindmapPocPage = observer(() => {
             {p.label}
           </button>
         ))}
+        <span className="ml-auto text-[10px] text-default-400">
+          💡 编辑器里按 <kbd className="px-1 py-0.5 rounded bg-default-100 border border-default-200">Tab</kbd> 缩进，父项前出现折叠手柄
+        </span>
       </div>
 
-      {/* Split: Editor + Preview (3-column: input / native md render / markmap) */}
+      {/* Split: Tiptap editor + Markdown render + Markmap */}
       <main className="flex-1 grid grid-cols-3 gap-0 min-h-0">
-        {/* Left: textarea */}
+        {/* Left: Tiptap editor — 折叠手柄 + bullet 样式 + hover 引导线 */}
         <section className="flex flex-col border-r border-default-200 bg-white">
           <div className="flex items-center justify-between px-4 py-2 border-b border-default-200">
             <span className="text-[11px] text-default-400 uppercase tracking-wider font-medium">
-              Markdown 输入
+              Tiptap 编辑器（折叠手柄）
             </span>
-            <span className="text-[10px] text-default-300">{content.length} 字符</span>
+            <span className="text-[10px] text-default-300">
+              {editor?.storage.characterCount?.characters() ?? 0} 字符
+            </span>
           </div>
-          <textarea
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              setActivePreset(''); // 自定义时清掉 preset 高亮
-            }}
-            className="flex-1 w-full p-4 resize-none outline-none font-mono text-[13px] leading-6 text-default-700 bg-white placeholder:text-default-300"
-            placeholder={`输入 markdown 试试
-
-# 中心主题
-## 分支 1
-### 子分支
-- 要点
-- 要点`}
-          />
+          <div className="flex-1 px-8 py-5 overflow-y-auto">
+            <EditorContent editor={editor} className="tiptap-wrap" />
+          </div>
         </section>
 
-        {/* Middle: native markdown render (for visual verification of bullets / tree lines) */}
+        {/* Middle: native markdown render */}
         <section className="flex flex-col border-r border-default-200 bg-white">
           <div className="flex items-center justify-between px-4 py-2 border-b border-default-200">
             <span className="text-[11px] text-default-400 uppercase tracking-wider font-medium">
               原生 Markdown 渲染
             </span>
-            <span className="text-[10px] text-default-300">bullet + tree-line</span>
+            <span className="text-[10px] text-default-300">read 视图</span>
           </div>
           <div className="flex-1 p-5 overflow-y-auto markdown-body">
             <NativeMarkdownPreview content={content} />
           </div>
         </section>
 
-        {/* Right: markmap preview */}
+        {/* Right: markmap */}
         <section className="flex flex-col bg-default-50">
           <div className="flex items-center justify-between px-4 py-2 border-b border-default-200 bg-white">
             <span className="text-[11px] text-default-400 uppercase tracking-wider font-medium">
@@ -224,7 +279,7 @@ const MindmapPocPage = observer(() => {
       {/* Footer note */}
       <footer className="px-6 py-2 border-t border-default-200 bg-white text-[11px] text-default-400 flex items-center justify-between">
         <span>
-          💡 结论：Blinko 已通过 ```mindmap 代码块集成 markmap，验证通过即可做三视图编辑器。
+          💡 三视图共享同一份 markdown：Tiptap 编辑器 / Markdown 阅读态 / markmap 思维导图
         </span>
         <a
           href="/"
@@ -269,11 +324,9 @@ const MindmapPreview = observer(({ content }: { content: string }) => {
   }, []);
 
   // 对 ```mindmap 代码块做一层剥壳：markmap-lib 直接吃 markdown 文本，不识别代码块围栏
-  // 我们在 POC 里做轻量抽取，遇到 ```mindmap ... ``` 就把内部内容拿出来
   const stripped = useMemo(() => {
     const m = content.match(/```mindmap\s*([\s\S]*?)```/);
     if (m) return m[1].trim();
-    // 已经是裸 bullet / heading
     return content;
   }, [content]);
 

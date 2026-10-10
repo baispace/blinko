@@ -71,7 +71,7 @@ const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor
             className={`collapse-caret ${collapsed ? 'is-collapsed' : 'is-expanded'}`}
             aria-hidden="true"
           >
-            {collapsed ? '+' : '−'}
+            ▸
           </span>
         )}
         <NodeViewContent>{children}</NodeViewContent>
@@ -96,7 +96,7 @@ const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor
           contentEditable={false}
           aria-label={collapsed ? '展开子项' : '折叠子项'}
         >
-          {collapsed ? '+' : '−'}
+          ▸
         </button>
       )}
       <NodeViewContent>{children}</NodeViewContent>

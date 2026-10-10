@@ -43,6 +43,7 @@ const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
 const AiSharePage = lazy(() => import('./pages/ai-share'));
+const MindmapPocPage = lazy(() => import('./pages/mindmapPoc'));
 
 const HomeRedirect = () => {
   const navigate = useNavigate();
@@ -248,6 +249,7 @@ function AppRoutes() {
             <Route path="/quicknote" element={<QuickNotePage />} />
             <Route path="/quickai" element={<QuickAIPage />} />
             <Route path="/quicktool" element={<QuickToolPage />} />
+            <Route path="/mindmap-poc" element={<ProtectedRoute><MindmapPocPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

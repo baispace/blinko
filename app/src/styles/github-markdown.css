@@ -552,51 +552,43 @@ ol {
   list-style-type: lower-alpha;
 }
 
-/* ---------- 总结模式：ul/ol 顶部的 "N 个项目" chip ----------
-   MarkdownRender 用 list-block wrapper 包裹 ul/ol，渲染一个轻量 chip。
-   chip 默认 0.7 透明度，hover list-block 时变 1，给"可读性元数据"的感觉。 */
-.markdown-body .list-block {
-  position: relative;
+/* ---------- Collapsible list item (阅读态) ----------
+   编辑器折叠的子树在阅读态也应保持收起。
+   折叠态下首段显示"·已收起"提示。
+*/
+.markdown-body li[data-type="collapsible-list-item"][data-collapsed="true"] > ul,
+.markdown-body li[data-type="collapsible-list-item"][data-collapsed="true"] > ol {
+  display: none;
 }
 
-.markdown-body .list-block > .list-summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted-foreground) 90%, transparent);
-  background-color: color-mix(in srgb, var(--muted) 60%, transparent);
-  padding: 2px 8px 2px 6px;
-  border-radius: calc(var(--radius) - 2px);
-  margin-bottom: 4px;
-  margin-left: 0;
-  user-select: none;
-  opacity: 0.7;
-  transition: opacity 120ms ease, background-color 120ms ease;
+.markdown-body li[data-type="collapsible-list-item"][data-collapsed="true"] > p:first-child {
+  opacity: 0.78;
 }
 
-.markdown-body .list-block:hover > .list-summary {
-  opacity: 1;
-  background-color: color-mix(in srgb, var(--muted) 80%, transparent);
+.markdown-body li[data-type="collapsible-list-item"][data-collapsed="true"][data-has-children="true"] > p:first-child::after {
+  content: ' · 已收起';
+  font-size: 0.78em;
+  color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  font-weight: 400;
+  margin-left: 2px;
 }
 
-.markdown-body .list-block > .list-summary .list-summary-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--primary);
+/* 阅读态下手柄不可见（无交互），但视觉上保留一个 ▸ 让用户感知层级 */
+.markdown-body li[data-type="collapsible-list-item"][data-has-children="true"]::before {
+  content: '▸';
   display: inline-block;
+  font-size: 9px;
+  color: var(--muted-foreground);
+  margin-right: 6px;
+  margin-left: -16px;
+  vertical-align: middle;
 }
 
-.markdown-body .list-block > ul,
-.markdown-body .list-block > ol {
-  margin-top: 0.2em;
+.markdown-body li[data-type="collapsible-list-item"][data-has-children="true"][data-collapsed="false"]::before {
+  content: '▾';
 }
 
-/* ---------- shadcn-aligned bullet list (read view) ----------
+
    与编辑器侧（.tiptap）使用同一套 token，保持视觉一致：
    - --muted-foreground 做 bullet / 序号
    - --border 做嵌套引导线（仅孙级起）

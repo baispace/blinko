@@ -182,6 +182,77 @@
   border-radius: 3px;
 }
 
+/* ---------- Collapsible list item (折叠/展开子树) ----------
+   每个有子项的 <li data-type="collapsible-list-item"> 前面出现一个 ▸ / ▾ 手柄，
+   点击切换 data-collapsed="true|false"。折叠时整个 <li> 的内容（除了手柄本身和首段）
+   被隐藏，让长列表可收起。
+*/
+.tiptap li[data-type="collapsible-list-item"] {
+  position: relative;
+  /* 让折叠手柄和 bullet 互不重叠 */
+  padding-left: 0.5rem;
+}
+
+/* 折叠手柄 */
+.tiptap li[data-type="collapsible-list-item"] > .collapse-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  margin-left: -18px;
+  font-size: 9px;
+  color: var(--muted-foreground);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: transform 160ms cubic-bezier(.4, 0, .2, 1),
+              background-color 120ms ease,
+              color 120ms ease;
+  user-select: none;
+  vertical-align: middle;
+  flex-shrink: 0;
+  /* 手柄不进入文本流，只是装饰 */
+  pointer-events: auto;
+}
+
+/* 展开时 ▸ 旋转 90° 成 ▾ */
+.tiptap li[data-type="collapsible-list-item"] > .collapse-caret.is-expanded {
+  transform: rotate(90deg);
+}
+
+.tiptap li[data-type="collapsible-list-item"] > .collapse-caret.is-collapsed {
+  transform: rotate(0deg);
+}
+
+.tiptap li[data-type="collapsible-list-item"] > .collapse-caret:hover {
+  background-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  color: var(--foreground);
+}
+
+/* 折叠时 li 内首段之后的 block 都隐藏 */
+.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > ul,
+.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > ol {
+  display: none;
+}
+
+/* 折叠状态下让首段自身略微变浅色，传达"被收起"状态 */
+.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > p:first-child {
+  opacity: 0.78;
+}
+
+/* 折叠计数提示：折叠时在首段后面显示一个 "N 项已收起" 的 hint */
+/* 用 ::after 而不是真正的 DOM 节点，避免 React NodeView 复杂度 */
+.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"][data-has-children="true"] > p:first-child::after {
+  content: ' · 已收起';
+  font-size: 0.78em;
+  color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
 /* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
    - 用 Blinko/shadcn 既有 token：--muted-foreground / --border / --accent
    - 缩进前的小灰点代替默认黑色 disc

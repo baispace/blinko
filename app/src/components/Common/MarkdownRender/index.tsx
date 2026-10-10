@@ -233,34 +233,6 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
             ...mathPlugins.rehype
           ]}
           components={{
-            // 总结模式：在 ul/ol 顶部加一个 "N 个项目" 灰色 chip
-            // 不影响 markdown 源数据，纯渲染层注入
-            ul: ({ node, children, ...props }) => {
-              const count = (node?.children ?? []).filter((c: any) => c?.tagName === 'li').length;
-              if (count < 2) return <ul {...props}>{children}</ul>;
-              return (
-                <div className="list-block" data-list-type="ul" data-count={count}>
-                  <div className="list-summary">
-                    <span className="list-summary-dot" />
-                    <span>{count} 个项目</span>
-                  </div>
-                  <ul {...props}>{children}</ul>
-                </div>
-              );
-            },
-            ol: ({ node, children, ...props }) => {
-              const count = (node?.children ?? []).filter((c: any) => c?.tagName === 'li').length;
-              if (count < 2) return <ol {...props}>{children}</ol>;
-              return (
-                <div className="list-block" data-list-type="ol" data-count={count}>
-                  <div className="list-summary">
-                    <span className="list-summary-dot" />
-                    <span>{count} 项</span>
-                  </div>
-                  <ol {...props}>{children}</ol>
-                </div>
-              );
-            },
             p: ({ node, children }) => {
               // 段落里只要含有图片，就不能渲染成 <p>：HeroUI Image + react-photo-view
               // 注入的内部 <div> 会触发 validateDOMNesting（<div> cannot appear as a

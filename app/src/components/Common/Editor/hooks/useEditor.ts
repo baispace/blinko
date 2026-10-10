@@ -32,6 +32,7 @@ import { NoteMention } from '../Tiptap/noteMention';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
+import { CollapsibleListItem } from '../Tiptap/collapsibleListItem';
 
 export const useEditorInit = (
   store: EditorStore,
@@ -73,7 +74,10 @@ export const useEditorInit = (
           // 自定义 MarkdownBlankLine 接管 paragraph 序列化（空段落 → nbsp 占位行，
           // 解决「编辑器空行保存后消失」）。同样需要关闭默认避免 duplicate name。
           paragraph: false,
+          // 用自定义 CollapsibleListItem 替换默认 listItem（添加折叠/展开子树能力）
+          listItem: false,
         }),
+        CollapsibleListItem,
         MarkdownHardBreak,
         MarkdownBlankLine,
         Placeholder.configure({

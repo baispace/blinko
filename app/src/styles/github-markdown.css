@@ -552,6 +552,93 @@ ol {
   list-style-type: lower-alpha;
 }
 
+/* ---------- Effie-style tree lines for read view ----------
+   和编辑器侧（.tiptap）保持一致：小灰点 + 嵌套列表左侧 1px 引导线
+   任务列表（带 checkbox 的）走自己的样式，不被覆盖
+*/
+.markdown-body ul:not(.contains-task-list),
+.markdown-body ol {
+  list-style: none;
+  padding-left: 1.25rem;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  position: relative;
+}
+
+.markdown-body ul:not(.contains-task-list) > li,
+.markdown-body ol > li {
+  position: relative;
+  padding-left: 0.25rem;
+}
+
+/* 嵌套引导线 */
+.markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.markdown-body ol ol::before,
+.markdown-body ol ul:not(.contains-task-list)::before,
+.markdown-body ul:not(.contains-task-list) ol::before {
+  content: '';
+  position: absolute;
+  left: 0.4rem;
+  top: 0.85em;
+  bottom: 0.15em;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.09);
+  pointer-events: none;
+}
+
+/* 小灰点 */
+.markdown-body ul:not(.contains-task-list) > li::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.markdown-body ol {
+  counter-reset: md-ol;
+}
+
+.markdown-body ol > li {
+  counter-increment: md-ol;
+}
+
+.markdown-body ol > li::before {
+  content: counter(md-ol);
+  position: absolute;
+  left: -1.25rem;
+  top: 0.05em;
+  width: 1rem;
+  text-align: right;
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+}
+
+/* 暗色模式 */
+.dark .markdown-body ul:not(.contains-task-list) > li::before,
+[data-theme="dark"] .markdown-body ul:not(.contains-task-list) > li::before {
+  background: rgba(255, 255, 255, 0.28);
+}
+.dark .markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.dark .markdown-body ol ol::before,
+.dark .markdown-body ol ul:not(.contains-task-list)::before,
+.dark .markdown-body ul:not(.contains-task-list) ol::before,
+[data-theme="dark"] .markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+[data-theme="dark"] .markdown-body ol ol::before,
+[data-theme="dark"] .markdown-body ol ul:not(.contains-task-list)::before,
+[data-theme="dark"] .markdown-body ul:not(.contains-task-list) ol::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark .markdown-body ol > li::before,
+[data-theme="dark"] .markdown-body ol > li::before {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .markdown-body dd {
   margin-left: 0;
 }

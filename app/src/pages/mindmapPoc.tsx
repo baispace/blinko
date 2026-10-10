@@ -165,8 +165,8 @@ const MindmapPocPage = observer(() => {
         ))}
       </div>
 
-      {/* Split: Editor + Preview */}
-      <main className="flex-1 grid grid-cols-2 gap-0 min-h-0">
+      {/* Split: Editor + Preview (3-column: input / native md render / markmap) */}
+      <main className="flex-1 grid grid-cols-3 gap-0 min-h-0">
         {/* Left: textarea */}
         <section className="flex flex-col border-r border-default-200 bg-white">
           <div className="flex items-center justify-between px-4 py-2 border-b border-default-200">
@@ -192,7 +192,20 @@ const MindmapPocPage = observer(() => {
           />
         </section>
 
-        {/* Right: preview */}
+        {/* Middle: native markdown render (for visual verification of bullets / tree lines) */}
+        <section className="flex flex-col border-r border-default-200 bg-white">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-default-200">
+            <span className="text-[11px] text-default-400 uppercase tracking-wider font-medium">
+              原生 Markdown 渲染
+            </span>
+            <span className="text-[10px] text-default-300">bullet + tree-line</span>
+          </div>
+          <div className="flex-1 p-5 overflow-y-auto markdown-body">
+            <NativeMarkdownPreview content={content} />
+          </div>
+        </section>
+
+        {/* Right: markmap preview */}
         <section className="flex flex-col bg-default-50">
           <div className="flex items-center justify-between px-4 py-2 border-b border-default-200 bg-white">
             <span className="text-[11px] text-default-400 uppercase tracking-wider font-medium">
@@ -223,6 +236,22 @@ const MindmapPocPage = observer(() => {
       </footer>
     </div>
   );
+});
+
+// Native markdown render via existing MarkdownRender — 用于直观对比 bullet / 树状线样式
+const NativeMarkdownPreview = observer(({ content }: { content: string }) => {
+  const [MarkdownRender, setCmp] = useState<any>(null);
+  useEffect(() => {
+    let cancelled = false;
+    import('@/components/Common/MarkdownRender').then((mod) => {
+      if (!cancelled) setCmp(() => mod.MarkdownRender);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  if (!MarkdownRender) {
+    return <div className="text-default-300 text-xs">加载中…</div>;
+  }
+  return <MarkdownRender content={content} />;
 });
 
 // Lazy-loaded preview wrapper — 保持与 MarkdownRender 一致的挂载行为

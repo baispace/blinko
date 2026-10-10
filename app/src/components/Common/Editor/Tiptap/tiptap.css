@@ -182,8 +182,104 @@
   border-radius: 3px;
 }
 
-.tiptap ul, .tiptap ol {
-  padding-left: 1.4em;
+/* ---------- bullet / ordered list (Effie-style tree lines + subtle dot) ----------
+   - 缩进前的小灰点代替默认黑色 disc
+   - 嵌套列表左侧挂一根 1px 浅灰引导线，把父项和子项连起来
+   - 缩进节奏 1.25rem，与任务列表、代码块、callout 的视觉权重区分
+   - 任务列表和有序列表走自己的样式，不被这套规则覆盖
+*/
+.tiptap ul:not([data-type="taskList"]),
+.tiptap ol:not([data-type="taskList"]) {
+  list-style: none;
+  padding-left: 1.25rem;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  position: relative;
+}
+
+.tiptap ul:not([data-type="taskList"]) > li,
+.tiptap ol:not([data-type="taskList"]) > li {
+  position: relative;
+  padding-left: 0.25rem;
+}
+
+/* 嵌套 ul 左侧 1px 浅灰垂直引导线 —— "树状对齐线" */
+.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before {
+  content: '';
+  position: absolute;
+  left: 0.4rem;
+  top: 0.85em;
+  bottom: 0.15em;
+  width: 1px;
+  background: var(--list-guide, rgba(0, 0, 0, 0.09));
+  pointer-events: none;
+}
+
+/* 每条 li 前面的小灰点 */
+.tiptap ul:not([data-type="taskList"]) > li::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--list-bullet, rgba(0, 0, 0, 0.22));
+  transition: background-color 120ms ease;
+}
+
+/* hover 时点变深一点，给用户"这条可以点"的暗示 */
+.tiptap ul:not([data-type="taskList"]) > li:hover::before {
+  background: var(--list-bullet-hover, rgba(0, 0, 0, 0.45));
+}
+
+/* ordered list 用 CSS counter 显示小灰数字，不要默认 decimal */
+.tiptap ol:not([data-type="taskList"]) {
+  counter-reset: tiptap-ol;
+}
+
+.tiptap ol:not([data-type="taskList"]) > li {
+  counter-increment: tiptap-ol;
+}
+
+.tiptap ol:not([data-type="taskList"]) > li::before {
+  content: counter(tiptap-ol);
+  position: absolute;
+  left: -1.25rem;
+  top: 0.05em;
+  width: 1rem;
+  text-align: right;
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+  color: var(--list-number, rgba(0, 0, 0, 0.4));
+  font-weight: 500;
+}
+
+/* 暗色模式：把点 / 引导线 / 数字 调亮一点 */
+.dark .tiptap ul:not([data-type="taskList"]) > li::before,
+[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) > li::before {
+  background: rgba(255, 255, 255, 0.28);
+}
+.dark .tiptap ul:not([data-type="taskList"]) > li:hover::before,
+[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) > li:hover::before {
+  background: rgba(255, 255, 255, 0.55);
+}
+.dark .tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.dark .tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.dark .tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.dark .tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark .tiptap ol:not([data-type="taskList"]) > li::before,
+[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) > li::before {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ---------- task list (circular yellow checkbox, same as vditor) ---------- */

@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core'
-import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from '@tiptap/react'
 import React, { useCallback, useEffect, useRef } from 'react'
 
 /**
@@ -27,29 +27,22 @@ declare module '@tiptap/core' {
 
 /**
  * 检测一个 li 节点是否有子项（嵌套的 ul/ol）。
- * - 至少包含 paragraph 之外的一个 block 节点（嵌套 ul/ol 通常就是 block）
- * - 或者 content.size > 实际段落大小（paragraph + 嵌套 list 共存）
+ * listItem content 是 block+：第一个 block 是 paragraph（li 自己的文本），
+ * 后续 block 是嵌套的 ul/ol。所以 childCount > 1 即表示有子项。
  */
 function listItemHasChildren(node: any): boolean {
   if (!node) return false
-  let hasNonParagraphBlock = false
-  node.content.forEach((child: any) => {
-    if (
-      child.type.name !== 'paragraph' &&
-      (child.type.name === 'bulletList' || child.type.name === 'orderedList' || child.isBlock)
-    ) {
-      hasNonParagraphBlock = true
-    }
-  })
-  return hasNonParagraphBlock
+  // childCount > 1 = paragraph + 至少一个 nested list
+  return node.childCount > 1
 }
 
 /**
  * NodeView 组件 —— 给 li 前面追加折叠手柄
  *
  * 只在 li 实际有子项时才显示手柄；点击手柄切换 collapsed attr。
+ * children 由 Tiptap 的 ReactNodeViewRenderer 自动注入，要用 NodeViewContent 渲染。
  */
-const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor }) => {
+const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor, children }) => {
   const hasChildren = listItemHasChildren(node)
   const collapsed = !!node.attrs.collapsed
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -81,7 +74,7 @@ const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor
             ▸
           </span>
         )}
-        <NodeViewContent />
+        <NodeViewContent>{children}</NodeViewContent>
       </NodeViewWrapper>
     )
   }
@@ -106,22 +99,16 @@ const CollapsibleListItemView: React.FC<any> = ({ node, updateAttributes, editor
           ▸
         </button>
       )}
-      <NodeViewContent />
+      <NodeViewContent>{children}</NodeViewContent>
     </NodeViewWrapper>
   )
-}
-
-/**
- * NodeViewContent — 把 children 渲染出来的简单包装
- * （用 NodeViewContent 而不是直接 children 是为了让 ReactNodeViewRenderer 正确接管）
- */
-const NodeViewContent: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  return <>{children}</>
 }
 
 export const CollapsibleListItem = Node.create({
   name: 'listItem',
   group: 'listItem',
+  // 与 StarterKit 默认一致：至少一段 paragraph（li 自己的文本），后面跟 0+ 个 block
+  // （嵌套 ul/ol 等）
   content: 'paragraph block*',
   defining: true,
 

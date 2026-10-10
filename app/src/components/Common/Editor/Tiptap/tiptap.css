@@ -185,9 +185,9 @@
 /* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
    - 用 Blinko/shadcn 既有 token：--muted-foreground / --border / --accent
    - 缩进前的小灰点代替默认黑色 disc
-   - 嵌套列表左侧挂一根 1px 浅灰引导线，把父项和子项连起来
+   - 仅孙级（ul ul ul 及更深）画引导线 —— 第一层嵌套由父 bullet 标识，不重复画线
    - 缩进节奏紧凑（1.25rem），行间距宽松（0.2em 上下），与 shadcn typography 一致
-   - hover 时整行加 --accent 背景 + 点加深，给用户"这条可点"的暗示
+   - hover 时整行加 --accent 背景 + 点加深 + 整列引导线加粗变深
    - 任务列表和有序嵌套样式保留各自样式不被覆盖
 */
 .tiptap ul:not([data-type="taskList"]),
@@ -220,19 +220,38 @@
   background-color: var(--muted-foreground);
 }
 
-/* 嵌套 ul 左侧 1px 浅灰垂直引导线 —— "树状对齐线"，用 --border 而非硬编码 */
-.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before {
+/* 仅孙级（ul ul ul 及更深）画 1px 浅灰垂直引导线 —— "树状对齐线"
+   直接子列表（第一层嵌套）的层级关系由父级 bullet + 缩进已经标识，再画线是冗余 */
+.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ol::before,
+.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ol ol::before {
   content: '';
   position: absolute;
   left: 0.45rem;
-  top: 0.85em;
-  bottom: 0.15em;
+  top: 0.5em;
+  bottom: 0.1em;
   width: 1px;
   background-color: var(--border);
   pointer-events: none;
+  transition: width 120ms ease, background-color 120ms ease;
+}
+
+/* hover 时所在嵌套列的引导线整体加粗 + 加深 —— :has() 向上传递状态 */
+.tiptap:has(li:hover) ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ol::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ol::before {
+  width: 1.5px;
+  background-color: var(--muted-foreground);
 }
 
 /* 每条 li 前面的小灰点 —— 用 --muted-foreground 而不是硬编码 rgba */
@@ -302,17 +321,23 @@
   width: 16px;
   height: 16px;
   appearance: none;
-  border: 2px solid #EAB308;
-  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background-color: var(--background);
+  border-radius: 4px;
   margin: 0;
   vertical-align: middle;
   cursor: pointer;
   position: relative;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.tiptap ul[data-type="taskList"] input[type="checkbox"]:hover {
+  border-color: var(--primary);
 }
 
 .tiptap ul[data-type="taskList"] input[type="checkbox"]:checked {
-  background-color: #EAB308;
-  border-color: #EAB308;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .tiptap ul[data-type="taskList"] input[type="checkbox"]:checked::after {

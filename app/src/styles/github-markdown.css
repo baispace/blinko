@@ -552,11 +552,56 @@ ol {
   list-style-type: lower-alpha;
 }
 
+/* ---------- 总结模式：ul/ol 顶部的 "N 个项目" chip ----------
+   MarkdownRender 用 list-block wrapper 包裹 ul/ol，渲染一个轻量 chip。
+   chip 默认 0.7 透明度，hover list-block 时变 1，给"可读性元数据"的感觉。 */
+.markdown-body .list-block {
+  position: relative;
+}
+
+.markdown-body .list-block > .list-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted-foreground) 90%, transparent);
+  background-color: color-mix(in srgb, var(--muted) 60%, transparent);
+  padding: 2px 8px 2px 6px;
+  border-radius: calc(var(--radius) - 2px);
+  margin-bottom: 4px;
+  margin-left: 0;
+  user-select: none;
+  opacity: 0.7;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+
+.markdown-body .list-block:hover > .list-summary {
+  opacity: 1;
+  background-color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+.markdown-body .list-block > .list-summary .list-summary-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  display: inline-block;
+}
+
+.markdown-body .list-block > ul,
+.markdown-body .list-block > ol {
+  margin-top: 0.2em;
+}
+
 /* ---------- shadcn-aligned bullet list (read view) ----------
    与编辑器侧（.tiptap）使用同一套 token，保持视觉一致：
    - --muted-foreground 做 bullet / 序号
-   - --border 做嵌套引导线
+   - --border 做嵌套引导线（仅孙级起）
    - --accent 做 hover 整行背景
+   - hover 时整列引导线加粗变深（:has() 向上传递）
    任务列表（带 checkbox）走自己的样式，不被覆盖
 */
 .markdown-body ul:not(.contains-task-list),
@@ -589,19 +634,38 @@ ol {
   background-color: var(--muted-foreground);
 }
 
-/* 嵌套引导线 */
-.markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
-.markdown-body ol ol::before,
-.markdown-body ol ul:not(.contains-task-list)::before,
-.markdown-body ul:not(.contains-task-list) ol::before {
+/* 仅孙级（ul ul ul 及更深）画 1px 浅灰垂直引导线 —— "树状对齐线"
+   直接子列表（第一层嵌套）的层级关系由父级 bullet + 缩进已经标识，再画线是冗余 */
+.markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list) ol::before,
+.markdown-body ul:not(.contains-task-list) ol ul:not(.contains-task-list)::before,
+.markdown-body ul:not(.contains-task-list) ol ol::before,
+.markdown-body ol ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.markdown-body ol ul:not(.contains-task-list) ol::before,
+.markdown-body ol ol ul:not(.contains-task-list)::before,
+.markdown-body ol ol ol::before {
   content: '';
   position: absolute;
   left: 0.45rem;
-  top: 0.85em;
-  bottom: 0.15em;
+  top: 0.5em;
+  bottom: 0.1em;
   width: 1px;
   background-color: var(--border);
   pointer-events: none;
+  transition: width 120ms ease, background-color 120ms ease;
+}
+
+/* hover 时所在嵌套列的引导线整体加粗 + 加深 —— :has() 向上传递状态 */
+.markdown-body:has(li:hover) ul:not(.contains-task-list) ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.markdown-body:has(li:hover) ul:not(.contains-task-list) ul:not(.contains-task-list) ol::before,
+.markdown-body:has(li:hover) ul:not(.contains-task-list) ol ul:not(.contains-task-list)::before,
+.markdown-body:has(li:hover) ul:not(.contains-task-list) ol ol::before,
+.markdown-body:has(li:hover) ol ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.markdown-body:has(li:hover) ol ul:not(.contains-task-list) ol::before,
+.markdown-body:has(li:hover) ol ol ul:not(.contains-task-list)::before,
+.markdown-body:has(li:hover) ol ol ol::before {
+  width: 1.5px;
+  background-color: var(--muted-foreground);
 }
 
 /* 小灰点 */
@@ -847,8 +911,11 @@ ol {
 }
 
 .markdown-body li>p {
-  margin-top: var(--base-size-8);
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
+.markdown-body li>p:first-child { margin-top: 0; }
+.markdown-body li>p:last-child { margin-bottom: 0; }
 
 .markdown-body li+li {
   margin-top: .25em;
@@ -1359,6 +1426,24 @@ table tr:last-child td:last-child {
 .markdown-body .task-list-item-checkbox {
   margin: 0 .2em .25em -1.4em;
   vertical-align: middle;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  background-color: var(--background);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.markdown-body .task-list-item-checkbox:hover {
+  border-color: var(--primary);
+}
+
+.markdown-body .task-list-item-checkbox:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .markdown-body ul:dir(rtl) .task-list-item-checkbox {

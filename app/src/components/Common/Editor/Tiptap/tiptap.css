@@ -182,61 +182,73 @@
   border-radius: 3px;
 }
 
-/* ---------- bullet / ordered list (Effie-style tree lines + subtle dot) ----------
+/* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
+   - 用 Blinko/shadcn 既有 token：--muted-foreground / --border / --accent
    - 缩进前的小灰点代替默认黑色 disc
    - 嵌套列表左侧挂一根 1px 浅灰引导线，把父项和子项连起来
-   - 缩进节奏 1.25rem，与任务列表、代码块、callout 的视觉权重区分
-   - 任务列表和有序列表走自己的样式，不被这套规则覆盖
+   - 缩进节奏紧凑（1.25rem），行间距宽松（0.2em 上下），与 shadcn typography 一致
+   - hover 时整行加 --accent 背景 + 点加深，给用户"这条可点"的暗示
+   - 任务列表和有序嵌套样式保留各自样式不被覆盖
 */
 .tiptap ul:not([data-type="taskList"]),
 .tiptap ol:not([data-type="taskList"]) {
   list-style: none;
   padding-left: 1.25rem;
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
   position: relative;
 }
 
 .tiptap ul:not([data-type="taskList"]) > li,
 .tiptap ol:not([data-type="taskList"]) > li {
   position: relative;
-  padding-left: 0.25rem;
+  padding-left: 0.4rem;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background-color 120ms ease;
 }
 
-/* 嵌套 ul 左侧 1px 浅灰垂直引导线 —— "树状对齐线" */
+/* hover 时整行加 --accent 背景 + 点加深 */
+.tiptap ul:not([data-type="taskList"]) > li:hover,
+.tiptap ol:not([data-type="taskList"]) > li:hover {
+  background-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.tiptap ul:not([data-type="taskList"]) > li:hover::before,
+.tiptap ol:not([data-type="taskList"]) > li:hover::before {
+  background-color: var(--muted-foreground);
+}
+
+/* 嵌套 ul 左侧 1px 浅灰垂直引导线 —— "树状对齐线"，用 --border 而非硬编码 */
 .tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
 .tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
 .tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
 .tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before {
   content: '';
   position: absolute;
-  left: 0.4rem;
+  left: 0.45rem;
   top: 0.85em;
   bottom: 0.15em;
   width: 1px;
-  background: var(--list-guide, rgba(0, 0, 0, 0.09));
+  background-color: var(--border);
   pointer-events: none;
 }
 
-/* 每条 li 前面的小灰点 */
+/* 每条 li 前面的小灰点 —— 用 --muted-foreground 而不是硬编码 rgba */
 .tiptap ul:not([data-type="taskList"]) > li::before {
   content: '';
   position: absolute;
-  left: -0.85rem;
-  top: 0.7em;
+  left: -0.8rem;
+  top: 0.75em;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--list-bullet, rgba(0, 0, 0, 0.22));
+  background-color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
   transition: background-color 120ms ease;
 }
 
-/* hover 时点变深一点，给用户"这条可以点"的暗示 */
-.tiptap ul:not([data-type="taskList"]) > li:hover::before {
-  background: var(--list-bullet-hover, rgba(0, 0, 0, 0.45));
-}
-
-/* ordered list 用 CSS counter 显示小灰数字，不要默认 decimal */
+/* ordered list 用 CSS counter 显示小灰数字，颜色来自 --muted-foreground */
 .tiptap ol:not([data-type="taskList"]) {
   counter-reset: tiptap-ol;
 }
@@ -254,32 +266,8 @@
   text-align: right;
   font-size: 0.82em;
   font-variant-numeric: tabular-nums;
-  color: var(--list-number, rgba(0, 0, 0, 0.4));
+  color: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
   font-weight: 500;
-}
-
-/* 暗色模式：把点 / 引导线 / 数字 调亮一点 */
-.dark .tiptap ul:not([data-type="taskList"]) > li::before,
-[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) > li::before {
-  background: rgba(255, 255, 255, 0.28);
-}
-.dark .tiptap ul:not([data-type="taskList"]) > li:hover::before,
-[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) > li:hover::before {
-  background: rgba(255, 255, 255, 0.55);
-}
-.dark .tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.dark .tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.dark .tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.dark .tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-[data-theme="dark"] .tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before {
-  background: rgba(255, 255, 255, 0.1);
-}
-.dark .tiptap ol:not([data-type="taskList"]) > li::before,
-[data-theme="dark"] .tiptap ol:not([data-type="taskList"]) > li::before {
-  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ---------- task list (circular yellow checkbox, same as vditor) ---------- */

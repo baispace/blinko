@@ -552,23 +552,41 @@ ol {
   list-style-type: lower-alpha;
 }
 
-/* ---------- Effie-style tree lines for read view ----------
-   和编辑器侧（.tiptap）保持一致：小灰点 + 嵌套列表左侧 1px 引导线
-   任务列表（带 checkbox 的）走自己的样式，不被覆盖
+/* ---------- shadcn-aligned bullet list (read view) ----------
+   与编辑器侧（.tiptap）使用同一套 token，保持视觉一致：
+   - --muted-foreground 做 bullet / 序号
+   - --border 做嵌套引导线
+   - --accent 做 hover 整行背景
+   任务列表（带 checkbox）走自己的样式，不被覆盖
 */
 .markdown-body ul:not(.contains-task-list),
 .markdown-body ol {
   list-style: none;
   padding-left: 1.25rem;
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
   position: relative;
 }
 
 .markdown-body ul:not(.contains-task-list) > li,
 .markdown-body ol > li {
   position: relative;
-  padding-left: 0.25rem;
+  padding-left: 0.4rem;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background-color 120ms ease;
+}
+
+/* hover 整行加 --accent 背景 */
+.markdown-body ul:not(.contains-task-list) > li:hover,
+.markdown-body ol > li:hover {
+  background-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.markdown-body ul:not(.contains-task-list) > li:hover::before,
+.markdown-body ol > li:hover::before {
+  background-color: var(--muted-foreground);
 }
 
 /* 嵌套引导线 */
@@ -578,11 +596,11 @@ ol {
 .markdown-body ul:not(.contains-task-list) ol::before {
   content: '';
   position: absolute;
-  left: 0.4rem;
+  left: 0.45rem;
   top: 0.85em;
   bottom: 0.15em;
   width: 1px;
-  background: rgba(0, 0, 0, 0.09);
+  background-color: var(--border);
   pointer-events: none;
 }
 
@@ -590,12 +608,13 @@ ol {
 .markdown-body ul:not(.contains-task-list) > li::before {
   content: '';
   position: absolute;
-  left: -0.85rem;
-  top: 0.7em;
+  left: -0.8rem;
+  top: 0.75em;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.22);
+  background-color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  transition: background-color 120ms ease;
 }
 
 .markdown-body ol {
@@ -615,28 +634,8 @@ ol {
   text-align: right;
   font-size: 0.82em;
   font-variant-numeric: tabular-nums;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
   font-weight: 500;
-}
-
-/* 暗色模式 */
-.dark .markdown-body ul:not(.contains-task-list) > li::before,
-[data-theme="dark"] .markdown-body ul:not(.contains-task-list) > li::before {
-  background: rgba(255, 255, 255, 0.28);
-}
-.dark .markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
-.dark .markdown-body ol ol::before,
-.dark .markdown-body ol ul:not(.contains-task-list)::before,
-.dark .markdown-body ul:not(.contains-task-list) ol::before,
-[data-theme="dark"] .markdown-body ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
-[data-theme="dark"] .markdown-body ol ol::before,
-[data-theme="dark"] .markdown-body ol ul:not(.contains-task-list)::before,
-[data-theme="dark"] .markdown-body ul:not(.contains-task-list) ol::before {
-  background: rgba(255, 255, 255, 0.1);
-}
-.dark .markdown-body ol > li::before,
-[data-theme="dark"] .markdown-body ol > li::before {
-  color: rgba(255, 255, 255, 0.5);
 }
 
 .markdown-body dd {

@@ -1,20 +1,26 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { CollapsibleListItem } from '@/components/Common/Editor/Tiptap/collapsibleListItem';
+import { DragHandle } from '@/components/Common/Editor/Tiptap/DragHandle';
+import { SlashCommand } from '@/components/Common/Editor/Tiptap/extensions';
+import { SlashMenuState } from '@/components/Common/Editor/Tiptap/slashMenuState';
+import { SlashMenuView } from '@/components/Common/Editor/Tiptap/ToolbarButtons';
 import '@/components/Common/Editor/Tiptap/tiptap.css';
+import './mindmapPoc.css';
 
 /**
  * Effie 大纲 ↔ 思维导图 POC
  *
- * 现场验证三件事：
+ * 现场验证：
  *  1. Tiptap 编辑器 + CollapsibleListItem 折叠手柄（Effie 风格核心交互）
  *  2. shadcn-aligned bullet 样式 + 嵌套引导线 + hover 加粗
  *  3. markmap.js 思维导图渲染（基于同一份 markdown 数据）
+ *  4. Notion-like 块级操作：drag handle / + 插入 / bubble menu / slash / floating menu
  *
  * 三栏布局：左侧 Tiptap 编辑器 / 中间 MarkdownRender 阅读态 / 右侧 markmap
  * 三者共享同一份 markdown：编辑器 → onUpdate → state → markmap + markdown
@@ -97,14 +103,23 @@ const MindmapPocPage = observer(() => {
   const [renderMs, setRenderMs] = useState<number | null>(null);
   const [nodeCount, setNodeCount] = useState<number | null>(null);
 
+  // Notion-ish slash menu state —— SlashCommand 用这个 store 推 open / rect / items
+  const slashMenuRef = useRef<SlashMenuState | null>(null);
+  if (slashMenuRef.current === null) {
+    slashMenuRef.current = new SlashMenuState();
+  }
+  const slashMenuState = slashMenuRef.current;
+
   /**
-   * Tiptap 编辑器实例 —— 简化版配置
+   * Tiptap 编辑器实例 —— Notion-ish demo 配置
    *
-   * 只用 bullet / heading / collapsible list / markdown 序列化，省略：
-   * - TaskList / TaskItem（任务列表有自己的 checkbox 场景）
+   * 包含：bullet / heading / collapsible list / markdown / slash /
+   *       drag handle 后续手动 mount、FloatingMenu & BubbleMenu 也手动挂载。
+   *
+   * 故意不接（demo 不需要）：
+   * - TaskList / TaskItem（避免和 bullet 视觉混淆）
    * - NoteMention / HashtagSuggestion（笔记专属）
    * - Callout / Table（演示不需要）
-   * - SlashCommand / AiPendingIndicator（编辑器交互）
    * - 图片上传 / 附件
    */
   const editor = useEditor({
@@ -113,11 +128,10 @@ const MindmapPocPage = observer(() => {
         heading: { levels: [1, 2, 3, 4, 5, 6] },
         // 禁用默认 listItem 用自定义 CollapsibleListItem（添加折叠/展开子树）
         listItem: false,
-        // paragraph / hardBreak 保持 StarterKit 默认，避免 schema 找不到
       }),
       CollapsibleListItem,
       Placeholder.configure({
-        placeholder: '输入 - 然后空格进入列表，然后按 Tab 缩进……',
+        placeholder: '输入 / 唤起命令 · 输入 - 然后空格进列表 · Tab 缩进……',
         showOnlyWhenEditable: true,
       }),
       Markdown.configure({
@@ -127,6 +141,8 @@ const MindmapPocPage = observer(() => {
         transformPastedText: false,
         transformCopiedText: false,
       }),
+      // 斜杠菜单：独立 SlashMenuState（不依赖 EditorStore）
+      SlashCommand.configure({ slashMenu: slashMenuState }),
     ],
     // 注意：content 必须是 ProseMirror JSON，markdown 需要在 onCreate 后用
     // editor.commands.setContent(md) 设置（tiptap-markdown 在 insertContent 时才解析）
@@ -187,7 +203,7 @@ const MindmapPocPage = observer(() => {
               Effie 大纲 ↔ 思维导图 POC
             </div>
             <div className="text-[11px] text-default-400 mt-0.5">
-              现场体验折叠手柄 + 新 bullet 样式 · 临时页面 ·{' '}
+              Notion-ish demo：拖拽手柄 / + 块插入 / 浮层条 / 斜杠菜单 · 临时页面 ·{' '}
               <code className="px-1 py-0.5 rounded bg-default-100">/mindmap-poc</code>
             </div>
           </div>
@@ -225,8 +241,8 @@ const MindmapPocPage = observer(() => {
             {p.label}
           </button>
         ))}
-        <span className="ml-auto text-[10px] text-default-400">
-          💡 编辑器里按 <kbd className="px-1 py-0.5 rounded bg-default-100 border border-default-200">Tab</kbd> 缩进，父项前出现折叠手柄
+        <span className="ml-auto text-[10px] text-default-400 flex items-center gap-1">
+          💡 悬停块显示 <kbd className="px-1 py-0.5 rounded bg-default-100 border border-default-200">⠿</kbd> 拖拽 / <kbd className="px-1 py-0.5 rounded bg-default-100 border border-default-200">+</kbd> 插入 / 选中文本出浮层 / <kbd className="px-1 py-0.5 rounded bg-default-100 border border-default-200">/</kbd> 命令
         </span>
       </div>
 
@@ -244,6 +260,88 @@ const MindmapPocPage = observer(() => {
           </div>
           <div className="flex-1 px-8 py-5 overflow-y-auto">
             <EditorContent editor={editor} className="tiptap-wrap" />
+            {editor && (
+              <>
+                <DragHandle editor={editor} />
+                <BubbleMenu
+                  editor={editor}
+                  shouldShow={({ editor }) => {
+                    if (!editor) return false;
+                    const { selection } = editor.state;
+                    if (selection.empty) return false;
+                    const node = (selection as any)?.node;
+                    return !(node?.type?.name === 'image');
+                  }}
+                  tippyOptions={{ duration: 120, maxWidth: 'none' }}
+                >
+                  <div className="tiptap-bubble">
+                    <button title="粗体"
+                      className={editor.isActive('bold') ? 'is-active' : ''}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editor.chain().focus().toggleBold().run()}
+                    >
+                      <Icon icon="mdi:format-bold" width={14} height={14} />
+                    </button>
+                    <button title="斜体"
+                      className={editor.isActive('italic') ? 'is-active' : ''}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editor.chain().focus().toggleItalic().run()}
+                    >
+                      <Icon icon="mdi:format-italic" width={14} height={14} />
+                    </button>
+                    <button title="下划线"
+                      className={editor.isActive('underline') ? 'is-active' : ''}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    >
+                      <Icon icon="mdi:format-underline" width={14} height={14} />
+                    </button>
+                    <div className="bubble-divider" />
+                    <button title="行内代码"
+                      className={editor.isActive('code') ? 'is-active' : ''}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editor.chain().focus().toggleCode().run()}
+                    >
+                      <Icon icon="mdi:code-tags" width={14} height={14} />
+                    </button>
+                    <button title="高亮"
+                      className={editor.isActive('highlight') ? 'is-active' : ''}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editor.chain().focus().toggleHighlight().run()}
+                    >
+                      <Icon icon="mdi:format-color-highlight" width={14} height={14} />
+                    </button>
+                  </div>
+                </BubbleMenu>
+                <FloatingMenu
+                  editor={editor}
+                  shouldShow={({ editor }) => {
+                    if (!editor) return false;
+                    const { state } = editor;
+                    const { selection } = state;
+                    const { $from } = selection;
+                    const node = $from.node();
+                    // 仅在当前块是 paragraph 且完全为空时出现，避免与 slash 重复
+                    if (node?.type?.name !== 'paragraph') return false;
+                    if (node.textContent.length > 0) return false;
+                    return true;
+                  }}
+                  tippyOptions={{ duration: 120, placement: 'left' }}
+                >
+                  <button
+                    className="tiptap-addblock"
+                    title="点击调出块菜单"
+                    onClick={() => {
+                      editor.commands.focus();
+                      editor.commands.insertContent('/');
+                    }}
+                  >
+                    <Icon icon="mdi:plus" width={16} height={16} />
+                  </button>
+                </FloatingMenu>
+              </>
+            )}
+            <SlashMenuView state={slashMenuState} />
           </div>
         </section>
 

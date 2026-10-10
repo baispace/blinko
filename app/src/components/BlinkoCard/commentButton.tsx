@@ -89,7 +89,7 @@ const NestedComment = observer(({
   return (
     <div
       key={comment.id}
-      className={`mb-2 border-divider p-2 rounded-2xl bg-background ${depth > 0 ? 'ml-6' : ''}`}
+      className={`mb-2 border-divider p-2 rounded-lg bg-card ${depth > 0 ? 'ml-6' : ''}`}
       style={{ marginLeft: `${Math.min(depth * 24, maxDepth * 24)}px` }}
     >
       <div className="flex items-center justify-between">
@@ -271,7 +271,7 @@ export const CommentDialog = observer(({ blinkoItem }: { blinkoItem: BlinkoItem 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center justify-between mt-3 p-2 bg-background rounded-lg"
+            className="flex items-center justify-between mt-3 p-2 bg-card rounded-lg"
           >
             <div className="text-sm text-yellow-500 font-bold">
               {t('reply-to')} <span>@{Store.reply.name}</span>
@@ -381,9 +381,9 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
           icon="akar-icons:comment"
           width="15"
           height="15"
-          className={`cursor-pointer ml-2 ${isIOSDevice
+          className={`cursor-pointer ml-2 !transition-opacity ${isIOSDevice
             ? 'opacity-60'
-            : `${alwaysShow ? '!text-ignore' : '!text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}`
+            : `${alwaysShow ? '!text-ignore' : '!text-desc opacity-0 group-hover/card:opacity-100'}`
             }`}
           onClick={handleClick}
         />
@@ -404,7 +404,7 @@ export const CommentCount = observer(({ blinkoItem }: { blinkoItem: Note }) => {
     });
   };
   return (
-    <div className="flex items-center gap-1 hover:bg-background rounded-full px-1 py-0.5 cursor-pointer" onClick={handleClick}>
+    <div className="flex items-center gap-1 hover:bg-card rounded-full px-1 py-0.5 cursor-pointer" onClick={handleClick}>
       <CommentButton blinkoItem={blinkoItem} alwaysShow={true} />
       <span className="text-sm text-ignore">{blinkoItem?._count?.comments}</span>
     </div>

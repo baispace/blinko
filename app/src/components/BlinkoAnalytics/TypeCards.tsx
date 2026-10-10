@@ -65,7 +65,7 @@ export const TypeCards = observer(({ data, onJump }: TypeCardsProps) => {
             key={c.key}
             onClick={() => onJump?.(c.filter)}
             title="点击下钻"
-            className="group text-left bg-content1 border border-default-200 rounded-2xl p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
+            className="group text-left bg-card border border-default-200 rounded-lg p-4  hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
           >
             <div className="flex justify-between items-center mb-2">
               <span className={`flex items-center gap-1.5 text-xs text-default-500 font-medium`}>

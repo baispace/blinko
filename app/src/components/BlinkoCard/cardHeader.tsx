@@ -162,18 +162,29 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         {!hideTime && <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
 
         {compactActions && !isShareMode ? (
+          /* 紧凑闪念行：时间 + 操作按钮同行；操作按钮默认低透明度，hover 行才完全显出
+             （对齐 prototype「行式」交互，详见 blinko-home-redesign.html .row .actions）。
+             把时间从 CardFooter 搬上来，整卡不再有 footer 一节，更轻。 */
           <div className="ml-auto flex items-center gap-3 shrink-0">
-            {blinkoItem._count?.comments ? (
-              <CommentCount blinkoItem={blinkoItem} />
-            ) : (
-              <CommentButton blinkoItem={blinkoItem} alwaysShow />
+            {!hideTime && (
+              <span className="text-[11px] text-default-500 font-normal opacity-60">
+                <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />
+              </span>
             )}
-            <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />
-            <PinButton blinkoItem={blinkoItem} blinko={blinko} iconSize={iconSize} />
-            <LeftCickMenu
-              className="cursor-pointer"
-              onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
-            />
+            <div className="flex items-center gap-3 shrink-0
+              opacity-40 group-hover/card:opacity-100 !transition-opacity">
+              {blinkoItem._count?.comments ? (
+                <CommentCount blinkoItem={blinkoItem} />
+              ) : (
+                <CommentButton blinkoItem={blinkoItem} />
+              )}
+              <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
+              <PinButton blinkoItem={blinkoItem} blinko={blinko} iconSize={iconSize} />
+              <LeftCickMenu
+                className="cursor-pointer"
+                onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
+              />
+            </div>
           </div>
         ) : (
           /* Expanded (detail page) header: a single labelled dropdown instead of
@@ -212,9 +223,9 @@ export const ShareButton = observer(({ blinkoItem, isIOSDevice, alwaysShow }: { 
           icon="tabler:share-2"
           width="16"
           height="16"
-          className={`cursor-pointer text-desc ml-2 ${isIOSDevice || alwaysShow
+          className={`cursor-pointer text-desc ml-2 !transition-opacity ${isIOSDevice || alwaysShow
             ? 'opacity-100'
-            : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
+            : 'opacity-0 group-hover/card:opacity-100'
             }`}
           onClick={async (e) => {
             e.stopPropagation()

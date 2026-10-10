@@ -22,7 +22,7 @@ export const TopNTags = observer(({ data, topN = 5, onChangeTopN }: TopNTagsProp
   const totalCount = sorted.reduce((s, x) => s + x.count, 0)
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-default-200 rounded-lg p-5 ">
       <div className="flex items-center justify-between mb-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-default-500"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -41,7 +41,7 @@ export const TopNTags = observer(({ data, topN = 5, onChangeTopN }: TopNTagsProp
                     disabled={disabled}
                     className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
                       topN === n
-                        ? "bg-content1 shadow-sm text-foreground"
+                        ? "bg-card  text-foreground"
                         : disabled
                           ? "text-default-300 cursor-not-allowed"
                           : "text-default-500 hover:text-foreground"

@@ -260,7 +260,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
 
   const editorContent = (
     <div
-      className={`fixed inset-0 z-[9999] bg-background ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      className={`fixed inset-0 z-[9999] bg-card ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
       /**
        * 注意：这里曾经用 onPointerDownCapture / onTouchStartCapture 对
        * "不在 editorContainerRef 内"的事件 stopPropagation()，本意是防止拖到
@@ -296,7 +296,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
               分享 / 页宽 / 预览切换 全部收进右侧 ⋯ 菜单，顶栏只留一个操作入口。
               演示模式下整条顶栏消失 —— 演示模式不留任何 chrome。 */}
           {!presentationMode && isPc && (
-            <div className="sticky top-0 z-10 flex items-center gap-3 py-3 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
+            <div className="sticky top-0 z-10 flex items-center gap-3 py-3 flex-shrink-0 border-b border-border bg-card/95 backdrop-blur-md">
               <Button
                 isIconOnly
                 variant="light"
@@ -394,7 +394,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
           {/* Bottom toolbar with back button (Mobile only, sticky above the keyboard area).
               演示模式下整条底栏消失 —— 演示模式不留任何 chrome。 */}
           {!presentationMode && !isPc && (
-            <div className="sticky bottom-0 flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+            <div className="sticky bottom-0 flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-card" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
               <Button
                 isIconOnly
                 variant="light"
@@ -435,7 +435,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
           size="sm"
           onPress={() => setPresentationMode(false)}
           aria-label={t('exit-presentation')}
-          className="fixed top-4 right-4 z-[10000] bg-background/80 backdrop-blur-md text-foreground shadow-md hover:bg-background"
+          className="fixed top-4 right-4 z-[10000] bg-card/80 backdrop-blur-md text-foreground  hover:bg-card"
         >
           <Icon icon="mdi:arrow-collapse" width={20} height={20} />
         </Button>

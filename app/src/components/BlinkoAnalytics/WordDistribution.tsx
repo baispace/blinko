@@ -89,7 +89,7 @@ export const WordDistribution = observer(({ data, median, avg }: WordDistributio
 
   const total = data.reduce((s, b) => s + b.count, 0)
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-default-200 rounded-lg p-5 ">
       <div className="flex items-center justify-between mb-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-default-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>

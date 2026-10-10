@@ -37,7 +37,7 @@ export const TldrCard = observer(({ snapshot }: TldrCardProps) => {
 
   if (typeBreakdown.total === 0) {
     return (
-      <div className="flex items-start gap-3 p-4 rounded-2xl bg-content1 border border-default-200 shadow-sm">
+      <div className="flex items-start gap-3 p-4 rounded-lg bg-card border border-default-200 ">
         <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
           <Icon icon="solar:ai-line" className="w-5 h-5" />
         </div>
@@ -49,7 +49,7 @@ export const TldrCard = observer(({ snapshot }: TldrCardProps) => {
   }
 
   return (
-    <div className="flex items-start gap-3 p-4 rounded-2xl bg-content1 border border-default-200 shadow-sm">
+    <div className="flex items-start gap-3 p-4 rounded-lg bg-card border border-default-200 ">
       <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
         <Icon icon="solar:ai-line" className="w-5 h-5" />
       </div>

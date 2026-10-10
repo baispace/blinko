@@ -17,7 +17,7 @@ export const StreakCard = observer(({ current, longest, longestMonth, goal = 5 }
   const monthLabel = longestMonth ? dayjs(longestMonth + "-01").format("YYYY-MM") : "—"
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm flex flex-col gap-3">
+    <div className="bg-card border border-default-200 rounded-lg p-5  flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Icon icon="mdi:lightning-bolt" className="w-4 h-4 text-amber-500" />

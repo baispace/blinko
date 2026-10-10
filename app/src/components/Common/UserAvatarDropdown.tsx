@@ -28,18 +28,35 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
       }}
     >
       <DropdownTrigger>
-        <div className={`cursor-pointer ${collapsed ? 'flex justify-center' : 'flex items-center gap-2'}`}>
+        <div className={`cursor-pointer ${collapsed ? 'flex justify-center' : 'flex items-center gap-2.5'}`}>
           <div className="relative group">
             {user.image ? (
-              <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-full object-cover transition-all`} />
+              <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-9 h-9' : 'w-8 h-8'} rounded-lg object-cover !transition-all`} />
             ) : (
               <Image src="/logo.png" width={30} />
             )}
-            <div className={`absolute inset-0 bg-black/30 rounded-full flex items-center justify-center transition-opacity ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+            <div className={`absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center transition-opacity ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
               <Icon icon="mdi:cog" width="16" height="16" className="text-white" />
             </div>
           </div>
-          {!collapsed && <span className="font-bold">{user.nickname || user.name}</span>}
+          {!collapsed && (
+            <>
+              <span className="font-semibold text-[13px] truncate flex-1 min-w-0">
+                {user.nickname || user.name}
+              </span>
+              {/*
+                ⌘K 提示：原型的账号行右侧 chip，
+                与 BarSearchInput 的快捷键一致，作为视觉锚点提醒用户用快捷键唤起搜索。
+                不可点击（避免双触发：BarSearchInput 的按钮已经处理）。
+              */}
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
+                bg-default-100 text-default-500
+                border border-default-200
+                shrink-0 tabular-nums">
+                ⌘K
+              </span>
+            </>
+          )}
         </div>
       </DropdownTrigger>
       <DropdownMenu aria-label="User Actions">

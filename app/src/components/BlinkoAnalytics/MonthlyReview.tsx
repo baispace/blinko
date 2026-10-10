@@ -82,7 +82,7 @@ export const MonthlyReview = observer(({ data, rangeLabel }: MonthlyReviewProps)
   }
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-default-200 rounded-lg p-5 ">
       <div className="flex items-center justify-between mb-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Icon icon="solar:bookmark-bold" className="w-4 h-4 text-amber-500" />

@@ -19,7 +19,6 @@ import { WordDistribution } from '@/components/BlinkoAnalytics/WordDistribution'
 import { MonthlyReview } from '@/components/BlinkoAnalytics/MonthlyReview'
 import { TypeChart } from '@/components/BlinkoAnalytics/TypeChart'
 import { useNavigate } from 'react-router-dom'
-import dayjs from 'dayjs'
 
 const Analytics = observer(() => {
   const store = RootStore.Get(AnalyticsStore)
@@ -50,7 +49,7 @@ const Analytics = observer(() => {
           <p>{t("load-error")}: {error}</p>
           <button
             onClick={() => store.snapshot.call()}
-            className="mt-4 px-4 py-1.5 bg-primary text-white rounded-lg text-sm"
+            className="mt-4 px-4 py-1.5 bg-primary text-white rounded-md text-sm hover:opacity-90 transition-opacity"
           >
             {t("retry")}
           </button>
@@ -78,35 +77,36 @@ const Analytics = observer(() => {
                        t("vs-last-period")
 
   return (
-    <ScrollArea fixMobileTopBar className="px-4 md:px-6 space-y-4 md:space-y-6 md:p-6 mx-auto max-w-7xl">
-      {/* Period switcher + range label */}
-      <div>
-        <PeriodSwitcher store={store} />
-        <div className="flex items-center gap-2 mt-3 text-xs text-default-500 flex-wrap">
-          <span className="font-medium text-foreground">{snap.range.label}</span>
+    <ScrollArea fixMobileTopBar className="px-4 md:px-6 py-4 md:py-6 mx-auto max-w-7xl">
+      {/* 顶部：周期切换 + 范围信息（紧凑一行） */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-5">
+        <div className="flex items-center gap-2 text-xs text-default-500 flex-wrap">
+          <span className="font-medium text-foreground text-sm">{snap.range.label}</span>
           {snap.range.hasPrev && compareLabel && (
             <>
-              <span>·</span>
+              <span className="text-default-300">·</span>
               <span>{compareLabel}</span>
             </>
           )}
-          <span style={{ marginLeft: "auto" }} className="px-2 py-0.5 rounded-md bg-default-100 text-default-600">
-            共 {snap.typeBreakdown.total} 条 · {snap.wordStats.activeDays} 个活跃日
-          </span>
+          <span className="text-default-300">·</span>
+          <span>共 {snap.typeBreakdown.total} 条 · {snap.wordStats.activeDays} 个活跃日</span>
         </div>
+        <PeriodSwitcher store={store} />
       </div>
 
       {/* TL;DR */}
-      <TldrCard snapshot={snap} />
-
-      {/* Type breakdown */}
-      <div>
-        <SectionLabel title={t("按类型")} meta={t("click-to-jump")} />
-        <TypeCards data={snap.typeBreakdown} onJump={typeJump} />
+      <div className="mb-5">
+        <TldrCard snapshot={snap} />
       </div>
 
-      {/* Word quality */}
-      <div>
+      {/* 按类型 */}
+      <section className="mb-5">
+        <SectionLabel title={t("按类型")} meta={t("click-to-jump")} />
+        <TypeCards data={snap.typeBreakdown} onJump={typeJump} />
+      </section>
+
+      {/* 按字数 */}
+      <section className="mb-5">
         <SectionLabel
           title={t("按字数")}
           meta={snap.wordStats.rawTotal !== snap.wordStats.total
@@ -114,12 +114,12 @@ const Analytics = observer(() => {
             : ""}
         />
         <WordCards data={snap.wordStats} />
-      </div>
+      </section>
 
-      {/* Behavior: streak + active hours */}
-      <div>
+      {/* 行为反馈 */}
+      <section className="mb-5">
         <SectionLabel title={t("behavior-feedback")} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <StreakCard
             current={snap.streak.current}
             longest={snap.streak.longest}
@@ -127,10 +127,10 @@ const Analytics = observer(() => {
           />
           <HourChart data={snap.activeHours} peak={snap.activeHourPeak} />
         </div>
-      </div>
+      </section>
 
-      {/* Writing calendar */}
-      <div>
+      {/* 写作日历 */}
+      <section className="mb-5">
         <SectionLabel title={t("writing-calendar")} meta={t("点击格子查看当天记录")} />
         <HeatMap
           data={snap.dailyCount}
@@ -139,38 +139,38 @@ const Analytics = observer(() => {
           title={t("heatMapTitle")}
           description={t("heatMapDescription")}
         />
-      </div>
+      </section>
 
-      {/* Type distribution by month */}
-      <div>
+      {/* 类型分布 */}
+      <section className="mb-5">
         <SectionLabel title="类型分布" meta="过去 12 个月" />
         <TypeChart
           noteByMonth={snap.typeByMonth}
           mode={store.typeChartMode}
           onModeChange={(m) => store.setTypeChartMode(m)}
         />
-      </div>
+      </section>
 
-      {/* Tag section: cloud + activity + top N */}
-      <div>
+      {/* 标签区 */}
+      <section className="mb-5">
         <SectionLabel title={t("tag-cloud")} meta="点击下钻" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-default-200 bg-card p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="flex items-center gap-2 text-sm font-semibold">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <Icon icon="solar:tag-bold" className="w-4 h-4 text-default-500" />
                 {t("tag-cloud")}
               </span>
               <div className="inline-flex bg-default-100 rounded-md p-0.5">
                 <button
                   onClick={() => store.setTagCloudMode("all")}
-                  className={`px-2.5 py-0.5 text-[11px] rounded ${store.tagCloudMode === "all" ? "bg-content1 shadow-sm" : "text-default-500"}`}
+                  className={`px-2.5 py-0.5 text-[11px] rounded ${store.tagCloudMode === "all" ? "bg-card shadow-sm" : "text-default-500"}`}
                 >
                   全部时间
                 </button>
                 <button
                   onClick={() => store.setTagCloudMode("period")}
-                  className={`px-2.5 py-0.5 text-[11px] rounded ${store.tagCloudMode === "period" ? "bg-content1 shadow-sm" : "text-default-500"}`}
+                  className={`px-2.5 py-0.5 text-[11px] rounded ${store.tagCloudMode === "period" ? "bg-card shadow-sm" : "text-default-500"}`}
                 >
                   本周期
                 </button>
@@ -181,9 +181,9 @@ const Analytics = observer(() => {
               <span>共 <strong className="text-foreground">{snap.topTags.length}</strong> 个标签 · 面积 ∝ 笔记数</span>
             </div>
           </div>
-          <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+          <div className="rounded-lg border border-default-200 bg-card p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="flex items-center gap-2 text-sm font-semibold">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <Icon icon="solar:hashtag-line" className="w-4 h-4 text-default-500" />
                 {t("tag-activity-heat")}
               </span>
@@ -192,32 +192,44 @@ const Analytics = observer(() => {
             <TagHeatmap data={snap.tagActivity} />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Top N tags */}
-      <TopNTags
-        data={snap.topTags}
-        topN={store.topN}
-        onChangeTopN={(n) => store.setTopN(n)}
-      />
+      {/* Top N 标签 */}
+      <section className="mb-5">
+        <TopNTags
+          data={snap.topTags}
+          topN={store.topN}
+          onChangeTopN={(n) => store.setTopN(n)}
+        />
+      </section>
 
-      {/* Word distribution */}
-      <WordDistribution
-        data={snap.wordDistribution}
-        median={snap.wordStats.median}
-        avg={snap.wordStats.avgPerActiveDay}
-      />
+      {/* 字数分布 */}
+      <section className="mb-5">
+        <WordDistribution
+          data={snap.wordDistribution}
+          median={snap.wordStats.median}
+          avg={snap.wordStats.avgPerActiveDay}
+        />
+      </section>
 
-      {/* Monthly review */}
-      <MonthlyReview data={snap.review} rangeLabel={snap.range.label} />
+      {/* 月度复盘 */}
+      <section className="mb-5">
+        <MonthlyReview data={snap.review} rangeLabel={snap.range.label} />
+      </section>
     </ScrollArea>
   )
 })
 
+/**
+ * Notion+shadcn 风格的章节标题：
+ * - 11px uppercase tracking-[0.04em] muted 色（与侧边栏章节标题一致）
+ * - 右侧可选 meta 说明（小一号非 uppercase）
+ * - 底部 4-5 gap 与下方内容分隔（不用 border 拉线）
+ */
 const SectionLabel = ({ title, meta }: { title: string; meta?: string }) => (
-  <div className="flex items-center justify-between text-xs text-default-500 font-medium uppercase tracking-wider mb-2.5">
+  <div className="flex items-center justify-between text-[11px] font-medium tracking-[0.04em] uppercase text-default-400 mb-3">
     <span>{title}</span>
-    {meta && <span className="text-default-400 normal-case tracking-normal font-normal">{meta}</span>}
+    {meta && <span className="text-xs text-default-400 normal-case tracking-normal font-normal">{meta}</span>}
   </div>
 )
 

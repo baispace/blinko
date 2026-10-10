@@ -44,13 +44,19 @@ interface BlinkoCardProps {
   glassEffect?: boolean;
   withoutHoverAnimation?: boolean;
   withoutBoxShadow?: boolean;
+  /**
+   * 列表模式（noteListStyle === 'byDay'）下让所有卡片走紧凑行式：
+   * 去边框 + bg-transparent + hover 底色，跟闪念卡一样的 row 风格，
+   * 避免堆叠卡片互相割裂。对齐 prototype 的 Notion 行式。
+   */
+  compactList?: boolean;
   /** Detail route: always uses the full labelled action menu, even for a
       compact blinko (otherwise opening a blinko full-screen still shows the
       Weibo-style compact bar). */
   isDetailPage?: boolean;
 }
 
-export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutBoxShadow = false, withoutHoverAnimation = false, className, defaultExpanded = false, isDetailPage = false }: BlinkoCardProps) => {
+export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, glassEffect = false, forceBlog = false, withoutBoxShadow = false, withoutHoverAnimation = false, className, defaultExpanded = false, isDetailPage = false, compactList = false }: BlinkoCardProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
@@ -194,7 +200,10 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
         // 展示侧对应 editorStore.uploadFiles 的存储分流：闪念的图片只存附件、
         // 不写进正文 markdown，所以这里能把它们整个抽出来做九宫格；
         // 笔记/待办的图片在正文里，本来就随文流动，不需要（也不能）抽出来。
-        const isCompactBlinko = blinkoItem.type === NoteType.BLINKO && !blinkoItem.isBlog;
+        // compactList：列表模式（byDay）下让所有非博客卡走行式（去边框+透明底），
+        // 跟 prototype 一致；博客卡（isBlog）保持原样，仍需边框+封面。
+        const isCompactBlinko = (blinkoItem.type === NoteType.BLINKO && !blinkoItem.isBlog)
+          || (compactList && !blinkoItem.isBlog);
         const allAttachments = blinkoItem.attachments ?? [];
         const imageAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) === 'image');
         const otherAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) !== 'image');
@@ -211,10 +220,24 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               onContextMenu={e => !isPc && e.stopPropagation()}
               shadow='none'
               className={`
-                flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
-                ${isPc && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
+                flex flex-col ${isCompactBlinko ? 'px-3 py-2.5' : 'px-4 py-3.5'}
+                /* 卡片模式（含紧凑 BLINKO）所有卡统一 border + bg-card + rounded-lg，
+                    对齐 prototype .m-card 的默认静态样式；list 行模式（byDay）走
+                    BlinkoListRow 单独的无边框 row 样式，不走这里。
+
+                    border-default-300/60：边框颜色更柔和，跟顶部 TagFilterChips chipIdle
+                    一致，不那么「生硬」；hover 走 prototype 的
+                      border-color → primary/.45
+                      box-shadow   → md 档
+                      translateY    → -0.5px（轻浮起）
+                    三个一起给 hover 一个「真的在悬停」的反馈。 */
+                ${isPc && !blinkoItem.isShare && !withoutHoverAnimation
+                  ? 'border border-default-300/60 hover:!border-primary/45 hover:shadow-md hover:-translate-y-0.5'
+                  : 'border border-default-300/60'}
+                ${glassEffect ? 'bg-transparent' : 'bg-card'} rounded-lg
+                !transition-all !duration-200 group/card
                 ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
-                ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
+                ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? '!border-primary border-2 !bg-primary/5' : ''}
                 ${className}
               `}
             >
@@ -238,6 +261,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     and the action bar all live in the footer (Weibo-style),
                     otherwise time/icons sit above the title and the type chip
                     drifts to the footer corner — too scattered. */}
+                {/* 紧凑闪念卡：时间挪到 CardHeader 右侧（与 actions 同行），
+                    不再用 hideTime。BlinkoListRow 同款行式视觉。 */}
                 {!blinkoItem.isBlog && (
                   <CardHeader
                     blinkoItem={blinkoItem}
@@ -245,7 +270,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     isShareMode={isShareMode}
                     isExpanded={defaultExpanded}
                     account={account}
-                    hideTime={isCompactBlinko}
+                    hideTime={false}
                     compactActions={isCompactBlinko && !isDetailPage}
                     isDetailPage={isDetailPage}
                   />
@@ -307,15 +332,15 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     </div>
                   ))}
 
-                {/* Blog cards use BlogCardTopRow/BlogCardBottomRow around the
-                    title instead; compact blinko cards show time here. */}
-                {!blinkoItem.isBlog && (
+                {/* 紧凑闪念卡：时间已挪到 CardHeader 右侧，footer 不再渲染；
+                    非紧凑卡保留 CardFooter（带 tags + time）。 */}
+                {!blinkoItem.isBlog && !isCompactBlinko && (
                   <CardFooter
                     blinkoItem={blinkoItem}
                     blinko={blinko}
                     isShareMode={isShareMode}
-                    showTime={isCompactBlinko}
-                    hideTags={isCompactBlinko}
+                    showTime
+                    hideTags={false}
                   />
                 )}
                 {!blinko.config.value?.isHideCommentInCard && blinkoItem.comments && blinkoItem.comments.length > 0 && (

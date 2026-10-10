@@ -82,7 +82,7 @@ export const TypeChart = observer(({ noteByMonth, mode = "stack", onModeChange }
   }, [])
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-default-200 rounded-lg p-5 ">
       <div className="flex items-center justify-between mb-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-default-500"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -95,7 +95,7 @@ export const TypeChart = observer(({ noteByMonth, mode = "stack", onModeChange }
                 key={m}
                 onClick={() => onModeChange(m)}
                 className={`px-2.5 py-0.5 text-[11px] rounded ${
-                  mode === m ? "bg-content1 shadow-sm" : "text-default-500"
+                  mode === m ? "bg-card " : "text-default-500"
                 }`}
               >
                 {m === "stack" ? "堆叠" : m === "group" ? "分组" : "100%"}

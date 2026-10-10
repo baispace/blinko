@@ -183,75 +183,71 @@
 }
 
 /* ---------- Collapsible list item (折叠/展开子树) ----------
-   每个有子项的 <li data-type="collapsible-list-item"> 前面出现一个 ▸ / ▾ 手柄，
-   点击切换 data-collapsed="true|false"。折叠时整个 <li> 的内容（除了手柄本身和首段）
-   被隐藏，让长列表可收起。
+   思路：折叠手柄本身就**是**黑圆点。默认 6×6 黑圆点（与普通 bullet 同规格），
+   li 被 hover 时手柄放大到 16×16 灰色胶囊，居中显示 + 或 − 文字。
+   - 叶子 li 没有手柄、无子项，靠 ::before 给的黑点
+   - 父级 li 上有 .collapse-caret 按钮，把默认 ::before bullet 隐藏避免重叠
+   - 点击按钮切换 data-collapsed=true|false
+   - 折叠态隐藏 <li> 内除第一段之外的 block（含嵌套 ul/ol）
+   - 不显示"N 项已收起"文字，不污染视觉
 */
 .tiptap li[data-type="collapsible-list-item"] {
   position: relative;
-  /* 让折叠手柄和 bullet 互不重叠 */
-  padding-left: 0.5rem;
 }
 
-/* 折叠手柄 */
+/* 折叠手柄 —— 默认是 6×6 黑圆点 */
 .tiptap li[data-type="collapsible-list-item"] > .collapse-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-  margin-left: -18px;
-  font-size: 9px;
-  color: var(--muted-foreground);
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  margin-left: -16px;
+  font-size: 0;                 /* 默认隐藏 +/− 文字，只看到一个圆点 */
+  line-height: 1;
+  color: var(--foreground);
   border: none;
-  background: transparent;
+  background: var(--foreground);
+  border-radius: 50%;
   cursor: pointer;
-  border-radius: 3px;
-  transition: transform 160ms cubic-bezier(.4, 0, .2, 1),
-              background-color 120ms ease,
-              color 120ms ease;
-  user-select: none;
   vertical-align: middle;
   flex-shrink: 0;
-  /* 手柄不进入文本流，只是装饰 */
+  user-select: none;
   pointer-events: auto;
+  transition:
+    width 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 160ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
 }
 
-/* 展开时 ▸ 旋转 90° 成 ▾ */
-.tiptap li[data-type="collapsible-list-item"] > .collapse-caret.is-expanded {
-  transform: rotate(90deg);
-}
-
-.tiptap li[data-type="collapsible-list-item"] > .collapse-caret.is-collapsed {
-  transform: rotate(0deg);
-}
-
-.tiptap li[data-type="collapsible-list-item"] > .collapse-caret:hover {
-  background-color: color-mix(in srgb, var(--accent) 70%, transparent);
+/* hover 行 → 黑点放大成灰色胶囊，露出 + / − */
+.tiptap li[data-type="collapsible-list-item"]:hover > .collapse-caret,
+.tiptap li[data-type="collapsible-list-item"]:focus-within > .collapse-caret {
+  width: 16px;
+  height: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--border);
   color: var(--foreground);
+  border-radius: 50%;
 }
 
-/* 折叠时 li 内首段之后的 block 都隐藏 */
+/* 有折叠手柄的 li 上不要 ::before 默认黑点 —— 避免与手柄重叠 */
+.tiptap ul:not([data-type="taskList"]) > li[data-type="collapsible-list-item"][data-has-children="true"]::before {
+  display: none;
+}
+
+/* 折叠时隐藏 li 首段之后的所有 block —— 嵌套 ul/ol 都不显示 */
 .tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > ul,
 .tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > ol {
   display: none;
 }
 
-/* 折叠状态下让首段自身略微变浅色，传达"被收起"状态 */
-.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"] > p:first-child {
-  opacity: 0.78;
-}
+/* 折叠时不展示 "已收起" 计数（按用户反馈） */
 
-/* 折叠计数提示：折叠时在首段后面显示一个 "N 项已收起" 的 hint */
-/* 用 ::after 而不是真正的 DOM 节点，避免 React NodeView 复杂度 */
-.tiptap li[data-type="collapsible-list-item"][data-collapsed="true"][data-has-children="true"] > p:first-child::after {
-  content: ' · 已收起';
-  font-size: 0.78em;
-  color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
-  font-weight: 400;
-  margin-left: 2px;
-}
 
 /* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
    - 用 Blinko/shadcn 既有 token：--muted-foreground / --border / --accent

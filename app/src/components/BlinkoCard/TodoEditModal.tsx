@@ -130,7 +130,7 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
   };
 
   return (
-    <div className="rounded-xl border border-default-200 bg-background p-4 shadow-sm">
+    <div className="rounded-lg border border-default-200 bg-card p-4 ">
       {/* Top: due date on the left, priority flag on the right */}
       <div className="flex items-center justify-between gap-2 pb-3 border-b border-default-200">
         <label className="inline-flex items-center gap-1.5 h-7">
@@ -181,7 +181,7 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
           {prioOpen && (
             <div
               role="listbox"
-              className="absolute right-0 top-full mt-1.5 z-30 min-w-[200px] rounded-lg border border-default-200 bg-background shadow-lg p-1"
+              className="absolute right-0 top-full mt-1.5 z-30 min-w-[200px] rounded-lg border border-default-200 bg-card  p-1"
             >
               {PRIORITY_OPTIONS.map((p) => {
                 const active = p.key === priorityKey;

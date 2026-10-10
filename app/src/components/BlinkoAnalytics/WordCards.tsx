@@ -96,7 +96,7 @@ export const WordCards = observer(({ data }: WordCardsProps) => {
           key={i}
           onClick={c.onClick}
           disabled={!c.onClick}
-          className={`text-left bg-content1 border border-default-200 rounded-2xl p-4 shadow-sm transition-all ${
+          className={`text-left bg-card border border-default-200 rounded-lg p-4  transition-all ${
             c.onClick ? "hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 cursor-pointer" : ""
           }`}
         >

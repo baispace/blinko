@@ -95,7 +95,9 @@ export const SettingsDialog = observer(({ initialSection }: { initialSection?: s
 
         <div className="min-w-0 flex-1 overflow-y-auto">
           <ScrollArea onBottom={() => { }} className="h-full">
-            <div className="flex max-w-[860px] flex-col gap-6 px-6 py-5">
+            {/* 内容区紧凑：max-w 760px + gap-4 + px-5，比 860/6/6 更密。
+                section 内部组件各自管自己布局，这里只收紧外层节奏。 */}
+            <div className="flex max-w-[760px] flex-col gap-4 px-5 py-4">
               {current ? <div key={current.key}>{current.component}</div> : null}
             </div>
           </ScrollArea>

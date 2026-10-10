@@ -117,7 +117,7 @@ export const HeatMap = ({
   const isScrollable = months.length > maxRows
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-default-200 rounded-lg p-5 ">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <div>
           {title && <h2 className="text-base font-semibold">{title}</h2>}

@@ -127,7 +127,9 @@ export const TagFilterChips = observer(() => {
   const chipActive = 'bg-primary text-primary-foreground shadow-sm';
 
   return (
-    <div className="sticky top-0 z-20 bg-secondbackground" data-testid="tag-filter-chips">
+    /* pb-3（12px 下间距）拉开标签筛选和下方卡片的距离，
+   避免卡片 hover 上浮/投影时被 sticky 筛选栏压住。 */
+    <div className="sticky top-0 z-20 bg-background pb-3" data-testid="tag-filter-chips">
       <div className="relative">
         {/* pr-12 无条件预留翻页按钮的横向空间（按钮占 right-1.5 + w-7 = 34px，
             留 14px 间隙）。不能改成「仅溢出时加」：那样 scrollWidth 会跟着按钮
@@ -163,7 +165,7 @@ export const TagFilterChips = observer(() => {
                 而不是硬生生切断。 */}
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-secondbackground to-transparent"
+              className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent"
             />
             <button
               type="button"

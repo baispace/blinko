@@ -79,7 +79,7 @@ const ShowCustomIconPicker = (element, theme) => {
   })
 }
 
-export const TagListPanel = observer(() => {
+export const TagListPanel = observer(({ hideHeader = false }: { hideHeader?: boolean }) => {
   const blinko = RootStore.Get(BlinkoStore);
   const base = RootStore.Get(BaseStore);
   const { theme } = useTheme();
@@ -93,7 +93,7 @@ export const TagListPanel = observer(() => {
   useEffect(() => { }, [blinko.noteListFilterConfig.tagId])
   return (
     <>
-      <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>
+      {!hideHeader && <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>}
       <TreeView
         className="mb-4"
         data={flattenTree({

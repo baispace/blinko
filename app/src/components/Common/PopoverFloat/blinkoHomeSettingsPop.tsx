@@ -42,18 +42,6 @@ const ViewOptionsGlyph = ({ size = 21 }: { size?: number }) => (
   </svg>
 );
 
-const WIDTH_OPTIONS = [
-  { value: 860, label: '860px', glyph: 12 },
-  { value: 1120, label: '1120px', glyph: 18 },
-  { value: 1440, label: '1440px', glyph: 24 },
-  { value: 0, label: 'full-width', glyph: 30 },
-] as const;
-
-type WidthKey = typeof WIDTH_OPTIONS[number]['value'];
-
-// 历史档位（xs/sm/md/lg → 1200/1600/2100/2800）迁移到新四档
-const LEGACY_WIDTH_MAP: Record<number, WidthKey> = { 1200: 860, 1600: 1120, 2100: 1440, 2800: 0 };
-
 const SORT_OPTIONS = [
   { key: 'updatedAt', label: 'updated-at' },
   { key: 'createdAt', label: 'created-at' },
@@ -83,15 +71,10 @@ const updateScopedColumns = (blinko: BlinkoStore, scope: PageViewScope, n: numbe
     blinko.config.call();
   });
 
-/** 宽度档位示意：宽度递增的小圆角矩形，颜色随选中态走 currentColor */
-const WidthGlyph = ({ w }: { w: number }) => (
-  <span
-    aria-hidden="true"
-    className="inline-block h-3 shrink-0 rounded-[3px] bg-current"
-    style={{ width: w }}
-  />
-);
-
+/**
+ * Segmented control: prototype uses muted track + raised white active cell.
+ * Single source of truth — used for both list-style and sort controls.
+ */
 const SegmentedButtons = <T extends string | number>({
   options,
   value,
@@ -101,7 +84,7 @@ const SegmentedButtons = <T extends string | number>({
   value: T;
   onChange: (v: T) => void;
 }) => (
-  <div className="grid gap-1 rounded-xl bg-secondbackground p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0,1fr))` }}>
+  <div className="inline-flex w-full gap-[2px] rounded-md bg-default-100 p-[2px]">
     {options.map((opt) => {
       const selected = opt.key === value;
       return (
@@ -112,7 +95,11 @@ const SegmentedButtons = <T extends string | number>({
           title={opt.label}
           data-selected={selected}
           onClick={() => onChange(opt.key)}
-          className={`view-option-button min-w-0 rounded-lg px-2 py-2.5 text-sm font-medium !transition-colors flex items-center justify-center gap-1.5 ${selected ? 'bg-default-300/80 text-foreground shadow-sm dark:bg-default-600' : 'text-default-500 hover:text-foreground'}`}
+          className={`min-w-0 flex-1 rounded-[5px] px-2 py-[3px] text-[11px] !transition-all flex items-center justify-center gap-1 ${
+            selected
+              ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]'
+              : 'bg-transparent text-default-500 hover:text-foreground'
+          }`}
         >
           {opt.icon}
           {!opt.iconOnly && <span>{opt.label}</span>}
@@ -130,8 +117,6 @@ export const BlinkoHomeSettingsPop = observer(() => {
   const scope = getPageViewScope(new URLSearchParams(location.search));
   const [isOpen, setIsOpen] = useState(false);
 
-  const hidePcEditor = !!getPageViewSetting(blinko, scope, 'hidePcEditor');
-  const maxHomePageWidth = (getPageViewSetting(blinko, scope, 'maxHomePageWidth') as number | null | undefined) ?? 0;
   const cardSpacing = (getPageViewSetting(blinko, scope, 'cardSpacing') as number | undefined) ?? 16;
   // 列数取大屏档作为单一真相源
   const noteListColumnCount = Number(getPageViewSetting(blinko, scope, 'largeDeviceCardColumns') ?? 1);
@@ -139,12 +124,6 @@ export const BlinkoHomeSettingsPop = observer(() => {
   // 「按周」已从 UI 移除；历史配置里的 byWeek 归一到 byDay，避免切换器无选中项
   const rawListStyle = getPageViewSetting(blinko, scope, 'noteListStyle') as string | undefined;
   const noteListStyle: ListStyleKey = rawListStyle === 'byWeek' ? 'byDay' : ((rawListStyle as ListStyleKey | undefined) ?? 'continuous');
-  const scopeLabel = { blinko: t('blinko'), notes: t('notes'), all: t('all'), todo: t('todo'), archived: t('archived'), trash: t('trash') }[scope] ?? scope;
-
-  // 把当前宽度值归一到 4 档（兼容历史 xs/sm/md/lg 值）；0 = 全宽
-  const matchedWidth: WidthKey = (WIDTH_OPTIONS.find(o => o.value === maxHomePageWidth)?.value)
-    ?? LEGACY_WIDTH_MAP[maxHomePageWidth as number]
-    ?? (WIDTH_OPTIONS.find(o => o.value === 0)?.value as WidthKey);
 
   return (
     <Popover placement="bottom-start" backdrop="transparent" isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -157,71 +136,49 @@ export const BlinkoHomeSettingsPop = observer(() => {
           <ViewOptionsGlyph />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="!p-0 !bg-content1 !shadow-xl !rounded-2xl">
-        <div className="flex w-full flex-col gap-5 p-4 w-[310px]">
-          <div>
-            <div className="font-semibold text-base">{t('blinko-view-settings')}</div>
-            <div className="text-xs text-default-400 mt-0.5">{t('blinko-view-settings-subtitle')}</div>
-            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-secondbackground px-2 py-0.5 text-[11px] text-default-500">
-              {t('view-scope-current')}：{scopeLabel}
+      {/*
+        容器严格按原型 .view-popover 视觉对齐：
+          - 240px 宽（原 260 → 260→240；原型 228，留 12px 富余给中文 label）
+          - rounded-[10px]
+          - shadow-lg + 1px border
+          - section 之间用 border-top 分隔（首段无上边框）
+          - label 11px text-default-500
+          - 底部「完成」按钮收尾
+      */}
+      <PopoverContent className="!p-0 !bg-card !shadow-lg !rounded-[10px] border border-default-200">
+        <div className="flex w-[240px] flex-col p-3 text-left">
+          {/* 列表样式（原 .vp-section：8px padding + 1px 上边框分隔） */}
+          <section className="py-2 border-t border-default-200 first:border-t-0 first:pt-1">
+            <div className="mb-1.5 flex items-center justify-between text-[11px] text-default-500">
+              <span>{t('list-style')}</span>
             </div>
-          </div>
-
-          {/* 隐藏桌面编辑器 */}
-          <section className="flex items-center justify-between gap-3 rounded-xl bg-secondbackground px-3 py-2.5">
-            <div className="min-w-0">
-              <div className="text-sm font-medium">{t('hide-desktop-editor')}</div>
-              <p className="mt-0.5 text-[11px] text-default-400">{t('hide-desktop-editor-desc')}</p>
-            </div>
-            <Switch
-              size="sm"
-              isSelected={hidePcEditor}
-              onValueChange={(v) => updateScopedConfig(blinko, scope, 'hidePcEditor', v)}
-            />
-          </section>
-
-          {/* 内容宽度 */}
-          <section className="flex flex-col gap-2">
-            <span className="text-sm text-default-400">{t('content-width')}</span>
             <SegmentedButtons
-              value={matchedWidth}
-              onChange={(v) => updateScopedConfig(blinko, scope, 'maxHomePageWidth', v)}
-              options={WIDTH_OPTIONS.map(o => ({
-                key: o.value,
-                label: o.value === 0 ? t('full-width') : o.label,
-                icon: <WidthGlyph w={o.glyph} />,
-                iconOnly: true,
-              }))}
+              value={noteListStyle}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListStyle', v)}
+              options={LIST_STYLE_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
             />
+            {noteListStyle !== 'continuous' && (
+              <p className="mt-1 text-[11px] text-default-400">{t('list-style-timeline-desc')}</p>
+            )}
           </section>
 
-          {/* 卡片间距 */}
-          <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-default-400">{t('card-spacing')}</span>
-              <span className="text-sm font-medium tabular-nums text-foreground">{cardSpacing}px</span>
+          {/* 排序 */}
+          <section className="py-2 border-t border-default-200">
+            <div className="mb-1.5 flex items-center justify-between text-[11px] text-default-500">
+              <span>{t('sort-by')}</span>
             </div>
-            <Slider
-              size="sm"
-              aria-label={t('card-spacing')}
-              minValue={4}
-              maxValue={24}
-              step={2}
-              value={cardSpacing}
-              onChange={(v) => updateScopedConfig(blinko, scope, 'cardSpacing', Array.isArray(v) ? v[0] : v)}
-              classNames={{ track: '!bg-default-300/50', filler: '!bg-[#fbe573]', thumb: '!bg-[#fbe573] !shadow-small' }}
+            <SegmentedButtons
+              value={noteListSortBy}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListSortBy', v)}
+              options={SORT_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
             />
-            <div className="flex justify-between px-1 text-[11px] text-default-400">
-              <span>{t('compact')}</span>
-              <span>{t('loose')}</span>
-            </div>
           </section>
 
           {/* 卡片列数 */}
-          <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-default-400">{t('card-columns')}</span>
-              <span className="text-sm font-medium tabular-nums text-foreground">{noteListColumnCount}</span>
+          <section className="py-2 border-t border-default-200">
+            <div className="mb-1.5 flex items-center justify-between text-[11px] text-default-500">
+              <span>{t('card-columns')}</span>
+              <span className="text-default-500 tabular-nums">{noteListColumnCount}</span>
             </div>
             <Slider
               size="sm"
@@ -237,32 +194,45 @@ export const BlinkoHomeSettingsPop = observer(() => {
                 { value: 3, label: '3' },
                 { value: 4, label: '4' },
               ]}
-              classNames={{ track: '!bg-default-300/50', filler: '!bg-[#fbe573]', thumb: '!bg-[#fbe573] !shadow-small' }}
+              classNames={{
+                track: '!bg-default-200',
+                filler: '!bg-default-300',
+                thumb: '!bg-default-400 !shadow-small',
+                mark: '!text-[10px]',
+              }}
             />
           </section>
 
-          {/* 列表样式：按天 / 按周时间线，或瀑布流 */}
-          <section className="flex flex-col gap-2">
-            <span className="text-sm text-default-400">{t('list-style')}</span>
-            <SegmentedButtons
-              value={noteListStyle}
-              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListStyle', v)}
-              options={LIST_STYLE_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
+          {/* 卡片间距 */}
+          <section className="py-2 border-t border-default-200">
+            <div className="mb-1.5 flex items-center justify-between text-[11px] text-default-500">
+              <span>{t('card-spacing')}</span>
+              <span className="text-default-500 tabular-nums">{cardSpacing}px</span>
+            </div>
+            <Slider
+              size="sm"
+              aria-label={t('card-spacing')}
+              minValue={4}
+              maxValue={24}
+              step={2}
+              value={cardSpacing}
+              onChange={(v) => updateScopedConfig(blinko, scope, 'cardSpacing', Array.isArray(v) ? v[0] : v)}
+              classNames={{
+                track: '!bg-default-200',
+                filler: '!bg-default-300',
+                thumb: '!bg-default-400 !shadow-small',
+              }}
             />
-            {noteListStyle !== 'continuous' && (
-              <p className="mt-0.5 text-[11px] text-default-400">{t('list-style-timeline-desc')}</p>
-            )}
           </section>
 
-          {/* 排序方式 */}
-          <section className="flex flex-col gap-2">
-            <span className="text-sm text-default-400">{t('sort-by')}</span>
-            <SegmentedButtons
-              value={noteListSortBy}
-              onChange={(v) => updateScopedConfig(blinko, scope, 'noteListSortBy', v)}
-              options={SORT_OPTIONS.map(o => ({ key: o.key, label: t(o.label) }))}
-            />
-          </section>
+          {/* 完成（vp-done） */}
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="mt-2 w-full rounded-md border border-default-200 py-1.5 text-[11.5px] text-foreground hover:!bg-hover !transition-colors"
+          >
+            {t('done')}
+          </button>
         </div>
       </PopoverContent>
     </Popover>

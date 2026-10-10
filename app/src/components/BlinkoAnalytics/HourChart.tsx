@@ -70,7 +70,7 @@ export const HourChart = observer(({ data, peak }: HourChartProps) => {
     : null
 
   return (
-    <div className="bg-content1 border border-default-200 rounded-2xl p-5 shadow-sm flex flex-col gap-3">
+    <div className="bg-card border border-default-200 rounded-lg p-5  flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Icon icon="solar:clock-circle-bold" className="w-4 h-4" />

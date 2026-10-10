@@ -266,8 +266,10 @@ const Home = observer(() => {
               {/* 全局唯一新增入口：放在 tabs 上方，三个 section 共用一份 */}
               <TodoQuickAdd />
 
-              {/* Tab 栏（今天 / 接下来几天 / 已完成） */}
-              <div className="sticky top-0 z-20 flex items-center gap-1 bg-secondbackground py-1.5">
+              {/* Tab 栏（今天 / 接下来几天 / 已完成）——
+                  去掉行内灰色底，改透明 + sticky top-0 让 tabs 滚动时停留。
+                  下方一条极细分隔线把 tabs 行跟主内容分开。 */}
+              <div className="sticky top-0 z-20 flex items-center gap-1 py-1.5 -mb-px">
                 {TABS.map((tab) => {
                   const isActive = activeTab === tab.key;
                   return (
@@ -275,16 +277,18 @@ const Home = observer(() => {
                       key={tab.key}
                       type="button"
                       onClick={() => setActiveTab(tab.key)}
-                      className={`inline-flex items-center rounded-full px-3 h-8 text-[13px] font-medium transition-colors ${
+                      className={`inline-flex items-center rounded-full px-3 h-8 text-[13px] !transition-colors ${
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-default-600 hover:text-foreground'
+                          ? 'bg-primary text-primary-foreground font-semibold'
+                          : 'text-default-600 hover:text-foreground font-medium'
                       }`}
                     >
                       {tab.label}
                     </button>
                   );
                 })}
+                {/* 极细分隔线：tabs 行跟主内容分界（透到背景色） */}
+                <span aria-hidden className="ml-2 h-px flex-1 bg-default-200" />
               </div>
 
               {activeTab === 'today' && (

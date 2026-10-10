@@ -16,7 +16,6 @@ import AiWritePop from '../Common/PopoverFloat/aiWritePop';
 import { Sidebar } from './Sidebar';
 import { MobileNavBar } from './MobileNavBar';
 import FilterPop from '../Common/PopoverFloat/filterPop';
-import BlinkoHomeSettingsPop from '../Common/PopoverFloat/blinkoHomeSettingsPop';
 import { api } from '@/lib/trpc';
 import { showTipsDialog } from '../Common/TipsDialog';
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
@@ -25,8 +24,20 @@ import { BarSearchInput } from './BarSearchInput';
 import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { HomeHeaderLeft } from './HomeHeaderLeft';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-lg !transition-all';
+
+/**
+ * 顶部栏 LEFT 是否渲染主页模式控件（替代旧 HomeSubHeader 的 row 内容）。
+ * 主页类 path：blinko / notes / all / archived / trash。
+ */
+const HOME_HEADER_SCOPES = ['blinko', 'notes', 'todo', 'all', 'archived', 'trash'] as const;
+const isHomeSubHeaderScope = (location: ReturnType<typeof useLocation>, searchParams: URLSearchParams): boolean => {
+  if (location.pathname !== '/') return false;
+  const p = searchParams.get('path');
+  return p == null || (HOME_HEADER_SCOPES as readonly string[]).includes(p);
+};
 
 export const getFixedHeaderBackground = () => {
   if (document?.documentElement?.classList?.contains('dark')) {
@@ -98,7 +109,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
       <main
         id="page-wrap"
         style={{ width: isPc ? `calc(100% - ${base.sideBarWidth}px)` : '100%' }}
-        className={`flex !transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-secondbackground`}
+        className={`flex !transition-all duration-300 overflow-y-hidden w-full flex-col gap-y-1 bg-background`}
       >
         {/* nav bar  */}
         <header
@@ -123,72 +134,86 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                 <Icon className="text-default-500" height={24} icon="solar:hamburger-menu-outline" width={24} />
               </Button>
             )}
-            <div className="flex flex-1 items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex flex-row items-center gap-1">
-                  <div className="font-black select-none">
+            <div className="flex flex-1 items-center gap-3 min-w-0">
+              {/* LEFT：主页模式（blinko / notes / all / archived / trash）渲染 HomeHeaderLeft；
+                  其它页面保留原标题 + 离线徽标 + 回收站删除按钮。 */}
+              <div className="flex items-center gap-3 shrink-0 min-w-0">
+                {isHomeSubHeaderScope(location, searchParams) ? (
+                  <HomeHeaderLeft />
+                ) : (
+                  <div className="font-black select-none truncate">
                     {location.pathname == '/ai'
                       ? !!RootStore.Get(AiStore).currentConversation.value?.title
                         ? RootStore.Get(AiStore).currentConversation.value?.title
                         : t(base.currentTitle)
                       : t(base.currentTitle)}
                   </div>
-                  {base.currentRouter?.title === 'blinko' && isPc && <BlinkoHomeSettingsPop />}
-                  {searchParams.get('path') != 'trash' ? null : (
-                    <Icon
-                      className="cursor-pointer !transition-all text-red-500"
-                      onClick={() => {
-                        showTipsDialog({
-                          size: 'sm',
-                          title: t('confirm-to-delete'),
-                          content: t('this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm'),
-                          onConfirm: async () => {
-                            await RootStore.Get(ToastPlugin).promise(api.notes.clearRecycleBin.mutate(), {
-                              loading: t('in-progress'),
-                              success: <b>{t('your-changes-have-been-saved')}</b>,
-                              error: <b>{t('operation-failed')}</b>,
-                            });
-                            blinkoStore.refreshData();
-                            RootStore.Get(DialogStandaloneStore).close();
-                          },
-                        });
-                      }}
-                      icon="mingcute:delete-2-line"
-                      width="20"
-                      height="20"
-                    />
-                  )}
-                </div>
+                )}
+                {searchParams.get('path') != 'trash' ? null : (
+                  <Icon
+                    className="cursor-pointer !transition-all text-red-500 shrink-0"
+                    onClick={() => {
+                      showTipsDialog({
+                        size: 'sm',
+                        title: t('confirm-to-delete'),
+                        content: t('this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm'),
+                        onConfirm: async () => {
+                          await RootStore.Get(ToastPlugin).promise(api.notes.clearRecycleBin.mutate(), {
+                            loading: t('in-progress'),
+                            success: <b>{t('your-changes-have-been-saved')}</b>,
+                            error: <b>{t('operation-failed')}</b>,
+                          });
+                          blinkoStore.refreshData();
+                          RootStore.Get(DialogStandaloneStore).close();
+                        },
+                      });
+                    }}
+                    icon="mingcute:delete-2-line"
+                    width="20"
+                    height="20"
+                  />
+                )}
                 {!base.isOnline && (
-                  <Badge color="warning" variant="flat" className="animate-pulse">
+                  <Badge color="warning" variant="flat" className="animate-pulse shrink-0">
                     <div className="flex text-sm items-center gap-1 text-yellow-500">
                       <span>{t('offline-status')}</span>
                     </div>
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center justify-center gap-2 md:gap-4 w-auto ">
+
+              {/* CENTER：搜索居中，吃掉中间剩余空间。max-w-md 让它不撑满长条。 */}
+              <div className="flex-1 flex justify-center min-w-0">
                 <BarSearchInput isPc={isPc} />
+              </div>
+
+              {/* RIGHT：全局操作（筛选 / 每日回顾 / 通知 —— 收紧到 prototype 风格的
+                   ghost 小按钮）。FilterPop 内部自渲染 trigger Button，宽度收紧靠
+                   该组件内 className；Bulb / Bell 在此 inline 保证视觉一致。 */}
+              <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
                 <FilterPop />
-                {!blinkoStore.config.value?.isCloseDailyReview && <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
-                  {/* 之前是 <Link><Button as="a"> —— 两个 <a> 嵌套，HTML 非法且 React 告警。
-                      Button 本身渲染成 <button>，用 onPress 走 SPA 跳转，语义与 DOM 都正确。 */}
-                  <Button
-                    className="mt-[2px]"
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    onPress={() => navigate('/review')}
-                  >
-                    <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="24" height="24" />
-                  </Button>
-                </Badge>}
+                {!blinkoStore.config.value?.isCloseDailyReview && (
+                  <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      className="!transition-all"
+                      onPress={() => navigate('/review')}
+                      aria-label={t('daily-review')}
+                    >
+                      <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="20" height="20" />
+                    </Button>
+                  </Badge>
+                )}
                 <BlinkoNotification />
               </div>
             </div>
           </div>
           {header}
         </header>
+
+        {/* 主页模式标题已合并到顶部栏 LEFT（HomeHeaderLeft），不再单独渲染子标题栏。 */}
 
 
 

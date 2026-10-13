@@ -253,6 +253,33 @@
   margin-left: 2px;
 }
 
+/* 缩进引导线（mubu 风格）：每个嵌套 ul/ol 在左侧画一条浅灰竖线，
+   对齐父 bullet 的中心。折叠时整组 display:none，连带竖线一起隐。
+   ul/ol 必须 position:relative 才能让 ::before 绝对定位生效。
+   注：去掉 .tiptap 前缀，read-only 详情页（无 .tiptap wrapper）也生效。 */
+li[data-type="collapsible-list-item"] > ul,
+li[data-type="collapsible-list-item"] > ol {
+  position: relative;
+}
+li[data-type="collapsible-list-item"] > ul::before,
+li[data-type="collapsible-list-item"] > ol::before {
+  content: '';
+  position: absolute;
+  /* bullet-zone 在 caret 之外用 shadcn bullet 时是 22px；这里取 caret 中心
+     (caret 14px / 2 = 7) 减 0.5px 让 1px 线视觉居中 */
+  left: 6.5px;
+  top: 0.5em;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--border) 90%, transparent);
+  pointer-events: none;
+  transition: background-color 120ms ease;
+}
+li[data-type="collapsible-list-item"]:hover > ul::before,
+li[data-type="collapsible-list-item"]:hover > ol::before {
+  background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+}
+
 /* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
    - 用 Blinko/shadcn 既有 token：--muted-foreground / --border / --accent
    - 缩进前的小灰点代替默认黑色 disc

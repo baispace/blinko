@@ -21,6 +21,21 @@ declare module '@tiptap/core' {
       toggleListItemCollapsed: () => ReturnType
       collapseAllListItems: () => ReturnType
       expandAllListItems: () => ReturnType
+      /**
+       * 折叠当前 li 的同级（同 parent 的所有 li）：
+       *   - 若当前 li 是展开的，全部同级折叠
+       *   - 若当前 li 已折叠 / 混合态，全部同级展开
+       * 行为与 mubu 原型 `toggleSiblings` 对齐。
+       */
+      collapseSiblingListItems: () => ReturnType
+      /**
+       * 按层级折叠：在 prosemirror 文档里，listItem 的深度恒为偶数
+       * （top-level = 2, 嵌套一级 = 4，依此类推）。该命令只影响
+       * `targetDepth` 整深度上、且有子项的 li，取一致态翻转：
+       *   - 全部展开 → 全部折叠
+       *   - 否则（混合 / 全部折叠）→ 全部展开
+       */
+      collapseListItemsByDepth: (targetDepth: number) => ReturnType
     }
   }
 }
@@ -164,16 +179,16 @@ export const CollapsibleListItem = Node.create({
 
       collapseAllListItems:
         () =>
-        ({ tr, doc, dispatch }) => {
+        ({ tr, dispatch }) => {
           if (!dispatch) return true
           const positions: number[] = []
-          doc.descendants((node, pos) => {
+          tr.doc.descendants((node, pos) => {
             if (node.type.name === 'listItem') {
               positions.push(pos)
             }
           })
           positions.forEach((pos) => {
-            const node = doc.nodeAt(pos)
+            const node = tr.doc.nodeAt(pos)
             if (node && node.type.name === 'listItem' && !node.attrs.collapsed) {
               tr.setNodeMarkup(pos, undefined, { ...node.attrs, collapsed: true })
             }
@@ -183,30 +198,138 @@ export const CollapsibleListItem = Node.create({
 
       expandAllListItems:
         () =>
-        ({ tr, doc, dispatch }) => {
+        ({ tr, dispatch }) => {
           if (!dispatch) return true
           const positions: number[] = []
-          doc.descendants((node, pos) => {
+          tr.doc.descendants((node, pos) => {
             if (node.type.name === 'listItem') {
               positions.push(pos)
             }
           })
           positions.forEach((pos) => {
-            const node = doc.nodeAt(pos)
+            const node = tr.doc.nodeAt(pos)
             if (node && node.type.name === 'listItem' && node.attrs.collapsed) {
               tr.setNodeMarkup(pos, undefined, { ...node.attrs, collapsed: false })
             }
           })
           return positions.length > 0
         },
+
+      /**
+       * 折叠 / 展开当前 li 的所有同级（同 parent ul/ol 下的所有 li）。
+       * 状态收敛规则：
+       *   - 当前 li 是展开的 → 全部同级折叠
+       *   - 否则（当前已折叠 / 混合）→ 全部同级展开
+       */
+      collapseSiblingListItems:
+        () =>
+        ({ tr, state, dispatch }) => {
+          const { $from } = state.selection
+
+          // 1) 找到光标所在的最近 listItem 及其 parent
+          let currentDepth = -1
+          for (let depth = $from.depth; depth > 0; depth--) {
+            if ($from.node(depth).type.name === 'listItem') {
+              currentDepth = depth
+              break
+            }
+          }
+          if (currentDepth <= 0) return false
+
+          const parentDepth = currentDepth - 1
+          const parent = $from.node(parentDepth)
+          if (!parent) return false
+          // 防御：parent 必须是 list（不能是文档根或 listItem）
+          if (parent.type.name !== 'bulletList' && parent.type.name !== 'orderedList') {
+            return false
+          }
+
+          // 2) 收集 parent 下所有 listItem 的 doc 位置
+          const beforeParent = $from.before(parentDepth)
+          const positions: number[] = []
+          parent.forEach((child, childIndex) => {
+            if (child.type.name === 'listItem') {
+              // child 在 fragment 里的 index 转为 doc 位置：beforeParent + 1 (open tag) + childIndex
+              positions.push(beforeParent + 1 + childIndex)
+            }
+          })
+          if (positions.length === 0) return false
+
+          // 3) 一致态：当前是展开的 → 全部折叠；否则全部展开
+          const anyExpanded = positions.some((p) => {
+            const n = state.doc.nodeAt(p)
+            return n && !n.attrs.collapsed
+          })
+          const targetCollapsed = anyExpanded
+
+          // 4) 提交事务
+          if (dispatch) {
+            positions.forEach((pos) => {
+              const n = state.doc.nodeAt(pos)
+              if (n && n.type.name === 'listItem' && n.attrs.collapsed !== targetCollapsed) {
+                tr.setNodeMarkup(pos, undefined, { ...n.attrs, collapsed: targetCollapsed })
+              }
+            })
+          }
+          return true
+        },
+
+      /**
+       * 按层级折叠：只动 targetDepth 整深度上、且有子项的 li。
+       * 行为：全部展开 → 全部折叠；否则 → 全部展开。
+       *  注：listItem 的 PM 深度恒为偶数：
+       *    顶级（直接挂在 bulletList/orderedList 下）= 2
+       *    嵌套一级 = 4
+       *    嵌套两级 = 6
+       */
+      collapseListItemsByDepth:
+        (targetDepth: number) =>
+        ({ tr, state, dispatch }) => {
+          if (!dispatch) return true
+          const positions: number[] = []
+          state.doc.descendants((node, pos) => {
+            if (node.type.name !== 'listItem') return
+            if (node.childCount <= 1) return  // 没有子项（只有 paragraph）
+            // pos 是节点起点；resolve pos+1 得到节点所在深度
+            const $pos = state.doc.resolve(pos + 1)
+            if ($pos.depth === targetDepth) {
+              positions.push(pos)
+            }
+          })
+          if (positions.length === 0) return false
+
+          const allExpanded = positions.every((p) => {
+            const n = state.doc.nodeAt(p)
+            return n && !n.attrs.collapsed
+          })
+          const targetCollapsed = allExpanded
+
+          if (dispatch) {
+            positions.forEach((pos) => {
+              const n = state.doc.nodeAt(pos)
+              if (n && n.type.name === 'listItem' && n.attrs.collapsed !== targetCollapsed) {
+                tr.setNodeMarkup(pos, undefined, { ...n.attrs, collapsed: targetCollapsed })
+              }
+            })
+          }
+          return true
+        },
     }
   },
 
   addKeyboardShortcuts() {
     return {
-      // Alt+Click on caret row would be ideal but Tiptap doesn't expose that.
-      // 提供 Cmd/Ctrl+. 快捷键切换当前 li 折叠状态（与 VS Code 习惯一致）
+      // Cmd/Ctrl+. 切换当前 li 折叠状态（与 VS Code / mubu 一致）
       'Mod-.': () => this.editor.commands.toggleListItemCollapsed(),
+      // Cmd/Ctrl+Shift+. 同级折叠 / 展开
+      'Mod-Shift-.': () => this.editor.commands.collapseSiblingListItems(),
+      // Cmd/Ctrl+Alt+1/2/3 按层级折叠：1=顶级 li, 2=嵌套一级, 3=嵌套两级
+      // 行为：取该层一致态后整层翻转
+      'Mod-Alt-1': () => this.editor.commands.collapseListItemsByDepth(2),
+      'Mod-Alt-2': () => this.editor.commands.collapseListItemsByDepth(4),
+      'Mod-Alt-3': () => this.editor.commands.collapseListItemsByDepth(6),
+      // Cmd/Ctrl+Shift+Alt+. 全部折叠 / 展开
+      'Mod-Shift-Alt-.': () => this.editor.commands.collapseAllListItems(),
     }
   },
 })

@@ -51,13 +51,22 @@ declare module '@tiptap/core' {
 
 /**
  * 检测一个 li 节点是否有子项（嵌套的 ul/ol）。
- * listItem content 是 block+：第一个 block 是 paragraph（li 自己的文本），
- * 后续 block 是嵌套的 ul/ol。所以 childCount > 1 即表示有子项。
+ *
+ * li 的 content 是 `paragraph block*`：第一个 block 是 paragraph（li 自己的文本），
+ * 后续 block 可能是嵌套的 ul/ol，也可能是**额外的 paragraph**（连续回车产生的空白段、
+ * 或者像 `- foo\n  - bar` 错位、或者某些 markdown 解析异常留下的 `- ` 残留）。
+ * 单看 childCount > 1 会误判：li 里塞两个 `<p>` 也会让它"以为"有子项，
+ * 结果就是给叶子前面也画个空折叠按钮 + 折叠时把第二个 `<p>` 误隐藏。
+ *
+ * 正确判定：子节点里**至少有一个 bulletList / orderedList**。
  */
 function listItemHasChildren(node: any): boolean {
-  if (!node) return false
-  // childCount > 1 = paragraph + 至少一个 nested list
-  return node.childCount > 1
+  if (!node || !node.children) return false
+  for (let i = 0; i < node.childCount; i++) {
+    const t = node.children[i].type?.name
+    if (t === 'bulletList' || t === 'orderedList') return true
+  }
+  return false
 }
 
 /**

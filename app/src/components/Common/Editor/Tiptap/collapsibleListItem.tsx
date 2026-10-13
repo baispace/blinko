@@ -18,24 +18,33 @@ import React, { useCallback, useEffect, useRef } from 'react'
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     collapsibleListItem: {
+      /**
+       * 切换光标所在 listItem 的折叠状态（叶子 no-op）。
+       * 对齐 mubu 原型 `toggleTopic`。
+       */
       toggleListItemCollapsed: () => ReturnType
-      collapseAllListItems: () => ReturnType
-      expandAllListItems: () => ReturnType
       /**
-       * 折叠当前 li 的同级（同 parent 的所有 li）：
-       *   - 若当前 li 是展开的，全部同级折叠
-       *   - 若当前 li 已折叠 / 混合态，全部同级展开
-       * 行为与 mubu 原型 `toggleSiblings` 对齐。
+       * 切换光标所在 li 的所有同级（同 parent list 下的所有 li）：
+       *   - 取当前 li 自身的状态决定 target（不是聚合态）
+       *   - 当前 open → 全部 folded；当前 folded → 全部 open
+       *   - 只对有子项的 li 生效（叶子 no-op）
+       * 对齐 mubu 原型 `toggleSiblings`。
        */
-      collapseSiblingListItems: () => ReturnType
+      toggleSiblingListItems: () => ReturnType
       /**
-       * 按层级折叠：在 prosemirror 文档里，listItem 的深度恒为偶数
-       * （top-level = 2, 嵌套一级 = 4，依此类推）。该命令只影响
-       * `targetDepth` 整深度上、且有子项的 li，取一致态翻转：
-       *   - 全部展开 → 全部折叠
-       *   - 否则（混合 / 全部折叠）→ 全部展开
+       * 按层级 toggle：只动 targetDepth 整深度上、且有子项的 li。
+       * 取一致态翻转：
+       *   - 全部 open → 全部 folded
+       *   - 否则（混合 / 全部 folded）→ 全部 open
+       * 对齐 mubu 原型 `toggleByLevel`。listItem PM 深度恒为偶数：
+       * 顶级 = 2, 嵌套一级 = 4, 嵌套两级 = 6。
        */
-      collapseListItemsByDepth: (targetDepth: number) => ReturnType
+      toggleListItemsByDepth: (targetDepth: number) => ReturnType
+      /**
+       * 全局 toggle：任一 open → 全部 folded；否则全部 open。
+       * 只对有子项的 li 生效。对齐 mubu 原型 `toggleAll`。
+       */
+      toggleAllListItems: () => ReturnType
     }
   }
 }
@@ -156,117 +165,119 @@ export const CollapsibleListItem = Node.create({
   },
 
   addCommands() {
+    /*
+     * ============================================================
+     * 折叠状态机 —— 完全照搬 mubu 原型 4 个函数
+     *   blinko-mubu-prototype.html:1593 toggleTopic(li)
+     *   blinko-mubu-prototype.html:1600 toggleSiblings(li)
+     *   blinko-mubu-prototype.html:1612 toggleByLevel(level)
+     *   blinko-mubu-prototype.html:1623 toggleAll()
+     *
+     * 把 prototype 的 `parent.querySelectorAll` 换成 `tr.doc.descendants` /
+     * `$from.node(...).forEach`，把 `data-state` 换成 `attrs.collapsed`。
+     * 原型的 leaf guard（`!li.querySelector('.topic-children')`）对应
+     * `listItemHasChildren(node)`（childCount > 1 = paragraph + 嵌套 list）。
+     *
+     * 关键差异（与上一版不同）：
+     *   toggleSiblings 用**当前 li 自身状态**决定 target，不是聚合态。
+     *     案例：cursor A 已折叠 + sibling B 已展开
+     *       上一版：any 展开 → 全部折叠（A 保持折叠、B 变折叠）
+     *       原型：A 已折叠 → 全部展开（A 保持折叠但取反目标=展开，
+     *            最终 B 也是展开；混合态收敛到一致）
+     * ============================================================
+     */
     return {
+      // ---- toggleTopic(li) ----------------------------------------
+      // 原型: `next = li.dataset.state === 'folded' ? 'open' : 'folded'`
+      // 叶子 no-op（与原型 `if (!li.querySelector('.topic-children')) return` 一致）
       toggleListItemCollapsed:
         () =>
         ({ tr, state, dispatch }) => {
           const { $from } = state.selection
           for (let depth = $from.depth; depth > 0; depth--) {
             const node = $from.node(depth)
-            if (node.type.name === 'listItem') {
-              const pos = $from.before(depth)
-              if (dispatch) {
-                tr.setNodeMarkup(pos, undefined, {
-                  ...node.attrs,
-                  collapsed: !node.attrs.collapsed,
-                })
-              }
-              return true
+            if (node.type.name !== 'listItem') continue
+            if (!listItemHasChildren(node)) return false
+            const pos = $from.before(depth)
+            if (dispatch) {
+              tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                collapsed: !node.attrs.collapsed,
+              })
             }
+            return true
           }
           return false
         },
 
-      collapseAllListItems:
-        () =>
-        ({ tr, dispatch }) => {
-          if (!dispatch) return true
-          const positions: number[] = []
-          tr.doc.descendants((node, pos) => {
-            if (node.type.name === 'listItem') {
-              positions.push(pos)
-            }
-          })
-          positions.forEach((pos) => {
-            const node = tr.doc.nodeAt(pos)
-            if (node && node.type.name === 'listItem' && !node.attrs.collapsed) {
-              tr.setNodeMarkup(pos, undefined, { ...node.attrs, collapsed: true })
-            }
-          })
-          return positions.length > 0
-        },
-
-      expandAllListItems:
-        () =>
-        ({ tr, dispatch }) => {
-          if (!dispatch) return true
-          const positions: number[] = []
-          tr.doc.descendants((node, pos) => {
-            if (node.type.name === 'listItem') {
-              positions.push(pos)
-            }
-          })
-          positions.forEach((pos) => {
-            const node = tr.doc.nodeAt(pos)
-            if (node && node.type.name === 'listItem' && node.attrs.collapsed) {
-              tr.setNodeMarkup(pos, undefined, { ...node.attrs, collapsed: false })
-            }
-          })
-          return positions.length > 0
-        },
-
-      /**
-       * 折叠 / 展开当前 li 的所有同级（同 parent ul/ol 下的所有 li）。
-       * 状态收敛规则：
-       *   - 当前 li 是展开的 → 全部同级折叠
-       *   - 否则（当前已折叠 / 混合）→ 全部同级展开
-       */
-      collapseSiblingListItems:
+      // ---- toggleSiblings(li) ------------------------------------
+      // 原型:
+      //   const target = li.dataset.state === 'open' ? 'folded' : 'open'
+      //   parent.querySelectorAll(':scope > .topic').forEach(t => {
+      //     if (t.querySelector('.topic-children')) t.dataset.state = target
+      //   })
+      // 注意：
+      //   - target 由**当前 li 自身状态**决定（不是聚合态 any/allExpanded）
+      //   - `:scope > .topic` 包含当前 li 自身（也走 children 守卫）
+      //   - 光标在嵌套 li → 取**最近**的 listItem（最深匹配），与原型
+      //     `currentTopicFromSelection` 沿祖先向上找 `.topic` 等价
+      toggleSiblingListItems:
         () =>
         ({ tr, state, dispatch }) => {
           const { $from } = state.selection
 
-          // 1) 找到光标所在的最近 listItem 及其 parent
-          let currentDepth = -1
+          // 1) 光标所在最近的（最深）listItem
+          let currentLiDepth = -1
           for (let depth = $from.depth; depth > 0; depth--) {
             if ($from.node(depth).type.name === 'listItem') {
-              currentDepth = depth
+              currentLiDepth = depth
               break
             }
           }
-          if (currentDepth <= 0) return false
+          if (currentLiDepth <= 0) return false
 
-          const parentDepth = currentDepth - 1
+          const currentLiNode = $from.node(currentLiDepth)
+          if (!currentLiNode) return false
+
+          const parentDepth = currentLiDepth - 1
           const parent = $from.node(parentDepth)
           if (!parent) return false
-          // 防御：parent 必须是 list（不能是文档根或 listItem）
+          // 防御：parent 必须是 list
           if (parent.type.name !== 'bulletList' && parent.type.name !== 'orderedList') {
             return false
           }
 
-          // 2) 收集 parent 下所有 listItem 的 doc 位置
+          // 2) 收集 parent 下所有直接子 listItem 的 doc 位置
+          //    (:scope > li 类比)
           const beforeParent = $from.before(parentDepth)
           const positions: number[] = []
           parent.forEach((child, childIndex) => {
             if (child.type.name === 'listItem') {
-              // child 在 fragment 里的 index 转为 doc 位置：beforeParent + 1 (open tag) + childIndex
               positions.push(beforeParent + 1 + childIndex)
             }
           })
           if (positions.length === 0) return false
 
-          // 3) 一致态：当前是展开的 → 全部折叠；否则全部展开
-          const anyExpanded = positions.some((p) => {
-            const n = state.doc.nodeAt(p)
-            return n && !n.attrs.collapsed
-          })
-          const targetCollapsed = anyExpanded
+          // 3) target 由当前 li 自身状态决定（原型核心）
+          //    attrs.collapsed=false ↔ data-state='open'（open 时折叠）
+          //
+          // 原型细节点：叶子 li 没有 data-state（setState 守卫删了），
+          //   `li.dataset.state === 'open'` 在叶子上返回 false → target='open'。
+          //   所以「cursor 在叶子 + 任意非空 parent list」= 展开所有非叶子 sibling。
+          const targetCollapsed = listItemHasChildren(currentLiNode)
+            ? !currentLiNode.attrs.collapsed
+            : false
 
-          // 4) 提交事务
+          // 4) 只对有子项的 sibling 提交事务
           if (dispatch) {
             positions.forEach((pos) => {
               const n = state.doc.nodeAt(pos)
-              if (n && n.type.name === 'listItem' && n.attrs.collapsed !== targetCollapsed) {
+              if (
+                n &&
+                n.type.name === 'listItem' &&
+                listItemHasChildren(n) &&
+                n.attrs.collapsed !== targetCollapsed
+              ) {
                 tr.setNodeMarkup(pos, undefined, { ...n.attrs, collapsed: targetCollapsed })
               }
             })
@@ -274,23 +285,23 @@ export const CollapsibleListItem = Node.create({
           return true
         },
 
-      /**
-       * 按层级折叠：只动 targetDepth 整深度上、且有子项的 li。
-       * 行为：全部展开 → 全部折叠；否则 → 全部展开。
-       *  注：listItem 的 PM 深度恒为偶数：
-       *    顶级（直接挂在 bulletList/orderedList 下）= 2
-       *    嵌套一级 = 4
-       *    嵌套两级 = 6
-       */
-      collapseListItemsByDepth:
+      // ---- toggleByLevel(level) ----------------------------------
+      // 原型:
+      //   const nodes = [...].filter(t => parseInt(t.dataset.depth)===level
+      //                                    && t.querySelector('.topic-children'))
+      //   const allOpen = nodes.every(t => t.dataset.state === 'open')
+      //   const target = allOpen ? 'folded' : 'open'
+      //   nodes.forEach(t => { t.dataset.state = target })
+      //
+      // listItem 的 PM 深度恒为偶数：top-level=2, 嵌套一级=4, 嵌套两级=6
+      // （原型 key '1' → level 0 → PM depth 2）
+      toggleListItemsByDepth:
         (targetDepth: number) =>
         ({ tr, state, dispatch }) => {
-          if (!dispatch) return true
           const positions: number[] = []
           state.doc.descendants((node, pos) => {
             if (node.type.name !== 'listItem') return
-            if (node.childCount <= 1) return  // 没有子项（只有 paragraph）
-            // pos 是节点起点；resolve pos+1 得到节点所在深度
+            if (!listItemHasChildren(node)) return  // 叶子 no-op
             const $pos = state.doc.resolve(pos + 1)
             if ($pos.depth === targetDepth) {
               positions.push(pos)
@@ -304,10 +315,56 @@ export const CollapsibleListItem = Node.create({
           })
           const targetCollapsed = allExpanded
 
+          let changed = false
+          positions.forEach((pos) => {
+            const n = state.doc.nodeAt(pos)
+            if (
+              n &&
+              n.type.name === 'listItem' &&
+              n.attrs.collapsed !== targetCollapsed
+            ) {
+              if (dispatch) {
+                tr.setNodeMarkup(pos, undefined, { ...n.attrs, collapsed: targetCollapsed })
+              }
+              changed = true
+            }
+          })
+          return changed
+        },
+
+      // ---- toggleAll() ------------------------------------------
+      // 原型:
+      //   let anyOpen = false
+      //   document.querySelectorAll('.topic').forEach(t => {
+      //     if (t.dataset.state === 'open' && t.querySelector('.topic-children')) anyOpen = true
+      //   })
+      //   const target = anyOpen ? 'folded' : 'open'
+      //   document.querySelectorAll('.topic').forEach(t => {
+      //     if (t.querySelector('.topic-children')) t.dataset.state = target
+      //   })
+      toggleAllListItems:
+        () =>
+        ({ tr, state, dispatch }) => {
+          const positions: number[] = []
+          let anyExpanded = false
+          state.doc.descendants((node, pos) => {
+            if (node.type.name !== 'listItem') return
+            if (!listItemHasChildren(node)) return
+            positions.push(pos)
+            if (!node.attrs.collapsed) anyExpanded = true
+          })
+          if (positions.length === 0) return false
+
+          const targetCollapsed = anyExpanded
+
           if (dispatch) {
             positions.forEach((pos) => {
               const n = state.doc.nodeAt(pos)
-              if (n && n.type.name === 'listItem' && n.attrs.collapsed !== targetCollapsed) {
+              if (
+                n &&
+                n.type.name === 'listItem' &&
+                n.attrs.collapsed !== targetCollapsed
+              ) {
                 tr.setNodeMarkup(pos, undefined, { ...n.attrs, collapsed: targetCollapsed })
               }
             })
@@ -319,17 +376,17 @@ export const CollapsibleListItem = Node.create({
 
   addKeyboardShortcuts() {
     return {
-      // Cmd/Ctrl+. 切换当前 li 折叠状态（与 VS Code / mubu 一致）
+      // Cmd/Ctrl+. 切换当前 li（与 VS Code / mubu 一致）—— toggleTopic
       'Mod-.': () => this.editor.commands.toggleListItemCollapsed(),
-      // Cmd/Ctrl+Shift+. 同级折叠 / 展开
-      'Mod-Shift-.': () => this.editor.commands.collapseSiblingListItems(),
-      // Cmd/Ctrl+Alt+1/2/3 按层级折叠：1=顶级 li, 2=嵌套一级, 3=嵌套两级
-      // 行为：取该层一致态后整层翻转
-      'Mod-Alt-1': () => this.editor.commands.collapseListItemsByDepth(2),
-      'Mod-Alt-2': () => this.editor.commands.collapseListItemsByDepth(4),
-      'Mod-Alt-3': () => this.editor.commands.collapseListItemsByDepth(6),
-      // Cmd/Ctrl+Shift+Alt+. 全部折叠 / 展开
-      'Mod-Shift-Alt-.': () => this.editor.commands.collapseAllListItems(),
+      // Cmd/Ctrl+Shift+. 同级 toggle —— toggleSiblings
+      'Mod-Shift-.': () => this.editor.commands.toggleSiblingListItems(),
+      // Cmd/Ctrl+Alt+1/2/3 按层级 toggle —— toggleByLevel
+      // 1=顶级 li (PM depth 2), 2=嵌套一级 (4), 3=嵌套两级 (6)
+      'Mod-Alt-1': () => this.editor.commands.toggleListItemsByDepth(2),
+      'Mod-Alt-2': () => this.editor.commands.toggleListItemsByDepth(4),
+      'Mod-Alt-3': () => this.editor.commands.toggleListItemsByDepth(6),
+      // Cmd/Ctrl+Shift+Alt+. 全局 toggle —— toggleAll
+      'Mod-Shift-Alt-.': () => this.editor.commands.toggleAllListItems(),
     }
   },
 })

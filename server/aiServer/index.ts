@@ -5,9 +5,9 @@ import { ProgressResult } from '@shared/lib/types';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
 import { UnstructuredLoader } from '@langchain/community/document_loaders/fs/unstructured';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
+import { readFile } from 'fs/promises';
 import { FileService } from '../lib/files';
 import { Context } from '../context';
 import { CreateNotification } from '../routerTrpc/notification';
@@ -17,6 +17,22 @@ import { MDocument } from '@mastra/rag';
 import { embedMany } from 'ai';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { userCaller } from '../routerTrpc/_app';
+
+/**
+ * Minimal plain-text loader that replaces langchain v0.x's TextLoader.
+ *
+ * langchain v1 dropped the `langchain/document_loaders/fs/text` subpath (the
+ * community package only exposes pdf/docx/csv, no plain-text loader). We
+ * implement the same shape on top of `fs/promises.readFile` so the rest of
+ * this module doesn't need to know about the version skew.
+ */
+class PlainTextLoader extends BaseDocumentLoader {
+  constructor(private filePath: string) { super(); }
+  async load() {
+    const text = await readFile(this.filePath, 'utf-8');
+    return [{ pageContent: text, metadata: {} }];
+  }
+}
 
 import { getAllPathTags } from '@server/lib/helper';
 import { commentWebhookInclude, sendCommentWebhook } from '@server/lib/commentWebhook';
@@ -81,7 +97,7 @@ export class AiService {
           loader = new DocxLoader(filePath);
           break;
         case filePath.endsWith('.txt'):
-          loader = new TextLoader(filePath);
+          loader = new PlainTextLoader(filePath);
           break;
         case filePath.endsWith('.csv'):
           console.log('load csv');

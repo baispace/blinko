@@ -323,14 +323,33 @@ export class UserStore implements Store {
       this.initializeFonts(config.fontStyle);
     }
 
-    // Apply global typography (font size / weight)
+    // Apply global typography (font size / weight / line-height / paragraph spacing /
+    // line width / first-line indent / heading scales / table size).
+    // 写入 .dark / .light 根节点，让正文 (`.markdown-body`) 和编辑器 (`.tiptap`)
+    // 通过 `var(--app-*)` 一起消费 —— 单一信源覆盖三种内容类型（闪念/笔记/待办）。
     {
       const fontSize = Number(config?.fontSize) >= 12 && Number(config?.fontSize) <= 20 ? Number(config.fontSize) : 16;
       const fontWeight = Number(config?.fontWeight) >= 300 && Number(config?.fontWeight) <= 700 ? Number(config.fontWeight) : 400;
+      const lineHeight = Number(config?.lineHeight) >= 1 && Number(config?.lineHeight) <= 2.5 ? Number(config.lineHeight) : 1.6;
+      const paragraphSpacing = Number(config?.paragraphSpacing) >= 0 && Number(config?.paragraphSpacing) <= 30 ? Number(config.paragraphSpacing) : 8;
+      const lineWidthChars = Number(config?.lineWidthChars) >= 30 && Number(config?.lineWidthChars) <= 120 ? Number(config.lineWidthChars) : 60;
+      const firstLineIndentChars = Number(config?.firstLineIndentChars) >= 0 && Number(config?.firstLineIndentChars) <= 4 ? Number(config.firstLineIndentChars) : 0;
+      const h1Size = Number(config?.h1Size) >= 18 && Number(config?.h1Size) <= 40 ? Number(config.h1Size) : 26;
+      const h2Size = Number(config?.h2Size) >= 16 && Number(config?.h2Size) <= 36 ? Number(config.h2Size) : 22;
+      const h3Size = Number(config?.h3Size) >= 14 && Number(config?.h3Size) <= 32 ? Number(config.h3Size) : 20;
+      const tableSize = Number(config?.tableSize) >= 12 && Number(config?.tableSize) <= 20 ? Number(config.tableSize) : fontSize;
       const typographyTargets = [...document.querySelectorAll('.dark, .light')] as HTMLElement[];
       for (const el of typographyTargets) {
         el.style.setProperty('--app-font-size', `${fontSize}px`);
         el.style.setProperty('--app-font-weight', String(fontWeight));
+        el.style.setProperty('--app-line-height', String(lineHeight));
+        el.style.setProperty('--app-paragraph-spacing', `${paragraphSpacing}px`);
+        el.style.setProperty('--app-line-width', `${lineWidthChars}ch`);
+        el.style.setProperty('--app-first-line-indent', `${firstLineIndentChars}em`);
+        el.style.setProperty('--app-h1-size', `${h1Size}px`);
+        el.style.setProperty('--app-h2-size', `${h2Size}px`);
+        el.style.setProperty('--app-h3-size', `${h3Size}px`);
+        el.style.setProperty('--app-table-size', `${tableSize}px`);
       }
     }
 

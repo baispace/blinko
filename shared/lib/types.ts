@@ -63,6 +63,14 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('noteListSortBy'),
   z.literal('fontSize'),
   z.literal('fontWeight'),
+  z.literal('lineHeight'),
+  z.literal('paragraphSpacing'),
+  z.literal('lineWidthChars'),
+  z.literal('firstLineIndentChars'),
+  z.literal('h1Size'),
+  z.literal('h2Size'),
+  z.literal('h3Size'),
+  z.literal('tableSize'),
 ]);
 
 export const ZConfigKey = z.union([
@@ -218,7 +226,15 @@ export const ZConfigSchema = z.object({
   noteListStyle: z.string().optional(),
   noteListSortBy: z.string().optional(),
   fontSize: z.number().optional(),
-  fontWeight: z.number().optional()
+  fontWeight: z.number().optional(),
+  lineHeight: z.number().optional(),
+  paragraphSpacing: z.number().optional(),
+  lineWidthChars: z.number().optional(),
+  firstLineIndentChars: z.number().optional(),
+  h1Size: z.number().optional(),
+  h2Size: z.number().optional(),
+  h3Size: z.number().optional(),
+  tableSize: z.number().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

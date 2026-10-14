@@ -18,9 +18,10 @@ interface UseDragCardProps {
   setInsertPosition: (position: number | null) => void;
   isDragForbidden: boolean;
   setIsDragForbidden: (forbidden: boolean) => void;
+  reorderEnabled?: boolean;
 }
 
-export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, insertPosition, setInsertPosition, isDragForbidden, setIsDragForbidden }: UseDragCardProps) => {
+export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, insertPosition, setInsertPosition, isDragForbidden, setIsDragForbidden, reorderEnabled = true }: UseDragCardProps) => {
   const [localNotes, setLocalNotes] = useState<any[]>([]);
   const isDraggingRef = useRef(false);
   const blinko = RootStore.Get(BlinkoStore);
@@ -28,22 +29,20 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
   // Update local notes when the list changes (but not during drag operations)
   useEffect(() => {
     if (notes && !isDraggingRef.current) {
-      // Sort by isTop first (desc), then by sortOrder (asc) to maintain the correct order from the database
-      const sortedNotes = [...notes].sort((a, b) => {
-        // First, sort by isTop (pinned notes first)
-        if (a.isTop !== b.isTop) {
-          return b.isTop ? 1 : -1;
-        }
-        // Then sort by sortOrder
-        return a.sortOrder - b.sortOrder;
-      });
+      // 日期排序时保留服务端分页顺序；手动排序才按 isTop + sortOrder 归一。
+      const sortedNotes = reorderEnabled
+        ? [...notes].sort((a, b) => {
+            if (a.isTop !== b.isTop) return b.isTop ? 1 : -1;
+            return a.sortOrder - b.sortOrder;
+          })
+        : [...notes];
       setLocalNotes(sortedNotes);
       onNotesUpdate?.(sortedNotes);
     }
     else if (!notes) {
       setLocalNotes([]);
     }
-  }, [notes]);
+  }, [notes, reorderEnabled]);
 
   // Disable sensors when fullscreen editor is open.
   // Previously we used an activationConstraint with both delay and distance,
@@ -51,7 +50,7 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
   // field – without it, every mousemove throws "Cannot use 'in' operator to
   // search for 'x' in undefined" and cancels the drag. Removing the sensors
   // entirely is the cleanest way to disable dragging.
-  const shouldEnableDrag = blinko.fullscreenEditorNoteId === null;
+  const shouldEnableDrag = reorderEnabled && blinko.fullscreenEditorNoteId === null;
 
   const sensors = useSensors(
     ...(shouldEnableDrag

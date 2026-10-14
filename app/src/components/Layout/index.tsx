@@ -25,6 +25,7 @@ import { BlinkoNotification } from '@/components/BlinkoNotification';
 import { AiStore } from '@/store/aiStore';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { HomeHeaderLeft } from './HomeHeaderLeft';
+import { BlinkoHomeSettingsPop } from '../Common/PopoverFloat/blinkoHomeSettingsPop';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-lg !transition-all';
 
@@ -191,6 +192,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                    ghost 小按钮）。FilterPop 内部自渲染 trigger Button，宽度收紧靠
                    该组件内 className；Bulb / Bell 在此 inline 保证视觉一致。 */}
               <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
+                {isHomeSubHeaderScope(location, searchParams) && <BlinkoHomeSettingsPop />}
                 <FilterPop />
                 {!blinkoStore.config.value?.isCloseDailyReview && (
                   <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">

@@ -1,497 +1,104 @@
-import React, { useRef, useEffect } from 'react';
-import { Modal, ModalContent, ModalBody, Input, Button, Divider } from '@heroui/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Modal, ModalContent, ModalBody, Input, Spinner } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { AiStore } from '@/store/aiStore';
 import { observer } from 'mobx-react-lite';
-import { _ } from '@/lib/lodash';
-import { cn } from '@/lib/utils';
-import { Note, ResourceType, Tag } from '@shared/lib/types';
-import { ScrollArea } from '../Common/ScrollArea';
-import { ResourceItemPreview } from '@/components/BlinkoResource/ResourceItem';
+import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/trpc';
 import { allSettings } from '@/components/BlinkoSettings/settingsRegistry';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
-import { BlinkoCard } from '../BlinkoCard';
-import { ConvertTypeButton } from '../BlinkoCard/cardFooter';
-import { LoadingAndEmpty } from '../Common/LoadingAndEmpty';
-import { helper } from '@/lib/helper';
-import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { downloadFromLink } from '@/lib/tauriHelper';
-import { clearSearchState, getSearchWithClearedFilters } from '@/lib/searchFilters';
+import { cn } from '@/lib/utils';
+import { searchSnippet, tagPath } from './searchUtils';
 
-interface GlobalSearchProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+type Category = 'all' | 'flash' | 'notes' | 'todo' | 'tags' | 'files' | 'settings';
+type Hit = { key: string; kind: string; title: string; summary?: string; info?: string; action: () => void };
+const icons: Record<string, string> = { flash: 'tabler:bolt', notes: 'tabler:notes', todo: 'tabler:checkbox', tags: 'tabler:hash', files: 'tabler:file', settings: 'tabler:settings', ai: 'hugeicons:ai-beautify' };
+function Highlight({ text, term }: { text: string; term: string }) {
+  if (!term) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+  return <>{parts.map((part, index) => part.toLocaleLowerCase() === term.toLocaleLowerCase()
+    ? <mark key={index} className="rounded-sm bg-primary/10 text-primary">{part}</mark> : <React.Fragment key={index}>{part}</React.Fragment>)}</>;
 }
-
-// Text highlighting component
-const HighlightText = ({ text, searchTerm }: { text: string; searchTerm: string }) => {
-  if (!searchTerm || !text) return <span>{text}</span>;
-
-  // Clean search term (remove @ and # prefixes)
-  const cleanSearchTerm = searchTerm.replace(/^[@#]/, '').trim();
-  if (!cleanSearchTerm) return <span>{text}</span>;
-
-  // Escape special regex characters
-  const escapedSearchTerm = cleanSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Create regex for case-insensitive matching
-  const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
-
-  // Split text into parts
-  const parts = text.split(regex);
-
-  return (
-    <span>
-      {parts.map((part, index) => {
-        // Check if this part matches the search term (case insensitive)
-        const isMatch = regex.test(part);
-        regex.lastIndex = 0; // Reset regex for next test
-
-        return isMatch ? (
-          <mark
-            key={index}
-            className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white px-1 rounded-sm"
-          >
-            {part}
-          </mark>
-        ) : (
-          <span key={index}>{part}</span>
-        );
-      })}
-    </span>
-  );
-};
-
-export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProps) => {
-  const { t } = useTranslation();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const blinkoStore = RootStore.Get(BlinkoStore);
-  const aiStore = RootStore.Get(AiStore);
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate()
-
-  const clearSearchFiltersFromUrl = () => {
-    navigate({
-      pathname: location.pathname,
-      search: getSearchWithClearedFilters(searchParams),
-    });
-  };
-
-  // Move all state management to RootStore.Local
-  const store = RootStore.Local(() => ({
-    searchQuery: '',
-    isAiQuestion: false,
-    isSearching: false,
-    searchResults: {
-      notes: [] as Note[],
-      resources: [] as ResourceType[],
-      settings: [] as any[],
-      tags: [] as Tag[],
-    },
-
-    // Methods
-    setSearchQuery(value: string) {
-      this.searchQuery = value;
-
-      // Auto-detect @AI syntax
-      if (value.startsWith('@') && !this.isAiQuestion) {
-        this.isAiQuestion = true;
-      } else if (!value.startsWith('@')) {
-        this.isAiQuestion = false;
-      }
-
-      // Trigger search with loading state
-      if (value) {
-        this.isSearching = true;
-        debouncedSearch.current(value);
-      } else if (!value) {
-        this.searchResults = { notes: [], resources: [], settings: [], tags: [] };
-        clearSearchState(blinkoStore);
-        clearSearchFiltersFromUrl();
-        blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
-        blinkoStore.resourceList.resetAndCall({
-          page: 1,
-          size: 20,
-          searchText: '',
-          folder: undefined,
-        });
-        blinkoStore.updateTicker++
-      }
-    },
-
-    toggleAiQuestion() {
-      this.isAiQuestion = !this.isAiQuestion;
-      this.searchQuery = this.isAiQuestion ? '@' + this.searchQuery.replace('#', '') : this.searchQuery.replace('@', '');
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    },
-
-    // Computed properties
-    get hasResults() {
-      return (
-        this.searchResults.notes.length > 0 ||
-        this.searchResults.resources.length > 0 ||
-        this.searchResults.settings.length > 0 ||
-        this.searchResults.tags.length > 0
-      );
-    },
-  }));
-
-  // Reset search query when the modal opens
+export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: (open: boolean) => void }) => {
+  const { t, i18n } = useTranslation();
+  const label = (zh: string, en: string) => i18n.language.startsWith('zh') ? zh : en;
+  const navigate = useNavigate(), blinkoStore = RootStore.Get(BlinkoStore), aiStore = RootStore.Get(AiStore);
+  const [query, setQuery] = useState(''), [category, setCategory] = useState<Category>('all');
+  const [hits, setHits] = useState<Hit[]>([]), [loading, setLoading] = useState(false), [error, setError] = useState(false), [limited, setLimited] = useState(false), [active, setActive] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null), request = useRef(0);
+  const term = query.replace(/^[@#]/, '').trim(), aiOnly = query.trimStart().startsWith('@'), onlyTags = query.trimStart().startsWith('#');
+  const categories: { key: Category; name: string }[] = [{ key: 'all', name: label('全部', 'All') }, { key: 'flash', name: label('闪念', 'Memos') }, { key: 'notes', name: t('note') }, { key: 'todo', name: t('todo') }, { key: 'tags', name: t('tag') }, { key: 'files', name: label('文件', 'Files') }, { key: 'settings', name: t('settings') }];
+  const close = () => onOpenChange(false);
+  useEffect(() => { if (isOpen) { setQuery(''); setCategory('all'); setHits([]); setActive(0); } }, [isOpen]);
   useEffect(() => {
-    if (isOpen) {
-      store.searchQuery = blinkoStore.searchText || '';
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    blinkoStore.noteListFilterConfig.isUseAiQuery = store.isAiQuestion;
-  }, [store.isAiQuestion]);
-
-  // Create debounced search function - properly update search results after typing stops
-  const debouncedSearch = useRef(
-    _.debounce(async (query) => {
-      if (!query) {
-        store.searchResults = { notes: [], resources: [], settings: [], tags: [] };
-        store.isSearching = false;
-        return;
-      }
-      // 1. Store the search query in the store
-      blinkoStore.searchText = query;
-      blinkoStore.globalSearchTerm = query;
-
-      try {
-        // Ensure AI retrieval flag is in sync for this call
-        // Detect "@" prefix proactively to avoid timing issues with the effect
-        const isAiQuery = query.trim().startsWith('@') || store.isAiQuestion;
-        blinkoStore.noteListFilterConfig.isUseAiQuery = isAiQuery;
-
-        // 2. Search for notes using the API
-        // Set search text in the store and call the API through the store
-        blinkoStore.searchText = query;
-        // type: -1 means search all types (Memo, Note, Todo)
-        // isArchived: null means search both archived and non-archived
-        const notes = await blinkoStore.noteList.resetAndCall({ page: 1, size: 20, type: -1, isArchived: null });
-        // await blinkoStore.blinkoList.resetAndCall({ page: 1, size: 20 });
-        // 3. Search for resources using the API
-        const resources = await blinkoStore.resourceList.resetAndCall({
-          page: 1,
-          size: 20,
-          // Strip leading @/# so regular resource search still works with prefixes
-          searchText: query.replace(/^[@#]/, ''),
-          folder: undefined,
-        });
-
-        // 4. Search settings using the imported allSettings array
-        // Filter settings that match the search query
-        const matchingSettings = allSettings
-          .filter((setting) => setting.title.toLowerCase().includes(query.toLowerCase()) || setting.keywords?.some((kw) => kw.toLowerCase().includes(query.toLowerCase())))
-          .filter((setting) => setting.key !== 'all')
-          .slice(0, 5);
-
-        // 5. Search tags locally — the full tag list is already in memory, so
-        //    this is a cheap prefix/substring match (strip the leading # like
-        //    resources does).
-        const tagTerm = query.replace(/^[#@]/, '').toLowerCase();
-        const matchingTags = tagTerm
-          ? (blinkoStore.tagList.value?.falttenTags ?? [])
-              .filter((tag) => tag.name.toLowerCase().includes(tagTerm))
-              .slice(0, 8)
-          : [];
-
-        // 6. Update search results (filter out .folder placeholder files)
-        store.searchResults = {
-          notes: notes || [],
-          resources: (resources || []).filter(r => r.name !== '.folder'),
-          settings: matchingSettings,
-          tags: matchingTags,
-        };
-
-        blinkoStore.forceQuery++
-      } catch (error) {
-        console.error('Search error:', error);
-      } finally {
-        store.isSearching = false;
-      }
-    }, 300),
-  );
-
-  // Key handling
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      if (store.isAiQuestion) {
-        handleAiQuestion();
-      } else {
-        onOpenChange(false);
-      }
-    } else if (e.key === 'Escape') {
-      onOpenChange(false);
-    }
+    const id = ++request.current;
+    setHits([]); setActive(0); setError(false); setLimited(false);
+    if (!isOpen || !term || aiOnly) { setLoading(false); return; }
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      const tags = blinkoStore.tagList.value?.falttenTags ?? [];
+      const type = category === 'flash' ? 0 : category === 'notes' ? 1 : category === 'todo' ? 2 : -1;
+      const results = await Promise.allSettled([
+        !onlyTags && ['all', 'flash', 'notes', 'todo'].includes(category) ? api.notes.list.mutate({ searchText: term, type, page: 1, size: 21, isArchived: null, isRecycle: false, isUseAiQuery: false }) : Promise.resolve([]),
+        !onlyTags && ['all', 'files'].includes(category) ? api.attachments.list.query({ searchText: term, page: 1, size: 21 }) : Promise.resolve([]),
+      ]);
+      if (id !== request.current) return;
+      const rows: Hit[] = [];
+      const notes = results[0].status === 'fulfilled' ? results[0].value : [];
+      const files = results[1].status === 'fulfilled' ? results[1].value.filter((file: any) => file.name !== '.folder') : [];
+      notes.slice(0, 20).forEach((note: any) => {
+        const kind = note.type === 0 ? 'flash' : note.type === 2 ? 'todo' : 'notes', snippet = searchSnippet(note.content ?? '', term);
+        rows.push({ key: `note-${note.id}`, kind, title: note.metadata?.title || snippet.title || t('no-content'), summary: snippet.summary,
+          info: [categories.find(item => item.key === kind)?.name, note.isArchived ? label('已归档', 'Archived') : '', note.updatedAt ? new Date(note.updatedAt).toLocaleDateString() : ''].filter(Boolean).join(' · '),
+          action: () => { navigate(`/detail?id=${note.id}`); close(); } });
+      });
+      if (category === 'all' || category === 'tags' || onlyTags) tags.filter(tag => tagPath(tag, tags).toLocaleLowerCase().includes(term.toLocaleLowerCase())).slice(0, 12).forEach(tag => rows.push({ key: `tag-${tag.id}`, kind: 'tags', title: '#' + tagPath(tag, tags), info: t('tag'), action: () => { navigate(`/?path=all&tagId=${tag.id}`); close(); } }));
+      files.slice(0, 20).forEach((file: any) => rows.push({ key: `file-${file.id}`, kind: 'files', title: file.name, info: label('文件 · 下载', 'File · Download'), action: () => { downloadFromLink(getBlinkoEndpoint(file.path)); close(); } }));
+      if (!onlyTags && ['all', 'settings'].includes(category)) allSettings.filter(setting => setting.key !== 'all' && [t(setting.title), ...(setting.keywords ?? [])].some(text => text.toLocaleLowerCase().includes(term.toLocaleLowerCase()))).slice(0, 5).forEach(setting => rows.push({ key: `setting-${setting.key}`, kind: 'settings', title: t(setting.title), info: t('settings'), action: () => { ShowSettingsDialog(setting.key); close(); } }));
+      setHits(rows); setLimited(notes.length > 20 || files.length > 20); setError(results.some(result => result.status === 'rejected')); setLoading(false);
+    }, 250);
+    return () => { clearTimeout(timer); request.current++; };
+  }, [isOpen, term, category, aiOnly, onlyTags, i18n.language]);
+  const visible: Hit[] = term ? [...(aiOnly ? [] : hits), { key: 'ask-ai', kind: 'ai', title: label('向 AI 提问：', 'Ask AI: ') + term, info: label('进入对话，确认后发送', 'Open chat to review and send'), action: () => {
+    if (aiStore.isAnswering) return;
+    aiStore.newChat(); aiStore.input = term; navigate('/ai'); close();
+  } }] : [];
+  useEffect(() => { document.getElementById(`global-search-result-${active}`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
+  const handleKey = (event: React.KeyboardEvent) => {
+    if (event.nativeEvent.isComposing) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setActive(index => visible.length ? (index + (event.key === 'ArrowDown' ? 1 : -1) + visible.length) % visible.length : 0); }
+    else if (event.key === 'Enter') { event.preventDefault(); if (!loading) visible[active]?.action(); }
+    else if (event.key === 'Escape') close();
   };
-
-  // Navigation methods
-  const navigateToNote = (note: Note) => {
-    navigate(`/detail?id=${note.id}`);
-    onOpenChange(false);
-  };
-
-  const navigateToResource = (resource: ResourceType) => {
-    //download
-    downloadFromLink(getBlinkoEndpoint(resource.path));
-    onOpenChange(false);
-  };
-
-  const navigateToSetting = (settingKey: string) => {
-    // Open the overlay rather than the route — /settings stays reachable via
-    // deep link, but clicking a search hit should not unload the current page.
-    ShowSettingsDialog(settingKey);
-    onOpenChange(false);
-  };
-
-  const handleAiQuestion = () => {
-    if (!store.searchQuery) return;
-
-    // Prepare the AI prompt
-    const aiPrompt = store.searchQuery.startsWith('@') ? store.searchQuery.substring(1).trim() : store.searchQuery;
-
-    // Start a new AI chat with the question
-    aiStore.newChatWithSuggestion(aiPrompt);
-    navigate('/ai');
-    onOpenChange(false);
-  };
-
-  // Add a new navigation method for tags
-  const navigateToTag = (tagName: string) => {
-    navigate(`/?path=all&searchText=%23${encodeURIComponent(tagName)}`);
-    onOpenChange(false);
-  };
-
-  // Render search result items
-  const renderNoteItem = (note: Note) => (
-    <div key={note.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md transition-colors">
-      <div
-        className="text-xs truncate w-full md:w-[80%] cursor-pointer"
-        onClick={() => navigateToNote(note)}
-      >
-        <HighlightText text={note?.content?.substring(0, 60) || t('no-content')} searchTerm={store.searchQuery} />
+  return <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="top" hideCloseButton
+    classNames={{ base: 'max-w-2xl mx-3 sm:mx-auto mt-[12vh] rounded-2xl border border-default-200 shadow-xl', backdrop: 'bg-black/20' }}
+    motionProps={{ variants: { enter: { opacity: 1, y: 0, transition: { duration: 0.16 } }, exit: { opacity: 0, y: -6, transition: { duration: 0.12 } } } }}>
+    <ModalContent><ModalBody className="gap-0 p-0" onKeyDown={handleKey}>
+      <div className="p-4 pb-3"><Input ref={inputRef} autoFocus aria-label={label('全局搜索', 'Global search')} placeholder={label('搜索闪念、笔记、待办、标签和文件…', 'Search notes, tasks, tags and files…')}
+        value={query} onValueChange={setQuery} variant="flat" classNames={{ inputWrapper: 'bg-transparent shadow-none px-0', input: 'text-base' }} role="combobox" aria-expanded={!loading && visible.length > 0} aria-controls="global-search-results" aria-activedescendant={!loading && visible.length ? `global-search-result-${active}` : undefined}
+        startContent={<Icon icon="tabler:search" width="22" className="text-default-400 mr-2" />}
+        endContent={loading ? <Spinner size="sm" /> : query ? <button aria-label={label('清空关键词', 'Clear search')} onClick={() => setQuery('')} className="p-2 rounded-lg hover:bg-default-100"><Icon icon="tabler:x" width="18" /></button> : <kbd className="text-xs text-default-400">Esc</kbd>} /></div>
+      <div className="flex gap-1 overflow-x-auto px-4 pb-3 border-b border-default-100" aria-label={label('搜索分类', 'Search category')}>
+        {categories.map(item => <button key={item.key} aria-pressed={category === item.key} onClick={() => { setCategory(item.key); inputRef.current?.focus(); }} className={cn('shrink-0 rounded-lg px-3 py-1.5 text-xs transition-colors', category === item.key ? 'bg-primary/10 text-primary' : 'text-default-500 hover:bg-default-100')}>{item.name}</button>)}
       </div>
-      <div className="ml-auto hidden md:block" onClick={(e) => e.stopPropagation()}>
-        <ConvertTypeButton
-          blinkoItem={note}
-          tooltipPlacement="right"
-          toolTipClassNames={{
-            base: 'bg-content1 border border-default-200 shadow-lg',
-            content: 'p-0',
-          }}
-          tooltip={
-            <div className="max-w-[400px] p-0 rounded-2xl bg-transparent">
-              <BlinkoCard blinkoItem={note} withoutHoverAnimation withoutBoxShadow className='!border-none' />
-            </div>
-          }
-        />
+      <div className="min-h-[180px] max-h-[min(50vh,420px)] overflow-y-auto p-2" id="global-search-results" role="listbox" aria-label={label('搜索结果', 'Search results')} aria-busy={loading}>
+        {!term && <div className="px-5 py-10 text-center text-sm text-default-400">{label('输入关键词查找内容，输入 # 查找标签', 'Type to search, or use # to find tags')}</div>}
+        {term && !loading && !hits.length && !aiOnly && <p role="status" className="px-4 py-5 text-sm text-default-500">{error ? label('部分内容搜索失败，请稍后重试', 'Some searches failed. Please try again.') : label('没有找到匹配内容，试试更短的关键词', 'No matches. Try a shorter keyword.')}</p>}
+        {error && hits.length > 0 && <p role="status" className="px-4 py-2 text-xs text-warning">{label('部分内容暂时无法搜索，以下为已找到的结果', 'Some sources are unavailable. Showing available results.')}</p>}
+        {!loading && visible.map((hit, index) => <button type="button" id={`global-search-result-${index}`} key={hit.key} role="option" aria-selected={index === active} disabled={hit.kind === 'ai' && aiStore.isAnswering} onMouseEnter={() => setActive(index)} onClick={hit.action}
+          className={cn('flex w-full gap-3 px-3 py-3 rounded-xl text-left transition-colors disabled:opacity-40', index === active ? 'bg-default-100' : 'hover:bg-default-50', hit.kind === 'ai' && !aiOnly && 'border-t border-default-100 mt-2')}>
+          <Icon icon={icons[hit.kind]} width="20" className={cn('shrink-0 mt-0.5', hit.kind === 'ai' ? 'text-primary' : 'text-default-400')} />
+          <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate"><Highlight text={hit.title} term={term} /></div>{hit.summary && <div className="text-xs text-default-500 truncate mt-1"><Highlight text={hit.summary} term={term} /></div>}<div className="text-xs text-default-400 mt-1">{hit.info}</div></div>
+          {index === active && <span className="text-default-400 text-xs self-center">↵</span>}
+        </button>)}
+        {limited && <p className="px-4 py-2 text-xs text-default-400">{label('每类显示前20条，可选择分类或细化关键词', 'Showing up to 20 per category. Refine your search for more.')}</p>}
       </div>
-    </div>
-  );
-
-  const renderResourceItem = (resource: ResourceType) => (
-    <div key={resource.id} className="hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => navigateToResource(resource)}>
-      <ResourceItemPreview item={resource} onClick={() => navigateToResource(resource)} showExtraInfo={true} showAssociationIcon={true} className="hover:bg-transparent" />
-    </div>
-  );
-
-  const renderSettingItem = (setting: any) => (
-    <div key={setting.key} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => navigateToSetting(setting.key)}>
-      <div className="p-2 rounded-md bg-warning-50">
-        <Icon icon={setting.icon} className="text-warning" />
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm truncate">{t(setting.title)}</div>
-        <div className="text-xs text-default-500 truncate">{t('settings')}</div>
-      </div>
-    </div>
-  );
-
-  // Render tag item
-  const renderTagItem = (tag: Tag) => (
-    <div key={tag.id} className="flex gap-2 items-center p-2 hover:bg-default-100 rounded-md cursor-pointer transition-colors" onClick={() => navigateToTag(tag.name)}>
-      <div className="text-xs flex items-center gap-2">
-        <span className="text-primary">#{tag.name}</span>
-      </div>
-    </div>
-  );
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      placement="top"
-      motionProps={{
-        variants: {
-          enter: {
-            y: 0,
-            opacity: 1,
-            transition: { type: 'spring', bounce: 0.5, duration: 0.6, },
-          },
-          exit: {
-            y: -20,
-            opacity: 0,
-            transition: { type: 'spring', bounce: 0.5, duration: 0.3, },
-          },
-        }
-      }}
-      classNames={{
-        base: 'max-w-2xl mx-auto mt-10',
-      }}
-    >
-      <ModalContent>
-        <ModalBody className="py-4">
-          <div className="flex flex-col gap-3">
-            {/* Search Input */}
-            <Input
-              ref={searchInputRef}
-              aria-label="global-search"
-              className={cn("mt-4", {
-                'input-highlight': store.isAiQuestion,
-              })}
-              placeholder={t('search-or-ask-ai')}
-              value={store.searchQuery}
-              onChange={(e) => {
-                const value = e.target.value;
-                store.setSearchQuery(value);
-              }}
-              autoFocus
-              onKeyDown={handleKeyDown}
-              startContent={
-                <Icon
-                  className=""
-                  icon={
-                    store.isAiQuestion
-                      ? 'hugeicons:ai-beautify'
-                      : 'lets-icons:search'
-                  }
-                  width="24"
-                  height="24"
-                />
-              }
-              endContent={
-                <div className="flex items-center gap-1">
-                  {store.searchQuery && (
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={() => store.setSearchQuery('')}
-                      className="hover:text-danger transition-colors"
-                    >
-                      <Icon icon="ph:x-bold" width="16" height="16" />
-                    </Button>
-                  )}
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    onPress={() => store.toggleAiQuestion()}
-                    className={cn('hover:text-primary transition-colors', store.isAiQuestion && 'text-primary')}
-                  >
-                    <Icon icon={store.isAiQuestion ? 'lets-icons:search' : 'hugeicons:ai-beautify'} width="20" height="20" />
-                  </Button>
-                </div>
-              }
-            />
-
-            {/* Search Results */}
-            {store.searchQuery && (
-              <div className="mt-2">
-                <LoadingAndEmpty isLoading={store.isSearching} isEmpty={!store.hasResults} />
-                <ScrollArea className="max-h-[600px] md:max-h-[400px]" onBottom={() => { }}>
-                  <div className="flex flex-col gap-3 px-1">
-                    {/* Notes section - only show if not in tag search mode */}
-                    {store.searchResults.notes.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Icon icon="hugeicons:sticky-note-02" className="h-4 w-4 mr-2 text-primary" />
-                            <h3 className="text-sm font-medium text-default-700">{t('note')}</h3>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">{store.searchResults.notes.map(renderNoteItem)}</div>
-                      </div>
-                    )}
-
-                    {/* Resources section - only show if not in tag search mode */}
-                    {store.searchResults.resources.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <Divider className="my-2" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Icon icon="mingcute:folder-line" className="h-4 w-4 mr-2 text-success" />
-                            <h3 className="text-sm font-medium text-default-700">{t('resources')}</h3>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">{store.searchResults.resources.map(renderResourceItem)}</div>
-                      </div>
-                    )}
-
-                    {/* Settings section - only show if not in tag search mode */}
-                    {store.searchResults.settings.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <Divider className="my-2" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Icon icon="tabler:settings" className="mr-2 text-warning" />
-                            <h3 className="text-sm font-medium text-default-700">{t('settings')}</h3>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">{store.searchResults.settings.map(renderSettingItem)}</div>
-                      </div>
-                    )}
-
-                    {/* Tags section */}
-                    {store.searchResults.tags.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <Divider className="my-2" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Icon icon="solar:tag-outline" className="mr-2 text-primary" />
-                            <h3 className="text-sm font-medium text-default-700">{t('tag')}</h3>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">{store.searchResults.tags.map(renderTagItem)}</div>
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
-
-            <div className="text-xs text-default-500 flex justify-between items-center">
-              <div>
-                {store.isAiQuestion ? (
-                  t('to-ask-ai')
-                ) : (
-                  <>
-                    {t('press-enter-to-select-first-result')} • <span className="text-primary">@</span> {t('to-ask-ai')} • <span className="text-primary">#</span> {t('to-search-tags')}
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-default-100 rounded text-default-600 text-xs">Ctrl</kbd>
-                <span>+</span>
-                <kbd className="px-2 py-1 bg-default-100 rounded text-default-600 text-xs">K</kbd>
-              </div>
-            </div>
-          </div>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
-  );
+      <div className="flex justify-between border-t border-default-100 px-4 py-3 text-xs text-default-400"><span>{label('↑↓ 选择 · Enter 打开 · Esc 关闭', '↑↓ Select · Enter Open · Esc Close')}</span><span>{label('@ 向 AI 提问', '@ Ask AI')}</span></div>
+    </ModalBody></ModalContent>
+  </Modal>;
 });

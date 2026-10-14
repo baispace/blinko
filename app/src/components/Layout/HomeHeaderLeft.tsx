@@ -2,104 +2,111 @@ import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { RootStore } from '@/store';
+import { BaseStore } from '@/store/baseStore';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Icon } from '@/components/Common/Iconify/icons';
-import {
-  getPageViewScope,
-  getPageViewSetting,
-  updatePageViewSetting,
-} from '@/lib/pageViewConfig';
-import { api } from '@/lib/trpc';
-import { PromiseCall } from '@/store/standard/PromiseState';
+import { getPageViewScope } from '@/lib/pageViewConfig';
 
-/**
- * 顶部栏 LEFT 区内容：模式标题 + 计数 + 视图切换（列表/卡片）。
- * 严格按 prototype blinko-home-redesign.html 的顶栏左侧：
- *   ✅ 待办 5 条    [≡ 列表] [▦ 卡片]
- *
- * - 设置按钮 (BlinkoHomeSettingsPop) 已从 LEFT 移到顶部栏右侧的最后，
- *   让左侧只承担「我现在看的是什么」这一组语义，避免视觉拥挤。
- */
-const MODE_TITLE_EMOJI: Record<string, string> = {
-  blinko: '⚡',
-  notes: '📝',
-  todo: '✅',
-  all: '📚',
-  archived: '🗄️',
-  trash: '🗑️',
+const MODE_VISUAL: Record<string, { background: string; foreground: string }> = {
+  blinko: { background: 'bg-amber-500/10', foreground: 'text-amber-500' },
+  notes: { background: 'bg-primary/10', foreground: 'text-primary' },
+  todo: { background: 'bg-emerald-500/10', foreground: 'text-emerald-500' },
+  tag: { background: 'bg-violet-500/10', foreground: 'text-violet-500' },
+  all: { background: 'bg-default-100', foreground: 'text-default-500' },
+  archived: { background: 'bg-default-100', foreground: 'text-default-500' },
+  trash: { background: 'bg-default-100', foreground: 'text-default-500' },
 };
 
+const CONTENT_TYPE_TITLE = {
+  '0': 'blinko',
+  '1': 'notes',
+  '2': 'todo',
+} as const;
+
+const CONTENT_TYPE_VISUAL = {
+  '0': 'bg-amber-500/10 text-amber-600',
+  '1': 'bg-primary/10 text-primary',
+  '2': 'bg-emerald-500/10 text-emerald-600',
+} as const;
+
+/** 顶部栏左侧：只承担当前内容类型、标题与数量的定位语义。 */
 export const HomeHeaderLeft = observer(() => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+  const base = RootStore.Get(BaseStore);
   const blinko = RootStore.Get(BlinkoStore);
 
   const scope = getPageViewScope(searchParams);
   const currentListState = blinko.getListByPath(searchParams.get('path'));
-  const noteCount = currentListState.value?.length ?? 0;
+  const loadedCount = currentListState.value?.length ?? 0;
+  const tagList = blinko.tagList.value;
+  const tagId = searchParams.get('tagId');
+  const numericTagId = tagId ? Number(tagId) : undefined;
+  const tag = tagList?.falttenTags?.find(item => String(item.id) === tagId);
+  const contentType = searchParams.get('contentType');
+  const contentTypeTitle = contentType && contentType in CONTENT_TYPE_TITLE
+    ? CONTENT_TYPE_TITLE[contentType as keyof typeof CONTENT_TYPE_TITLE]
+    : 'all';
+  const hasContentType = contentTypeTitle !== 'all';
 
-  const noteListStyle = ((getPageViewSetting(blinko, scope, 'noteListStyle') as string | undefined) ?? 'continuous');
-  const isListView = noteListStyle === 'byDay' || noteListStyle === 'byWeek';
+  const getAggregateCount = () => {
+    if (numericTagId !== undefined && Number.isFinite(numericTagId)) {
+      const counts = contentType === '0'
+        ? tagList?.tagBlinkoCounts
+        : contentType === '1'
+          ? tagList?.tagNoteCounts
+          : contentType === '2'
+            ? tagList?.tagTodoCounts
+            : tagList?.tagCounts;
+      return tagList ? (counts?.[numericTagId] ?? 0) : undefined;
+    }
 
-  const writeNoteListStyle = (next: 'byDay' | 'continuous') => {
-    updatePageViewSetting(blinko, scope, 'noteListStyle', next, async (k, v) => {
-      await PromiseCall(api.config.update.mutate({ key: k, value: v }), { autoAlert: false });
-      blinko.config.call();
-    });
+    const viewCounts = tagList?.viewCounts;
+    if (scope === 'blinko') return viewCounts?.blinko;
+    if (scope === 'notes') return viewCounts?.note;
+    if (scope === 'todo') return viewCounts?.todo;
+    if (scope === 'all') {
+      if (contentType === '0') return viewCounts?.blinko;
+      if (contentType === '1') return viewCounts?.note;
+      if (contentType === '2') return viewCounts?.todo;
+      if (viewCounts) return viewCounts.blinko + viewCounts.note + viewCounts.todo;
+    }
+    return undefined;
   };
 
-  // 模式标题里的 emoji 跟 BLINKO/笔记/待办概念保持一致：
-  //   ⚡ 闪念 / 📝 笔记 / ✅ 待办 / 📚 全部 / 🗄️ 归档 / 🗑️ 回收站
-  const tag = blinko.tagList.value?.falttenTags?.find(item => String(item.id) === searchParams.get('tagId'));
-  const typeLabel = ({ '0': '闪念', '1': '笔记', '2': '待办' } as Record<string, string>)[searchParams.get('contentType') || ''] || '全部';
-  const modeTitle = scope === 'all' && tag ? `#${tag.name} · ${typeLabel}` : `${MODE_TITLE_EMOJI[scope] ?? ''} ${t(scope)}`.trim();
+  const noteCount = getAggregateCount() ?? loadedCount;
+  const modeTitle = tag ? `#${tag.name}` : t(scope);
+  const visual = MODE_VISUAL[tag ? 'tag' : scope] ?? MODE_VISUAL.all;
+  const routeIcon = base.routerList.find(item => item.title === scope)?.icon;
+  const modeIcon = tag
+    ? 'mingcute:hashtag-line'
+    : routeIcon ?? 'hugeicons:note';
 
   return (
-    <div className="flex items-center gap-2.5 min-w-0">
-      {/* 模式标题 + 计数 —— 视觉锚点：emoji + 中字（15px semibold）+ 小灰数 (12px muted) */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <h1 className="text-[15px] font-semibold truncate leading-none">{modeTitle}</h1>
-        <span className="text-[12px] text-default-500 tabular-nums shrink-0 leading-none">
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div
+        aria-hidden="true"
+        className={`grid size-7 shrink-0 place-items-center rounded-lg ${visual.background} ${visual.foreground}`}
+      >
+        <Icon icon={modeIcon} width="16" height="16" />
+      </div>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <h1 className="truncate text-[15px] font-semibold leading-none" title={modeTitle}>
+          {modeTitle}
+        </h1>
+        {tag && hasContentType && contentType && (
+          <span
+            className={`inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[10.5px] font-medium leading-none ${CONTENT_TYPE_VISUAL[contentType as keyof typeof CONTENT_TYPE_VISUAL]}`}
+          >
+            {t(contentTypeTitle)}
+          </span>
+        )}
+        <span className="hidden shrink-0 text-[12px] leading-none text-default-500 tabular-nums md:inline">
           {noteCount} {t('items-suffix')}
         </span>
       </div>
-      {/* 视图切换 —— segmented control: [列表 active/inactive] [卡片 active/inactive],
-          跟 prototype 那种"凸起卡片在圆角底条"完全一致。
-          mobile (<md) 只显示图标 + active 凸起卡片，desktop (md+) 显示图标 + 文字。 */}
-      <div
-        role="group"
-        aria-label={t('view')}
-        className="inline-flex items-center rounded-md bg-default-100 p-[2px] shrink-0"
-      >
-        <button
-          type="button"
-          onClick={() => writeNoteListStyle('byDay')}
-          title={t('list')}
-          aria-pressed={isListView}
-          className={`flex items-center gap-1 rounded-[5px] px-2 md:px-2.5 py-[3px] text-[11.5px] leading-none !transition-all ${
-            isListView
-              ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-              : 'bg-transparent text-default-500 hover:text-foreground'
-          }`}
-        >
-          <Icon icon="tabler:list-check" width="13" height="13" />
-          <span className="hidden md:inline">{t('list')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => writeNoteListStyle('continuous')}
-          title={t('card')}
-          aria-pressed={!isListView}
-          className={`flex items-center gap-1 rounded-[5px] px-2 md:px-2.5 py-[3px] text-[11.5px] leading-none !transition-all ${
-            !isListView
-              ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-              : 'bg-transparent text-default-500 hover:text-foreground'
-          }`}
-        >
-          <Icon icon="tabler:cards" width="13" height="13" />
-          <span className="hidden md:inline">{t('card')}</span>
-        </button>
-      </div>
+
     </div>
   );
 });

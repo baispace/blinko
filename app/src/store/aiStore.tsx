@@ -84,6 +84,7 @@ export class AiStore implements Store {
   currentConversationId = 0;
   currentConversation = new PromiseState({
     function: async () => {
+      if (!this.currentConversationId) return null;
       const res = await api.conversation.detail.query({ id: this.currentConversationId });
       return res;
     },
@@ -107,7 +108,8 @@ export class AiStore implements Store {
       this.isChatting = true;
       this.isAnswering = true;
       if (this.currentConversationId == 0) {
-        const conversation = await api.conversation.create.mutate({ title: '' });
+        const conversation = await api.conversation.create.mutate({ title: userQuestion.trim().slice(0, 60) });
+        void this.conversactionList.resetAndCall({});
         this.currentConversationId = conversation.id;
       }
 
@@ -143,7 +145,7 @@ export class AiStore implements Store {
           console.log(JSON.parse(JSON.stringify(item)));
           if (item.chunk?.type == 'error') {
             //@ts-ignore
-            const errorMessage = item.chunk?.error?.name || 'error';
+            const errorMessage = item.chunk?.error?.message || item.chunk?.error?.name || 'AI 服务调用失败';
             RootStore.Get(ToastPlugin).error(errorMessage);
             this.isAnswering = false;
             return;
@@ -193,10 +195,10 @@ export class AiStore implements Store {
         });
 
         if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 3) {
-          api.ai.summarizeConversationTitle.mutate({
+          void api.ai.summarizeConversationTitle.mutate({
             conversations: this.currentConversation.value?.messages ?? [],
             conversationId: this.currentConversationId,
-          });
+          }).then(() => this.conversactionList.resetAndCall({})).catch(() => {});
         }
         this.currentMessageResult.id = newAssisantMessage.id;
         // await this.currentConversation.call()
@@ -242,11 +244,12 @@ export class AiStore implements Store {
   };
 
   newChat = () => {
+    if (this.isAnswering || this.currentConversation.loading.value) return;
     this.currentConversationId = 0;
     this.input = '';
     this.clearCurrentMessageResult();
     this.isChatting = false;
-    this.currentConversation.call();
+    this.currentConversation.setValue(null);
   };
 
   newChatWithSuggestion = async (prompt: string) => {
@@ -259,7 +262,8 @@ export class AiStore implements Store {
     this.isChatting = true;
 
     if (this.currentConversationId == 0) {
-      const conversation = await api.conversation.create.mutate({ title: '' });
+      const conversation = await api.conversation.create.mutate({ title: prompt.trim().slice(0, 60) });
+        void this.conversactionList.resetAndCall({});
       this.currentConversationId = conversation.id;
     }
 

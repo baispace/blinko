@@ -85,7 +85,19 @@ export const aiRouter = router({
         })
         yield { notes }
         for await (const chunk of responseStream.fullStream) {
-          yield { chunk }
+          if (chunk.type === 'error') {
+            const error = chunk.error as { statusCode?: number; message?: string };
+            const message = error?.statusCode === 401
+              ? 'AI 服务认证失败（401）：请检查 API Key 是否有效，并确认它与服务地址属于同一平台。'
+              : error?.statusCode === 429
+                ? 'AI 服务请求受限（429）：请检查额度或稍后重试。'
+                : error?.statusCode === 400 || error?.statusCode === 404
+                  ? 'AI 服务拒绝请求：请检查模型标识和 API 地址是否正确。'
+                  : 'AI 服务调用失败，请检查服务配置或稍后重试。';
+            yield { chunk: { type: 'error' as const, error: { name: 'AI_APICallError', message } } };
+          } else {
+            yield { chunk };
+          }
         }
       } catch (error) {
         throw new TRPCError({

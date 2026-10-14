@@ -9,9 +9,12 @@ import { UserAvatarDropdown } from '../Common/UserAvatarDropdown';
 import { TagListPanel } from '../Common/TagListPanel';
 import { useEffect, useState } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
-import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { eventBus } from '@/lib/event';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
+
+import { AiStore } from '@/store/aiStore';
+import { AiConversactionList } from '../BlinkoAi/aiConversactionList';
 
 interface SidebarProps {
   onItemClick?: () => void;
@@ -43,6 +46,13 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const base = RootStore.Get(BaseStore);
   const blinkoStore = RootStore.Get(BlinkoStore);
   const location = useLocation();
+  const navigate = useNavigate();
+  const aiStore = RootStore.Get(AiStore);
+  const aiMode = location.pathname === "/ai";
+  const [homeUrl, setHomeUrl] = useState("/");
+  useEffect(() => {
+    if (!aiMode) setHomeUrl(location.pathname + location.search);
+  }, [aiMode, location.pathname, location.search]);
   const [searchParams] = useSearchParams();
   const [isHovering, setIsHovering] = useState(false);
 
@@ -130,11 +140,49 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         </div>
       </div>
 
+      <div className={`flex gap-1 px-2 mt-4 ${base.isSidebarCollapsed ? 'flex-col items-center' : 'items-center'}`}>
+        <Tooltip content="主页" placement="right">
+          <button type="button" aria-label="主页" aria-pressed={!aiMode}
+            onClick={() => { navigate(homeUrl); onItemClick?.(); }}
+            className={`flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${!aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+            <Icon icon="hugeicons:home-01" width="21" height="21" />
+            {!base.isSidebarCollapsed && <span className="font-medium">主页</span>}
+          </button>
+        </Tooltip>
+        <Tooltip content="与 AI 对话" placement="right">
+          <button type="button" aria-label="与 AI 对话" aria-pressed={aiMode}
+            onClick={() => { navigate('/ai'); onItemClick?.(); }}
+            className={`flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+            <Icon icon="hugeicons:message-01" width="21" height="21" />
+            {!base.isSidebarCollapsed && aiMode && <span className="font-medium">AI 对话</span>}
+          </button>
+        </Tooltip>
+      </div>
+
+      {aiMode ? <>
+        <div className="flex-1 min-h-0 mt-5 overflow-y-auto px-2">
+          {!base.isSidebarCollapsed ? <>
+            <div className="px-2 mb-3 text-xs text-default-400">{t('conversation-history')}</div>
+            <AiConversactionList inline onSelect={onItemClick} />
+          </> : <Tooltip content={t('conversation-history')} placement="right">
+            <button type="button" aria-label={t('conversation-history')} onClick={base.toggleSidebar} className="flex mx-auto p-2 rounded-md hover:bg-hover">
+              <Icon icon="hugeicons:clock-01" width="20" height="20" />
+            </button>
+          </Tooltip>}
+        </div>
+        <div className="p-3 mt-auto">
+          <button type="button" disabled={aiStore.isAnswering || aiStore.currentConversation.loading.value} onClick={() => { aiStore.newChat(); onItemClick?.(); }}
+            aria-label={t('new-conversation')} className="w-full flex items-center justify-center gap-2 rounded-full border border-default-200 bg-background py-3 shadow-sm hover:bg-default-100 disabled:opacity-40 transition-colors">
+            <Icon icon="hugeicons:edit-02" width="20" height="20" />
+            {!base.isSidebarCollapsed && <span>{t('new-conversation')}</span>}
+          </button>
+        </div>
+      </> : <>
       <ScrollShadow className="-mr-[16px] mt-3 h-full max-h-full pr-4 hide-scrollbar">
         <div className={`flex flex-col font-medium ${base.isSidebarCollapsed ? 'items-center gap-2' : ''}`}>
           {/* 三组导航：记录 / 整理 / 工具 */}
           {NAV_GROUPS.map((group) => {
-            const items = base.routerList.filter((i) => i.group === group.key && !i.hiddenSidebar);
+            const items = base.routerList.filter((i) => i.group === group.key && !i.hiddenSidebar && i.href !== '/ai');
             if (items.length === 0) return null;
             return (
               <div key={group.key} className="mt-3 first:mt-0">
@@ -256,6 +304,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           )}
         </div>
       </ScrollShadow>
+      </>}
     </div>
   );
 });

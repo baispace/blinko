@@ -21,6 +21,8 @@ import { DialogStore } from "@/store/module/Dialog";
 import { api } from '@/lib/trpc';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
+import { AiDraftResult, parseDraft } from './AiDraftResult';
+
 const EditMessageContent = ({ initialContent, onConfirm }: {
   initialContent: string;
   onConfirm: (content: string) => void;
@@ -165,7 +167,7 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
           </>
 
           <div className="max-w-[100%] px-2 py-1 rounded-xl">
-            <MarkdownRender content={content} largeSpacing={true} />
+            {!shareMode && !isStreaming && !!id && parseDraft(content) ? <AiDraftResult key={id} draft={parseDraft(content)} messageId={id} initialSaved={(metadata as any)?.savedDrafts} /> : <MarkdownRender content={content} largeSpacing={true} />}
           </div>
           {
             !shareMode && !isStreaming && (

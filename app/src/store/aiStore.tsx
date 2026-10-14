@@ -63,6 +63,8 @@ export class AiStore implements Store {
   }
 
   selectedProviderId = 0;
+  chatModelId = 0;
+  selectedSkill: { title: string; prompt: string; key: "tasks" | "note" | "today" | "overdue" | "ideas" } | null = null;
   isChatting = false;
   isAnswering = false;
   input = '';
@@ -102,7 +104,17 @@ export class AiStore implements Store {
 
   onInputSubmit = async (isRegenerate = false) => {
     try {
-      const userQuestion = _.cloneDeep(this.input);
+      if (this.isAnswering) return;
+      if (this.selectedSkill && !this.referencesNotes.length && !this.input.trim()) {
+        RootStore.Get(ToastPlugin).error('请先选择要整理的内容，或输入一段内容。');
+        return;
+      }
+      if (!this.selectedSkill && !this.input.trim() && !this.referencesNotes.length) return;
+      const userQuestion = [this.selectedSkill?.prompt, this.input.trim(),
+        ...this.referencesNotes.map(note => `用户确认的来源 #${note.id}（类型 ${note.type}，创建 ${note.createdAt}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
+      ].filter(Boolean).join('\n\n');
+      this.referencesNotes = [];
+      this.selectedSkill = null;
       this.clearCurrentMessageResult();
       this.input = '';
       this.isChatting = true;
@@ -133,6 +145,7 @@ export class AiStore implements Store {
         const res = await streamApi.ai.completions.mutate(
           {
             question: userQuestion,
+            modelId: this.chatModelId || undefined,
             conversations: filteredChatConversation,
             withRAG: this.withRAG.value ?? false,
             withTools: this.withTools.value ?? false,
@@ -246,6 +259,8 @@ export class AiStore implements Store {
   newChat = () => {
     if (this.isAnswering || this.currentConversation.loading.value) return;
     this.currentConversationId = 0;
+    this.selectedSkill = null;
+    this.referencesNotes = [];
     this.input = '';
     this.clearCurrentMessageResult();
     this.isChatting = false;

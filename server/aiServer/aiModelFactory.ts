@@ -272,12 +272,12 @@ export class AiModelFactory {
     return await AiModelFactory.globalConfig();
   }
 
-  static async GetProvider() {
-    const globalConfig = await AiModelFactory.ValidConfig();
-    if (!globalConfig.mainModelId) {
+  static async GetProvider(modelId?: number) {
+    const globalConfig = modelId ? await AiModelFactory.globalConfig() : await AiModelFactory.ValidConfig();
+    if (!modelId && !globalConfig.mainModelId) {
       throw new Error('Main AI model configuration not found!');
     }
-    const mainModel = await AiModelFactory.getAiModel(globalConfig.mainModelId);
+    const mainModel = await AiModelFactory.getAiModel((modelId ?? globalConfig.mainModelId)!);
     if (!mainModel) {
       throw new Error('Main AI model configuration not found!');
     }
@@ -357,8 +357,8 @@ export class AiModelFactory {
       }
     };
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string }) {
-    const provider = await AiModelFactory.GetProvider();
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions, modelId }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string; modelId?: number }) {
+    const provider = await AiModelFactory.GetProvider(modelId);
     let tools: Record<string, any> = {};
     if (withTools) {
       tools = {

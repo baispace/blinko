@@ -23,6 +23,14 @@
     "Apple Color Emoji", "Segoe UI Emoji");
 }
 
+/* 行宽：仅在「长文阅读 / 全屏编辑」视图（`.expanded-container` 包裹）下生效。
+   列表卡片内 / 紧凑编辑位 不走这规则，避免挤压。 */
+.expanded-container .tiptap-wrap .tiptap {
+  max-width: min(var(--app-line-width, 60ch), 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* fullscreen (edit note page) */
 .tiptap-wrap.tiptap-fullscreen .tiptap {
   max-height: none;

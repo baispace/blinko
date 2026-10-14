@@ -260,7 +260,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
 
   const editorContent = (
     <div
-      className={`fixed inset-0 z-[9999] bg-card ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      className={`fixed inset-0 z-[9999] bg-card expanded-container ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
       /**
        * 注意：这里曾经用 onPointerDownCapture / onTouchStartCapture 对
        * "不在 editorContainerRef 内"的事件 stopPropagation()，本意是防止拖到

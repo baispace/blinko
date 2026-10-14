@@ -13,6 +13,7 @@ import { HashtagList } from './HashtagList'; // 输入 # 时的标签建议列�
 import { BlockComment } from './BlockComment'; // Block-level comment
 import { Icon } from '@/components/Common/Iconify/icons';
 import './tiptap.css';
+import './outline.css';
 
 /**
  * Renders the Tiptap document + bubble menu + slash menu,

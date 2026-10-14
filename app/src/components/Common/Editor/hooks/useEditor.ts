@@ -32,6 +32,7 @@ import { NoteMention } from '../Tiptap/noteMention';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
+import { OutlineList, OutlineItem } from '../Tiptap/outline';
 import { CollapsibleListItem } from '../Tiptap/collapsibleListItem';
 
 export const useEditorInit = (
@@ -78,6 +79,8 @@ export const useEditorInit = (
           listItem: false,
         }),
         CollapsibleListItem,
+        OutlineList,
+        OutlineItem,
         MarkdownHardBreak,
         MarkdownBlankLine,
         Placeholder.configure({

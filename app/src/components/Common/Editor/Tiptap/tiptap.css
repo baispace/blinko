@@ -293,7 +293,7 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
    - hover 时整行加 --accent 背景 + 点加深 + 整列引导线加粗变深
    - 任务列表和有序嵌套样式保留各自样式不被覆盖
 */
-.tiptap ul:not([data-type="taskList"]),
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]),
 .tiptap ol:not([data-type="taskList"]) {
   list-style: none;
   padding-left: 1.25rem;
@@ -302,7 +302,7 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   position: relative;
 }
 
-.tiptap ul:not([data-type="taskList"]) > li,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) > li,
 .tiptap ol:not([data-type="taskList"]) > li {
   position: relative;
   padding-left: 0.4rem;
@@ -313,25 +313,25 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 }
 
 /* hover 时整行加 --accent 背景 + 点加深 */
-.tiptap ul:not([data-type="taskList"]) > li:hover,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) > li:hover,
 .tiptap ol:not([data-type="taskList"]) > li:hover {
   background-color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
-.tiptap ul:not([data-type="taskList"]) > li:hover::before,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) > li:hover::before,
 .tiptap ol:not([data-type="taskList"]) > li:hover::before {
   background-color: var(--muted-foreground);
 }
 
 /* 仅孙级（ul ul ul 及更深）画 1px 浅灰垂直引导线 —— "树状对齐线"
    直接子列表（第一层嵌套）的层级关系由父级 bullet + 缩进已经标识，再画线是冗余 */
-.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ol::before,
-.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.tiptap ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"])::before,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"]) ol::before,
+.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"])::before,
+.tiptap ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"]):not([data-type="outline"])::before,
 .tiptap ol:not([data-type="taskList"]) ol ol::before {
   content: '';
   position: absolute;
@@ -345,20 +345,20 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 }
 
 /* hover 时所在嵌套列的引导线整体加粗 + 加深 —— :has() 向上传递状态 */
-.tiptap:has(li:hover) ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap:has(li:hover) ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.tiptap:has(li:hover) ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap:has(li:hover) ul:not([data-type="taskList"]) ol:not([data-type="taskList"]) ol::before,
-.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ul:not([data-type="taskList"])::before,
-.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]) ol:not([data-type="taskList"])::before,
-.tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap:has(li:hover) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"]) ol::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ul:not([data-type="taskList"]):not([data-type="outline"])::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"])::before,
+.tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"]):not([data-type="outline"])::before,
 .tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ol::before {
   width: 1.5px;
   background-color: var(--muted-foreground);
 }
 
 /* 每条 li 前面的小灰点 —— 用 --muted-foreground 而不是硬编码 rgba */
-.tiptap ul:not([data-type="taskList"]) > li::before {
+.tiptap ul:not([data-type="taskList"]):not([data-type="outline"]) > li::before {
   content: '';
   position: absolute;
   left: -0.8rem;
@@ -1066,29 +1066,3 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   background-color: #1c1c1e;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
-
-/* Outline blocks keep their tree in the document, including hidden children. */
-.tiptap ul[data-type="outline"] {
-  list-style: none;
-  padding: 12px 16px;
-  margin: 12px 0;
-  border: 1px solid var(--outline-border, #a1a1aa40);
-  border-radius: 10px;
-}
-.tiptap ul[data-type="outline"] ul[data-type="outline"] {
-  border: 0;
-  border-left: 1px solid #a1a1aa40;
-  border-radius: 0;
-  padding: 0 0 0 20px;
-  margin: 4px 0 4px 8px;
-}
-.tiptap li[data-type="outline-item"] { position: relative; list-style: none; padding-left: 22px; margin: 4px 0; }
-.tiptap .outline-content > p { margin: 0; min-height: 1.6em; }
-.tiptap .outline-toggle {
-  position: absolute; left: 0; top: 0; width: 20px; height: 26px;
-  border: 0; background: transparent; color: inherit; cursor: pointer;
-}
-.tiptap .outline-toggle:disabled { cursor: default; opacity: .5; }
-.tiptap .outline-toggle:focus-visible { outline: 2px solid currentColor; border-radius: 4px; }
-.tiptap li[data-type="outline-item"][data-collapsed="true"] > .outline-content > ul,
-.tiptap li[data-type="outline-item"][data-collapsed="true"] > ul { display: none; }

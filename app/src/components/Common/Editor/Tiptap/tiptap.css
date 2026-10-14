@@ -23,13 +23,11 @@
     "Apple Color Emoji", "Segoe UI Emoji");
 }
 
-/* 行宽：仅在「长文阅读 / 全屏编辑」视图（`.expanded-container` 包裹）下生效。
-   列表卡片内 / 紧凑编辑位 不走这规则，避免挤压。 */
-.expanded-container .tiptap-wrap .tiptap {
-  max-width: min(var(--app-line-width, 60ch), 100%);
-  margin-left: auto;
-  margin-right: auto;
-}
+/*
+ * 行宽约束 **只作用在阅读视图**（.markdown-body，见 github-markdown.css）。
+ * 编辑器（.tiptap）刻意不限宽 —— 编辑时用户需要把一整段同屏看到，方便浏览
+ * 上下文与拖拽文本。60ch 之类阅读宽是在「读」的时候才有意义，写时反而挤。
+ */
 
 /* fullscreen (edit note page) */
 .tiptap-wrap.tiptap-fullscreen .tiptap {

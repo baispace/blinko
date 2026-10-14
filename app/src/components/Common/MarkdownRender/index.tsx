@@ -11,6 +11,7 @@ import { Code } from './Code';
 import { LinkPreview } from './LinkPreview';
 import { ImageWrapper } from './ImageWrapper';
 import { ListItem } from './ListItem';
+import { OutlineReadItem, OutlineReadList } from './OutlineReader';
 import { TableWrapper } from './TableWrapper';
 import { NoteLink, preprocessNoteLinks } from './NoteLink';
 import { InlineTag } from './InlineTag';
@@ -353,7 +354,19 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
               }
               return <>{children}</>;
             },
+            ul: ({ node, children, ...props }) => {
+              if (node?.properties?.dataType === 'outline') {
+                return <OutlineReadList initialView={node.properties.dataView} title={node.properties.dataMapTitle}>{children}</OutlineReadList>;
+              }
+              return <ul {...props}>{children}</ul>;
+            },
             li: ({ node, children, className }) => {
+              if (node?.properties?.dataType === 'outline-item') {
+                const blocks = (node.children ?? []).filter((child: any) => child.type === 'element');
+                const branches = blocks.filter((child: any) => child.properties?.dataType === 'outline');
+                return <OutlineReadItem initiallyCollapsed={String(node.properties.dataCollapsed) === 'true'}
+                  hasChildren={branches.length > 0} bodyRows={blocks.length - branches.length}>{children}</OutlineReadItem>;
+              }
               const isTaskListItem = className?.includes('task-list-item');
               if (isTaskListItem && onChange && !isShareMode) {
                 // remark-task-list 会给每个任务项注入 id="task-list-item-N"，

@@ -179,6 +179,15 @@ export default defineConfig({
     ] : [])
   ],
   resolve: {
+    // Workspace/isolated installs can otherwise load separate ProseMirror
+    // instances, causing duplicate keyed plugins when extensions are combined.
+    dedupe: [
+      '@tiptap/core', '@tiptap/pm',
+      'prosemirror-model', 'prosemirror-state', 'prosemirror-view',
+      'prosemirror-transform', 'prosemirror-commands', 'prosemirror-history',
+      'prosemirror-keymap', 'prosemirror-inputrules', 'prosemirror-schema-list',
+      'prosemirror-gapcursor', 'prosemirror-dropcursor', 'prosemirror-tables',
+    ],
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@shared': path.resolve(__dirname, '../shared')

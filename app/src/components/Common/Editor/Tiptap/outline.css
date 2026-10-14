@@ -1,0 +1,254 @@
+/* Outline is document typography, rather than a separate card or widget. */
+:is(.tiptap, .markdown-body) .outline-view {
+  --outline-line: color-mix(in srgb, currentColor 12%, transparent);
+  --outline-accent: var(--primary, currentColor);
+  position: relative;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  margin: 12px 0;
+  background: transparent;
+}
+:is(.tiptap, .markdown-body) .outline-toolbar {
+  position: absolute;
+  inset: -18px 0 auto auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: auto;
+  transform: translateY(2px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+:is(.tiptap, .markdown-body) .outline-view:hover > .outline-toolbar,
+:is(.tiptap, .markdown-body) .outline-view[data-active="true"] > .outline-toolbar,
+:is(.tiptap, .markdown-body) .outline-view[data-view="mindmap"] > .outline-toolbar,
+:is(.tiptap, .markdown-body) .outline-toolbar:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+:is(.tiptap, .markdown-body) .outline-label { display: none; }
+:is(.tiptap, .markdown-body) .outline-view-toggle {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  opacity: .5;
+  cursor: pointer;
+  transition: opacity 140ms ease, background-color 140ms ease;
+}
+:is(.tiptap, .markdown-body) .outline-view-toggle:hover {
+  opacity: .9;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+:is(.tiptap, .markdown-body) .outline-view-toggle:focus-visible,
+:is(.tiptap, .markdown-body) .outline-toggle:focus-visible {
+  outline: 2px solid var(--outline-accent);
+  outline-offset: 2px;
+}
+:is(.tiptap, .markdown-body) .outline-viewport {
+  padding: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+:is(.tiptap, .markdown-body) .outline-view ul[data-type="outline"] {
+  list-style: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+:is(.tiptap, .markdown-body) li[data-type="outline-item"] {
+  position: relative;
+  list-style: none;
+  padding-left: 28px;
+  margin: 7px 0;
+  background: transparent;
+}
+:is(.tiptap, .markdown-body) .outline-content { min-width: 12ch; }
+:is(.tiptap, .markdown-body) .outline-content > p {
+  margin: 0;
+  min-height: 1.625em;
+  overflow-wrap: break-word;
+}
+:is(.tiptap, .markdown-body) .outline-content > img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+  border-radius: 4px;
+}
+/* Square tap target, round dot and round halo are independent of font metrics. */
+:is(.tiptap, .markdown-body) .outline-toggle {
+  position: absolute;
+  left: 0;
+  top: calc((1.625em - 24px) / 2);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1;
+  touch-action: manipulation;
+}
+:is(.tiptap, .markdown-body) .outline-toggle::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  transform: scale(.8);
+  transition: background-color 140ms ease, transform 140ms ease;
+  pointer-events: none;
+}
+:is(.tiptap, .markdown-body) .outline-toggle::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .62;
+  transition: transform 140ms ease, opacity 140ms ease;
+  pointer-events: none;
+}
+:is(.tiptap, .markdown-body) .outline-toggle:hover:not(:disabled)::before {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  transform: scale(1);
+}
+:is(.tiptap, .markdown-body) .outline-toggle:hover:not(:disabled)::after { opacity: .9; }
+:is(.tiptap, .markdown-body) .outline-toggle:active:not(:disabled)::after { transform: scale(.78); }
+:is(.tiptap, .markdown-body) .outline-toggle:disabled { cursor: default; }
+:is(.tiptap, .markdown-body) li[data-collapsed="true"][data-has-children="true"] > .outline-toggle::before {
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  transform: scale(1);
+}
+:is(.tiptap, .markdown-body) li[data-collapsed="true"][data-has-children="true"] > .outline-toggle::after { opacity: .82; }
+/* Guide line runs under the parent dot; the text indentation advances 34px. */
+:is(.tiptap, .markdown-body) .outline-content > .outline-view {
+  border: 0;
+  margin: 6px 0 4px -16px;
+}
+:is(.tiptap, .markdown-body) .outline-content > .outline-view > .outline-toolbar { display: none; }
+:is(.tiptap, .markdown-body) .outline-content > .outline-view > .outline-viewport {
+  border-left: 1px solid var(--outline-line);
+  padding: 0 0 0 21px;
+  overflow: visible;
+}
+:is(.tiptap, .markdown-body) li[data-type="outline-item"][data-collapsed="true"] > .outline-content > .outline-view { display: none; }
+/* A live, editable map canvas; the outline remains the document source. */
+:is(.tiptap, .markdown-body) .outline-map-stage { position: relative; }
+:is(.tiptap, .markdown-body) .outline-map-root,
+:is(.tiptap, .markdown-body) .outline-map-controls,
+:is(.tiptap, .markdown-body) .outline-map-edges,
+:is(.tiptap, .markdown-body) .outline-drag { display: none; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] { --outline-map-line: #8b97a8; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] > .outline-viewport { padding: 38px 20px 30px; max-height: 75vh; overflow: auto; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] > .outline-viewport > .outline-map-stage {
+  display: flex; align-items: center; gap: 56px; width: max-content; min-width: 100%; padding: 12px 2px;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-map-edges {
+  display: block; position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 0;
+}
+:is(.tiptap, .markdown-body) .outline-map-edges path { fill: none; stroke: var(--outline-map-line); stroke-width: 1.5; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] > .outline-viewport > .outline-map-stage > .outline-map-root {
+  display: block; flex: 0 0 310px; width: 310px; height: 76px; border: 0; border-radius: 6px;
+  background: #1677ff; color: white; text-align: center; font: inherit; font-size: 28px; padding: 16px; position: relative; z-index: 1;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] ul[data-type="outline"] { width: max-content; min-width: 0; position: relative; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-type="outline-item"] { padding: 0; margin: 22px 0; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content {
+  display: grid; grid-template-columns: max-content max-content; gap: 8px 36px; align-items: center; min-width: 0;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > :not(.outline-view) {
+  grid-column: 1; width: max-content; max-width: var(--map-topic-width, 384px); min-width: 72px; box-sizing: border-box; overflow-wrap: anywhere; position: relative; z-index: 1;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > p {
+  padding: 12px 24px; border-radius: 6px; background: #64748b; color: white; text-align: center; font-size: 22px; line-height: 1.35; min-height: 42px;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="2"] { --map-topic-width: 140px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="2"] > .outline-content > p { background: var(--background, Canvas); color: inherit; border: 1.5px solid var(--outline-map-line); font-size: 16px; padding: 8px 12px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"],
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li { --map-topic-width: 120px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] > .outline-content > p,
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li > .outline-content > p { background: var(--background, Canvas); color: inherit; border: 0; text-align: left; font-size: 16px; padding: 6px 10px; min-height: 32px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > p:focus-within,
+:is(.tiptap, .markdown-body) .outline-map-root:focus { outline: 2px solid #83d8ff; outline-offset: 3px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > .outline-view {
+  grid-column: 2; grid-row: 1 / span var(--outline-body-rows, 1); margin: 0; border: 0;
+}
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > .outline-view > .outline-viewport { padding: 0; border: 0; overflow: visible; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle { color: var(--outline-map-line); background: var(--background, Canvas); border: 1.5px solid currentColor; width: 18px; height: 18px; margin-top: 3px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle:disabled { display: none; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle::before { width: 8px; height: 1.5px; background: currentColor; transform: none; border-radius: 0; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle::after { width: 1.5px; height: 8px; background: currentColor; border-radius: 0; opacity: 0; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-collapsed="true"] > .outline-toggle::after { opacity: 1; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-drag { display: flex; position: absolute; z-index: 3; width: 28px; height: 28px; padding: 6px; border: 0; border-radius: 4px; background: var(--background, Canvas); color: var(--outline-map-line); opacity: 0; cursor: grab; touch-action: none; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li:hover > .outline-drag,
+:is(.tiptap, .markdown-body) .outline-drag:focus-visible { opacity: 1; }
+:is(.tiptap, .markdown-body) li[data-dragging="true"] > .outline-content > p { opacity: .45; }
+:is(.tiptap, .markdown-body) li[data-drop="child"] > .outline-content > p { outline: 2px solid #1677ff; outline-offset: 3px; }
+:is(.tiptap, .markdown-body) li[data-drop="before"] > .outline-content > p { box-shadow: 0 -6px 0 -3px #1677ff; }
+:is(.tiptap, .markdown-body) li[data-drop="after"] > .outline-content > p { box-shadow: 0 6px 0 -3px #1677ff; }
+:is(.tiptap, .markdown-body) .outline-drop-hint { position: absolute; z-index: 10; pointer-events: none; padding: 4px 10px; font-size: 12px; border-radius: 5px; background: #1677ff; color: white; white-space: nowrap; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] > .outline-map-controls { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; }
+:is(.tiptap, .markdown-body) .outline-map-controls button { border: 0; background: transparent; color: inherit; padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; border-radius: 4px; }
+:is(.tiptap, .markdown-body) .outline-map-controls button:hover { background: color-mix(in srgb, currentColor 7%, transparent); }
+@media (hover: none) {
+  :is(.tiptap, .markdown-body) .outline-toolbar { opacity: .65; pointer-events: auto; transform: none; }
+  :is(.tiptap, .markdown-body) .outline-view-toggle { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.tiptap, .markdown-body) .outline-toolbar,
+  :is(.tiptap, .markdown-body) .outline-view-toggle,
+  :is(.tiptap, .markdown-body) .outline-toggle::before,
+  :is(.tiptap, .markdown-body) .outline-toggle::after { transition: none; }
+}
+
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-selected="true"] > .outline-content > p { outline: 2px solid #83d8ff; outline-offset: 3px; }
+@media (hover: none) {
+  :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-drag { opacity: .65; }
+}
+
+:is(.tiptap, .markdown-body) .outline-toggle > svg { display: none; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle { border: 0; background: transparent; width: 32px; height: 32px; margin-top: 0; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle > svg { display: block; width: 18px; height: 18px; background: var(--background, Canvas); border-radius: 50%; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle::before,
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-toggle::after { display: none; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] ul[data-type="outline"] { display: flex; flex-direction: column; gap: 24px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-type="outline-item"] { margin: 0; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content ul[data-type="outline"] { gap: 20px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"],
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li { --map-topic-width: 160px; }
+:is(.tiptap, .markdown-body) .outline-view[data-expanded="true"][data-map-root="true"] { position: fixed; inset: 16px; z-index: 1000; margin: 0; padding: 12px 20px 12px; background: var(--background, Canvas); border-radius: 12px; box-shadow: 0 8px 50px #0002; }
+:is(.tiptap, .markdown-body) .outline-view[data-expanded="true"] > .outline-viewport { max-height: calc(100vh - 64px); height: calc(100vh - 64px); }
+:is(.tiptap, .markdown-body) .outline-view[data-expanded="true"] > .outline-toolbar { top: 4px; right: 12px; }
+
+:is(.tiptap, .markdown-body) .outline-map-root[data-drop="child"] { outline: 2px solid #83d8ff; outline-offset: 3px; }
+:is(.tiptap, .markdown-body) .outline-drag-preview { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; overflow: visible; }
+:is(.tiptap, .markdown-body) .outline-drag-preview path { fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+:is(.tiptap, .markdown-body) .outline-drop-hint[data-valid="false"] { background: #64748b; }
+
+:is(.tiptap, .markdown-body) .outline-view[data-expanded="true"] > .outline-map-controls { position: absolute; bottom: 12px; right: 20px; z-index: 4; padding: 4px; border-radius: 6px; background: var(--background, Canvas); }
+
+/* A topic is selected first; editing is an explicit second action. */
+.tiptap .outline-view[data-map-root="true"] li.ProseMirror-selectednode { outline: none; border-radius: 0; }
+.tiptap .outline-view[data-map-root="true"] li:not([data-map-editing="true"]) > .outline-content > p { cursor: grab; user-select: none; caret-color: transparent; touch-action: none; }
+.tiptap .outline-view[data-map-root="true"] li[data-dragging="true"] > .outline-content > p { cursor: grabbing; }
+.tiptap .outline-view[data-map-root="true"] li[data-map-editing="true"] > .outline-content > p { cursor: text; user-select: text; }
+.tiptap .outline-view[data-map-root="true"] li:not([data-map-editing="true"]) > .outline-drag { display: none; }

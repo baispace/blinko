@@ -52,6 +52,15 @@ const sepClassNames = {
   wrapper: '!p-0 pointer-events-none',
 };
 
+const PageWidthGlyph = ({ mode, active }: { mode: PageWidthMode; active: boolean }) => {
+  const width = mode === 'default' ? '42%' : mode === 'wide' ? '68%' : '92%';
+  return (
+    <span data-testid="page-width-glyph" className={`flex h-6 w-10 shrink-0 items-center justify-center rounded-md border ${active ? 'border-primary/40 bg-primary/5' : 'border-default-200 bg-default-50'}`}>
+      <span className={`h-3.5 rounded-sm ${active ? 'bg-primary/35' : 'bg-default-300'}`} style={{ width }} />
+    </span>
+  );
+};
+
 /**
  * Feishu-style action menu for a note.
  *
@@ -79,6 +88,8 @@ export const CardActionMenu = observer(({
   presentationMode = false,
   onTogglePresentation,
   isDetailPage = false,
+  hideShare = false,
+  hidePin = false,
 }: {
   blinkoItem: Note;
   showPageWidth?: boolean;
@@ -88,6 +99,9 @@ export const CardActionMenu = observer(({
   presentationMode?: boolean;
   onTogglePresentation?: () => void;
   isDetailPage?: boolean;
+  /** Primary actions promoted beside the menu in the fullscreen document header. */
+  hideShare?: boolean;
+  hidePin?: boolean;
 }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
@@ -113,9 +127,9 @@ export const CardActionMenu = observer(({
   return (
     <Dropdown placement="bottom-end">
       <DropdownTrigger>
-        <div className="flex items-center cursor-pointer !transition-colors text-desc hover:text-primary hover:scale-110">
+        <button type="button" aria-label={t('more')} data-testid="card-more-actions" className="flex items-center cursor-pointer transition-colors text-desc hover:text-primary hover:scale-110">
           <Icon icon="fluent:more-vertical-16-regular" width="18" height="18" />
-        </div>
+        </button>
       </DropdownTrigger>
 
       <DropdownMenu
@@ -149,19 +163,20 @@ export const CardActionMenu = observer(({
                 key={`pw-${m}`}
                 textValue={t('page-width-' + m)}
                 onClick={() => pageWidth.setMode(m as PageWidthMode)}
-                classNames={{ base: 'pl-8' }}
+                classNames={{ base: '!py-1.5' }}
               >
-                {pageWidth.mode === m ? (
-                  <Icon icon="mdi:check" width="15" height="15" className="text-primary" />
-                ) : null}
-                {t('page-width-' + m)}
+                <div className="flex w-full items-center gap-2.5">
+                  <PageWidthGlyph mode={m as PageWidthMode} active={pageWidth.mode === m} />
+                  <span className="min-w-0 flex-1 text-[13px]">{t('page-width-' + m)}</span>
+                  {pageWidth.mode === m ? <Icon icon="mdi:check" width="15" height="15" className="shrink-0 text-primary" /> : null}
+                </div>
               </DropdownItem>
             ))}
             <DropdownItem key="sep-view" textValue=" " isReadOnly classNames={sepClassNames} />
           </>
         ) : null}
 
-        {showViewItems ? (
+        {showViewItems && !hideShare ? (
           <DropdownItem key="share" textValue={t('share')} onClick={withNote(handlePublic)}>
             <div className="flex items-center gap-2">
               <Icon icon="tabler:share-2" width="20" height="20" />
@@ -253,7 +268,7 @@ export const CardActionMenu = observer(({
         <DropdownItem key="sep-org" textValue=" " isReadOnly classNames={sepClassNames} />
 
         {/* 组织 */}
-        <DropdownItem
+        {!hidePin ? <DropdownItem
           key="top"
           textValue={blinkoItem.isTop ? t('cancel-top') : t('top')}
           onClick={withNote(handleTop)}
@@ -262,7 +277,7 @@ export const CardActionMenu = observer(({
             <Icon icon="lets-icons:pin" width="20" height="20" />
             <div>{blinkoItem.isTop ? t('cancel-top') : t('top')}</div>
           </div>
-        </DropdownItem>
+        </DropdownItem> : null}
         <DropdownItem
           key="archived"
           textValue={blinkoItem.isArchived || blinkoItem.isRecycle ? t('recovery') : t('archive')}

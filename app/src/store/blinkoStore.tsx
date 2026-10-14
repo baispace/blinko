@@ -152,12 +152,18 @@ export class BlinkoStore implements Store {
     let notes: Note[] = [];
 
     if (this.isOnline) {
-      const queryParams = { 
-        ...this.noteListFilterConfig, 
+      const currentPath = new URLSearchParams(window.location.search).get('path');
+      const pageScope = currentPath === 'notes' || currentPath === 'all' || currentPath === 'todo' || currentPath === 'archived' || currentPath === 'trash'
+        ? currentPath
+        : 'blinko';
+      const sortBy = this.config.value?.pageViewSettings?.[pageScope]?.noteListSortBy;
+      const queryParams = {
+        ...this.noteListFilterConfig,
         ...filterConfig,
-        searchText: this.searchText, 
-        page, 
-        size 
+        searchText: this.searchText,
+        sortBy,
+        page,
+        size
       };
       notes = await api.notes.list.mutate(queryParams);
 
@@ -268,7 +274,7 @@ export class BlinkoStore implements Store {
    * Calls are chained so they reach the server in order, and only the newest
    * queued version is sent, so a slow response can never resurrect stale text.
    */
-  autosaveNote = ({ id, content }: { id: number, content: string }) => {
+  autosaveNote = ({ id, content, onSaved }: { id: number, content: string, onSaved?: () => void }) => {
     const seq = ++this.autosaveSeq
     this.autosaveChain = this.autosaveChain
       .then(async () => {
@@ -276,6 +282,8 @@ export class BlinkoStore implements Store {
         if (seq !== this.autosaveSeq) return
         runInAction(() => { this.autosaveStatus = 'saving' })
         await api.notes.upsert.mutate({ id, content })
+        if (seq !== this.autosaveSeq) return
+        onSaved?.()
         runInAction(() => {
           this.autosaveStatus = 'saved'
           // The local draft only exists so a crash mid-edit does not lose text.
@@ -322,6 +330,7 @@ export class BlinkoStore implements Store {
     attachments?: { name: string, path: string, size: number, type: string }[],
     references?: number[],
     type?: number,
+    isTop?: boolean,
     metadata?: any
   }) => {
     this.silentChain = this.silentChain
@@ -333,6 +342,11 @@ export class BlinkoStore implements Store {
         runInAction(() => { this.autosaveStatus = 'error' })
       })
     return this.silentChain
+  }
+
+  waitForPendingWrites = async () => {
+    await this.autosaveChain
+    await this.silentChain
   }
 
   shareNote = new PromiseState({
@@ -637,7 +651,7 @@ export class BlinkoStore implements Store {
     } else if (currentPath === 'trash') {
       await this.trashList.callNextPage({});
     } else if (currentPath === 'all') {
-      this.noteList.resetAndCall({});
+      await this.noteList.callNextPage({});
     } else {
       await this.blinkoList.callNextPage({});
     }
@@ -681,7 +695,10 @@ export class BlinkoStore implements Store {
     if (currentPath === 'notes') {
       this.noteOnlyList.resetAndCall({});
     } else if (currentPath === 'todo') {
-      this.todoList.resetAndCall({});
+      await Promise.all([
+        this.todoList.resetAndCall({}),
+        this.doneTodoList.resetAndCall({}),
+      ]);
     } else if (currentPath === 'archived') {
       this.archivedList.resetAndCall({});
     } else if (currentPath === 'trash') {
@@ -786,7 +803,9 @@ export class BlinkoStore implements Store {
       let cancelled = false;
       const refresh = async () => {
         while (state.loading.value && !cancelled) await new Promise(resolve => setTimeout(resolve, 40));
-        if (!cancelled) await state.resetAndCall({});
+        if (cancelled) return;
+        await state.resetAndCall({});
+        if (path === 'todo' && !cancelled) await this.doneTodoList.resetAndCall({});
       };
       void refresh();
       return () => { cancelled = true; };

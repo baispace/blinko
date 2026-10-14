@@ -4,14 +4,14 @@ import Masonry from 'react-masonry-css';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
 import { ListComposer } from '@/components/Common/ListComposer';
-import { BlinkoEditor } from '@/components/BlinkoEditor';
-import { TodoQuickAdd } from '@/components/Common/TodoQuickAdd';
 import { ScrollArea, type ScrollAreaHandles } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { TodoCard } from '@/components/BlinkoCard/TodoCard';
+import { BlinkoListRow } from '@/components/BlinkoCard/BlinkoListRow';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
-import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
+import { ListEmptyState } from '@/components/Common/ListEmptyState';
+import { TagContentTypeTabs } from '@/components/Common/TagContentTypeTabs';
 import { TagFilterChips } from '@/components/Common/TagFilterChips';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -22,14 +22,10 @@ import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { useDragCard, DraggableBlinkoCard } from '@/hooks/useDragCard';
 import { getPageViewScope, getPageViewSetting } from '@/lib/pageViewConfig';
 
-interface TodoGroup {
-  displayDate: string;
-  todos: any[];
-}
 
 const Home = observer(() => {
   const { t } = useTranslation();
-  const isPc = useMediaQuery('(min-width: 768px)')
+  const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore)
   // NOTE: blinko.use() is already called by CommonLayout (root layout),
   // calling it here causes firstLoad() to run twice on first paint.
@@ -43,8 +39,10 @@ const Home = observer(() => {
   // 卡片间距 / 列表样式 / 内容宽度（页面级覆盖 → 全局兜底）
   const cardSpacing = (getPageViewSetting(blinko, pageScope, 'cardSpacing') as number | undefined) ?? 16;
   const noteListStyle = ((getPageViewSetting(blinko, pageScope, 'noteListStyle') as string | undefined) ?? 'continuous');
+  const noteListSortBy = ((getPageViewSetting(blinko, pageScope, 'noteListSortBy') as string | undefined) ?? 'createdAt');
   const pageWidth = (getPageViewSetting(blinko, pageScope, 'maxHomePageWidth') as number | null | undefined) ?? blinko.config.value?.maxHomePageWidth;
   const hidePcEditor = getPageViewSetting(blinko, pageScope, 'hidePcEditor') ?? blinko.config.value?.hidePcEditor;
+  const effectiveHideEditor = isPc && hidePcEditor;
   const isTagView = !!searchParams.get('tagId') && searchParams.get('path') === 'all';
   const tagName = blinko.tagList.value?.falttenTags?.find(tag => String(tag.id) === searchParams.get('tagId'))?.name;
   const [ , setListSearchParams] = useSearchParams();
@@ -60,18 +58,18 @@ const Home = observer(() => {
   const currentListState = blinko.getListByPath(searchParams.get('path'));
 
   // Use drag card hook only for non-todo views
-  const { localNotes, sensors, setLocalNotes, handleDragStart, handleDragEnd, handleDragOver } = useDragCard({
+  const { localNotes, sensors, handleDragStart, handleDragEnd, handleDragOver } = useDragCard({
     notes: isTodoView ? undefined : currentListState.value,
     activeId,
     setActiveId,
     insertPosition,
     setInsertPosition,
     isDragForbidden,
-    setIsDragForbidden
+    setIsDragForbidden,
+    reorderEnabled: noteListSortBy === 'manual'
   });
 
   const store = RootStore.Local(() => ({
-    editorHeight: 30,
     get showEditor() {
       return !blinko.noteListFilterConfig.isArchived && !blinko.noteListFilterConfig.isRecycle
     },
@@ -79,45 +77,6 @@ const Home = observer(() => {
       return currentListState.isLoadAll
     }
   }))
-
-  const todosByDate = useMemo(() => {
-    if (!isTodoView || !currentListState.value) return {} as Record<string, TodoGroup>;
-    const todoItems = currentListState.value;
-    const groupedTodos: Record<string, TodoGroup> = {};
-    todoItems.forEach(todo => {
-      const date = dayjs(todo.createdAt).format('YYYY-MM-DD');
-      const isToday = dayjs().isSame(dayjs(todo.createdAt), 'day');
-      const isYesterday = dayjs().subtract(1, 'day').isSame(dayjs(todo.createdAt), 'day');
-      let displayDate;
-      if (isToday) {
-        displayDate = t('today');
-      } else if (isYesterday) {
-        displayDate = t('yesterday');
-      } else {
-        displayDate = dayjs(todo.createdAt).format('MM/DD (ddd)');
-      }
-      if (!groupedTodos[date]) {
-        groupedTodos[date] = {
-          displayDate,
-          todos: []
-        };
-      }
-      groupedTodos[date].todos.push(todo);
-    });
-    return Object.entries(groupedTodos)
-      .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
-      .reduce((acc, [date, data]) => {
-        acc[date] = data;
-        return acc;
-      }, {} as Record<string, TodoGroup>);
-  }, [currentListState.value, isTodoView, t]);
-
-  // 待办视图：标签页（今天 / 接下来几天 / 已完成）
-  const TABS = useMemo(() => ([
-    { key: 'today', label: t('today-list') },
-    { key: 'upcoming', label: t('upcoming-list') },
-    { key: 'done', label: t('done-list') },
-  ]), [t]);
 
   // 已完成的「当日完成」也算当前列表：updatedAt 是今天
   // - 今天列表：未完成 + 当日完成（due ≤ 今天）
@@ -164,13 +123,10 @@ const Home = observer(() => {
   }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
 
   const visibleTodayList = useMemo(
-    () => todayList.filter((todo: any) => !todo.metadata?.priorityImportant),
+    () => todayList.filter((todo: any) => todo.isArchived || !todo.metadata?.priorityImportant),
     [todayList]
   );
-  const visibleUpcomingList = useMemo(
-    () => upcomingList.filter((todo: any) => !todo.metadata?.priorityImportant),
-    [upcomingList]
-  );
+
 
   // 「重要」是跨今天/接下来的一个正交视图：只要打了「重要」旗子就进来，
   // 不论截止日。数据早已存在（metadata.priorityImportant），只是没有露出来。
@@ -179,7 +135,7 @@ const Home = observer(() => {
     if (!isTodoView) return [];
     const seen = new Set<number>();
     return [...todayList, ...upcomingList]
-      .filter((todo: any) => Boolean(todo.metadata?.priorityImportant))
+      .filter((todo: any) => !todo.isArchived && Boolean(todo.metadata?.priorityImportant))
       .filter((todo: any) => (seen.has(todo.id) ? false : seen.add(todo.id)))
       .sort((a: any, b: any) => {
         // 紧急且重要排最前，其次按截止日
@@ -192,23 +148,16 @@ const Home = observer(() => {
       });
   }, [isTodoView, todayList, upcomingList]);
 
+  const importantTodayList = importantList.filter((item: any) => todayList.some((today: any) => today.id === item.id));
+
   const doneList = useMemo(
     () => (blinko.doneTodoList.value ?? []).filter((n: any) => !isCompletedToday(n)),
     [blinko.doneTodoList.value]
   );
 
-  const doneLoadedRef = useRef(false);
   useEffect(() => {
-    if (isTodoView) {
-      // 不论 activeTab 都要拉，避免 today/upcoming 列表缺当日完成项
-      if (!doneLoadedRef.current) {
-        doneLoadedRef.current = true;
-        blinko.doneTodoList.resetAndCall({});
-      }
-    } else {
-      doneLoadedRef.current = false;
-    }
-  }, [isTodoView, blinko]);
+    if (!isTodoView) setActiveTab('today');
+  }, [isTodoView]);
 
   // Restore scroll position when returning from editor
   useEffect(() => {
@@ -225,271 +174,292 @@ const Home = observer(() => {
     }
   }, [location.key]);
 
+  const groupedNotes = useMemo(() => {
+    if (noteListStyle !== 'byDay' && noteListStyle !== 'byWeek') return [];
+    const grouped: Record<string, { displayDate: string; notes: any[] }> = {};
+    localNotes.forEach((note: any) => {
+      const date = dayjs(note.createdAt);
+      const isoWeek = String(date.isoWeek()).padStart(2, '0');
+      const isoWeekYear = date.isoWeekYear();
+      const key = noteListStyle === 'byWeek' ? `${isoWeekYear}-W${isoWeek}` : date.format('YYYY-MM-DD');
+      const displayDate = dayjs().isSame(date, 'day')
+        ? t('today')
+        : dayjs().subtract(1, 'day').isSame(date, 'day')
+          ? t('yesterday')
+          : noteListStyle === 'byWeek'
+            ? `${isoWeekYear} W${isoWeek}`
+            : date.format('MM/DD (ddd)');
+      (grouped[key] ??= { displayDate, notes: [] }).notes.push(note);
+    });
+    return Object.entries(grouped).map(([key, value]) => ({ key, ...value }));
+  }, [localNotes, noteListStyle, t]);
+
+  const hasListFilters = Boolean(
+    searchParams.get('tagId') ||
+    searchParams.get('contentType') ||
+    searchParams.get('searchText') ||
+    searchParams.get('withoutTag') ||
+    searchParams.get('withFile') ||
+    searchParams.get('withLink') ||
+    searchParams.get('hasTodo')
+  );
+
+  const clearListFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    ['tagId', 'contentType', 'searchText', 'withoutTag', 'withFile', 'withLink', 'hasTodo'].forEach(key => next.delete(key));
+    setListSearchParams(next);
+  };
+
+  const emptyVariant = isTagView ? 'tag' : isTodoView ? 'todo' : pageScope === 'notes' ? 'notes' : 'blinko';
+
   // 限宽层：内容限宽居中，滚动容器保持全宽，使滚动条贴窗口右缘
   const maxWidthStyle = {
     maxWidth: pageWidth ? `${pageWidth}px` : '100%'
   } as const;
 
-  return (
-    <div
-      className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col w-full`}>
+  const loadedItemCount = currentListState.value?.length ?? 0;
 
-      {!isTodoView && store.showEditor && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
-          <ListComposer key={searchParams.get('path') || 'blinko'} defaultType={searchParams.get('path') === 'notes' ? NoteType.NOTE : NoteType.BLINKO} mixed={isTagView} tag={tagName} />
+  const todoTabs = [
+    { key: 'today', label: t('today-list'), count: todayList.length },
+    { key: 'upcoming', label: t('upcoming-list'), count: upcomingList.length },
+    { key: 'done', label: t('done-list'), count: doneList.length },
+  ];
+
+  const renderTodoSection = ({
+    id,
+    title,
+    subtitle,
+    icon,
+    iconClass,
+    items,
+    tone = 'default',
+    action,
+    hideHeader = false,
+  }: {
+    id: string;
+    title: string;
+    subtitle?: string;
+    icon: string;
+    iconClass: string;
+    items: any[];
+    tone?: 'default' | 'important' | 'done';
+    action?: React.ReactNode;
+    hideHeader?: boolean;
+  }) => (
+    <section
+      aria-labelledby={id}
+      className={`rounded-2xl border p-2.5 md:p-3 ${
+        tone === 'important'
+          ? 'border-red-500/15 bg-red-500/[0.025]'
+          : tone === 'done'
+            ? 'border-emerald-500/10 bg-emerald-500/[0.02]'
+            : 'border-transparent bg-transparent !p-0'
+      }`}
+    >
+      {hideHeader ? <><h2 id={id} className="sr-only">{title}</h2>{subtitle && <p className="mb-3 px-1 text-xs text-default-400">{subtitle}</p>}</> : <header className="mb-2 flex min-h-8 items-center gap-2 px-1">
+        <span className={`grid size-7 shrink-0 place-items-center rounded-lg bg-background ${iconClass}`}>
+          <Icon icon={icon} width={16} height={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 id={id} className="text-[14px] font-semibold text-foreground">{title}</h2>
+            <span className="rounded-full bg-default-100 px-1.5 py-0.5 text-[10.5px] tabular-nums text-default-500">
+              {items.length}
+            </span>
+          </div>
+          {subtitle && <p className="hidden truncate text-[11px] text-default-400 sm:block">{subtitle}</p>}
         </div>
-      }
-      {hidePcEditor && !isTodoView && <BlinkoAddButton />}
+        {action}
+      </header>}
+      <div className="flex flex-col gap-2">
+        {items.length > 0
+          ? items.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+          : <ListEmptyState variant="todo" compact />}
+      </div>
+    </section>
+  );
 
-      {/* 待办视图永远渲染自身外壳（新增入口 + Tabs + 空列表提示），
-          否则列表为空时 isEmpty 会把整个待办模块连带「加一条任务」一起隐藏 */}
-      <LoadingAndEmpty
-        isLoading={currentListState.isLoading}
-        isEmpty={!isTodoView && !isTagView && currentListState.isEmpty}
-      />
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col-reverse pt-1 md:flex-col md:p-0">
+      {store.showEditor && !effectiveHideEditor && (
+        <div className="mx-auto w-full px-2 md:px-6" style={maxWidthStyle}>
+          <ListComposer
+            key={searchParams.get('path') || 'blinko'}
+            defaultType={isTodoView ? NoteType.TODO : pageScope === 'notes' ? NoteType.NOTE : NoteType.BLINKO}
+            mixed={isTagView}
+            tag={tagName}
+          />
+        </div>
+      )}
+      {effectiveHideEditor && <BlinkoAddButton />}
 
-      {
-        (!currentListState.isEmpty || isTodoView || isTagView) &&
-        <ScrollArea
-          ref={scrollAreaRef}
-          fixMobileTopBar
-          onRefresh={async () => {
-            await currentListState.resetAndCall({})
-          }}
-          onBottom={() => {
-            blinko.onBottom();
-          }}
-          style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
-          className={`mt-0 md:${hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
-          <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
-          {isTagView && <div role="group" aria-label="标签内内容类型" className="flex flex-wrap gap-1 mb-3">
-            {['全部', '闪念', '笔记', '待办'].map((label, index) => {
-              const value = index === 0 ? '' : String(index - 1);
-              const active = (searchParams.get('contentType') || '') === value;
-              return <button key={label} type="button" aria-pressed={active} onClick={() => { const next = new URLSearchParams(searchParams); value ? next.set('contentType', value) : next.delete('contentType'); setListSearchParams(next); }} className={`rounded-full px-3 py-1.5 text-sm transition-colors ${active ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-default-100'}`}>{label}</button>;
-            })}
-          </div>}
+      <ScrollArea
+        ref={scrollAreaRef}
+        fixMobileTopBar
+        onRefresh={async () => {
+          await currentListState.resetAndCall({});
+          if (isTodoView) await blinko.doneTodoList.resetAndCall({});
+        }}
+        onBottom={() => {
+          if (isTodoView && activeTab === 'done') void blinko.doneTodoList.callNextPage({});
+          else void blinko.onBottom();
+        }}
+        className={`mt-0 h-full min-h-0 w-full flex-1 !transition-all scroll-area ${effectiveHideEditor ? 'md:mt-0' : 'md:mt-3'}`}
+      >
+        <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
+          {isTagView && <TagContentTypeTabs />}
           {!isTodoView && <TagFilterChips />}
-          {isTagView && currentListState.isEmpty && !currentListState.isLoading && <div className="py-8 text-center text-sm text-default-400">当前类型没有内容，可以切换类型或在上方新建。</div>}
-          {isTodoView ? (
-            <div className="flex flex-col gap-4">
-              {/* 全局唯一新增入口：放在 tabs 上方，三个 section 共用一份 */}
-              <ListComposer defaultType={NoteType.TODO} />
 
-              {/* Tab 栏（今天 / 接下来几天 / 已完成）——
-                  去掉行内灰色底，改透明 + sticky top-0 让 tabs 滚动时停留。
-                  下方一条极细分隔线把 tabs 行跟主内容分开。 */}
-              <div className="sticky top-0 z-20 flex items-center gap-1 py-1.5 -mb-px">
-                {TABS.map((tab) => {
-                  const isActive = activeTab === tab.key;
+          {currentListState.isLoading && !currentListState.value?.length ? (
+            <div className="flex min-h-48 items-center justify-center text-default-400" role="status" aria-label={t('loading')}>
+              <Icon icon="eos-icons:three-dots-loading" width={38} height={38} />
+            </div>
+          ) : isTodoView ? (
+            <div className="flex flex-col gap-4">
+              <div
+                role="tablist"
+                aria-label={t('todo')}
+                className="sticky top-0 z-20 flex items-center gap-2 border-b border-default-200 bg-background px-1"
+              >
+                {todoTabs.map(tab => {
+                  const selected = activeTab === tab.key;
                   return (
                     <button
                       key={tab.key}
                       type="button"
+                      role="tab"
+                      aria-selected={selected}
                       onClick={() => setActiveTab(tab.key)}
-                      className={`inline-flex items-center rounded-full px-3 h-8 text-[13px] !transition-colors ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground font-semibold'
-                          : 'text-default-600 hover:text-foreground font-medium'
+                      className={`flex h-10 min-w-0 items-center justify-center gap-1.5 border-b-2 px-3 text-[12.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                        selected
+                          ? 'border-primary text-foreground'
+                          : 'border-transparent text-default-500 hover:text-foreground'
                       }`}
                     >
-                      {tab.label}
+                      <span className="truncate">{tab.label}</span>
+                      <span className={`text-[10.5px] tabular-nums ${selected ? 'text-primary' : 'text-default-400'}`}>
+                        {tab.count}
+                      </span>
                     </button>
                   );
                 })}
-                {/* 极细分隔线：tabs 行跟主内容分界（透到背景色） */}
-                <span aria-hidden className="ml-2 h-px flex-1 bg-default-200" />
               </div>
 
               {activeTab === 'today' && (
                 <>
-                  {/* Section: 重要（跨今天/接下来，带旗子的优先看） */}
-                  {importantList.length > 0 && (
-                    <section>
-                      <header className="flex items-center justify-between gap-3 px-1 pb-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Icon icon="solar:bookmark-bold" width={18} height={18} className="text-red-500 shrink-0" />
-                          <span className="text-[15px] font-semibold text-foreground shrink-0">{t('important-list')}</span>
-                          <span className="text-[12px] text-default-400 truncate">{t('important-list-subtitle')}</span>
-                        </div>
-                      </header>
-                      <div className="flex flex-col gap-3">
-                        {importantList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
-                      </div>
-                    </section>
-                  )}
+                  {importantTodayList.length > 0 && renderTodoSection({
+                    id: 'todo-important',
+                    title: t('important-list'),
+                    subtitle: t('todo-important-today-subtitle'),
+                    icon: 'solar:bookmark-bold',
+                    iconClass: 'text-red-500',
+                    items: importantTodayList,
+                    tone: 'important',
+                  })}
+                  {renderTodoSection({
+                    id: 'todo-today',
+                    title: importantTodayList.length ? t('todo-other-items') : t('today-list'),
+                    hideHeader: !importantTodayList.length,
+                    subtitle: t('today-list-subtitle'),
+                    icon: 'mdi:white-balance-sunny',
+                    iconClass: 'text-amber-500',
+                    items: visibleTodayList,
+                  })}
 
-                  {/* Section: 今天的清单 */}
-                  <section>
-                    <header className="flex items-center justify-between gap-3 px-1 pb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Icon icon="mdi:white-balance-sunny" width={18} height={18} className="text-amber-500 shrink-0" />
-                        <span className="text-[15px] font-semibold text-foreground shrink-0">{t('today-list')}</span>
-                        <span className="text-[12px] text-default-400 truncate">{t('today-list-subtitle')}</span>
-                      </div>
-                    </header>
-                    <div className="flex flex-col gap-3">
-                      {visibleTodayList.length === 0 ? (
-                        <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
-                      ) : (
-                        visibleTodayList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
-                      )}
-                    </div>
-                  </section>
-
-                  {/* Section: 接下来几天 */}
-                  {visibleUpcomingList.length > 0 && (
-                    <section>
-                      <header className="flex items-center justify-between gap-3 px-1 pb-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Icon icon="mdi:chevron-double-right" width={18} height={18} className="text-primary shrink-0" />
-                          <span className="text-[15px] font-semibold text-foreground shrink-0">{t('upcoming-list')}</span>
-                          <span className="text-[12px] text-default-400 truncate">{t('upcoming-list-subtitle')}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('upcoming')}
-                          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600 hover:text-foreground hover:border-primary/50 transition-colors"
-                        >
-                          {t('all')} {visibleUpcomingList.length} {t('items-suffix')}
-                        </button>
-                      </header>
-                      <div className="flex flex-col gap-3">
-                        {visibleUpcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)}
-                      </div>
-                    </section>
-                  )}
                 </>
               )}
 
-              {activeTab === 'upcoming' && (
-                <section>
-                  <header className="flex items-center justify-between gap-3 px-1 pb-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon icon="mdi:chevron-double-right" width={18} height={18} className="text-primary shrink-0" />
-                      <span className="text-[15px] font-semibold text-foreground shrink-0">{t('upcoming-list')}</span>
-                      <span className="text-[12px] text-default-400 truncate">{t('upcoming-list-subtitle')}</span>
-                    </div>
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600">
-                      {t('all')} {upcomingList.length} {t('items-suffix')}
-                    </span>
-                  </header>
-                  <div className="flex flex-col gap-3">
-                    {upcomingList.length === 0 ? (
-                      <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
-                    ) : (
-                      upcomingList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
-                    )}
-                  </div>
-                </section>
-              )}
+              {activeTab === 'upcoming' && renderTodoSection({
+                id: 'todo-upcoming',
+                hideHeader: true,
+                title: t('upcoming-list'),
+                subtitle: t('upcoming-list-subtitle'),
+                icon: 'mdi:chevron-double-right',
+                iconClass: 'text-primary',
+                items: upcomingList,
+              })}
 
-              {activeTab === 'done' && (
-                <section>
-                  <header className="flex items-center justify-between gap-3 px-1 pb-2">
-<div className="flex items-center gap-2 min-w-0">
-                    <Icon icon="mdi:check-circle-outline" width={18} height={18} className="text-emerald-500 shrink-0" />
-                    <span className="text-[15px] font-semibold text-foreground shrink-0">{t('done-list')}</span>
-                  </div>
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-default-200 px-3 py-1 text-[12px] text-default-600">
-                      {t('all')} {doneList.length} {t('items-suffix')}
-                    </span>
+              {activeTab === 'done' && renderTodoSection({
+                id: 'todo-done',
+                hideHeader: true,
+                title: t('done-list'),
+                icon: 'mdi:check-circle-outline',
+                iconClass: 'text-emerald-500',
+                items: doneList,
+                tone: 'default',
+              })}
+            </div>
+          ) : localNotes.length === 0 ? (
+            <ListEmptyState
+              variant={emptyVariant}
+              filtered={hasListFilters}
+              onClearFilters={clearListFilters}
+            />
+          ) : noteListStyle === 'byDay' || noteListStyle === 'byWeek' ? (
+            <div className="space-y-5">
+              {groupedNotes.map(group => (
+                <section key={group.key}>
+                  <header className="mb-1.5 flex items-center gap-2 px-1">
+                    <span className="size-1.5 rounded-full bg-primary" aria-hidden />
+                    <h2 className="text-[12px] font-semibold text-default-600">{group.displayDate}</h2>
+                    <span className="text-[10.5px] tabular-nums text-default-400">{group.notes.length}</span>
                   </header>
-                  <div className="flex flex-col gap-3">
-                    {doneList.length === 0 ? (
-                      <div className="text-center py-6 text-default-400 text-[13px]">{t('no-task')}</div>
-                    ) : (
-                      doneList.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
-                    )}
+                  <div className="overflow-hidden rounded-xl border border-default-200/60 bg-card px-3 shadow-sm">
+                    {group.notes.map(note => <BlinkoListRow key={note.id} blinkoItem={note} />)}
                   </div>
                 </section>
-              )}
+              ))}
             </div>
           ) : (
-            noteListStyle === 'byDay' || noteListStyle === 'byWeek' ? (
-              <div className="timeline-view relative">
-                {(() => {
-                  const grouped: Record<string, { displayDate: string; notes: typeof localNotes }> = {};
-                  const fmt = noteListStyle === 'byWeek' ? 'YYYY-[W]WW' : 'YYYY-MM-DD';
-                  localNotes?.forEach((n: any) => {
-                    const key = dayjs(n.createdAt).format(fmt);
-                    const isToday = dayjs().isSame(dayjs(n.createdAt), 'day');
-                    const isYesterday = dayjs().subtract(1, 'day').isSame(dayjs(n.createdAt), 'day');
-                    let displayDate;
-                    if (isToday) displayDate = t('today');
-                    else if (isYesterday) displayDate = t('yesterday');
-                    else if (noteListStyle === 'byWeek') displayDate = dayjs(n.createdAt).format('YYYY [W]WW');
-                    else displayDate = dayjs(n.createdAt).format('MM/DD (ddd)');
-                    if (!grouped[key]) grouped[key] = { displayDate, notes: [] as any };
-                    grouped[key].notes!.push(n);
-                  });
-                  return Object.entries(grouped).map(([date, { displayDate, notes }]) => (
-                    <div key={date} className="mb-6 relative">
-                      <div className="flex items-center mb-2 relative z-10">
-                        <div className="w-4 h-4 rounded-sm bg-primary absolute left-[4.5px] transform translate-x-[-50%]"></div>
-                        <h3 className="text-base font-bold ml-5">{displayDate}</h3>
-                      </div>
-                      <div className="md:pl-4">
-                        {notes!.map((note: any) => (
-                          <div key={note.id} className="mb-3">
-                            <BlinkoCard blinkoItem={note} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            ) : (
-              <>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                >
-                  <Masonry
-                    breakpointCols={{
-                      default: getPageViewSetting(blinko, pageScope, 'largeDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'largeDeviceCardColumns')) : 2,
-                      1280: getPageViewSetting(blinko, pageScope, 'mediumDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'mediumDeviceCardColumns')) : 2,
-                      768: getPageViewSetting(blinko, pageScope, 'smallDeviceCardColumns') ? Number(getPageViewSetting(blinko, pageScope, 'smallDeviceCardColumns')) : 1
-                    }}
-                    style={{ ['--blinko-card-spacing' as any]: `${cardSpacing}px` }}
-                    className="card-masonry-grid"
-                    columnClassName="card-masonry-grid_column">
-                    {
-                      localNotes?.map((i, index) => {
-                        const showInsertLine = insertPosition === i.id && activeId !== i.id;
-                        return (
-                          <DraggableBlinkoCard
-                            key={i.id}
-                            blinkoItem={i}
-                            showInsertLine={showInsertLine}
-                            insertPosition="top"
-                            isDragForbidden={isDragForbidden && showInsertLine}
-                          />
-                        );
-                      })
-                    }
-                  </Masonry>
-                  <DragOverlay>
-                    {activeId ? (
-                      <div className="rotate-3 scale-105 opacity-90 max-w-sm shadow-xl">
-                        <BlinkoCard
-                          blinkoItem={localNotes.find(n => n.id === activeId)}
-                        />
-                      </div>
-                    ) : null}
-                  </DragOverlay>
-                </DndContext>
-              </>
-            )
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <Masonry
+                breakpointCols={{
+                  default: Number(getPageViewSetting(blinko, pageScope, 'largeDeviceCardColumns') ?? 2),
+                  1280: Number(getPageViewSetting(blinko, pageScope, 'mediumDeviceCardColumns') ?? 2),
+                  768: Number(getPageViewSetting(blinko, pageScope, 'smallDeviceCardColumns') ?? 1),
+                }}
+                style={{ ['--blinko-card-spacing' as any]: `${cardSpacing}px` }}
+                className="card-masonry-grid"
+                columnClassName="card-masonry-grid_column"
+              >
+                {localNotes.map(item => {
+                  const showInsertLine = insertPosition === item.id && activeId !== item.id;
+                  return (
+                    <DraggableBlinkoCard
+                      key={item.id}
+                      blinkoItem={item}
+                      showInsertLine={showInsertLine}
+                      insertPosition="top"
+                      isDragForbidden={isDragForbidden && showInsertLine}
+                    />
+                  );
+                })}
+              </Masonry>
+              <DragOverlay>
+                {activeId ? (
+                  <div className="max-w-sm rotate-2 scale-[1.02] opacity-90 shadow-xl">
+                    <BlinkoCard blinkoItem={localNotes.find(note => note.id === activeId)} />
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           )}
 
-          {store.showLoadAll && <div className='select-none w-full text-center text-sm font-bold text-ignore my-4'>{t('all-notes-have-been-loaded', { items: currentListState.value?.length })}</div>}
-          </div>
-        </ScrollArea>
-      }
+          {store.showLoadAll && loadedItemCount > 0 && (
+            <div className="my-5 flex w-full items-center justify-center gap-2 text-[11px] text-default-400">
+              <span className="h-px w-8 bg-default-200" />
+              <span>{t('all-notes-have-been-loaded', { items: loadedItemCount })}</span>
+              <span className="h-px w-8 bg-default-200" />
+            </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 });

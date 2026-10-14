@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { when } from "mobx";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from "react-dom";
 import { Button, Tooltip } from "@heroui/react";
 import { Icon } from "@/components/Common/Iconify/icons";
@@ -15,7 +15,8 @@ import { useTranslation } from "react-i18next";
 import type { Editor } from "@tiptap/core";
 import { PageWidthStore, PAGE_WIDTH_PAD_CLASS } from "@/store/pageWidthStore";
 import { CardActionMenu } from './cardActionMenu';
-import { TableOfContents } from '@/components/Common/TableOfContents';
+import { extractHeadingsFromMarkdown, TableOfContents } from '@/components/Common/TableOfContents';
+import { ShareButton } from './cardHeader';
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface FullscreenEditorProps {
@@ -71,6 +72,15 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
     }
     blinko.fullscreenEditorNoteId = null;
     // 回到「打开即编辑」的默认态，而不是写死 preview，否则下一条笔记会继承上一条的阅读态
+    setEditorMode(defaultEditorMode);
+    setPresentationMode(false);
+    setDataReady(false);
+    onClose();
+  };
+
+  const handleHome = () => {
+    navigate('/');
+    blinko.fullscreenEditorNoteId = null;
     setEditorMode(defaultEditorMode);
     setPresentationMode(false);
     setDataReady(false);
@@ -254,6 +264,26 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
     handleClose();
   };
 
+  const documentNote: BlinkoItem = blinko.curSelectedNote?.id != null && blinko.curSelectedNote.id === blinkoItem.id
+    ? blinko.curSelectedNote
+    : blinkoItem;
+  const documentContent = documentNote?.content ?? blinkoItem.content ?? '';
+  const documentTitle = documentNote?.metadata?.title?.trim() || blinkoItem.title || t('note');
+  const hasOutline = useMemo(() => extractHeadingsFromMarkdown(documentContent).length > 0, [documentContent]);
+  const outlineColumnWidth = isPc && hasOutline ? (isTocOpen ? 280 : 40) : 0;
+  const outlineLayoutWidth = outlineColumnWidth > 0 ? outlineColumnWidth + 12 : 0;
+  const baseDocumentWidth = pageWidth.maxWidth ? Number.parseInt(pageWidth.maxWidth, 10) : null;
+  const documentMaxWidth = baseDocumentWidth ? `${baseDocumentWidth + outlineLayoutWidth}px` : undefined;
+
+  const handleTogglePin = () => {
+    if (!documentNote?.id) return;
+    const next = !documentNote.isTop;
+    if (blinko.curSelectedNote?.id === documentNote.id) blinko.curSelectedNote.isTop = next;
+    void blinko.silentUpsertNote({ id: documentNote.id, isTop: next }).then(() => {
+      blinko.updateTicker++;
+    });
+  };
+
   const isLongText = (blinkoItem?.content?.length ?? 0) > 1000;
 
   if (!isOpen) return null;
@@ -279,90 +309,88 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
         bottom: 0
       }}
     >
+      {!presentationMode && isPc && (
+        <div data-testid="document-fixed-header" className="fixed inset-x-0 top-0 z-[10005] flex flex-col border-b border-border bg-card/95 shadow-sm backdrop-blur-xl">
+          <div className="flex h-12 w-full items-center gap-1.5 px-3 md:px-5">
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onPress={handleClose}
+              aria-label={t('back')}
+              className="shrink-0 text-default-600 hover:bg-default-100 hover:text-foreground"
+            >
+              <Icon icon="tabler:arrow-left" width={20} height={20} />
+            </Button>
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onPress={handleHome}
+              aria-label={t('go-home')}
+              className="shrink-0 text-default-600 hover:bg-default-100 hover:text-foreground"
+            >
+              <Icon icon="tabler:home" width={19} height={19} />
+            </Button>
+            <span className="mx-1 h-5 w-px shrink-0 bg-default-200" aria-hidden />
+            <div className="min-w-0 flex-1 truncate text-[13.5px] text-default-600" title={documentTitle}>
+              {documentTitle}
+            </div>
+
+            {!documentNote?.isRecycle && (
+              <Tooltip content={t(documentNote?.isTop ? 'cancel-top' : 'top')}>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  onPress={handleTogglePin}
+                  aria-label={t(documentNote?.isTop ? 'cancel-top' : 'top')}
+                  className={documentNote?.isTop ? 'shrink-0 bg-amber-500/10 text-amber-500' : 'shrink-0 text-default-500'}
+                >
+                  <Icon icon="solar:bookmark-bold" width={18} height={18} />
+                </Button>
+              </Tooltip>
+            )}
+            {!documentNote?.isRecycle && (
+              <div className="grid size-8 shrink-0 place-items-center rounded-lg text-default-500 transition-colors hover:bg-default-100 hover:text-foreground">
+                <ShareButton blinkoItem={documentNote} isIOSDevice={false} alwaysShow compact />
+              </div>
+            )}
+            <div className="grid size-8 shrink-0 place-items-center rounded-lg hover:bg-default-100">
+              <CardActionMenu
+                blinkoItem={documentNote}
+                showPageWidth
+                editorMode={editorMode}
+                onToggleEditorMode={() => {
+                  if (editorMode === 'preview') handleSwitchToEdit();
+                  else handleSwitchToPreview();
+                }}
+                presentationMode={presentationMode}
+                onTogglePresentation={() => setPresentationMode((value) => !value)}
+                isDetailPage={isDetailPage}
+                hideShare
+                hidePin
+              />
+            </div>
+          </div>
+          <div className={`${editorMode === 'edit' ? 'flex' : 'hidden'} min-h-[42px] w-full items-center overflow-x-auto border-t border-default-100 px-3 py-1 md:px-5 hide-scrollbar`}>
+            <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex min-w-max flex-1 items-center" />
+          </div>
+        </div>
+      )}
+
       {/* PC: window-level scrolling — cover, title and body scroll away together
           (Feishu behaviour), scrollbar sits at the viewport's right edge.
           Mobile keeps the previous internal-scroll layout. */}
-      <div className={`${isPc ? 'min-h-full' : 'h-full'} flex justify-center`}>
+      <div className={`${isPc ? `min-h-full ${!presentationMode ? (editorMode === 'edit' ? 'pt-[90px]' : 'pt-12') : ''}` : 'h-full'} flex justify-center`}>
         <div
           ref={editorContainerRef}
           className={`w-full mx-auto ${isPc ? 'min-h-full' : 'h-full'} flex ${isPc ? 'flex-col ' + PAGE_WIDTH_PAD_CLASS[pageWidth.mode] : 'flex-col p-2'}`}
-          style={{ maxWidth: pageWidth.maxWidth }}
+          style={{ maxWidth: documentMaxWidth }}
           onClick={(e) => {
             e.stopPropagation();
           }}
         >
-          {/* Top header with back button and toolbar (PC only, sticky while scrolling).
-              收纳后的形态：← 大纲 │ 标题 ……… [编辑器工具栏] │ ⋯
-              分享 / 页宽 / 预览切换 全部收进右侧 ⋯ 菜单，顶栏只留一个操作入口。
-              演示模式下整条顶栏消失 —— 演示模式不留任何 chrome。 */}
-          {!presentationMode && isPc && (
-            <div className="sticky top-0 z-10 flex items-center gap-3 py-3 flex-shrink-0 border-b border-border bg-card/95 backdrop-blur-md">
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={handleClose}
-                className="text-foreground hover:bg-default-100 shrink-0"
-              >
-                <Icon icon="tabler:arrow-left" width={20} height={20} />
-              </Button>
-
-              {/* 大纲入口：阅读态、编辑态都给。以前只在阅读态给（因为靠
-                  `.markdown-body` 抓 DOM，编辑态抓不到），现在 TableOfContents
-                  直接从 markdown 源文本解析标题，两种模式都能用。 */}
-              {!!blinkoItem.content && (
-                <Tooltip content={t('table-of-contents')}>
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    onPress={() => setIsTocOpen((v) => !v)}
-                    className={`shrink-0 ${isTocOpen ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-default-100'}`}
-                  >
-                    <Icon icon="mdi:format-list-bulleted" width={20} height={20} />
-                  </Button>
-                </Tooltip>
-              )}
-
-              {/* 标题面包屑：飞书式顶栏左侧，让用户始终知道自己在哪一篇 */}
-              <div className="text-[13.5px] text-default-600 truncate min-w-0 mr-auto">
-                {blinkoItem.title || t('note')}
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
-                    否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
-                <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
-
-                <span className="w-px h-5 bg-default-200 mx-0.5" />
-
-                {/* 唯一的笔记级操作入口：分享 / 页宽 / 编辑↔预览 + 全部分组操作 */}
-                <CardActionMenu
-                  blinkoItem={blinkoItem}
-                  showPageWidth
-                  editorMode={editorMode}
-                  onToggleEditorMode={() => {
-                    if (editorMode === 'preview') handleSwitchToEdit();
-                    else handleSwitchToPreview();
-                  }}
-                  presentationMode={presentationMode}
-                  onTogglePresentation={() => setPresentationMode((v) => !v)}
-                  isDetailPage={isDetailPage}
-                />
-              </div>
-
-              {/* 挂在 sticky 栏内，跟着栏一起吸顶；浮层自管遮罩与关闭 */}
-              {isTocOpen && (
-                <TableOfContents
-                  content={blinkoItem.content ?? ''}
-                  floating
-                  onClose={() => setIsTocOpen(false)}
-                  className="top-full left-1 mt-2"
-                />
-              )}
-            </div>
-          )}
-
           {/*
             阅读态与编辑态是同一棵 Tiptap 树，只切 setEditable：
             打开即可直接写，切回阅读再点正文任意处也能接着写，
@@ -383,6 +411,38 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
                 onSended={handleEditorSended}
                 withoutOutline={true}
                 showTopToolbar={true}
+                documentToolbar={true}
+                documentSidebar={isPc && hasOutline ? (
+                  <aside
+                    data-testid="document-outline-column"
+                    style={{ width: outlineColumnWidth, flexBasis: outlineColumnWidth }}
+                    className={`sticky top-[102px] mr-3 h-[calc(100vh-118px)] shrink-0 overflow-hidden transition-[width,flex-basis] duration-200 ${
+                      isTocOpen ? 'bg-default-50/30 pr-2' : 'bg-transparent'
+                    }`}
+                  >
+                    {isTocOpen ? (
+                      <TableOfContents
+                        content={documentContent}
+                        embedded
+                        rootElement={editorContainerRef.current}
+                        onClose={() => setIsTocOpen(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        data-testid="document-outline-trigger"
+                        aria-label={t('table-of-contents')}
+                        title={t('table-of-contents')}
+                        aria-expanded={false}
+                        onClick={() => setIsTocOpen(true)}
+                        className="mx-auto grid size-8 place-items-center rounded-lg text-default-500 transition-colors hover:bg-default-100 hover:text-foreground"
+                      >
+                        <Icon icon="mdi:format-list-bulleted" width={17} height={17} />
+                      </button>
+                    )}
+                  </aside>
+                ) : undefined}
+                documentSidebarInset={outlineLayoutWidth}
                 pageScroll={isPc}
                 focusOnMount={false}
               />
@@ -391,41 +451,92 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
             )}
           </div>
 
-          {/* Bottom toolbar with back button (Mobile only, sticky above the keyboard area).
-              演示模式下整条底栏消失 —— 演示模式不留任何 chrome。 */}
+          {/* Mobile: scrollable document tools plus a stable navigation/action row. */}
           {!presentationMode && !isPc && (
-            <div className="sticky bottom-0 flex items-center justify-between py-3 px-2 flex-shrink-0 border-t border-border bg-card" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={handleClose}
-                className="text-foreground hover:bg-default-100"
-              >
-                <Icon icon="tabler:arrow-left" width={20} height={20} />
-              </Button>
-              <div className="flex-1 flex justify-end items-center ml-2 gap-2">
-                {/* 与 PC 顶栏一致：只留一个 ⋯，预览切换 / 演示模式 收进菜单。
-                    移动端不传 showPageWidth —— 窄屏上页宽没有意义。 */}
-                <CardActionMenu
-                  blinkoItem={blinkoItem}
-                  editorMode={editorMode}
-                  onToggleEditorMode={() => {
-                    if (editorMode === 'preview') handleSwitchToEdit();
-                    else handleSwitchToPreview();
-                  }}
-                  presentationMode={presentationMode}
-                  onTogglePresentation={() => setPresentationMode((v) => !v)}
-                  isDetailPage={isDetailPage}
-                />
-                {/* 工具栏宿主始终在 DOM 里（阅读态由 Editor 决定不往里注入内容），
-                    否则从阅读切到编辑时 Editor 找不到挂载点，工具栏不会出现 */}
-                <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
+            <div
+              className="sticky bottom-0 z-[10005] flex shrink-0 flex-col border-t border-border bg-card/95 px-2 pt-1.5 backdrop-blur-xl"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            >
+              <div className={`${editorMode === 'edit' ? 'flex' : 'hidden'} w-full overflow-x-auto border-b border-default-100 pb-1 hide-scrollbar`}>
+                <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex min-w-max flex-1 items-center" />
+              </div>
+              <div className="flex h-11 items-center justify-between">
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  onPress={handleClose}
+                  aria-label={t('back')}
+                  className="text-foreground hover:bg-default-100"
+                >
+                  <Icon icon="tabler:arrow-left" width={20} height={20} />
+                </Button>
+                <div className="flex items-center gap-1.5">
+                  {!documentNote?.isRecycle && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      size="sm"
+                      onPress={handleTogglePin}
+                      aria-label={t(documentNote?.isTop ? 'cancel-top' : 'top')}
+                      className={documentNote?.isTop ? 'text-amber-500' : 'text-default-500'}
+                    >
+                      <Icon icon="solar:bookmark-bold" width={18} height={18} />
+                    </Button>
+                  )}
+                  {!documentNote?.isRecycle && (
+                    <div className="grid size-8 place-items-center rounded-lg hover:bg-default-100">
+                      <ShareButton blinkoItem={documentNote} isIOSDevice alwaysShow compact />
+                    </div>
+                  )}
+                  <div className="grid size-8 place-items-center rounded-lg hover:bg-default-100">
+                    <CardActionMenu
+                      blinkoItem={documentNote}
+                      editorMode={editorMode}
+                      onToggleEditorMode={() => {
+                        if (editorMode === 'preview') handleSwitchToEdit();
+                        else handleSwitchToPreview();
+                      }}
+                      presentationMode={presentationMode}
+                      onTogglePresentation={() => setPresentationMode((value) => !value)}
+                      isDetailPage={isDetailPage}
+                      hideShare
+                      hidePin
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {!presentationMode && !isPc && hasOutline && (
+        <>
+          <button
+            type="button"
+            data-testid="document-outline-trigger"
+            aria-label={t('table-of-contents')}
+            title={t('table-of-contents')}
+            aria-expanded={isTocOpen}
+            onClick={() => setIsTocOpen((value) => !value)}
+            style={{ left: '8px' }}
+            className={`fixed top-24 z-[10010] grid size-8 place-items-center rounded-r-lg border border-default-200 bg-card/90 shadow-sm backdrop-blur-md transition-colors max-md:top-16 ${
+              isTocOpen ? 'text-primary' : 'text-default-500 hover:bg-default-100 hover:text-foreground'
+            }`}
+          >
+            <Icon icon="mdi:format-list-bulleted" width={17} height={17} />
+          </button>
+          {isTocOpen && (
+            <TableOfContents
+              content={documentContent}
+              sidePanel
+              rootElement={editorContainerRef.current}
+              onClose={() => setIsTocOpen(false)}
+            />
+          )}
+        </>
+      )}
 
       {/* 演示模式浮动退出口：右上角，半透浮于正文之上，点 ESC 也退出。 */}
       {presentationMode && (

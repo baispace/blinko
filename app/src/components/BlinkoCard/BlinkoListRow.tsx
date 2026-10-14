@@ -59,10 +59,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
   const navigate = useNavigate();
   const isIOSDevice = useIsIOS();
 
-  // 计算 isBlog / title / isTop 跟 BlinkoCard 保持一致（masonry 视图分支会用到这些字段）
-  const contentLength = blinkoItem.content?.length ?? 0;
-  blinkoItem.isBlog = contentLength >= (blinko.config.value?.textFoldLength ?? 1000);
-
+  // 标题只做视图派生，不在 render 阶段写回 store 中的 note 对象。
   const rawFirstLine = blinkoItem.content?.split('\n').find(line => {
     if (!line.trim()) return false;
     if (/^#+\s/.test(line) || /^\s*[-*+]\s/.test(line)) return false;
@@ -74,8 +71,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
     .replace(/^\s*[-*+]\s+/, '')
     .replace(/\s*#[^#\s]+/g, '')
     .trim() : undefined;
-  blinkoItem.titleFromMetadata = !!metadataTitle;
-  blinkoItem.title = metadataTitle || titleFromContent || '';
+  const derivedTitle = metadataTitle || titleFromContent || '';
 
   const isSelected = blinko.curMultiSelectIds?.includes(blinkoItem.id!);
   const isBlinko = blinkoItem.type === NoteType.BLINKO;
@@ -83,8 +79,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
   const isNote = blinkoItem.type === NoteType.NOTE;
   const isDone = isTodo && blinkoItem.isArchived;
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const openItem = () => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
       return;
@@ -92,6 +87,17 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
     if (blinkoItem.id == null) return;
     blinko.fullscreenEditorNoteId = blinkoItem.id;
     navigate(`/detail?id=${blinkoItem.id}`);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openItem();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    openItem();
   };
 
   const handleTodoToggle = async (e: React.MouseEvent) => {
@@ -130,7 +136,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
   // 时间单独渲染在 row 最右侧（跟 actions 同行），不再挤进 meta 行
   const renderContent = () => {
     if (isNote) {
-      const title = blinkoItem.title || rawFirstLine || '';
+      const title = derivedTitle || rawFirstLine || '';
       const tags = (blinkoItem.tags ?? []).map(t => t.tag).filter(Boolean);
       return (
         <>
@@ -141,10 +147,10 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
           {/* meta：tags + 附件数，muted；时间挪到 row 右侧，不再这里 */}
           <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
             {tags.slice(0, 3).map((tag, i) => <RowTagChip key={i} tag={tag} />)}
-            {blinkoItem._count?.attachments > 0 && (
+            {(blinkoItem.attachments?.length ?? 0) > 0 && (
               <span className="shrink-0 inline-flex items-center gap-0.5">
                 <Icon icon="solar:paperclip-linear" width="11" height="11" />
-                {blinkoItem._count.attachments}
+                {blinkoItem.attachments?.length ?? 0}
               </span>
             )}
           </div>
@@ -190,16 +196,17 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
 
   return (
     <div
-      role="row"
+      role="link"
+      tabIndex={0}
+      aria-label={derivedTitle || rawFirstLine || t('no-title')}
       data-type={blinkoItem.type}
       data-id={blinkoItem.id}
       data-pinned={blinkoItem.isTop ? '1' : '0'}
       data-done={isDone ? '1' : '0'}
       onClick={handleClick}
-      className={`group/row relative flex items-start gap-3 py-2 px-3 cursor-pointer
-        !transition-colors duration-100 -mx-3
-        border-b border-default-200/40 last:border-b-0
-        ${isSelected ? '!bg-primary/10' : 'hover:!bg-hover'}
+      onKeyDown={handleKeyDown}
+      className={`group/row relative -mx-3 flex min-h-14 cursor-pointer items-start gap-2.5 border-b border-default-200/40 px-3 py-2.5 transition-colors duration-150 last:border-b-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/35
+        ${isSelected ? '!bg-primary/10' : 'md:hover:!bg-hover'}
       `}
     >
       {/* 选中态左侧 2px 主题色条（对齐 prototype） */}
@@ -209,27 +216,24 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
           ${isSelected ? 'opacity-100' : 'opacity-0'}`}
       />
 
-      {/* 左：drag handle（hover-only） */}
-      <span className="mt-1 shrink-0 opacity-0 group-hover/row:opacity-100 !transition-opacity cursor-grab text-default-400">
-        <Icon icon="solar:list-arrow-down-minimalistic-linear" width="14" height="14" />
-      </span>
-
       {/* 类型标识位：
           - TODO：checkbox（任务有完成语义）
           - NOTE：emoji（笔记类型标识，metadata.icon 兜底 📝）
           - BLINKO：小 ⚡ 图标 muted，跟 NOTE 的 emoji 视觉对称 —— 让人一眼
             看出"这是闪念"，不再跟 NOTE 混淆。 */}
       {isTodo ? (
-        <span
+        <button
+          type="button"
           onClick={handleTodoToggle}
-          className={`mt-1.5 w-[15px] h-[15px] border-[1.5px] rounded-[3px] shrink-0 inline-flex items-center justify-center
-            !transition-all cursor-pointer
-            ${isDone
-              ? 'bg-primary border-primary text-white'
-              : 'border-default-300 hover:border-primary/50'}`}
+          aria-label={isDone ? t('restore') : t('complete')}
+          className="-ml-1 -mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg hover:bg-default-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         >
-          {isDone && <Icon icon="solar:check-read-linear" width="10" height="10" />}
-        </span>
+          <span className={`inline-flex size-4 items-center justify-center rounded border-[1.5px] transition-colors ${
+            isDone ? 'border-primary bg-primary text-white' : 'border-default-300 hover:border-primary/50'
+          }`}>
+            {isDone && <Icon icon="solar:check-read-linear" width="10" height="10" />}
+          </span>
+        </button>
       ) : isNote ? (
         <span className="text-xl mt-0.5 shrink-0 leading-none select-none">
           {(blinkoItem as any).metadata?.icon || '📝'}
@@ -246,37 +250,26 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
         {renderContent()}
       </div>
 
-      {/* 右：time + actions（time 一直可见；actions hover-only） */}
-      <div className="flex items-center gap-2 shrink-0 mt-0.5">
-        {/* time：单独在最右，muted 小字，跟 chip 行解耦，不抢视觉 */}
-        <span className="text-[11px] text-default-400 tabular-nums whitespace-nowrap">
+      {/* 时间在窄屏收起，操作菜单始终可达但不挤压正文。 */}
+      <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+        <span className="hidden whitespace-nowrap text-[11px] tabular-nums text-default-400 sm:inline">
           {formattedTime}
         </span>
-        {/* actions：hover-only */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 !transition-opacity">
+        <div className="hidden items-center gap-0.5 opacity-0 transition-opacity group-hover/row:opacity-100 md:flex">
           <Tooltip content={blinkoItem.isTop ? t('cancel-top') : t('top')} delay={500}>
             <button
               type="button"
               onClick={handlePinToggle}
-              className={`p-1 rounded hover:!bg-hover !transition-colors ${blinkoItem.isTop ? 'text-[#EFC646]' : 'text-default-500 hover:text-foreground'}`}
+              className={`rounded p-1 transition-colors hover:!bg-hover ${blinkoItem.isTop ? 'text-[#EFC646]' : 'text-default-500 hover:text-foreground'}`}
               title={blinkoItem.isTop ? t('cancel-top') : t('top')}
             >
-              <Icon icon={blinkoItem.isTop ? "solar:pin-bold" : "solar:pin-linear"} width="14" height="14" />
+              <Icon icon={blinkoItem.isTop ? 'solar:pin-bold' : 'solar:pin-linear'} width="14" height="14" />
             </button>
           </Tooltip>
           <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />
-          {isTodo ? (
-            <Tooltip content={t('schedule')} delay={500}>
-              <button
-                type="button"
-                onClick={(e) => e.stopPropagation()}
-                className="p-1 rounded hover:!bg-hover text-default-500 hover:text-foreground !transition-colors"
-                title={t('schedule')}
-              >
-                <Icon icon="solar:calendar-mark-bold" width="14" height="14" />
-              </button>
-            </Tooltip>
-          ) : null}
+          <CardActionMenu blinkoItem={blinkoItem} isDetailPage={false} />
+        </div>
+        <div className="md:hidden" onClick={(event) => event.stopPropagation()}>
           <CardActionMenu blinkoItem={blinkoItem} isDetailPage={false} />
         </div>
       </div>

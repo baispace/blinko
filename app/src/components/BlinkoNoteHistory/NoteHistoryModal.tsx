@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Button, Slider } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import dayjs from '@/lib/dayjs';
@@ -13,14 +13,7 @@ import { ScrollArea } from '../Common/ScrollArea';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { DialogStore } from '@/store/module/Dialog';
 import { LoadingAndEmpty } from '../Common/LoadingAndEmpty';
-
-interface HistoryItem {
-  id: number;
-  version: number;
-  content: string;
-  createdAt: Date;
-  metadata: any;
-}
+import { eventBus } from '@/lib/event';
 
 interface NoteHistoryModalProps {
   noteId: number;
@@ -29,7 +22,6 @@ interface NoteHistoryModalProps {
 const NoteHistoryModal = observer(({ noteId }: NoteHistoryModalProps) => {
   const { t } = useTranslation();
   const toast = RootStore.Get(ToastPlugin);
-  const [sliderValue, setSliderValue] = useState<number>(0);
 
   const Store = RootStore.Local(() => ({
     loading: true,
@@ -39,151 +31,142 @@ const NoteHistoryModal = observer(({ noteId }: NoteHistoryModalProps) => {
       return Store.historyList.value?.[Store.currentHistoryIndex];
     },
     historyList: new PromiseState({
-      function: async (params: { noteId: number }) => {
-        return await api.notes.getNoteHistory.query(params);
-      },
-    }),
-    noteDetail: new PromiseState({
-      function: async (params: { id: number }) => {
-        return await api.notes.detail.mutate(params);
-      },
+      function: async (params: { noteId: number }) => api.notes.getNoteHistory.query(params),
     }),
     restoreNoteVersion: new PromiseState({
       function: async (params: { noteId: number; content: string }) => {
-        await api.notes.upsert.mutate({
-          id: params.noteId,
-          content: params.content,
-        });
-
+        await api.notes.upsert.mutate({ id: params.noteId, content: params.content });
         return true;
       },
     }),
     fetchData: async () => {
-      if (noteId > 0) {
-        Store.loading = true;
-        try {
-          await Store.historyList.call({
-            noteId,
-          });
-
-          setSliderValue(0);
-          Store.currentHistoryIndex = 0;
-        } catch (error) {
-          toast.error(error.message);
-        } finally {
-          Store.loading = false;
-        }
+      if (noteId <= 0) return;
+      Store.loading = true;
+      try {
+        await Store.historyList.call({ noteId });
+        Store.currentHistoryIndex = 0;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : String(error));
+      } finally {
+        Store.loading = false;
       }
     },
-
-    // Handle restore button click
     handleRestore: async () => {
-      if (!Store.historyList.value || Store.historyList.value.length === 0) {
-        return;
-      }
-
-      const historyItem = Store.historyList.value[Store.currentHistoryIndex];
-      if (!historyItem) return;
-
+      const item = Store.currentHistory;
+      if (!item) return;
       Store.restoring = true;
+      const blinko = RootStore.Get(BlinkoStore);
+      eventBus.emit('editor:cancelPending', { id: noteId });
       try {
-        await Store.restoreNoteVersion.call({
-          noteId,
-          content: historyItem.content,
-        });
+        await blinko.waitForPendingWrites();
+        await Store.restoreNoteVersion.call({ noteId, content: item.content });
+        eventBus.emit('editor:applyExternalContent', { id: noteId, content: item.content });
+        if (blinko.noteDetail.value?.id === noteId) blinko.noteDetail.value.content = item.content;
+        blinko.updateTicker++;
+        RootStore.Get(DialogStore).close();
       } catch (error) {
-        toast.error(error.message);
+        toast.error(error instanceof Error ? error.message : String(error));
       } finally {
         Store.restoring = false;
-        RootStore.Get(BlinkoStore).updateTicker++;
-        RootStore.Get(DialogStore).close();
       }
     },
-
-    // Gets the version label for display
-    getVersionLabel: () => {
-      if (!Store.historyList.value || Store.historyList.value.length === 0) {
-        return '';
-      }
-
-      const item = Store.historyList.value[Store.currentHistoryIndex];
-      if (!item) return '';
-
-      return `${t('version')} ${item.version} (${dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss')})`;
-    },
-
-    getContentSummary: (content: string, maxLength: number = 150) => {
-      if (!content) return '';
-      const plainText = content.replace(/<[^>]*>/g, '');
-      return plainText.length > maxLength ? plainText.slice(0, maxLength) + '...' : plainText;
+    getContentSummary: (content: string, maxLength = 76) => {
+      const plain = (content ?? '')
+        .replace(/[#*_`>\-[\]()]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return plain.length > maxLength ? `${plain.slice(0, maxLength)}…` : plain;
     },
   }));
 
-  // Load note history
   useEffect(() => {
-    Store.fetchData();
+    void Store.fetchData();
   }, [noteId]);
 
-  // Called when slider changes
-  const handleSliderChange = (value: number | number[]) => {
-    if (Array.isArray(value)) {
-      setSliderValue(value[0]);
-      Store.currentHistoryIndex = value[0];
-    } else {
-      setSliderValue(value);
-      Store.currentHistoryIndex = value;
-    }
-  };
+  const histories = Store.historyList.value ?? [];
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <LoadingAndEmpty className="mb-4" isLoading={Store.loading} isEmpty={!Store.historyList.value || Store.historyList.value.length === 0} />
-      {Store.historyList.value && Store.historyList.value.length > 0 && (
-        <>
-          <div className="flex flex-col items-center mb-4 px-4">
-            <div className="w-full flex justify-between items-center mb-2">
-              <span className="text-sm flex items-center text-desc">
-                <Icon icon="carbon:time" className="mr-1 text-desc" />
-                {t('newer')}
-              </span>
-              <span className="text-sm font-medium text-primary">{Store.getVersionLabel()}</span>
-              <span className="text-sm flex items-center text-desc">
-                {t('older')}
-                <Icon icon="carbon:time-filled" className="ml-1 text-desc" />
-              </span>
+    <div className="flex h-[min(70vh,620px)] min-h-[420px] w-full flex-col">
+      <LoadingAndEmpty
+        className="mb-2"
+        isLoading={Store.loading}
+        isEmpty={!Store.loading && histories.length === 0}
+        isAbsolute={false}
+      />
+
+      {histories.length > 0 && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-default-200 md:flex-row">
+          <aside className="flex max-h-48 shrink-0 flex-col border-b border-default-200 bg-default-50/50 md:max-h-none md:w-56 md:border-b-0 md:border-r">
+            <div className="flex items-center gap-2 border-b border-default-200 px-3 py-2.5 text-[11px] font-medium text-default-500">
+              <Icon icon="lucide:history" width={15} height={15} />
+              <span>{t('version-history')}</span>
+              <span className="ml-auto rounded-full bg-default-100 px-1.5 py-0.5 tabular-nums">{histories.length}</span>
             </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
+              {histories.map((item, index) => {
+                const selected = Store.currentHistoryIndex === index;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => { Store.currentHistoryIndex = index; }}
+                    className={`relative mb-1 w-full rounded-lg px-2.5 py-2 text-left transition-colors ${
+                      selected ? 'bg-primary/10 text-primary' : 'text-default-600 hover:bg-default-100'
+                    }`}
+                  >
+                    <span className={`absolute bottom-2 left-0 top-2 w-0.5 rounded-full ${selected ? 'bg-primary' : 'bg-transparent'}`} />
+                    <span className="flex items-center justify-between gap-2">
+                      <strong className="text-[12px] font-semibold">{t('version')} {item.version}</strong>
+                      {index === 0 && <span className="text-[9.5px] text-emerald-500">{t('newer')}</span>}
+                    </span>
+                    <span className="mt-0.5 block text-[10.5px] tabular-nums text-default-400">
+                      {dayjs(item.createdAt).format('MM-DD HH:mm:ss')}
+                    </span>
+                    <span className="mt-1 block line-clamp-2 text-[10.5px] leading-relaxed text-default-500">
+                      {Store.getContentSummary(item.content) || t('no-content')}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
 
-            <Slider
-              color="primary"
-              aria-label={t('version')}
-              step={1}
-              maxValue={Math.max(0, (Store.historyList.value?.length || 1) - 1)}
-              minValue={0}
-              value={sliderValue}
-              onChange={handleSliderChange}
-              className="w-full"
-              showSteps={true}
-              size="sm"
-            />
-
-            <div className="w-full mt-2">
-              <p className="text-xs text-amber-500 flex items-center">
-                <Icon icon="carbon:information" className="mr-1" width={14} height={14} />
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-card">
+            <header className="flex items-center justify-between gap-3 border-b border-default-200 px-4 py-2.5">
+              <div className="min-w-0">
+                <div className="truncate text-[12.5px] font-semibold text-foreground">
+                  {t('version')} {Store.currentHistory?.version}
+                </div>
+                <div className="mt-0.5 text-[10.5px] text-default-400">
+                  {Store.currentHistory?.createdAt ? dayjs(Store.currentHistory.createdAt).format('YYYY-MM-DD HH:mm:ss') : ''}
+                </div>
+              </div>
+              <span className="hidden items-center gap-1 text-[10px] text-amber-500 sm:flex">
+                <Icon icon="carbon:information" width={13} height={13} />
                 {t('history-note-only')}
-              </p>
-            </div>
-          </div>
+              </span>
+            </header>
 
-          <ScrollArea className="flex-1 w-full p-4 max-h-[400px]" onBottom={() => {}}>
-            <MarkdownRender content={Store.currentHistory?.content || ''} />
-          </ScrollArea>
+            <ScrollArea className="min-h-0 flex-1 px-4 py-3" onBottom={() => {}}>
+              <MarkdownRender content={Store.currentHistory?.content || ''} />
+            </ScrollArea>
 
-          <div className="flex justify-end mt-4">
-            <Button color="primary" isLoading={Store.restoring} onPress={Store.handleRestore} startContent={<Icon icon="material-symbols:settings-backup-restore-rounded" />}>
-              {t('restore-this-version')}
-            </Button>
-          </div>
-        </>
+            <footer className="flex items-center justify-between gap-3 border-t border-default-200 px-4 py-3">
+              <span className="text-[10.5px] text-default-400 sm:hidden">{t('history-note-only')}</span>
+              <Button
+                color="primary"
+                size="sm"
+                isLoading={Store.restoring}
+                onPress={Store.handleRestore}
+                startContent={<Icon icon="material-symbols:settings-backup-restore-rounded" width={16} height={16} />}
+                className="ml-auto"
+              >
+                {t('restore-this-version')}
+              </Button>
+            </footer>
+          </section>
+        </div>
       )}
     </div>
   );

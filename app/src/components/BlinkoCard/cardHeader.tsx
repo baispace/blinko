@@ -1,6 +1,6 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from '@heroui/react';
-import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
+import { ShowEditTimeModel } from '../BlinkoRightClickMenu';
 import { CardActionMenu } from './cardActionMenu';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note, NoteType } from '@shared/lib/types';
@@ -55,22 +55,26 @@ export const PinButton = observer(({ blinkoItem, blinko, iconSize = '15' }: { bl
 });
 
 /** Shared timestamp display; click opens the edit-time dialog. */
-export const NoteTime = ({ blinkoItem, blinko, isExpanded }: { blinkoItem: Note; blinko: BlinkoStore; isExpanded?: boolean }) => {
+export const NoteTime = ({ blinkoItem, blinko, isExpanded, compact = false }: { blinkoItem: Note; blinko: BlinkoStore; isExpanded?: boolean; compact?: boolean }) => {
   const { t } = useTranslation();
+  const time = dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt);
+  const display = blinko.config.value?.timeFormat === 'relative'
+    ? time.fromNow()
+    : time.format(compact ? 'MM-DD HH:mm' : (blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss'));
+
   return (
     <Tooltip content={t('edit-time')} delay={1000}>
       <div
-        className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc cursor-pointer transition-colors`}
+        data-testid="note-time"
+        className={`${isExpanded ? 'text-sm' : compact ? 'text-[11px]' : 'text-xs'} cursor-pointer truncate whitespace-nowrap text-desc transition-colors`}
+        title={display}
         onClick={(e) => {
           e.stopPropagation();
           blinko.curSelectedNote = _.cloneDeep(blinkoItem);
           ShowEditTimeModel();
         }}
       >
-        {blinko.config.value?.timeFormat == 'relative'
-          ? dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).fromNow()
-          : dayjs(blinko.config.value?.isOrderByCreateTime ? blinkoItem.createdAt : blinkoItem.updatedAt).format(blinko.config.value?.timeFormat ?? 'YYYY-MM-DD HH:mm:ss')
-        }
+        {display}
       </div>
     </Tooltip>
   );
@@ -159,31 +163,27 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </Tooltip>
         )}
 
-        {!hideTime && <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
+        {!hideTime && !compactActions && <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
 
         {compactActions && !isShareMode ? (
           /* 紧凑闪念行：时间 + 操作按钮同行；操作按钮默认低透明度，hover 行才完全显出
              （对齐 prototype「行式」交互，详见 blinko-home-redesign.html .row .actions）。
              把时间从 CardFooter 搬上来，整卡不再有 footer 一节，更轻。 */
-          <div className="ml-auto flex items-center gap-3 shrink-0">
+          <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-hidden">
             {!hideTime && (
-              <span className="text-[11px] text-default-500 font-normal opacity-60">
-                <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />
-              </span>
+              <div className="min-w-0 flex-1 text-right opacity-65">
+                <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} compact />
+              </div>
             )}
-            <div className="flex items-center gap-3 shrink-0
-              opacity-40 group-hover/card:opacity-100 !transition-opacity">
+            <div className="flex shrink-0 items-center gap-2 opacity-55 transition-opacity group-hover/card:opacity-100">
               {blinkoItem._count?.comments ? (
                 <CommentCount blinkoItem={blinkoItem} />
               ) : (
                 <CommentButton blinkoItem={blinkoItem} />
               )}
-              <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
+              <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow compact />
               <PinButton blinkoItem={blinkoItem} blinko={blinko} iconSize={iconSize} />
-              <LeftCickMenu
-                className="cursor-pointer"
-                onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
-              />
+              <CardActionMenu blinkoItem={blinkoItem} isDetailPage={!!isDetailPage} />
             </div>
           </div>
         ) : (
@@ -213,37 +213,40 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
   );
 });
 
-export const ShareButton = observer(({ blinkoItem, isIOSDevice, alwaysShow }: { blinkoItem: Note, isIOSDevice: boolean, alwaysShow?: boolean }) => {
+export const ShareButton = observer(({ blinkoItem, isIOSDevice, alwaysShow, compact = false }: { blinkoItem: Note, isIOSDevice: boolean, alwaysShow?: boolean, compact?: boolean }) => {
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore);
   return (
     <Tooltip content={t('share')} delay={1000}>
-      <div className="flex items-center gap-2">
+      <button
+        type="button"
+        aria-label={t('share')}
+        className="flex items-center gap-2"
+        onClick={(event) => {
+          event.stopPropagation();
+          blinko.curSelectedNote = _.cloneDeep(blinkoItem);
+          RootStore.Get(DialogStore).setData({
+            isOpen: true,
+            size: 'md',
+            title: t('share'),
+            content: <BlinkoShareDialog defaultSettings={{
+              shareUrl: blinkoItem.shareEncryptedUrl ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl : undefined,
+              expiryDate: blinkoItem.shareExpiryDate ?? undefined,
+              password: blinkoItem.sharePassword ?? '',
+              isShare: blinkoItem.isShare,
+            }} />,
+          });
+        }}
+      >
         <Icon
           icon="tabler:share-2"
           width="16"
           height="16"
-          className={`cursor-pointer text-desc ml-2 !transition-opacity ${isIOSDevice || alwaysShow
-            ? 'opacity-100'
-            : 'opacity-0 group-hover/card:opacity-100'
-            }`}
-          onClick={async (e) => {
-            e.stopPropagation()
-            blinko.curSelectedNote = _.cloneDeep(blinkoItem)
-            RootStore.Get(DialogStore).setData({
-              isOpen: true,
-              size: 'md',
-              title: t('share'),
-              content: <BlinkoShareDialog defaultSettings={{
-                shareUrl: blinkoItem.shareEncryptedUrl ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl : undefined,
-                expiryDate: blinkoItem.shareExpiryDate ?? undefined,
-                password: blinkoItem.sharePassword ?? '',
-                isShare: blinkoItem.isShare
-              }} />
-            })
-          }}
+          className={`cursor-pointer text-desc ${compact ? 'ml-0' : 'ml-2'} transition-opacity ${
+            isIOSDevice || alwaysShow ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'
+          }`}
         />
-      </div>
+      </button>
     </Tooltip>
   );
 })

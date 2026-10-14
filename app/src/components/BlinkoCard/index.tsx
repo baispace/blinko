@@ -220,7 +220,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               onContextMenu={e => !isPc && e.stopPropagation()}
               shadow='none'
               className={`
-                flex flex-col ${isCompactBlinko ? 'px-3 py-2.5' : 'px-4 py-3.5'}
+                flex flex-col ${isCompactBlinko ? 'px-3 py-2.5' : 'px-3.5 py-3'}
                 /* 卡片模式（含紧凑 BLINKO）所有卡统一 border + bg-card + rounded-lg，
                     对齐 prototype .m-card 的默认静态样式；list 行模式（byDay）走
                     BlinkoListRow 单独的无边框 row 样式，不走这里。
@@ -295,7 +295,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     isExpanded={defaultExpanded}
                     isShareMode={isShareMode}
                     attachments={isCompactBlinko ? otherAttachments : undefined}
-                    foldable={isCompactBlinko}
+                    foldable={!defaultExpanded && !isDetailPage && !isShareMode}
                     foldLength={blinko.config.value?.cardFoldLength ?? 300}
                     inlineTags={isCompactBlinko}
                     skipFirstLine={!blinkoItem.titleFromMetadata && !!blinkoItem.title}
@@ -333,13 +333,13 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                   ))}
 
                 {/* 紧凑闪念卡：时间已挪到 CardHeader 右侧，footer 不再渲染；
-                    非紧凑卡保留 CardFooter（带 tags + time）。 */}
+                    非紧凑卡保留 CardFooter 的标签和操作；时间统一由 header 显示。 */}
                 {!blinkoItem.isBlog && !isCompactBlinko && (
                   <CardFooter
                     blinkoItem={blinkoItem}
                     blinko={blinko}
                     isShareMode={isShareMode}
-                    showTime
+                    showTime={false}
                     hideTags={false}
                   />
                 )}

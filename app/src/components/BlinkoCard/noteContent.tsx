@@ -17,9 +17,9 @@ interface NoteContentProps {
   /** When provided (blinko gallery split), replaces blinkoItem.attachments. */
   attachments?: Note['attachments'];
   /**
-   * Weibo-style fold for compact blinko cards: long text is height-capped
-   * with a gradient fade and an expand/collapse toggle, media below still
-   * renders. Long NOTE cards use the blog layout instead.
+   * Long-content folding for list cards: cap rendered text with a gradient
+   * while keeping media and references available below. Detail/share views
+   * pass false so the full document remains visible.
    */
   foldable?: boolean;
   /** Char threshold above which the text is folded (cardFoldLength). */
@@ -33,8 +33,8 @@ interface NoteContentProps {
   skipFirstLine?: boolean;
 }
 
-/** Max visible height of folded text (≈ 7 lines, Weibo-style preview). */
-const FOLD_MAX_HEIGHT = 200;
+/** Max visible height of folded text (≈ 6 lines in a masonry card). */
+const FOLD_MAX_HEIGHT = 180;
 
 /** 笔记关联标签的完整路径（父子标签只保留最深层级） */
 export const getNoteTagPaths = (blinkoItem: Note): string[] => {
@@ -73,10 +73,10 @@ const stripTagTokens = (content: string, tagPaths: string[]) => {
 export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMode, attachments, foldable, foldLength, inlineTags, skipFirstLine }: NoteContentProps) => {
   const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isTextExpanded, setTextExpanded] = useState(!!isExpanded);
-  const [needsFold, setNeedsFold] = useState(false);
   const foldThreshold = foldLength ?? blinko.config.value?.cardFoldLength ?? 300;
   const isLongText = (blinkoItem.content?.length ?? 0) > foldThreshold;
+  const [isTextExpanded, setTextExpanded] = useState(!!isExpanded);
+  const [needsFold, setNeedsFold] = useState(isLongText);
   const isClamped = !!foldable && isLongText && !isTextExpanded && needsFold;
 
   // Fold only when the rendered content actually overflows the cap
@@ -124,9 +124,9 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         </div>
         {isClamped && (
           <>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background via-background/80 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card via-card/80 to-transparent" />
             <button
-              className="absolute bottom-1.5 right-2 text-[color:var(--tag)] text-sm font-medium flex items-center gap-0.5 bg-background/70 rounded px-1.5 py-0.5 hover:opacity-80"
+              className="absolute bottom-1.5 right-2 text-[color:var(--tag)] text-sm font-medium flex items-center gap-0.5 bg-card/80 rounded px-1.5 py-0.5 hover:opacity-80"
               onClick={(e) => { e.stopPropagation(); setTextExpanded(true); }}
             >
               {t('expand')}

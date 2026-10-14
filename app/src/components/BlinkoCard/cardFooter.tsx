@@ -85,7 +85,7 @@ const ShareMetaIcons = ({ blinkoItem, iconSize = '16' }: { blinkoItem: Note; ico
 export const BlogCardTopRow = ({ blinkoItem, blinko, isShareMode, isDetailPage }: { blinkoItem: BlinkoItem; blinko: BlinkoStore; isShareMode?: boolean; isDetailPage?: boolean }) => {
   const isIOSDevice = useIsIOS();
   return (
-    <div className="flex items-center justify-between mt-4 mb-2 gap-2">
+    <div className="flex items-center justify-between mt-0 mb-1.5 gap-2">
       <ConvertTypeButton blinkoItem={blinkoItem} />
       <div className="flex items-center gap-2 shrink-0">
         {!isShareMode && <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} alwaysShow />}

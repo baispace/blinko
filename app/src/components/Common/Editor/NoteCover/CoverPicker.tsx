@@ -69,6 +69,7 @@ export const CoverPicker = ({
   const { getRootProps, getInputProps, isDragAccept, open } = useDropzone({
     multiple: false,
     noClick: true,
+    accept: { 'image/*': [] },
     onDrop: (accepted) => {
       void doUpload(accepted);
     },

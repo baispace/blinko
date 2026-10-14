@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Card } from '@heroui/react';
+import { Card, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { NoteType, type Note } from '@shared/lib/types';
@@ -144,38 +144,38 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     ShowTodoEditModal(todo);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    openEdit();
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (todo.id == null) return;
-    if (!window.confirm(`${t('confirm')}：${t('delete')}？`)) return;
-    PromiseCall(api.notes.deleteMany.mutate({ ids: [todo.id] }));
-    PromiseCall(api.ai.embeddingDelete.mutate({ id: todo.id }));
-    blinko.todoList.resetAndCall({});
-  };
-
-  const handleSnooze = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const snoozeTodo = () => {
+    if (done) return;
     const base = due ?? dayjs().startOf('day');
-    const next = base.add(1, 'day').toISOString();
     blinko.upsertNote.call({
       id: todo.id,
       type: NoteType.TODO,
       metadata: {
-        expireAt: next,
+        expireAt: base.add(1, 'day').toISOString(),
         snoozeCount: snooze + 1,
       },
     });
   };
 
+  const deleteTodo = async () => {
+    if (todo.id == null || !window.confirm(`${t('confirm')}：${t('delete')}？`)) return;
+    await PromiseCall(api.notes.deleteMany.mutate({ ids: [todo.id] }));
+    void PromiseCall(api.ai.embeddingDelete.mutate({ id: todo.id }), { autoAlert: false });
+    await Promise.all([
+      blinko.todoList.resetAndCall({}),
+      blinko.doneTodoList.resetAndCall({}),
+    ]);
+  };
+
+  const stopAndRun = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
+
   return (
     <Card
       shadow='none'
-      className="relative flex flex-row gap-3 items-start p-3.5 pl-4 bg-background border border-default-200 rounded-xl shadow-sm !transition-all group/card hover:border-primary/40 hover:shadow-md hover:-translate-y-px"
+      className="group/card relative flex flex-row items-start gap-2.5 rounded-xl border border-default-200/70 bg-card p-3 pl-3.5 shadow-sm transition-[border-color,box-shadow,transform] duration-200 md:hover:-translate-y-px md:hover:border-primary/30 md:hover:shadow-md"
     >
       <div
         className="absolute left-0 top-2 bottom-2 w-1 rounded-full"
@@ -186,13 +186,17 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
         type="button"
         onClick={toggle}
         aria-label={done ? t('restore') : t('complete')}
-        className="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
-        style={{
-          borderColor: done ? quadMeta.color : '#cbd5e1',
-          backgroundColor: done ? quadMeta.color : 'transparent',
-        }}
+        className="-ml-1 -mt-1 grid size-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-default-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
-        {done && <Icon icon="mdi:check" width={13} height={13} className="text-white" />}
+        <span
+          className="flex size-5 items-center justify-center rounded-full border-2 transition-colors"
+          style={{
+            borderColor: done ? quadMeta.color : '#cbd5e1',
+            backgroundColor: done ? quadMeta.color : 'transparent',
+          }}
+        >
+          {done && <Icon icon="mdi:check" width={13} height={13} className="text-white" />}
+        </span>
       </button>
 
       <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
@@ -226,15 +230,15 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
             </button>
           )}
 
-          {/* 多行提示：昨日未完成，带到今天 */}
-          {carriedFromYesterday && (
-            <div className="mt-1 text-[11px] text-amber-500">
-              {t('carried-from-yesterday')}
-            </div>
-          )}
-
           {/* 时间信息（左侧）+ 标签 */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+              style={{ color: quadMeta.color, backgroundColor: `${quadMeta.color}14` }}
+              title={t(quadMeta.label)}
+            >
+              {t(quadMeta.label)}
+            </span>
             {due && (
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
@@ -279,46 +283,63 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
           )}
         </div>
 
-        {/* 右侧：优先级 chip + 顺延 / 编辑 / 删除 */}
-        <div className="flex items-center gap-1 shrink-0">
-          <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium mr-0.5"
-            style={{
-              color: quadMeta.color,
-              backgroundColor: `${quadMeta.color}14`,
-            }}
-            title={t(quadMeta.label)}
-          >
-            {t(quadMeta.label)}
-          </span>
+        {/* 桌面端展示高频动作；移动端收进菜单，避免挤压正文。 */}
+        <div className="hidden shrink-0 items-center gap-0.5 md:flex">
+          {!done && (
+            <button
+              type="button"
+              onClick={(e) => stopAndRun(e, snoozeTodo)}
+              aria-label={t('snooze-1-day')}
+              title={t('snooze-1-day')}
+              className="grid size-8 place-items-center rounded-lg text-default-500 transition-colors hover:bg-default-100 hover:text-primary"
+            >
+              <Icon icon="mdi:chevron-double-right" width={16} height={16} />
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleSnooze}
-            aria-label={t('snooze-1-day')}
-            title={t('snooze-1-day')}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-default-500 hover:bg-default-100 hover:text-primary transition-colors"
-          >
-            <Icon icon="mdi:chevron-double-right" width={16} height={16} />
-          </button>
-          <button
-            type="button"
-            onClick={handleEdit}
+            onClick={(e) => stopAndRun(e, openEdit)}
             aria-label={t('edit')}
             title={t('edit')}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-default-500 hover:bg-default-100 hover:text-foreground transition-colors"
+            className="grid size-8 place-items-center rounded-lg text-default-500 transition-colors hover:bg-default-100 hover:text-foreground"
           >
             <Icon icon="mdi:pencil-outline" width={16} height={16} />
           </button>
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={(e) => stopAndRun(e, () => void deleteTodo())}
             aria-label={t('delete')}
             title={t('delete')}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-default-500 hover:bg-danger/10 hover:text-danger transition-colors"
+            className="grid size-8 place-items-center rounded-lg text-default-500 transition-colors hover:bg-danger/10 hover:text-danger"
           >
             <Icon icon="mdi:trash-can-outline" width={16} height={16} />
           </button>
         </div>
+
+        <Dropdown placement="bottom-end">
+          <DropdownTrigger>
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t('more')}
+              className="grid size-9 shrink-0 place-items-center rounded-lg text-default-500 transition-colors hover:bg-default-100 hover:text-foreground md:hidden"
+            >
+              <Icon icon="ri:more-fill" width={18} height={18} />
+            </button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label={t('todo')}
+            onAction={(key) => {
+              if (key === 'snooze') snoozeTodo();
+              if (key === 'edit') openEdit();
+              if (key === 'delete') void deleteTodo();
+            }}
+          >
+            {!done ? <DropdownItem key="snooze" startContent={<Icon icon="mdi:chevron-double-right" width={16} height={16} />}>{t('snooze-1-day')}</DropdownItem> : null}
+            <DropdownItem key="edit" startContent={<Icon icon="mdi:pencil-outline" width={16} height={16} />}>{t('edit')}</DropdownItem>
+            <DropdownItem key="delete" color="danger" className="text-danger" startContent={<Icon icon="mdi:trash-can-outline" width={16} height={16} />}>{t('delete')}</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
     </Card>
   );

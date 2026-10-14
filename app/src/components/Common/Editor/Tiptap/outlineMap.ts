@@ -93,6 +93,13 @@ export function mountOutlineMap(dom: HTMLElement, viewport: HTMLElement, list: H
     if (!active) {
       initialized = false; dom.dataset.expanded = 'false'
       expand.textContent = '展开画布'; expand.setAttribute('aria-label', '展开画布')
+      // Mindmap layout writes absolute coordinates onto controls. Clear them when
+      // returning to outline mode, otherwise those inline values override the
+      // normal outline CSS and leave the black dots floating beside the wrong row.
+      list.querySelectorAll<HTMLElement>('.outline-toggle, .outline-drag').forEach(control => {
+        control.style.removeProperty('top')
+        control.style.removeProperty('left')
+      })
       svg.replaceChildren(); return
     }
     const pos = getPos?.(), node = typeof pos === 'number' ? editor?.state.doc.nodeAt(pos) : null

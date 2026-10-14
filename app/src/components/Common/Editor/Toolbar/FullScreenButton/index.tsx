@@ -1,4 +1,3 @@
-import { useMediaQuery } from 'usehooks-ts';
 import { IconButton } from '../IconButton';
 import { useTranslation } from 'react-i18next';
 
@@ -9,13 +8,12 @@ interface Props {
 
 export const FullScreenButton = ({ isFullscreen, onClick }: Props) => {
   const { t } = useTranslation();
-  const isPc = useMediaQuery('(min-width: 768px)');
 
   return (
     <div className='' onClick={onClick}>
       <IconButton
         tooltip={isFullscreen ? t('exit-fullscreen') : t('fullscreen')}
-        icon={isFullscreen ? 'lucide:minimize' : 'lucide:maximize'}
+        icon={isFullscreen ? 'lucide:minimize' : 'basil:expand-outline'}
       />
     </div>
   );

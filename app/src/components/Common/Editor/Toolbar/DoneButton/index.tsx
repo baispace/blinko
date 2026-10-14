@@ -18,31 +18,23 @@ interface Props {
  */
 export const DoneButton = observer(({ store, isSendLoading }: Props) => {
   const { t } = useTranslation();
+  const isUploading = store.activeUploads > 0 || store.files?.some(item => item.uploadPromise?.loading?.value);
+  const isBusy = Boolean(isSendLoading || isUploading);
+
   return (
-    <div
+    <button
+      type="button"
       title={t('done')}
-      onClick={
-        (e) => {
-          if (isSendLoading) return
-          store.handleDone()
-        }
-      }
-      onTouchEnd={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (isSendLoading) return
-        store.handleDone()
-      }}
+      aria-label={t('done')}
+      disabled={isBusy}
+      onClick={() => { if (!isBusy) void store.handleDone(); }}
+      className="group ml-2 flex h-8 w-[60px] cursor-pointer items-center justify-center rounded-[11px] bg-primary text-foreground disabled:cursor-wait disabled:opacity-70"
     >
-      <div
-        className='w-[60px] group ml-2 bg-primary text-foreground flex items-center justify-center rounded-[11px] cursor-pointer h-[32px]'
-      >
-        {(store.files?.some(i => i.uploadPromise?.loading?.value) || isSendLoading) ? (
-          <Icon icon="eos-icons:three-dots-loading" width="24" height="24" className='text-[#F5A524]' />
-        ) : (
-          <Icon icon="mingcute:check-line" width="22" height="22" className='!text-primary-foreground' />
-        )}
-      </div>
-    </div>
+      {isBusy ? (
+        <Icon icon="eos-icons:three-dots-loading" width="24" height="24" className="text-[#F5A524]" />
+      ) : (
+        <Icon icon="mingcute:check-line" width="22" height="22" className="text-primary-foreground" />
+      )}
+    </button>
   );
 })

@@ -56,8 +56,8 @@ const currentCellGeometry = (editor: Editor): CellGeometry | null => {
   return {
     tablePos: $from.before(tableDepth),
     tableNode: $from.node(tableDepth),
-    rowIndex: $from.index(rowDepth),
-    colIndex: $from.index(cellDepth),
+    rowIndex: $from.index(tableDepth),
+    colIndex: $from.index(rowDepth),
   };
 };
 
@@ -68,7 +68,7 @@ const cellInnerPos = (table: CellGeometry, rowIndex: number, colIndex: number) =
   const row = table.tableNode.child(rowIndex);
   let cellPos = rowPos + 1;
   for (let j = 0; j < colIndex; j++) cellPos += row.child(j).nodeSize;
-  return cellPos + 1;
+  return cellPos;
 };
 
 /** Selects every cell of one row (or column), the way a spreadsheet does. */

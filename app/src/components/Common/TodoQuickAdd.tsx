@@ -90,8 +90,7 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
 
   return (
     <div className={compact ? "px-3 pb-3" : "rounded-xl border border-default-200 bg-background p-4 shadow-sm"}>
-      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器（富文本、#标签、@引用、附件、AI 斜杠菜单），
-          但锁定为待办类型、隐藏类型切换与全屏，避免误操作 */}
+      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器；待办类型固定，元信息置于正文上方。 */}
       <div>
         <Editor
           composerVariant="todo"
@@ -102,17 +101,20 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
           isSendLoading={blinko.upsertNote.loading.value}
           fixedNoteType={NoteType.TODO}
           hideNoteTypeButton
-          hideFullscreenButton
           withoutOutline
-          beforeToolbar={<>      {/* Top: due date on the left, priority flag on the right, separated from the hero input by a divider */}
-      <div className="flex items-center justify-between gap-2 py-3 border-t border-default-100">
-        <label className="inline-flex items-center gap-1.5 h-7">
-          <Icon icon="mdi:calendar-outline" width={15} height={15} className="text-default-500 shrink-0 self-center" />
+          topSlot={<>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 border-b border-default-100 px-1 pb-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           <input
             type="datetime-local"
+            aria-label={t('due-date')}
+            title={t('due-date')}
             value={due}
             onChange={(e) => setDue(e.target.value)}
-            className="cursor-pointer bg-transparent text-[13px] text-default-700 outline-none border border-default-200 rounded-md px-2 h-7 leading-none transition-colors hover:border-primary/50 focus:border-primary"
+            onClick={(e) => {
+              try { e.currentTarget.showPicker?.(); } catch { /* Browser may restrict native pickers. */ }
+            }}
+            className="h-8 min-w-[180px] max-w-full cursor-pointer rounded-md border border-default-200 bg-transparent px-2 text-[13px] leading-none text-default-700 outline-none transition-[border-color,background-color,box-shadow] duration-150 hover:border-primary/50 hover:bg-default-50 focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
           {!due ? (
             <button
@@ -133,9 +135,9 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
               <Icon icon="mdi:close" width={14} height={14} />
             </button>
           )}
-        </label>
+        </div>
 
-        <div ref={prioWrapRef} className="relative">
+        <div ref={prioWrapRef} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setPrioOpen((v) => !v)}
@@ -144,12 +146,13 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
                 ? 'border-primary/50 text-foreground'
                 : 'border-default-200 text-default-700 hover:border-primary/50'
             }`}
-            aria-label={t('priority')}
+            aria-label={`${t('priority')}：${t(cur.labelKey)}`}
+            title={t(cur.labelKey)}
             aria-haspopup="listbox"
             aria-expanded={prioOpen}
           >
             <FlagIcon color={cur.color} outline={priorityKey === 'nn'} />
-            <span>{t(cur.labelKey)}</span>
+            <span className="hidden sm:inline">{t(cur.labelKey)}</span>
           </button>
           {prioOpen && (
             <div
@@ -186,7 +189,6 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
       </div>
 
 </>}
-          bottomSlot={<span className="composer-shortcut text-xs text-default-400">⌘ / Ctrl + Enter 添加</span>}
         />
       </div>
     </div>

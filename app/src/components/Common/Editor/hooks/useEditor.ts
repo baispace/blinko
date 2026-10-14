@@ -54,7 +54,9 @@ export const useEditorInit = (
    * 打开既有长文时关掉它：编辑器会把光标放到文末并 scrollIntoView，
    * 结果是文章刚打开就被拽到底部。关掉后保持可编辑，点哪儿从哪儿写。
    */
-  focusOnMount: boolean = true
+  focusOnMount: boolean = true,
+  /** 创建器类型用 ref 传入，切换混合类型时无需重建 Tiptap 也能更新占位提示 */
+  composerVariantRef?: { current?: 'flash' | 'note' | 'todo' }
 ) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
@@ -84,8 +86,17 @@ export const useEditorInit = (
         MarkdownHardBreak,
         MarkdownBlankLine,
         Placeholder.configure({
-          placeholder: () => store.noteType === NoteType.NOTE ? '记录背景、思考和结论…' : store.noteType === NoteType.TODO ? '需要完成什么？可以补充执行步骤…' : t('i-have-a-new-idea'),
+          placeholder: () => {
+            const variant = composerVariantRef?.current;
+            if (variant === 'note') return t('composer-placeholder-note');
+            if (variant === 'todo') return t('composer-placeholder-todo');
+            if (variant === 'flash') return t('composer-placeholder-flash');
+            if (store.noteType === NoteType.NOTE) return '记录背景、思考和结论…';
+            if (store.noteType === NoteType.TODO) return '需要完成什么？可以补充执行步骤…';
+            return t('i-have-a-new-idea');
+          },
           showOnlyWhenEditable: true,
+          showOnlyCurrent: false,
         }),
         TaskList,
         TaskItem.configure({

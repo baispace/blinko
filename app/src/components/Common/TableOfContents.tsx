@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -48,8 +48,8 @@ export const extractHeadingsFromMarkdown = (content: string): TocItem[] => {
  * 把解析出来的标题和页面上真实渲染的 heading 节点按顺序对齐。
  * 只认当前可见的节点，避免匹配到被遮罩盖住 / 隐藏的那一份渲染。
  */
-const resolveHeadingElements = (items: TocItem[]): TocItem[] => {
-  const nodes = Array.from(document.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'))
+const resolveHeadingElements = (items: TocItem[], root: ParentNode = document): TocItem[] => {
+  const nodes = Array.from(root.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'))
     .filter((n) => n.offsetParent !== null || n.getClientRects().length > 0);
 
   let cursor = 0;
@@ -93,16 +93,27 @@ export const TableOfContents = observer(({
   content,
   className = '',
   floating = false,
+  sidePanel = false,
+  embedded = false,
   onClose,
+  panelStyle,
+  rootElement,
 }: {
   content: string;
   className?: string;
   floating?: boolean;
+  sidePanel?: boolean;
+  embedded?: boolean;
   onClose?: () => void;
+  panelStyle?: CSSProperties;
+  /** Limit heading resolution to the active document surface. */
+  rootElement?: ParentNode | null;
 }) => {
   const { t } = useTranslation();
   const [headings, setHeadings] = useState<TocItem[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [tocScrolling, setTocScrolling] = useState(false);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const parsed = useMemo(() => extractHeadingsFromMarkdown(content), [content]);
 
@@ -111,13 +122,13 @@ export const TableOfContents = observer(({
     let disposed = false;
     const timer = setTimeout(() => {
       if (disposed) return;
-      setHeadings(resolveHeadingElements(parsed));
+      setHeadings(resolveHeadingElements(parsed, rootElement ?? document));
     }, 100);
     return () => {
       disposed = true;
       clearTimeout(timer);
     };
-  }, [parsed]);
+  }, [parsed, rootElement]);
 
   // 滚动高亮：监听真正滚动的那个容器
   useEffect(() => {
@@ -141,6 +152,16 @@ export const TableOfContents = observer(({
     return () => scrollParent.removeEventListener('scroll', handleScroll);
   }, [headings]);
 
+  useEffect(() => () => {
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+  }, []);
+
+  const handleTocScroll = () => {
+    setTocScrolling(true);
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setTocScrolling(false), 650);
+  };
+
   const scrollToHeading = (index: number) => {
     const el = headings[index]?.element;
     if (!el) return;
@@ -154,26 +175,36 @@ export const TableOfContents = observer(({
 
   const panel = (
     <div
-      className={floating
-        ? `absolute z-30 w-64 max-h-[70vh] overflow-hidden rounded-xl border border-default-200 bg-popover shadow-lg p-2 ${className}`
-        : `toc-sidebar sticky top-20 ${className}`}
+      data-testid={sidePanel || embedded ? 'document-outline-panel' : undefined}
+      style={panelStyle}
+      className={embedded
+        ? `flex h-full min-h-0 flex-col overflow-hidden ${className}`
+        : sidePanel
+          ? `fixed bottom-6 top-24 z-[10020] flex w-72 flex-col overflow-hidden rounded-2xl border border-default-200 bg-card/95 p-3 shadow-xl backdrop-blur-xl max-md:inset-x-3 max-md:bottom-20 max-md:top-16 max-md:w-auto ${className}`
+          : floating
+            ? `absolute z-30 w-64 max-h-[70vh] overflow-hidden rounded-xl border border-default-200 bg-popover shadow-lg p-2 ${className}`
+            : `toc-sidebar sticky top-20 ${className}`}
     >
       <div className="text-xs font-medium text-default-500 mb-2 px-1 flex items-center gap-1">
         <Icon icon="mdi:format-list-bulleted" width={14} height={14} />
         <span>{t('table-of-contents')}</span>
-        {floating && onClose && (
-          <button onClick={onClose} className="ml-auto text-default-400 hover:text-default-600" aria-label="close">
+        {(floating || sidePanel || embedded) && onClose && (
+          <button onClick={onClose} className="ml-auto grid size-7 place-items-center rounded-lg text-default-400 hover:bg-default-100 hover:text-default-700" aria-label={t('close')}>
             <Icon icon="mingcute:close-circle-fill" width={14} height={14} />
           </button>
         )}
       </div>
-      <nav className="space-y-0.5 max-h-[60vh] overflow-y-auto">
+      <nav
+        data-scrolling={tocScrolling ? 'true' : 'false'}
+        onScroll={handleTocScroll}
+        className={`toc-scrollbar space-y-0.5 overflow-y-auto ${sidePanel || embedded ? 'min-h-0 flex-1' : 'max-h-[60vh]'}`}
+      >
         {headings.map((heading, index) => (
           <button
             key={`${heading.level}-${heading.text}-${index}`}
             onClick={() => {
               scrollToHeading(index);
-              if (floating) onClose?.();
+              if (floating || (sidePanel && window.innerWidth < 768)) onClose?.();
             }}
             className={`w-full text-left text-sm px-2 py-1 rounded truncate transition-colors ${
               activeIndex === index
@@ -192,11 +223,11 @@ export const TableOfContents = observer(({
 
   // In floating mode the component owns its dismiss layer too, so a note with
   // no headings renders nothing at all instead of an invisible click blocker.
-  if (!floating) return panel;
+  if (embedded || (!floating && !sidePanel)) return panel;
 
   return (
     <>
-      <div className="fixed inset-0 z-20" onClick={() => onClose?.()} />
+      <div className={`${sidePanel ? 'fixed inset-0 z-[10015] bg-black/10 md:hidden' : 'fixed inset-0 z-20'}`} onClick={() => onClose?.()} />
       {panel}
     </>
   );

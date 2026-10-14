@@ -9,7 +9,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { type Attachment, NoteType } from '@shared/lib/types';
-import { Card, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
+import { Card, Popover, PopoverTrigger, PopoverContent, Tooltip } from '@heroui/react';
 import { AttachmentsRender, ReferenceRender } from '../AttachmentRender';
 import { ReferenceButton } from './Toolbar/ReferenceButton';
 import { NoteTypeButton } from './Toolbar/NoteTypeButton';
@@ -30,19 +30,25 @@ import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
 import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
 import { NoteCoverHeader } from './NoteCover';
-import { ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/ToolbarButtons';
+import { DocumentImageUploadButton, ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
 type IProps = {
   mode: 'create' | 'edit' | 'comment',
   composerVariant?: 'flash' | 'note' | 'todo',
+  /** Fullscreen document toolbar: expose labelled tag/image/attachment actions. */
+  documentToolbar?: boolean,
+  /** Inline document rail/sidebar rendered between title header and body. */
+  documentSidebar?: ReactElement<any, any>,
+  documentSidebarInset?: number,
   content: string,
   onChange?: (content: string) => void,
   onHeightChange?: () => void,
   onSend: (args: OnSendContentType) => Promise<any>,
   isSendLoading?: boolean,
   bottomSlot?: ReactElement<any, any>,
-  beforeToolbar?: ReactElement<any, any>,
+  /** 正文之前的创建器元信息（如待办截止日期和优先级） */
+  topSlot?: ReactElement<any, any>,
   originFiles?: Attachment[],
   originReference?: number[],
   hiddenToolbar?: boolean,
@@ -87,7 +93,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, beforeToolbar, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
+const Editor = observer(({ composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, topSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -108,8 +114,9 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
     };
   }, [openPopover]);
 
-  // High-frequency toolbar: NoteType / #tag / image | Aa / lists | @reference
+  // High-frequency toolbar: NoteType / #tag / image / attachment | Aa | @reference
   const renderToolbar = () => {
+    const showLabels = Boolean(composerVariant || (documentToolbar && isPc));
     if (!hiddenToolbar) {
       return (
         <>
@@ -121,18 +128,20 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
               }}
             />
           )}
-          <HashtagButton store={store} content={content} label={composerVariant ? "标签" : undefined} />
+          <HashtagButton store={store} content={content} label={showLabels ? t('tag') : undefined} />
+          {documentToolbar && <DocumentImageUploadButton store={store} label={showLabels ? t('insert-image') : undefined} />}
           <UploadImageButton
             getInputProps={getInputProps}
             open={open}
             store={store}
-            label={composerVariant ? "附件" : undefined}
+            icon={documentToolbar ? 'mage:file-upload' : undefined}
+            label={showLabels ? t('attachment') : undefined}
           />
           <ToolbarDivider />
           {/* 无序 / 有序 / 任务 / 标注 已收进 Aa 格式菜单，顶栏不再各占一个按钮 */}
-          <FormatMenuButton editor={store.vditor?.editor ?? null} label={composerVariant ? "格式" : undefined} />
+          <FormatMenuButton editor={store.vditor?.editor ?? null} label={showLabels ? t('format') : undefined} />
           <ToolbarDivider />
-          <ReferenceButton store={store} iconButton={composerVariant ? <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-default-500 hover:bg-default-100"><Icon icon="mdi:at" width="16" height="16" />关联</button> : <IconButton tooltip="reference" icon="mdi:at" />} />
+          <ReferenceButton store={store} iconButton={showLabels ? <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-default-500 hover:bg-default-100"><Icon icon="mdi:at" width="16" height="16" />{t('reference')}</button> : <IconButton tooltip="reference" icon="mdi:at" />} />
           {pluginApi.customToolbarIcons
             .map((item) => (
               item.content ? (
@@ -181,7 +190,7 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
       {renderStatusText()}
       {editable && (onDone
         ? <DoneButton store={store} isSendLoading={isSendLoading} />
-        : <SendButton store={store} isSendLoading={isSendLoading} label={composerVariant ? store.noteType === NoteType.NOTE ? "保存笔记" : store.noteType === NoteType.TODO ? "添加待办" : "记录闪念" : undefined} />)}
+        : <SendButton store={store} isSendLoading={isSendLoading} label={composerVariant ? t(store.noteType === NoteType.NOTE ? 'composer-save-note' : store.noteType === NoteType.TODO ? 'composer-add-todo' : 'composer-record-blinko') : undefined} />)}
     </div>
   );
 
@@ -212,7 +221,18 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
    */
   const fillHeight = showTopToolbar || store.isFullscreen
 
-  useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType, editable, focusOnMount);
+  const composerVariantRef = React.useRef(composerVariant);
+  composerVariantRef.current = composerVariant;
+
+  useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType, editable, focusOnMount, composerVariantRef);
+
+  // Placeholder decorations are derived from editor state. A ref update alone does not
+  // make ProseMirror recompute them, so refresh the empty editor after mixed-type switches.
+  useEffect(() => {
+    const editor = store.vditor?.editor;
+    if (editor?.isEmpty) editor.view.dispatch(editor.state.tr);
+  }, [composerVariant, store.vditor]);
+
   useEditorEvents(store);
   useEditorFiles(store, blinko, originFiles);
   useEditorHeight(onHeightChange, blinko, content, store);
@@ -348,7 +368,7 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
             store.adjustMobileEditorHeight()
           }}>
 
-            {composerVariant === 'note' && !showTopToolbar && <div className="composer-toolbar composer-formatbar">{renderToolbar()}</div>}
+            {topSlot}
             <div className={`relative ${fillHeight && !pageScroll ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
               <div
                 id={`vditor-${mode}`}
@@ -356,17 +376,32 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
                 onClick={!editable ? handleReadOnlyLinkClick : undefined}
               >
                 {/* Cover & icon are a "note" feature; flashes (BLINKO) and todos stay clean. */}
-                {mode !== 'comment' && store.noteType === NoteType.NOTE && <NoteCoverHeader store={store} readOnly={!editable} />}
-                <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
+                {mode !== 'comment' && store.noteType === NoteType.NOTE && (
+                  <NoteCoverHeader store={store} compact={!!composerVariant} readOnly={!editable} fullBleed={showTopToolbar} contentInsetLeft={documentSidebarInset} content={content} />
+                )}
+                {documentSidebar ? (
+                  <div className="flex min-w-0 items-start">
+                    {documentSidebar}
+                    <div className="min-w-0 flex-1">
+                      <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
+                    </div>
+                  </div>
+                ) : (
+                  <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
+                )}
               </div>
               {isPc && !showTopToolbar && !hideFullscreenButton && (
-                <div
-                  onClick={handleFullScreenToggle}
-                  title={store.isFullscreen ? t('exit-fullscreen') : t('fullscreen')}
-                  className={`absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg cursor-pointer !transition-all ${store.isFullscreen ? 'bg-primary text-white border border-primary hover:bg-primary/90 hover:border-primary/70 shadow-md' : 'bg-background text-default-500 border border-border shadow-md hover:text-primary hover:border-primary/50'}`}
-                >
-                  <Icon icon={store.isFullscreen ? 'lucide:minimize' : 'lucide:maximize'} width={16} height={16} className="!stroke-current" />
-                </div>
+                <Tooltip content={t(store.isFullscreen ? 'collapse-editor' : 'expand-editor')} placement="bottom" delay={300}>
+                  <button
+                    type="button"
+                    onClick={handleFullScreenToggle}
+                    aria-label={t(store.isFullscreen ? 'collapse-editor' : 'expand-editor')}
+                    aria-pressed={store.isFullscreen}
+                    className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-default-500 backdrop-blur-sm transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <Icon icon={store.isFullscreen ? 'lucide:minimize' : 'basil:expand-outline'} width={18} height={18} />
+                  </button>
+                </Tooltip>
               )}
             </div>
           {store.files.length > 0 && (
@@ -403,11 +438,9 @@ const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoa
               </div>
             ))}
 
-          {beforeToolbar}
           {!showTopToolbar && (
             <div className={composerVariant ? 'composer-toolbar composer-footer w-full mt-auto' : 'flex w-full items-center gap-1 mt-auto'}>
-              {composerVariant !== 'note' && renderToolbar()}
-              {composerVariant === 'note' && <span className="composer-shortcut text-xs text-default-400">输入 / 使用插入与 AI 命令 · ⌘ / Ctrl + Enter 保存</span>}
+              {renderToolbar()}
               {renderRightToolbar()}
             </div>
           )}

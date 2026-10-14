@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@heroui/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import type { CalloutType } from './Callout';
 import type { SlashMenuState } from './slashMenuState';
@@ -46,8 +46,9 @@ const TippyButton = ({ label, active, onClick, title }: {
 /**
  * Image-like upload button (file picker), keeps the audio recording event listener.
  */
-export const UploadImageButton = ({ getInputProps, open, store, label }: {
+export const UploadImageButton = ({ getInputProps, open, store, label, icon = 'tdesign:image' }: {
   label?: string;
+  icon?: string;
   getInputProps: () => any;
   open: () => void;
   store: any;
@@ -68,9 +69,41 @@ export const UploadImageButton = ({ getInputProps, open, store, label }: {
   }, [store]);
 
   return (
-    <IconButtonWrap label={label} tooltip={t('upload-file')} onClick={open} icon="tdesign:image">
+    <IconButtonWrap label={label} tooltip={t('upload-file')} onClick={open} icon={icon}>
       <input {...getInputProps()} />
     </IconButtonWrap>
+  );
+};
+
+/** Detail-document image picker: images are routed inline by EditorStore for NOTE documents. */
+export const DocumentImageUploadButton = ({ store, label }: { store: any; label?: string }) => {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <Tooltip content={t('insert-image')} placement="bottom" delay={300}>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className={`flex items-center justify-center rounded-md text-default-600 transition-colors hover:bg-hover ${
+          label ? 'gap-1.5 px-2 py-1.5 text-xs' : 'h-[23px] w-[23px]'
+        }`}
+      >
+        <Icon icon="tdesign:image" width={19} height={19} />
+        {label && <span>{label}</span>}
+        <input
+          ref={inputRef}
+          hidden
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(event) => {
+            const files = Array.from(event.currentTarget.files ?? []);
+            if (files.length) store.uploadFiles(files);
+            event.currentTarget.value = '';
+          }}
+        />
+      </button>
+    </Tooltip>
   );
 };
 

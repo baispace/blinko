@@ -10,9 +10,60 @@ import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { fetchWithProxy } from '@server/lib/proxy';
+import { helper } from '@shared/lib/helper';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
 export const aiRouter = router({
+  skillSources: authProcedure.input(z.object({ skill: z.enum(['tasks','note','today','overdue','ideas']), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
+    const now = new Date();
+    const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now);
+    const startToday = new Date(today + 'T00:00:00+08:00');
+    const base = { accountId: Number(ctx.id), isRecycle: false, isArchived: false };
+    const candidates = await prisma.notes.findMany({
+      where: input.skill === 'overdue' ? { ...base, type: 2 } : input.skill === 'today' ? { ...base, OR: [{ type: 2 }, { createdAt: { gte: startToday } }] } : input.skill === 'tasks' ? { ...base, OR: [{ type: { in: [0,1] }, createdAt: { gte: new Date(Date.now() - input.days * 86400000) } }, { type: 2 }] } : { ...base, ...(input.skill === 'ideas' ? { type: 0 } : { type: { in: [0,1] } }), createdAt: { gte: new Date(Date.now() - input.days * 86400000) } },
+      orderBy: { updatedAt: 'desc' }, take: 501,
+      select: { id: true, content: true, type: true, metadata: true, createdAt: true, updatedAt: true }
+    });
+    const matching = input.skill === 'overdue' ? candidates.filter(note => {
+      const due = (note.metadata as any)?.expireAt;
+      return due && Number.isFinite(new Date(due).getTime()) && new Date(due) < now;
+    }) : candidates;
+    return { items: matching.slice(0,80), total: matching.length, limited: matching.length > 80 || candidates.length > 500 };
+  }),
+  saveDraft: authProcedure.input(z.object({
+    messageId: z.number().int().positive(),
+    drafts: z.array(z.object({ index: z.number().int().min(0).max(99), title: z.string().trim().min(1).max(500), content: z.string().max(100000), due: z.union([z.literal(''), z.string().datetime(), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''), priority: z.enum(['', 'ui', 'in', 'un', 'nn']).default(''), tags: z.array(z.string().max(255)).max(30).default([]) })).min(1).max(20),
+  })).mutation(async ({ input, ctx }) => prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM message WHERE id = ${input.messageId} FOR UPDATE`;
+    const message = await tx.message.findFirst({ where: { id: input.messageId, role: 'assistant', conversation: { accountId: Number(ctx.id) } } });
+    if (!message) throw new TRPCError({ code: 'NOT_FOUND', message: '对话结果不存在' });
+    const clean = message.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    let draft: any;
+    try { draft = JSON.parse(clean.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] ?? clean); } catch { throw new TRPCError({ code: 'BAD_REQUEST', message: '草稿格式无效' }); }
+    if (draft.kind !== 'tasks' && draft.kind !== 'note') throw new TRPCError({ code: 'BAD_REQUEST', message: '草稿类型无效' });
+    const metadata: any = message.metadata && typeof message.metadata === 'object' ? message.metadata : {};
+    const saved = { ...(metadata.savedDrafts || {}) };
+    for (const item of input.drafts) {
+      if (saved[item.index]) continue;
+      if (draft.kind === 'note' ? item.index !== 0 : !Array.isArray(draft.tasks) || item.index >= draft.tasks.length) throw new TRPCError({ code: 'BAD_REQUEST', message: '草稿条目无效' });
+      const expireAt = item.due ? new Date(item.due.length === 10 ? item.due + 'T23:59:59+08:00' : item.due) : null;
+      if (expireAt && (!Number.isFinite(expireAt.getTime()) || item.due.length === 10 && item.due !== new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(expireAt))) throw new TRPCError({ code: 'BAD_REQUEST', message: '截止日期无效' });
+      const note = await tx.notes.create({ data: { accountId: Number(ctx.id), type: draft.kind === 'tasks' ? 2 : 1, content: (draft.kind === 'tasks' ? item.title.replace(/^#+\s*/, '') + '\n\n' : '') + item.content.replace(/(?<!:\/\/)(?<=\s|^)#[^\s#]+(?=\s|$)/g, '').trim() + (item.tags.length ? '\n\n' + item.tags.map(tag => '#' + tag.replace(/^#/, '')).join(' ') : ''), metadata: { title: item.title.replace(/^#+\s*/, ''), expireAt: expireAt?.toISOString() ?? null, priorityImportant: ['ui','in'].includes(item.priority), priorityUrgent: ['ui','un'].includes(item.priority), priority: item.priority === 'ui' ? 1 : item.priority === 'in' || item.priority === 'un' ? 2 : 3, aiSourceMessageId: message.id } } });
+      const tree = helper.buildHashTagTreeFromHashString(item.tags);
+      const attachTags = async (nodes: typeof tree, parent = 0) => {
+        for (const node of nodes) {
+          const tag = await tx.tag.findFirst({ where: { accountId: Number(ctx.id), name: node.name, parent } });
+          if (!tag) throw new TRPCError({ code: 'BAD_REQUEST', message: '标签已变化，请重新选择站点标签。' });
+          await tx.tagsToNote.create({ data: { noteId: note.id, tagId: tag.id } });
+          if (node.children) await attachTags(node.children, tag.id);
+        }
+      };
+      await attachTags(tree);
+      saved[item.index] = note.id;
+    }
+    await tx.message.update({ where: { id: message.id }, data: { metadata: { ...metadata, savedDrafts: saved } } });
+    return saved;
+  })),
   embeddingUpsert: authProcedure
     .input(z.object({
       id: z.number(),
@@ -64,6 +115,7 @@ export const aiRouter = router({
   completions: authProcedure
     .input(z.object({
       question: z.string(),
+      modelId: z.number().int().positive().optional(),
       withTools: z.boolean().optional(),
       withOnline: z.boolean().optional(),
       withRAG: z.boolean().optional(),
@@ -74,11 +126,16 @@ export const aiRouter = router({
       try {
         const { question, conversations, withTools = false, withOnline = false, withRAG = true, systemPrompt } = input
         let _conversations = conversations as CoreMessage[]
+        if (input.modelId) {
+          const model = await prisma.aiModels.findUnique({ where: { id: input.modelId } });
+          if (!model || !(model.capabilities as any)?.inference) throw new TRPCError({ code: 'BAD_REQUEST', message: '所选模型不可用于对话，请重新选择。' });
+        }
         const { result: responseStream, notes } = await AiService.completions({
           question,
           conversations: _conversations,
           ctx,
           withTools,
+          modelId: input.modelId,
           withOnline,
           withRAG,
           systemPrompt

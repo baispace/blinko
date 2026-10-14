@@ -291,6 +291,7 @@ export class AiService {
     withRAG = true,
     withOnline = false,
     systemPrompt,
+    modelId,
     ctx,
   }: {
     question: string;
@@ -299,6 +300,7 @@ export class AiService {
     withRAG?: boolean;
     withOnline?: boolean;
     systemPrompt?: string;
+    modelId?: number;
     ctx: Context;
   }) {
     try {
@@ -338,6 +340,7 @@ export class AiService {
         ...historySystem,
         `Current user name: ${ctx.name}`,
         systemPrompt,
+    modelId,
         ragNoteString,
       ].filter(Boolean);
 
@@ -350,6 +353,7 @@ export class AiService {
       runtimeContext.set('accountId', Number(ctx.id));
       const agent = await AiModelFactory.BaseChatAgent({
         withTools,
+        modelId,
         withOnlineSearch: withOnline,
         extraInstructions: contextParts.join('\n\n'),
       });

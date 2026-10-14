@@ -1,5 +1,6 @@
 import { Button } from '@heroui/react';
 import { useRef, useState, useEffect } from 'react';
+import { AiSkills } from '@/components/BlinkoAi/AiSkills';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useMediaQuery } from 'usehooks-ts';
@@ -91,7 +92,7 @@ const AIPage = observer(() => {
             initial={{ width: 0, scaleX: 0 }}
             animate={{ width: "auto", scaleX: 1 }}
             transition={{
-              duration: 1.2,
+              duration: 0.2,
               ease: [0.16, 0.77, 0.47, 0.97],
               scaleX: {
                 type: "spring",
@@ -121,69 +122,12 @@ const AIPage = observer(() => {
           aiStore.isChatting ? "absolute bottom-2" : "mt-4"
         )}
       >
-        <AnimatePresence>
-          {!aiStore.isChatting && (
-            <motion.div
-              className="w-full md:w-[85%] flex items-center gap-2 mt-4 overflow-x-scroll scrollbar-hide my-3"
-              initial={{ y: 0, opacity: 1 }}
-              exit={{
-                y: 150,
-                opacity: 0,
-                transition: {
-                  type: "spring",
-                  damping: 10,
-                  stiffness: 100
-                }
-              }}
-            >
-              <div className="flex gap-2 px-4 w-full items-center justify-center">
-                {buttons.map((button, index) => (
-                  <Button
-                    onPress={() => {
-                      aiStore.newRoleChat(button.prompt)
-                    }}
-                    className='w-fit'
-                    key={index}
-                    variant='light'
-                    startContent={<Icon className='min-w-[20px]' icon={button.icon} color={button.color} width="20" height="20" />}
-                  >
-                    {button.label}
-                  </Button>
-                ))}
-                <Button isIconOnly variant='light' startContent={<Icon icon="icon-park-outline:more" className='min-w-[20px]' width="20" height="20" />} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
+
+        {!aiStore.isChatting && <AiSkills />}
         <AiInput className={aiStore.isChatting ? 'mt-0' : 'mt-2'} />
 
-        <AnimatePresence>
-          {RootStore.Get(AiStore).withTools.value && !aiStore.isChatting && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className='flex gap-2 mt-4 flex-col items-center'
-            >
-              {suggestionActions.map((action, index) => (
-                <Button
-                  size={isPc ? 'md' : 'sm'}
-                  onPress={() => {
-                    aiStore.newChatWithSuggestion(t(action.prompt))
-                  }}
-                  className='w-fit'
-                  key={index}
-                  radius='full'
-                  variant='flat'
-                >
-                  {t(action.prompt)}
-                </Button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
       </motion.div>
     </div>

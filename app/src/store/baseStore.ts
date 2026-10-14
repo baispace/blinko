@@ -37,6 +37,7 @@ export class BaseStore implements Store {
       title: 'analytics',
       href: '/analytics',
       group: 'tool' as const,
+      hiddenSidebar: true,
       hiddenMobile: true,
       icon: 'hugeicons:analytics-01',
     },
@@ -44,11 +45,13 @@ export class BaseStore implements Store {
       title: 'resources',
       href: '/resources',
       group: 'tool' as const,
+      hiddenSidebar: true,
       icon: 'solar:database-linear',
       hiddenMobile: true,
     },
     {
       title: 'archived',
+      hiddenSidebar: true,
       href: '/?path=archived',
       group: 'tidy' as const,
       icon: 'solar:box-broken',
@@ -61,14 +64,14 @@ export class BaseStore implements Store {
       href: '/?path=trash',
       group: 'tidy' as const,
       hiddenMobile: true,
-      hiddenSidebar: false,
+      hiddenSidebar: true,
       icon: 'hugeicons:delete-02',
     },
     {
       title: 'plugin',
       href: '/plugin',
       group: 'tool' as const,
-      hiddenSidebar: false,
+      hiddenSidebar: true,
       hiddenMobile: true,
       icon: 'hugeicons:plug-socket',
     },
@@ -147,7 +150,7 @@ export class BaseStore implements Store {
 
     useEffect(() => {
       if (location.pathname == '/ai') {
-        this.currentTitle = 'AI 对话';
+        this.currentTitle = '对话';
       } else if (location.pathname == '/review') {
         this.currentTitle = 'daily-review';
       } else if (location.pathname == '/detail') {

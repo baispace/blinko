@@ -15,7 +15,8 @@ import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '../Common/ScrollArea';
 import AiSetting from '../BlinkoSettings/AiSetting/AiSetting';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { AiSettingStore } from '@/store/aiSettingStore';
 
 interface AiInputProps {
   mode?: 'card' | 'inline';
@@ -104,6 +105,7 @@ const cardIcons = [
     },
     onClick: async () => {
       const aiStore = RootStore.Get(AiStore);
+
       await PromiseCall(api.conversation.clearMessages.mutate({ id: aiStore.currentConversationId }));
       await aiStore.currentConversation.call();
     },
@@ -113,6 +115,8 @@ const cardIcons = [
 export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInputProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const aiStore = RootStore.Get(AiStore);
+  const settings = RootStore.Get(AiSettingStore);
+  useEffect(() => { void settings.allModels.call(); }, []);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -147,6 +151,12 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
+      {!!aiStore.referencesNotes.length && <div className="flex flex-wrap gap-2 px-2 pt-2 max-h-28 overflow-y-auto">
+        {aiStore.referencesNotes.map(note => <div key={note.id} className="flex items-center gap-2 max-w-full rounded-lg bg-default-100 px-2 py-1 text-xs">
+          <span className="truncate max-w-[210px]">{(note.content ?? '').replace(/[#*`]/g, '').slice(0, 45) || `内容 #${note.id}`}</span>
+          <button type="button" disabled={aiStore.isAnswering} aria-label={`移除来源 ${note.id}`} onClick={() => { aiStore.referencesNotes = aiStore.referencesNotes.filter(n => n.id !== note.id); }} className="px-1 text-default-500">×</button>
+        </div>)}
+      </div>}
       <div className="relative flex items-end gap-2">
         <Textarea
           className={`mt-4 mb-10`}
@@ -179,7 +189,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           }}
           rows={mode == 'inline' ? 1 : 20}
           maxRows={40}
-          placeholder={t('search-blinko-content-or-help-create')}
+          placeholder={aiStore.selectedSkill ? '可补充要求或粘贴内容；选好来源后点击发送开始整理' : t('search-blinko-content-or-help-create')}
         />
         <div className="absolute bottom-3 right-0 w-full px-2 gap-1 flex justify-center items-center !transition-all">
           <>
@@ -193,15 +203,22 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
 
           <BlinkoSelectNote
             onSelect={(item) => {
-              if (aiStore.referencesNotes?.includes(item.id)) return;
+              if (aiStore.referencesNotes.some(n => n.id === item.id)) return;
               aiStore.referencesNotes.push(item);
-              aiStore.input = aiStore.input += `${item.content}`;
+
             }}
             iconButton={<IconButton tooltip={'@'} icon="hugeicons:at" size={20} containerSize={30} />}
             blackList={aiStore.referencesNotes.map((i) => i.id ?? 0)}
           />
 
-          <div className="ml-auto"></div>
+          <div className="ml-auto min-w-0">
+            <select aria-label="对话模型" disabled={aiStore.isAnswering || settings.allModels.loading.value}
+              value={aiStore.chatModelId} onChange={e => { aiStore.chatModelId = Number(e.target.value); }}
+              className="max-w-[180px] text-xs bg-transparent text-default-500 rounded-lg px-2 py-2 cursor-pointer hover:bg-default-100 transition-colors focus:outline-primary">
+              <option value={0}>默认模型</option>
+              {settings.allModels.value?.filter(m => m.capabilities?.inference).map(m => <option key={m.id} value={m.id}>{m.provider?.title ? m.provider.title + " · " : ""}{m.title || m.modelKey}</option>)}
+            </select>
+          </div>
 
           <IconButton
             onClick={async () => {
@@ -240,12 +257,12 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           <div className="text-ignore opacity-50 w-[2px] h-[20px] bg-desc rounded-full"></div>
 
           <div
-            className={`ml-2 bg-primary rounded-full p-1 group  ${aiStore.input.trim() == '' && !aiStore.isAnswering ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`ml-2 bg-primary rounded-full p-1 group  ${aiStore.input.trim() == '' && !aiStore.referencesNotes.length && !aiStore.isAnswering ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             onClick={() => {
               if (aiStore.isAnswering) {
                 return aiStore.abortAiChat();
               }
-              if (aiStore.input.trim() == '') {
+              if (aiStore.input.trim() == '' && !aiStore.referencesNotes.length) {
                 return;
               } else {
                 handleSubmit();

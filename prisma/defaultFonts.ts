@@ -248,6 +248,19 @@ export const cdnFonts: FontSeed[] = [
     isSystem: false,
     sortOrder: 127,
   },
+  // 霞鹜文楷（简体原版）—— jsDelivr npm 镜像的 lxgw-wenkai-webfont，
+  // font-family: 'LXGW WenKai'（@import 内含 light/regular/bold 三个 weight 子表）
+  {
+    name: 'LXGW WenKai',
+    displayName: '霞鹜文楷',
+    url: 'https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css',
+    fileData: null,
+    isLocal: false,
+    weights: [300, 400, 700],
+    category: 'sans-serif',
+    isSystem: false,
+    sortOrder: 128,
+  },
   {
     name: 'Long Cang',
     displayName: '仓耳今楷',

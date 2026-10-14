@@ -146,7 +146,9 @@ export class BaseStore implements Store {
     }, [navigate]);
 
     useEffect(() => {
-      if (location.pathname == '/review') {
+      if (location.pathname == '/ai') {
+        this.currentTitle = 'AI 对话';
+      } else if (location.pathname == '/review') {
         this.currentTitle = 'daily-review';
       } else if (location.pathname == '/detail') {
         this.currentTitle = 'detail';

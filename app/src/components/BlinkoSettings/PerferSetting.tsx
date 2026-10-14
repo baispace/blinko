@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Switch, Input, Tooltip, Textarea, Slider } from "@heroui/react";
+import { Switch, Input, Tooltip, Textarea, Slider, Button } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
 import ThemeSwitcher from "../Common/Theme/ThemeSwitcher";
@@ -54,6 +54,114 @@ const ItemLabel = ({ title, desc }: { title: string; desc?: string }) => (
   </div>
 );
 
+/**
+ * 排版面板「数字 + 步进按钮」行 —— 参考 Obsidian / Typora / Logseq 风格。
+ * 左侧 label（中文 / i18n），中间可编辑的数字输入框，右侧步进（+/−），
+ * 最右侧单位（suffix）。
+ *
+ * 交互：
+ * - onChange：每次数值变化 → 实时写 CSS 变量（视觉即时反馈，不落库）
+ * - onComplete：用户失焦/回车/点击步进 → 触发 DB 持久化
+ *
+ * 数值 clamp 在 step/min/max 内；超出则按 max/min 截断。
+ */
+const TypoNumberRow = ({
+  label,
+  value,
+  suffix,
+  min,
+  max,
+  step,
+  decimals,
+  onChange,
+  onComplete,
+}: {
+  label: string;
+  value: number;
+  suffix: string;
+  min: number;
+  max: number;
+  step: number;
+  decimals: number;
+  onChange: (next: number) => void;
+  onComplete: (next: number) => void | Promise<void>;
+}) => {
+  const [draft, setDraft] = useState<string>(value.toFixed(decimals));
+
+  useEffect(() => {
+    setDraft(value.toFixed(decimals));
+  }, [value, decimals]);
+
+  const clamp = (n: number) => Math.max(min, Math.min(max, n));
+
+  const apply = (next: number) => {
+    const clamped = clamp(Number.isFinite(next) ? next : value);
+    setDraft(clamped.toFixed(decimals));
+    onChange(clamped);
+    return clamped;
+  };
+
+  return (
+    <div className="flex items-center gap-4 py-3">
+      <div className="w-24 shrink-0 text-sm font-medium">{label}</div>
+      <div className="flex items-center gap-1">
+        <Input
+          type="number"
+          size="sm"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={e => {
+            const next = parseFloat(e.target.value);
+            const clamped = apply(Number.isFinite(next) ? next : value);
+            void onComplete(clamped);
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              const next = parseFloat((e.target as HTMLInputElement).value);
+              const clamped = apply(Number.isFinite(next) ? next : value);
+              void onComplete(clamped);
+            }
+          }}
+          min={min}
+          max={max}
+          step={step}
+          className="w-20"
+          classNames={{ input: 'text-right tabular-nums' }}
+        />
+        <div className="flex flex-col">
+          <button
+            type="button"
+            aria-label="increment"
+            onClick={() => {
+              const next = clamp(value + step);
+              setDraft(next.toFixed(decimals));
+              onChange(next);
+              void onComplete(next);
+            }}
+            className="text-default-500 hover:text-foreground hover:bg-default-100 rounded-t px-1 leading-none h-3.5"
+          >
+            <Icon icon="mdi:chevron-up" width="14" height="14" />
+          </button>
+          <button
+            type="button"
+            aria-label="decrement"
+            onClick={() => {
+              const next = clamp(value - step);
+              setDraft(next.toFixed(decimals));
+              onChange(next);
+              void onComplete(next);
+            }}
+            className="text-default-500 hover:text-foreground hover:bg-default-100 rounded-b px-1 leading-none h-3.5"
+          >
+            <Icon icon="mdi:chevron-down" width="14" height="14" />
+          </button>
+        </div>
+      </div>
+      {suffix && <div className="text-xs text-default-500">{suffix}</div>}
+    </div>
+  );
+};
+
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
@@ -67,9 +175,33 @@ export const PerferSetting = observer(() => {
   const [customTitle, setCustomTitle] = useState(blinko.config.value?.customTitle || '');
   const user = RootStore.Get(UserStore)
 
-  // 全局排版：字号 12-20px / 字重 300-700
+  // 全局排版：字号 12-20px / 字重 300-700 / 行高 1.0-2.5 / 段间距 0-30px /
+  // 行宽 30-120ch / 首行缩进 0-4em / H1 18-40px / H2 16-36px / H3 14-32px /
+  // 表格字号 12-20px（与正文同档）
   const [fontSize, setFontSize] = useState<number>(blinko.config.value?.fontSize ?? 16);
   const [fontWeight, setFontWeight] = useState<number>(blinko.config.value?.fontWeight ?? 400);
+  const [lineHeight, setLineHeight] = useState<number>(blinko.config.value?.lineHeight ?? 1.6);
+  const [paragraphSpacing, setParagraphSpacing] = useState<number>(blinko.config.value?.paragraphSpacing ?? 8);
+  const [lineWidthChars, setLineWidthChars] = useState<number>(blinko.config.value?.lineWidthChars ?? 60);
+  const [firstLineIndentChars, setFirstLineIndentChars] = useState<number>(blinko.config.value?.firstLineIndentChars ?? 0);
+  const [h1Size, setH1Size] = useState<number>(blinko.config.value?.h1Size ?? 26);
+  const [h2Size, setH2Size] = useState<number>(blinko.config.value?.h2Size ?? 22);
+  const [h3Size, setH3Size] = useState<number>(blinko.config.value?.h3Size ?? 20);
+  const [tableSize, setTableSize] = useState<number>(blinko.config.value?.tableSize ?? 16);
+
+  /** 与 store/user.ts 写入 :root 的默认值保持一致（除 fontWeight/lineHeight 默认 16/1.6 外其余为 UI 自行定的合理默认值） */
+  const TYPOGRAPHY_DEFAULTS = {
+    fontSize: 16,
+    fontWeight: 400,
+    lineHeight: 1.6,
+    paragraphSpacing: 8,
+    lineWidthChars: 60,
+    firstLineIndentChars: 0,
+    h1Size: 26,
+    h2Size: 22,
+    h3Size: 20,
+    tableSize: 16,
+  } as const;
 
   useEffect(() => {
     blinko.config.call();
@@ -79,22 +211,100 @@ export const PerferSetting = observer(() => {
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
     setSigninFooterText(blinko.config.value?.signinFooterText || '');
     setCustomTitle(blinko.config.value?.customTitle || '');
-    setFontSize(blinko.config.value?.fontSize ?? 16);
-    setFontWeight(blinko.config.value?.fontWeight ?? 400);
+    setFontSize(blinko.config.value?.fontSize ?? TYPOGRAPHY_DEFAULTS.fontSize);
+    setFontWeight(blinko.config.value?.fontWeight ?? TYPOGRAPHY_DEFAULTS.fontWeight);
+    setLineHeight(blinko.config.value?.lineHeight ?? TYPOGRAPHY_DEFAULTS.lineHeight);
+    setParagraphSpacing(blinko.config.value?.paragraphSpacing ?? TYPOGRAPHY_DEFAULTS.paragraphSpacing);
+    setLineWidthChars(blinko.config.value?.lineWidthChars ?? TYPOGRAPHY_DEFAULTS.lineWidthChars);
+    setFirstLineIndentChars(blinko.config.value?.firstLineIndentChars ?? TYPOGRAPHY_DEFAULTS.firstLineIndentChars);
+    setH1Size(blinko.config.value?.h1Size ?? TYPOGRAPHY_DEFAULTS.h1Size);
+    setH2Size(blinko.config.value?.h2Size ?? TYPOGRAPHY_DEFAULTS.h2Size);
+    setH3Size(blinko.config.value?.h3Size ?? TYPOGRAPHY_DEFAULTS.h3Size);
+    setTableSize(blinko.config.value?.tableSize ?? TYPOGRAPHY_DEFAULTS.tableSize);
   }, [blinko.config.value]);
 
-  /** 拖动时即时把变量写到根元素（视觉实时反馈），写库由 onChangeEnd 负责 */
-  const applyTypographyPreview = (size: number, weight: number) => {
+  /** 把单条排版变量写到根元素（视觉实时反馈），单条不影响其它项 */
+  const setTypographyVar = (name: string, value: string) => {
     for (const el of document.querySelectorAll<HTMLElement>('.dark, .light')) {
-      el.style.setProperty('--app-font-size', `${size}px`);
-      el.style.setProperty('--app-font-weight', String(weight));
+      el.style.setProperty(name, value);
     }
   };
 
-  const saveTypography = async (size: number, weight: number) => {
+  /** 拖动时一次性写完全部 typography 变量（统一即时反馈，避免逐条重写时短暂回弹） */
+  const applyTypographyPreviewAll = () => {
+    for (const el of document.querySelectorAll<HTMLElement>('.dark, .light')) {
+      el.style.setProperty('--app-font-size', `${fontSize}px`);
+      el.style.setProperty('--app-font-weight', String(fontWeight));
+      el.style.setProperty('--app-line-height', String(lineHeight));
+      el.style.setProperty('--app-paragraph-spacing', `${paragraphSpacing}px`);
+      el.style.setProperty('--app-line-width', `${lineWidthChars}ch`);
+      el.style.setProperty('--app-first-line-indent', `${firstLineIndentChars}em`);
+      el.style.setProperty('--app-h1-size', `${h1Size}px`);
+      el.style.setProperty('--app-h2-size', `${h2Size}px`);
+      el.style.setProperty('--app-h3-size', `${h3Size}px`);
+      el.style.setProperty('--app-table-size', `${tableSize}px`);
+    }
+  };
+
+  /**
+   * 把当前面板上 10 个 typography state 落库。
+   * 单一 Promise.all — 单键顺序写会触发 10 次 config 拉取，合并减少网络往返。
+   * 所有更新均走 UserStore 的写入路径，与既有 fontSize/fontWeight 写法一致。
+   */
+  const saveTypography = async () => {
     await Promise.all([
-      api.config.update.mutate({ key: 'fontSize', value: size }),
-      api.config.update.mutate({ key: 'fontWeight', value: weight }),
+      api.config.update.mutate({ key: 'fontSize', value: fontSize }),
+      api.config.update.mutate({ key: 'fontWeight', value: fontWeight }),
+      api.config.update.mutate({ key: 'lineHeight', value: lineHeight }),
+      api.config.update.mutate({ key: 'paragraphSpacing', value: paragraphSpacing }),
+      api.config.update.mutate({ key: 'lineWidthChars', value: lineWidthChars }),
+      api.config.update.mutate({ key: 'firstLineIndentChars', value: firstLineIndentChars }),
+      api.config.update.mutate({ key: 'h1Size', value: h1Size }),
+      api.config.update.mutate({ key: 'h2Size', value: h2Size }),
+      api.config.update.mutate({ key: 'h3Size', value: h3Size }),
+      api.config.update.mutate({ key: 'tableSize', value: tableSize }),
+    ]);
+    blinko.config.call();
+  };
+
+  /** 把所有 typography state 重置为默认值（UI 状态 + 视觉变量 + 持久化） */
+  const restoreTypographyDefaults = async () => {
+    setFontSize(TYPOGRAPHY_DEFAULTS.fontSize);
+    setFontWeight(TYPOGRAPHY_DEFAULTS.fontWeight);
+    setLineHeight(TYPOGRAPHY_DEFAULTS.lineHeight);
+    setParagraphSpacing(TYPOGRAPHY_DEFAULTS.paragraphSpacing);
+    setLineWidthChars(TYPOGRAPHY_DEFAULTS.lineWidthChars);
+    setFirstLineIndentChars(TYPOGRAPHY_DEFAULTS.firstLineIndentChars);
+    setH1Size(TYPOGRAPHY_DEFAULTS.h1Size);
+    setH2Size(TYPOGRAPHY_DEFAULTS.h2Size);
+    setH3Size(TYPOGRAPHY_DEFAULTS.h3Size);
+    setTableSize(TYPOGRAPHY_DEFAULTS.tableSize);
+    // 立即把视觉反馈刷成默认，再落库
+    setTimeout(() => {
+      for (const el of document.querySelectorAll<HTMLElement>('.dark, .light')) {
+        el.style.setProperty('--app-font-size', `${TYPOGRAPHY_DEFAULTS.fontSize}px`);
+        el.style.setProperty('--app-font-weight', String(TYPOGRAPHY_DEFAULTS.fontWeight));
+        el.style.setProperty('--app-line-height', String(TYPOGRAPHY_DEFAULTS.lineHeight));
+        el.style.setProperty('--app-paragraph-spacing', `${TYPOGRAPHY_DEFAULTS.paragraphSpacing}px`);
+        el.style.setProperty('--app-line-width', `${TYPOGRAPHY_DEFAULTS.lineWidthChars}ch`);
+        el.style.setProperty('--app-first-line-indent', `${TYPOGRAPHY_DEFAULTS.firstLineIndentChars}em`);
+        el.style.setProperty('--app-h1-size', `${TYPOGRAPHY_DEFAULTS.h1Size}px`);
+        el.style.setProperty('--app-h2-size', `${TYPOGRAPHY_DEFAULTS.h2Size}px`);
+        el.style.setProperty('--app-h3-size', `${TYPOGRAPHY_DEFAULTS.h3Size}px`);
+        el.style.setProperty('--app-table-size', `${TYPOGRAPHY_DEFAULTS.tableSize}px`);
+      }
+    }, 0);
+    await Promise.all([
+      api.config.update.mutate({ key: 'fontSize', value: TYPOGRAPHY_DEFAULTS.fontSize }),
+      api.config.update.mutate({ key: 'fontWeight', value: TYPOGRAPHY_DEFAULTS.fontWeight }),
+      api.config.update.mutate({ key: 'lineHeight', value: TYPOGRAPHY_DEFAULTS.lineHeight }),
+      api.config.update.mutate({ key: 'paragraphSpacing', value: TYPOGRAPHY_DEFAULTS.paragraphSpacing }),
+      api.config.update.mutate({ key: 'lineWidthChars', value: TYPOGRAPHY_DEFAULTS.lineWidthChars }),
+      api.config.update.mutate({ key: 'firstLineIndentChars', value: TYPOGRAPHY_DEFAULTS.firstLineIndentChars }),
+      api.config.update.mutate({ key: 'h1Size', value: TYPOGRAPHY_DEFAULTS.h1Size }),
+      api.config.update.mutate({ key: 'h2Size', value: TYPOGRAPHY_DEFAULTS.h2Size }),
+      api.config.update.mutate({ key: 'h3Size', value: TYPOGRAPHY_DEFAULTS.h3Size }),
+      api.config.update.mutate({ key: 'tableSize', value: TYPOGRAPHY_DEFAULTS.tableSize }),
     ]);
     blinko.config.call();
   };
@@ -201,6 +411,7 @@ export const PerferSetting = observer(() => {
       title={t('global-typography')}
       desc={t('global-typography-desc')}
     >
+      {/* 字体 */}
       <Item
         leftContent={<ItemLabel title={t('font-style')} desc={t('font-style-desc')} />}
         rightContent={
@@ -214,33 +425,165 @@ export const PerferSetting = observer(() => {
           }} />
         }
       />
-      {/* 字号 */}
+
+      {/* 行高 / 段间距 / 行宽 / 首行缩进 — 走「行内格子 + 步进按钮」样式，参考排版面板设计 */}
+      <TypoNumberRow
+        label={t('line-height')}
+        value={lineHeight}
+        suffix=""
+        min={1.0}
+        max={2.5}
+        step={0.1}
+        decimals={2}
+        onChange={(next) => {
+          setLineHeight(next);
+          setTypographyVar('--app-line-height', String(next));
+        }}
+        onComplete={async (next) => {
+          setLineHeight(next);
+          await api.config.update.mutate({ key: 'lineHeight', value: next });
+          blinko.config.call();
+        }}
+      />
+      <TypoNumberRow
+        label={t('paragraph-spacing')}
+        value={paragraphSpacing}
+        suffix="px"
+        min={0}
+        max={30}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setParagraphSpacing(next);
+          setTypographyVar('--app-paragraph-spacing', `${next}px`);
+        }}
+        onComplete={async (next) => {
+          setParagraphSpacing(next);
+          await api.config.update.mutate({ key: 'paragraphSpacing', value: next });
+          blinko.config.call();
+        }}
+      />
+      <TypoNumberRow
+        label={t('line-width-chars')}
+        value={lineWidthChars}
+        suffix={t('chars')}
+        min={30}
+        max={120}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setLineWidthChars(next);
+          setTypographyVar('--app-line-width', `${next}ch`);
+        }}
+        onComplete={async (next) => {
+          setLineWidthChars(next);
+          await api.config.update.mutate({ key: 'lineWidthChars', value: next });
+          blinko.config.call();
+        }}
+      />
+      <TypoNumberRow
+        label={t('first-line-indent')}
+        value={firstLineIndentChars}
+        suffix={t('chars')}
+        min={0}
+        max={4}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setFirstLineIndentChars(next);
+          setTypographyVar('--app-first-line-indent', `${next}em`);
+        }}
+        onComplete={async (next) => {
+          setFirstLineIndentChars(next);
+          await api.config.update.mutate({ key: 'firstLineIndentChars', value: next });
+          blinko.config.call();
+        }}
+      />
+
+      {/* 一级 / 二级 / 三级标题字号 */}
+      <TypoNumberRow
+        label={t('h1-size')}
+        value={h1Size}
+        suffix="px"
+        min={18}
+        max={40}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setH1Size(next);
+          setTypographyVar('--app-h1-size', `${next}px`);
+        }}
+        onComplete={async (next) => {
+          setH1Size(next);
+          await api.config.update.mutate({ key: 'h1Size', value: next });
+          blinko.config.call();
+        }}
+      />
+      <TypoNumberRow
+        label={t('h2-size')}
+        value={h2Size}
+        suffix="px"
+        min={16}
+        max={36}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setH2Size(next);
+          setTypographyVar('--app-h2-size', `${next}px`);
+        }}
+        onComplete={async (next) => {
+          setH2Size(next);
+          await api.config.update.mutate({ key: 'h2Size', value: next });
+          blinko.config.call();
+        }}
+      />
+      <TypoNumberRow
+        label={t('h3-size')}
+        value={h3Size}
+        suffix="px"
+        min={14}
+        max={32}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setH3Size(next);
+          setTypographyVar('--app-h3-size', `${next}px`);
+        }}
+        onComplete={async (next) => {
+          setH3Size(next);
+          await api.config.update.mutate({ key: 'h3Size', value: next });
+          blinko.config.call();
+        }}
+      />
+
+      {/* 正文 + 字重（保留旧版的 Slider，因为有 5 个 marks；样式不变） */}
       <div className="flex items-center gap-4 py-3">
-        <div className="w-16 shrink-0 text-sm font-medium">{t('font-size')}</div>
+        <div className="w-24 shrink-0 text-sm font-medium">{t('body-size')}</div>
         <Slider
           size="sm"
           minValue={12}
           maxValue={20}
           step={1}
           value={fontSize}
-          aria-label={t('font-size')}
+          aria-label={t('body-size')}
           onChange={(v) => {
             const next = Array.isArray(v) ? v[0] : v;
             setFontSize(next);
-            applyTypographyPreview(next, fontWeight);
+            setTypographyVar('--app-font-size', `${next}px`);
           }}
-          onChangeEnd={(v) => {
+          onChangeEnd={async (v) => {
             const next = Array.isArray(v) ? v[0] : v;
-            saveTypography(next, fontWeight);
+            setFontSize(next);
+            await api.config.update.mutate({ key: 'fontSize', value: next });
+            blinko.config.call();
           }}
           className="flex-1"
           classNames={{ track: '!bg-default-300/50', filler: '!bg-primary', thumb: '!bg-primary !shadow-small' }}
         />
-        <div className="w-12 text-right text-sm tabular-nums text-default-500">{fontSize}px</div>
+        <div className="w-14 text-right text-sm tabular-nums text-default-500">{fontSize}px</div>
       </div>
-      {/* 字重 */}
       <div className="flex items-center gap-4 py-3">
-        <div className="w-16 shrink-0 text-sm font-medium">{t('font-weight')}</div>
+        <div className="w-24 shrink-0 text-sm font-medium">{t('font-weight')}</div>
         <Slider
           size="sm"
           minValue={300}
@@ -251,11 +594,13 @@ export const PerferSetting = observer(() => {
           onChange={(v) => {
             const next = Array.isArray(v) ? v[0] : v;
             setFontWeight(next);
-            applyTypographyPreview(fontSize, next);
+            setTypographyVar('--app-font-weight', String(next));
           }}
-          onChangeEnd={(v) => {
+          onChangeEnd={async (v) => {
             const next = Array.isArray(v) ? v[0] : v;
-            saveTypography(fontSize, next);
+            setFontWeight(next);
+            await api.config.update.mutate({ key: 'fontWeight', value: next });
+            blinko.config.call();
           }}
           className="flex-1"
           marks={[
@@ -267,16 +612,73 @@ export const PerferSetting = observer(() => {
           ]}
           classNames={{ track: '!bg-default-300/50', filler: '!bg-primary', thumb: '!bg-primary !shadow-small' }}
         />
-        <div className="w-12 text-right text-sm tabular-nums text-default-500">{fontWeight}</div>
+        <div className="w-14 text-right text-sm tabular-nums text-default-500">{fontWeight}</div>
       </div>
+
+      {/* 表格字号 */}
+      <TypoNumberRow
+        label={t('table-size')}
+        value={tableSize}
+        suffix="px"
+        min={12}
+        max={20}
+        step={1}
+        decimals={0}
+        onChange={(next) => {
+          setTableSize(next);
+          setTypographyVar('--app-table-size', `${next}px`);
+        }}
+        onComplete={async (next) => {
+          setTableSize(next);
+          await api.config.update.mutate({ key: 'tableSize', value: next });
+          blinko.config.call();
+        }}
+      />
+
       {/* 实时预览 */}
       <div className="py-3">
         <div
-          className="rounded-xl border border-default-200 bg-default-50 dark:bg-default-100 px-4 py-3.5 select-none"
-          style={{ fontSize: `${fontSize}px`, fontWeight: fontWeight, lineHeight: 1.6, transition: 'font-size .15s ease, font-weight .15s ease' }}
+          className="rounded-xl border border-default-200 bg-default-50 dark:bg-default-100 px-4 py-3.5 select-none markdown-body"
+          style={{
+            fontSize: `${fontSize}px`,
+            fontWeight: fontWeight,
+            lineHeight: lineHeight,
+            transition: 'font-size .15s ease, font-weight .15s ease, line-height .15s ease',
+            textIndent: `${firstLineIndentChars}em`,
+          }}
         >
-          {t('typography-preview-text')}
+          <h1 style={{ fontSize: `${h1Size}px`, margin: '0 0 4px' }}># {t('h1-preview-title')}</h1>
+          <h2 style={{ fontSize: `${h2Size}px`, margin: '0 0 4px' }}>## {t('h2-preview-title')}</h2>
+          <h3 style={{ fontSize: `${h3Size}px`, margin: '0 0 4px' }}>### {t('h3-preview-title')}</h3>
+          <p style={{ marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text')}</p>
+          <p style={{ marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text-2')}</p>
+          <table style={{ fontSize: `${tableSize}px`, width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--desc, #ccc)' }}>
+                <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('table-col-a')}</th>
+                <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('table-col-b')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '4px 8px' }}>{t('table-row-1')}</td>
+                <td style={{ padding: '4px 8px' }}>{t('table-row-2')}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
+
+      {/* 恢复默认 */}
+      <div className="flex justify-end py-3">
+        <Button
+          size="sm"
+          variant="flat"
+          color="default"
+          onPress={restoreTypographyDefaults}
+        >
+          {t('restore-defaults')}
+        </Button>
       </div>
     </SettingSection>
 

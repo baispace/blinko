@@ -377,3 +377,22 @@ body {
 .group[data-focus-visible="true"] .group-data-\[focus-visible\=true\]\:ring-2 {
   --tw-ring-shadow: 0 !important;
 }
+
+/* Document outline: keep the rail visually quiet and reveal its scrollbar only while scrolling. */
+.toc-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.toc-scrollbar::-webkit-scrollbar { width: 4px; }
+.toc-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.toc-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 160ms ease;
+}
+.toc-scrollbar[data-scrolling="true"] {
+  scrollbar-color: color-mix(in srgb, var(--foreground) 22%, transparent) transparent;
+}
+.toc-scrollbar[data-scrolling="true"]::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--foreground) 22%, transparent);
+}

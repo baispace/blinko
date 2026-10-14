@@ -3,9 +3,10 @@ import Editor from "../Common/Editor"
 import { RootStore } from "@/store"
 import { BlinkoStore } from "@/store/blinkoStore"
 import dayjs from "@/lib/dayjs"
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, type ReactElement } from 'react'
 import { NoteType } from "@shared/lib/types"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { eventBus } from '@/lib/event'
 
 /** 停止输入多久后自动落库（毫秒） */
 const AUTOSAVE_DELAY = 800
@@ -16,6 +17,9 @@ type IProps = {
   mode: 'create' | 'edit',
   fixedNoteType?: NoteType,
   composerVariant?: 'flash' | 'note' | 'todo',
+  documentToolbar?: boolean,
+  documentSidebar?: ReactElement,
+  documentSidebarInset?: number,
   hideNoteTypeButton?: boolean,
   onSended?: () => void,
   onHeightChange?: (height: number) => void,
@@ -37,7 +41,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
+export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -64,7 +68,10 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
     const item = pendingAutosave.current
     pendingAutosave.current = null
     if (!item) return null
-    return blinko.autosaveNote(item)
+    return blinko.autosaveNote({
+      ...item,
+      onSaved: () => { lastSavedContent.current = item.content; },
+    })
   }, [blinko])
 
   /**
@@ -80,6 +87,17 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
   const sidePatch = useRef<{ id: number, content: string, patch: any } | null>(null)
   const sidePatchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const flushSidePatch = useCallback(() => {
+    if (sidePatchTimer.current) {
+      clearTimeout(sidePatchTimer.current)
+      sidePatchTimer.current = null
+    }
+    const item = sidePatch.current
+    sidePatch.current = null
+    if (!item) return null
+    return blinko.silentUpsertNote({ id: item.id, content: item.content, ...item.patch })
+  }, [blinko])
+
   const handleSidePatch = useCallback((patch: { attachments?: any[], references?: number[], type?: number }) => {
     const noteId = blinko.curSelectedNote?.id
     if (!noteId) return
@@ -90,21 +108,16 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
       patch: { ...base, ...patch }
     }
     if (sidePatchTimer.current) clearTimeout(sidePatchTimer.current)
-    sidePatchTimer.current = setTimeout(() => {
-      const item = sidePatch.current
-      sidePatch.current = null
-      if (!item) return
-      // content 必须一起发：后端在 content 为空时会提前 return，跳过附件/引用处理
-      blinko.silentUpsertNote({ id: item.id, content: item.content, ...item.patch })
-    }, SIDE_PATCH_DELAY)
-  }, [blinko])
+    sidePatchTimer.current = setTimeout(() => { void flushSidePatch(); }, SIDE_PATCH_DELAY)
+  }, [blinko, flushSidePatch])
 
-  /** 编辑态「完成」：正文已自动保存，这里只补写还没落库的、刷新列表、然后关闭 */
+  /** 编辑态「完成」：等待正文、上传衍生补丁全部落库后再关闭。 */
   const handleDone = useCallback(async () => {
     await flushAutosave()
+    await flushSidePatch()
     blinko.updateTicker++
     onSended?.()
-  }, [flushAutosave, blinko, onSended])
+  }, [flushAutosave, flushSidePatch, blinko, onSended])
 
   const store = RootStore.Local(() => ({
     get noteContent() {
@@ -121,7 +134,7 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
           if (!blinko.curSelectedNote) return '';
           const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
           const blinkoContent = blinko.curSelectedNote?.content ?? ''
-          return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
+          return local ? (local.content ?? '') : blinkoContent
         } catch (error) {
           return ''
         }
@@ -186,8 +199,8 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
       try {
         if (!blinko.curSelectedNote) return;
         const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
-        if (local && local?.content != '') {
-          blinko.curSelectedNote.content = local.content
+        if (local) {
+          blinko.curSelectedNote.content = local.content ?? ''
         }
       } catch (error) {
         console.error(error)
@@ -201,6 +214,32 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
     lastSavedContent.current = blinko.curSelectedNote?.content ?? ''
     return () => { flushAutosave() }
   }, [blinko.curSelectedNote?.id, flushAutosave])
+
+  useEffect(() => {
+    const cancelPending = ({ id }: { id: number }) => {
+      if (blinko.curSelectedNote?.id !== id) return
+      clearAutosaveTimer()
+      pendingAutosave.current = null
+      if (sidePatchTimer.current) clearTimeout(sidePatchTimer.current)
+      sidePatchTimer.current = null
+      sidePatch.current = null
+      blinko.cancelAutosave()
+    }
+    const applyExternalContent = ({ id, content }: { id: number, content: string }) => {
+      if (blinko.curSelectedNote?.id !== id) return
+      cancelPending({ id })
+      lastSavedContent.current = content
+      blinko.editContentStorage.removeByFind(item => Number(item.id) === Number(id))
+      blinko.curSelectedNote.content = content
+      eventBus.emit('editor:replace', content)
+    }
+    eventBus.on('editor:cancelPending', cancelPending)
+    eventBus.on('editor:applyExternalContent', applyExternalContent)
+    return () => {
+      eventBus.off('editor:cancelPending', cancelPending)
+      eventBus.off('editor:applyExternalContent', applyExternalContent)
+    }
+  }, [blinko])
 
   // Use Tauri hotkey hook
 
@@ -222,8 +261,8 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
         const noteId = blinko.curSelectedNote?.id
         if (!noteId) return
         const content = v ?? ''
-        // 空内容不自动保存：宁可留着旧内容，也不要把整篇笔记悄悄清空
-        if (!content.trim() || content === lastSavedContent.current) {
+        // 空正文也是有效编辑；只有与最近一次确认落库的内容相同才跳过。
+        if (content === lastSavedContent.current) {
           clearAutosaveTimer()
           pendingAutosave.current = null
           return
@@ -233,6 +272,9 @@ export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hi
         autosaveTimer.current = setTimeout(flushAutosave, AUTOSAVE_DELAY)
       }}
       composerVariant={composerVariant}
+      documentToolbar={documentToolbar}
+      documentSidebar={documentSidebar}
+      documentSidebarInset={documentSidebarInset}
       fixedNoteType={fixedNoteType}
       hideNoteTypeButton={hideNoteTypeButton}
       withoutOutline={withoutOutline}

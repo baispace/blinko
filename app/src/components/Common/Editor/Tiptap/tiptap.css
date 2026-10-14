@@ -45,8 +45,10 @@
 }
 
 /* ---------- placeholder ---------- */
-.tiptap p.is-editor-empty:first-child::before {
+.tiptap > .is-editor-empty[data-placeholder]:first-child::before {
   content: attr(data-placeholder);
+  font-size: var(--app-font-size, 16px);
+  font-weight: 400;
   float: left;
   height: 0;
   pointer-events: none;
@@ -1081,3 +1083,106 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   background-color: #1c1c1e;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
+
+/* ================= Feishu-like table edge controls ================= */
+.feishu-table-edges .feishu-table-col-rail,
+.feishu-table-edges .feishu-table-row-rail,
+.feishu-table-edges .feishu-table-col-insert,
+.feishu-table-edges .feishu-table-row-insert {
+  position: fixed;
+  padding: 0;
+  border: 0;
+  pointer-events: auto;
+}
+.feishu-table-edges .feishu-table-col-rail {
+  border-right: 1px solid color-mix(in srgb, var(--background) 70%, transparent);
+  border-radius: 3px 3px 0 0;
+  background: color-mix(in srgb, var(--foreground) 13%, transparent);
+  cursor: pointer;
+  transition: background-color 120ms ease, opacity 120ms ease;
+}
+.feishu-table-edges .feishu-table-col-rail:hover {
+  background: color-mix(in srgb, var(--primary) 34%, transparent);
+}
+.feishu-table-edges .feishu-table-row-rail {
+  border-bottom: 1px solid color-mix(in srgb, var(--background) 70%, transparent);
+  border-radius: 3px 0 0 3px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.feishu-table-edges .feishu-table-row-rail:hover {
+  background: color-mix(in srgb, var(--primary) 34%, transparent);
+}
+.feishu-table-edges .feishu-table-col-insert,
+.feishu-table-edges .feishu-table-row-insert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: cell;
+}
+.feishu-table-plus {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+  border-radius: 50%;
+  color: var(--primary);
+  background: var(--background);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  opacity: 0;
+  transform: scale(.72);
+  transition: opacity 120ms ease, transform 120ms ease, background-color 120ms ease;
+}
+.feishu-table-col-insert:hover .feishu-table-plus,
+.feishu-table-row-insert:hover .feishu-table-plus,
+.feishu-table-col-insert:focus-visible .feishu-table-plus,
+.feishu-table-row-insert:focus-visible .feishu-table-plus {
+  opacity: 1;
+  transform: scale(1);
+}
+.feishu-table-col-insert:hover .feishu-table-plus,
+.feishu-table-row-insert:hover .feishu-table-plus {
+  background: color-mix(in srgb, var(--primary) 8%, var(--background));
+}
+.tiptap-table-toolbar.is-compact {
+  max-width: calc(100vw - 16px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px;
+}
+.tiptap-table-toolbar.is-compact::-webkit-scrollbar { display: none; }
+.tiptap-table-toolbar.is-compact .tiptap-table-btn {
+  width: 30px;
+  min-width: 30px;
+  padding: 0;
+  justify-content: center;
+}
+@media (hover: none) {
+  .feishu-table-edges .feishu-table-col-rail,
+  .feishu-table-edges .feishu-table-row-rail { opacity: .65; }
+  .feishu-table-col-insert:focus .feishu-table-plus,
+  .feishu-table-row-insert:focus .feishu-table-plus { opacity: 1; transform: scale(1); }
+}
+
+.feishu-table-edges .feishu-table-col-insert,
+.feishu-table-edges .feishu-table-row-insert { opacity: 1 !important; }
+.feishu-table-edges.is-visible .feishu-table-col-rail,
+.feishu-table-edges.is-visible .feishu-table-row-rail { opacity: 1 !important; }
+
+/* Grouped table controls: matched stroke icons, quiet separators and explicit destructive labels. */
+.tiptap-table-toolbar.feishu-format-toolbar { gap: 3px; padding: 6px; border: 1px solid var(--border, #e2e4e8); border-radius: 10px; flex-wrap: wrap; overflow: visible; width: max-content; max-width: calc(100vw - 16px); box-shadow: 0 4px 14px rgba(0,0,0,.09); }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn { width: 32px; min-width: 32px; height: 32px; padding: 0; color: var(--foreground, #30343b); }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn.has-label { width: auto; padding: 0 8px; gap: 5px; }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn:hover { background: var(--hover, #f1f3f5); }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn.is-active { color: #2563eb; background: rgba(37,99,235,.1); }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn.is-danger { color: #c54646; }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn.is-danger:hover { background: rgba(197,70,70,.09); }
+.tiptap-table-toolbar.feishu-format-toolbar .tiptap-table-btn:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.table-toolbar-popover { position: absolute; top: calc(100% + 8px); right: 0; left: auto; min-width: 150px; padding: 6px; border: 1px solid var(--border, #e2e4e8); border-radius: 10px; background: var(--background, #fff); box-shadow: 0 6px 20px rgba(0,0,0,.12); z-index: 1; }
+.tiptap-table-colors.table-toolbar-popover { display: flex; flex-direction: column; gap: 2px; min-width: 150px; }
+.table-toolbar-menu-item, .table-toolbar-color-option { display: flex; align-items: center; gap: 9px; padding: 7px 8px; width: 100%; border-radius: 6px; font-size: 12px; color: var(--foreground, #30343b); white-space: nowrap; }
+.table-toolbar-menu-item:hover, .table-toolbar-color-option:hover { background: var(--hover, #f1f3f5); }
+.table-toolbar-popover-label { padding: 5px 8px; font-size: 11px; color: var(--desc, #777); }

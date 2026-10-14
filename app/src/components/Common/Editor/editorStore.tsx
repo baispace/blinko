@@ -49,6 +49,7 @@ export const isInlineImageNoteType = (noteType?: NoteType | null): boolean => {
 
 export class EditorStore {
   files: FileType[] = []
+  activeUploads = 0
   lastRange: Range | null = null
   lastStartOffset: number = 0
   lastEndOffset: number = 0
@@ -333,56 +334,68 @@ export class EditorStore {
   }
 
   uploadFiles = async (acceptedFiles) => {
-    const uploadFileType = {}
+    if (!acceptedFiles?.length) return
+    this.activeUploads++
+    try {
+      const uploadFileType = {}
 
-    const _acceptedFiles = await Promise.all(
-      acceptedFiles.map(file => this.uploadSingleFile(file, uploadFileType))
-    )
+      const _acceptedFiles = await Promise.all(
+        acceptedFiles.map(file => this.uploadSingleFile(file, uploadFileType))
+      )
 
-    /**
-     * 分流规则见 isInlineImageNoteType 的表格：
-     * 笔记/待办 → 图片写进正文 markdown（![]()），插在光标处；
-     * 闪念     → 图片只做附件（微博式九宫格展示），不进正文。
-     */
-    const inlineImages = isInlineImageNoteType(this.noteType)
-      ? _acceptedFiles.filter(i => i.previewType === 'image')
-      : []
-    const attachmentFiles = _acceptedFiles.filter(i => !inlineImages.includes(i))
+      /**
+       * 分流规则见 isInlineImageNoteType 的表格：
+       * 笔记/待办 → 图片写进正文 markdown（![]()），插在光标处；
+       * 闪念     → 图片只做附件（微博式九宫格展示），不进正文。
+       */
+      const inlineImages = isInlineImageNoteType(this.noteType)
+        ? _acceptedFiles.filter(i => i.previewType === 'image')
+        : []
+      const attachmentFiles = _acceptedFiles.filter(i => !inlineImages.includes(i))
 
-    this.files.push(...attachmentFiles)
-    await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
+      this.files.push(...attachmentFiles)
+      await Promise.all(_acceptedFiles.map(i => i.uploadPromise.call()))
 
-    if (inlineImages.length > 0) {
-      // 只在内容里写原始路径；CDN / token 由渲染端（ContentImage / ImageWrapper）解析
-      for (const img of inlineImages) {
-        const path = img.uploadPromise.value
-        if (!path) continue
-        this.vditor?.insertMD(`![](${path})`)
+      if (inlineImages.length > 0) {
+        // 只在内容里写原始路径；CDN / token 由渲染端（ContentImage / ImageWrapper）解析
+        for (const img of inlineImages) {
+          const path = img.uploadPromise.value
+          if (!path) continue
+          this.vditor?.insertMD(`![](${path})`)
+        }
+        this.onChange?.(this.vditor?.getValue() ?? '')
       }
-      this.onChange?.(this.vditor?.getValue() ?? '')
+
+      if (attachmentFiles.length === 0) return
+
+      if (this.mode == 'create') {
+        attachmentFiles.map(i => ({
+          name: i.name,
+          path: i.uploadPromise.value,
+          type: uploadFileType?.[i.name],
+          size: i.size
+        })).map(t => {
+          RootStore.Get(BlinkoStore).createAttachmentsStorage.push(t)
+        })
+      } else {
+        attachmentFiles.map(i => ({
+          name: i.name,
+          path: i.uploadPromise.value,
+          type: uploadFileType?.[i.name],
+          size: i.size,
+          id: this.blinko.curSelectedNote?.id!
+        })).map(t => {
+          RootStore.Get(BlinkoStore).editAttachmentsStorage.push(t)
+        })
+      }
+    } finally {
+      this.activeUploads = Math.max(0, this.activeUploads - 1)
     }
+  }
 
-    if (attachmentFiles.length === 0) return
-
-    if (this.mode == 'create') {
-      attachmentFiles.map(i => ({
-        name: i.name,
-        path: i.uploadPromise.value,
-        type: uploadFileType?.[i.name],
-        size: i.size
-      })).map(t => {
-        RootStore.Get(BlinkoStore).createAttachmentsStorage.push(t)
-      })
-    } else {
-      attachmentFiles.map(i => ({
-        name: i.name,
-        path: i.uploadPromise.value,
-        type: uploadFileType?.[i.name],
-        size: i.size,
-        id: this.blinko.curSelectedNote?.id!
-      })).map(t => {
-        RootStore.Get(BlinkoStore).editAttachmentsStorage.push(t)
-      })
+  waitForUploads = async () => {
+    while (this.activeUploads > 0) {
+      await new Promise(resolve => setTimeout(resolve, 40))
     }
   }
 
@@ -487,6 +500,9 @@ export class EditorStore {
    * closes. Create mode has no note id yet and keeps using `handleSend`.
    */
   async handleDone() {
+    await this.waitForUploads();
+    // MobX reactions that create attachment side-patches run synchronously after upload state updates.
+    await Promise.resolve();
     await this.onDone?.();
     RootStore.Get(AiStore).isWriting = false;
     eventBus.emit('editor:setFullScreen', false);

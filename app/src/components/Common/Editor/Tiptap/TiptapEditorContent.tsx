@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { EditorContent, BubbleMenu } from '@tiptap/react';
 import type { Editor } from '@tiptap/core';
+import { CellSelection } from '@tiptap/pm/tables';
 import type { EditorStore } from '../editorStore';
 import { SlashMenuView } from './ToolbarButtons';
 import { CalloutIconMenu } from './CalloutIconMenu';
@@ -40,13 +41,13 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
       <BubbleMenu
         editor={editor}
         shouldShow={({ editor }) => {
-          if (!editor) return false;
+          if (!editor || !editor.isEditable || !editor.isFocused) return false;
           const { selection } = editor.state;
           // 默认行为：只在真正选中了文本内容时才显示；空光标时不显示。
-          if (selection.empty) return false;
+          if (selection.empty || selection instanceof CellSelection) return false;
           const node = (selection as any)?.node;
           // 选中图片时只显示图片专用工具栏，避免文本气泡和图片工具栏重叠
-          return !(node?.type?.name === 'image');
+          return !(node?.type?.name === 'image' || node?.type?.name === 'table');
         }}
         tippyOptions={{ duration: 120, maxWidth: 'none' }}
       >

@@ -46,7 +46,8 @@ const TippyButton = ({ label, active, onClick, title }: {
 /**
  * Image-like upload button (file picker), keeps the audio recording event listener.
  */
-export const UploadImageButton = ({ getInputProps, open, store }: {
+export const UploadImageButton = ({ getInputProps, open, store, label }: {
+  label?: string;
   getInputProps: () => any;
   open: () => void;
   store: any;
@@ -67,21 +68,22 @@ export const UploadImageButton = ({ getInputProps, open, store }: {
   }, [store]);
 
   return (
-    <IconButtonWrap tooltip={t('upload-file')} onClick={open} icon="tdesign:image">
+    <IconButtonWrap label={label} tooltip={t('upload-file')} onClick={open} icon="tdesign:image">
       <input {...getInputProps()} />
     </IconButtonWrap>
   );
 };
 
-const IconButtonWrap = ({ tooltip, onClick, icon, children }: {
-  tooltip: string, onClick: (e: any) => void, icon: string, children?: any
+const IconButtonWrap = ({ tooltip, onClick, icon, children, label }: {
+  label?: string, tooltip: string, onClick: (e: any) => void, icon: string, children?: any
 }) => (
   <Tooltip content={tooltip} placement="bottom" delay={300}>
     <div
       onClick={onClick}
-      className="hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center w-[23px] h-[23px] text-default-600"
+      className={`hover:bg-hover transition-colors cursor-pointer rounded-md flex items-center justify-center text-default-600 ${label ? "gap-1 px-2 py-1.5 text-xs" : "w-[23px] h-[23px]"}`}
     >
       <Icon icon={icon} width={20} height={20} />
+      {label && <span>{label}</span>}
       {children}
     </div>
   </Tooltip>
@@ -255,7 +257,7 @@ export const CalloutButton = ({ editor }: { editor: Editor | null | undefined })
 /**
  * "Aa" format menu: headings / rich text marks / quote & code block.
  */
-export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined }) => {
+export const FormatMenuButton = ({ editor, label }: { editor: Editor | null | undefined; label?: string }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [showCallout, setShowCallout] = useState(false);
@@ -281,10 +283,11 @@ export const FormatMenuButton = ({ editor }: { editor: Editor | null | undefined
     <Popover placement="bottom-start" isOpen={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowCallout(false); }}>
       <PopoverTrigger>
         <div
-          className="hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center w-[23px] h-[23px] text-default-600"
+          className={`hover:bg-hover transition-colors cursor-pointer rounded-md flex items-center justify-center text-default-600 ${label ? "gap-1 px-2 py-1.5 text-xs" : "w-[23px] h-[23px]"}`}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(!open); }}
         >
           <Icon icon="tabler:letter-case" width={20} height={20} />
+          {label && <span>{label}</span>}
         </div>
       </PopoverTrigger>
       {/* 展开标注选择器时需要更宽，否则颜色/表情网格会被挤 */}

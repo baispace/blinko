@@ -35,12 +35,14 @@ import { ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/To
 //https://ld246.com/guide/markdown
 type IProps = {
   mode: 'create' | 'edit' | 'comment',
+  composerVariant?: 'flash' | 'note' | 'todo',
   content: string,
   onChange?: (content: string) => void,
   onHeightChange?: () => void,
   onSend: (args: OnSendContentType) => Promise<any>,
   isSendLoading?: boolean,
   bottomSlot?: ReactElement<any, any>,
+  beforeToolbar?: ReactElement<any, any>,
   originFiles?: Attachment[],
   originReference?: number[],
   hiddenToolbar?: boolean,
@@ -85,7 +87,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
+const Editor = observer(({ composerVariant, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, beforeToolbar, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -119,17 +121,18 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
               }}
             />
           )}
-          <HashtagButton store={store} content={content} />
+          <HashtagButton store={store} content={content} label={composerVariant ? "标签" : undefined} />
           <UploadImageButton
             getInputProps={getInputProps}
             open={open}
             store={store}
+            label={composerVariant ? "附件" : undefined}
           />
           <ToolbarDivider />
           {/* 无序 / 有序 / 任务 / 标注 已收进 Aa 格式菜单，顶栏不再各占一个按钮 */}
-          <FormatMenuButton editor={store.vditor?.editor ?? null} />
+          <FormatMenuButton editor={store.vditor?.editor ?? null} label={composerVariant ? "格式" : undefined} />
           <ToolbarDivider />
-          <ReferenceButton store={store} iconButton={<IconButton tooltip="reference" icon="mdi:at" />} />
+          <ReferenceButton store={store} iconButton={composerVariant ? <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-default-500 hover:bg-default-100"><Icon icon="mdi:at" width="16" height="16" />关联</button> : <IconButton tooltip="reference" icon="mdi:at" />} />
           {pluginApi.customToolbarIcons
             .map((item) => (
               item.content ? (
@@ -178,7 +181,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       {renderStatusText()}
       {editable && (onDone
         ? <DoneButton store={store} isSendLoading={isSendLoading} />
-        : <SendButton store={store} isSendLoading={isSendLoading} />)}
+        : <SendButton store={store} isSendLoading={isSendLoading} label={composerVariant ? store.noteType === NoteType.NOTE ? "保存笔记" : store.noteType === NoteType.TODO ? "添加待办" : "记录闪念" : undefined} />)}
     </div>
   );
 
@@ -345,6 +348,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             store.adjustMobileEditorHeight()
           }}>
 
+            {composerVariant === 'note' && !showTopToolbar && <div className="composer-toolbar composer-formatbar">{renderToolbar()}</div>}
             <div className={`relative ${fillHeight && !pageScroll ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
               <div
                 id={`vditor-${mode}`}
@@ -399,9 +403,11 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
               </div>
             ))}
 
+          {beforeToolbar}
           {!showTopToolbar && (
-            <div className='flex w-full items-center gap-1 mt-auto'>
-              {renderToolbar()}
+            <div className={composerVariant ? 'composer-toolbar composer-footer w-full mt-auto' : 'flex w-full items-center gap-1 mt-auto'}>
+              {composerVariant !== 'note' && renderToolbar()}
+              {composerVariant === 'note' && <span className="composer-shortcut text-xs text-default-400">输入 / 使用插入与 AI 命令 · ⌘ / Ctrl + Enter 保存</span>}
               {renderRightToolbar()}
             </div>
           )}

@@ -116,7 +116,9 @@ if (process.env.NODE_ENV === 'production') {
     }
   });
 } else {
+  process.env.NODE_ENV = 'development';
   ViteExpress.config({
+    mode: 'development',
     viteConfigFile: path.resolve(appRootDev, 'vite.config.ts'),
     inlineViteConfig: {
       root: appRootDev,
@@ -550,32 +552,22 @@ async function bootstrap() {
 
     // Start or update server
     if (!server) {
-      const server = app.listen(PORT, "::", () => {
-        console.log(`🎉server start on port http://localhost:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
-      });
+      server = app.listen(PORT, "::");
       
       // Increase timeout for large file uploads (5 minutes)
       server.timeout = 5 * 60 * 1000;
       server.keepAliveTimeout = 5 * 60 * 1000;
       server.headersTimeout = 5 * 60 * 1000;
       
-      ViteExpress.bind(app, server); // the server binds to all network interfaces
+      await ViteExpress.bind(app, server);
+      console.log(`🎉frontend and API ready at http://localhost:${PORT} - env: ${process.env.NODE_ENV}`);
     } else {
       console.log(`API routes updated - env: ${process.env.NODE_ENV || 'development'}`);
     }
   } catch (err) {
-    console.error('start server error:', err);
-    try {
-      // Attempt to start server even if route setup fails
-      if (!server) {
-        const server = app.listen(PORT, "::", () => {
-          console.log(`🎉server start on port http://localhost:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
-        });
-        ViteExpress.bind(app, server); // the server binds to all network interfaces
-      }
-    } catch (startupError) {
-      console.error('start server error:', startupError);
-    }
+    console.error('Frontend/API initialization failed; refusing to run a partial server:', err);
+    if (server) server.close();
+    process.exit(1);
   }
 }
 

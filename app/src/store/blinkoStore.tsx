@@ -720,9 +720,6 @@ export class BlinkoStore implements Store {
     const location = useLocation();
     useEffect(() => {
       const tagId = searchParams.get('tagId');
-      if (tagId && Number(tagId) === this.noteListFilterConfig.tagId) {
-        return;
-      }
       
       const withoutTag = searchParams.get('withoutTag');
       const withFile = searchParams.get('withFile');
@@ -750,25 +747,21 @@ export class BlinkoStore implements Store {
 
       if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
-        this.noteOnlyList.resetAndCall({});
       } else if (path == 'todo') {
         this.noteListFilterConfig.type = NoteType.TODO
-        this.todoList.resetAndCall({});
       } else if (path == 'all') {
         this.noteListFilterConfig.type = -1
-        this.noteList.resetAndCall({});
       } else if (path == 'archived') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isArchived = true
-        this.archivedList.resetAndCall({});
       } else if (path == 'trash') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isRecycle = true
-        this.trashList.resetAndCall({});
-      } else {
-        this.blinkoList.resetAndCall({});
       }
 
+      if (path === 'all' && ['0', '1', '2'].includes(searchParams.get('contentType') || '')) {
+        this.noteListFilterConfig.type = Number(searchParams.get('contentType'));
+      }
       if (tagId) {
         this.noteListFilterConfig.tagId = Number(tagId) as number
       }
@@ -789,6 +782,14 @@ export class BlinkoStore implements Store {
       } else {
         this.searchText = '';
       }
+      const state = this.getListByPath(path);
+      let cancelled = false;
+      const refresh = async () => {
+        while (state.loading.value && !cancelled) await new Promise(resolve => setTimeout(resolve, 40));
+        if (!cancelled) await state.resetAndCall({});
+      };
+      void refresh();
+      return () => { cancelled = true; };
     }, [this.forceQuery, location.pathname, searchParams])
   }
 

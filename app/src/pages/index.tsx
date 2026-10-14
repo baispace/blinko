@@ -3,9 +3,10 @@ import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
+import { ListComposer } from '@/components/Common/ListComposer';
 import { BlinkoEditor } from '@/components/BlinkoEditor';
 import { TodoQuickAdd } from '@/components/Common/TodoQuickAdd';
-import { ScrollArea } from '@/components/Common/ScrollArea';
+import { ScrollArea, type ScrollAreaHandles } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { TodoCard } from '@/components/BlinkoCard/TodoCard';
 import { useMediaQuery } from 'usehooks-ts';
@@ -44,11 +45,14 @@ const Home = observer(() => {
   const noteListStyle = ((getPageViewSetting(blinko, pageScope, 'noteListStyle') as string | undefined) ?? 'continuous');
   const pageWidth = (getPageViewSetting(blinko, pageScope, 'maxHomePageWidth') as number | null | undefined) ?? blinko.config.value?.maxHomePageWidth;
   const hidePcEditor = getPageViewSetting(blinko, pageScope, 'hidePcEditor') ?? blinko.config.value?.hidePcEditor;
+  const isTagView = !!searchParams.get('tagId') && searchParams.get('path') === 'all';
+  const tagName = blinko.tagList.value?.falttenTags?.find(tag => String(tag.id) === searchParams.get('tagId'))?.name;
+  const [ , setListSearchParams] = useSearchParams();
   const isTodoView = searchParams.get('path') === 'todo';
   const [activeId, setActiveId] = useState<number | null>(null);
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<ScrollAreaHandles>(null);
   const [activeTab, setActiveTab] = useState<string>('today');
 
   // 当前视图真正渲染的列表。映射收敛到 store，筛选面板 / 批量选择共用同一份，
@@ -213,7 +217,7 @@ const Home = observer(() => {
       const position = Number(savedPosition);
       setTimeout(() => {
         if (scrollAreaRef.current) {
-          scrollAreaRef.current.scrollTop = position;
+          scrollAreaRef.current.scrollTo(position);
         }
         // Clear the saved position after restoring
         sessionStorage.removeItem('restore-scroll-position');
@@ -230,24 +234,21 @@ const Home = observer(() => {
     <div
       className={`pt-1 md:p-0 relative h-full flex flex-col-reverse md:flex-col w-full`}>
 
-      {!isTodoView && store.showEditor && isPc && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
-          <BlinkoEditor mode='create' key='create-key' onHeightChange={height => {
-            if (!isPc) return
-            store.editorHeight = height
-          }} />
+      {!isTodoView && store.showEditor && !hidePcEditor && <div className='px-2 md:px-6 mx-auto w-full' style={maxWidthStyle} >
+          <ListComposer key={searchParams.get('path') || 'blinko'} defaultType={searchParams.get('path') === 'notes' ? NoteType.NOTE : NoteType.BLINKO} mixed={isTagView} tag={tagName} />
         </div>
       }
-      {(!isPc || hidePcEditor) && !isTodoView && <BlinkoAddButton />}
+      {hidePcEditor && !isTodoView && <BlinkoAddButton />}
 
       {/* 待办视图永远渲染自身外壳（新增入口 + Tabs + 空列表提示），
           否则列表为空时 isEmpty 会把整个待办模块连带「加一条任务」一起隐藏 */}
       <LoadingAndEmpty
         isLoading={currentListState.isLoading}
-        isEmpty={!isTodoView && currentListState.isEmpty}
+        isEmpty={!isTodoView && !isTagView && currentListState.isEmpty}
       />
 
       {
-        (!currentListState.isEmpty || isTodoView) &&
+        (!currentListState.isEmpty || isTodoView || isTagView) &&
         <ScrollArea
           ref={scrollAreaRef}
           fixMobileTopBar
@@ -260,11 +261,19 @@ const Home = observer(() => {
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`mt-0 md:${hidePcEditor ? 'mt-0' : 'mt-4'} w-full h-full !transition-all scroll-area`}>
           <div className="px-2 md:px-6 mx-auto w-full" style={maxWidthStyle}>
+          {isTagView && <div role="group" aria-label="标签内内容类型" className="flex flex-wrap gap-1 mb-3">
+            {['全部', '闪念', '笔记', '待办'].map((label, index) => {
+              const value = index === 0 ? '' : String(index - 1);
+              const active = (searchParams.get('contentType') || '') === value;
+              return <button key={label} type="button" aria-pressed={active} onClick={() => { const next = new URLSearchParams(searchParams); value ? next.set('contentType', value) : next.delete('contentType'); setListSearchParams(next); }} className={`rounded-full px-3 py-1.5 text-sm transition-colors ${active ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-default-100'}`}>{label}</button>;
+            })}
+          </div>}
           {!isTodoView && <TagFilterChips />}
+          {isTagView && currentListState.isEmpty && !currentListState.isLoading && <div className="py-8 text-center text-sm text-default-400">当前类型没有内容，可以切换类型或在上方新建。</div>}
           {isTodoView ? (
             <div className="flex flex-col gap-4">
               {/* 全局唯一新增入口：放在 tabs 上方，三个 section 共用一份 */}
-              <TodoQuickAdd />
+              <ListComposer defaultType={NoteType.TODO} />
 
               {/* Tab 栏（今天 / 接下来几天 / 已完成）——
                   去掉行内灰色底，改透明 + sticky top-0 让 tabs 滚动时停留。

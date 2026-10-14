@@ -1,0 +1,9 @@
+.list-composer .tiptap { min-height: 88px !important; padding: 10px 8px 14px; }
+.list-composer.composer-1 .tiptap { min-height: 140px !important; }
+.list-composer.composer-2 .tiptap { min-height: 68px !important; }
+.list-composer .tiptap-wrap { max-height: 360px; overflow-y: auto; }
+.list-composer .reference-container:empty { margin: 0; }
+.list-composer .composer-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.list-composer .composer-footer { border-top: 1px solid hsl(var(--heroui-default-100)); padding: 10px 4px 2px; }
+.list-composer .composer-formatbar { border-bottom: 1px solid hsl(var(--heroui-default-100)); padding: 4px 4px 10px; margin-bottom: 8px; }
+@media (max-width: 640px) { .list-composer .composer-toolbar { gap: 4px; } .list-composer .composer-shortcut { display: none; } }

@@ -50,7 +50,9 @@ export const HomeHeaderLeft = observer(() => {
 
   // 模式标题里的 emoji 跟 BLINKO/笔记/待办概念保持一致：
   //   ⚡ 闪念 / 📝 笔记 / ✅ 待办 / 📚 全部 / 🗄️ 归档 / 🗑️ 回收站
-  const modeTitle = `${MODE_TITLE_EMOJI[scope] ?? ''} ${t(scope)}`.trim();
+  const tag = blinko.tagList.value?.falttenTags?.find(item => String(item.id) === searchParams.get('tagId'));
+  const typeLabel = ({ '0': '闪念', '1': '笔记', '2': '待办' } as Record<string, string>)[searchParams.get('contentType') || ''] || '全部';
+  const modeTitle = scope === 'all' && tag ? `#${tag.name} · ${typeLabel}` : `${MODE_TITLE_EMOJI[scope] ?? ''} ${t(scope)}`.trim();
 
   return (
     <div className="flex items-center gap-2.5 min-w-0">

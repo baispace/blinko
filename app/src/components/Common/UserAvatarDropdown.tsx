@@ -6,7 +6,7 @@ import { BaseStore } from '@/store/baseStore';
 import { UserStore } from '@/store/user';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { signOut, navigate } from '../Auth/auth-client';
+import { signOut } from '../Auth/auth-client';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 
@@ -23,50 +23,32 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
   const navigate = useNavigate()
   return (
     <Dropdown
+      placement="bottom-start"
       classNames={{
-        content: 'bg-secondbackground',
+        content: 'bg-background border border-default-200 rounded-xl min-w-[220px] shadow-lg',
       }}
     >
       <DropdownTrigger>
-        <div className={`cursor-pointer ${collapsed ? 'flex justify-center' : 'flex items-center gap-2.5'}`}>
+        <button type="button" aria-label="账户与管理菜单" title={user.nickname || user.name || "账户与管理"} className={`cursor-pointer rounded-lg p-1.5 hover:bg-default-100 transition-colors focus-visible:outline-primary flex items-center justify-center shrink-0`}>
           <div className="relative group">
             {user.image ? (
               <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-9 h-9' : 'w-8 h-8'} rounded-lg object-cover !transition-all`} />
             ) : (
               <Image src="/logo.png" width={30} />
             )}
-            <div className={`absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center transition-opacity ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              <Icon icon="mdi:cog" width="16" height="16" className="text-white" />
-            </div>
+
           </div>
-          {!collapsed && (
-            <>
-              <span className="font-semibold text-[13px] truncate flex-1 min-w-0">
-                {user.nickname || user.name}
-              </span>
-              {/*
-                ⌘K 提示：原型的账号行右侧 chip，
-                与 BarSearchInput 的快捷键一致，作为视觉锚点提醒用户用快捷键唤起搜索。
-                不可点击（避免双触发：BarSearchInput 的按钮已经处理）。
-              */}
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
-                bg-default-100 text-default-500
-                border border-default-200
-                shrink-0 tabular-nums">
-                ⌘K
-              </span>
-            </>
-          )}
-        </div>
+
+        </button>
       </DropdownTrigger>
-      <DropdownMenu aria-label="User Actions">
+      <DropdownMenu aria-label="账户与管理">
         <>
           {base.routerList
             .filter((i) => i.hiddenSidebar)
             .map((i) => (
               <DropdownItem
                 key={i.title}
-                className='font-bold'
+                className='text-default-600 rounded-lg'
                 startContent={<Icon icon={i.icon} width="20" height="20" />}
                 onPress={() => {
                   // 设置走 overlay 弹窗，不做路由跳转。跳转会把用户从当前页面
@@ -87,7 +69,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, sh
 
           <DropdownItem
             key="logout"
-            className="font-bold text-danger"
+            className="text-danger rounded-lg border-t border-default-200 mt-1"
             startContent={<Icon icon="hugeicons:logout-05" width="20" height="20" />}
             onPress={async () => {
               await signOut({ callbackUrl: '/signin', redirect: false });

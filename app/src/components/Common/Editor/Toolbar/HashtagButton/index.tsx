@@ -1,103 +1,54 @@
-import { IconButton } from '../IconButton';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
+import { observer } from 'mobx-react-lite';
+import { Input, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
+import { Icon } from '@/components/Common/Iconify/icons';
 import { EditorStore } from '../../editorStore';
-import { useMediaQuery } from 'usehooks-ts';
-import { Input } from '@heroui/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
-import { ScrollArea } from '@/components/Common/ScrollArea';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store/root';
-import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
 
-interface Props {
-  store: EditorStore;
-  content: string;
-}
-
-export const HashtagButton = observer(({ store, content }: Props) => {
-  const { t } = useTranslation();
-  const isPc = useMediaQuery('(min-width: 768px)')
-  const blinko = RootStore.Get(BlinkoStore)
-  const localStore = RootStore.Local(() => ({
-    show: false,
-    setShow: (show: boolean) => {
-      localStore.show = show
-    },
-    isSearchMode: true,
-    searchText: '',
-    selectedIndex: 0,
-    get tagList() {
-      if (!localStore.searchText) {
-        return blinko.tagList?.value?.pathTags
-      }
-      return blinko.tagList?.value?.pathTags.filter(i =>
-        i.toLowerCase().includes(localStore.searchText.toLowerCase().replace("#", ''))
-      )
-    },
-  }))
-
-  useEffect(() => {
-    localStore.searchText = ''
-  }, [])
-
-  return (
-    <Popover
-      placement="bottom"
-      isOpen={localStore.show}
-      onOpenChange={localStore.setShow}
-    >
-      <PopoverTrigger>
-        <div
-          onClick={e => {
-            e.preventDefault()
-            e.stopPropagation()
-            localStore.setShow(true)
-          }}>
-          <IconButton
-            tooltip={t('insert-hashtag')}
-            icon="mingcute:hashtag-line"
-          />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className='flex flex-col max-w-[300px] p-2'>
-        <ScrollArea className={'max-h-[300px]'} onBottom={() => { }}>
-          <Input
-            className='mb-2'
-            placeholder={t('search-tags')}
-            size='sm'
-            autoFocus
-            value={localStore.searchText} onChange={e => {
-              localStore.searchText = e.target.value
-            }} />
-
-          {localStore.tagList?.map((i, index) => (
-            <div
-              key={i}
-              data-index={index}
-              className={`cursor-pointer hover:bg-hover !transition-all px-2 py-1 rounded-lg
-            ${index === localStore.selectedIndex ? 'bg-hover' : ''}`}
-              onClick={e => {
-                localStore.setShow(false)
-                store.vditor?.insertValue(`#${i}&nbsp;`, true)
-                store.onChange?.(store.vditor?.getValue() ?? '')
-                setTimeout(() => {
-                  store.focus()
-                }, 300)
-              }}
-            >
-              #{i}
-            </div>
-          ))}
-          {localStore.tagList?.length == 0 && (
-            <div className='text-ignore font-bold text-sm'>
-              {t('no-tag-found')}
-            </div>
-          )}
-        </ScrollArea>
-
-      </PopoverContent>
-    </Popover >
-
-  );
-}); 
+interface Props { store: EditorStore; content: string; label?: string }
+export const HashtagButton = observer(({ store, label }: Props) => {
+  const blinko = RootStore.Get(BlinkoStore);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(0);
+  const query = search.trim().replace(/^#+/, '').toLocaleLowerCase();
+  const tags = (blinko.tagList.value?.pathTags ?? []).filter(path => !query || path.toLocaleLowerCase().includes(query));
+  const load = async () => { blinko.tagList.errMsg = ''; await blinko.tagList.call(); };
+  const insert = (path: string) => {
+    const editor = store.vditor?.editor;
+    if (!editor || !editor.isEditable) return;
+    const { $from } = editor.state.selection;
+    const before = $from.parent.textBetween(0, $from.parentOffset, ' ', ' ');
+    const prefix = before && !/\s$/.test(before) ? ' ' : '';
+    editor.chain().focus().insertContent([{ type: 'text', text: `${prefix}#${path} ` }]).run();
+    store.onChange?.(store.vditor?.getValue() ?? '');
+    setOpen(false);
+  };
+  return <Popover placement="bottom-start" isOpen={open} onOpenChange={next => {
+    setOpen(next);
+    if (next) { setSearch(''); setSelected(0); void load(); }
+  }}>
+    <PopoverTrigger>
+      <button type="button" aria-label="选择标签" className={`flex items-center justify-center rounded-md text-default-500 hover:bg-default-100 transition-colors ${label ? 'gap-1 px-2 py-1.5 text-xs' : 'w-7 h-7'}`}>
+        <Icon icon="mingcute:hashtag-line" width="18" height="18" />{label && <span>{label}</span>}
+      </button>
+    </PopoverTrigger>
+    <PopoverContent className="w-[300px] max-w-[calc(100vw-24px)] p-2 items-stretch">
+      <Input aria-label="搜索标签" placeholder="搜索标签名称或完整路径" size="sm" autoFocus value={search} onValueChange={value => { setSearch(value); setSelected(0); }} onKeyDown={e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(i => Math.min(Math.max(0, tags.length - 1), i + 1)); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); setSelected(i => Math.max(0, i - 1)); }
+        if (e.key === 'Enter' && tags[selected]) { e.preventDefault(); insert(tags[selected]); }
+        if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
+      }} />
+      <div className="max-h-64 overflow-y-auto mt-2" role="list" aria-label="站点标签">
+        {blinko.tagList.loading.value && !tags.length && <p role="status" className="p-3 text-xs text-default-400">正在加载标签…</p>}
+        {tags.map((path, index) => <button type="button" key={path} onClick={() => insert(path)} onMouseEnter={() => setSelected(index)} className={`block w-full text-left rounded-lg px-2 py-2 text-sm break-words transition-colors ${index === selected ? 'bg-default-100 text-foreground' : 'text-default-600 hover:bg-default-100'}`}>#{path}</button>)}
+        {!blinko.tagList.loading.value && !tags.length && <div className="p-3 text-sm text-default-500">
+          {blinko.tagList.errMsg ? '标签加载失败，请重试。' : query ? '没有匹配标签，可换个关键词搜索。' : '暂无标签，可在正文输入 #标签名 创建。'}
+          {blinko.tagList.errMsg && <button type="button" className="block mt-2 text-primary" onClick={() => void load()}>重新加载</button>}
+        </div>}
+      </div>
+    </PopoverContent>
+  </Popover>;
+});

@@ -5,10 +5,12 @@ import { observer } from 'mobx-react-lite';
 
 interface Props {
   store: EditorStore;
+  label?: string;
   isSendLoading?: boolean;
 }
 
-export const SendButton = observer(({ store, isSendLoading }: Props) => {
+export const SendButton = observer(({ store, isSendLoading, label }: Props) => {
+  if (label) return <button type="button" disabled={!store.canSend || isSendLoading || store.files?.some(i => i.uploadPromise?.loading?.value)} onClick={() => store.handleSend()} className="ml-2 rounded-lg px-3 py-2 text-xs font-medium bg-primary text-primary-foreground disabled:opacity-40 transition-opacity">{isSendLoading ? "正在保存…" : label}</button>;
   return (
     <div
       onClick={

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --env-file ../.env --watch index.ts",
+    "dev": "bun --env-file ../.env index.ts",
     "build:web": "bun esbuild.config.ts",
-    "start": "cross-env NODE_ENV=production bun --env-file ../.env ../dist/index.js"
+    "start": "cross-env NODE_ENV=production bun --env-file ../.env ../dist/index.js",
+    "dev:watch": "bun --env-file ../.env --watch index.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.10",

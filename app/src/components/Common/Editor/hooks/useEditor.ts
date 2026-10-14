@@ -84,7 +84,7 @@ export const useEditorInit = (
         MarkdownHardBreak,
         MarkdownBlankLine,
         Placeholder.configure({
-          placeholder: t('i-have-a-new-idea'),
+          placeholder: () => store.noteType === NoteType.NOTE ? '记录背景、思考和结论…' : store.noteType === NoteType.TODO ? '需要完成什么？可以补充执行步骤…' : t('i-have-a-new-idea'),
           showOnlyWhenEditable: true,
         }),
         TaskList,

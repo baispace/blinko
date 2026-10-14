@@ -36,7 +36,7 @@ const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
   </svg>
 );
 
-export const TodoQuickAdd = observer(() => {
+export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
   const [content, setContent] = useState('');
@@ -68,7 +68,7 @@ export const TodoQuickAdd = observer(() => {
   const submit = async (args: OnSendContentType) => {
     const text = (args?.content ?? content).trim();
     if (!text) return;
-    await blinko.upsertNote.call({
+    const saved = await blinko.upsertNote.call({
       content: text,
       type: NoteType.TODO,
       references: args?.references ?? [],
@@ -84,17 +84,32 @@ export const TodoQuickAdd = observer(() => {
         expireAt: due ? dayjs(due).toISOString() : undefined,
       },
     });
+    if (!saved) throw new Error('保存失败，待办草稿已保留');
     resetContent();
   };
 
   return (
-    <div className="rounded-xl border border-default-200 bg-background p-4 shadow-sm">
-      {/* Top: due date on the left, priority flag on the right, separated from the hero input by a divider */}
-      <div className="flex items-center justify-between gap-2 pb-3 border-b border-default-200">
+    <div className={compact ? "px-3 pb-3" : "rounded-xl border border-default-200 bg-background p-4 shadow-sm"}>
+      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器（富文本、#标签、@引用、附件、AI 斜杠菜单），
+          但锁定为待办类型、隐藏类型切换与全屏，避免误操作 */}
+      <div>
+        <Editor
+          composerVariant="todo"
+          mode="create"
+          content={content}
+          onChange={setContent}
+          onSend={submit}
+          isSendLoading={blinko.upsertNote.loading.value}
+          fixedNoteType={NoteType.TODO}
+          hideNoteTypeButton
+          hideFullscreenButton
+          withoutOutline
+          beforeToolbar={<>      {/* Top: due date on the left, priority flag on the right, separated from the hero input by a divider */}
+      <div className="flex items-center justify-between gap-2 py-3 border-t border-default-100">
         <label className="inline-flex items-center gap-1.5 h-7">
           <Icon icon="mdi:calendar-outline" width={15} height={15} className="text-default-500 shrink-0 self-center" />
           <input
-            type="date"
+            type="datetime-local"
             value={due}
             onChange={(e) => setDue(e.target.value)}
             className="cursor-pointer bg-transparent text-[13px] text-default-700 outline-none border border-default-200 rounded-md px-2 h-7 leading-none transition-colors hover:border-primary/50 focus:border-primary"
@@ -102,7 +117,7 @@ export const TodoQuickAdd = observer(() => {
           {!due ? (
             <button
               type="button"
-              onClick={() => setDue(dayjs().format('YYYY-MM-DD'))}
+              onClick={() => setDue(dayjs().endOf('day').format('YYYY-MM-DDTHH:mm'))}
               className="shrink-0 rounded-md border border-default-200 px-2 h-7 text-[13px] leading-none text-default-600 transition-colors hover:border-primary/50 hover:text-foreground"
             >
               {t('today')}
@@ -170,20 +185,8 @@ export const TodoQuickAdd = observer(() => {
         </div>
       </div>
 
-      {/* 正文编辑器：与闪念/笔记同一套 Tiptap 编辑器（富文本、#标签、@引用、附件、AI 斜杠菜单），
-          但锁定为待办类型、隐藏类型切换与全屏，避免误操作 */}
-      <div className="pt-3">
-        <Editor
-          mode="create"
-          content={content}
-          onChange={setContent}
-          onSend={submit}
-          isSendLoading={blinko.upsertNote.loading.value}
-          fixedNoteType={NoteType.TODO}
-          hideNoteTypeButton
-          hideFullscreenButton
-          withoutOutline
-          bottomSlot={<div className="text-xs text-default-400 ml-2">支持富文本 · 拖入文件上传 · ⌘/Ctrl + Enter 添加</div>}
+</>}
+          bottomSlot={<span className="composer-shortcut text-xs text-default-400">⌘ / Ctrl + Enter 添加</span>}
         />
       </div>
     </div>

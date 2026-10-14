@@ -14,6 +14,9 @@ const SIDE_PATCH_DELAY = 300
 
 type IProps = {
   mode: 'create' | 'edit',
+  fixedNoteType?: NoteType,
+  composerVariant?: 'flash' | 'note' | 'todo',
+  hideNoteTypeButton?: boolean,
   onSended?: () => void,
   onHeightChange?: (height: number) => void,
   height?: number,
@@ -34,7 +37,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
+export const BlinkoEditor = observer(({ mode, composerVariant, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -229,6 +232,9 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         clearAutosaveTimer()
         autosaveTimer.current = setTimeout(flushAutosave, AUTOSAVE_DELAY)
       }}
+      composerVariant={composerVariant}
+      fixedNoteType={fixedNoteType}
+      hideNoteTypeButton={hideNoteTypeButton}
       withoutOutline={withoutOutline}
       editable={editable}
       onEditorReady={onEditorReady}
@@ -248,20 +254,21 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }}
       isSendLoading={blinko.upsertNote.loading.value}
       bottomSlot={
-        isCreateMode ? <div className='text-xs text-ignore ml-2'>Drop to upload files</div> :
-          blinko.curSelectedNote?.createdAt ? <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div> : null
+        isCreateMode ? (composerVariant ? undefined : <div className='text-xs text-ignore ml-2'>Drop to upload files</div>) :
+          blinko.curSelectedNote?.createdAt ? <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div> : undefined
       }
       onSend={async ({ files, references, noteType, metadata }) => {
         if (isCreateMode) {
           //@ts-ignore
-          await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }), metadata })
+          const saved = await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }), metadata })
+          if (!saved) throw new Error('保存失败，草稿已保留');
           blinko.createAttachmentsStorage.clear()
           blinko.createContentStorage.clear()
-          if (blinko.noteTypeDefault == NoteType.NOTE && searchParams.get('path') != 'notes') {
+          if (!searchParams.get('tagId') && blinko.noteTypeDefault == NoteType.NOTE && searchParams.get('path') != 'notes') {
             await navigate('/?path=notes')
             blinko.forceQuery++
           }
-          if (blinko.noteTypeDefault == NoteType.BLINKO && location.pathname != '/') {
+          if (!searchParams.get('tagId') && blinko.noteTypeDefault == NoteType.BLINKO && location.pathname != '/') {
             await navigate('/')
             blinko.forceQuery++
           }

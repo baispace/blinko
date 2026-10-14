@@ -38,7 +38,6 @@ const NAV_ICON_COLOR: Record<string, string> = {
   todo: 'text-green-500',
 };
 
-const TAGS_PANEL_KEY = 'blinko_sidebar_tags_collapsed';
 
 export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
@@ -55,16 +54,6 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   }, [aiMode, location.pathname, location.search]);
   const [searchParams] = useSearchParams();
   const [isHovering, setIsHovering] = useState(false);
-
-  // 标签面板折叠态：持久化到 localStorage，与原型一致
-  const [tagsCollapsed, setTagsCollapsed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(TAGS_PANEL_KEY) === '1';
-  });
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(TAGS_PANEL_KEY, tagsCollapsed ? '1' : '0');
-  }, [tagsCollapsed]);
 
   const routerInfo = {
     pathname: location.pathname,
@@ -144,17 +133,17 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         <Tooltip content="主页" placement="right">
           <button type="button" aria-label="主页" aria-pressed={!aiMode}
             onClick={() => { navigate(homeUrl); onItemClick?.(); }}
-            className={`flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${!aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
-            <Icon icon="hugeicons:home-01" width="21" height="21" />
-            {!base.isSidebarCollapsed && <span className="font-medium">主页</span>}
+            className={`flex shrink-0 items-center justify-center gap-2 rounded-full h-10 ${base.isSidebarCollapsed ? 'w-10 p-0' : 'px-3'} transition-colors ${!aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+            <Icon className="shrink-0" icon="tabler:home" width="21" height="21" />
+            {!base.isSidebarCollapsed && !aiMode && <span className="font-medium">主页</span>}
           </button>
         </Tooltip>
-        <Tooltip content="与 AI 对话" placement="right">
-          <button type="button" aria-label="与 AI 对话" aria-pressed={aiMode}
+        <Tooltip content="对话" placement="right">
+          <button type="button" aria-label="对话" aria-pressed={aiMode}
             onClick={() => { navigate('/ai'); onItemClick?.(); }}
-            className={`flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
-            <Icon icon="hugeicons:message-01" width="21" height="21" />
-            {!base.isSidebarCollapsed && aiMode && <span className="font-medium">AI 对话</span>}
+            className={`flex shrink-0 items-center justify-center gap-2 rounded-full h-10 ${base.isSidebarCollapsed ? 'w-10 p-0' : 'px-3'} transition-colors ${aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+            <Icon className="shrink-0" icon="hugeicons:message-01" width="21" height="21" />
+            {!base.isSidebarCollapsed && aiMode && <span className="font-medium">对话</span>}
           </button>
         </Tooltip>
       </div>
@@ -265,23 +254,8 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             <div className="mt-3">
               {!base.isSidebarCollapsed ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setTagsCollapsed(v => !v)}
-                    className="w-full flex items-center justify-between px-3 pb-1.5
-                      text-[11.5px] font-medium tracking-[0.04em] uppercase text-default-400
-                      hover:!text-foreground !transition-colors"
-                    aria-expanded={!tagsCollapsed}
-                  >
-                    <span>{t('total-tags')}</span>
-                    <Icon
-                      icon="mdi:chevron-down"
-                      width="14"
-                      height="14"
-                      className={`!transition-transform duration-150 ${tagsCollapsed ? '-rotate-90' : ''}`}
-                    />
-                  </button>
-                  {!tagsCollapsed && <TagListPanel hideHeader />}
+                  <div className="px-3 pb-1.5 text-[11.5px] font-medium tracking-[0.04em] text-default-400">{t('total-tags')}</div>
+                  <TagListPanel hideHeader />
                 </>
               ) : (
                 // 折叠态：标签入口收成一个图标入口，hover tooltip 提示「所有标签」
@@ -290,7 +264,6 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
                     type="button"
                     onClick={() => {
                       base.toggleSidebar();
-                      setTagsCollapsed(false);
                     }}
                     className="w-8 h-8 rounded-md flex items-center justify-center mx-auto
                       text-default-600 hover:!bg-hover hover:text-foreground

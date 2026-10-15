@@ -13,6 +13,7 @@ export const updateBlinkoTool = createTool({
     id: z.number().describe('the note ID'),
     content: z.string().describe('note content'),
     type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
+    title: z.string().optional().describe('Optional: A short title for the note. Stored in metadata.title and shown in the card/editor header. Omit it to keep the existing title. Pass an empty string to clear it.'),
     isArchived: z.union([z.boolean(), z.null()]).default(null).describe('is archived'),
     isTop: z.union([z.boolean(), z.null()]).default(null).describe('is top'),
     isShare: z.union([z.boolean(), z.null()]).default(null),
@@ -51,7 +52,10 @@ export const updateBlinkoTool = createTool({
       return await caller.notes.upsert({
         content: stripThinkText(context.content),
         type: noteType,
-        id: context.id
+        id: context.id,
+        // 空字符串是「清除标题」的显式信号，所以这里判 undefined 而不是真值。
+        // 传 null/不传则保持原标题不变。
+        ...(context.title !== undefined ? { metadata: { title: context.title } } : {}),
       })
     } catch (error) {
       console.log(error)

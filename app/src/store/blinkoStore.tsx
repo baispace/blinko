@@ -344,6 +344,29 @@ export class BlinkoStore implements Store {
     return this.silentChain
   }
 
+  /** Explicit save: always write, report failures, and leave the editor open. */
+  manualSaveNote = (params: { id: number; content: string; attachments?: any[]; references?: number[]; type?: number }) => {
+    const sideWrites = this.silentChain
+    const sequence = ++this.autosaveSeq
+    const attempt = this.autosaveChain.then(async () => {
+      await sideWrites
+      runInAction(() => { this.autosaveStatus = 'saving' })
+      const saved = await api.notes.upsert.mutate(params as any)
+      if (sequence === this.autosaveSeq) {
+        runInAction(() => {
+          this.autosaveStatus = 'saved'
+          const draft = this.editContentStorage.list?.find(item => Number(item.id) === params.id)
+          if (draft?.content === params.content) this.editContentStorage.removeByFind(item => Number(item.id) === params.id)
+        })
+      }
+      return saved
+    })
+    this.autosaveChain = attempt.then(() => undefined).catch(() => {
+      runInAction(() => { this.autosaveStatus = 'error' })
+    })
+    return attempt
+  }
+
   waitForPendingWrites = async () => {
     await this.autosaveChain
     await this.silentChain

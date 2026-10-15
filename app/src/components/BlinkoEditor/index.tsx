@@ -1,3 +1,5 @@
+import { ToastPlugin } from '@/store/module/Toast/Toast';
+import { isSaveShortcut } from './saveShortcut';
 import { observer } from "mobx-react-lite"
 import Editor from "../Common/Editor"
 import { RootStore } from "@/store"
@@ -15,6 +17,7 @@ const SIDE_PATCH_DELAY = 300
 
 type IProps = {
   mode: 'create' | 'edit',
+  hideDoneButton?: boolean,
   fixedNoteType?: NoteType,
   composerVariant?: 'flash' | 'note' | 'todo',
   documentToolbar?: boolean,
@@ -41,7 +44,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
+export const BlinkoEditor = observer(({ mode, hideDoneButton = false, composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -85,6 +88,7 @@ export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar =
    * 就快照下来，避免定时器触发时笔记已经切走了。
    */
   const sidePatch = useRef<{ id: number, content: string, patch: any } | null>(null)
+  const latestSidePatch = useRef<{ id: number; patch: any } | null>(null)
   const sidePatchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const flushSidePatch = useCallback(() => {
@@ -107,6 +111,7 @@ export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar =
       content: blinko.curSelectedNote?.content ?? '',
       patch: { ...base, ...patch }
     }
+    latestSidePatch.current = { id: noteId, patch: { ...(latestSidePatch.current?.id === noteId ? latestSidePatch.current.patch : {}), ...patch } }
     if (sidePatchTimer.current) clearTimeout(sidePatchTimer.current)
     sidePatchTimer.current = setTimeout(() => { void flushSidePatch(); }, SIDE_PATCH_DELAY)
   }, [blinko, flushSidePatch])
@@ -119,30 +124,35 @@ export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar =
     onSended?.()
   }, [flushAutosave, flushSidePatch, blinko, onSended])
 
-  /**
-   * Cmd/Ctrl+S → 手动保存。
-   *
-   * 浏览器默认行为是「另存网页」（下载一份 HTML），在编辑器里毫无意义，
-   * 所以必须 preventDefault 吃掉它。绑在 capture 阶段：ProseMirror 自己
-   * 监听 keydown，冒泡阶段会被它先处理。
-   *
-   * create 模式没有已存在的笔记可保存（那条路径走 SendButton），editable=false
-   * 时是纯阅读视图 —— 这两种情况都放行浏览器默认，比静默吞掉键更诚实。
-   */
+  const manualSaveBusy = useRef(false)
+  const handleManualSave = useCallback(async () => {
+    if (manualSaveBusy.current) return
+    const note = blinko.curSelectedNote
+    if (!note?.id) return
+    manualSaveBusy.current = true
+    const item = { id: note.id, content: note.content ?? '', ...(latestSidePatch.current?.id === note.id ? latestSidePatch.current.patch : {}) }
+    // Queue immediately, after already pending writes and before later edits.
+    void flushAutosave()
+    void flushSidePatch()
+    try {
+      await blinko.manualSaveNote(item)
+      lastSavedContent.current = item.content
+    } catch {
+      RootStore.Get(ToastPlugin).error('保存失败，当前内容已保留，请按 Ctrl/⌘+S 重试。')
+    } finally { manualSaveBusy.current = false }
+  }, [blinko, flushAutosave, flushSidePatch])
+
   useEffect(() => {
-    if (isCreateMode || !editable) return
-
-    const handleSaveShortcut = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.altKey) return
-      if (e.key !== 's' && e.key !== 'S') return
-      e.preventDefault()
-      e.stopPropagation()
-      void handleDone()
+    if (isCreateMode) return
+    const handleSaveShortcut = (event: KeyboardEvent) => {
+      if (!isSaveShortcut(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+      if (!event.isComposing) void handleManualSave()
     }
-
     document.addEventListener('keydown', handleSaveShortcut, true)
     return () => document.removeEventListener('keydown', handleSaveShortcut, true)
-  }, [isCreateMode, editable, handleDone])
+  }, [isCreateMode, handleManualSave])
 
   const store = RootStore.Local(() => ({
     get noteContent() {
@@ -278,6 +288,8 @@ export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar =
       originReference={!isCreateMode ? blinko.curSelectedNote?.references?.map(i => i.toNoteId) : []}
       autosaveStatus={isCreateMode ? 'idle' : blinko.autosaveStatus}
       onDone={isCreateMode ? undefined : handleDone}
+      hideDoneButton={hideDoneButton}
+      onManualSave={isCreateMode ? undefined : handleManualSave}
       onSidePatch={isCreateMode ? undefined : handleSidePatch}
       content={store.noteContent}
       onChange={v => {

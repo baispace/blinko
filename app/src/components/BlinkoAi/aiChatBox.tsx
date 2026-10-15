@@ -2,13 +2,11 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from "mobx-react-lite";
 import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { ScrollArea } from "../Common/ScrollArea";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { MarkdownRender } from "../Common/MarkdownRender";
 import { AiStore, AssisantMessageMetadata } from "@/store/aiStore";
 import { RootStore } from "@/store";
 import { useEffect, useRef, useCallback, memo, useState } from "react";
-import { BlinkoCard, BlinkoItem } from "../BlinkoCard";
-import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 import copy from "copy-to-clipboard";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
@@ -18,261 +16,108 @@ import { AiProcessDetails } from "./AiProcessDetails";
 import { splitAssistantContent } from "./messagePresentation";
 import { useMediaQuery } from "usehooks-ts";
 import { Textarea } from "@heroui/react";
-import { DialogStore } from "@/store/module/Dialog";
 import { api } from '@/lib/trpc';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
 import { AiDraftResult, parseDraft } from './AiDraftResult';
+import { AiDailyResult } from './AiDailyResult';
+import { parseDailyDraft } from '@shared/lib/aiWorkflows';
+import './aiChat.css';
 
-const EditMessageContent = ({ initialContent, onConfirm }: {
-  initialContent: string;
-  onConfirm: (content: string) => void;
+const ChatAction = ({ label, icon, onClick, disabled = false }: { label: string; icon: string; onClick: () => void; disabled?: boolean }) => (
+  <button type="button" className="ai-chat-action" onClick={onClick} disabled={disabled} aria-label={label} title={label}>
+    <Icon icon={icon} width={15} /><span>{label}</span>
+  </button>
+);
+
+const UserMessage = memo(({ content, time, id, onEdit, sources = [], workflowTitle, shareMode = false, busy = false }: {
+  content: string; time: string; sources?: any[]; workflowTitle?: string; id?: number; onEdit?: (id: number, content: string) => Promise<boolean>; shareMode?: boolean; busy?: boolean;
 }) => {
-  const [editContent, setEditContent] = useState(initialContent);
-
-  return (
-    <div className="p-4">
-      <div className="text-sm text-desc mb-4">
-        {i18n.t('edit-message-warning')}
-      </div>
-      <Textarea
-        value={editContent}
-        onChange={(e) => setEditContent(e.target.value)}
-        placeholder={i18n.t('enter-your-message')}
-        minRows={4}
-        maxRows={12}
-        autoFocus
-      />
-      <div className="flex gap-2 mt-4 justify-end">
-        <Button
-          color="danger"
-          variant="light"
-          onPress={() => RootStore.Get(DialogStore).close()}
-        >
-          {i18n.t('cancel')}
-        </Button>
-        <Button
-          color="primary"
-          onPress={() => {
-            if (editContent.trim()) {
-              onConfirm(editContent.trim());
-              RootStore.Get(DialogStore).close();
-            }
-          }}
-          isDisabled={!editContent.trim()}
-        >
-          {i18n.t('confirm')}
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const UserMessage = memo(({ content, time, id, onEdit, shareMode = false }: {
-  content: string;
-  time: string;
-  id?: number;
-  onEdit?: (id: number, content: string) => void;
-  shareMode?: boolean;
-}) => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-
-  return (
-    <motion.div
-      className={`group flex flex-col w-full gap-1 ${shareMode ? 'mb-2' : ''}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="ml-auto max-w-[100%] text-sm bg-background p-2 border border-border rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-sm relative">
-        {content.length > 900 ? <details><summary className="cursor-pointer whitespace-pre-wrap">{content.slice(0, 220)}… <span className="text-default-400">{i18n.t('show-more', { defaultValue: '展开完整消息' })}</span></summary><div className="mt-3 whitespace-pre-wrap max-h-80 overflow-auto">{content}</div></details> : <div className="whitespace-pre-wrap">{content}</div>}
-      </div>
-
-      {!!id && !shareMode && (
-        <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 ml-auto mb-2`}>
-          <div className="flex gap-2 backdrop-blur-sm rounded-full p-1 items-center">
-            <IconButton
-              tooltip={i18n.t('edit')}
-              icon="hugeicons:edit-02"
-              onClick={() => onEdit?.(id, content)}
-              size={18}
-              containerSize={24}
-            />
-
-            <IconButton
-              tooltip={i18n.t('copy')}
-              icon="hugeicons:copy-01"
-              onClick={() => {
-                copy(content)
-                RootStore.Get(ToastPlugin).success(i18n.t('operation-success'))
-              }}
-              size={18}
-              containerSize={24}
-            />
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(content);
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (!id || !draft.trim() || saving || busy) return;
+    setSaving(true);
+    try { if (await onEdit?.(id, draft.trim())) setEditing(false); }
+    finally { setSaving(false); }
+  };
+  return <article className="ai-user-turn group">
+    <div className="ai-turn-heading justify-end">{workflowTitle && <span>{workflowTitle}</span>}<span>你</span><time title={time}>{time}</time></div>
+    {editing ? <div className="ai-message-edit">
+      <Textarea aria-label="修改消息内容" autoFocus minRows={4} maxRows={14} value={draft} onValueChange={setDraft} isDisabled={saving}
+        onKeyDown={event => { if (event.key === 'Escape' && !saving) setEditing(false); if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); void submit(); } }} />
+      <p className="text-xs text-default-500 leading-5 mt-3">提交后将替换本条消息及其后的对话，重新生成回复。若后续结果已保存，请通过新消息修正，避免重复创建。</p>
+      <div className="flex justify-end gap-2 mt-3"><Button size="sm" variant="light" isDisabled={saving} onPress={() => setEditing(false)}>取消</Button>
+        <Button size="sm" color="primary" isLoading={saving} isDisabled={busy || !draft.trim() || draft.trim() === content.trim()} onPress={submit}>修改并重新生成</Button></div>
+    </div> : <>
+      <div className="ai-user-bubble">{content.length > 900 ? <details><summary>{content.slice(0, 220)}… <span className="text-default-400">展开完整消息</span></summary><div className="mt-3 max-h-80 overflow-auto">{content}</div></details> : content}</div>
+      {!!sources.length && <details className="ai-user-sources"><summary>引用了 {sources.length} 条历史内容</summary><div className="flex flex-wrap gap-1.5 justify-end mt-2 max-h-40 overflow-auto">{sources.map(source => <a key={source.id} href={`/detail?id=${source.id}`} target="_blank" rel="noreferrer" className="text-xs text-default-500 rounded-md bg-default-100 px-2 py-1">{String(source.metadata?.title || source.content?.split('\n')[0] || `内容 #${source.id}`).replace(/^#+\s*/, '').slice(0,40)}</a>)}</div></details>}
+      {!!id && !shareMode && <div className="ai-message-actions justify-end">
+        <ChatAction label="修改" icon="tabler:pencil" disabled={busy} onClick={() => { setDraft(content); setEditing(true); }} />
+        <ChatAction label="复制" icon="tabler:copy" onClick={() => { copy(content); RootStore.Get(ToastPlugin).success('已复制'); }} />
+      </div>}
+    </>}
+  </article>;
 });
 
-const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation = false, id, metadata, shareMode = false, isStreaming = false }:
-  {
-    content: string, withoutAnimation?: boolean, withStreamAnimation?: boolean, id?: number,
-    metadata?: AssisantMessageMetadata,
-    shareMode?: boolean,
-    isStreaming?: boolean
-  }) => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+const AiMessage = memo(({ content, id, metadata, shareMode = false, isStreaming = false, busy = false, canRegenerate = false }:
+  { content: string; id?: number; metadata?: AssisantMessageMetadata; shareMode?: boolean; isStreaming?: boolean; busy?: boolean; canRegenerate?: boolean; withoutAnimation?: boolean; withStreamAnimation?: boolean }) => {
   const presented = splitAssistantContent(content);
   const answer = presented.answer;
-
-  return (
-    <>
-      {(content.length > 0 || !!metadata?.toolCalls?.length) && (
-        <motion.div
-          className={`group ${shareMode ? 'mb-2' : ''}`}
-          initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
-          exit={withoutAnimation ? {} : { opacity: 0, y: -20 }}
-          animate={withoutAnimation ? {} : { opacity: 1, y: 0 }}
-          transition={withoutAnimation ? {} : { duration: 0.3, ease: "easeOut" }}
-        >
-          <>
-            {
-              !!metadata?.notes?.length && (
-                <Popover placement="bottom-start">
-                  <PopoverTrigger>
-                    <Button
-                      size="sm"
-                      radius='lg'
-                      variant="flat"
-                      className="w-fit my-2"
-                      startContent={<Icon icon="hugeicons:file-02" width="14" height="14" />}
-                    >
-                      <span className="text-xs">
-                        {i18n.t('reference-notes', { count: metadata.notes.length })} ({metadata.notes.length})
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="overflow-y-auto">
-                    <ScrollArea className="flex flex-col gap-2 p-2 h-[400px]" onBottom={() => { }}>
-                      {
-                        //@ts-ignore
-                        metadata?.notes?.map((item: BlinkoItem, index: number) => (
-                          <BlinkoCard key={item.id || index} className='w-[300px] md:w-[600px]' blinkoItem={item!} withoutHoverAnimation />
-                        ))
-                      }
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
-              )
-            }
-          </>
-
-          <AiProcessDetails process={presented.process} toolCalls={metadata?.toolCalls} toolResults={metadata?.toolResults} running={isStreaming} />
-          <div className="max-w-[100%] px-2 py-1 rounded-xl">
-            {!shareMode && !isStreaming && !!id && parseDraft(answer) ? <AiDraftResult key={id} draft={parseDraft(answer)} messageId={id} initialSaved={(metadata as any)?.savedDrafts} /> : <MarkdownRender content={answer} largeSpacing={true} />}
-          </div>
-          {
-            !shareMode && !isStreaming && (
-              <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>
-                <div className="flex gap-2 backdrop-blur-sm rounded-full p-1 items-center">
-                  <IconButton
-                    tooltip={i18n.t('add-to-blinko')}
-                    icon="basil:lightning-solid"
-                    classNames={{
-                      icon: 'text-yellow-500'
-                    }}
-                    onClick={() => {
-                      RootStore.Get(BlinkoStore).upsertNote.call({
-                        content: answer,
-                        type: NoteType.BLINKO,
-                      })
-                    }}
-                    size={20}
-                    containerSize={25}
-                  />
-
-                  <IconButton
-                    tooltip={i18n.t('add-to-note')}
-                    icon="solar:notes-minimalistic-bold-duotone"
-                    classNames={{
-                      icon: 'text-blue-500'
-                    }}
-                    onClick={() => {
-                      RootStore.Get(BlinkoStore).upsertNote.call({
-                        content: answer,
-                        type: NoteType.NOTE
-                      })
-                    }}
-                    size={20}
-                    containerSize={25}
-                  />
-
-                  <IconButton
-                    tooltip={i18n.t('copy')}
-                    icon="hugeicons:copy-01"
-                    onClick={() => {
-                      copy(answer)
-                      RootStore.Get(ToastPlugin).success(i18n.t('operation-success'))
-                    }}
-                    size={20}
-                    containerSize={25}
-                  />
-                  {
-                    !!id && <IconButton
-                      tooltip={i18n.t('refresh')}
-                      icon="solar:refresh-outline"
-                      onClick={() => {
-                        RootStore.Get(AiStore).regenerate(id)
-                      }}
-                      size={20}
-                      containerSize={25}
-                    />
-                  }
-                  <IconButton
-                    tooltip={i18n.t('share-conversation')}
-                    icon="hugeicons:share-05"
-                    onClick={async () => {
-                      const aiStore = RootStore.Get(AiStore);
-                      if (aiStore.currentConversation.value) {
-                        try {
-                          // First enable sharing for this conversation
-                          await api.conversation.toggleShare.mutate({
-                            id: aiStore.currentConversation.value.id,
-                            isShare: true
-                          });
-
-                          // Create a longer, more aesthetically pleasing share ID
-                          const conversationId = aiStore.currentConversation.value.id?.toString();
-                          const shareData = `blinko-ai-share-${conversationId}`;
-                          const encodedId = btoa(shareData);
-                          const shareUrl = getBlinkoEndpoint(`/ai-share/${encodedId}`)
-                          copy(shareUrl);
-                          RootStore.Get(ToastPlugin).success(i18n.t('share-link-copied'));
-                        } catch (error) {
-                          console.error('Failed to share conversation:', error);
-                          RootStore.Get(ToastPlugin).error(i18n.t('operation-failed'));
-                        }
-                      }
-                    }}
-                    size={20}
-                    containerSize={25}
-                  />
-
-                  {
-                    !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold select-none line-clamp-1">
-                      {i18n.t('total-tokens')}: {metadata?.usage?.totalTokens} | {i18n.t('first-char-delay')}: {metadata?.fristCharDelay}ms
-                    </div>
-                  }
-
-                </div>
-              </div>)
-          }
-        </motion.div >
-      )}
-    </>
-  );
+  const daily = parseDailyDraft(answer);
+  const draft = parseDraft(answer);
+  const resultKind = metadata?.resultKind || daily?.kind || draft?.kind || answer.match(/^\s*(?:```json\s*)?\{\s*"kind"\s*:\s*"(note|tasks|daily)"/)?.[1];
+  const [saving, setSaving] = useState(false);
+  const malformedDaily = resultKind === 'daily' && !daily && /^\s*(?:```|\{)/.test(answer);
+  const [savedType, setSavedType] = useState<string>('');
+  const copyContent = daily ? `${daily.title}\n\n${daily.content}\n\n待办变更建议：\n${daily.actions.map(action => `- ${action.action === 'create' ? '新增' : `更新 #${action.taskId}`}：${action.title || ''}；${action.reason}`).join('\n')}` : draft?.kind === 'note' ? `${draft.title}\n\n${draft.content}` : draft?.kind === 'tasks' ? draft.tasks.map((task: any) => `- ${task.title}\n  ${task.description}`).join('\n') : answer;
+  const status = metadata?.responseStatus;
+  const save = async (type: NoteType) => {
+    if (saving || !answer.trim()) return;
+    setSaving(true);
+    try { await api.notes.upsert.mutate({ content: answer, type }); RootStore.Get(BlinkoStore).refreshData(); setSavedType(type === NoteType.NOTE ? '笔记' : '闪念'); RootStore.Get(ToastPlugin).success('已保存'); }
+    catch { RootStore.Get(ToastPlugin).error('保存失败，请重试'); }
+    finally { setSaving(false); }
+  };
+  const share = async () => {
+    const conversation = RootStore.Get(AiStore).currentConversation.value;
+    if (!conversation) return;
+    try {
+      await api.conversation.toggleShare.mutate({ id: conversation.id, isShare: true });
+      copy(getBlinkoEndpoint(`/ai-share/${btoa(`blinko-ai-share-${conversation.id}`)}`));
+      RootStore.Get(ToastPlugin).success('分享链接已复制');
+    } catch { RootStore.Get(ToastPlugin).error('分享失败，请重试'); }
+  };
+  if (!content && !metadata?.toolCalls?.length && !status && !isStreaming) return null;
+  return <article className="ai-assistant-turn group">
+    <div className="ai-turn-heading"><span className="ai-assistant-badge"><Icon icon="tabler:sparkles" width={14} /></span><span>AI 助手</span>
+      {isStreaming && <span className="ai-generating-label" role="status">正在生成…</span>}
+    </div>
+    <AiProcessDetails process={presented.process} toolCalls={metadata?.toolCalls} toolResults={metadata?.toolResults} running={isStreaming} />
+    {!!metadata?.notes?.length && <details className="ai-source-details"><summary>参考了 {metadata.notes.length} 条内容</summary><div className="mt-2 flex flex-wrap gap-2">
+      {metadata.notes.map(note => <a className="text-primary text-xs rounded-md bg-primary/5 px-2 py-1" key={note.id} href={`/detail?id=${note.id}`} target="_blank" rel="noreferrer">{String((note.metadata as any)?.title || note.content?.split('\n')[0] || `内容 ${note.id}`).slice(0, 64)}</a>)}
+    </div></details>}
+    <div className="ai-answer-body">
+      {resultKind && (isStreaming || (!id && busy)) ? <div className="ai-artifact-pending" role="status"><Icon icon="tabler:file-text" width={22} /><div><p className="text-sm font-medium">{resultKind === 'daily' ? '正在整理日报与待办变更…' : resultKind === 'note' ? '正在整理笔记草稿…' : '正在提取待办事项…'}</p><p className="text-xs text-default-500 mt-1">完成后可编辑、确认并保存</p></div></div> : daily && !shareMode && !isStreaming && !!id && status !== 'stopped' && status !== 'error' ? <AiDailyResult draft={daily} messageId={id} initialSaved={(metadata as any)?.dailySaved} /> : !shareMode && !isStreaming && !!id && draft && status !== 'stopped' && status !== 'error'
+        ? <AiDraftResult key={id} draft={draft} messageId={id} initialSaved={(metadata as any)?.savedDrafts} />
+        : malformedDaily ? <p role="alert" className="text-sm text-default-500">日报结构未生成完整或包含无效任务变更，暂不能同步。请重新生成；原始内容可复制保留。</p> : resultKind && !draft && !daily && (status === 'stopped' || status === 'error')
+          ? <p className="text-sm text-default-500">草稿尚未生成完整，可以继续回答或重新生成。</p>
+          : <MarkdownRender content={daily ? `## ${daily.title}\n\n${daily.content}` : draft ? (draft.kind === 'note' ? `## ${draft.title}\n\n${draft.content}` : draft.tasks.map((item: any) => `- ${item.title}\n  ${item.description}`).join('\n')) : answer} largeSpacing={false} variant="chat" />}
+    </div>
+    {(status === 'stopped' || status === 'error') && !isStreaming && <div className="ai-response-notice" role="status"><Icon icon={status === 'stopped' ? 'tabler:player-stop' : 'tabler:alert-circle'} width={14} />{status === 'stopped' ? (answer ? '已停止生成 · 已保留当前内容' : '已停止生成') : '回复未完成 · 当前内容已保留'}</div>}
+    {!shareMode && !isStreaming && <div className="ai-message-actions">
+      {!!answer.trim() && <ChatAction label="复制" icon="tabler:copy" onClick={() => { copy(copyContent); RootStore.Get(ToastPlugin).success('已复制'); }} />}
+      {!draft && !daily && resultKind !== 'daily' && !!answer.trim() && <Popover placement="top-start"><PopoverTrigger><button type="button" className="ai-chat-action" disabled={saving}><Icon icon="tabler:bookmark" width={15} />{saving ? '保存中…' : savedType ? `已存为${savedType}` : '保存为'}<Icon icon="tabler:chevron-down" width={12} /></button></PopoverTrigger>
+        <PopoverContent className="items-stretch p-1.5"><ChatAction label="保存为笔记" icon="tabler:notes" disabled={saving} onClick={() => void save(NoteType.NOTE)} /><ChatAction label="保存为闪念" icon="tabler:bolt" disabled={saving} onClick={() => void save(NoteType.BLINKO)} /></PopoverContent></Popover>}
+      {!!id && canRegenerate && <ChatAction label={status === 'error' ? '重试' : '重新生成'} icon="tabler:refresh" disabled={busy} onClick={() => void RootStore.Get(AiStore).regenerate(id)} />}
+      {status === 'stopped' && canRegenerate && !!answer.trim() && <ChatAction label="继续回答" icon="tabler:player-play" disabled={busy} onClick={() => { const store = RootStore.Get(AiStore); store.input = '请接着上一条未完成的回复继续回答，避免重复已输出的内容。'; void store.onInputSubmit(); }} />}
+      <Popover placement="top-start"><PopoverTrigger><button type="button" className="ai-chat-action" aria-label="更多回复操作"><Icon icon="tabler:dots" width={16} /></button></PopoverTrigger>
+        <PopoverContent className="items-stretch p-2 gap-1"><ChatAction label="分享整个对话" icon="tabler:share" disabled={busy} onClick={() => void share()} />
+          {!!metadata?.usage?.totalTokens && <p className="text-xs text-default-400 px-2 py-1">用量 {metadata.usage.totalTokens} tokens{metadata.fristCharDelay ? ` · 首字 ${metadata.fristCharDelay}ms` : ''}</p>}
+        </PopoverContent></Popover>
+    </div>}
+  </article>;
 });
 
 // Streaming message component with throttled rendering to reduce MarkdownRender updates
@@ -318,7 +163,7 @@ const StreamingAiMessage = observer(({ shareMode = false }: { shareMode?: boolea
     }
   }, [aiStore.isAnswering, content]);
 
-  if (!throttledContent && !metadata.toolCalls.length) return null;
+  if (!throttledContent && !metadata.toolCalls.length && !metadata.responseStatus) return null;
 
   return (
     <AiMessage
@@ -328,6 +173,8 @@ const StreamingAiMessage = observer(({ shareMode = false }: { shareMode?: boolea
       id={id}
       shareMode={shareMode}
       isStreaming={aiStore.isAnswering}
+      busy={aiStore.isAnswering || aiStore.isPreparing}
+      canRegenerate={!!id}
     />
   );
 });
@@ -337,6 +184,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomAnchorRef = useRef<HTMLDivElement>(null)
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [showJump, setShowJump] = useState(false);
 
   // Refs for tracking scroll state
   const shouldAutoScrollRef = useRef(true)
@@ -386,6 +234,9 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
       shouldAutoScrollRef.current = false
     }
 
+    const nearBottom = containerRef.current.scrollHeight - currentScrollTop - containerRef.current.clientHeight < 90;
+    setShowJump(!nearBottom);
+    if (nearBottom) shouldAutoScrollRef.current = true;
     lastScrollTopRef.current = currentScrollTop
   }, [])
 
@@ -430,38 +281,26 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
     setTimeout(scrollToBottom, 50)
   }, [aiStore.currentConversationId, scrollToBottom])
 
-  const handleEditMessage = (id: number, content: string) => {
-    if (shareMode) return; // Disable editing in share mode
-
-    RootStore.Get(DialogStore).setData({
-      isOpen: true,
-      size: '2xl',
-      title: i18n.t('edit-message'),
-      content: (
-        <EditMessageContent
-          initialContent={content}
-          onConfirm={(editedContent) => {
-            aiStore.editUserMessage(id, editedContent);
-          }}
-        />
-      )
-    });
+  const handleEditMessage = async (id: number, content: string) => {
+    if (shareMode) return false;
+    return await aiStore.editUserMessage(id, content);
   }
 
   // Get the first message time for header display
   const firstMessageTime = aiStore.currentConversation.value?.messages?.[0]?.createdAt?.toLocaleString() || '';
 
   return (
+    <div className="relative h-full w-full">
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="h-full overflow-y-auto overflow-x-hidden"
+      className="ai-chat-scroll h-full overflow-y-auto overflow-x-hidden"
     >
 
       {/* Mobile top spacing */}
       {isMobile && <div className="h-16"></div>}
 
-      <div className="flex flex-col p-0 md:p-2 relative min-h-full w-[95%] md:w-[78%] mx-auto">
+      <div className="ai-chat-transcript flex flex-col relative min-h-full mx-auto">
         {/* Flex spacer */}
         <div className="flex-grow" />
 
@@ -476,7 +315,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
           {
             (() => {
               const systemMessage = aiStore.currentConversation.value?.messages.find((item) => item.role == 'system');
-              return systemMessage && (
+              return systemMessage && systemMessage.content !== '[Request interrupted by user]' && (
                 <div
                   key="system-message"
                   className="mx-auto text-desc text-xs text-center font-bold select-none line-clamp-1 p-3 border-2 border-ignore rounded-lg"
@@ -491,10 +330,13 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
               item.role == 'user' ? (
                 <UserMessage
                   key={`user-${item.id ?? index}`}
-                  content={item.content}
+                  content={(item.metadata as any)?.displayContent || item.content}
+                  sources={(item.metadata as any)?.sources || []}
+                  workflowTitle={(item.metadata as any)?.workflow?.title}
                   time={item.createdAt.toLocaleString()}
                   id={item.id}
                   onEdit={handleEditMessage}
+                  busy={aiStore.isAnswering || aiStore.isPreparing}
                   shareMode={shareMode}
                 />
               ) : item.role == 'assistant' ? (
@@ -503,6 +345,8 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
                   id={item.id}
                   metadata={item.metadata as AssisantMessageMetadata}
                   content={item.content}
+                  busy={aiStore.isAnswering || aiStore.isPreparing}
+                  canRegenerate={!aiStore.currentMessageResult.id && item.id === aiStore.currentConversation.value?.messages.at(-1)?.id}
                   shareMode={shareMode}
                 />
               ) : null
@@ -522,9 +366,13 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
           <StreamingAiMessage key="streaming-message" shareMode={shareMode} />
         </AnimatePresence>
 
+        {!shareMode && aiStore.chatStatus === 'stopping' && <div className="ai-response-notice" role="status">正在停止，保留已生成内容…</div>}
+        {!shareMode && aiStore.chatStatus === 'error' && <div className="ai-chat-error" role="alert"><span>{aiStore.chatError || '生成失败，请重试'}</span><button type="button" disabled={aiStore.isPreparing || aiStore.isAnswering} onClick={() => void aiStore.retryLastResponse()}>重试回复</button></div>}
         {/* Bottom anchor for scroll detection */}
         <div ref={bottomAnchorRef} className="h-4" />
       </div>
+    </div>
+    {showJump && <button type="button" className="ai-jump-latest" onClick={() => { shouldAutoScrollRef.current = true; scrollToBottom(); setShowJump(false); }}><Icon icon="tabler:arrow-down" width={15} />回到最新</button>}
     </div>
   )
 })

@@ -11,9 +11,13 @@ import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { fetchWithProxy } from '@server/lib/proxy';
 import { helper } from '@shared/lib/helper';
+import { cleanConversationTitle } from '../../shared/lib/conversationTitle';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
+import { getChatCapabilities } from '../lib/chatCapabilities';
+
 export const aiRouter = router({
+  chatCapabilities: authProcedure.input(z.object({ modelId: z.number().int().positive().optional() })).query(({ input }) => getChatCapabilities(input.modelId)),
   skillSources: authProcedure.input(z.object({ skill: z.enum(['tasks','note','today','overdue','ideas']), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
     const now = new Date();
     const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now);
@@ -124,7 +128,12 @@ export const aiRouter = router({
     }))
     .mutation(async function* ({ input, ctx }) {
       try {
-        const { question, conversations, withTools = false, withOnline = false, withRAG = true, systemPrompt } = input
+        const { question, conversations, systemPrompt } = input;
+        const available = await getChatCapabilities(input.modelId);
+        if (!available.canChat) throw new TRPCError({ code: 'BAD_REQUEST', message: '请先配置可用的对话模型。' });
+        const withTools = !!input.withTools && available.tools;
+        const withOnline = !!input.withOnline && available.online;
+        const withRAG = (input.withRAG ?? true) && available.rag;
         let _conversations = conversations as CoreMessage[]
         if (input.modelId) {
           const model = await prisma.aiModels.findUnique({ where: { id: input.modelId } });
@@ -202,8 +211,10 @@ export const aiRouter = router({
       conversations: z.array(z.object({ role: z.string(), content: z.string() })),
       conversationId: z.number()
     }))
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { conversations, conversationId } = input
+      const owned = await prisma.conversation.findFirst({ where: { id: conversationId, accountId: Number(ctx.id) } });
+      if (!owned) throw new TRPCError({ code: 'NOT_FOUND' });
       const agent = await AiModelFactory.SummarizeAgent()
       const conversationString = JSON.stringify(
         conversations.map(i => ({
@@ -214,8 +225,8 @@ export const aiRouter = router({
       );
       const result = await agent.generate(conversationString)
       const conversation = await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { title: result?.text }
+        where: { id: conversationId, accountId: Number(ctx.id) },
+        data: { title: cleanConversationTitle(result?.text, cleanConversationTitle(owned.title, '新对话')) }
       })
       return conversation
     }),

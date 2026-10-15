@@ -14,7 +14,8 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@shared/lib/types";
-import { StreamToolRenderer } from "./ToolComponents";
+import { AiProcessDetails } from "./AiProcessDetails";
+import { splitAssistantContent } from "./messagePresentation";
 import { useMediaQuery } from "usehooks-ts";
 import { Textarea } from "@heroui/react";
 import { DialogStore } from "@/store/module/Dialog";
@@ -84,7 +85,7 @@ const UserMessage = memo(({ content, time, id, onEdit, shareMode = false }: {
       transition={{ duration: 0.3 }}
     >
       <div className="ml-auto max-w-[100%] text-sm bg-background p-2 border border-border rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-sm relative">
-        {content}
+        {content.length > 900 ? <details><summary className="cursor-pointer whitespace-pre-wrap">{content.slice(0, 220)}… <span className="text-default-400">{i18n.t('show-more', { defaultValue: '展开完整消息' })}</span></summary><div className="mt-3 whitespace-pre-wrap max-h-80 overflow-auto">{content}</div></details> : <div className="whitespace-pre-wrap">{content}</div>}
       </div>
 
       {!!id && !shareMode && (
@@ -123,10 +124,12 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
     isStreaming?: boolean
   }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const presented = splitAssistantContent(content);
+  const answer = presented.answer;
 
   return (
     <>
-      {content.length > 0 && (
+      {(content.length > 0 || !!metadata?.toolCalls?.length) && (
         <motion.div
           className={`group ${shareMode ? 'mb-2' : ''}`}
           initial={withoutAnimation ? {} : { opacity: 0, y: 20 }}
@@ -166,8 +169,9 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
             }
           </>
 
+          <AiProcessDetails process={presented.process} toolCalls={metadata?.toolCalls} toolResults={metadata?.toolResults} running={isStreaming} />
           <div className="max-w-[100%] px-2 py-1 rounded-xl">
-            {!shareMode && !isStreaming && !!id && parseDraft(content) ? <AiDraftResult key={id} draft={parseDraft(content)} messageId={id} initialSaved={(metadata as any)?.savedDrafts} /> : <MarkdownRender content={content} largeSpacing={true} />}
+            {!shareMode && !isStreaming && !!id && parseDraft(answer) ? <AiDraftResult key={id} draft={parseDraft(answer)} messageId={id} initialSaved={(metadata as any)?.savedDrafts} /> : <MarkdownRender content={answer} largeSpacing={true} />}
           </div>
           {
             !shareMode && !isStreaming && (
@@ -181,7 +185,7 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
                     }}
                     onClick={() => {
                       RootStore.Get(BlinkoStore).upsertNote.call({
-                        content: content,
+                        content: answer,
                         type: NoteType.BLINKO,
                       })
                     }}
@@ -197,7 +201,7 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
                     }}
                     onClick={() => {
                       RootStore.Get(BlinkoStore).upsertNote.call({
-                        content: content,
+                        content: answer,
                         type: NoteType.NOTE
                       })
                     }}
@@ -209,7 +213,7 @@ const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation
                     tooltip={i18n.t('copy')}
                     icon="hugeicons:copy-01"
                     onClick={() => {
-                      copy(content)
+                      copy(answer)
                       RootStore.Get(ToastPlugin).success(i18n.t('operation-success'))
                     }}
                     size={20}
@@ -314,7 +318,7 @@ const StreamingAiMessage = observer(({ shareMode = false }: { shareMode?: boolea
     }
   }, [aiStore.isAnswering, content]);
 
-  if (!throttledContent) return null;
+  if (!throttledContent && !metadata.toolCalls.length) return null;
 
   return (
     <AiMessage
@@ -514,17 +518,6 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             )
           }
 
-
-          {
-            aiStore.currentMessageResult.toolCalls.length > 0 && (
-              <div key="stream-tool-calls" className="my-2">
-                <StreamToolRenderer
-                  toolCalls={aiStore.currentMessageResult.toolCalls}
-                  toolResults={aiStore.currentMessageResult.toolResults}
-                />
-              </div>
-            )
-          }
 
           <StreamingAiMessage key="streaming-message" shareMode={shareMode} />
         </AnimatePresence>

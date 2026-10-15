@@ -1,3 +1,4 @@
+import { cleanConversationTitle } from '@shared/lib/conversationTitle';
 import { _ } from '@/lib/lodash';
 import { Store } from './standard/base';
 import { ToastPlugin } from './module/Toast/Toast';
@@ -29,6 +30,8 @@ type Chat = {
 type WriteType = 'expand' | 'polish' | 'custom';
 export type AssisantMessageMetadata = {
   notes?: BlinkoItem[];
+  toolCalls?: ToolCall[];
+  toolResults?: ToolResult[];
   usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
   fristCharDelay?: number;
 };
@@ -67,6 +70,7 @@ export class AiStore implements Store {
   selectedSkill: { title: string; prompt: string; key: "tasks" | "note" | "today" | "overdue" | "ideas" } | null = null;
   isChatting = false;
   isAnswering = false;
+  isPreparing = false;
   input = '';
   withRAG = new StorageState({ key: 'withRAG', value: true, default: true });
   withTools = new StorageState({ key: 'withTools', value: false, default: false });
@@ -82,6 +86,10 @@ export class AiStore implements Store {
     toolResults: [],
     content: '',
   };
+
+  chatCapabilities = new PromiseState({
+    function: async () => api.ai.chatCapabilities.query({ modelId: this.chatModelId || undefined }),
+  });
 
   currentConversationId = 0;
   currentConversation = new PromiseState({
@@ -103,13 +111,21 @@ export class AiStore implements Store {
   });
 
   onInputSubmit = async (isRegenerate = false) => {
+    if (this.isAnswering || this.isPreparing) return;
+    this.isPreparing = true;
     try {
-      if (this.isAnswering) return;
+      const available = await api.ai.chatCapabilities.query({ modelId: this.chatModelId || undefined });
+      this.chatCapabilities.setValue(available);
+      if (!available.canChat) {
+        RootStore.Get(ToastPlugin).error('请先配置对话模型，或选择一个已配置的模型。');
+        return;
+      }
       if (this.selectedSkill && !this.referencesNotes.length && !this.input.trim()) {
         RootStore.Get(ToastPlugin).error('请先选择要整理的内容，或输入一段内容。');
         return;
       }
       if (!this.selectedSkill && !this.input.trim() && !this.referencesNotes.length) return;
+      const conversationTitle = cleanConversationTitle(this.selectedSkill?.title || this.input, '新对话');
       const userQuestion = [this.selectedSkill?.prompt, this.input.trim(),
         ...this.referencesNotes.map(note => `用户确认的来源 #${note.id}（类型 ${note.type}，创建 ${note.createdAt}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
       ].filter(Boolean).join('\n\n');
@@ -120,7 +136,7 @@ export class AiStore implements Store {
       this.isChatting = true;
       this.isAnswering = true;
       if (this.currentConversationId == 0) {
-        const conversation = await api.conversation.create.mutate({ title: userQuestion.trim().slice(0, 60) });
+        const conversation = await api.conversation.create.mutate({ title: conversationTitle });
         void this.conversactionList.resetAndCall({});
         this.currentConversationId = conversation.id;
       }
@@ -147,9 +163,9 @@ export class AiStore implements Store {
             question: userQuestion,
             modelId: this.chatModelId || undefined,
             conversations: filteredChatConversation,
-            withRAG: this.withRAG.value ?? false,
-            withTools: this.withTools.value ?? false,
-            withOnline: this.withOnline.value ?? false,
+            withRAG: available.rag && !!this.withRAG.value,
+            withTools: available.tools && !!this.withTools.value,
+            withOnline: available.online && !!this.withOnline.value,
           },
           { signal: this.aiChatabortController.signal },
         );
@@ -202,6 +218,8 @@ export class AiStore implements Store {
           role: 'assistant',
           metadata: {
             notes: this.currentMessageResult.notes,
+            toolCalls: this.currentMessageResult.toolCalls,
+            toolResults: this.currentMessageResult.toolResults,
             usage: this.currentMessageResult.usage,
             fristCharDelay: this.currentMessageResult.fristCharDelay,
           },
@@ -223,6 +241,8 @@ export class AiStore implements Store {
         RootStore.Get(ToastPlugin).error(error.message);
       }
       this.isAnswering = false;
+    } finally {
+      this.isPreparing = false;
     }
   };
 
@@ -257,7 +277,7 @@ export class AiStore implements Store {
   };
 
   newChat = () => {
-    if (this.isAnswering || this.currentConversation.loading.value) return;
+    if (this.isAnswering || this.isPreparing || this.currentConversation.loading.value) return;
     this.currentConversationId = 0;
     this.selectedSkill = null;
     this.referencesNotes = [];

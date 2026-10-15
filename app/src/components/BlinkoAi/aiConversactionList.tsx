@@ -1,3 +1,4 @@
+import { cleanConversationTitle } from '@shared/lib/conversationTitle';
 import { RootStore } from "@/store/root"
 import { AiStore } from "@/store/aiStore"
 import { observer } from "mobx-react-lite"
@@ -76,9 +77,9 @@ export const AiConversactionList = observer(({ inline = false, onSelect }: { inl
           ) : (
             <button
               type="button"
-              disabled={aiStore.isAnswering || aiStore.currentConversation.loading.value}
+              disabled={aiStore.isAnswering || aiStore.isPreparing || aiStore.currentConversation.loading.value}
               aria-current={item.id === aiStore.currentConversationId ? "true" : undefined}
-              className="flex-1 text-left truncate pr-14 cursor-pointer disabled:opacity-50"
+              className="min-w-0 flex-1 text-left truncate pr-14 cursor-pointer disabled:opacity-50"
               onClick={() => {
                 if (editingId !== null) return;
                 aiStore.input = "";
@@ -91,7 +92,7 @@ export const AiConversactionList = observer(({ inline = false, onSelect }: { inl
                 onSelect?.();
               }}
             >
-              {item.title || t('no-title')}
+              {cleanConversationTitle(item.title, t('no-title'))}
             </button>
           )}
 
@@ -100,7 +101,7 @@ export const AiConversactionList = observer(({ inline = false, onSelect }: { inl
               onClick={(e) => {
                 e.stopPropagation();
                 setEditingId(item.id);
-                setNewTitle(item.title || '');
+                setNewTitle(cleanConversationTitle(item.title));
               }}
               tooltip={t('rename')}
               icon="hugeicons:edit-02"

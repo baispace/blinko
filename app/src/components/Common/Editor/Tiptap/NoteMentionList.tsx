@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { NoteMentionState } from './noteMentionState';
@@ -18,13 +19,13 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
   const { top, left } = state.rect;
   const style: React.CSSProperties = {
     position: 'fixed',
-    left: left,
-    top: top + 24,
-    zIndex: 100,
-    transform: 'translateX(-50%)',
+    left: Math.max(8, Math.min(left, window.innerWidth - 328)),
+    top: Math.max(8, Math.min(top + 24, window.innerHeight - 330)),
+    zIndex: 10030,
+    maxWidth: 'calc(100vw - 16px)',
   };
 
-  return (
+  return createPortal(
     <div
       className="tiptap-note-mention-list"
       style={style}
@@ -42,9 +43,11 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
             <div className="px-3 py-4 text-center text-default-400 text-sm">
               <span className="animate-pulse">{t('searching')}...</span>
             </div>
+          ) : state.error ? (
+            <div role="alert" className="px-3 py-4 text-sm text-danger">{state.error}<button type="button" className="ml-2 text-primary" onMouseDown={event => event.preventDefault()} onClick={() => state.searchNotes(state.query)}>重试</button></div>
           ) : state.items.length === 0 ? (
             <div className="px-3 py-4 text-center text-default-400 text-sm">
-              {state.query ? t('no-results') : t('recent-notes')}
+              {state.query ? t('no-results') : '暂无可引用的内容'}
             </div>
           ) : (
             state.items.map((item, index) => (
@@ -53,7 +56,11 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
                 className={`w-full px-3 py-2 text-left flex flex-col gap-0.5 hover:bg-default-100 transition-colors ${
                   index === state.selectedIndex ? 'bg-default-100' : ''
                 }`}
+                type="button"
+                onMouseDown={event => event.preventDefault()}
+                onMouseEnter={() => { state.selectedIndex = index; }}
                 onClick={() => {
+                  state.selectedIndex = index;
                   state.selectCurrent();
                 }}
               >
@@ -75,6 +82,6 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
           <span>Esc {t('close')}</span>
         </div>
       </div>
-    </div>
+    </div>, document.body
   );
 });

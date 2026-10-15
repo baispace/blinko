@@ -30,6 +30,8 @@ import { PluginRender } from '@/store/plugin/pluginRender';
 import { IconButton } from "./Toolbar/IconButton";
 import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
 import { NoteCoverHeader } from './NoteCover';
+import { DocumentProperties } from './DocumentProperties';
+import { DocumentInsertMenu } from './DocumentInsertMenu';
 import { DocumentImageUploadButton, ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
@@ -75,7 +77,9 @@ type IProps = {
    * 正文已经自动保存，附件/引用/类型也各自即时落库，按钮只负责收尾关闭。
    * 新建态不传（笔记还不存在，必须走 onSend 创建）。
    */
+  onManualSave?: () => void,
   onDone?: () => Promise<any>,
+  hideDoneButton?: boolean,
   /**
    * 编辑态下附件 / @引用 / 类型切换的即时落库回调。不传则沿用旧行为：
    * 这三样仍然只在点「发布」时才写回服务端。
@@ -93,7 +97,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-const Editor = observer(({ composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, topSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
+const Editor = observer(({ composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, topSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onManualSave, hideDoneButton = false, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -115,11 +119,25 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   }, [openPopover]);
 
   // High-frequency toolbar: NoteType / #tag / image / attachment | Aa | @reference
+  const [moreOpen, setMoreOpen] = useState(false);
   const renderToolbar = () => {
     const showLabels = Boolean(composerVariant || (documentToolbar && isPc));
     if (!hiddenToolbar) {
       return (
         <>
+          {showTopToolbar ? <>
+
+            <Popover placement="bottom-end" isOpen={moreOpen} onOpenChange={setMoreOpen}>
+              <PopoverTrigger><button type="button" className="document-action-button" aria-label="更多编辑操作" title="更多操作"><Icon icon="tabler:dots" width={19} /></button></PopoverTrigger>
+              <PopoverContent className="w-56 items-stretch p-2 gap-1">
+                <div className="text-xs text-default-400 px-2 py-1">内容操作</div>
+                <ReferenceButton store={store} iconButton={<button type="button" className="document-action-button justify-start w-full"><Icon icon="tabler:link" width={16} />关联内容</button>} />
+                <div className="border-t border-default-100 my-1" />
+                <p className="px-2 text-xs leading-6 text-default-500">选中文字设置格式<br />输入 / 插入内容块<br />输入 @ 引用其他内容<br />Ctrl / ⌘ S 手动保存</p>
+              </PopoverContent>
+            </Popover>
+            <input {...getInputProps()} />
+          </> : <>
           {!hideNoteTypeButton && (
             <NoteTypeButton
               noteType={store.noteType}
@@ -142,6 +160,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
           <FormatMenuButton editor={store.vditor?.editor ?? null} label={showLabels ? t('format') : undefined} />
           <ToolbarDivider />
           <ReferenceButton store={store} iconButton={showLabels ? <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-default-500 hover:bg-default-100"><Icon icon="mdi:at" width="16" height="16" />{t('reference')}</button> : <IconButton tooltip="reference" icon="mdi:at" />} />
+          </>}
           {pluginApi.customToolbarIcons
             .map((item) => (
               item.content ? (
@@ -179,21 +198,22 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
     if (autosaveStatus && autosaveStatus !== 'idle') {
       if (autosaveStatus === 'saving') return <div className="text-default-400 text-xs mr-2">{t('saving')}</div>
       if (autosaveStatus === 'saved') return <div className="text-default-400 text-xs mr-2">{t('saved')}</div>
-      return <div className="text-red-500 text-xs mr-2">{t('save-failed')}</div>
+      return <button type="button" onClick={onManualSave} className="text-danger text-xs mr-2 whitespace-nowrap">{t('save-failed')} · 重试</button>
     }
     if (store.showIsEditText) return <div className="text-red-500 text-xs mr-2">{t('edited')}</div>
     return null
   }
 
-  const renderRightToolbar = () => (
+  const renderRightToolbar = (includeStatus = true) => (
     <div className='flex items-center gap-1 ml-auto'>
-      {renderStatusText()}
-      {editable && (onDone
+      {includeStatus && renderStatusText()}
+      {editable && !(hideDoneButton && onDone) && (onDone
         ? <DoneButton store={store} isSendLoading={isSendLoading} />
         : <SendButton store={store} isSendLoading={isSendLoading} label={composerVariant ? t(store.noteType === NoteType.NOTE ? 'composer-save-note' : store.noteType === NoteType.TODO ? 'composer-add-todo' : 'composer-record-blinko') : undefined} />)}
     </div>
   );
 
+  const [saveStatusElement, setSaveStatusElement] = useState<HTMLElement | null>(null);
   const [topToolbarElement, setTopToolbarElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -205,8 +225,10 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
         element = document.getElementById('editor-top-toolbar');
       }
       setTopToolbarElement(element);
+      setSaveStatusElement(document.getElementById(`editor-save-status-${blinko.curSelectedNote?.id}`));
     } else {
       setTopToolbarElement(null);
+      setSaveStatusElement(null);
     }
   }, [showTopToolbar, blinko.curSelectedNote?.id]);
 
@@ -324,7 +346,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   };
 
   const handleFullScreenToggle = () => {
-    eventBus.emit('editor:setFullScreen', !store.isFullscreen);
+    store.setFullscreen(!store.isFullscreen);
   };
 
   /** 阅读态下的链接应该像渲染结果一样新窗口打开，而不是把编辑器顶掉 */
@@ -339,11 +361,12 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
 
   return (
     <>
+      {showTopToolbar && editable && saveStatusElement && createPortal(<div role="status" aria-live="polite">{renderStatusText()}</div>, saveStatusElement)}
       {/* Top toolbar portal（阅读态不需要工具栏，等进入编辑再注入） */}
       {showTopToolbar && editable && topToolbarElement && createPortal(
-        <div className='flex w-full items-center gap-1'>
+        <div className='flex w-full items-center justify-end gap-1'>
           {renderToolbar()}
-          {renderRightToolbar()}
+          {renderRightToolbar(false)}
         </div>,
         topToolbarElement
       )}
@@ -377,8 +400,16 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
               >
                 {/* Cover & icon are a "note" feature; flashes (BLINKO) and todos stay clean. */}
                 {mode !== 'comment' && store.noteType === NoteType.NOTE && (
-                  <NoteCoverHeader store={store} compact={!!composerVariant} readOnly={!editable} fullBleed={showTopToolbar} contentInsetLeft={documentSidebarInset} content={content} />
+                  <NoteCoverHeader store={store} compact={!!composerVariant} readOnly={!editable} fullBleed={showTopToolbar} contentInsetLeft={documentSidebarInset} content={content}
+                    properties={showTopToolbar ? <DocumentProperties store={store} content={content} editable={editable} hideType={hideNoteTypeButton} /> : undefined} />
                 )}
+                {showTopToolbar && store.noteType !== NoteType.NOTE && <div style={{ paddingLeft: documentSidebarInset }} className="mb-4">
+                  <DocumentProperties store={store} content={content} editable={editable} hideType={hideNoteTypeButton} />
+                </div>}
+                {showTopToolbar && editable && <div className="mb-2 flex items-center gap-1" style={{ paddingLeft: documentSidebarInset }}>
+                  <DocumentInsertMenu store={store} openAttachments={open} />
+                  {store.noteType !== NoteType.NOTE && <DocumentImageUploadButton store={store} label="图片" />}
+                </div>}
                 {documentSidebar ? (
                   <div className="flex min-w-0 items-start">
                     {documentSidebar}

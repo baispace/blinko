@@ -618,7 +618,10 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   gap: 2px;
   padding: 4px;
   border-radius: 10px;
-  background-color: #1c1c1e;
+  background-color: hsl(var(--heroui-content1));
+  border: 1px solid hsl(var(--heroui-default-200));
+  max-width: calc(100vw - 24px);
+  flex-wrap: wrap;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
@@ -628,31 +631,30 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 }
 
 .tiptap-bubble button {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.82);
+  color: hsl(var(--heroui-foreground));
   transition: background-color 0.12s, color 0.12s;
 }
 
 .tiptap-bubble button:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background-color: hsl(var(--heroui-default-100));
 }
 
 .tiptap-bubble button.is-active {
-  background-color: var(--primary);
-  color: #fff;
+  background-color: hsl(var(--heroui-primary) / .12);
+  color: hsl(var(--heroui-primary));
 }
 
 .tiptap-bubble .bubble-divider {
   width: 1px;
   height: 14px;
-  background-color: rgba(255, 255, 255, 0.18);
+  background-color: hsl(var(--heroui-default-200));
   margin: 0 3px;
 }
 
@@ -1198,3 +1200,84 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 .table-toolbar-menu-item, .table-toolbar-color-option { display: flex; align-items: center; gap: 9px; padding: 7px 8px; width: 100%; border-radius: 6px; font-size: 12px; color: var(--foreground, #30343b); white-space: nowrap; }
 .table-toolbar-menu-item:hover, .table-toolbar-color-option:hover { background: var(--hover, #f1f3f5); }
 .table-toolbar-popover-label { padding: 5px 8px; font-size: 11px; color: var(--desc, #777); }
+
+/* Detail-page heading guides are decorative UI, outside the saved document. */
+.document-heading-guides .tiptap-wrap .tiptap {
+  padding-inline-start: 42px;
+}
+.document-heading-guides .tiptap :is(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+}
+.document-heading-guides .tiptap :is(h1, h2, h3, h4, h5, h6)::after {
+  position: absolute;
+  inset-inline-start: -32px;
+  top: 0.65em;
+  width: 24px;
+  color: hsl(var(--heroui-default-400));
+  font: 600 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: start;
+  letter-spacing: 0;
+  text-indent: 0;
+  opacity: 0.8;
+  pointer-events: none;
+  user-select: none;
+}
+.document-heading-guides .tiptap h1::after { content: "H1" / ""; }
+.document-heading-guides .tiptap h2::after { content: "H2" / ""; }
+.document-heading-guides .tiptap h3::after { content: "H3" / ""; }
+.document-heading-guides .tiptap h4::after { content: "H4" / ""; }
+.document-heading-guides .tiptap h5::after { content: "H5" / ""; }
+.document-heading-guides .tiptap h6::after { content: "H6" / ""; }
+@media (max-width: 767px) {
+  .document-heading-guides .tiptap-wrap .tiptap { padding-inline-start: 36px; }
+  .document-heading-guides .tiptap :is(h1, h2, h3, h4, h5, h6)::after {
+    inset-inline-start: -26px;
+    width: 22px;
+    font-size: 10px;
+  }
+}
+@media print {
+  .document-heading-guides .tiptap :is(h1, h2, h3, h4, h5, h6)::after { display: none; }
+  .document-heading-guides .tiptap-wrap .tiptap { padding-inline-start: 10px; }
+}
+/* Nested headings keep their guide inside their own block, away from bullets. */
+.document-heading-guides .tiptap :is(li, blockquote, td, th) :is(h1, h2, h3, h4, h5, h6) {
+  padding-inline-start: 28px;
+}
+.document-heading-guides .tiptap :is(li, blockquote, td, th) :is(h1, h2, h3, h4, h5, h6)::after {
+  inset-inline-start: 0;
+}
+@media print {
+  .document-heading-guides .tiptap :is(li, blockquote, td, th) :is(h1, h2, h3, h4, h5, h6) { padding-inline-start: 0; }
+}
+
+/* Keep semantic emphasis visible in the editor as well as saved previews. */
+.tiptap-wrap .tiptap strong,
+.tiptap-wrap .tiptap b {
+  font-weight: 700;
+  font-synthesis: weight;
+}
+.tiptap-bubble button.bubble-labeled { width: auto; padding: 0 8px; gap: 4px; font-size: 12px; }
+.tiptap-bubble .bubble-block-select select {
+  height: 32px; width: 82px; padding: 0 6px; border-radius: 6px;
+  font-size: 13px; color: hsl(var(--heroui-foreground)); background: hsl(var(--heroui-content1)); cursor: pointer;
+}
+.tiptap-bubble button:focus-visible,
+.tiptap-bubble select:focus-visible { outline: 2px solid hsl(var(--heroui-primary)); outline-offset: 1px; }
+
+.selection-colors { position: relative; }
+.selection-color-letter { font-size: 19px; line-height: 23px; border-bottom: 3px solid; }
+.selection-color-panel { position: absolute; top: calc(100% + 10px); right: -36px; width: min(320px, calc(100vw - 32px)); padding: 16px; border: 1px solid hsl(var(--heroui-default-200)); border-radius: 12px; background: hsl(var(--heroui-content1)); color: hsl(var(--heroui-foreground)); box-shadow: 0 8px 28px #0002; z-index: 2; }
+.selection-color-heading { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.selection-color-panel section + section { margin-top: 16px; }
+.selection-color-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.tiptap-bubble .selection-color-swatch { width: 100%; height: 28px; border: 1px solid hsl(var(--heroui-default-200)); border-radius: 4px; font-size: 20px; }
+.tiptap-bubble .selection-color-swatch.selected { outline: 2px solid hsl(var(--heroui-primary)); outline-offset: 1px; }
+.tiptap-bubble .selection-color-swatch:hover { filter: brightness(.96); }
+.no-color { background-image: linear-gradient(135deg, transparent 48%, #9aa1af 49%, #9aa1af 51%, transparent 52%); }
+.tiptap-bubble .selection-color-reset { width: 100%; height: 32px; margin-top: 18px; border: 1px solid hsl(var(--heroui-default-300)); font-size: 13px; }
+
+.document-properties { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; min-height: 28px; }
+.document-property-type, .document-action-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; font-size: 12px; line-height: 18px; color: hsl(var(--heroui-default-500)); transition: background-color .15s, color .15s; }
+button.document-property-type:hover, .document-action-button:hover { background: hsl(var(--heroui-default-100)); color: hsl(var(--heroui-foreground)); }
+.document-property-type:focus-visible, .document-action-button:focus-visible { outline: 2px solid hsl(var(--heroui-primary)); outline-offset: 2px; }

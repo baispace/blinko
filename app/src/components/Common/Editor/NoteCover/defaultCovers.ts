@@ -477,14 +477,16 @@ export const toCoverUrl = (cover?: string | null): string | undefined => {
   if (cover.startsWith(PREFIX)) {
     return DEFAULT_COVERS.find((c) => c.key === cover.slice(PREFIX.length))?.src
   }
-  return cover
+  // Recover gallery ids saved by the old random button without its prefix.
+  return DEFAULT_COVERS.find((c) => c.key === cover)?.src ?? cover
 }
 
 export const isDefaultCoverKey = (cover?: string | null): boolean =>
   !!cover && cover.startsWith(PREFIX)
 
 export const randomDefaultCoverKey = (exclude?: string | null): string => {
-  const pool = DEFAULT_COVERS.filter((c) => c.key !== exclude)
+  const excludedKey = exclude?.startsWith(PREFIX) ? exclude.slice(PREFIX.length) : exclude
+  const pool = DEFAULT_COVERS.filter((c) => c.key !== excludedKey)
   const list = pool.length ? pool : DEFAULT_COVERS
   return list[Math.floor(Math.random() * list.length)]!.key
 }

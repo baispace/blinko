@@ -290,7 +290,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
 
   const editorContent = (
     <div
-      className={`fixed inset-0 z-[9999] bg-card expanded-container ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      className={`fixed inset-0 z-[9999] bg-card expanded-container ${!presentationMode ? 'document-heading-guides' : ''} ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
       /**
        * 注意：这里曾经用 onPointerDownCapture / onTouchStartCapture 对
        * "不在 editorContainerRef 内"的事件 stopPropagation()，本意是防止拖到
@@ -332,10 +332,12 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
             >
               <Icon icon="tabler:home" width={19} height={19} />
             </Button>
+            <div id={`editor-save-status-${blinkoItem.id}`} className="shrink-0" />
             <span className="mx-1 h-5 w-px shrink-0 bg-default-200" aria-hidden />
             <div className="min-w-0 flex-1 truncate text-[13.5px] text-default-600" title={documentTitle}>
               {documentTitle}
             </div>
+            <div id={`editor-top-toolbar-${blinkoItem.id}`} className={`${editorMode === 'edit' ? 'flex' : 'hidden'} shrink-0 items-center`} />
 
             {!documentNote?.isRecycle && (
               <Tooltip content={t(documentNote?.isTop ? 'cancel-top' : 'top')}>
@@ -373,16 +375,13 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
               />
             </div>
           </div>
-          <div className={`${editorMode === 'edit' ? 'flex' : 'hidden'} min-h-[42px] w-full items-center overflow-x-auto border-t border-default-100 px-3 py-1 md:px-5 hide-scrollbar`}>
-            <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex min-w-max flex-1 items-center" />
-          </div>
         </div>
       )}
 
       {/* PC: window-level scrolling — cover, title and body scroll away together
           (Feishu behaviour), scrollbar sits at the viewport's right edge.
           Mobile keeps the previous internal-scroll layout. */}
-      <div className={`${isPc ? `min-h-full ${!presentationMode ? (editorMode === 'edit' ? 'pt-[90px]' : 'pt-12') : ''}` : 'h-full'} flex justify-center`}>
+      <div className={`${isPc ? `min-h-full ${!presentationMode ? 'pt-12' : ''}` : 'h-full'} flex justify-center`}>
         <div
           ref={editorContainerRef}
           className={`w-full mx-auto ${isPc ? 'min-h-full' : 'h-full'} flex ${isPc ? 'flex-col ' + PAGE_WIDTH_PAD_CLASS[pageWidth.mode] : 'flex-col p-2'}`}
@@ -406,6 +405,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
               <BlinkoEditor
                 key={`editor-${blinkoItem.id}`}
                 mode="edit"
+                hideDoneButton
                 editable={!presentationMode && editorMode === 'edit'}
                 onEditorReady={handleEditorReady}
                 onSended={handleEditorSended}

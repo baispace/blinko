@@ -738,6 +738,7 @@ export const noteRouter = router({
         where: {
           createdAt: { gt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
           isReviewed: false,
+          type: { in: [NoteType.BLINKO, NoteType.NOTE] },
           isArchived: false,
           isRecycle: false,
           accountId: Number(ctx.id),
@@ -750,7 +751,7 @@ export const noteRouter = router({
     .meta({ openapi: { method: 'GET', path: '/v1/note/random-list', summary: 'Query random notes for review', protect: true, tags: ['Note'] } })
     .input(
       z.object({
-        limit: z.number().default(30),
+        limit: z.number().int().min(1).max(100).default(30),
       })
     )
     .output(
@@ -771,6 +772,7 @@ export const noteRouter = router({
         WHERE n."isArchived" = false 
         AND n."isRecycle" = false
         AND n."accountId" = ${Number(ctx.id)}
+        AND n."type" IN (0, 1)
         ORDER BY RANDOM()
         LIMIT ${limit}
       `;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { eventBus } from '@/lib/event';
 import { EditorStore } from '../editorStore';
 import { FocusEditorFixMobile, HandleFileType } from '../editorUtils';
@@ -62,6 +62,13 @@ export const useEditorInit = (
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
   const [searchParams] = useSearchParams()
+
+  // The editor instance persists across changes to due dates, priorities and
+  // other parent state. Refresh callbacks without rebuilding its document.
+  useLayoutEffect(() => {
+    store.onSend = onSend;
+    store.onChange = onChange ?? null;
+  }, [store, onSend, onChange]);
 
   useEffect(() => {
     const adapter = new TiptapEditorAdapter()
@@ -200,7 +207,7 @@ export const useEditorInit = (
         },
       },
       onUpdate: () => {
-        onChange?.(adapter.getValue())
+        store.onChange?.(adapter.getValue())
       },
     })
 

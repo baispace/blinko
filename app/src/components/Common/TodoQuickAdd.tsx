@@ -1,3 +1,4 @@
+import { todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -9,14 +10,8 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import Editor from '@/components/Common/Editor';
 import type { OnSendContentType } from '@/components/Common/Editor/type';
 
-type PrioKey = 'ui' | 'in' | 'un' | 'nn';
-
-const PRIORITY_OPTIONS: { key: PrioKey; u: boolean; i: boolean; labelKey: string; color: string }[] = [
-  { key: 'ui', u: true,  i: true,  labelKey: 'priority-urgent-important', color: '#ef4444' },
-  { key: 'in', u: false, i: true,  labelKey: 'priority-important',        color: '#f59e0b' },
-  { key: 'un', u: true,  i: false, labelKey: 'priority-urgent',           color: '#3b82f6' },
-  { key: 'nn', u: false, i: false, labelKey: 'priority-normal',           color: '#9ca3af' },
-];
+type PrioKey = TodoPriority;
+const PRIORITY_OPTIONS = TODO_PRIORITIES;
 
 // Inline flag SVG — tinted by the priority color; outline for "none"
 const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
@@ -79,8 +74,7 @@ export const TodoQuickAdd = observer(({ compact = false }: { compact?: boolean }
         type: i.type,
       })) as any,
       metadata: {
-        priorityUrgent: cur.u,
-        priorityImportant: cur.i,
+        ...todoPriorityMetadata(priorityKey),
         expireAt: due ? dayjs(due).toISOString() : undefined,
       },
     });

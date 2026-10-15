@@ -1,3 +1,4 @@
+import { getTodoPriority, compareTodoPriority } from '@shared/lib/todoPriority';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
@@ -99,7 +100,7 @@ const Home = observer(() => {
       const d = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
       const due = d && d.isValid() ? d.startOf('day') : null;
       return !due || !due.isAfter(todayStart, 'day'); // 今天到期 + 逾期
-    });
+    }).sort(compareTodoPriority);
   }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
 
   const upcomingList = useMemo(() => {
@@ -118,12 +119,12 @@ const Home = observer(() => {
       .sort((a: any, b: any) => {
         const da = dayjs(a.metadata.expireAt).valueOf();
         const db = dayjs(b.metadata.expireAt).valueOf();
-        return da - db;
+        return da - db || compareTodoPriority(a, b);
       });
   }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
 
   const visibleTodayList = useMemo(
-    () => todayList.filter((todo: any) => todo.isArchived || !todo.metadata?.priorityImportant),
+    () => todayList.filter((todo: any) => todo.isArchived || !['ui', 'in'].includes(getTodoPriority(todo.metadata))),
     [todayList]
   );
 
@@ -135,17 +136,9 @@ const Home = observer(() => {
     if (!isTodoView) return [];
     const seen = new Set<number>();
     return [...todayList, ...upcomingList]
-      .filter((todo: any) => !todo.isArchived && Boolean(todo.metadata?.priorityImportant))
+      .filter((todo: any) => !todo.isArchived && ['ui', 'in'].includes(getTodoPriority(todo.metadata)))
       .filter((todo: any) => (seen.has(todo.id) ? false : seen.add(todo.id)))
-      .sort((a: any, b: any) => {
-        // 紧急且重要排最前，其次按截止日
-        const ua = a.metadata?.priorityUrgent ? 0 : 1;
-        const ub = b.metadata?.priorityUrgent ? 0 : 1;
-        if (ua !== ub) return ua - ub;
-        const da = a.metadata?.expireAt ? dayjs(a.metadata.expireAt).valueOf() : Infinity;
-        const db = b.metadata?.expireAt ? dayjs(b.metadata.expireAt).valueOf() : Infinity;
-        return da - db;
-      });
+      .sort(compareTodoPriority);
   }, [isTodoView, todayList, upcomingList]);
 
   const importantTodayList = importantList.filter((item: any) => todayList.some((today: any) => today.id === item.id));

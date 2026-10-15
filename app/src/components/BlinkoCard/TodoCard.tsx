@@ -1,3 +1,5 @@
+import { getTodoPriority, todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { observer } from 'mobx-react-lite';
 import { Card, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
 import { RootStore } from '@/store';
@@ -26,15 +28,6 @@ const QUADRANT = {
 } as const;
 
 type QuadrantKey = keyof typeof QUADRANT;
-
-function getQuadrant(item: BlinkoItem): QuadrantKey {
-  const u = Boolean(item.metadata?.priorityUrgent);
-  const i = Boolean(item.metadata?.priorityImportant);
-  if (u && i) return 'ui';
-  if (!u && i) return 'in';
-  if (u && !i) return 'un';
-  return 'nn';
-}
 
 /** 去掉正文里的 #标签# token，取纯文本标题/内容 */
 function stripContent(item: BlinkoItem): string {
@@ -67,7 +60,8 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
   const blinko = RootStore.Get(BlinkoStore);
   const [expanded, setExpanded] = useState(false);
   const done = Boolean(todo.isArchived);
-  const quad = getQuadrant(todo);
+  const quad = getTodoPriority(todo.metadata);
+  const [prioritySaving, setPrioritySaving] = useState(false);
   const quadMeta = QUADRANT[quad];
 
   // expireAt 可能被脏数据/旧版本写成非法值，这里做有效性校验，避免出现 "Invalid Date"
@@ -167,6 +161,19 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     ]);
   };
 
+  const changePriority = async (key: TodoPriority) => {
+    if (prioritySaving || done || key === quad) return;
+    setPrioritySaving(true);
+    try {
+      const saved = await api.notes.upsert.mutate({ id: todo.id, type: NoteType.TODO, metadata: todoPriorityMetadata(key) });
+      // Replace list entries so both MobX readers and memoized groups update.
+      for (const list of [blinko.todoList, blinko.doneTodoList, blinko.noteList]) {
+        list.setValue((list.value ?? []).map(item => item.id === todo.id ? { ...item, metadata: saved.metadata } : item));
+      }
+    } catch { RootStore.Get(ToastPlugin).error('优先级修改失败，请重试。'); }
+    finally { setPrioritySaving(false); }
+  };
+
   const stopAndRun = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
     action();
@@ -232,13 +239,21 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
 
           {/* 时间信息（左侧）+ 标签 */}
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <span
-              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
-              style={{ color: quadMeta.color, backgroundColor: `${quadMeta.color}14` }}
-              title={t(quadMeta.label)}
-            >
-              {t(quadMeta.label)}
-            </span>
+            <Dropdown isDisabled={done || prioritySaving}>
+              <DropdownTrigger><button type="button" disabled={done || prioritySaving}
+                aria-label={`${t('priority')}：${t(quadMeta.label)}`} title={t('priority')}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-75 disabled:cursor-default disabled:opacity-70"
+                style={{ color: quadMeta.color, backgroundColor: `${quadMeta.color}14` }}>
+                {prioritySaving ? t('saving') : t(quadMeta.label)}{!done && <Icon icon="tabler:chevron-down" width="11" />}
+              </button></DropdownTrigger>
+              <DropdownMenu aria-label={t('priority')} selectionMode="single" selectedKeys={[quad]}
+                onAction={key => { void changePriority(key as TodoPriority); }}>
+                {TODO_PRIORITIES.map(option => <DropdownItem key={option.key} textValue={t(option.labelKey)}
+                  startContent={<span className="h-2 w-2 rounded-full" style={{ backgroundColor: option.color }} />}>
+                  {t(option.labelKey)}
+                </DropdownItem>)}
+              </DropdownMenu>
+            </Dropdown>
             {due && (
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${

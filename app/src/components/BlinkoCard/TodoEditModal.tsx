@@ -1,8 +1,9 @@
+import { getTodoPriority, todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { DialogStore } from '@/store/module/Dialog';
-import { PromiseCall } from '@/store/standard/PromiseState';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { NoteType, type Note } from '@shared/lib/types';
 import { api } from '@/lib/trpc';
 import { useTranslation } from 'react-i18next';
@@ -12,14 +13,8 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import Editor from '@/components/Common/Editor';
 import type { OnSendContentType } from '@/components/Common/Editor/type';
 
-type PrioKey = 'ui' | 'in' | 'un' | 'nn';
-
-const PRIORITY_OPTIONS: { key: PrioKey; u: boolean; i: boolean; labelKey: string; color: string }[] = [
-  { key: 'ui', u: true,  i: true,  labelKey: 'priority-urgent-important', color: '#ef4444' },
-  { key: 'in', u: false, i: true,  labelKey: 'priority-important',        color: '#f59e0b' },
-  { key: 'un', u: true,  i: false, labelKey: 'priority-urgent',           color: '#3b82f6' },
-  { key: 'nn', u: false, i: false, labelKey: 'priority-normal',           color: '#9ca3af' },
-];
+type PrioKey = TodoPriority;
+const PRIORITY_OPTIONS = TODO_PRIORITIES;
 
 // SVG flag — tinted by the priority color; outline for "nn"
 const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
@@ -38,15 +33,6 @@ const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
     <path d="M4 4h13l-2.5 5L20 14H4" />
   </svg>
 );
-
-function quadKeyFromMeta(item: Note): PrioKey {
-  const u = Boolean(item.metadata?.priorityUrgent);
-  const i = Boolean(item.metadata?.priorityImportant);
-  if (u && i) return 'ui';
-  if (!u && i) return 'in';
-  if (u && !i) return 'un';
-  return 'nn';
-}
 
 /**
  * Open a dedicated edit dialog for a TODO note. The standard BlinkoEditor
@@ -69,7 +55,7 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
   const [content, setContent] = useState(note.content ?? '');
-  const [priorityKey, setPriorityKey] = useState<PrioKey>(quadKeyFromMeta(note));
+  const [priorityKey, setPriorityKey] = useState<PrioKey>(getTodoPriority(note.metadata));
   // 没有 expireAt 的旧任务保持「无日期」，不要在打开弹窗时替用户填今天 ——
   // 一保存就把无期限任务变成了今日到期。
   const [due, setDue] = useState(note.metadata?.expireAt ? dayjs(note.metadata.expireAt).format('YYYY-MM-DD') : '');
@@ -96,11 +82,10 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
   // 编辑器发送（Cmd/Ctrl+Enter 或工具栏按钮）走同一条保存路径
   const save = async (args: OnSendContentType) => {
     const text = (args?.content ?? content).trim();
-    if (!text || note.id == null) return;
+    if (!text || note.id == null || saving) return;
     setSaving(true);
     try {
-      await PromiseCall(
-        api.notes.upsert.mutate({
+      await api.notes.upsert.mutate({
           id: note.id,
           content: text,
           type: NoteType.TODO,
@@ -114,16 +99,17 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
           })) as any,
           metadata: {
             ...(note.metadata ?? {}),
-            priorityUrgent: cur.u,
-            priorityImportant: cur.i,
+            ...todoPriorityMetadata(priorityKey),
             expireAt: due ? dayjs(due).toISOString() : null,
           },
-        })
-      );
+        });
       // refresh store lists so the updated card shows up immediately
       blinko.todoList.resetAndCall({});
       blinko.doneTodoList.resetAndCall({});
       close();
+    } catch (error) {
+      RootStore.Get(ToastPlugin).error('保存失败，修改已保留，请重试。');
+      throw error;
     } finally {
       setSaving(false);
     }

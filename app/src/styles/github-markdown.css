@@ -284,7 +284,9 @@ menu {
   height: 1px;
   padding: 0;
   margin: var(--base-size-24) 0;
-  background-color: var(--hover);
+  /* 分割线用 --divider（前景色低透明度）而不是 --hover。
+     --hover 在暗色下是 #292929 实心灰、亮色下是偏黄的暖白，两头都不对。 */
+  background-color: var(--divider);
   border: 0;
 }
 

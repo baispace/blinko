@@ -10,6 +10,7 @@ import { configRouter } from './config';
 import { followsRouter } from './follows';
 import { notificationRouter } from './notification';
 import { aiRouter } from './ai';
+import { aiImportRouter } from './aiImport';
 import { tagRouter } from './tag';
 import { userRouter } from './user';
 import { commentRouter } from './comment';
@@ -25,6 +26,7 @@ import { mcpServersRouter } from './mcpServers';
 import { fontRouter } from './font';
 export const appRouter = router({
   ai: aiRouter,
+  aiImport: aiImportRouter,
   notes: noteRouter,
   tags: tagRouter,
   users: userRouter,

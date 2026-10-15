@@ -119,6 +119,31 @@ export const BlinkoEditor = observer(({ mode, composerVariant, documentToolbar =
     onSended?.()
   }, [flushAutosave, flushSidePatch, blinko, onSended])
 
+  /**
+   * Cmd/Ctrl+S → 手动保存。
+   *
+   * 浏览器默认行为是「另存网页」（下载一份 HTML），在编辑器里毫无意义，
+   * 所以必须 preventDefault 吃掉它。绑在 capture 阶段：ProseMirror 自己
+   * 监听 keydown，冒泡阶段会被它先处理。
+   *
+   * create 模式没有已存在的笔记可保存（那条路径走 SendButton），editable=false
+   * 时是纯阅读视图 —— 这两种情况都放行浏览器默认，比静默吞掉键更诚实。
+   */
+  useEffect(() => {
+    if (isCreateMode || !editable) return
+
+    const handleSaveShortcut = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return
+      if (e.key !== 's' && e.key !== 'S') return
+      e.preventDefault()
+      e.stopPropagation()
+      void handleDone()
+    }
+
+    document.addEventListener('keydown', handleSaveShortcut, true)
+    return () => document.removeEventListener('keydown', handleSaveShortcut, true)
+  }, [isCreateMode, editable, handleDone])
+
   const store = RootStore.Local(() => ({
     get noteContent() {
       if (isCreateMode) {

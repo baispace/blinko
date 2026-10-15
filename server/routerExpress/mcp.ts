@@ -17,6 +17,7 @@ import {
   deleteScheduledTaskTool,
   listScheduledTasksTool,
 } from '@server/aiServer/tools/scheduledTask';
+import { importConversationTool } from '@server/aiServer/tools/importConversation';
 
 const router = express.Router();
 
@@ -198,6 +199,7 @@ function createBlinkoMcpServer(getAuthContext: () => AuthContext) {
   createToolWithContext('createScheduledTask', createScheduledTaskTool);
   createToolWithContext('deleteScheduledTask', deleteScheduledTaskTool);
   createToolWithContext('listScheduledTasks', listScheduledTasksTool);
+  createToolWithContext('importConversation', importConversationTool);
 
   return server;
 }

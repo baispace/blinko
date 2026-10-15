@@ -1,5 +1,6 @@
+import { cleanConversationTitle } from '@shared/lib/conversationTitle';
 import React, { useEffect, useState } from 'react';
-import { Button, Badge } from '@heroui/react';
+import { Button, Badge, Tooltip } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { UserStore } from '@/store/user';
 import { observer } from 'mobx-react-lite';
@@ -145,7 +146,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                   <div className="font-black select-none truncate">
                     {location.pathname == '/ai'
                       ? !!RootStore.Get(AiStore).currentConversation.value?.title
-                        ? RootStore.Get(AiStore).currentConversation.value?.title
+                        ? cleanConversationTitle(RootStore.Get(AiStore).currentConversation.value?.title, t(base.currentTitle))
                         : t(base.currentTitle)
                       : t(base.currentTitle)}
                   </div>
@@ -183,19 +184,18 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                 )}
               </div>
 
-              {/* CENTER：搜索居中，吃掉中间剩余空间。max-w-md 让它不撑满长条。 */}
-              <div className="flex-1 flex justify-center min-w-0">
-                <BarSearchInput isPc={isPc} />
-              </div>
+              <div className="flex-1 min-w-0" />
 
               {/* RIGHT：全局操作（筛选 / 每日回顾 / 通知 —— 收紧到 prototype 风格的
                    ghost 小按钮）。FilterPop 内部自渲染 trigger Button，宽度收紧靠
                    该组件内 className；Bulb / Bell 在此 inline 保证视觉一致。 */}
               <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
+                <BarSearchInput isPc={isPc} />
                 {isHomeSubHeaderScope(location, searchParams) && <BlinkoHomeSettingsPop />}
                 <FilterPop />
                 {!blinkoStore.config.value?.isCloseDailyReview && (
-                  <Badge size="sm" className="shrink-0" content={blinkoStore.dailyReviewNoteList.value?.length} color="warning">
+                  <Tooltip content={t('daily-review')} delay={400}>
+                  <Badge size="sm" className="shrink-0" isInvisible={!blinkoStore.dailyReviewNoteList.value?.length} content={blinkoStore.dailyReviewNoteList.value?.length} color="primary">
                     <Button
                       isIconOnly
                       size="sm"
@@ -203,10 +203,13 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                       className="!transition-all"
                       onPress={() => navigate('/review')}
                       aria-label={t('daily-review')}
+                      title={t('daily-review')}
+                      aria-current={location.pathname === '/review' ? 'page' : undefined}
                     >
-                      <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="20" height="20" />
+                      <Icon className="cursor-pointer text-default-600" icon="tabler:clock" width="20" height="20" />
                     </Button>
                   </Badge>
+                  </Tooltip>
                 )}
                 <BlinkoNotification />
               </div>

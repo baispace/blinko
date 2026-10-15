@@ -17,7 +17,7 @@ import { searchSnippet, tagPath } from './searchUtils';
 
 type Category = 'all' | 'flash' | 'notes' | 'todo' | 'tags' | 'files' | 'settings';
 type Hit = { key: string; kind: string; title: string; summary?: string; info?: string; action: () => void };
-const icons: Record<string, string> = { flash: 'tabler:bolt', notes: 'tabler:notes', todo: 'tabler:checkbox', tags: 'tabler:hash', files: 'tabler:file', settings: 'tabler:settings', ai: 'hugeicons:ai-beautify' };
+const icons: Record<string, string> = { flash: 'tabler:bulb', notes: 'hugeicons:sticky-note-02', todo: 'tabler:list-check', tags: 'tabler:tags', files: 'tabler:file-import', settings: 'tabler:settings', ai: 'hugeicons:ai-beautify' };
 function Highlight({ text, term }: { text: string; term: string }) {
   if (!term) return <>{text}</>;
   const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
@@ -71,6 +71,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolea
   useEffect(() => { document.getElementById(`global-search-result-${active}`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
   const handleKey = (event: React.KeyboardEvent) => {
     if (event.nativeEvent.isComposing) return;
+    const target = event.target as HTMLElement;
+    if (target.tagName !== 'INPUT' && target.getAttribute('role') !== 'option') return;
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setActive(index => visible.length ? (index + (event.key === 'ArrowDown' ? 1 : -1) + visible.length) % visible.length : 0); }
     else if (event.key === 'Enter') { event.preventDefault(); if (!loading) visible[active]?.action(); }
     else if (event.key === 'Escape') close();
@@ -81,7 +83,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolea
     <ModalContent><ModalBody className="gap-0 p-0" onKeyDown={handleKey}>
       <div className="p-4 pb-3"><Input ref={inputRef} autoFocus aria-label={label('全局搜索', 'Global search')} placeholder={label('搜索闪念、笔记、待办、标签和文件…', 'Search notes, tasks, tags and files…')}
         value={query} onValueChange={setQuery} variant="flat" classNames={{ inputWrapper: 'bg-transparent shadow-none px-0', input: 'text-base' }} role="combobox" aria-expanded={!loading && visible.length > 0} aria-controls="global-search-results" aria-activedescendant={!loading && visible.length ? `global-search-result-${active}` : undefined}
-        startContent={<Icon icon="tabler:search" width="22" className="text-default-400 mr-2" />}
+        startContent={<Icon icon="lets-icons:search" width="22" className="text-default-400 mr-2" />}
         endContent={loading ? <Spinner size="sm" /> : query ? <button aria-label={label('清空关键词', 'Clear search')} onClick={() => setQuery('')} className="p-2 rounded-lg hover:bg-default-100"><Icon icon="tabler:x" width="18" /></button> : <kbd className="text-xs text-default-400">Esc</kbd>} /></div>
       <div className="flex gap-1 overflow-x-auto px-4 pb-3 border-b border-default-100" aria-label={label('搜索分类', 'Search category')}>
         {categories.map(item => <button key={item.key} aria-pressed={category === item.key} onClick={() => { setCategory(item.key); inputRef.current?.focus(); }} className={cn('shrink-0 rounded-lg px-3 py-1.5 text-xs transition-colors', category === item.key ? 'bg-primary/10 text-primary' : 'text-default-500 hover:bg-default-100')}>{item.name}</button>)}

@@ -48,19 +48,14 @@ export const messageRouter = router({
     }),
 
   update: authProcedure
-    .input(z.object({
-      id: z.number(),
-      content: z.string(),
-    }))
+    .input(z.object({ id: z.number(), content: z.string(), displayContent: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
-      return await prisma.message.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          content: input.content,
-        }
-      });
+      const message = await prisma.message.findFirst({ where: { id: input.id, conversation: { accountId: Number(ctx.id) } } });
+      if (!message) throw new Error('Message not found');
+      return await prisma.message.update({ where: { id: message.id }, data: {
+        content: input.content,
+        ...(input.displayContent !== undefined ? { metadata: { ...(typeof message.metadata === 'object' && message.metadata ? message.metadata as object : {}), displayContent: input.displayContent } } : {}),
+      } });
     }),
 
   delete: authProcedure

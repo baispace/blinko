@@ -14,19 +14,31 @@ import { helper } from '@shared/lib/helper';
 import { cleanConversationTitle } from '../../shared/lib/conversationTitle';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
+import { workflowKeys } from '../../shared/lib/aiWorkflows';
+import { dailySyncInput, syncDailyWorkflow } from '../lib/dailyWorkflow';
 import { getChatCapabilities } from '../lib/chatCapabilities';
 
 export const aiRouter = router({
   chatCapabilities: authProcedure.input(z.object({ modelId: z.number().int().positive().optional() })).query(({ input }) => getChatCapabilities(input.modelId)),
-  skillSources: authProcedure.input(z.object({ skill: z.enum(['tasks','note','today','overdue','ideas']), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
+  skillSources: authProcedure.input(z.object({ skill: z.enum(workflowKeys), from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), includeNotes: z.boolean().default(false), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
     const now = new Date();
     const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now);
     const startToday = new Date(today + 'T00:00:00+08:00');
+    if (input.skill === 'daily' || input.skill === 'weekly') {
+      const from = input.from ? new Date(input.from + 'T00:00:00+08:00') : new Date(startToday.getTime() - (input.skill === 'daily' ? 1 : input.days - 1) * 86400000);
+      const to = input.to ? new Date(input.to + 'T23:59:59.999+08:00') : now;
+      if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()) || from > to || to.getTime() - from.getTime() > 91 * 86400000) throw new TRPCError({ code: 'BAD_REQUEST', message: '请选择有效且不超过90天的时间范围' });
+      const owned = { accountId: Number(ctx.id), isRecycle: false };
+      const inRange = { gte: from, lte: to };
+      const tasks = await prisma.notes.findMany({ where: { ...owned, type: 2, ...(input.skill === 'daily' ? { OR: [{ isArchived: false }, { updatedAt: inRange }] } : { OR: [{ updatedAt: inRange }, { createdAt: inRange }] }) }, orderBy: { updatedAt: 'desc' }, take: 81, select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true } });
+      const extras = input.includeNotes ? await prisma.notes.findMany({ where: { ...owned, type: { in: [0,1] }, updatedAt: inRange }, orderBy: { updatedAt: 'desc' }, take: 21, select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true } }) : [];
+      return { items: [...tasks.slice(0,80), ...extras.slice(0,20)], total: tasks.length + extras.length, limited: tasks.length > 80 || extras.length > 20 };
+    }
     const base = { accountId: Number(ctx.id), isRecycle: false, isArchived: false };
     const candidates = await prisma.notes.findMany({
       where: input.skill === 'overdue' ? { ...base, type: 2 } : input.skill === 'today' ? { ...base, OR: [{ type: 2 }, { createdAt: { gte: startToday } }] } : input.skill === 'tasks' ? { ...base, OR: [{ type: { in: [0,1] }, createdAt: { gte: new Date(Date.now() - input.days * 86400000) } }, { type: 2 }] } : { ...base, ...(input.skill === 'ideas' ? { type: 0 } : { type: { in: [0,1] } }), createdAt: { gte: new Date(Date.now() - input.days * 86400000) } },
       orderBy: { updatedAt: 'desc' }, take: 501,
-      select: { id: true, content: true, type: true, metadata: true, createdAt: true, updatedAt: true }
+      select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true }
     });
     const matching = input.skill === 'overdue' ? candidates.filter(note => {
       const due = (note.metadata as any)?.expireAt;
@@ -34,6 +46,7 @@ export const aiRouter = router({
     }) : candidates;
     return { items: matching.slice(0,80), total: matching.length, limited: matching.length > 80 || candidates.length > 500 };
   }),
+  syncDaily: authProcedure.input(dailySyncInput).mutation(({ input, ctx }) => syncDailyWorkflow(input, Number(ctx.id))),
   saveDraft: authProcedure.input(z.object({
     messageId: z.number().int().positive(),
     drafts: z.array(z.object({ index: z.number().int().min(0).max(99), title: z.string().trim().min(1).max(500), content: z.string().max(100000), due: z.union([z.literal(''), z.string().datetime(), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''), priority: z.enum(['', 'ui', 'in', 'un', 'nn']).default(''), tags: z.array(z.string().max(255)).max(30).default([]) })).min(1).max(20),

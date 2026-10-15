@@ -102,6 +102,17 @@
   margin-bottom: 0;
 }
 
+/* 水平分割线：与 `.markdown-body hr` 用同一个 --divider token。
+   之前这里完全没有规则，编辑器里的 <hr> 落到浏览器默认的
+   `border: 1px inset`，那条灰线比阅读视图明显重，且亮暗都不一致。 */
+.tiptap hr {
+  height: 1px;
+  margin: 1.5em 0;
+  padding: 0;
+  background-color: var(--divider);
+  border: 0;
+}
+
 .tiptap a {
   color: var(--primary);
   font-weight: 700;
@@ -292,13 +303,14 @@ li[data-type="collapsible-list-item"] > ol::before {
   top: 0.5em;
   bottom: 0;
   width: 1px;
-  background: color-mix(in srgb, var(--border) 90%, transparent);
+  background: var(--indent-guide);
   pointer-events: none;
-  transition: background-color 120ms ease;
+  transition: background-color 120ms ease, width 120ms ease;
 }
 li[data-type="collapsible-list-item"]:hover > ul::before,
 li[data-type="collapsible-list-item"]:hover > ol::before {
-  background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  background: var(--indent-guide-hover);
+  width: 1.5px;
 }
 
 /* ---------- bullet / ordered list (shadcn-aligned + Effie-style tree lines) ----------
@@ -355,7 +367,7 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   top: 0.5em;
   bottom: 0.1em;
   width: 1px;
-  background-color: var(--border);
+  background-color: var(--indent-guide);
   pointer-events: none;
   transition: width 120ms ease, background-color 120ms ease;
 }
@@ -369,8 +381,8 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 .tiptap:has(li:hover) ol:not([data-type="taskList"]) ul:not([data-type="taskList"]):not([data-type="outline"]) ol:not([data-type="taskList"])::before,
 .tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ul:not([data-type="taskList"]):not([data-type="outline"])::before,
 .tiptap:has(li:hover) ol:not([data-type="taskList"]) ol ol::before {
-  width: 1.5px;
-  background-color: var(--muted-foreground);
+  width: 2px;
+  background-color: var(--indent-guide-hover);
 }
 
 /* 每条 li 前面的小灰点 —— 用 --muted-foreground 而不是硬编码 rgba */

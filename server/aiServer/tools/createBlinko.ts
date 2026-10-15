@@ -11,6 +11,7 @@ export const upsertBlinkoTool = createTool({
   inputSchema: z.object({
     content: z.string().describe("The content to save. Tag is start with #"),
     type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
+    title: z.string().optional().describe('Optional: A short title for the note. Stored in metadata.title and shown in the card/editor header. Use this when the first line of `content` would make a poor title (it is long, is a tag, or starts with an image). Omit it and the title falls back to the first line of `content`.'),
     token: z.string().optional().describe("internal use, do not pass!")
   }),
   execute: async ({ context, runtimeContext }) => {
@@ -50,6 +51,11 @@ export const upsertBlinkoTool = createTool({
       const note = await caller.notes.upsert({
         content: stripThinkText(context.content),
         type: noteType,
+        // notes 表没有独立的 title 列，标题存在 metadata.title。
+        // notes.upsert 在更新已有笔记时会浅合并 metadata，所以这里只传 title
+        // 不会抹掉其他 metadata 字段。判 undefined 而不是真值：空字符串表示
+        // 显式清除标题，回退到 content 首行。
+        ...(context.title !== undefined ? { metadata: { title: context.title } } : {}),
       })
       console.log('Created note:', note)
       return note

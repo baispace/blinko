@@ -1,22 +1,17 @@
 import { observer } from 'mobx-react-lite';
-import { Textarea } from '@heroui/react';
+import { Button, Textarea } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { IconButton } from '../Common/Editor/Toolbar/IconButton';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from 'usehooks-ts';
 import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
 import { RootStore } from '@/store/root';
 import { DialogStore } from '@/store/module/Dialog';
-import { AiConversactionList } from './aiConversactionList';
-import { PromiseCall } from '@/store/standard/PromiseState';
 import { BlinkoSelectNote } from '../Common/BlinkoSelectNote';
-import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '../Common/ScrollArea';
 import AiSetting from '../BlinkoSettings/AiSetting/AiSetting';
-import { useRef, useEffect } from 'react';
-import { AiSettingStore } from '@/store/aiSettingStore';
+import { useRef, useEffect, useState } from 'react';
 
 interface AiInputProps {
   mode?: 'card' | 'inline';
@@ -26,102 +21,39 @@ interface AiInputProps {
 }
 
 const cardIcons = [
-  {
-    tooltip: 'new-conversation',
-    icon: 'hugeicons:bubble-chat-add',
-    size: 20,
-    containerSize: 30,
-    onClick: () => {
-      RootStore.Get(AiStore).newChat();
-    },
-  },
-  {
-    tooltip: 'knowledge-base-search',
-    icon: 'hugeicons:search-list-01',
-    size: 20,
-    containerSize: 30,
-    onClick: () => {
-      RootStore.Get(AiStore).withRAG.save(!RootStore.Get(AiStore).withRAG.value);
-    },
-    classNames: () => {
-      return RootStore.Get(AiStore).withRAG.value
-        ? {
-          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-          icon: 'text-primary-foreground font-bold',
-        }
-        : {
-          base: 'bg-transparent text-foreground',
-          icon: 'text-foreground',
-        };
-    },
-  },
-  {
-    tooltip: 'online-search',
-    icon: 'hugeicons:global-search',
-    size: 20,
-    containerSize: 30,
-    onClick: () => {
-      RootStore.Get(AiStore).withOnline.save(!RootStore.Get(AiStore).withOnline.value);
-    },
-    classNames: () => {
-      return RootStore.Get(AiStore).withOnline.value
-        ? {
-          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-          icon: 'text-primary-foreground font-bold',
-        }
-        : {
-          base: 'bg-transparent text-foreground',
-          icon: 'text-foreground',
-        };
-    },
-  },
-  {
-    tooltip: 'add-tools-to-model',
-    icon: 'hugeicons:ai-chemistry-02',
-    size: 20,
-    containerSize: 30,
-    onClick: () => {
-      RootStore.Get(AiStore).withTools.save(!RootStore.Get(AiStore).withTools.value);
-    },
-    classNames: () => {
-      return RootStore.Get(AiStore).withTools.value
-        ? {
-          base: 'bg-primary hover:opacity-80 hover:bg-primary ',
-          icon: 'text-primary-foreground font-bold',
-        }
-        : {
-          base: 'bg-transparent text-foreground',
-          icon: 'text-foreground',
-        };
-    },
-  },
-  {
-    tooltip: 'clear-current-content',
-    icon: 'hugeicons:delete-01',
-    size: 20,
-    containerSize: 30,
-    isHidden: () => {
-      return !RootStore.Get(AiStore).isChatting;
-    },
-    onClick: async () => {
-      const aiStore = RootStore.Get(AiStore);
-
-      await PromiseCall(api.conversation.clearMessages.mutate({ id: aiStore.currentConversationId }));
-      await aiStore.currentConversation.call();
-    },
-  },
-];
+  { tooltip: 'knowledge-base-search', label: '检索笔记', capability: 'rag', state: 'withRAG' },
+  { tooltip: 'online-search', label: '联网搜索', capability: 'online', state: 'withOnline' },
+  { tooltip: 'add-tools-to-model', label: '工具操作', capability: 'tools', state: 'withTools' },
+] as const;
 
 export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInputProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const aiStore = RootStore.Get(AiStore);
-  const settings = RootStore.Get(AiSettingStore);
-  useEffect(() => { void settings.allModels.call(); }, []);
+  const [checking, setChecking] = useState(true);
+  const [configError, setConfigError] = useState(false);
+  const [configVersion, setConfigVersion] = useState(0);
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setChecking(true); setConfigError(false);
+      try {
+        const result = await api.ai.chatCapabilities.query({ modelId: aiStore.chatModelId || undefined });
+        if (active) aiStore.chatCapabilities.setValue(result);
+      } catch { if (active) setConfigError(true); }
+      finally { if (active) setChecking(false); }
+    };
+    void load();
+    window.addEventListener('focus', load);
+    return () => { active = false; window.removeEventListener('focus', load); };
+  }, [aiStore.chatModelId, configVersion, RootStore.Get(DialogStore).isOpen]);
+  const available = aiStore.chatCapabilities.value;
+  const canSend = !checking && !configError && !!available?.canChat && !aiStore.isPreparing && !aiStore.isAnswering && (!!aiStore.input.trim() || !!aiStore.referencesNotes.length);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const handleSubmit = () => {
+    if (!canSend) return;
     if (onSubmit) {
       onSubmit(aiStore.input);
     } else {
@@ -145,21 +77,21 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
   
   return (
     <motion.div
-      className={`w-full p-2 ${withoutOutline ? '' : 'rounded-3xl bg-background'} ${className}`}
+      className={`w-full max-w-3xl p-3 ${withoutOutline ? '' : 'rounded-2xl border border-default-200 bg-background'} ${className}`}
       animate={{
-        width: mode === 'inline' ? (isPc ? '85%' : '100%') : isPc ? '60%' : '100%',
+        width: '100%',
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       {!!aiStore.referencesNotes.length && <div className="flex flex-wrap gap-2 px-2 pt-2 max-h-28 overflow-y-auto">
         {aiStore.referencesNotes.map(note => <div key={note.id} className="flex items-center gap-2 max-w-full rounded-lg bg-default-100 px-2 py-1 text-xs">
           <span className="truncate max-w-[210px]">{(note.content ?? '').replace(/[#*`]/g, '').slice(0, 45) || `内容 #${note.id}`}</span>
-          <button type="button" disabled={aiStore.isAnswering} aria-label={`移除来源 ${note.id}`} onClick={() => { aiStore.referencesNotes = aiStore.referencesNotes.filter(n => n.id !== note.id); }} className="px-1 text-default-500">×</button>
+          <button type="button" disabled={aiStore.isAnswering || aiStore.isPreparing} aria-label={`移除来源 ${note.id}`} onClick={() => { aiStore.referencesNotes = aiStore.referencesNotes.filter(n => n.id !== note.id); }} className="px-1 text-default-500">×</button>
         </div>)}
       </div>}
-      <div className="relative flex items-end gap-2">
+      <div className="flex flex-col gap-2">
         <Textarea
-          className={`mt-4 mb-10`}
+          className="w-full"
           data-focus-visible="false"
           autoFocus
           value={aiStore.input}
@@ -183,109 +115,51 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           }}
           onChange={(e) => (aiStore.input = e.target.value)}
           classNames={{
-            input: `!bg-transparent border-none ${mode == 'inline' ? 'min-h-[20px]' : 'min-h-[120px]'} whitespace-pre-wrap`,
+            input: `!bg-transparent border-none ${mode == 'inline' ? 'min-h-[20px]' : 'min-h-[64px]'} whitespace-pre-wrap`,
             label: '!bg-transparent border-none',
             inputWrapper: '!bg-transparent border-none !shadow-none',
           }}
-          rows={mode == 'inline' ? 1 : 20}
-          maxRows={40}
+          minRows={mode == 'inline' ? 1 : 3}
+          maxRows={8}
           placeholder={aiStore.selectedSkill ? '可补充要求或粘贴内容；选好来源后点击发送开始整理' : t('search-blinko-content-or-help-create')}
         />
-        <div className="absolute bottom-3 right-0 w-full px-2 gap-1 flex justify-center items-center !transition-all">
+        <div className="w-full gap-1 flex flex-wrap items-center">
           <>
-            {cardIcons.map(
-              (icon, index) =>
-                !icon.isHidden?.() && (
-                  <IconButton key={icon.icon ?? index} onClick={icon.onClick} tooltip={icon.tooltip} icon={icon.icon} size={icon.size} containerSize={icon.containerSize} classNames={icon.classNames?.()} />
-                ),
-            )}
+            {cardIcons.filter(item => !checking && !configError && available?.[item.capability]).map(item => <Button key={item.capability} size="sm" variant="light" isDisabled={aiStore.isAnswering || aiStore.isPreparing} aria-pressed={!!aiStore[item.state].value} onPress={() => aiStore[item.state].save(!aiStore[item.state].value)} className={aiStore[item.state].value ? 'bg-primary/10 text-primary' : 'text-default-500'}>{item.label}</Button>)}
           </>
 
           <BlinkoSelectNote
             onSelect={(item) => {
-              if (aiStore.referencesNotes.some(n => n.id === item.id)) return;
+              if (aiStore.isAnswering || aiStore.isPreparing || aiStore.referencesNotes.some(n => n.id === item.id)) return;
               aiStore.referencesNotes.push(item);
 
             }}
-            iconButton={<IconButton tooltip={'@'} icon="hugeicons:at" size={20} containerSize={30} />}
+            iconButton={<Button size="sm" variant="light" isDisabled={aiStore.isAnswering || aiStore.isPreparing} startContent={<Icon icon="tabler:link" width="16" />}>引用</Button>}
             blackList={aiStore.referencesNotes.map((i) => i.id ?? 0)}
           />
 
           <div className="ml-auto min-w-0">
-            <select aria-label="对话模型" disabled={aiStore.isAnswering || settings.allModels.loading.value}
+            <select aria-label="对话模型" disabled={aiStore.isAnswering || checking || configError || aiStore.isPreparing}
               value={aiStore.chatModelId} onChange={e => { aiStore.chatModelId = Number(e.target.value); }}
               className="max-w-[180px] text-xs bg-transparent text-default-500 rounded-lg px-2 py-2 cursor-pointer hover:bg-default-100 transition-colors focus:outline-primary">
               <option value={0}>默认模型</option>
-              {settings.allModels.value?.filter(m => m.capabilities?.inference).map(m => <option key={m.id} value={m.id}>{m.provider?.title ? m.provider.title + " · " : ""}{m.title || m.modelKey}</option>)}
+              {available?.models.map(m => <option key={m.id} value={m.id} disabled={!m.ready}>{m.providerTitle} · {m.title}{!m.ready ? '（配置不完整）' : ''}</option>)}
             </select>
           </div>
 
-          <IconButton
-            onClick={async () => {
-              RootStore.Get(DialogStore).setData({
-                isOpen: true,
-                size: '2xl',
-                onlyContent: true,
-                title: t('settings'),
-                content: (
-                  <ScrollArea className="h-full md:h-[600px]" onBottom={() => { }}>
-                    <AiSetting />
-                  </ScrollArea>
-                ),
-              });
-            }}
-            tooltip={t('settings')}
-            icon="hugeicons:settings-03"
-            size={20}
-            containerSize={30}
-          />
+          <Button isIconOnly size="sm" variant="light" aria-label="AI 设置" onPress={() => {
+            RootStore.Get(DialogStore).setData({ isOpen: true, size: '2xl', onlyContent: true, showOnlyContentCloseButton: true, title: t('settings'), content: <ScrollArea className="h-full md:h-[600px]"><AiSetting /></ScrollArea> });
+          }}><Icon icon="tabler:settings" width="18" /></Button>
 
-          <IconButton
-            onClick={async () => {
-              RootStore.Get(DialogStore).setData({
-                isOpen: true,
-                title: t('conversation-history'),
-                content: <AiConversactionList />,
-              });
-            }}
-            tooltip={t('conversation-history')}
-            icon="hugeicons:book-edit"
-            size={20}
-            containerSize={30}
-          />
-
-          <div className="text-ignore opacity-50 w-[2px] h-[20px] bg-desc rounded-full"></div>
-
-          <div
-            className={`ml-2 bg-primary rounded-full p-1 group  ${aiStore.input.trim() == '' && !aiStore.referencesNotes.length && !aiStore.isAnswering ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            onClick={() => {
-              if (aiStore.isAnswering) {
-                return aiStore.abortAiChat();
-              }
-              if (aiStore.input.trim() == '' && !aiStore.referencesNotes.length) {
-                return;
-              } else {
-                handleSubmit();
-              }
-            }}
-          >
-            {aiStore.isAnswering ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.5,
-                  ease: 'linear',
-                }}
-              >
-                <Icon icon="uil:spinner-alt" width="24" height="24" className="text-primary-foreground group-hover:translate-y-[-1px] !transition-all" />
-              </motion.div>
-            ) : (
-              <Icon icon="uil:arrow-up" width="24" height="24" className="text-primary-foreground group-hover:translate-y-[-1px] !transition-all" />
-            )}
-          </div>
+          <Button isIconOnly size="sm" color="primary"
+            isDisabled={!aiStore.isAnswering && !canSend}
+            aria-label={aiStore.isAnswering ? '停止生成' : '发送消息'}
+            onPress={() => { if (aiStore.isAnswering) aiStore.abortAiChat(); else handleSubmit(); }}>
+            <Icon icon={aiStore.isAnswering ? 'tabler:x' : 'uil:arrow-up'} width="20" height="20" />
+          </Button>
         </div>
       </div>
+      {checking ? <p role="status" className="mt-2 text-xs text-default-400">正在检查可用功能…</p> : configError ? <p role="alert" className="mt-2 text-xs text-default-500">配置读取失败 <button className="text-primary" onClick={() => setConfigVersion(value => value + 1)}>重试</button></p> : !available?.canChat && <p className="mt-2 text-xs text-default-500">请先在 AI 设置中配置对话模型，或选择一个已配置的模型。</p>}
     </motion.div>
   );
 });

@@ -359,6 +359,7 @@ export class AiModelFactory {
   }
   static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions, modelId }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string; modelId?: number }) {
     const provider = await AiModelFactory.GetProvider(modelId);
+    const chatConfig = await AiModelFactory.globalConfig();
     let tools: Record<string, any> = {};
     if (withTools) {
       tools = {
@@ -368,7 +369,7 @@ export class AiModelFactory {
           updateBlinkoTool,
           deleteBlinkoTool,
           webExtra,
-          webSearchTool,
+          ...(chatConfig.tavilyApiKey ? { webSearchTool } : {}),
           createCommentTool,
           createScheduledTaskTool,
           deleteScheduledTaskTool,
@@ -376,7 +377,7 @@ export class AiModelFactory {
         },
       };
     }
-    if (withOnlineSearch) {
+    if (withOnlineSearch && chatConfig.tavilyApiKey) {
       tools = {
         tools: { ...tools?.tools, webSearchTool },
       };

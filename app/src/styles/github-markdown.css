@@ -219,7 +219,8 @@ menu {
 
 .markdown-body b,
 .markdown-body strong {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
 }
 
 .markdown-body dfn {
@@ -228,7 +229,8 @@ menu {
 
 .markdown-body h1 {
   margin: .67em 0;
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   padding-bottom: .3em;
   font-size: 2em;
 }
@@ -474,13 +476,51 @@ menu {
 }
 
 
-.expanded-container .markdown-body h1::before {
-  content: ' ';
-  width: 4px;
-  height: 22px;
-  margin-right: 5px;
+/* Static Markdown headings only. Editable detail headings have their own
+   gutter guides in tiptap.css, so they must not receive a second marker. */
+.expanded-container .markdown-body h1,
+.expanded-container .markdown-body h2,
+.expanded-container .markdown-body h3 {
+  position: relative;
+  padding-left: 40px;
+}
+
+.expanded-container .markdown-body h1::before,
+.expanded-container .markdown-body h2::before,
+.expanded-container .markdown-body h3::before {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-block;
-  background-color: var(--primary);
+  font-size: .56em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .04em;
+  color: var(--desc);
+  white-space: nowrap;
+  pointer-events: none;
+  /* 伪元素本身不可选中，双保险避免某些复制实现把它带出去 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.expanded-container .markdown-body h1::before { content: 'H1'; }
+.expanded-container .markdown-body h2::before { content: 'H2'; }
+.expanded-container .markdown-body h3::before { content: 'H3'; }
+
+/* 窄屏：标签位收紧 */
+@media (max-width: 768px) {
+  .expanded-container .markdown-body h1,
+  .expanded-container .markdown-body h2,
+  .expanded-container .markdown-body h3 {
+    padding-left: 32px;
+  }
+  .expanded-container .markdown-body h1::before,
+  .expanded-container .markdown-body h2::before,
+  .expanded-container .markdown-body h3::before {
+    font-size: .5em;
+  }
 }
 
 .expanded-container .markdown-body p {
@@ -508,28 +548,33 @@ ol {
 
 
 .markdown-body h2 {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   padding-bottom: .3em;
   font-size: var(--app-h2-size, 22px);
 }
 
 .markdown-body h3 {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   font-size: var(--app-h3-size, 20px);
 }
 
 .markdown-body h4 {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   font-size: 1em;
 }
 
 .markdown-body h5 {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   font-size: .875em;
 }
 
 .markdown-body h6 {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   font-size: .85em;
 }
 
@@ -951,7 +996,8 @@ ol {
   margin-top: var(--base-size-16);
   font-size: 1em;
   font-style: italic;
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
 }
 
 .markdown-body dl dd {
@@ -960,7 +1006,8 @@ ol {
 }
 
 /* .markdown-body table th {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
 }
 
 .markdown-body table th,
@@ -1221,7 +1268,8 @@ table tr:last-child td:last-child {
 }
 
 .markdown-body .csv-data th {
-  font-weight: var(--base-text-weight-semibold, 600);
+  font-weight: 700;
+  font-synthesis: weight;
   background: var(--bgColor-muted);
   border-top: 0;
 }

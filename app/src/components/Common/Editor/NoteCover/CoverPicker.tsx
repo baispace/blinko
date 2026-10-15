@@ -13,7 +13,7 @@ import {
   Tabs,
 } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { DEFAULT_COVERS, COVER_CATEGORIES, randomDefaultCoverKey, type CoverCategory } from './defaultCovers';
+import { DEFAULT_COVERS, COVER_CATEGORIES, randomCoverValue, type CoverCategory } from './defaultCovers';
 import { toAuthenticatedCoverUrl } from './coverUrl';
 
 interface CoverPickerProps {
@@ -188,7 +188,7 @@ export const CoverPicker = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => { onPick(randomDefaultCoverKey(cover)); onClose(); }}
+              onClick={() => { onPick(randomCoverValue(cover)); onClose(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-foreground hover:bg-default-100 !transition-colors cursor-pointer"
             >
               <Icon icon="mingcute:shuffle-line" width={15} height={15} />

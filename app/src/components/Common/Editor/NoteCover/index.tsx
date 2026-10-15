@@ -41,13 +41,14 @@ interface NoteCoverHeaderProps {
   /** Keep title aligned with the body when an inline outline rail is present. */
   contentInsetLeft?: number
   content?: string
+  properties?: React.ReactNode
 }
 
 /**
  * Sits above the editor body: exposes the note's emoji icon and cover image,
  * both persisted through `metadata` and shipped with the note on send.
  */
-export const NoteCoverHeader = observer(({ store, compact = false, readOnly = false, fullBleed = false, contentInsetLeft = 0, content = '' }: NoteCoverHeaderProps) => {
+export const NoteCoverHeader = observer(({ store, compact = false, readOnly = false, fullBleed = false, contentInsetLeft = 0, content = '', properties }: NoteCoverHeaderProps) => {
   const { t } = useTranslation();
   const [iconOpen, setIconOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
@@ -103,7 +104,7 @@ export const NoteCoverHeader = observer(({ store, compact = false, readOnly = fa
           data-testid="document-cover"
           className={`relative mb-5 overflow-hidden ${
             fullBleed
-              ? 'left-1/2 w-screen -translate-x-1/2 rounded-none h-[clamp(220px,30vw,380px)]'
+              ? 'left-1/2 w-screen -translate-x-1/2 rounded-none h-[clamp(160px,20vw,260px)] max-h-[32svh]'
               : 'w-full rounded-xl aspect-[2.35/1] max-h-[260px]'
           } ${adjusting ? 'ring-2 ring-inset ring-primary/60' : 'group/cover'}`}
         >
@@ -208,7 +209,7 @@ export const NoteCoverHeader = observer(({ store, compact = false, readOnly = fa
             }`}
           />
         </div>
-        <DocumentVisibleTags store={store} content={content} className="mt-2" />
+        {properties ?? <DocumentVisibleTags store={store} content={content} className="mt-2" />}
       </div>
 
       <IconPicker

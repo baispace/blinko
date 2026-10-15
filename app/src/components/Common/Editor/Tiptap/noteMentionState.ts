@@ -16,8 +16,10 @@ export class NoteMentionState {
   editor: Editor | null = null
   query = ''
   loading = false
+  error = ''
 
   private abortController: AbortController | null = null
+  private requestVersion = 0
   private searchTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
@@ -36,61 +38,40 @@ export class NoteMentionState {
 
   async searchNotes(query: string) {
     this.query = query
-
-    // Debounce search
+    const version = ++this.requestVersion
     if (this.searchTimer) clearTimeout(this.searchTimer)
-
-    if (!query.trim()) {
-      this.items = []
-      return
-    }
-
+    this.abortController?.abort()
+    this.items = []
+    this.error = ''
+    this.loading = true
     this.searchTimer = setTimeout(async () => {
-      this.loading = true
-
-      // Cancel previous request
-      if (this.abortController) {
-        this.abortController.abort()
-      }
-      this.abortController = new AbortController()
-
+      const controller = new AbortController()
+      this.abortController = controller
       try {
-        // api 是 tRPC client，不是 MobX store。套 RootStore.Get() 会在
-        // RootStore.get() 里执行 `new api()` → TypeError，被下面的 catch 吞掉，
-        // 表现为输入 @ 永远搜不到任何笔记。
-        // appRouter 里的键是 notes（复数）不是 note；且 note.ts:147 里 list 收尾是
-        // .mutation()，只有 .mutate 没有 .query。写错任一处都会抛 TypeError，
-        // 被下面的 catch 吞掉 —— 表现都是输入 @ 搜不到任何笔记。
         const result = await api.notes.list.mutate({
-          searchText: query,
-          size: 10,
-          // Exclude current note to avoid self-reference
-          // type: -1 means all types
-        }, {
-          signal: this.abortController.signal,
-        })
-
+          searchText: query.trim(), size: 15, type: -1, isArchived: null,
+        }, { signal: controller.signal })
+        if (version !== this.requestVersion || !this.isOpen) return
         runInAction(() => {
-          this.items = result.map(note => ({
+          this.items = result.filter(note => note.id !== this.currentNoteId).map(note => ({
             id: note.id,
-            title: this.extractTitle(note.content || ''),
+            title: String((note.metadata as { title?: string } | null)?.title || this.extractTitle(note.content || '')),
             content: note.content || '',
           }))
+          this.selectedIndex = 0
           this.loading = false
-          if (this.items.length > 0) {
-            this.selectedIndex = 0
-          }
         })
       } catch (error: any) {
-        if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
-          console.error('Failed to search notes:', error)
-        }
+        if (version !== this.requestVersion || !this.isOpen) return
         runInAction(() => {
           this.loading = false
+          if (error.name !== 'AbortError' && error.name !== 'CanceledError') this.error = '搜索失败，请重试'
         })
       }
-    }, 200)
+    }, query.trim() ? 180 : 0)
   }
+
+  currentNoteId: number | undefined = undefined
 
   private extractTitle(content: string): string {
     // Extract first line or first heading as title
@@ -112,7 +93,7 @@ export class NoteMentionState {
     this.query = ''
 
     // Initial search for recent notes
-    this.searchNotes('')
+    this.searchNotes(props.query || '')
   }
 
   update(props: SuggestionProps) {
@@ -120,13 +101,12 @@ export class NoteMentionState {
       this.open(props)
       return
     }
-    this.items = props.items ?? []
     if (this.selectedIndex >= this.items.length) this.selectedIndex = Math.max(0, this.items.length - 1)
     this.rect = this.getRect(props)
     this.command = (item) => props.command(item)
 
     // Extract query from editor
-    const query = this.extractQuery(props)
+    const query = props.query ?? this.extractQuery(props)
     if (query !== this.query) {
       this.searchNotes(query)
     }
@@ -150,6 +130,8 @@ export class NoteMentionState {
   }
 
   close() {
+    ++this.requestVersion
+    this.error = ''
     this.isOpen = false
     this.command = null
     this.rect = null
@@ -180,7 +162,7 @@ export class NoteMentionState {
     const { event } = props
     if (event.key === 'ArrowUp') { this.prev(); return true }
     if (event.key === 'ArrowDown') { this.next(); return true }
-    if (event.key === 'Enter') { this.selectCurrent(); return true }
+    if (event.key === 'Enter' && this.items.length) { this.selectCurrent(); return true }
     if (event.key === 'Escape') { this.close(); return true }
     return false
   }

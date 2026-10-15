@@ -19,6 +19,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
+import { InlineColor } from '../Tiptap/inlineColor';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { ContentImage } from '../Tiptap/contentImage';
@@ -129,6 +130,7 @@ export const useEditorInit = (
         Callout,
         CalloutClickOutside,
         Highlight,
+        InlineColor,
         Underline,
         Link.configure({ openOnClick: false, autolink: true }),
         // 正文图片：渲染时解析内部路径（CDN / ?token=），markdown 仍写原始路径
@@ -334,9 +336,8 @@ export const useEditorEvents = (store: EditorStore) => {
     eventBus.on('editor:focus', store.focus);
     // Tiptap is WYSIWYG-only; keep the listener for backward compatibility
     eventBus.on('editor:setViewMode', () => { });
-    eventBus.on('editor:setFullScreen', (value: boolean) => {
-      store.setFullscreen(value);
-    });
+    const handleFullscreen = (value: boolean) => store.setFullscreen(value);
+    eventBus.on('editor:setFullScreen', handleFullscreen);
     store.handleIOSFocus();
 
     return () => {
@@ -345,9 +346,7 @@ export const useEditorEvents = (store: EditorStore) => {
       eventBus.off('editor:replace', store.replaceMarkdown);
       eventBus.off('editor:focus', store.focus);
       eventBus.off('editor:setViewMode', () => { });
-      eventBus.off('editor:setFullScreen', (value: boolean) => {
-        store.setFullscreen(value);
-      });
+      eventBus.off('editor:setFullScreen', handleFullscreen);
     };
   }, []);
 };

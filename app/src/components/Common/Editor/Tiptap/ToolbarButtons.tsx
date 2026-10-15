@@ -387,7 +387,7 @@ export const SlashMenuView = observer(({ state }: { state: SlashMenuState }) => 
           key={item.title}
           className={`item ${index === state.selectedIndex ? 'is-selected' : ''}`}
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => state.selectCurrent()}
+          onClick={() => { state.selectedIndex = index; state.selectCurrent(); }}
           onMouseEnter={() => { state.selectedIndex = index; }}
         >
           <div className="icon-wrap"><Icon icon={item.icon} width={17} height={17} /></div>

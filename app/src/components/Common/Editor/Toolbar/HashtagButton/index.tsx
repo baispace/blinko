@@ -6,8 +6,8 @@ import { EditorStore } from '../../editorStore';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store/root';
 
-interface Props { store: EditorStore; content: string; label?: string }
-export const HashtagButton = observer(({ store, label }: Props) => {
+interface Props { store: EditorStore; content: string; label?: string; placement?: 'cursor' | 'document' }
+export const HashtagButton = observer(({ store, label, placement = 'cursor' }: Props) => {
   const blinko = RootStore.Get(BlinkoStore);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -18,6 +18,20 @@ export const HashtagButton = observer(({ store, label }: Props) => {
   const insert = (path: string) => {
     const editor = store.vditor?.editor;
     if (!editor || !editor.isEditable) return;
+    if (placement === 'document') {
+      if (editor.state.doc.textContent.split(/\s+/).includes(`#${path}`)) { setOpen(false); return; }
+      const doc = editor.state.doc;
+      const last = doc.lastChild;
+      const tagParagraph = last?.type.name === 'paragraph' && /^(?:#[^\s#]+\s*)+$/.test(last.textContent);
+      if (tagParagraph) {
+        editor.chain().insertContentAt(doc.content.size - 1, { type: 'text', text: ` #${path}` }, { updateSelection: false }).run();
+      } else {
+        editor.chain().insertContentAt(doc.content.size, { type: 'paragraph', content: [{ type: 'text', text: `#${path}` }] }, { updateSelection: false }).run();
+      }
+      store.onChange?.(store.vditor?.getValue() ?? '');
+      setOpen(false);
+      return;
+    }
     const { $from } = editor.state.selection;
     const before = $from.parent.textBetween(0, $from.parentOffset, ' ', ' ');
     const prefix = before && !/\s$/.test(before) ? ' ' : '';

@@ -200,6 +200,12 @@ const runAiSlash = (
 
 export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
   {
+    title: '正文',
+    icon: 'mdi:format-text',
+    keywords: 'paragraph text 正文 段落',
+    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setParagraph().run(),
+  },
+  {
     title: '大纲',
     icon: 'mdi:format-list-bulleted',
     keywords: 'outline mubu 幕布 大纲 大綱',

@@ -211,7 +211,7 @@ export const stripTrailingBackslashes = (content: string): string => {
   }).join('\n')
 }
 
-export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false }: { content?: string, onChange?: (updater: (current: string) => string) => void, isShareMode?: boolean, largeSpacing?: boolean }) => {
+export const MarkdownRender = observer(({ content = '', onChange, isShareMode, largeSpacing = false, variant = 'default' }: { content?: string, onChange?: (updater: (current: string) => string) => void, isShareMode?: boolean, largeSpacing?: boolean, variant?: 'default' | 'chat' }) => {
   const { theme } = useTheme()
   const contentRef = useRef(null);
   const mathPlugins = useMathPlugins(content);
@@ -220,8 +220,8 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
   const normalizedContent = stripTrailingBackslashes(liftIndentedCallouts(preprocessedContent));
 
   return (
-    <div className={`markdown-body ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
-      <div ref={contentRef} data-markdown-theme={theme} className={`markdown-body content ${largeSpacing ? 'markdown-large-spacing' : ''}`}>
+    <div className={`markdown-body ${largeSpacing ? 'markdown-large-spacing' : ''} ${variant === 'chat' ? 'markdown-chat' : ''}`}>
+      <div ref={contentRef} data-markdown-theme={theme} className={`markdown-body content ${largeSpacing ? 'markdown-large-spacing' : ''} ${variant === 'chat' ? 'markdown-chat' : ''}`}>
         <ReactMarkdown
           remarkPlugins={[
             remarkBreaks,
@@ -388,7 +388,7 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
               return <li className={className}>{children}</li>;
             },
             img: ImageWrapper,
-            table: TableWrapper,
+            table: ({ children }) => <TableWrapper compact={variant === 'chat'}>{children}</TableWrapper>,
             // 为标题添加 ID 以支持目录跳转
             h1: ({ node, children, ...props }) => {
               const text = Array.isArray(children) ? children.join('') : String(children || '');

@@ -2,8 +2,12 @@ import React from 'react';
 import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@heroui/react";
 import { Pagination } from "@heroui/react";
 
-export const TableWrapper = ({ children }: { children?: React.ReactNode }) => {
+export const TableWrapper = ({ children, compact = false }: { children?: React.ReactNode; compact?: boolean }) => {
+  const [page, setPage] = React.useState(1);
   const childrenArray = React.Children.toArray(children);
+  if (compact) {
+    return <div className="chat-markdown-table"><table>{children}</table></div>;
+  }
 
   // HTML tables emitted by the editor (e.g. merged/colored/resized tables)
   // come through as raw <table><colgroup><tbody>... with no <thead>. Fall back
@@ -69,7 +73,6 @@ export const TableWrapper = ({ children }: { children?: React.ReactNode }) => {
     );
   }
 
-  const [page, setPage] = React.useState(1);
   const rowsPerPage = 10;
 
   const pages = Math.ceil(rows.length / rowsPerPage);

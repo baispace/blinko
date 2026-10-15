@@ -6,12 +6,12 @@ export function AiProcessDetails({ process, toolCalls = [], toolResults = [], ru
   const { i18n } = useTranslation();
   const text = (zh: string, en: string) => i18n.language.startsWith('zh') ? zh : en;
   if (!process && !toolCalls.length) return null;
-  return <details className="my-2 rounded-xl border border-default-100 text-default-500">
+  return <details className="ai-process-details my-2 rounded-lg bg-default-50 text-default-500">
     <summary className="cursor-pointer px-3 py-2 text-xs select-none focus-visible:outline-primary">
-      {running ? text('正在处理', 'Working') : text('查看处理过程', 'View process')}{toolCalls.length > 0 && ` · ${toolCalls.length} ${text('项操作', 'operations')}`}
+      {running ? text('正在处理', 'Working') : text('处理过程', 'Process')}{toolCalls.length > 0 && ` · ${toolCalls.length} ${text('项操作', 'operations')}`}
     </summary>
     <div className="max-h-64 overflow-auto overscroll-contain border-t border-default-100 p-3 text-xs space-y-3">
-      {process && <MarkdownRender content={process} />}
+      {process && <MarkdownRender content={process} variant="chat" />}
       {toolCalls.map(call => {
         const result = toolResults.find(item => item.toolCallId === call.toolCallId);
         const name = /search|query/i.test(call.toolName) ? text('查找信息', 'Search') : /upsert|create/i.test(call.toolName) ? text('创建内容', 'Create content') : /update/i.test(call.toolName) ? text('更新内容', 'Update content') : /delete/i.test(call.toolName) ? text('删除内容', 'Delete content') : text('工具操作', 'Tool operation');

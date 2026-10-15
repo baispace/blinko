@@ -1,3 +1,5 @@
+import { workflows, hasSavedWorkflowResult } from '@shared/lib/aiWorkflows';
+import type { WorkflowKey } from '@shared/lib/aiWorkflows';
 import { cleanConversationTitle } from '@shared/lib/conversationTitle';
 import { _ } from '@/lib/lodash';
 import { Store } from './standard/base';
@@ -29,6 +31,8 @@ type Chat = {
 
 type WriteType = 'expand' | 'polish' | 'custom';
 export type AssisantMessageMetadata = {
+  resultKind?: 'note' | 'tasks' | 'daily';
+  responseStatus?: 'completed' | 'stopped' | 'error';
   notes?: BlinkoItem[];
   toolCalls?: ToolCall[];
   toolResults?: ToolResult[];
@@ -67,10 +71,13 @@ export class AiStore implements Store {
 
   selectedProviderId = 0;
   chatModelId = 0;
-  selectedSkill: { title: string; prompt: string; key: "tasks" | "note" | "today" | "overdue" | "ideas" } | null = null;
+  selectedSkill: { title: string; prompt: string; key: WorkflowKey; scope?: { from?: string; to?: string; includeNotes?: boolean; read?: boolean; limited?: boolean; sourceCount?: number } } | null = null;
   isChatting = false;
   isAnswering = false;
   isPreparing = false;
+  chatStatus: 'idle' | 'preparing' | 'generating' | 'stopping' | 'stopped' | 'error' | 'completed' = 'idle';
+  chatError = '';
+  private chatStopRequested = false;
   input = '';
   withRAG = new StorageState({ key: 'withRAG', value: true, default: true });
   withTools = new StorageState({ key: 'withTools', value: false, default: false });
@@ -113,6 +120,10 @@ export class AiStore implements Store {
   onInputSubmit = async (isRegenerate = false) => {
     if (this.isAnswering || this.isPreparing) return;
     this.isPreparing = true;
+    this.chatStatus = 'preparing';
+    this.chatError = '';
+    this.chatStopRequested = false;
+    this.aiChatabortController = new AbortController();
     try {
       const available = await api.ai.chatCapabilities.query({ modelId: this.chatModelId || undefined });
       this.chatCapabilities.setValue(available);
@@ -125,16 +136,29 @@ export class AiStore implements Store {
         return;
       }
       if (!this.selectedSkill && !this.input.trim() && !this.referencesNotes.length) return;
+      if (this.selectedSkill?.key === 'practice' && !this.referencesNotes.length) { RootStore.Get(ToastPlugin).error('请先引用要练习或复盘的文章'); return; }
+      if (this.selectedSkill?.key === 'daily' && !this.input.trim()) { RootStore.Get(ToastPlugin).error('请补充昨日进展、今日计划或遇到的问题'); return; }
+      if (['daily','weekly'].includes(this.selectedSkill?.key || '') && !this.selectedSkill?.scope?.read) { RootStore.Get(ToastPlugin).error('请先读取待办来源，确认时间范围'); return; }
+      const displayContent = this.input.trim() || this.selectedSkill?.title || '整理引用内容';
+      const sourceContext = {
+        displayContent,
+        workflow: this.selectedSkill ? { key: this.selectedSkill.key, title: this.selectedSkill.title, ...this.selectedSkill.scope } : undefined,
+        sources: this.referencesNotes.map(note => ({ id: note.id, type: note.type, content: note.content, metadata: note.metadata, isArchived: note.isArchived, updatedAt: note.updatedAt ? new Date(note.updatedAt).toISOString() : null })),
+      };
+      const scopeText = this.selectedSkill?.scope ? `统计范围：${JSON.stringify(this.selectedSkill.scope)}；当前日期：${new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())}。时区 Asia/Shanghai。` : '';
       const conversationTitle = cleanConversationTitle(this.selectedSkill?.title || this.input, '新对话');
-      const userQuestion = [this.selectedSkill?.prompt, this.input.trim(),
-        ...this.referencesNotes.map(note => `用户确认的来源 #${note.id}（类型 ${note.type}，创建 ${note.createdAt}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
+      const userQuestion = [this.selectedSkill?.prompt, scopeText, this.input.trim(),
+        ...this.referencesNotes.map(note => `用户确认的来源 #${note.id}（类型 ${note.type}，创建 ${note.createdAt}，更新 ${note.updatedAt}，状态 ${note.type === 2 ? note.isArchived ? '已完成' : '未完成' : note.isArchived ? '已归档' : '正常'}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
       ].filter(Boolean).join('\n\n');
+      const resultKind = this.selectedSkill?.key === 'daily' ? 'daily' : this.selectedSkill?.key === 'note' || this.selectedSkill?.key === 'weekly' ? 'note' : this.selectedSkill?.key === 'tasks' ? 'tasks' : undefined;
       this.referencesNotes = [];
       this.selectedSkill = null;
       this.clearCurrentMessageResult();
+      this.currentMessageResult.resultKind = resultKind;
       this.input = '';
       this.isChatting = true;
       this.isAnswering = true;
+      this.chatStatus = 'generating';
       if (this.currentConversationId == 0) {
         const conversation = await api.conversation.create.mutate({ title: conversationTitle });
         void this.conversactionList.resetAndCall({});
@@ -147,7 +171,7 @@ export class AiStore implements Store {
             conversationId: this.currentConversationId,
             content: userQuestion,
             role: 'user',
-            metadata: ""
+            metadata: sourceContext
           });
         }
 
@@ -171,13 +195,11 @@ export class AiStore implements Store {
         );
 
         for await (const item of res) {
-          console.log(JSON.parse(JSON.stringify(item)));
+          if (this.chatStopRequested) break;
           if (item.chunk?.type == 'error') {
             //@ts-ignore
             const errorMessage = item.chunk?.error?.message || item.chunk?.error?.name || 'AI 服务调用失败';
-            RootStore.Get(ToastPlugin).error(errorMessage);
-            this.isAnswering = false;
-            return;
+            throw new Error(errorMessage);
           }
           if (item.chunk?.type == 'tool-call') {
             this.currentMessageResult.toolcall.push(`${item.chunk.toolName}`);
@@ -212,18 +234,8 @@ export class AiStore implements Store {
             }
           }
         }
-        const newAssisantMessage = await api.message.create.mutate({
-          conversationId: this.currentConversationId,
-          content: this.currentMessageResult.content,
-          role: 'assistant',
-          metadata: {
-            notes: this.currentMessageResult.notes,
-            toolCalls: this.currentMessageResult.toolCalls,
-            toolResults: this.currentMessageResult.toolResults,
-            usage: this.currentMessageResult.usage,
-            fristCharDelay: this.currentMessageResult.fristCharDelay,
-          },
-        });
+        this.isAnswering = false;
+        const newAssisantMessage = await this.persistChatResponse(this.chatStopRequested ? 'stopped' : 'completed');
 
         if (this.currentConversation.value?.messages?.length && this.currentConversation.value?.messages?.length < 3) {
           void api.ai.summarizeConversationTitle.mutate({
@@ -232,52 +244,112 @@ export class AiStore implements Store {
           }).then(() => this.conversactionList.resetAndCall({})).catch(() => {});
         }
         this.currentMessageResult.id = newAssisantMessage.id;
+        this.chatStatus = this.chatStopRequested ? 'stopped' : 'completed';
         // await this.currentConversation.call()
         this.isAnswering = false;
         // this.clearCurrentMessageResult()
       }
     } catch (error) {
-      if (!error.message.includes('interrupted') && !error.message.includes('aborted') && !error.message.includes('BodyStreamBuffer was aborted')) {
-        RootStore.Get(ToastPlugin).error(error.message);
+      const stopped = this.chatStopRequested;
+      this.chatStatus = stopped ? 'stopped' : 'error';
+      this.chatError = stopped ? '' : (error instanceof Error ? error.message : '生成失败，请重试');
+      this.currentMessageResult.responseStatus = stopped ? 'stopped' : 'error';
+      if (!this.currentMessageResult.id && this.currentConversationId &&
+          (this.currentMessageResult.content || this.currentMessageResult.toolCalls.length || stopped)) {
+        try { await this.persistChatResponse(stopped ? 'stopped' : 'error'); }
+        catch { this.chatError = '回复暂未保存，请先复制保留当前内容。'; }
       }
-      this.isAnswering = false;
     } finally {
+      this.isAnswering = false;
       this.isPreparing = false;
+      if (this.chatStatus === 'preparing') this.chatStatus = 'idle';
     }
   };
 
+  private persistChatResponse = async (responseStatus: 'completed' | 'stopped' | 'error') => {
+    this.currentMessageResult.responseStatus = responseStatus;
+    const saved = await api.message.create.mutate({
+      conversationId: this.currentConversationId,
+      content: this.currentMessageResult.content,
+      role: 'assistant',
+      metadata: {
+        responseStatus, resultKind: this.currentMessageResult.resultKind, notes: this.currentMessageResult.notes,
+        toolCalls: this.currentMessageResult.toolCalls, toolResults: this.currentMessageResult.toolResults,
+        usage: this.currentMessageResult.usage, fristCharDelay: this.currentMessageResult.fristCharDelay,
+      },
+    });
+    this.currentMessageResult.id = saved.id;
+    return saved;
+  };
+
   regenerate = async (messageId: number) => {
-    await api.message.delete.mutate({ id: messageId });
-    await this.currentConversation.call();
-    const lastMessage = this.currentConversation.value?.messages[this.currentConversation.value?.messages?.length - 1];
-    this.input = lastMessage?.content ?? '';
-    await this.onInputSubmit(true);
+    if (this.isAnswering || this.isPreparing) return;
+    const messages = this.currentConversation.value?.messages ?? [];
+    const latest = this.currentMessageResult.id || messages.at(-1)?.id;
+    if (messageId !== latest) return;
+    this.isPreparing = true;
+    try {
+      const available = await api.ai.chatCapabilities.query({ modelId: this.chatModelId || undefined });
+      if (!available.canChat) { RootStore.Get(ToastPlugin).error('请先配置可用的对话模型'); return; }
+      const fresh = await api.conversation.detail.query({ id: this.currentConversationId });
+      const target = fresh?.messages.at(-1);
+      if (target?.id !== messageId || target.role !== 'assistant') return;
+      if (hasSavedWorkflowResult(target.metadata)) { RootStore.Get(ToastPlugin).error('此结果已保存。请重新读取当前待办后开始新的工作流，避免重复创建或覆盖。'); return; }
+      await api.message.delete.mutate({ id: messageId });
+      this.clearCurrentMessageResult();
+      await this.currentConversation.call();
+      const last = this.currentConversation.value?.messages.at(-1);
+      if (last?.role !== 'user') return;
+      this.input = last.content;
+      this.isPreparing = false;
+      await this.onInputSubmit(true);
+    } catch { this.chatStatus = 'error'; this.chatError = '重新生成失败，请重试。'; }
+    finally { this.isPreparing = false; }
+  };
+
+  retryLastResponse = async () => {
+    if (this.isAnswering || this.isPreparing) return;
+    const last = this.currentConversation.value?.messages.at(-1);
+    const responseId = this.currentMessageResult.id || (last?.role === 'assistant' ? last.id : 0);
+    if (responseId) { await this.regenerate(responseId); return; }
+    if (last?.role === 'user') { this.input = last.content; await this.onInputSubmit(true); }
   };
 
   editUserMessage = async (messageId: number, newContent: string) => {
+    if (this.isAnswering || this.isPreparing) return false;
+    this.isPreparing = true;
     try {
-      // Update the message content
-      await api.message.update.mutate({
-        id: messageId,
-        content: newContent
-      });
-
-      // Clear all messages after this message
+      const available = await api.ai.chatCapabilities.query({ modelId: this.chatModelId || undefined });
+      if (!available.canChat) { this.isPreparing = false; RootStore.Get(ToastPlugin).error('请先配置可用的对话模型'); return false; }
+      const fresh = await api.conversation.detail.query({ id: this.currentConversationId });
+      const editIndex = fresh?.messages.findIndex(message => message.id === messageId) ?? -1;
+      if (editIndex < 0) { this.isPreparing = false; return false; }
+      if (fresh!.messages.slice(editIndex + 1).some(message => hasSavedWorkflowResult(message.metadata))) {
+        this.isPreparing = false; RootStore.Get(ToastPlugin).error('后续结果已保存，请通过新消息修正，并重新读取当前待办。'); return false;
+      }
+      const original = fresh!.messages[editIndex];
+      const context: any = original?.metadata || {};
+      const workflow = workflows.find(workflow => workflow.key === context.workflow?.key);
+      const rebuilt = workflow ? [workflow.prompt, `统计范围：${JSON.stringify(context.workflow)}`, newContent, ...(context.sources || []).map((source: any) => `引用来源 #${source.id}（类型 ${source.type}，更新 ${source.updatedAt}，${source.isArchived ? '已完成/归档' : '未完成/正常'}）：${source.content}\n任务信息：${JSON.stringify(source.metadata || {})}`)].join('\n\n') : newContent;
+      await api.message.update.mutate({ id: messageId, content: rebuilt, displayContent: newContent });
       await api.message.clearAfter.mutate({ id: messageId });
-
-      // Refresh conversation
+      this.clearCurrentMessageResult();
       await this.currentConversation.call();
-
-      // Set input to the new content and regenerate AI response
-      this.input = newContent;
-      await this.onInputSubmit(true);
+      this.input = rebuilt;
+      this.isPreparing = false;
+      void this.onInputSubmit(true);
+      return true;
     } catch (error) {
-      RootStore.Get(ToastPlugin).error(error.message);
+      this.isPreparing = false;
+      RootStore.Get(ToastPlugin).error(error instanceof Error ? error.message : '修改失败，请重试');
+      return false;
     }
   };
 
   newChat = () => {
     if (this.isAnswering || this.isPreparing || this.currentConversation.loading.value) return;
+    this.chatStatus = 'idle';
+    this.chatError = '';
     this.currentConversationId = 0;
     this.selectedSkill = null;
     this.referencesNotes = [];
@@ -498,28 +570,12 @@ export class AiStore implements Store {
   }
 
   async abortAiChat() {
+    if (!this.isAnswering || this.chatStopRequested) return;
+    this.chatStopRequested = true;
+    this.chatStatus = 'stopping';
     this.aiChatabortController.abort();
-    this.aiChatabortController = new AbortController();
-    this.isLoading = false;
-    this.isAnswering = false;
-    if (this.currentMessageResult.content.trim() != '') {
-      await api.message.create.mutate({
-        conversationId: this.currentConversationId,
-        content: this.currentMessageResult.content,
-        role: 'assistant',
-        metadata: this.currentMessageResult.notes,
-      });
-    }
-    // Add interruption notification message
-    await api.message.create.mutate({
-      conversationId: this.currentConversationId,
-      content: '[Request interrupted by user]',
-      role: 'system',
-      metadata: {},
-    });
-    this.clearCurrentMessageResult();
-    await this.currentConversation.call();
   }
+
 
 
 

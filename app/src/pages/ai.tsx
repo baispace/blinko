@@ -85,7 +85,7 @@ const AIPage = observer(() => {
       style={{
         height: isPc ? '100%' : `calc(100% - ${!isVisible ? '0px' : '60px'})`
       }}
-      className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[10vh] md:pt-[20vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
+      className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[4vh] md:pt-[6vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
       {!aiStore.isChatting ? (
         <div className="flex justify-center w-full">
           <motion.div
@@ -107,7 +107,7 @@ const AIPage = observer(() => {
           </motion.div>
         </div>
       ) : (
-        <div className="w-full " style={{ height: `calc(100% - ${inputHeight}px)` }}>
+        <div className="w-full " style={{ height: `max(100px, calc(100% - ${inputHeight}px))` }}>
           <BlinkoChatBox />
         </div>
       )}
@@ -124,7 +124,6 @@ const AIPage = observer(() => {
       >
 
 
-        {!aiStore.isChatting && <AiSkills />}
         <AiInput className={aiStore.isChatting ? 'mt-0' : 'mt-2'} />
 
 

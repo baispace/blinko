@@ -210,13 +210,22 @@ model conversation {
   title     String    @default("") @db.VarChar(255)
   isShare   Boolean   @default(false)
   accountId Int
-  createdAt DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
-  messages  message[]
+  // 外部 AI 工具（ChatGPT Tasks / Claude / 自建脚本）里这段对话的稳定标识。
+  // 配合 @@unique([accountId, externalId]) 让重复导入变成 upsert 而不是新建。
+  // 可空：Blinko 站内自己产生的会话不填。PostgreSQL 唯一索引允许多个 NULL，存量数据不受影响。
+  externalId String?  @db.VarChar(255)
+  // 来源标记，如 "chatgpt-task"，方便前端按来源过滤
+  source      String?  @db.VarChar(64)
+  metadata    Json?    @db.Json
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  messages    message[]
 
   account accounts @relation(fields: [accountId], references: [id])
 
   @@index([accountId])
+  @@index([source])
+  @@unique([accountId, externalId])
 }
 
 model message {
@@ -224,13 +233,16 @@ model message {
   content        String   @db.Text
   role           String   @db.VarChar(50) // user or assistant
   conversationId Int
-  createdAt      DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
-  metadata       Json?    @db.Json
+  // 消息级外部标识，与 conversationId 组成唯一键，保证同一条消息重复推送只更新不重复插入
+  externalId String?  @db.VarChar(255)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+  metadata   Json?    @db.Json
 
   conversation conversation @relation(fields: [conversationId], references: [id])
 
   @@index([conversationId])
+  @@unique([conversationId, externalId])
 }
 
 model noteHistory {

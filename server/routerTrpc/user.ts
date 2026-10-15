@@ -309,12 +309,18 @@ export const userRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
       }
 
-      const token = await generateApiToken({
-        id: user.id,
-        name: user.name ?? '',
-        role: user.role,
-        permissions: ['notes.upsert', 'ai.completions', 'users.list', 'users.genTokenByUserId']
-      });
+      // permissions 必须作为第二个参数传入 generateApiToken。
+      // 之前它被写在 user 对象内部，结果 token 里没有 permissions 字段，
+      // authProcedure 的权限校验会因 `ctx.permissions` 为空而整个跳过，
+      // 「低权限 token」实际拿到了完整权限。
+      const token = await generateApiToken(
+        {
+          id: user.id,
+          name: user.name ?? '',
+          role: user.role,
+        },
+        ['notes.upsert', 'ai.completions', 'ai.import', 'users.list', 'users.genTokenByUserId']
+      );
 
       return { token };
     }),

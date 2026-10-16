@@ -56,3 +56,11 @@ server/public
 # local design/visual reference (not for the open-source repo)
 .shots/
 .workbuddy/
+
+# local design prototypes + design notes (not for the open-source repo)
+/blinko-*-prototype.html
+/blinko-*prototype*.html
+/blinko-ui-proposal.html
+/blinko-ui-checklist.md
+design-qa.md
+docs/

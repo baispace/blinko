@@ -53,3 +53,6 @@ server/public
 /[a-z][0-9]*.yml
 /[a-z]*.yml
 !/docker-compose*.yml
+# local design/visual reference (not for the open-source repo)
+.shots/
+.workbuddy/

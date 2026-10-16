@@ -2,10 +2,10 @@ import { rememberHomeUrl } from '@/lib/profileIdentity';
 import { UserStore } from '@/store/user';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 import { SiteBrand } from '../Common/SiteBrand';
-import { SiteQuickLinksRow } from '../Common/SiteQuickLinks';
+import { parseQuickLinks } from '../Common/SiteQuickLinks';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
-import { ScrollShadow, Tooltip, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
+import { ScrollShadow, Tooltip, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
 import { useTranslation } from 'react-i18next';
@@ -56,6 +56,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const aiMode = location.pathname === "/ai";
   const previousHome = useRef('/');
   const homeUrl = rememberHomeUrl(location, previousHome.current);
+  const sidebarQuickLinks = parseQuickLinks(blinkoStore.config.value?.customQuickLinks);
   useEffect(() => { previousHome.current = homeUrl; }, [homeUrl]);
   const switchMode = (event:MouseEvent<HTMLAnchorElement>, destination:string) => {
     if(event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -125,10 +126,31 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           <DropdownItem key="home" startContent={<Icon icon="tabler:home" width="18" />} onPress={()=>{startTransition(()=>{ void navigate(homeUrl); });onItemClick?.();}}>{text('返回主页','Go to home')}</DropdownItem>
           {user.isSuperAdmin ? <DropdownItem key="appearance" startContent={<Icon icon="tabler:brush" width="18" />} onPress={()=>{ShowSettingsDialog('site');onItemClick?.();}}>{t('settings-site')}</DropdownItem> : null}
           <DropdownItem key="about" startContent={<Icon icon="tabler:info-circle" width="18" />} onPress={()=>{ShowSettingsDialog('about');onItemClick?.();}}>{t('settings-about-site')}</DropdownItem>
+          {sidebarQuickLinks.length > 0 && (
+            <DropdownSection showDivider aria-label={text('快捷链接', 'Quick links')}>
+              {sidebarQuickLinks.map(link => {
+                const isExternal = link.type === 'external';
+                const startContent = link.icon?.startsWith('data:')
+                  ? <img src={link.icon} alt="" width={18} height={18} className="size-[18px] shrink-0 rounded-sm object-contain" />
+                  : <Icon icon={link.icon} width={18} height={18} className="shrink-0" />;
+                const handlePress = () => {
+                  onItemClick?.();
+                  if (isExternal) {
+                    window.open(link.target, '_blank', 'noopener,noreferrer');
+                  } else {
+                    startTransition(() => { void navigate(link.target); });
+                  }
+                };
+                return (
+                  <DropdownItem key={link.id} startContent={startContent} onPress={handlePress}>
+                    {link.label}
+                  </DropdownItem>
+                );
+              })}
+            </DropdownSection>
+          )}
         </DropdownMenu></Dropdown>
       </div>
-
-      {!base.isSidebarCollapsed && <SiteQuickLinksRow />}
 
       <div aria-busy={isSwitching} className={`shrink-0 gap-1 px-2 mt-2 ${base.isSidebarCollapsed ? 'flex flex-col items-center' : 'grid grid-cols-2'}`}>
         <Tooltip content={text('主页','Home')} isDisabled={!base.isSidebarCollapsed} placement="right" delay={350} closeDelay={0}>

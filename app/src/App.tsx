@@ -293,7 +293,7 @@ function App() {
       />
       <BrowserRouter>
         <HeroUIProvider>
-          <ThemeProvider attribute="class" enableSystem={false}>
+          <ThemeProvider attribute="class" enableSystem>
             <AppProvider />
             <CommonLayout>
               <div className="app-content">

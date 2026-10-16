@@ -291,7 +291,7 @@ export class UserStore implements Store {
     if (savedTheme && !this.themeInitialized) {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       const themeToSet = savedTheme === 'system' ? systemTheme : savedTheme;
-      setTheme(themeToSet);
+      setTheme(savedTheme);
       this.updatePWAColor(themeToSet);
       setTauriTheme(themeToSet).catch(console.error);
       this.themeInitialized = true;
@@ -389,7 +389,7 @@ export class UserStore implements Store {
             localStorage.setItem('userTheme', config.theme);
             const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             const newTheme = config.theme === 'system' ? systemTheme : config.theme;
-            setTheme(newTheme);
+            setTheme(config.theme);
             this.updatePWAColor(newTheme);
             setTauriTheme(newTheme).catch(console.error);
           }
@@ -461,7 +461,7 @@ export class UserStore implements Store {
 
   use() {
     const { i18n } = useTranslation()
-    const { setTheme, theme } = useTheme()
+    const { setTheme, resolvedTheme } = useTheme()
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -475,8 +475,17 @@ export class UserStore implements Store {
     useEffect(() => { this.updateAppIcon(this.blinko.config.value?.customIcon); }, [this.blinko.config.value?.customIcon]);
 
     useEffect(() => {
-      setTauriTheme(theme).catch(console.error);
-    }, [theme]);
+      if (!resolvedTheme) return;
+      const config = this.blinko.config.value;
+      for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) {
+        const dark = resolvedTheme === 'dark';
+        element.style.setProperty('--primary',config?.themeColor || (dark?'#4d8bff':'#2f6feb'));
+        element.style.setProperty('--primary-foreground',config?.themeForegroundColor || (dark?'#000000':'#ffffff'));
+        if (config?.themeColor) element.style.setProperty('--tag',config.themeColor); else element.style.removeProperty('--tag');
+      }
+      this.updatePWAColor(resolvedTheme);
+      setTauriTheme(resolvedTheme).catch(console.error);
+    }, [resolvedTheme]);
 
     useEffect(() => {
       eventBus.on('user:token', (tokenData) => {

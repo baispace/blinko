@@ -39,11 +39,8 @@ const ThemeSwitcher = observer(({ onChange }: ThemeSwitcherProps) => {
         <DropdownMenu
           onAction={async (key) => {
             await onChange?.(key.toString());
-            if (key === 'system') {
-              setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-            } else {
-              setTheme(key.toString())
-            }
+            localStorage.setItem('userTheme',key.toString());
+            setTheme(key.toString());
           }}
         >
           <DropdownItem key="light" startContent={<Icon icon="line-md:sun-rising-loop" />}>

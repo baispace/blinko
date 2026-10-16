@@ -2,7 +2,12 @@ import { rememberHomeUrl } from '@/lib/profileIdentity';
 import { UserStore } from '@/store/user';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 import { SiteBrand } from '../Common/SiteBrand';
-import { parseQuickLinks } from '../Common/SiteQuickLinks';
+import {
+  parseWorkspaceMenu,
+  DEFAULT_WORKSPACE_MENU,
+  resolveMenuLabel,
+  type WorkspaceMenuItem,
+} from '../Common/SiteQuickLinks';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
 import { ScrollShadow, Tooltip, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection } from '@heroui/react';
@@ -56,8 +61,43 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const aiMode = location.pathname === "/ai";
   const previousHome = useRef('/');
   const homeUrl = rememberHomeUrl(location, previousHome.current);
-  const sidebarQuickLinks = parseQuickLinks(blinkoStore.config.value?.customQuickLinks);
+  const workspaceMenuConfig = parseWorkspaceMenu(blinkoStore.config.value?.customQuickLinks);
+  const isSuperAdmin = user.role === 'superadmin';
+  const isZh = i18n.language.startsWith('zh');
+  // 用户未配置时直接走代码内置默认；超级管理员才看得到 appearance 项。
+  const workspaceMenu: WorkspaceMenuItem[] =
+    workspaceMenuConfig.length > 0
+      ? workspaceMenuConfig.filter(item => !(item.type === 'system' && item.action === 'appearance' && !isSuperAdmin))
+      : DEFAULT_WORKSPACE_MENU().filter(item => !(item.type === 'system' && item.action === 'appearance' && !isSuperAdmin));
+
   useEffect(() => { previousHome.current = homeUrl; }, [homeUrl]);
+
+  const dispatchMenuItem = (item: WorkspaceMenuItem) => {
+    onItemClick?.();
+    if (item.type === 'external') {
+      window.open(item.target, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (item.type === 'system') {
+      if (item.action === 'home') {
+        startTransition(() => { void navigate(homeUrl); });
+        return;
+      }
+      if (item.action === 'appearance') { ShowSettingsDialog('site'); return; }
+      if (item.action === 'about') { ShowSettingsDialog('about'); return; }
+      return;
+    }
+    if (item.type === 'internal') {
+      startTransition(() => { void navigate(item.target); });
+    }
+  };
+
+  const renderMenuStart = (item: WorkspaceMenuItem) => {
+    if (item.icon?.startsWith('data:')) {
+      return <img src={item.icon} alt="" width={18} height={18} className="size-[18px] shrink-0 rounded-sm object-contain" />;
+    }
+    return <Icon icon={item.icon} width={18} height={18} className="shrink-0" />;
+  };
   const switchMode = (event:MouseEvent<HTMLAnchorElement>, destination:string) => {
     if(event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -123,32 +163,11 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             <SiteBrand compact={base.isSidebarCollapsed} framed size={26} />
           </button>
         </DropdownTrigger><DropdownMenu aria-label={text('工作空间菜单','Workspace menu')}>
-          <DropdownItem key="home" startContent={<Icon icon="tabler:home" width="18" />} onPress={()=>{startTransition(()=>{ void navigate(homeUrl); });onItemClick?.();}}>{text('返回主页','Go to home')}</DropdownItem>
-          {user.isSuperAdmin ? <DropdownItem key="appearance" startContent={<Icon icon="tabler:brush" width="18" />} onPress={()=>{ShowSettingsDialog('site');onItemClick?.();}}>{t('settings-site')}</DropdownItem> : null}
-          <DropdownItem key="about" startContent={<Icon icon="tabler:info-circle" width="18" />} onPress={()=>{ShowSettingsDialog('about');onItemClick?.();}}>{t('settings-about-site')}</DropdownItem>
-          {sidebarQuickLinks.length > 0 && (
-            <DropdownSection showDivider aria-label={text('快捷链接', 'Quick links')}>
-              {sidebarQuickLinks.map(link => {
-                const isExternal = link.type === 'external';
-                const startContent = link.icon?.startsWith('data:')
-                  ? <img src={link.icon} alt="" width={18} height={18} className="size-[18px] shrink-0 rounded-sm object-contain" />
-                  : <Icon icon={link.icon} width={18} height={18} className="shrink-0" />;
-                const handlePress = () => {
-                  onItemClick?.();
-                  if (isExternal) {
-                    window.open(link.target, '_blank', 'noopener,noreferrer');
-                  } else {
-                    startTransition(() => { void navigate(link.target); });
-                  }
-                };
-                return (
-                  <DropdownItem key={link.id} startContent={startContent} onPress={handlePress}>
-                    {link.label}
-                  </DropdownItem>
-                );
-              })}
-            </DropdownSection>
-          )}
+          {workspaceMenu.map(item => (
+            <DropdownItem key={item.id} startContent={renderMenuStart(item)} onPress={() => dispatchMenuItem(item)}>
+              {resolveMenuLabel(item, isZh)}
+            </DropdownItem>
+          ))}
         </DropdownMenu></Dropdown>
       </div>
 

@@ -1,6 +1,10 @@
 import { getAvatarUrl } from '@/lib/profileIdentity';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
+import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
+import { useState } from 'react';
+import { AccountAppearance } from './Theme/AccountAppearance';
+import { AboutSetting } from '../BlinkoSettings/AboutSetting';
+import { DialogStore } from '@/store/module/Dialog';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
@@ -21,15 +25,15 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
   const user = RootStore.Get(UserStore);
   const { t, i18n } = useTranslation();
   const accountLabel = i18n.language.startsWith('zh') ? '账户与设置' : 'Account & settings';
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [appearance, setAppearance] = useState(false);
+  const close = () => { setOpen(false); onItemClick?.(); };
+  const zh = i18n.language.startsWith('zh');
+  const rowClass = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] text-default-600 transition-colors hover:bg-default-100 focus-visible:outline-primary';
   return (
-    <Dropdown
-      placement="top-start"
-      classNames={{
-        content: 'bg-background border border-default-200 rounded-xl min-w-[220px] shadow-lg',
-      }}
-    >
-      <DropdownTrigger>
+    <Popover placement="top-start" isOpen={open} onOpenChange={value => { setOpen(value); if (!value) setAppearance(false); }}>
+      <PopoverTrigger>
         <button type="button" aria-label={accountLabel} title={collapsed ? accountLabel : (user.nickname || user.name || accountLabel)} className={`cursor-pointer rounded-lg p-2 hover:bg-default-100 transition-colors focus-visible:outline-primary flex items-center gap-2.5 ${collapsed ? 'justify-center' : 'w-full text-left'}`}>
           <div className="relative shrink-0">
             {user.image ? (
@@ -41,47 +45,31 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
           </div>
           {!collapsed && <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-medium text-default-700">{user.nickname || user.name || accountLabel}</span><span className="block text-[11px] text-default-400">{accountLabel}</span></span>}
         </button>
-      </DropdownTrigger>
-      <DropdownMenu aria-label={accountLabel}>
-        <>
-          {base.routerList
-            .filter((i) => i.hiddenSidebar)
-            .map((i) => (
-              <DropdownItem
-                key={i.title}
-                className='text-default-600 rounded-lg'
-                startContent={<Icon icon={i.icon} width="20" height="20" />}
-                onPress={() => {
-                  // 设置走 overlay 弹窗，不做路由跳转。跳转会把用户从当前页面
-                  // （闪念列表 / 详情页）踢走，而 PC 端设置本来就是弹窗交互；
-                  // 关闭弹窗后应当原样停在原页面。
-                  if (i.href === '/settings') {
-                    ShowSettingsDialog();
-                  } else {
-                    navigate(i.href);
-                    base.currentRouter = i;
-                  }
-                  onItemClick?.();
-                }}
-              >
-                {t(i.title)}
-              </DropdownItem>
-            ))}
-
-          <DropdownItem
-            key="logout"
-            className="text-danger rounded-lg border-t border-default-200 mt-1"
-            startContent={<Icon icon="hugeicons:logout-05" width="20" height="20" />}
-            onPress={async () => {
-              await signOut({ callbackUrl: '/signin', redirect: false });
-              navigate('/signin');
-              onItemClick?.();
-            }}
-          >
-            {t('logout')}
-          </DropdownItem>
-        </>
-      </DropdownMenu>
-    </Dropdown>
+      </PopoverTrigger>
+      <PopoverContent className="block w-[min(320px,calc(100vw-24px))] overflow-hidden rounded-xl border border-default-200 bg-background p-1.5 shadow-xl">
+        <div className="max-h-[min(650px,80dvh)] overflow-y-auto">
+          <div className="px-3 pb-2 pt-2 text-xs text-default-400">{user.nickname || user.name}</div>
+          <nav aria-label={accountLabel}>
+            {base.routerList.filter(item => item.hiddenSidebar).map(item => <button key={item.title} type="button" className={rowClass} onClick={() => {
+              close();
+              if (item.href === '/settings') ShowSettingsDialog();
+              else { navigate(item.href); base.currentRouter = item; }
+            }}><Icon icon={item.icon} width={18} height={18} /><span>{t(item.title)}</span></button>)}
+            <button type="button" className={rowClass} aria-expanded={appearance} aria-controls="account-appearance" onClick={() => setAppearance(value => !value)}>
+              <Icon icon="mdi:theme-light-dark" width={18} /><span className="flex-1">{zh ? '外观与语言' : 'Appearance & language'}</span><Icon icon="tabler:chevron-right" width={15} className={`transition-transform ${appearance ? 'rotate-90' : ''}`} />
+            </button>
+          </nav>
+          {appearance && <div id="account-appearance" className="mx-1 mb-1 rounded-lg border border-default-200/70 bg-default-50/50 p-3"><AccountAppearance /></div>}
+          <button type="button" className={rowClass} onClick={() => {
+            close();
+            RootStore.Get(DialogStore).setData({ isOpen:true, size:'2xl', title:zh ? '更新日志' : 'Update history', content:<div className="max-h-[70dvh] overflow-y-auto px-1 pb-4"><AboutSetting updatesOnly /></div> });
+          }}><Icon icon="tabler:history" width={18} /><span>{zh ? '更新日志' : 'Update history'}</span></button>
+          <div className="my-1 border-t border-default-100" />
+          <button type="button" className={`${rowClass} !text-danger`} onClick={async () => {
+            close(); await signOut({ callbackUrl:'/signin', redirect:false }); navigate('/signin');
+          }}><Icon icon="hugeicons:logout-05" width={18} /><span>{t('logout')}</span></button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 });

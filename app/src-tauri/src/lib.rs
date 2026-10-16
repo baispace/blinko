@@ -55,6 +55,9 @@ pub fn run() {
     {
         builder
             .invoke_handler(tauri::generate_handler![
+                open_pinned_note,
+                resize_pinned_note,
+                set_pinned_note_top,
                 toggle_editor_window,
                 register_hotkey,
                 unregister_hotkey,

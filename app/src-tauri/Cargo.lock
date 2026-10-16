@@ -11,6 +11,7 @@ dependencies = [
  "get-selected-text",
  "macos-accessibility-client",
  "mouse_position",
+ "objc2 0.6.3",
  "rdev",
  "serde",
  "serde_json",

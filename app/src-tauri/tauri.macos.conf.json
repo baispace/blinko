@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Ink",
+  "identifier": "cn.baispace.ink",
+  "build": {
+    "beforeBuildCommand": "VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa"
+  },
+  "bundle": {
+    "targets": [
+      "app",
+      "dmg"
+    ],
+    "createUpdaterArtifacts": false,
+    "icon": [
+      "icons/ink/32x32.png",
+      "icons/ink/128x128.png",
+      "icons/ink/128x128@2x.png",
+      "icons/ink/icon.icns"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [],
+      "pubkey": ""
+    }
+  },
+  "version": "1.8.9",
+  "app": {
+    "macOSPrivateApi": true
+  }
+}

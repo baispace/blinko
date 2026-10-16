@@ -12,6 +12,9 @@ use crate::desktop::{toggle_editor_window, toggle_quicknote_window};
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn setup_system_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error>> {
+    #[cfg(target_os = "macos")]
+    let icon_bytes = include_bytes!("../../icons/ink/32x32.png");
+    #[cfg(not(target_os = "macos"))]
     let icon_bytes = include_bytes!("../../icons/32x32.png");
     let image = Image::from_bytes(icon_bytes)?;
     
@@ -37,7 +40,7 @@ pub fn setup_system_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error
     let tray_icon = TrayIconBuilder::with_id("blinko-tray")
         .icon(image)
         .menu(&tray_menu)
-        .tooltip("Blinko - Quick Note")
+        .tooltip(app.config().product_name.as_deref().unwrap_or("Blinko"))
         .on_tray_icon_event(|tray, event| {
             match event {
                 TrayIconEvent::Click {

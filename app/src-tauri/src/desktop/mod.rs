@@ -1,5 +1,7 @@
 pub mod hotkey;
 pub mod window;
+pub mod pinned_note;
+pub use pinned_note::*;
 pub mod tray;
 pub mod setup;
 pub mod window_state;

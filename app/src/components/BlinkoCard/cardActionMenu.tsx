@@ -1,3 +1,4 @@
+import { supportsDesktopBookmarks, openDesktopBookmark, bookmarkTitle } from '@/lib/desktopBookmarks';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { getFullNote } from '@/lib/fullNote';
 import { observer } from "mobx-react-lite";
@@ -250,6 +251,9 @@ export const CardActionMenu = observer(({
             <CopyItem />
           </DropdownItem>
         ) : null}
+        {supportsDesktopBookmarks() && blinkoItem.type === NoteType.BLINKO && !isRecycle ? <DropdownItem key="desktop-bookmark" textValue="固定到桌面" startContent={<Icon icon="solar:pin-linear" width={18} />} onPress={() => {
+          void openDesktopBookmark({id:Number(blinkoItem.id),title:bookmarkTitle(blinkoItem.content||'')}).catch(()=>RootStore.Get(ToastPlugin).error('无法打开桌面书签，请重试'));
+        }}>固定到桌面</DropdownItem> : null}
         <DropdownItem
           key="edittime"
           textValue={t('edit-time')}

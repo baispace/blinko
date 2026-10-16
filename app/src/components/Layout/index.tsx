@@ -81,6 +81,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
 
   if (
     location.pathname == '/signin' ||
+    location.pathname == '/desktop-note' ||
     location.pathname == '/quicknote' ||
     location.pathname == '/quickai' ||
     location.pathname == '/quicktool' ||

@@ -1,3 +1,4 @@
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from 'next-themes';
@@ -39,6 +40,7 @@ const PluginPage = lazy(() => import('./pages/plugin'));
 const AnalyticsPage = lazy(() => import('./pages/analytics'));
 const AllPage = lazy(() => import('./pages/all'));
 const OAuthCallbackPage = lazy(() => import('./pages/oauth-callback'));
+const DesktopNotePage = lazy(() => import('./pages/desktop-note'));
 const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
@@ -127,10 +129,13 @@ const ProtectedRoute = ({ children }) => {
 // Detect current window type
 const getWindowType = () => {
   if (!isInTauri()) return 'main';
+  // Keep the floating window's route tree stable during sign-in redirects.
+  if (getCurrentWebviewWindow().label.startsWith('pinned-note-')) return 'desktop-note';
 
   // Check URL path to determine window type
   const path = window.location.pathname;
   if (path.startsWith('/quicktool')) return 'quicktool';
+  if (path.startsWith('/desktop-note')) return 'desktop-note';
   if (path.startsWith('/quicknote')) return 'quicknote';
   if (path.startsWith('/quickai')) return 'quickai';
   return 'main';
@@ -139,6 +144,15 @@ const getWindowType = () => {
 function AppRoutes() {
   const navigate = useNavigate();
   const windowType = getWindowType();
+  useEffect(() => {
+    if (windowType !== 'main' || !isInTauri()) return;
+    const refresh = (event: StorageEvent) => {
+      if (event.key === 'ink.desktop-note-saved') RootStore.Get(BlinkoStore).forceQuery++;
+    };
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, [windowType]);
+
 
   // Initialize Quick AI hotkey handler inside Router context (only for main window on desktop)
   if (windowType === 'main' && isDesktop()) {
@@ -214,6 +228,13 @@ function AppRoutes() {
           </Routes>
         </Suspense>
       );
+
+    case 'desktop-note':
+      return <Suspense fallback={<LoadingPage />}><Routes>
+        <Route path="/desktop-note" element={<ProtectedRoute><DesktopNotePage /></ProtectedRoute>} />
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="*" element={<Navigate to="/desktop-note" replace />} />
+      </Routes></Suspense>;
 
     case 'quicknote':
       return (

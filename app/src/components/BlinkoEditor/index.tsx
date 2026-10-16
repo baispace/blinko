@@ -1,3 +1,4 @@
+import { settleBeforeClose } from './settleBeforeClose';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { isSaveShortcut } from './saveShortcut';
 import { observer } from "mobx-react-lite"
@@ -18,6 +19,8 @@ const SIDE_PATCH_DELAY = 300
 type IProps = {
   mode: 'create' | 'edit',
   hideDoneButton?: boolean,
+  hideFullscreenButton?: boolean,
+  onSaveReady?: (save: (() => Promise<boolean>) | null) => void,
   fixedNoteType?: NoteType,
   composerVariant?: 'flash' | 'note' | 'todo',
   documentToolbar?: boolean,
@@ -44,7 +47,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, hideDoneButton = false, composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSaveReady, hideFullscreenButton = false, hideDoneButton = false, composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, fixedNoteType, hideNoteTypeButton, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false, editable = true, onEditorReady, pageScroll = false, focusOnMount = true }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -126,9 +129,9 @@ export const BlinkoEditor = observer(({ mode, hideDoneButton = false, composerVa
 
   const manualSaveBusy = useRef(false)
   const handleManualSave = useCallback(async () => {
-    if (manualSaveBusy.current) return
+    if (manualSaveBusy.current) return false
     const note = blinko.curSelectedNote
-    if (!note?.id) return
+    if (!note?.id) return false
     manualSaveBusy.current = true
     const item = { id: note.id, content: note.content ?? '', ...(latestSidePatch.current?.id === note.id ? latestSidePatch.current.patch : {}) }
     // Queue immediately, after already pending writes and before later edits.
@@ -137,10 +140,33 @@ export const BlinkoEditor = observer(({ mode, hideDoneButton = false, composerVa
     try {
       await blinko.manualSaveNote(item)
       lastSavedContent.current = item.content
+      return true
     } catch {
       RootStore.Get(ToastPlugin).error('保存失败，当前内容已保留，请按 Ctrl/⌘+S 重试。')
+      return false
     } finally { manualSaveBusy.current = false }
   }, [blinko, flushAutosave, flushSidePatch])
+
+  const saveBeforeClose = useCallback(() => settleBeforeClose({
+    flush: async () => {
+      await flushAutosave()
+      await flushSidePatch()
+      await blinko.waitForPendingWrites()
+    },
+    isDirty: () => {
+      const note = blinko.curSelectedNote
+      return blinko.autosaveStatus === 'error' || !!note && (
+        note.content !== lastSavedContent.current ||
+        blinko.editContentStorage.list?.some(item => Number(item.id) === Number(note.id))
+      )
+    },
+    save: handleManualSave,
+  }), [blinko, flushAutosave, flushSidePatch, handleManualSave])
+
+  useEffect(() => {
+    onSaveReady?.(saveBeforeClose)
+    return () => onSaveReady?.(null)
+  }, [onSaveReady, saveBeforeClose])
 
   useEffect(() => {
     if (isCreateMode) return
@@ -289,6 +315,7 @@ export const BlinkoEditor = observer(({ mode, hideDoneButton = false, composerVa
       autosaveStatus={isCreateMode ? 'idle' : blinko.autosaveStatus}
       onDone={isCreateMode ? undefined : handleDone}
       hideDoneButton={hideDoneButton}
+      hideFullscreenButton={hideFullscreenButton}
       onManualSave={isCreateMode ? undefined : handleManualSave}
       onSidePatch={isCreateMode ? undefined : handleSidePatch}
       content={store.noteContent}

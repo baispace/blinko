@@ -16,7 +16,8 @@
     "tauri:android:dev": "tauri android dev --host",
     "tauri:android:build": "tauri android build",
     "tauri:desktop:build": "tauri build",
-    "svg2vectordrawable": "bun add svg2vectordrawable"
+    "svg2vectordrawable": "bun add svg2vectordrawable",
+    "tauri:mac:build": "tauri build --target aarch64-apple-darwin"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

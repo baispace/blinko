@@ -203,7 +203,9 @@ export default defineConfig({
         // "index-*.js", which made the PWA precache glob pick up 1MB+ of
         // lazily-loaded code (echarts, ...) that never should be precached.
         entryFileNames: 'assets/entry-[hash].js',
-        manualChunks: (id) => {
+        // Forced React/UI chunks can form an initialization cycle on desktop.
+        // Let Rollup preserve module execution order for the desktop bundle.
+        manualChunks: process.env.VITE_DESKTOP_ENDPOINT ? undefined : (id) => {
           if (id.includes('node_modules/react') || 
               id.includes('node_modules/react-dom') || 
               id.includes('node_modules/react-router-dom')) {

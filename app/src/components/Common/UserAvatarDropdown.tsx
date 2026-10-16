@@ -1,3 +1,5 @@
+import { supportsDesktopBookmarks } from '@/lib/desktopBookmarks';
+import { DesktopBookmarks } from './DesktopBookmarks';
 import { getAvatarUrl } from '@/lib/profileIdentity';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
@@ -64,6 +66,9 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
             close();
             RootStore.Get(DialogStore).setData({ isOpen:true, size:'2xl', title:zh ? '更新日志' : 'Update history', content:<div className="max-h-[70dvh] overflow-y-auto px-1 pb-4"><AboutSetting updatesOnly /></div> });
           }}><Icon icon="tabler:history" width={18} /><span>{zh ? '更新日志' : 'Update history'}</span></button>
+          {supportsDesktopBookmarks() && <button type="button" className={rowClass} onClick={() => {
+            close(); RootStore.Get(DialogStore).setData({isOpen:true,size:'md',title:'桌面书签',content:<DesktopBookmarks/>});
+          }}><Icon icon="solar:pin-linear" width={18}/><span>桌面书签</span></button>}
           <div className="my-1 border-t border-default-100" />
           <button type="button" className={`${rowClass} !text-danger`} onClick={async () => {
             close(); await signOut({ callbackUrl:'/signin', redirect:false }); navigate('/signin');

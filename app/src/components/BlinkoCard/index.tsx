@@ -91,7 +91,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   //   folded card  cardFoldLength ~ textFoldLength (300-999, Weibo-style
   //                truncation with expand toggle, media still visible)
   //   article card ≥ textFoldLength (1000, cover card + fullscreen editor)
-  const contentLength = blinkoItem.content?.length ?? 0;
+  const contentLength = blinkoItem.contentLength ?? blinkoItem.content?.length ?? 0;
   if (forceBlog) {
     blinkoItem.isBlog = true
   } else {

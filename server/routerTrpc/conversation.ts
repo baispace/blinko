@@ -1,3 +1,4 @@
+import { getConversationMessages } from '../lib/conversationPages';
 import { router, authProcedure, publicProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -36,34 +37,26 @@ export const conversationRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       const skip = (input.page - 1) * input.size;
-      const [total, conversations] = await Promise.all([
-        prisma.conversation.count({
-          where: { accountId: Number(ctx.id) }
-        }),
-        prisma.conversation.findMany({
+      const conversations = await prisma.conversation.findMany({
           where: { accountId: Number(ctx.id) },
           skip,
           take: input.size,
-          orderBy: { createdAt: 'desc' }
-        })
-      ]);
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }]
+        });
       return conversations;
     }),
-  detail: authProcedure
-    .input(z.object({
-      id: z.number()
-    }))
+  messages: authProcedure.input(z.object({ id: z.number().int().positive(), beforeId: z.number().int().positive().optional(), size: z.number().int().min(1).max(100).default(40) }))
+    .query(({ input, ctx }) => getConversationMessages(input.id, Number(ctx.id), input.size, input.beforeId)),
+  detail: authProcedure.input(z.object({ id: z.number(), messageLimit: z.number().int().min(1).max(100).optional() }))
     .query(async ({ input, ctx }) => {
-      return await prisma.conversation.findUnique({
-        where: { id: input.id, accountId: Number(ctx.id) },
-        include: {
-          messages: {
-            orderBy: {
-              createdAt: 'asc'
-            }
-          }
-        }
-      });
+      const conversation = await prisma.conversation.findFirst({ where: { id: input.id, accountId: Number(ctx.id) } });
+      if (!conversation) return null;
+      if (input.messageLimit) {
+        const page = await getConversationMessages(input.id, Number(ctx.id), input.messageLimit);
+        return { ...conversation, messages: page.items, nextMessageCursor: page.nextCursor };
+      }
+      const messages = await prisma.message.findMany({ where: { conversationId: input.id }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
+      return { ...conversation, messages, nextMessageCursor: null as number | null };
     }),
 
   publicDetail: publicProcedure

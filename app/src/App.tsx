@@ -50,11 +50,19 @@ const HomeRedirect = () => {
   const location = useLocation();
   const blinko = RootStore.Get(BlinkoStore);
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => location.key === 'default' && !searchParams.get('path'));
   
   useEffect(() => {
+    let cancelled = false;
     const redirectToDefaultPage = async () => {
-      await blinko.config.call();
+      // In-app mode switches already know their destination. Do not flash a
+      // loading screen or refetch configuration before returning to content.
+      if (location.key !== 'default' || searchParams.get('path')) {
+        setLoading(false);
+        return;
+      }
+      if (!blinko.config.value) await blinko.config.call();
+      if (cancelled) return;
       const defaultHomePage = blinko.config.value?.defaultHomePage;
       const currentPath = searchParams.get('path');
       const isDirectNavigation = location.key === 'default';
@@ -66,7 +74,8 @@ const HomeRedirect = () => {
       navigate(`/?path=${defaultHomePage}`, { replace: true });
     };
     
-    redirectToDefaultPage();
+    void redirectToDefaultPage();
+    return () => { cancelled = true; };
   }, [navigate, searchParams, location]);
   
   if (loading) {

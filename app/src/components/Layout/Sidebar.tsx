@@ -160,7 +160,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'px-2.5'}`}>
         <Dropdown placement="bottom-start"><DropdownTrigger>
           <button type="button" aria-label={text('工作空间菜单','Workspace menu')} className="flex min-w-0 w-full items-center rounded-xl p-1 hover:bg-default-100/60 focus-visible:outline-primary">
-            <SiteBrand compact={base.isSidebarCollapsed} framed size={26} />
+            <SiteBrand compact={base.isSidebarCollapsed} framed size={30} />
           </button>
         </DropdownTrigger><DropdownMenu aria-label={text('工作空间菜单','Workspace menu')}>
           {workspaceMenu.map(item => (

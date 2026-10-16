@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blinko · 统计模块原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --line: rgba(0,0,0,0.06);
+    --line-soft: rgba(0,0,0,0.04);
+    --text: #14171e;
+    --muted: #7c7a72;
+    --primary: #10b981;
+    --primary-soft: rgba(16,185,129,0.08);
+    --warn: #f59e0b;
+    --down: #f43f5e;
+    --up: #10b981;
+    --shadow: 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.06);
+    --radius: 16px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1115;
+    --card: #181c23;
+    --line: rgba(255,255,255,0.08);
+    --line-soft: rgba(255,255,255,0.04);
+    --text: #e9eaee;
+    --muted: #9aa0aa;
+    --primary: #34d399;
+    --primary-soft: rgba(52,211,153,0.12);
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    transition: background .2s, color .2s;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  /* ───── Header ───── */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .topbar h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar h1 .sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .theme-btn {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    transition: all .2s;
+  }
+  .theme-btn:hover { color: var(--text); }
+  /* ───── Period switcher ───── */
+  .period-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 12px;
+  }
+  .period-pill {
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    border: none;
+    background: transparent;
+  }
+  .period-pill:hover { color: var(--text); background: var(--line-soft); }
+  .period-pill.active {
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .period-divider {
+    width: 1px; height: 20px;
+    background: var(--line);
+    margin: 0 4px;
+  }
+  .compare-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 4px 4px 16px;
+    flex-wrap: wrap;
+  }
+  .compare-line .label { font-weight: 500; }
+  .compare-line .diff-up { color: var(--up); font-weight: 600; }
+  .compare-line .diff-down { color: var(--down); font-weight: 600; }
+  .compare-line .arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  /* ───── TL;DR ───── */
+  .tldr {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .tldr-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .tldr-icon svg { width: 16px; height: 16px; }
+  .tldr-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .tldr-text strong { color: var(--primary); font-weight: 600; }
+  /* ───── Treemap / Tag cloud container ───── */
+  .tag-cloud { height: 220px; }
+  /* ───── Top N bar ───── */
+  .topn-row {
+    display: grid;
+    grid-template-columns: 24px 140px 1fr 60px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .topn-row:hover { background: var(--line-soft); }
+  .topn-row.muted { cursor: default; }
+  .topn-row.muted:hover { background: transparent; }
+  .topn-rank {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-align: center;
+  }
+  .topn-name {
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .topn-bar {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .topn-fill {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    transition: width .3s;
+  }
+  .topn-val {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    font-feature-settings: "tnum";
+  }
+  /* ───── Section title ───── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 28px 0 12px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .section-label .meta { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  /* ───── Card grid ───── */
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 768px) {
+    .grid-4, .grid-2 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+  /* ───── Stat card ───── */
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+    box-shadow: var(--shadow);
+    transition: all .2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(16,185,129,0.3);
+  }
+  .stat-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-card .label svg { width: 14px; height: 14px; opacity: 0.7; }
+  .stat-card .value {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    font-feature-settings: "tnum";
+  }
+  .stat-card .unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 2px;
+  }
+  .stat-card .diff {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .stat-card .diff.up { color: var(--up); }
+  .stat-card .diff.down { color: var(--down); }
+  .stat-card .diff.flat { color: var(--muted); }
+  .stat-card .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  /* ───── Generic card ───── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title svg { width: 16px; height: 16px; color: var(--muted); }
+  .card-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  /* ───── Toggle group ───── */
+  .toggle-group {
+    display: inline-flex;
+    background: var(--line-soft);
+    border-radius: 8px;
+    padding: 2px;
+  }
+  .toggle-group button {
+    border: none;
+    background: transparent;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .toggle-group button.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  /* ───── Streak ───── */
+  .streak {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .streak .big {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .streak .big .fire { color: #f59e0b; margin-right: 4px; }
+  .streak .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .streak .row strong { color: var(--text); font-weight: 600; }
+  .goal-bar {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .goal-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #f43f5e);
+    border-radius: 4px;
+    transition: width .3s;
+  }
+  /* ───── Hour chart container ───── */
+  .hour-chart { height: 100px; }
+  /* ───── Review card ───── */
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .review-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--line-soft);
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .review-row:hover { background: var(--primary-soft); }
+  .review-row .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--card);
+    flex-shrink: 0;
+  }
+  .review-row .icon svg { width: 16px; height: 16px; }
+  .review-row .body { flex: 1; min-width: 0; }
+  .review-row .body .t { font-size: 13px; font-weight: 500; color: var(--text); }
+  .review-row .body .d { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  /* ───── ECharts containers ───── */
+  .chart { width: 100%; }
+  .chart-heat { height: 180px; }
+  .chart-stack { height: 220px; }
+  .chart-line { height: 220px; }
+  .chart-hist { height: 200px; }
+  /* ───── Annotation chip ───── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--line-soft);
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  /* ───── Tag legend ───── */
+  .tag-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .tag-legend .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--line-soft);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .tag-legend .tag-item:hover { background: var(--primary-soft); }
+  .tag-legend .tag-item .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  /* ───── Word dist legend ───── */
+  .hist-legend {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .hist-legend .item {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .hist-legend .item strong { color: var(--text); font-weight: 600; }
+  /* ───── Note ───── */
+  .note {
+    margin-top: 40px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: var(--primary-soft);
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .note strong { color: var(--primary); }
+
+  /* ───── Topbar actions ───── */
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .seg { display: inline-flex; background: var(--line-soft); border-radius: 8px; padding: 2px; }
+  .seg button {
+    border: none; background: transparent; padding: 5px 11px; font-size: 12px;
+    color: var(--muted); cursor: pointer; border-radius: 6px; font-family: inherit;
+    font-weight: 500; transition: all .15s; white-space: nowrap;
+  }
+  .seg button.active { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .seg button:hover:not(.active) { color: var(--text); }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
+    border-radius: 9px; border: 1px solid var(--line); background: var(--card);
+    color: var(--muted); font-size: 12.5px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-ghost:hover { color: var(--primary); border-color: rgba(16,185,129,.4); background: var(--primary-soft); }
+  .btn-ghost svg { width: 15px; height: 15px; }
+  @media (max-width: 720px) { .btn-ghost span { display: none; } .btn-ghost { padding: 0 10px; } }
+
+  /* ───── Tag filter chip（联动选中） ───── */
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 5px 8px 5px 12px;
+    border-radius: 999px; background: var(--primary-soft); color: var(--primary);
+    font-size: 12px; font-weight: 500; margin: -4px 0 12px;
+  }
+  .filter-chip strong { font-weight: 700; }
+  .filter-chip button {
+    border: none; background: rgba(16,185,129,.15); color: var(--primary);
+    width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+    display: grid; place-items: center; font-size: 11px; line-height: 1; transition: background .15s;
+  }
+  .filter-chip button:hover { background: rgba(16,185,129,.32); }
+
+  /* ───── Top N selected（联动高亮） ───── */
+  .topn-row.selected { background: var(--primary-soft); box-shadow: inset 2px 0 0 var(--primary); }
+
+  /* ───── Cold-start empty state ───── */
+  #dash-empty { display: none; padding: 56px 20px 40px; text-align: center; }
+  .empty-wrap { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+  .empty-illust {
+    width: 96px; height: 96px; border-radius: 24px; background: var(--line-soft);
+    display: grid; place-items: center; color: var(--muted); margin-bottom: 16px;
+    border: 1px dashed var(--line);
+  }
+  .empty-illust svg { width: 44px; height: 44px; }
+  .empty-title { font-size: 19px; font-weight: 600; color: var(--text); margin: 0; }
+  .empty-sub { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin: 8px 0 22px; }
+  .empty-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 18px;
+    border-radius: 10px; border: none; background: var(--primary); color: #fff;
+    font-size: 13.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16,185,129,.3); transition: all .15s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(16,185,129,.4); }
+  .btn-primary svg { width: 16px; height: 16px; }
+  .btn-soft {
+    display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 18px;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+    color: var(--text); font-size: 13.5px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-soft:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-soft svg { width: 16px; height: 16px; }
+  .empty-hint {
+    margin-top: 28px; font-size: 12px; color: var(--muted);
+    display: flex; gap: 18px; flex-wrap: wrap; justify-content: center;
+  }
+  .empty-hint span { display: inline-flex; align-items: center; gap: 5px; }
+  .empty-hint svg { width: 13px; height: 13px; opacity: .6; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ───── Header ───── -->
+  <div class="topbar">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      统计
+      <span class="sub">数据原型 · 用于评审</span>
+    </h1>
+    <div class="topbar-actions">
+      <div class="seg" id="state-seg" title="切换有数据 / 冷启动空态">
+        <button class="active" data-dash="data">有数据</button>
+        <button data-dash="empty">空态</button>
+      </div>
+      <button class="btn-ghost" onclick="exportPNG()" title="把所有图表拼成一张 PNG 下载">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span>导出 PNG</span>
+      </button>
+      <button class="btn-ghost" onclick="exportCSV()" title="把统计数据导出为 CSV 表格">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>导出 CSV</span>
+      </button>
+      <button class="theme-btn" onclick="toggleTheme()" aria-label="切换主题">
+        <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ───── 冷启动空态 ───── -->
+  <div id="dash-empty">
+    <div class="empty-wrap">
+      <div class="empty-illust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h2 class="empty-title">还没有统计数据</h2>
+      <p class="empty-sub">写几条笔记或闪念后，这里会自动生成你的写作趋势、24 小时分布、标签云与活跃热力图。</p>
+      <div class="empty-actions">
+        <button class="btn-primary" onclick="alert('跳转到编辑器：写第一条笔记')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          写第一条笔记
+        </button>
+        <button class="btn-soft" onclick="alert('打开导入：Markdown / Word')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          导入已有笔记
+        </button>
+      </div>
+      <div class="empty-hint">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>支持 Markdown / Word 导入</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>数据仅本地统计</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>可导出 PNG / CSV</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 仪表盘内容（有数据） ───── -->
+  <div id="dash-content">
+
+  <!-- ───── TL;DR 一行总结 ───── -->
+  <div class="tldr">
+    <div class="tldr-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="tldr-text">
+      <strong>10 月写了 7 条</strong>，
+      比上月少 1 条 ↓，但
+      <strong>总字数比上月多 8%</strong>。
+      最长笔记是「策略产品区别于算法的价值点」(1247 字)，
+      主要写于 <strong>22:00 之后</strong>。
+    </div>
+  </div>
+
+  <!-- ───── Period switcher ───── -->
+  <div class="period-bar">
+    <button class="period-pill" data-period="week">本周</button>
+    <button class="period-pill active" data-period="month">本月</button>
+    <button class="period-pill" data-period="30d">近 30 天</button>
+    <button class="period-pill" data-period="90d">近 90 天</button>
+    <button class="period-pill" data-period="year">今年</button>
+    <button class="period-pill" data-period="all">全部</button>
+    <div class="period-divider"></div>
+    <button class="period-pill" data-period="custom">自定义…</button>
+  </div>
+  <div class="compare-line">
+    <span class="label">2026-10-01 → 2026-10-08</span>
+    <span>·</span>
+    <span>对比：<strong>2025-10 同周期</strong></span>
+    <span class="diff-up arrow">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      +12% 同比
+    </span>
+    <span style="margin-left:auto" class="chip">共 7 条 · 4 个活跃日</span>
+  </div>
+
+  <!-- ───── 按 type 卡片 ───── -->
+  <div class="section-label">
+    <span>按类型</span>
+    <span class="meta">点击查看明细 →</span>
+  </div>
+  <div class="grid-4">
+    <div class="stat-card" onclick="alert('跳转到：本月所有记录')">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+          记录
+        </span>
+        <span class="diff flat">总计</span>
+      </div>
+      <div class="value">7<span class="unit">条</span></div>
+      <div class="sub">上月 8 条 · 较上月 -1</div>
+    </div>
+    <div class="stat-card" onclick="alert('跳转到：本月笔记 (type=1)')">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          笔记
+        </span>
+        <span class="diff down">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="7" x2="17" y2="17"/><polyline points="17 7 17 17 7 17"/></svg>
+          -2
+        </span>
+      </div>
+      <div class="value">5<span class="unit">条</span></div>
+      <div class="sub">上月 7 条 · 占本月 71%</div>
+    </div>
+    <div class="stat-card" onclick="alert('跳转到：本月闪念 (type=0)')">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          闪念
+        </span>
+        <span class="diff up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          +1
+        </span>
+      </div>
+      <div class="value">1<span class="unit">条</span></div>
+      <div class="sub">上月 0 条 · 新增</div>
+    </div>
+    <div class="stat-card" onclick="alert('跳转到：本月待办 (type=2)')">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          待办
+        </span>
+        <span class="diff flat">—</span>
+      </div>
+      <div class="value">1<span class="unit">条</span></div>
+      <div class="sub">完成 0 · 完成率 0%</div>
+    </div>
+  </div>
+
+  <!-- ───── 按字数卡片 ───── -->
+  <div class="section-label">
+    <span>按字数（已去 markdown）</span>
+    <span class="meta">原始 3479 字 → 净化 2410 字</span>
+  </div>
+  <div class="grid-4">
+    <div class="stat-card">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          总字数
+        </span>
+        <span class="diff down">-8.2%</span>
+      </div>
+      <div class="value">2,410</div>
+      <div class="sub">原始 3,479 · -30.7%</div>
+    </div>
+    <div class="stat-card">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-5"/></svg>
+          日均
+        </span>
+        <span class="diff up">+12%</span>
+      </div>
+      <div class="value">602</div>
+      <div class="sub">活跃日 4 天 · 平均每天</div>
+    </div>
+    <div class="stat-card">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          中位数
+        </span>
+        <span class="diff flat">—</span>
+      </div>
+      <div class="value">280</div>
+      <div class="sub">比日均低 53% · 反映节奏</div>
+    </div>
+    <div class="stat-card">
+      <div class="head">
+        <span class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          最长笔记
+        </span>
+        <span class="chip" style="background:var(--line-soft);color:var(--muted);">#Welcome</span>
+      </div>
+      <div class="value">1,247<span class="unit">字</span></div>
+      <div class="sub" style="cursor:pointer;color:var(--primary);">策略产品区别于算法的价值点 →</div>
+    </div>
+  </div>
+
+  <!-- ───── Streak + 活跃时段 ───── -->
+  <div class="section-label">
+    <span>行为反馈</span>
+    <span class="meta">激励持续写作</span>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          写作连续
+        </h3>
+        <span class="card-meta">目标：连续 5 天</span>
+      </div>
+      <div class="streak">
+        <div>
+          <div class="big"><span class="fire">🔥</span>3<span style="font-size:14px;font-weight:400;color:var(--muted);"> 天</span></div>
+          <div class="sub">当前连续</div>
+        </div>
+        <div class="row">
+          <span>本月最长</span>
+          <strong>12 天（8 月）</strong>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:6px;">
+            <span>本月目标完成度</span>
+            <strong>3 / 5 = 60%</strong>
+          </div>
+          <div class="goal-bar">
+            <div class="fill" style="width:60%"></div>
+          </div>
+        </div>
+        <div class="row">
+          <span style="font-size:12px;">💡 距离本月目标还差 <strong>2 天</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          活跃时段
+        </h3>
+        <span class="card-meta">22:00 写得最多</span>
+      </div>
+      <div class="hour-chart" id="hour-chart"></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;">
+        <span>0 时</span><span>6 时</span><span>12 时</span><span>18 时</span><span>24 时</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 热力图 ───── -->
+  <div class="section-label">
+    <span>写作日历</span>
+    <span class="meta">点击格子查看当天记录</span>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <h3 class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          过去一年（2025-10 → 2026-10）
+        </h3>
+        <div class="toggle-group">
+          <button class="active" data-metric="count">按条数</button>
+          <button data-metric="words">按字数</button>
+        </div>
+      </div>
+      <div class="toggle-group">
+        <button data-range="6m">近 6 月</button>
+        <button class="active" data-range="1y">近 1 年</button>
+        <button data-range="all">全部</button>
+      </div>
+    </div>
+    <div class="chart chart-heat" id="heat-chart"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-top:8px;">
+      <span>8 个活跃日 · 28 条 · 累计 8370 字</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span>少</span>
+        <div style="display:flex;gap:2px;">
+          <span style="width:11px;height:11px;background:#ebedf0;border-radius:2px;"></span>
+          <span style="width:11px;height:11px;background:#9be9a8;border-radius:2px;"></span>
+          <span style="width:11px;height:11px;background:#40c463;border-radius:2px;"></span>
+          <span style="width:11px;height:11px;background:#30a14e;border-radius:2px;"></span>
+          <span style="width:11px;height:11px;background:#216e39;border-radius:2px;"></span>
+        </div>
+        <span>多</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 类型分布 + 标签云 ───── -->
+  <div class="section-label">
+    <span>类型分布</span>
+    <span class="meta">过去 12 个月 · 点击堆叠查看明细</span>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <h3 class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        类型构成（按月）
+      </h3>
+      <div class="toggle-group">
+        <button class="active" data-type-mode="stack">堆叠</button>
+        <button data-type-mode="group">分组</button>
+        <button data-type-mode="100">100%</button>
+      </div>
+    </div>
+    <div class="chart chart-stack" id="type-chart"></div>
+    <div class="tag-legend">
+      <span class="tag-item"><span class="dot" style="background:#3b82f6"></span>笔记 (12)</span>
+      <span class="tag-item"><span class="dot" style="background:#10b981"></span>闪念 (6)</span>
+      <span class="tag-item"><span class="dot" style="background:#f59e0b"></span>待办 (10)</span>
+    </div>
+  </div>
+
+  <!-- ───── 标签区（重设计：云 + 活跃热力图 + Top N bars） ───── -->
+  <div class="section-label">
+    <span>标签</span>
+    <span class="meta">点击标签，云 / 热力图 / 排名 三处联动高亮</span>
+  </div>
+  <div id="tag-filter" class="filter-chip" style="display:none;">
+    已选标签 <strong id="tag-filter-name">#</strong>
+    <button onclick="clearTag()" aria-label="清除选中">✕</button>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          标签云
+        </h3>
+        <div class="toggle-group">
+          <button class="active" data-cloud-mode="all">全部时间</button>
+          <button data-cloud-mode="period">本周期</button>
+        </div>
+      </div>
+      <div class="tag-cloud" id="tag-cloud"></div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">
+        <span>共 <strong style="color:var(--text);">7</strong> 个标签 · 28 条笔记</span>
+        <span>面积 ∝ 笔记数</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          标签活跃热力图
+        </h3>
+        <span class="card-meta">行=标签 · 列=月份</span>
+      </div>
+      <div class="chart" style="height:220px;" id="tag-heat"></div>
+    </div>
+  </div>
+
+  <!-- ───── 本周期 Top 标签（数量可调） ───── -->
+  <div class="card" style="margin-top:14px;">
+    <div class="card-head">
+      <h3 class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        本周期标签排名
+      </h3>
+      <div class="seg" id="topn-seg" title="调整展示的标签数量">
+        <button data-n="3">Top 3</button>
+        <button class="active" data-n="5">Top 5</button>
+        <button data-n="99">全部</button>
+      </div>
+    </div>
+    <div id="topn-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <!-- ───── 字数分布 ───── -->
+  <div class="section-label">
+    <span>字数分布</span>
+    <span class="meta">本月 7 条</span>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <h3 class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        按长度分布
+      </h3>
+      <span class="card-meta">中位数 280 · 平均 482</span>
+    </div>
+    <div class="chart chart-hist" id="hist-chart"></div>
+    <div class="hist-legend">
+      <span class="item"><strong>&lt;50</strong>字 闪念 · 3 条 (43%)</span>
+      <span class="item"><strong>50-200</strong>短笔记 · 2 条 (29%)</span>
+      <span class="item"><strong>200-500</strong>标准 · 1 条 (14%)</span>
+      <span class="item"><strong>500-1000</strong>长笔记 · 0 条</span>
+      <span class="item"><strong>&gt;1000</strong>深度 · 1 条 (14%)</span>
+    </div>
+  </div>
+
+  <!-- ───── 月度回顾 ───── -->
+  <div class="section-label">
+    <span>本月回顾</span>
+    <span class="meta">本月亮点</span>
+  </div>
+  <div class="card">
+    <div class="review-list">
+      <div class="review-row" onclick="alert('打开该笔记详情')">
+        <div class="icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="body">
+          <div class="t">最长笔记：策略产品区别于算法的价值点</div>
+          <div class="d">1247 字 · #Welcome · 10-07</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="review-row">
+        <div class="icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="body">
+          <div class="t">新标签：Multi-Level-Tags · 交互</div>
+          <div class="d">本月首次出现 · 用了 1 次</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="review-row">
+        <div class="icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <div class="body">
+          <div class="t">完成率：待办 5 / 8 = 62.5%</div>
+          <div class="d">3 个待办待完成 · 1 个已过期</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="review-row">
+        <div class="icon" style="background:rgba(244,63,94,0.1);color:#f43f5e;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="body">
+          <div class="t">写作高峰：22:00-23:00</div>
+          <div class="d">本月 4 条笔记都在这个时段</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 设计说明 ───── -->
+  <div class="note">
+    <strong>v3 原型说明</strong><br>
+    基于 dev DB 当前数据演示（admin 账号 · 28 条笔记 · 7 个标签 · 2025-10 → 2026-10）。<br>
+    v2 改动：① 顶部 TL;DR 一行总结；② 周期切换加「全部」；③ 字数卡片新增「最长笔记」；④ 标签趋势改为 云 + 热力图 + Top N；⑤ 字数分布加均值/中位数；⑥ 数字千分位。<br>
+    <strong>v3 新增</strong>：⑦ 顶部 <strong>导出 PNG（拼接全部图表）/ 导出 CSV（全量数据）</strong>；⑧ <strong>标签云 ↔ 活跃热力图 ↔ 排名 三处点击联动高亮</strong>（再次点击或 ✕ 取消）；⑨ <strong>Top N 数量可调</strong>（Top 3 / Top 5 / 全部）；⑩ <strong>冷启动空态</strong>（右上角「空态」切换预览）。<br>
+    待你确认后再继续。全部数字均为 mock；交互仅做演示。
+  </div>
+
+  </div><!-- /#dash-content -->
+
+</div>
+
+<script>
+  // ───── Shared mock data（云 / 热力图 / Top N / CSV 共用） ─────
+  const TAG_DATA = [
+    { name: 'Welcome', total: 8, period: 3, color: '#3b82f6', months: [1,1,1,0,2,1,1,1,1,0,1,2], children: [ { name: 'Welcome/To-Do', value: 3, color: '#60a5fa' }, { name: 'Welcome**', value: 2, color: '#93c5fd' } ] },
+    { name: 'Code', total: 6, period: 2, color: '#10b981', months: [0,1,0,1,0,1,0,1,0,1,0,1] },
+    { name: 'To-Do', total: 5, period: 2, color: '#f59e0b', months: [1,1,1,0,1,1,1,0,1,1,0,1] },
+    { name: 'Multi-Level-Tags', total: 3, period: 1, color: '#6366f1', months: [0,0,0,1,0,0,0,0,1,0,0,1] },
+    { name: '交互', total: 2, period: 1, color: '#f43f5e', months: [0,0,1,0,0,0,0,1,0,0,0,0] },
+    { name: '测试', total: 2, period: 1, color: '#8b5cf6', months: [0,0,0,0,0,0,1,0,0,0,1,0] },
+    { name: '未分类', total: 2, period: 0, color: '#9aa0aa', months: [0,0,0,0,0,0,0,0,0,0,0,0] }
+  ];
+  const HOUR_DATA = [0,0,0,0,0,0,1,2,3,4,3,2,2,3,4,5,4,3,4,6,7,9,8,5];
+  const TYPE_MONTHS = { note: [3,5,2,4,6,3,7,5,4,6,7,5], flash: [1,0,2,1,0,2,1,0,1,2,0,1], todo: [2,3,4,3,2,4,3,5,4,3,2,3] };
+  const HIST_DATA = [3,2,1,0,1];
+  let selectedTag = null;
+  let currentTopN = 5;
+
+  // ───── Theme ─────
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    renderAllCharts();
+  }
+
+  // ───── Common theme vars for echarts ─────
+  function chartTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+      bg: dark ? '#181c23' : '#ffffff',
+      text: dark ? '#e9eaee' : '#14171e',
+      muted: dark ? '#9aa0aa' : '#7c7a72',
+      line: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+      lineSoft: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+    };
+  }
+
+  // ───── Hour chart ─────
+  function renderHour() {
+    const t = chartTheme();
+    const el = document.getElementById('hour-chart');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    // Mock distribution: peak at 22-23
+    const data = HOUR_DATA;
+    chart.setOption({
+      grid: { top: 10, right: 0, bottom: 0, left: 0 },
+      tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue} 时<br/><strong>${p[0].data}</strong> 条` },
+      xAxis: { type: 'category', show: false, data: Array.from({length: 24}, (_, i) => i) },
+      yAxis: { type: 'value', show: false },
+      series: [{
+        type: 'bar',
+        data,
+        itemStyle: {
+          color: (params) => {
+            const v = params.value;
+            const max = 9;
+            const intensity = v / max;
+            if (intensity === 0) return t.lineSoft;
+            return `rgba(16, 185, 129, ${0.3 + intensity * 0.7})`;
+          },
+          borderRadius: [3, 3, 0, 0]
+        },
+        barCategoryGap: '20%'
+      }]
+    });
+  }
+
+  // ───── Heatmap ─────
+  function renderHeat() {
+    const t = chartTheme();
+    const el = document.getElementById('heat-chart');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    // Generate 365 days of mock data
+    const end = new Date('2026-10-08');
+    const start = new Date(end);
+    start.setFullYear(end.getFullYear() - 1);
+    const data = [];
+    const active = [
+      ['2026-09-25', 7], ['2026-09-27', 6], ['2026-09-28', 7],
+      ['2026-09-30', 1], ['2026-10-02', 2], ['2026-10-03', 1],
+      ['2026-10-06', 3], ['2026-10-08', 1]
+    ];
+    const activeMap = Object.fromEntries(active);
+    const cur = new Date(start);
+    while (cur <= end) {
+      const key = cur.toISOString().slice(0, 10);
+      if (activeMap[key]) data.push([key, activeMap[key]]);
+      else data.push([key, 0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    chart.setOption({
+      tooltip: {
+        formatter: (p) => {
+          const v = p.value[1];
+          if (v === 0) return `${p.value[0]}<br/><span style="color:#9aa0aa">无记录</span>`;
+          return `${p.value[0]}<br/><strong>${v}</strong> 条`;
+        }
+      },
+      visualMap: {
+        show: false,
+        min: 0,
+        max: 8,
+        inRange: { color: t.bg === '#181c23'
+          ? ['#181c23', '#0e4429', '#006d32', '#26a641', '#39d353']
+          : ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
+        }
+      },
+      calendar: {
+        top: 20, left: 30, right: 10,
+        cellSize: ['auto', 14],
+        range: [start.toISOString().slice(0,10), end.toISOString().slice(0,10)],
+        itemStyle: { borderColor: t.bg, borderWidth: 2, borderRadius: 3 },
+        yearLabel: { show: false },
+        dayLabel: { show: false },
+        monthLabel: { color: t.muted, fontSize: 10, margin: 8 },
+        splitLine: { show: false }
+      },
+      series: [{ type: 'heatmap', coordinateSystem: 'calendar', data, animation: false }]
+    });
+  }
+
+  // ───── Type distribution ─────
+  function renderType() {
+    const t = chartTheme();
+    const el = document.getElementById('type-chart');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    const months = [];
+    const cur = new Date('2026-10-01');
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(cur);
+      d.setMonth(d.getMonth() - i);
+      months.push(d.toISOString().slice(0,7));
+    }
+    const mockNote = TYPE_MONTHS.note;
+    const mockFlash = TYPE_MONTHS.flash;
+    const mockTodo = TYPE_MONTHS.todo;
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      legend: { show: false },
+      grid: { top: 10, right: 10, bottom: 30, left: 30 },
+      xAxis: {
+        type: 'category',
+        data: months,
+        axisLine: { lineStyle: { color: t.line } },
+        axisLabel: { color: t.muted, fontSize: 10, formatter: (v) => v.slice(5) }
+      },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: t.lineSoft } }, axisLabel: { color: t.muted, fontSize: 10 } },
+      series: [
+        { name: '笔记', type: 'bar', stack: 'a', data: mockNote, itemStyle: { color: '#3b82f6', borderRadius: [0,0,0,0] } },
+        { name: '闪念', type: 'bar', stack: 'a', data: mockFlash, itemStyle: { color: '#10b981' } },
+        { name: '待办', type: 'bar', stack: 'a', data: mockTodo, itemStyle: { color: '#f59e0b', borderRadius: [4,4,0,0] } }
+      ]
+    });
+  }
+
+  // ───── Tag cloud (treemap) ─────
+  function renderTagCloud() {
+    const t = chartTheme();
+    const el = document.getElementById('tag-cloud');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    // 从 TAG_DATA 构建，并根据 selectedTag 联动调暗
+    const dim = (name) => (selectedTag && selectedTag !== name) ? 0.18 : 1;
+    const data = [{
+      name: '全部',
+      itemStyle: { color: 'transparent', borderColor: 'transparent' },
+      children: TAG_DATA.map(tag => {
+        const node = { name: tag.name, value: tag.total, itemStyle: { color: tag.color, opacity: dim(tag.name) } };
+        if (tag.children) node.children = tag.children.map(c => ({ name: c.name, value: c.value, itemStyle: { color: c.color, opacity: dim(tag.name) } }));
+        return node;
+      })
+    }];
+    chart.setOption({
+      tooltip: {
+        formatter: (p) => {
+          const path = p.treePathInfo.slice(1).map(x => x.name).join(' / ');
+          return `<strong>${path}</strong><br/>${p.value} 条`;
+        }
+      },
+      series: [{
+        type: 'treemap',
+        data,
+        width: '100%',
+        height: '100%',
+        roam: false,
+        nodeClick: false,
+        breadcrumb: { show: false },
+        label: {
+          show: true,
+          formatter: (p) => `{name|${p.name}}\n{val|${p.value}}`,
+          rich: {
+            name: { color: '#fff', fontSize: 12, fontWeight: 600, lineHeight: 16 },
+            val: { color: 'rgba(255,255,255,0.85)', fontSize: 11 }
+          }
+        },
+        upperLabel: { show: false },
+        itemStyle: {
+          borderColor: t.bg,
+          borderWidth: 3,
+          borderRadius: 6,
+          gapWidth: 6
+        },
+        emphasis: {
+          upperLabel: { show: false },
+          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' }
+        },
+        levels: [
+          {
+            itemStyle: { borderColor: t.bg, borderWidth: 6, gapWidth: 6, borderRadius: 6 },
+            colorSaturation: [0.3, 0.6]
+          },
+          {
+            itemStyle: { borderColor: t.bg, borderWidth: 4, gapWidth: 4, borderRadius: 4 },
+            colorSaturation: [0.4, 0.7]
+          }
+        ]
+      }]
+    });
+    chart.off('click');
+    chart.on('click', (p) => { const path = p.treePathInfo || []; const top = path[1] ? path[1].name : p.name; if (top && top !== '全部') selectTag(top); });
+  }
+
+  // ───── Tag × Month heatmap ─────
+  function renderTagHeat() {
+    const t = chartTheme();
+    const el = document.getElementById('tag-heat');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    const months = [];
+    const cur = new Date('2026-10-01');
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(cur);
+      d.setMonth(d.getMonth() - i);
+      months.push(d.toISOString().slice(0,7));
+    }
+    const tags = TAG_DATA.map(x => x.name);
+    // 从 TAG_DATA.months 构建，并根据 selectedTag 联动调暗
+    const data = [];
+    TAG_DATA.forEach((tag, ti) => {
+      tag.months.forEach((v, mi) => {
+        if (v > 0) data.push({ value: [mi, ti, v], itemStyle: { opacity: (selectedTag && selectedTag !== tag.name) ? 0.15 : 1 } });
+      });
+    });
+    chart.setOption({
+      tooltip: {
+        formatter: (p) => {
+          const [mi, ti, v] = p.value;
+          return `<strong>#${tags[ti]}</strong><br/>${months[mi]}<br/>${v} 条`;
+        }
+      },
+      grid: { top: 10, right: 30, bottom: 30, left: 90 },
+      xAxis: {
+        type: 'category',
+        data: months,
+        splitArea: { show: false },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: t.muted, fontSize: 10, formatter: (v) => v.slice(5) }
+      },
+      yAxis: {
+        type: 'category',
+        data: tags,
+        splitArea: { show: false },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { fontSize: 11, color: (val) => (selectedTag ? (val === selectedTag ? t.text : t.line) : t.muted) }
+      },
+      visualMap: {
+        show: false,
+        min: 0,
+        max: 3,
+        inRange: { color: t.bg === '#181c23'
+          ? ['#181c23', '#1e3a5f', '#3b82f6', '#60a5fa']
+          : ['#f1f5f9', '#bfdbfe', '#60a5fa', '#3b82f6']
+        }
+      },
+      series: [{
+        type: 'heatmap',
+        data,
+        label: { show: false },
+        itemStyle: { borderRadius: 4, borderColor: t.bg, borderWidth: 3 }
+      }]
+    });
+    chart.off('click');
+    chart.on('click', (p) => { const ti = p.value[1]; if (tags[ti]) selectTag(tags[ti]); });
+  }
+
+  // ───── Word histogram ─────
+  function renderHist() {
+    const t = chartTheme();
+    const el = document.getElementById('hist-chart');
+    const chart = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (p) => `${p[0].name}字<br/><strong>${p[0].value}</strong> 条 (${(p[0].value/7*100).toFixed(0)}%)` },
+      grid: { top: 10, right: 30, bottom: 30, left: 40 },
+      xAxis: {
+        type: 'category',
+        data: ['<50', '50-200', '200-500', '500-1000', '>1000'],
+        axisLine: { lineStyle: { color: t.line } },
+        axisLabel: { color: t.muted, fontSize: 11 }
+      },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: t.lineSoft } }, axisLabel: { color: t.muted, fontSize: 10 } },
+      series: [{
+        type: 'bar',
+        data: HIST_DATA.map((v, i) => ({ value: v, itemStyle: { color: ['#10b981','#3b82f6','#6366f1', t.lineSoft, '#f59e0b'][i], borderRadius: [6,6,0,0] } })),
+        label: { show: true, position: 'top', color: t.muted, fontSize: 11, formatter: '{c}' },
+        barWidth: '50%',
+        markLine: {
+          symbol: 'none',
+          lineStyle: { type: 'dashed', width: 1 },
+          data: [
+            { name: '均值 482', xAxis: 2.2, lineStyle: { color: '#3b82f6' }, label: { color: '#3b82f6', fontSize: 10, position: 'end', formatter: '均值 482' } },
+            { name: '中位 280', xAxis: 1.5, lineStyle: { color: '#f59e0b' }, label: { color: '#f59e0b', fontSize: 10, position: 'end', formatter: '中位 280' } }
+          ]
+        }
+      }]
+    });
+  }
+
+  function renderAllCharts() {
+    renderHour();
+    renderHeat();
+    renderType();
+    renderTagCloud();
+    renderTagHeat();
+    renderHist();
+    renderTopN(currentTopN);
+  }
+
+  // ───── Period pill click ─────
+  document.querySelectorAll('.period-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.period-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+
+  // ───── Heatmap toggle ─────
+  document.querySelectorAll('[data-metric]').forEach(b => {
+    b.addEventListener('click', () => {
+      const group = b.closest('.toggle-group');
+      group.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+  document.querySelectorAll('[data-range]').forEach(b => {
+    b.addEventListener('click', () => {
+      const group = b.closest('.toggle-group');
+      group.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+  document.querySelectorAll('[data-type-mode]').forEach(b => {
+    b.addEventListener('click', () => {
+      const group = b.closest('.toggle-group');
+      group.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+
+  // ───── Tag selection（云 ↔ 热力图 ↔ 排名 联动） ─────
+  function selectTag(name) {
+    selectedTag = (selectedTag === name) ? null : name;
+    renderTagCloud();
+    renderTagHeat();
+    renderTopN(currentTopN);
+    updateFilterChip();
+  }
+  function clearTag() {
+    selectedTag = null;
+    renderTagCloud();
+    renderTagHeat();
+    renderTopN(currentTopN);
+    updateFilterChip();
+  }
+  function updateFilterChip() {
+    const chip = document.getElementById('tag-filter');
+    const nm = document.getElementById('tag-filter-name');
+    if (selectedTag) { nm.textContent = '#' + selectedTag; chip.style.display = 'inline-flex'; }
+    else { chip.style.display = 'none'; }
+  }
+
+  // ───── Top N 排名（数量可调 + 联动高亮） ─────
+  function renderTopN(n) {
+    currentTopN = n;
+    const list = document.getElementById('topn-list');
+    if (!list) return;
+    const sorted = [...TAG_DATA].sort((a, b) => (b.period - a.period) || (b.total - a.total));
+    const max = Math.max(...sorted.map(t => t.period), 1);
+    const shown = n >= sorted.length ? sorted : sorted.slice(0, n);
+    const rest = n >= sorted.length ? [] : sorted.slice(n);
+    const esc = (s) => String(s).replace(/'/g, "\\'");
+    let html = '';
+    shown.forEach((t, i) => {
+      const isSel = selectedTag === t.name;
+      const dim = selectedTag && !isSel;
+      const w = t.period > 0 ? Math.max(Math.round(t.period / max * 100), 6) : 0;
+      html += `<div class="topn-row${isSel ? ' selected' : ''}" onclick="selectTag('${esc(t.name)}')" title="点击联动高亮">
+        <span class="topn-rank">${i + 1}</span>
+        <span class="topn-name" style="color:${dim ? 'var(--muted)' : 'var(--text)'}">#${t.name}</span>
+        <span class="topn-bar"><span class="topn-fill" style="width:${w}%;background:${t.color};opacity:${dim ? 0.3 : 1}"></span></span>
+        <span class="topn-val" style="${dim ? 'opacity:.5' : ''}">${t.period} 条</span>
+      </div>`;
+    });
+    if (rest.length) {
+      const sum = rest.reduce((s, t) => s + t.period, 0);
+      html += `<div class="topn-row muted">
+        <span class="topn-rank">…</span>
+        <span class="topn-name" style="color:var(--muted);">其他 ${rest.length} 个标签</span>
+        <span class="topn-bar"><span class="topn-fill" style="width:${Math.round(sum / max * 100)}%;background:var(--line);"></span></span>
+        <span class="topn-val" style="color:var(--muted);">${sum} 条</span>
+      </div>`;
+    }
+    list.innerHTML = html;
+  }
+
+  // ───── Dashboard state（有数据 / 冷启动空态） ─────
+  function setDash(mode) {
+    const empty = mode === 'empty';
+    document.getElementById('dash-content').style.display = empty ? 'none' : 'block';
+    document.getElementById('dash-empty').style.display = empty ? 'block' : 'none';
+    document.querySelectorAll('#state-seg button').forEach(b => b.classList.toggle('active', b.dataset.dash === mode));
+    if (!empty) renderAllCharts();
+  }
+
+  // ───── Export PNG（把所有图表拼成一张长图下载） ─────
+  function exportPNG() {
+    const t = chartTheme();
+    const order = [
+      ['type-chart', '类型构成（近 12 月）'],
+      ['heat-chart', '写作日历（近一年）'],
+      ['hour-chart', '24 小时写作分布'],
+      ['tag-cloud', '标签云'],
+      ['tag-heat', '标签 × 月份 热力图'],
+      ['hist-chart', '字数分布']
+    ];
+    const items = [];
+    order.forEach(([id, label]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const inst = echarts.getInstanceByDom(el);
+      if (!inst) return;
+      try { items.push({ label, url: inst.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: t.bg }), w: el.clientWidth, h: el.clientHeight }); } catch (e) {}
+    });
+    if (!items.length) { alert('当前无可导出的图表（空态下没有数据）'); return; }
+    Promise.all(items.map(it => new Promise(res => {
+      const img = new Image();
+      img.onload = () => { it.img = img; res(); };
+      img.onerror = () => res();
+      img.src = it.url;
+    }))).then(() => {
+      const scale = 2, pad = 28, gap = 22, titleH = 26, headH = 56;
+      const contentW = Math.max(...items.map(it => it.w));
+      let canvasH = pad * 2 + headH;
+      items.forEach(it => { canvasH += titleH + it.h + gap; });
+      const c = document.createElement('canvas');
+      c.width = (contentW + pad * 2) * scale;
+      c.height = canvasH * scale;
+      const ctx = c.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = t.bg; ctx.fillRect(0, 0, contentW + pad * 2, canvasH);
+      ctx.fillStyle = t.text; ctx.font = '600 18px Outfit, sans-serif';
+      ctx.fillText('Blinko 统计', pad, pad + 18);
+      ctx.fillStyle = t.muted; ctx.font = '400 12px Outfit, sans-serif';
+      ctx.fillText('导出于 ' + new Date().toLocaleString('zh-CN'), pad, pad + 38);
+      let y = pad + headH;
+      items.forEach(it => {
+        ctx.fillStyle = t.muted; ctx.font = '500 12px Outfit, sans-serif';
+        ctx.fillText(it.label, pad, y + 12);
+        y += titleH;
+        if (it.img) ctx.drawImage(it.img, pad, y, it.w, it.h);
+        y += it.h + gap;
+      });
+      const a = document.createElement('a');
+      a.download = 'blinko-analytics.png';
+      a.href = c.toDataURL('image/png');
+      a.click();
+    });
+  }
+
+  // ───── Export CSV（全量数据，Excel 可直接打开） ─────
+  function exportCSV() {
+    const rows = [];
+    const push = (...c) => rows.push(c);
+    push('# Blinko 统计导出');
+    push('生成时间', new Date().toLocaleString('zh-CN'));
+    push('周期', '2026-10-01 → 2026-10-08');
+    push();
+    push('## 按类型（本月）'); push('类型', '条数');
+    push('记录', 7); push('笔记', 5); push('闪念', 1); push('待办', 1); push();
+    push('## 类型分布（近 12 月）'); push('月份', '笔记', '闪念', '待办');
+    const months = []; const cur = new Date('2026-10-01');
+    for (let i = 11; i >= 0; i--) { const d = new Date(cur); d.setMonth(d.getMonth() - i); months.push(d.toISOString().slice(0, 7)); }
+    months.forEach((m, i) => push(m, TYPE_MONTHS.note[i], TYPE_MONTHS.flash[i], TYPE_MONTHS.todo[i]));
+    push();
+    push('## 24 小时分布'); push('小时', '条数');
+    HOUR_DATA.forEach((v, h) => push(h + ':00', v));
+    push();
+    push('## 标签（全部时间 / 本周期）'); push('标签', '全部时间', '本周期');
+    TAG_DATA.forEach(t => push(t.name, t.total, t.period));
+    push();
+    push('## 字数分布'); push('区间', '条数');
+    ['<50', '50-200', '200-500', '500-1000', '>1000'].forEach((b, i) => push(b, HIST_DATA[i]));
+    push();
+    const csv = rows.map(r => r.map(cell => {
+      const s = String(cell == null ? '' : cell);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(',')).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.download = 'blinko-analytics.csv';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }
+
+  // ───── Wire segmented controls ─────
+  document.querySelectorAll('#state-seg button').forEach(b => b.addEventListener('click', () => setDash(b.dataset.dash)));
+  document.querySelectorAll('#topn-seg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#topn-seg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    renderTopN(parseInt(b.dataset.n, 10));
+  }));
+
+  // ───── Init ─────
+  document.documentElement.setAttribute('data-theme', 'light');
+  renderAllCharts();
+  updateFilterChip();
+  window.addEventListener('resize', renderAllCharts);
+</script>
+
+</body>
+</html>

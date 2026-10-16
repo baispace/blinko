@@ -1,7 +1,9 @@
 import { Card, Button } from "@heroui/react";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { motion, AnimatePresence } from "motion/react";
-import { useState, ReactNode, useEffect } from "react";
+import { useState, ReactNode, useEffect, createContext, useContext } from "react";
+
+export const SettingsCardContext = createContext(false);
 
 interface CollapsibleCardProps {
   icon: string;
@@ -59,17 +61,25 @@ export const CollapsibleCard = ({
   className = "",
   defaultCollapsed = false
 }: CollapsibleCardProps) => {
+  const settingsMode = useContext(SettingsCardContext);
   const storageKey = `blinko-card-collapsed-${typeof title === 'string' ? title : ''}`;
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const stored = localStorage.getItem(storageKey);
-    return stored ? JSON.parse(stored) : false;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) === true : defaultCollapsed;
+    } catch { return defaultCollapsed; }
   });
 
   const handleCollapse = (value: boolean) => {
     setIsCollapsed(value);
-    localStorage.setItem(storageKey, JSON.stringify(value));
+    try { localStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* Storage may be unavailable. */ }
   };
+
+  if (settingsMode) return <section className={`min-w-0 rounded-xl border border-default-200/70 bg-background p-4 sm:p-5 ${className}`}>
+    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold"><Icon icon={icon} width="18" className="text-default-400" />{title}</h3>
+    <div className="settings-card-body min-w-0">{children}</div>
+  </section>;
 
   return (
     <Card shadow="none" className={`flex flex-col p-2 md:p-4 bg-background relative ${className}`}>

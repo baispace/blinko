@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blinko · 首页重设计 · Notion + shadcn/ui</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg: 0 0% 100%; --fg: 240 10% 3.9%; --card: 0 0% 100%;
+    --primary: 252 87% 67%; --primary-fg: 0 0% 98%;
+    --muted: 240 4.8% 95.9%; --muted-fg: 240 3.8% 46.1%;
+    --border: 240 5.9% 90%; --ring: 252 87% 67%;
+    --row-hover: 240 5% 96%; --row-selected: 252 87% 67% / 0.08;
+    --success: 142 71% 45%; --warning: 38 92% 50%; --danger: 0 84% 60%;
+    --sidebar-w: 220px;
+    --sidebar-w-collapsed: 60px;
+  }
+  .dark {
+    --bg: 240 10% 3.9%; --fg: 0 0% 98%; --card: 240 10% 3.9%;
+    --muted: 240 3.7% 15.9%; --muted-fg: 240 5% 64.9%;
+    --border: 240 3.7% 15.9%; --row-hover: 240 3.7% 15.9%;
+    --row-selected: 252 87% 67% / 0.15;
+  }
+  html,body{font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;background:hsl(var(--bg));color:hsl(var(--fg))}
+  .text-fg{color:hsl(var(--fg))}.text-muted{color:hsl(var(--muted-fg))}.text-primary{color:hsl(var(--primary))}
+  .bg-muted{background:hsl(var(--muted))}.bg-card{background:hsl(var(--card))}
+  .border-default{border-color:hsl(var(--border))}.bg-primary{background:hsl(var(--primary))}
+  .bg-hover{background:hsl(var(--row-hover))}.bg-selected{background:hsl(var(--row-selected))}
+  .bg-primary\/10{background:hsl(var(--primary)/.1)}.text-success{color:hsl(var(--success))}.text-warning{color:hsl(var(--warning))}.text-danger{color:hsl(var(--danger))}
+
+  .nav-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:13.5px;transition:background-color 100ms;cursor:pointer;position:relative}
+  .nav-row:hover{background:hsl(var(--row-hover))}
+  .nav-row.selected{background:hsl(var(--row-selected))}
+  .nav-row.selected::before{content:'';position:absolute;left:-8px;top:4px;bottom:4px;width:2px;background:hsl(var(--primary));border-radius:0 1px 1px 0}
+  /* 侧边栏 折叠态 */
+  aside.sidebar.collapsed{width:60px;transition:width .22s cubic-bezier(.4,0,.2,1)}
+  aside.sidebar{width:220px;transition:width .22s cubic-bezier(.4,0,.2,1)}
+  aside.sidebar.collapsed .nav-row{padding:5px 0;justify-content:center}
+  aside.sidebar.collapsed .nav-row .nav-label,
+  aside.sidebar.collapsed .nav-row .nav-count,
+  aside.sidebar.collapsed .nav-row .nav-add,
+  aside.sidebar.collapsed .section-title,
+  aside.sidebar.collapsed .sidebar-account-name,
+  aside.sidebar.collapsed .sidebar-account-kbd,
+  aside.sidebar.collapsed .tags-list{display:none}
+  aside.sidebar.collapsed .nav-row .nav-icon{margin:0}
+  aside.sidebar.collapsed .nav-row.selected::before{left:0}
+  /* nav-row 内元素 */
+  .nav-icon{display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;margin-left:2px}
+  .nav-icon svg{width:16px;height:16px}
+  .nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-count{font-size:11px;color:hsl(var(--muted-fg));font-variant-numeric:tabular-nums;flex-shrink:0}
+  .nav-count.has-new{background:hsl(var(--primary));color:white;padding:1px 6px;border-radius:8px;font-weight:500}
+  .nav-add{width:18px;height:18px;display:none;align-items:center;justify-content:center;color:hsl(var(--muted-fg));border-radius:4px;flex-shrink:0}
+  .nav-row:hover .nav-add{display:flex}
+  .nav-add:hover{background:hsl(var(--border));color:hsl(var(--fg))}
+  .nav-add svg{width:13px;height:13px}
+  /* section title 折叠 chevron */
+  .section-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 8px 4px;font-size:11px;font-weight:500;color:hsl(var(--muted-fg));text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;user-select:none}
+  .section-toggle:hover{color:hsl(var(--fg))}
+  .section-toggle .chev{transition:transform .15s}
+  .section-toggle.collapsed .chev{transform:rotate(-90deg)}
+  .section-title{padding:12px 8px 4px;font-size:11px;font-weight:500;color:hsl(var(--muted-fg));text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;justify-content:space-between}
+  /* 标签 panel 折叠 */
+  .tags-list{overflow:hidden;transition:max-height .22s ease;max-height:300px}
+  .tags-list.collapsed{max-height:0}
+  /* sidebar 切换 collapse 按钮 */
+  .sidebar-collapse-btn{position:absolute;right:-12px;top:14px;width:24px;height:24px;border-radius:50%;background:hsl(var(--card));border:1px solid hsl(var(--border));display:grid;place-items:center;cursor:pointer;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.08);color:hsl(var(--muted-fg))}
+  .sidebar-collapse-btn:hover{color:hsl(var(--fg));background:hsl(var(--muted))}
+  .sidebar-collapse-btn svg{width:12px;height:12px}
+
+  .section-title{padding:12px 8px 4px;font-size:11px;font-weight:500;color:hsl(var(--muted-fg));text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;justify-content:space-between}
+
+  .row{display:flex;align-items:flex-start;gap:12px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background-color 120ms;position:relative;margin:0 -12px}
+  .row:hover{background:hsl(var(--row-hover))}
+  .row.selected{background:hsl(var(--row-selected))}
+  .row.selected::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;background:hsl(var(--primary));border-radius:1px}
+
+  /* ===== 显示密度（main 上挂 data-density，作用于 list-view 行） ===== */
+  main[data-density="compact"] #list-view .row{padding:5px 12px;gap:10px}
+  main[data-density="compact"] #list-view .row .text-\[14\.5px\]{font-size:13.5px;line-height:1.4}
+  main[data-density="compact"] #list-view .row .text-\[12\.5px\]{display:none} /* 隐藏摘要 */
+  main[data-density="compact"] #list-view .row .text-\[11\.5px\]{font-size:10.5px}
+  main[data-density="compact"] #list-view .drag-handle{margin-top:0.5rem}
+  main[data-density="loose"]    #list-view .row{padding:14px 12px;gap:14px}
+  main[data-density="loose"]    #list-view .row .text-\[14\.5px\]{font-size:15px;line-height:1.7}
+  main[data-density="loose"]    #list-view .row .text-\[12\.5px\]{font-size:13px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* ===== 列表样式：连续 / 按天分组（隐藏 .day-group 即可） ===== */
+  main[data-list-style="continuous"] #list-view .day-group{display:none}
+  main[data-list-style="continuous"] #list-view{padding-top:8px}
+  .row .actions{opacity:0;transition:opacity 100ms}
+  .row:hover .actions{opacity:1}
+  .row .drag-handle{opacity:0;transition:opacity 100ms;cursor:grab;color:hsl(var(--muted-fg))}
+  .row:hover .drag-handle{opacity:1}
+  .row .drag-handle:hover{color:hsl(var(--fg))}
+
+  .chip{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:999px;font-size:11px;line-height:16px;background:hsl(var(--muted));color:hsl(var(--muted-fg));cursor:pointer;transition:background-color 100ms}
+  .chip:hover{background:hsl(var(--border))}.chip.active{background:hsl(var(--primary)/.12);color:hsl(var(--primary))}
+  .chip-primary{background:hsl(var(--primary)/.12);color:hsl(var(--primary));font-weight:500}
+
+  kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;padding:1px 4px;border-radius:3px;border:1px solid hsl(var(--border));background:hsl(var(--muted));color:hsl(var(--muted-fg))}
+  .cb{width:15px;height:15px;border:1.5px solid hsl(var(--border));border-radius:3px;display:inline-flex;align-items:center;justify-content:center;transition:all 120ms;cursor:pointer;flex-shrink:0}
+  .cb.done{background:hsl(var(--primary));border-color:hsl(var(--primary));color:white}.cb.done::after{content:'✓';font-size:10px;font-weight:700}
+  .avatar{width:22px;height:22px;border-radius:5px;background:hsl(var(--primary));color:white;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+  *::-webkit-scrollbar{width:5px;height:5px}*::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:3px}
+  @keyframes shimmer{0%{background-position:-1000px 0}100%{background-position:1000px 0}}
+  .skeleton{background:linear-gradient(90deg,hsl(var(--muted))0%,hsl(var(--border))50%,hsl(var(--muted))100%);background-size:1000px 100%;animation:shimmer 2s infinite linear;border-radius:6px}
+
+  .state{display:none}.state.active{display:block}
+  .tip-hint{display:none}.has-tooltip:hover .tip-hint{display:block}
+
+  /* ===== 视图模式切换（列表 / 卡片） ===== */
+  .view-seg{display:inline-flex;background:hsl(var(--muted));border-radius:7px;padding:2px;margin-right:4px}
+  .view-seg button{display:flex;align-items:center;gap:4px;border:none;background:transparent;padding:3px 9px;font-size:11.5px;color:hsl(var(--muted-fg));cursor:pointer;border-radius:5px;transition:all .12s;font-family:inherit}
+  .view-seg button.active{background:hsl(var(--card));color:hsl(var(--fg));box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .view-seg button svg{width:13px;height:13px}
+
+  /* ===== 视图设置 Popover（点击展开，列数/间距仅卡片模式显示） ===== */
+  .view-popover-trigger.active{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .view-popover{position:absolute;right:0;top:calc(100% + 6px);width:228px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,.18);padding:12px;z-index:50;display:none;text-align:left}
+  .view-popover.open{display:block}
+  .view-popover .vp-section{padding:8px 0;border-top:1px solid hsl(var(--border))}
+  .view-popover .vp-section:first-child{padding-top:4px;border-top:none}
+  .view-popover .vp-section:last-child{padding-bottom:2px}
+  .view-popover .vp-label{font-size:11px;color:hsl(var(--muted-fg));margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+  .col-seg{display:inline-flex;gap:2px;background:hsl(var(--muted));border-radius:7px;padding:2px;width:100%}
+  .col-seg button{flex:1;border:none;background:transparent;padding:3px 8px;font-size:11.5px;color:hsl(var(--muted-fg));cursor:pointer;border-radius:5px;transition:all .12s;font-family:inherit;font-variant-numeric:tabular-nums}
+  .col-seg button.active{background:hsl(var(--card));color:hsl(var(--fg));box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .seg{display:inline-flex;gap:2px;background:hsl(var(--muted));border-radius:7px;padding:2px;width:100%}
+  .seg button{flex:1;border:none;background:transparent;padding:3px 6px;font-size:11px;color:hsl(var(--muted-fg));cursor:pointer;border-radius:5px;transition:all .12s;font-family:inherit}
+  .seg button.active{background:hsl(var(--card));color:hsl(var(--fg));box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .spacing-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:hsl(var(--border));outline:none;cursor:pointer}
+  .spacing-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:hsl(var(--primary));cursor:pointer;border:2px solid hsl(var(--card));box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .spacing-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:hsl(var(--primary));cursor:pointer;border:2px solid hsl(var(--card))}
+  .spacing-val{font-size:11px;color:hsl(var(--fg));font-variant-numeric:tabular-nums}
+  .vp-done{width:100%;margin-top:8px;padding:6px 0;border:1px solid hsl(var(--border));background:transparent;border-radius:6px;font-size:11.5px;color:hsl(var(--fg));cursor:pointer;transition:all .12s}
+  .vp-done:hover{background:hsl(var(--muted))}
+
+  /* ===== 每日回顾 · 整页 Random Walk 视图（对齐真实 app /review） ===== */
+  .review-trigger.active{background:hsl(var(--warning)/.12);color:hsl(var(--warning))}
+  .review-trigger .review-badge{box-shadow:0 0 0 2px hsl(var(--card))}
+  .rw-page{position:fixed;inset:0;background:radial-gradient(circle at 30% 20%,#fef6ee 0%,#fdf2e9 35%,#f9e9d9 100%);z-index:80;display:none;flex-direction:column;overflow:hidden}
+  .dark .rw-page{background:radial-gradient(circle at 30% 20%,#1f1812 0%,#1a140e 60%,#110d09 100%)}
+  .rw-page.open{display:flex}
+  /* 顶部 logo + 标题 */
+  .rw-header{padding:20px 28px 8px;display:flex;align-items:flex-start;justify-content:space-between}
+  .rw-title-block .rw-eyebrow{font-size:11px;font-weight:600;letter-spacing:.18em;color:hsl(var(--primary));text-transform:uppercase;margin-bottom:6px}
+  .rw-title-block h1{font-size:32px;font-weight:700;letter-spacing:-.01em;color:hsl(var(--fg));margin-bottom:4px}
+  .rw-title-block p{font-size:13px;color:hsl(var(--muted-fg))}
+  .rw-close{width:44px;height:44px;border-radius:10px;background:#ee5a1a;color:white;display:grid;place-items:center;cursor:pointer;border:none;box-shadow:0 4px 14px -2px rgba(238,90,26,.4)}
+  .rw-close:hover{background:#d54e10}
+  /* 范围选择器（左侧） */
+  .rw-filters{position:absolute;left:28px;top:130px;display:flex;flex-direction:column;gap:10px;z-index:5}
+  .rw-filter{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:999px;font-size:13px;color:hsl(var(--fg));cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:all .15s}
+  .rw-filter:hover{border-color:hsl(var(--primary)/.5);transform:translateY(-1px);box-shadow:0 4px 12px -2px rgba(0,0,0,.1)}
+  .rw-filter.active{background:hsl(var(--primary));color:white;border-color:hsl(var(--primary))}
+  .rw-filter svg{width:14px;height:14px}
+  .rw-filter select{background:transparent;border:none;font:inherit;color:inherit;cursor:pointer;outline:none;appearance:none;padding-right:2px}
+  /* 中央卡片堆叠 */
+  .rw-stage{flex:1;position:relative;display:grid;place-items:center;perspective:1200px;min-height:0}
+  .rw-card-stack{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .rw-bg-card{position:absolute;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:18px;box-shadow:0 8px 30px -8px rgba(0,0,0,.1);padding:18px;width:380px;opacity:0;transform-origin:center;transition:all .35s cubic-bezier(.4,0,.2,1)}
+  .rw-bg-card.show{opacity:1;pointer-events:auto}
+  /* 主体卡片 */
+  .rw-main{position:relative;width:min(640px,82vw);background:hsl(var(--card));border-radius:18px;box-shadow:0 20px 50px -12px rgba(0,0,0,.18);padding:24px 28px 26px;z-index:3;transition:transform .25s,opacity .25s}
+  .rw-main .rw-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .rw-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:6px;background:hsl(var(--warning)/.12);color:hsl(var(--warning))}
+  .rw-date{font-size:12px;color:hsl(var(--muted-fg));font-variant-numeric:tabular-nums;letter-spacing:.05em}
+  .rw-cover{width:100%;height:260px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#fb923c 50%,#f97316);margin-bottom:16px;position:relative;overflow:hidden;display:grid;place-items:center}
+  .rw-cover::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(255,255,255,.3) 0%,transparent 60%)}
+  .rw-cover-emoji{font-size:80px;position:relative;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.15))}
+  .rw-text{font-size:14px;line-height:1.7;color:hsl(var(--fg));white-space:pre-wrap;margin-bottom:14px}
+  .rw-subhead{font-size:18px;font-weight:600;color:hsl(var(--fg));margin:14px 0 10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .rw-subhead .hl{color:hsl(var(--fg))}
+  .rw-subhead .sub{color:hsl(var(--muted-fg));font-weight:500}
+  .rw-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .rw-tags .chip{font-size:11.5px}
+  /* 底部工具条 */
+  .rw-toolbar{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:14px;padding:8px 14px;box-shadow:0 8px 24px -4px rgba(0,0,0,.12);z-index:4}
+  .rw-toolbar button{width:36px;height:36px;border-radius:8px;border:none;background:transparent;display:grid;place-items:center;color:hsl(var(--muted-fg));cursor:pointer;transition:all .12s}
+  .rw-toolbar button:hover{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .rw-toolbar button.danger:hover{color:hsl(var(--danger));background:hsl(var(--danger)/.08)}
+  .rw-toolbar svg{width:17px;height:17px}
+  /* 底部操作提示 */
+  .rw-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;font-size:12px;color:hsl(var(--muted-fg));z-index:4}
+  .rw-hint kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;padding:1px 5px;border-radius:3px;border:1px solid hsl(var(--border));background:hsl(var(--card));color:hsl(var(--fg))}
+  /* 进度点（顶部居中，可选） */
+  .rw-progress{position:absolute;top:22px;left:50%;transform:translateX(-50%);font-size:11.5px;color:hsl(var(--muted-fg));font-variant-numeric:tabular-nums;letter-spacing:.04em;z-index:4}
+  /* 翻页动画态 */
+  .rw-main.slide-out-left{transform:translateX(-60px) rotate(-3deg);opacity:0}
+  .rw-main.slide-in-right{transform:translateX(60px) rotate(3deg);opacity:0}
+  .rw-toast{position:fixed;left:50%;top:90px;transform:translateX(-50%) translateY(-20px);background:rgba(0,0,0,.85);color:white;padding:8px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s, transform .2s;z-index:200;pointer-events:none}
+  .rw-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== 列表行交互态（pin / done / flagged） ===== */
+  .row.is-pinned{box-shadow:inset 2px 0 0 hsl(var(--primary))}
+  .row.is-pinned .pin-btn{color:hsl(var(--primary))}
+  .row.is-done .text-\[14\.5px\]{color:hsl(var(--muted-fg));text-decoration:line-through}
+  .cb:active{transform:scale(.92)}
+
+  /* ===== 行内 more 弹层（与 view-popover 视觉一致，但用绝对定位贴当前行） ===== */
+  .more-popover{position:fixed;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:8px;box-shadow:0 8px 24px -4px rgba(0,0,0,.18);padding:4px;z-index:70;min-width:160px;display:none}
+  .more-popover.open{display:block}
+  .more-popover button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:none;background:transparent;font-size:12.5px;color:hsl(var(--fg));border-radius:5px;cursor:pointer;text-align:left;font-family:inherit}
+  .more-popover button:hover{background:hsl(var(--muted))}
+  .more-popover button.danger{color:hsl(var(--danger))}
+  .more-popover button svg{width:13px;height:13px;flex-shrink:0}
+
+  /* ===== 详情抽屉（与 review 抽屉同宽同高，仅留左边距区别） ===== */
+  #detail-drawer{width:520px;max-width:100vw}
+  .detail-section{padding:14px 0;border-top:1px solid hsl(var(--border))}
+  .detail-section:first-child{padding-top:0;border-top:none}
+  .detail-section h3{font-size:11px;font-weight:500;color:hsl(var(--muted-fg));text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .detail-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:hsl(var(--muted-fg))}
+  .detail-meta b{font-weight:500;color:hsl(var(--fg))}
+  .detail-body{font-size:14px;line-height:1.7;color:hsl(var(--fg));white-space:pre-wrap;word-break:break-word}
+  .detail-body h1,.detail-body h2,.detail-body h3{font-weight:600;margin:14px 0 8px;line-height:1.3}
+  .detail-body h1{font-size:20px}.detail-body h2{font-size:17px}.detail-body h3{font-size:15px}
+  .detail-body p{margin:8px 0}
+  .detail-body code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;padding:1px 5px;background:hsl(var(--muted));border-radius:3px}
+  .detail-body blockquote{border-left:3px solid hsl(var(--border));padding-left:12px;color:hsl(var(--muted-fg));margin:10px 0}
+  .detail-img{width:100%;border-radius:8px;margin:8px 0}
+  .detail-toolbar{display:flex;align-items:center;gap:2px}
+  .detail-toolbar button{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;background:transparent;border:none;color:hsl(var(--muted-fg));cursor:pointer}
+  .detail-toolbar button:hover{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .detail-toolbar button.is-on{color:hsl(var(--primary));background:hsl(var(--primary)/.1)}
+  .detail-toolbar svg{width:16px;height:16px}
+  .detail-side-btn{padding:5px 10px;border:1px solid hsl(var(--border));background:transparent;border-radius:6px;font-size:12px;color:hsl(var(--fg));cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit}
+  .detail-side-btn:hover{background:hsl(var(--muted))}
+  .detail-side-btn svg{width:12px;height:12px}
+
+  /* ===== 详情抽屉：基础定位 + 阅读模式（侧边/居中/整页）+ 折叠 ===== */
+  /* 基础定位：右侧抽屉，从右滑入（与 review 抽屉一致） */
+  .review-drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100vw;background:hsl(var(--card));border-left:1px solid hsl(var(--border));box-shadow:-16px 0 40px -10px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:60;display:flex;flex-direction:column}
+  .review-drawer.open{transform:translateX(0)}
+  .review-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .22s;z-index:55}
+  .review-backdrop.open{opacity:1;pointer-events:auto}
+  /* 详情抽屉比默认 review 宽 */
+  #detail-drawer{width:520px}
+  /* 收起态：抽屉收为 56px 细条，仅显示 [>>] 展开按钮（中心垂直） */
+  #detail-drawer.collapsed{width:56px;overflow:hidden}
+  #detail-drawer.collapsed>header{padding:0;justify-content:center;height:100%;align-items:center;border-bottom:none}
+  /* 收起时只保留 data-collapse-toggle 按钮，其他全隐藏 */
+  #detail-drawer.collapsed>header>div:first-child{justify-content:center;width:100%}
+  #detail-drawer.collapsed>header>div:first-child>*:not([data-collapse-toggle]),
+  #detail-drawer.collapsed>header>div:last-child>*, #detail-drawer.collapsed>div, #detail-drawer.collapsed>footer{display:none}
+  /* 整页态：抽屉全屏铺开，遮罩变浅 */
+  #detail-drawer.fullpage{width:min(100vw,900px)}
+  #detail-drawer.fullpage~#detail-backdrop{background:rgba(0,0,0,.18)}
+  /* 居中态：内容区最大宽度 720px，水平居中 */
+  #detail-drawer[data-mode="centered"] #detail-scroll{max-width:720px;margin:0 auto;width:100%}
+  /* 整页态：更宽的阅读区 */
+  #detail-drawer[data-mode="fullpage"] #detail-scroll{max-width:760px;margin:0 auto;width:100%;padding:28px 32px 32px}
+  #detail-drawer[data-mode="fullpage"] #detail-body{font-size:15px;line-height:1.8}
+  /* 默认侧边：靠抽屉左边 */
+  #detail-drawer[data-mode="side"] #detail-scroll{padding:18px 22px 20px}
+  #detail-drawer[data-mode="side"] #detail-body{font-size:13.5px;line-height:1.7}
+
+  /* 阅读模式切换按钮 */
+  .mode-seg{display:inline-flex;background:hsl(var(--muted));border-radius:6px;padding:2px}
+  .mode-seg button{width:26px;height:24px;border:none;background:transparent;display:grid;place-items:center;border-radius:4px;color:hsl(var(--muted-fg));cursor:pointer;transition:all .12s}
+  .mode-seg button.active{background:hsl(var(--card));color:hsl(var(--fg));box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .mode-seg svg{width:13px;height:13px}
+
+  /* 元信息收束：底栏小字 */
+  .detail-meta-bar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:11px;color:hsl(var(--muted-fg));padding:10px 0 4px;margin-top:18px;border-top:1px solid hsl(var(--border))}
+  .detail-meta-bar b{font-weight:500;color:hsl(var(--fg))}
+  .detail-meta-bar .sep{color:hsl(var(--border))}
+
+  /* ===== 详情正文元素：标签 / @ 引用 / ! 重要度 / 图片 / 附件行内 ===== */
+  .detail-body{font-size:14px;line-height:1.75;color:hsl(var(--fg));white-space:normal}
+  .detail-body p{margin:8px 0}
+  .detail-body h1{font-size:26px;font-weight:700;margin:18px 0 10px;line-height:1.3}
+  .detail-body h2{font-size:20px;font-weight:600;margin:16px 0 8px;line-height:1.35}
+  .detail-body h3{font-size:16px;font-weight:600;margin:14px 0 6px;line-height:1.4}
+  .detail-body blockquote{border-left:3px solid hsl(var(--border));padding:4px 12px;color:hsl(var(--muted-fg));margin:10px 0;background:hsl(var(--muted)/.4);border-radius:0 4px 4px 0}
+  .detail-body code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:1px 6px;background:hsl(var(--muted));border-radius:3px;color:hsl(var(--fg))}
+  .detail-body pre{background:hsl(var(--muted));padding:12px 14px;border-radius:6px;overflow-x:auto;font-size:12.5px;margin:12px 0;line-height:1.55}
+  .detail-body pre code{background:transparent;padding:0}
+  .detail-body ul,.detail-body ol{margin:8px 0;padding-left:24px}
+  .detail-body li{margin:4px 0}
+  .detail-body hr{border:none;border-top:1px solid hsl(var(--border));margin:16px 0}
+  /* 行内标签：#xxx */
+  .inline-tag{display:inline-flex;align-items:center;padding:1px 7px;margin:0 2px;border-radius:4px;background:hsl(var(--primary)/.1);color:hsl(var(--primary));font-size:12.5px;cursor:pointer;font-weight:500}
+  .inline-tag:hover{background:hsl(var(--primary)/.18)}
+  /* 行内 @ 引用：@某人 */
+  .inline-mention{display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;background:hsl(var(--muted));color:hsl(var(--fg));font-size:12.5px;cursor:pointer;font-weight:500}
+  .inline-mention::before{content:'@';color:hsl(var(--primary));font-weight:600;margin-right:1px}
+  .inline-mention:hover{background:hsl(var(--border))}
+  /* 行内 ! 重要度 */
+  .inline-imp{display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;font-size:12.5px;font-weight:500;cursor:pointer}
+  .inline-imp[data-level="high"]{background:hsl(var(--danger)/.12);color:hsl(var(--danger))}
+  .inline-imp[data-level="mid"]{background:hsl(var(--warning)/.15);color:hsl(var(--warning))}
+  .inline-imp[data-level="low"]{background:hsl(var(--muted));color:hsl(var(--muted-fg))}
+  .inline-imp::before{content:'!';font-weight:700}
+  /* 嵌入图片 */
+  .inline-img{display:block;max-width:100%;border-radius:8px;margin:12px 0;border:1px solid hsl(var(--border))}
+  .inline-img-caption{font-size:11.5px;color:hsl(var(--muted-fg));margin-top:-6px;margin-bottom:10px;text-align:center}
+  /* 附件行内卡片 */
+  .inline-attach{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:6px 0;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--muted)/.3);font-size:12.5px;cursor:pointer;transition:background .12s}
+  .inline-attach:hover{background:hsl(var(--muted))}
+  .inline-attach .ia-icon{width:28px;height:28px;border-radius:5px;background:hsl(var(--card));border:1px solid hsl(var(--border));display:grid;place-items:center;color:hsl(var(--muted-fg));flex-shrink:0}
+  .inline-attach .ia-icon svg{width:14px;height:14px}
+  .inline-attach .ia-name{flex:1;color:hsl(var(--fg));font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .inline-attach .ia-size{color:hsl(var(--muted-fg));font-size:11px;flex-shrink:0}
+  .inline-attach .ia-dl{color:hsl(var(--muted-fg));cursor:pointer;padding:2px}
+  .inline-attach .ia-dl:hover{color:hsl(var(--primary))}
+  .inline-attach .ia-dl svg{width:14px;height:14px}
+
+  /* ===== Fullscreen Editor（详情打开方式，对齐真实 app：fixed inset-0 z-9999 全屏覆盖） ===== */
+  .fullscreen-editor{position:fixed;inset:0;z-index:9999;background:hsl(var(--bg));display:none;flex-direction:column;animation:fsEditorIn .22s ease-out}
+  .fullscreen-editor.open{display:flex}
+  @keyframes fsEditorIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  /* 顶栏：返回 / 标题 / 页宽 / 全屏 / 关闭 */
+  .fs-topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-bottom:1px solid hsl(var(--border));background:hsla(var(--bg)/.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);flex-shrink:0}
+  .fs-back{width:30px;height:30px;border-radius:7px;border:1px solid hsl(var(--border));background:hsl(var(--card));display:grid;place-items:center;color:hsl(var(--muted-fg));cursor:pointer;flex-shrink:0}
+  .fs-back:hover{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .fs-back svg{width:15px;height:15px}
+  .fs-title{flex:1;font-size:13px;color:hsl(var(--muted-fg));min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .fs-title b{color:hsl(var(--fg));font-weight:600;font-size:14px;max-width:50vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fs-type-chip{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:hsl(var(--primary)/.1);color:hsl(var(--primary));flex-shrink:0}
+  .fs-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+  .fs-actions button{width:30px;height:30px;border-radius:7px;border:none;background:transparent;display:grid;place-items:center;color:hsl(var(--muted-fg));cursor:pointer}
+  .fs-actions button:hover{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .fs-actions button svg{width:16px;height:16px}
+  /* 页宽选择（紧凑/标准/宽松/全宽） */
+  .fs-page-width{position:relative}
+  .fs-page-width-menu{position:absolute;top:calc(100% + 6px);right:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:8px;box-shadow:0 8px 24px -4px rgba(0,0,0,.16);padding:6px;min-width:160px;z-index:11;display:none}
+  .fs-page-width-menu.open{display:block}
+  .fs-page-width-menu button{display:block;width:100%;padding:6px 10px;border:none;background:transparent;text-align:left;font-size:12.5px;color:hsl(var(--fg));border-radius:5px;cursor:pointer;font-family:inherit}
+  .fs-page-width-menu button:hover{background:hsl(var(--muted))}
+  .fs-page-width-menu button.active{background:hsl(var(--primary)/.1);color:hsl(var(--primary))}
+  /* 滚动正文区 */
+  .fs-body{flex:1;overflow-y:auto;padding:36px 24px 80px}
+  .fs-container{margin:0 auto;transition:max-width .22s}
+  .fs-container[data-width="compact"]{max-width:560px}
+  .fs-container[data-width="standard"]{max-width:760px}
+  .fs-container[data-width="loose"]{max-width:960px}
+  .fs-container[data-width="full"]{max-width:100%}
+  /* 标题输入 */
+  .fs-h1{font-size:32px;font-weight:700;line-height:1.2;color:hsl(var(--fg));margin:0 0 6px;outline:none;width:100%;border:none;background:transparent;font-family:inherit;padding:4px 0}
+  .fs-h1:empty::before{content:attr(data-placeholder);color:hsl(var(--muted-fg))}
+  .fs-h1:focus{outline:none}
+  /* 标签行 */
+  .fs-tags-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}
+  .fs-tag{background:hsl(var(--muted));color:hsl(var(--muted-fg));padding:2px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px}
+  .fs-tag.priority-high{background:hsl(var(--danger)/.12);color:hsl(var(--danger))}
+  .fs-tag.priority-mid{background:hsl(var(--warning)/.15);color:hsl(var(--warning))}
+  .fs-tag .x{cursor:pointer;opacity:.6}
+  .fs-tag .x:hover{opacity:1}
+  /* 正文编辑区 */
+  .fs-content{min-height:200px;font-size:15.5px;line-height:1.75;color:hsl(var(--fg));outline:none;font-family:inherit;white-space:pre-wrap;word-break:break-word}
+  .fs-content:empty::before{content:attr(data-placeholder);color:hsl(var(--muted-fg))}
+  /* 元信息（底部小字） */
+  .fs-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:11px;color:hsl(var(--muted-fg));margin-top:32px;padding-top:14px;border-top:1px solid hsl(var(--border))}
+  .fs-meta b{font-weight:500;color:hsl(var(--fg))}
+  .fs-meta .sep{color:hsl(var(--border))}
+  /* 底部 FAB 工具条 */
+  .fs-fab{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:14px;padding:6px 10px;box-shadow:0 8px 24px -4px rgba(0,0,0,.12);z-index:10}
+  .fs-fab button{width:34px;height:34px;border-radius:8px;border:none;background:transparent;display:grid;place-items:center;color:hsl(var(--muted-fg));cursor:pointer;transition:all .12s;position:relative}
+  .fs-fab button:hover{background:hsl(var(--muted));color:hsl(var(--fg))}
+  .fs-fab button.is-on{color:hsl(var(--primary));background:hsl(var(--primary)/.08)}
+  .fs-fab button svg{width:17px;height:17px}
+  .fs-fab .label{font-size:11px;color:hsl(var(--muted-fg));padding:0 6px;border-right:1px solid hsl(var(--border));margin-right:4px}
+
+  /* 子任务列表 */
+  .subtask-list{margin:8px 0;padding:0;list-style:none}
+  .subtask-list li{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:13px;color:hsl(var(--fg))}
+  .subtask-list .sc{width:15px;height:15px;border:1.5px solid hsl(var(--border));border-radius:3px;display:inline-flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0}
+  .subtask-list .sc.done{background:hsl(var(--primary));border-color:hsl(var(--primary));color:white}
+  .subtask-list .sc.done::after{content:'✓';font-size:10px;font-weight:700}
+  .subtask-list .st.done{color:hsl(var(--muted-fg));text-decoration:line-through}
+
+  /* ===== 瀑布流卡片墙（flexbox 列，模拟 react-masonry-css） ===== */
+  #card-view{display:none;padding-bottom:64px}
+  #card-view.show{display:block}
+  .masonry{display:flex;gap:var(--card-gap,16px);align-items:flex-start}
+  .m-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:var(--card-gap,16px)}
+
+  /* ===== 卡片 ===== */
+  .m-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;position:relative}
+  .m-card:hover{border-color:hsl(var(--primary)/.45);box-shadow:0 6px 20px -6px rgba(0,0,0,.16);transform:translateY(-1px)}
+  .m-body{padding:11px 13px 12px}
+  .m-text{font-size:13.5px;line-height:1.62;color:hsl(var(--fg));white-space:pre-wrap}
+  .m-title{font-size:14.5px;font-weight:600;color:hsl(var(--fg));line-height:1.4;display:flex;gap:6px;align-items:flex-start}
+  .m-title .emoji{font-size:16px;line-height:1.3;flex-shrink:0}
+  .m-excerpt{font-size:12.5px;line-height:1.6;color:hsl(var(--muted-fg));margin-top:5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .m-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:hsl(var(--muted-fg))}
+  .m-actions{position:absolute;top:7px;right:7px;display:flex;gap:3px;opacity:0;transition:opacity .12s;z-index:2}
+  .m-card:hover .m-actions{opacity:1}
+  .m-actions button{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:hsl(var(--card)/.82);backdrop-filter:blur(4px);border:1px solid hsl(var(--border));color:hsl(var(--muted-fg));cursor:pointer}
+  .m-actions button:hover{color:hsl(var(--fg));background:hsl(var(--muted))}
+  .m-actions svg{width:13px;height:13px}
+
+  /* ===== 笔记封面 ===== */
+  .m-cover{width:100%;height:118px;display:block}
+  .cover-a{background:linear-gradient(135deg,#667eea,#764ba2)}
+  .cover-b{background:linear-gradient(135deg,#f093fb,#f5576c)}
+  .cover-c{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+
+  /* ===== 闪念图片画廊（对齐真实微博式 BlinkoImageGallery） ===== */
+  .m-single{margin-top:9px}
+  .m-gallery{display:grid;gap:3px;margin-top:9px}
+  .m-gallery.c2{grid-template-columns:repeat(2,1fr)}
+  .m-gallery.c3{grid-template-columns:repeat(3,1fr)}
+  .ph{position:relative;overflow-hidden;border-radius:6px;display:block}
+  .ph.sq{aspect-ratio:1/1}
+  .ph.land{height:150px}
+  .ph.port{height:280px}
+  .ph .ph-icon{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.72)}
+  .ph .ph-icon svg{width:20px;height:20px}
+  .g1{background:linear-gradient(135deg,#fbc2eb,#a6c1ee)}
+  .g2{background:linear-gradient(135deg,#84fab0,#8fd3f4)}
+  .g3{background:linear-gradient(135deg,#fa709a,#fee140)}
+  .g4{background:linear-gradient(135deg,#a18cd1,#fbc2eb)}
+  .g5{background:linear-gradient(135deg,#fad0c4,#ffd1ff)}
+  .g6{background:linear-gradient(135deg,#43e97b,#38f9d7)}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ========== TOP BAR ========== -->
+<div class="fixed top-0 left-0 right-0 z-50 bg-card border-b border-default">
+  <div class="h-11 flex items-center px-4">
+    <!-- search -->
+    <div class="flex items-center gap-2 flex-1 max-w-[400px] ml-[var(--sidebar-w)]">
+      <div class="flex items-center gap-2 border border-default rounded-md px-3 h-8 w-full bg-muted/50 text-sm text-muted cursor-pointer hover:border-primary/50 transition-colors" onclick="openCmdk()">
+        <i data-lucide="search" class="w-4 h-4 shrink-0"></i>
+        <span class="flex-1 truncate">搜索笔记、待办...</span>
+        <kbd>⌘K</kbd>
+      </div>
+    </div>
+    <!-- right actions -->
+    <div class="flex items-center gap-1 ml-auto">
+      <button onclick="switchState('data')" class="px-2.5 py-1.5 rounded-md text-xs font-medium bg-card shadow-sm text-fg" data-state-btn="data">有数据</button>
+      <button onclick="switchState('loading')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-fg" data-state-btn="loading">加载中</button>
+      <button onclick="switchState('empty')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-fg" data-state-btn="empty">空态</button>
+      <button onclick="switchState('error')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-fg" data-state-btn="error">错误</button>
+      <button onclick="toggleTheme()" class="ml-1 p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted"><i data-lucide="moon" class="w-3.5 h-3.5"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN LAYOUT ========== -->
+<div class="pt-11 flex min-h-screen">
+
+<!-- ========== SIDEBAR (新交互：折叠/展开、has-new 徽标、标签折叠) ========== -->
+<aside class="sidebar fixed top-11 left-0 h-[calc(100vh-44px)] border-r border-default bg-card flex flex-col overflow-y-auto" id="sidebar">
+  <button class="sidebar-collapse-btn" id="sidebar-collapse" onclick="toggleSidebarCollapse()" title="折叠侧边栏（⌘[）">
+    <i data-lucide="chevrons-left" id="sidebar-collapse-icon"></i>
+  </button>
+  <div class="px-2 pt-2">
+    <div class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted mb-1" onclick="openCmdk()">
+      <div class="w-5 h-5 rounded bg-primary flex items-center justify-center text-white text-[10px] font-bold shrink-0">B</div>
+      <span class="text-[13px] font-semibold flex-1 truncate sidebar-account-name">Brian's Space</span>
+      <kbd class="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-fg sidebar-account-kbd">⌘K</kbd>
+    </div>
+  </div>
+  <!-- 记录 -->
+  <div class="section-title">记录</div>
+  <div class="px-2">
+    <a class="nav-row" data-mode="blinko" data-key="1" onclick="sidebarNav(this, 'blinko', event)" title="闪念 (⌘1)">
+      <span class="nav-icon"><i data-lucide="zap" class="text-yellow-500"></i></span>
+      <span class="nav-label">闪念</span>
+      <span class="nav-count" id="nav-count-blinko">12</span>
+      <span class="nav-add" onclick="event.stopPropagation();quickAdd('blinko')" title="新建闪念 (⌘N)"><i data-lucide="plus"></i></span>
+    </a>
+    <a class="nav-row" data-mode="notes" data-key="2" onclick="sidebarNav(this, 'notes', event)" title="笔记 (⌘2)">
+      <span class="nav-icon"><i data-lucide="notebook-pen" class="text-blue-500"></i></span>
+      <span class="nav-label">笔记</span>
+      <span class="nav-count" id="nav-count-notes">34</span>
+      <span class="nav-add" onclick="event.stopPropagation();quickAdd('notes')" title="新建笔记"><i data-lucide="plus"></i></span>
+    </a>
+    <a class="nav-row" data-mode="todo" data-key="3" onclick="sidebarNav(this, 'todo', event)" title="待办 (⌘3)">
+      <span class="nav-icon"><i data-lucide="check-circle-2" class="text-green-500"></i></span>
+      <span class="nav-label">待办</span>
+      <span class="nav-count" id="nav-count-todo">5</span>
+      <span class="nav-add" onclick="event.stopPropagation();quickAdd('todo')" title="新建待办"><i data-lucide="plus"></i></span>
+    </a>
+  </div>
+  <!-- 整理 -->
+  <div class="section-title">整理</div>
+  <div class="px-2">
+    <a class="nav-row" onclick="sidebarNav(this, 'archive', event)" title="归档">
+      <span class="nav-icon"><i data-lucide="archive" class="text-muted-fg"></i></span>
+      <span class="nav-label">归档</span>
+      <span class="nav-count" id="nav-count-archive">23</span>
+    </a>
+    <a class="nav-row" onclick="sidebarNav(this, 'trash', event)" title="回收站">
+      <span class="nav-icon"><i data-lucide="trash-2" class="text-muted-fg"></i></span>
+      <span class="nav-label">回收站</span>
+    </a>
+  </div>
+  <!-- 工具 -->
+  <div class="section-title">工具</div>
+  <div class="px-2">
+    <a class="nav-row" onclick="sidebarNav(this, 'analytics', event)" title="统计">
+      <span class="nav-icon"><i data-lucide="bar-chart-3" class="text-muted-fg"></i></span>
+      <span class="nav-label">统计</span>
+    </a>
+    <a class="nav-row" onclick="sidebarNav(this, 'resources', event)" title="资源管理">
+      <span class="nav-icon"><i data-lucide="database" class="text-muted-fg"></i></span>
+      <span class="nav-label">资源管理</span>
+      <span class="nav-count">8</span>
+    </a>
+    <a class="nav-row" onclick="sidebarNav(this, 'plugin', event)" title="插件">
+      <span class="nav-icon"><i data-lucide="plug" class="text-muted-fg"></i></span>
+      <span class="nav-label">插件</span>
+    </a>
+  </div>
+  <!-- 标签面板（可折叠） -->
+  <div class="section-toggle" id="tags-toggle" onclick="toggleTagsPanel()" title="点击展开/收起">
+    <span>标签</span>
+    <i data-lucide="chevron-down" class="chev w-3 h-3"></i>
+  </div>
+  <div class="px-2 tags-list" id="tags-list">
+    <a class="nav-row" data-mode="tag:重要" onclick="sidebarNav(this, 'tag:重要', event)" title="# 重要 (5)">
+      <span class="nav-icon"><span class="w-2 h-2 rounded-full bg-rose-500"></span></span>
+      <span class="nav-label"># 重要</span>
+      <span class="nav-count">5</span>
+    </a>
+    <a class="nav-row" data-mode="tag:灵感" onclick="sidebarNav(this, 'tag:灵感', event)" title="# 灵感 (8)">
+      <span class="nav-icon"><span class="w-2 h-2 rounded-full bg-sky-500"></span></span>
+      <span class="nav-label"># 灵感</span>
+      <span class="nav-count">8</span>
+    </a>
+    <a class="nav-row" data-mode="tag:周报" onclick="sidebarNav(this, 'tag:周报', event)" title="# 周报 (3)">
+      <span class="nav-icon"><span class="w-2 h-2 rounded-full bg-emerald-500"></span></span>
+      <span class="nav-label"># 周报</span>
+      <span class="nav-count">3</span>
+    </a>
+    <a class="nav-row" data-mode="tag:改版" onclick="sidebarNav(this, 'tag:改版', event)" title="# 改版 (6)">
+      <span class="nav-icon"><span class="w-2 h-2 rounded-full bg-violet-500"></span></span>
+      <span class="nav-label"># 改版</span>
+      <span class="nav-count">6</span>
+    </a>
+  </div>
+  <div class="mt-auto border-t border-default px-2 py-2">
+    <a class="nav-row" onclick="sidebarNav(this, 'settings', event)" title="设置 (⌘,)">
+      <span class="nav-icon"><i data-lucide="settings" class="text-muted-fg"></i></span>
+      <span class="nav-label">设置</span>
+      <kbd class="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-fg sidebar-account-kbd">⌘,</kbd>
+    </a>
+  </div>
+</aside>
+
+<!-- ========== MAIN CONTENT (Noiton 风格) ========== -->
+<main class="ml-[var(--sidebar-w)] flex-1 min-w-0">
+
+<!-- ===== 视图切换标题 ===== -->
+<div class="border-b border-default bg-card sticky top-11 z-40">
+  <div class="max-w-[740px] mx-auto px-8 h-11 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <h1 class="text-[15px] font-semibold" id="modeTitle">⚡ 闪念</h1>
+      <span class="text-xs text-muted" id="modeCount">12 条</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <!-- 视图模式切换：列表 / 卡片 -->
+      <div class="view-seg" id="view-seg">
+        <button class="active" data-view="list" onclick="setViewMode('list')" title="列表视图（Notion 行式）"><i data-lucide="list"></i><span>列表</span></button>
+        <button data-view="card" onclick="setViewMode('card')" title="卡片视图（瀑布流，可调列数与间距）"><i data-lucide="layout-grid"></i><span>卡片</span></button>
+      </div>
+      <!-- view settings popover（点开才看到所有设置；列数/间距仅卡片模式显示，对齐真实 blinkoHomeSettingsPop） -->
+      <div class="relative inline-block text-left">
+        <button class="view-popover-trigger p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" id="vp-trigger" onclick="toggleViewPopover()" title="视图设置"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i></button>
+        <div class="view-popover" id="view-popover" onclick="event.stopPropagation()">
+          <div class="vp-section">
+            <div class="vp-label">显示密度</div>
+            <div class="seg" id="seg-density">
+              <button data-density="compact" onclick="setDensity('compact')">紧凑</button>
+              <button data-density="standard" class="active" onclick="setDensity('standard')">标准</button>
+              <button data-density="loose" onclick="setDensity('loose')">宽松</button>
+            </div>
+          </div>
+          <div class="vp-section">
+            <div class="vp-label">列表样式</div>
+            <div class="seg" id="seg-liststyle">
+              <button data-list-style="continuous" onclick="setListStyle('continuous')">连续</button>
+              <button data-list-style="byDay" class="active" onclick="setListStyle('byDay')">按天分组</button>
+            </div>
+          </div>
+          <div class="vp-section">
+            <div class="vp-label">排序</div>
+            <div class="seg" id="seg-sort">
+              <button data-sort="updated" class="active" onclick="setSort('updated')">最近更新</button>
+              <button data-sort="created" onclick="setSort('created')">创建时间</button>
+            </div>
+          </div>
+          <div class="vp-section" id="vp-card-section" style="display:none">
+            <div class="vp-label">每行卡片 <span class="text-muted" id="vp-col-hint">2</span></div>
+            <div class="col-seg" id="col-seg">
+              <button data-col="1" onclick="setColumns(1)">1</button>
+              <button data-col="2" class="active" onclick="setColumns(2)">2</button>
+              <button data-col="3" onclick="setColumns(3)">3</button>
+              <button data-col="4" onclick="setColumns(4)">4</button>
+            </div>
+          </div>
+          <div class="vp-section" id="vp-gap-section" style="display:none">
+            <div class="vp-label">间距 <span class="spacing-val" id="spacing-val">16px</span></div>
+            <input type="range" min="4" max="24" step="2" value="16" class="spacing-slider" id="spacing-slider" oninput="setSpacing(+this.value)">
+          </div>
+          <button class="vp-done" onclick="toggleViewPopover()">完成</button>
+        </div>
+      </div>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" title="按天分组"><i data-lucide="calendar-days" class="w-4 h-4"></i></button>
+      <!-- 每日回顾入口（顶栏右侧 · 对齐真实 app Layout/index.tsx:173-183 灯泡 icon + 角标） -->
+      <button class="review-trigger relative p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted has-tooltip" onclick="openReview()" title="每日回顾（未读 12 条）">
+        <i data-lucide="lightbulb" class="w-4 h-4"></i>
+        <span class="review-badge absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] px-1 rounded-full bg-warning text-white text-[10px] font-medium leading-[15px] text-center">12</span>
+        <span class="tip-hint absolute right-full mr-3 top-1/2 -translate-y-1/2 text-xs bg-card border border-default rounded-md px-2 py-1 shadow whitespace-nowrap">每日回顾</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3 STATES ===== -->
+<div class="max-w-[740px] mx-auto px-8">
+
+<!-- ====== STATE: DATA ====== -->
+<div class="state active" id="state-data" data-state="data">
+
+  <!-- 快速记录（替代 BlinkoEditor 全宽输入区） -->
+  <div class="mt-4 mb-4">
+    <div class="border border-default rounded-xl px-4 py-3 bg-card hover:bg-muted/50 cursor-text transition-colors flex items-center gap-3" onclick="this.querySelector('span').textContent='输入内容... 按 Enter 保存'">
+      <div class="avatar shrink-0">B</div>
+      <span class="flex-1 text-sm text-muted">写一条新的...</span>
+      <div class="flex items-center gap-1.5">
+        <button class="p-1 rounded hover:bg-muted text-muted" title="添加附件"><i data-lucide="paperclip" class="w-4 h-4"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" title="添加图片"><i data-lucide="image" class="w-4 h-4"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" title="语音输入"><i data-lucide="mic" class="w-4 h-4"></i></button>
+        <span class="w-px h-4 bg-default"></span>
+        <div class="chip chip-primary text-[10px] px-1.5" id="modeChip">⚡ 闪念</div>
+        <kbd>⌘↵</kbd>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签筛选 chip 行（替代 TagFilterChips 单独区块） -->
+  <div class="flex items-center gap-1.5 mb-1 overflow-x-auto pb-1" id="tagChips">
+    <button class="chip active" onclick="filterTag(this)">全部 <span class="opacity-60">51</span></button>
+    <button class="chip" onclick="filterTag(this)"># 重要 <span class="opacity-60">5</span></button>
+    <button class="chip" onclick="filterTag(this)"># 灵感 <span class="opacity-60">8</span></button>
+    <button class="chip" onclick="filterTag(this)"># 设计 <span class="opacity-60">12</span></button>
+    <button class="chip" onclick="filterTag(this)"># 工作 <span class="opacity-60">18</span></button>
+    <button class="chip" onclick="filterTag(this)"># 改版 <span class="opacity-60">6</span></button>
+    <button class="chip text-muted hover:text-fg">+ 管理标签</button>
+  </div>
+
+  <!-- ====== 列表视图（Notion 行式） ====== -->
+  <div id="list-view">
+  <div class="mt-2 pb-16">
+
+    <!-- --- 分组标题：今天 --- -->
+    <div class="day-group flex items-center gap-2 mb-1 mt-5">
+      <div class="text-xs font-medium text-muted uppercase tracking-wider">今天</div>
+      <div class="flex-1 h-px bg-default"></div>
+      <span class="text-[10px] text-muted">3 条</span>
+    </div>
+
+    <!-- 闪念行（blinko mode） -->
+    <div class="row" data-type="blinko" data-id="1" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="cb mt-1.5 shrink-0" onclick="event.stopPropagation();toggleRowTodo(this)"></span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] leading-6 text-fg">产品改版要点：把导入导出做到一键，参考飞书的"..."菜单层级</div>
+        <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px] text-muted">
+          <span>2 分钟前</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();shareRow(this)" title="分享"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- 笔记行（notes mode） -->
+    <div class="row" data-type="notes" data-id="2" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="text-2xl mt-0.5 shrink-0">📐</span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] font-medium text-fg truncate">Notion 风格设计语言：行即组件、空白大于边框</div>
+        <div class="text-[12.5px] text-muted leading-5 truncate mt-0.5">极简不是简陋，而是克制。Notion 的列表每一行就是信息单位，没有多余的卡片包裹...</div>
+        <div class="flex items-center gap-1.5 mt-1 text-[11.5px] text-muted">
+          <span class="chip"># 设计</span>
+          <span class="chip"># shadcn</span>
+          <span>· 2 个附件</span>
+          <span>· 今天</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();shareRow(this)" title="分享"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- 待办行（todo mode） -->
+    <div class="row" data-type="todo" data-id="3" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="cb mt-1.5 shrink-0" onclick="event.stopPropagation();toggleRowTodo(this)"></span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] leading-6 text-fg">提交 Blinko Notion 风格 HTML 原型评审</div>
+        <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px]">
+          <span class="text-danger font-medium inline-flex items-center gap-1"><i data-lucide="flag" class="w-3 h-3"></i>高</span>
+          <span class="text-danger inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>今天 18:00</span>
+          <span class="chip"># 改版</span>
+          <span class="text-muted">· 3/5 子任务</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();scheduleRow(this)" title="安排时间"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- --- 分组标题：昨天 --- -->
+    <div class="day-group flex items-center gap-2 mb-1 mt-7">
+      <div class="text-xs font-medium text-muted uppercase tracking-wider">昨天</div>
+      <div class="flex-1 h-px bg-default"></div>
+      <span class="text-[10px] text-muted">4 条</span>
+    </div>
+
+    <div class="row" data-type="notes" data-id="4" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="text-2xl mt-0.5 shrink-0">📊</span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] font-medium text-fg truncate">Blinko 统计模块 V2 复盘：从 13 个 bug 看产品设计</div>
+        <div class="text-[12.5px] text-muted leading-5 truncate mt-0.5">这轮迭代让我意识到：性能问题往往不是单一原因，而是多个边缘条件叠加...</div>
+        <div class="flex items-center gap-1.5 mt-1 text-[11.5px] text-muted">
+          <span class="chip"># 工作</span>
+          <span class="chip"># 复盘</span>
+          <span>· 昨天</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();shareRow(this)" title="分享"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <div class="row is-done" data-type="blinko" data-id="5" data-pinned="0" data-done="1">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="cb done mt-1.5 shrink-0" onclick="event.stopPropagation();toggleRowTodo(this)"></span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] leading-6 text-muted line-through">提交统计模块热力图改天的 PR</div>
+        <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px] text-muted">
+          <span class="chip"># 工作</span>
+          <span>· 昨天</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();shareRow(this)" title="分享"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <div class="row" data-type="todo" data-id="6" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="cb mt-1.5 shrink-0" onclick="event.stopPropagation();toggleRowTodo(this)"></span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] leading-6 text-fg">整理 Blinko 内容管理模块需求列表</div>
+        <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px]">
+          <span class="text-warning font-medium inline-flex items-center gap-1"><i data-lucide="flag" class="w-3 h-3"></i>中</span>
+          <span class="text-muted inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>明天</span>
+          <span class="chip"># PM</span>
+        </div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0">
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();scheduleRow(this)" title="安排时间"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- --- 分组标题：本周 --- -->
+    <div class="day-group flex items-center gap-2 mb-1 mt-7">
+      <div class="text-xs font-medium text-muted uppercase tracking-wider">本周</div>
+      <div class="flex-1 h-px bg-default"></div>
+      <span class="text-[10px] text-muted">5 条</span>
+    </div>
+
+    <div class="row" data-type="notes" data-id="7" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="text-2xl mt-0.5 shrink-0">🚀</span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] font-medium text-fg truncate">从 Notion 迁移笔记到 Blinko：HTML 导入路径设计</div>
+        <div class="text-[12.5px] text-muted leading-5 truncate mt-0.5">Notion 导出默认是 HTML+附件 zip，是最大迁移源...</div>
+        <div class="flex items-center gap-1.5 mt-1 text-[11.5px] text-muted"><span class="chip"># 设计</span><span class="chip"># 迁移</span><span>· 5 附件</span><span>· 周一</span></div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0"><button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button><button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button></div>
+    </div>
+
+    <div class="row" data-type="blinko" data-id="8" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="cb mt-1.5 shrink-0" onclick="event.stopPropagation();toggleRowTodo(this)"></span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] leading-6 text-fg">《简约至上》第三章的"移除"原则同样适用于笔记应用</div>
+        <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px] text-muted"><span class="chip"># 阅读</span><span class="chip"># 设计</span><span>· 周二</span></div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0"><button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button><button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button></div>
+    </div>
+
+    <div class="row" data-type="notes" data-id="9" data-pinned="0" data-done="0">
+      <span class="drag-handle mt-1.5 pt-px"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+      <span class="text-2xl mt-0.5 shrink-0">🎨</span>
+      <div class="flex-1 min-w-0 cursor-pointer" onclick="navigateToNote(this)">
+        <div class="text-[14.5px] font-medium text-fg truncate">Tailwind + shadcn/ui 设计 token 体系</div>
+        <div class="text-[12.5px] text-muted leading-5 truncate mt-0.5">CSS variables 控制颜色、圆角、阴影是 shadcn/ui 的精髓...</div>
+        <div class="flex items-center gap-1.5 mt-1 text-[11.5px] text-muted"><span class="chip"># 技术</span><span class="chip"># 设计</span><span>· 周三</span></div>
+      </div>
+      <div class="actions flex items-center gap-1 shrink-0"><button class="pin-btn p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();toggleRowPin(this)" title="置顶"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button><button class="p-1 rounded hover:bg-muted text-muted" onclick="event.stopPropagation();moreRow(event,this)" title="更多"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button></div>
+    </div>
+  </div>
+  </div><!-- /#list-view -->
+
+  <!-- ====== 卡片视图（瀑布流卡片墙，含闪念图片方案） ====== -->
+  <div id="card-view">
+    <div class="masonry" id="masonry"></div>
+  </div>
+</div>
+
+<!-- ====== STATE: LOADING ====== -->
+<div class="state" id="state-loading" data-state="loading">
+  <div class="mt-4 mb-4"><div class="skeleton h-10 w-full rounded-xl"></div></div>
+  <div class="flex items-center gap-1.5 mb-4">
+    <div class="skeleton h-6 w-16 rounded-full"></div><div class="skeleton h-6 w-16 rounded-full"></div><div class="skeleton h-6 w-16 rounded-full"></div>
+  </div>
+  <div class="mt-6 pb-16">
+    <div class="skeleton h-4 w-24 mb-4"></div>
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 px-3 py-2"><div class="skeleton w-4 h-4 rounded"></div><div class="skeleton h-5 flex-1"></div><div class="skeleton h-3 w-12"></div></div>
+      <div class="flex items-center gap-3 px-3 py-2"><div class="skeleton w-5 h-5 rounded"></div><div class="flex-1 space-y-1"><div class="skeleton h-5 w-3/4"></div><div class="skeleton h-3 w-1/3"></div></div></div>
+      <div class="flex items-center gap-3 px-3 py-2"><div class="skeleton w-4 h-4 rounded"></div><div class="skeleton h-5 flex-1"></div><div class="skeleton h-3 w-12"></div></div>
+      <div class="flex items-center gap-3 px-3 py-2"><div class="skeleton w-5 h-5 rounded"></div><div class="flex-1 space-y-1"><div class="skeleton h-5 w-2/3"></div><div class="skeleton h-3 w-1/4"></div></div></div>
+      <div class="flex items-center gap-3 px-3 py-2"><div class="skeleton w-4 h-4 rounded"></div><div class="skeleton h-5 flex-1"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== STATE: EMPTY ====== -->
+<div class="state" id="state-empty" data-state="empty">
+  <div class="pt-20 pb-16 text-center">
+    <div class="empty-illu mx-auto mb-6">
+      <i data-lucide="notebook-pen" class="w-16 h-16 text-primary/40"></i>
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight mb-2">欢迎来到 Blinko 👋</h1>
+    <p class="text-sm text-muted mb-8 max-w-md mx-auto">一个属于你的笔记空间。写下第一篇<span id="emptyType">闪念</span>，开启记录之旅。</p>
+    <div class="grid grid-cols-3 gap-3 mb-8 max-w-2xl mx-auto">
+      <button class="text-left p-4 border border-default rounded-lg hover:border-primary/40 hover:bg-muted transition-all">
+        <i data-lucide="file-plus-2" class="w-5 h-5 text-primary mb-2"></i>
+        <div class="font-medium text-sm mb-1">新建</div>
+        <div class="text-[11px] text-muted">空白页 + markdown</div>
+      </button>
+      <button class="text-left p-4 border border-default rounded-lg hover:border-primary/40 hover:bg-muted transition-all">
+        <i data-lucide="import" class="w-5 h-5 text-primary mb-2"></i>
+        <div class="font-medium text-sm mb-1">从 Notion 导入</div>
+        <div class="text-[11px] text-muted">HTML / MD / Word</div>
+      </button>
+      <button class="text-left p-4 border border-default rounded-lg hover:border-primary/40 hover:bg-muted transition-all">
+        <i data-lucide="zap" class="w-5 h-5 text-primary mb-2"></i>
+        <div class="font-medium text-sm mb-1">快捷键</div>
+        <div class="text-[11px] text-muted">⌘K 命令面板</div>
+      </button>
+    </div>
+    <button class="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 inline-flex items-center gap-2">
+      <i data-lucide="plus" class="w-4 h-4"></i>写下第一篇
+    </button>
+    <p class="text-[11px] text-muted mt-3">或按 <kbd>⌘</kbd>+<kbd>N</kbd></p>
+  </div>
+</div>
+
+<!-- ====== STATE: ERROR ====== -->
+<div class="state" id="state-error" data-state="error">
+  <div class="mt-6">
+    <div class="border border-danger/40 bg-danger/10 rounded-lg p-4 flex items-start gap-3">
+      <i data-lucide="alert-triangle" class="w-5 h-5 text-danger shrink-0 mt-0.5"></i>
+      <div class="flex-1">
+        <div class="font-medium text-sm">无法加载数据</div>
+        <div class="text-xs text-muted mt-1">NetworkError: 服务器响应超时（30s）</div>
+        <div class="mt-3 flex items-center gap-2">
+          <button class="px-3 py-1.5 rounded-md bg-primary text-white text-xs font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+            <i data-lucide="refresh-ccw" class="w-3 h-3"></i>重试
+          </button>
+          <button class="px-3 py-1.5 rounded-md text-xs font-medium hover:bg-muted">查看详情</button>
+        </div>
+      </div>
+    </div>
+    <div class="text-center py-12 text-muted">
+      <i data-lucide="wifi-off" class="w-10 h-10 mx-auto mb-3 opacity-40"></i>
+      <div class="text-sm">离线模式下显示缓存数据</div>
+      <div class="text-[11px] mt-1">最后更新 5 分钟前</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /max-w -->
+</main>
+</div>
+
+<!-- ===== FAB (替代 BlinkoAddButton) ===== -->
+<button class="fixed bottom-6 right-6 w-10 h-10 rounded-xl bg-primary text-white shadow-lg hover:shadow-xl hover:opacity-90 transition-all flex items-center justify-center z-50 has-tooltip">
+  <i data-lucide="plus" class="w-5 h-5"></i>
+  <span class="tip-hint absolute right-full mr-3 top-1/2 -translate-y-1/2 text-xs bg-card border border-default rounded-md px-2 py-1 shadow whitespace-nowrap">新建 <kbd>⌘N</kbd></span>
+</button>
+
+<!-- ===== Fullscreen Editor（点击列表行 → 路由跳转 → 全屏编辑器，对齐真实 app /detail?id=X） ===== -->
+<div class="fullscreen-editor" id="fs-editor" role="dialog" aria-label="笔记编辑器">
+  <!-- 顶栏：返回 / 标题 + 类型 chip / 页宽 / 全屏 / 关闭 -->
+  <header class="fs-topbar">
+    <button class="fs-back" onclick="closeFullscreenEditor()" title="返回列表（Esc）"><i data-lucide="arrow-left"></i></button>
+    <div class="fs-title">
+      <span class="fs-type-chip" id="fs-type-chip">⚡ 闪念</span>
+      <b id="fs-title-breadcrumb">未命名</b>
+    </div>
+    <div class="fs-actions">
+      <div class="fs-page-width" id="fs-pw">
+        <button onclick="toggleFsPageWidth()" title="页宽"><i data-lucide="pilcrow"></i></button>
+        <div class="fs-page-width-menu" id="fs-pw-menu">
+          <button data-width="compact" onclick="setFsPageWidth('compact')">紧凑 <span class="text-muted" style="font-size:10.5px">560</span></button>
+          <button data-width="standard" class="active" onclick="setFsPageWidth('standard')">标准 <span class="text-muted" style="font-size:10.5px">760</span></button>
+          <button data-width="loose" onclick="setFsPageWidth('loose')">宽松 <span class="text-muted" style="font-size:10.5px">960</span></button>
+          <button data-width="full" onclick="setFsPageWidth('full')">全宽</button>
+        </div>
+      </div>
+      <button onclick="toggleFsFullscreen()" id="fs-fullscreen-btn" title="全屏（⌘+Shift+F）"><i data-lucide="maximize-2"></i></button>
+      <button onclick="closeFullscreenEditor()" title="关闭（Esc）"><i data-lucide="x"></i></button>
+    </div>
+  </header>
+  <!-- 正文区 -->
+  <main class="fs-body" id="fs-body">
+    <div class="fs-container" data-width="standard" id="fs-container">
+      <input class="fs-h1" id="fs-h1" type="text" data-placeholder="无标题" />
+      <div class="fs-tags-row" id="fs-tags-row">
+        <span class="fs-tag" data-type="priority" style="display:none"><i data-lucide="flag" class="w-3 h-3"></i><span class="t"></span><span class="x">×</span></span>
+        <span class="text-muted text-[11px]">标签：</span>
+        <span id="fs-tags-container"></span>
+        <span class="fs-tag" data-type="add" style="cursor:pointer;opacity:.7"><i data-lucide="plus" class="w-3 h-3"></i></span>
+      </div>
+      <div class="fs-content" id="fs-content" contenteditable="true" data-placeholder="开始写…"></div>
+      <!-- 元信息（创建/更新/字数/子任务进度） -->
+      <div class="fs-meta" id="fs-meta"></div>
+    </div>
+  </main>
+  <!-- 底部 FAB 工具条 -->
+  <div class="fs-fab" id="fs-fab">
+    <button onclick="toggleFsEdit()" id="fs-edit-fab" class="is-on" title="编辑（E）"><i data-lucide="pencil"></i></button>
+    <button onclick="addAttachment()" title="附件"><i data-lucide="paperclip"></i></button>
+    <button onclick="addImage()" title="图片"><i data-lucide="image"></i></button>
+    <button onclick="toggleTodoComplete()" id="fs-todo-fab" title="完成/未完成" style="display:none"><i data-lucide="check-square"></i></button>
+    <span class="label" id="fs-word-count">0 字</span>
+    <button onclick="saveEditor()" title="保存（⌘+S）" class="is-on" id="fs-save-fab"><i data-lucide="check"></i></button>
+  </div>
+</div>
+
+<!-- ===== 每日回顾 · 整页 Random Walk 视图（对齐真实 app /review） ===== -->
+<div class="rw-page" id="rw-page" role="dialog" aria-label="每日回顾">
+  <!-- 左上：范围选择器 -->
+  <div class="rw-filters">
+    <label class="rw-filter active" data-range="1m" onclick="setReviewRange(this)">
+      <i data-lucide="calendar"></i>
+      <select id="rw-range-select" onclick="event.stopPropagation()" onchange="setReviewRange(this.closest('.rw-filter'))">
+        <option value="1w">最近一周</option>
+        <option value="1m" selected>最近一个月</option>
+        <option value="3m">最近三个月</option>
+        <option value="6m">最近半年</option>
+        <option value="1y">最近一年</option>
+        <option value="all">全部</option>
+      </select>
+      <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+    </label>
+    <button class="rw-filter" data-view="graph" onclick="setReviewView(this)">
+      <i data-lucide="star"></i>
+      <span>记忆星图</span>
+      <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+    </button>
+  </div>
+
+  <!-- 顶部：标题 + 关闭 -->
+  <header class="rw-header">
+    <div class="rw-title-block">
+      <div class="rw-eyebrow">Random Walk</div>
+      <h1>随机漫步</h1>
+      <p>偶遇一段被时间轻轻藏起来的想法</p>
+    </div>
+    <button class="rw-close" onclick="closeReview()" title="关闭（Esc）"><i data-lucide="x" class="w-5 h-5"></i></button>
+  </header>
+
+  <!-- 顶部进度：当前/总数 -->
+  <div class="rw-progress" id="rw-progress">3 / 12</div>
+
+  <!-- 中央堆叠 + 主体 -->
+  <div class="rw-stage" id="rw-stage">
+    <div class="rw-card-stack" id="rw-card-stack"></div>
+    <article class="rw-main" id="rw-main">
+      <div class="rw-meta">
+        <span class="rw-tag" id="rw-tag">闪念</span>
+        <span class="rw-date" id="rw-date">2026 · 09 · 22</span>
+      </div>
+      <div class="rw-cover" id="rw-cover">
+        <span class="rw-cover-emoji" id="rw-cover-emoji">💡</span>
+      </div>
+      <div class="rw-text" id="rw-text">这篇示例文章介绍 blinko 最重要的两种内容：Blinko 和 Note。</div>
+      <h2 class="rw-subhead" id="rw-subhead">
+        <span class="hl">先弄清</span><span class="sub">Blinko 和 Note</span>
+      </h2>
+      <div class="rw-tags" id="rw-tags">
+        <span class="chip"># Blinko</span>
+        <span class="chip"># 开始使用</span>
+      </div>
+    </article>
+  </div>
+
+  <!-- 底部工具条 -->
+  <div class="rw-toolbar">
+    <button onclick="reviewShare()" title="分享"><i data-lucide="share-2"></i></button>
+    <button onclick="reviewCopy()" title="复制"><i data-lucide="copy"></i></button>
+    <button onclick="reviewSaveImg()" title="保存为图片"><i data-lucide="image-down"></i></button>
+    <button class="danger" onclick="reviewDelete()" title="删除"><i data-lucide="trash-2"></i></button>
+    <button onclick="reviewArchive()" title="归档"><i data-lucide="archive"></i></button>
+    <button onclick="reviewToNote()" title="转笔记"><i data-lucide="notebook-pen"></i></button>
+  </div>
+
+  <!-- 操作提示 -->
+  <div class="rw-hint">
+    <span>← 拖动 · 方向键</span>
+    <span><kbd>Space</kbd> 卡片外滚轮</span>
+    <span>→</span>
+  </div>
+</div>
+
+<!-- ===== 详情抽屉（点击列表行打开，对齐 Notion 阅读体验） ===== -->
+<div class="review-backdrop" id="detail-backdrop" onclick="closeDetail()"></div>
+<aside class="review-drawer" id="detail-drawer" data-mode="side" role="dialog" aria-label="笔记详情">
+  <header class="h-11 px-3 flex items-center justify-between border-b border-default shrink-0 gap-2">
+    <!-- 左侧：收起按钮（>> / <<）+ 类型 chip + 时间 -->
+    <div class="flex items-center gap-2 min-w-0">
+      <button class="p-1 rounded-md text-muted hover:text-fg hover:bg-muted" data-collapse-toggle onclick="toggleDetailCollapse()" title="收起 / 展开"><i data-lucide="chevrons-right" class="w-4 h-4" id="detail-collapse-icon"></i></button>
+      <span id="detail-type-chip" class="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">⚡ 闪念</span>
+      <span class="text-[11px] text-muted truncate" id="detail-meta-line">2 分钟前</span>
+    </div>
+    <!-- 右侧：阅读模式切换 + 工具 -->
+    <div class="flex items-center gap-1 shrink-0">
+      <div class="mode-seg" title="阅读模式">
+        <button data-mode="side" class="active" onclick="setDetailMode('side')" title="侧边预览"><i data-lucide="panel-right"></i></button>
+        <button data-mode="centered" onclick="setDetailMode('centered')" title="居中预览"><i data-lucide="align-center"></i></button>
+        <button data-mode="fullpage" onclick="setDetailMode('fullpage')" title="整页观看"><i data-lucide="maximize-2"></i></button>
+      </div>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" onclick="toggleDetailEdit()" title="编辑（E）" id="detail-edit-btn"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" onclick="togglePinDetail()" title="置顶（P）" id="detail-pin-btn"><i data-lucide="pin" class="w-4 h-4"></i></button>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" onclick="shareDetail()" title="分享"><i data-lucide="share-2" class="w-4 h-4"></i></button>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" onclick="moreDetail(event)" title="更多"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+      <button class="p-1.5 rounded-md text-muted hover:text-fg hover:bg-muted" onclick="closeDetail()" title="关闭（Esc）"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+  </header>
+  <div class="flex-1 overflow-y-auto" id="detail-scroll">
+    <!-- 标题（笔记） -->
+    <h1 class="text-[26px] font-bold leading-tight mb-3 mt-1 hidden" id="detail-title">标题</h1>
+    <!-- 正文 -->
+    <div class="detail-body" id="detail-body">内容</div>
+    <!-- 子任务（仅待办） -->
+    <ul class="subtask-list" id="detail-subtasks" style="display:none"></ul>
+    <!-- 收束后的元信息条 -->
+    <div class="detail-meta-bar" id="detail-meta-bar">
+      <span id="detail-meta-words">字数 <b>0</b></span>
+      <span class="sep">·</span>
+      <span id="detail-meta-creator">创建 <b>—</b></span>
+      <span class="sep">·</span>
+      <span id="detail-meta-updated">更新 <b>—</b></span>
+      <span class="sep">·</span>
+      <span id="detail-meta-prio" style="display:none">优先级 <b>—</b></span>
+    </div>
+  </div>
+  <footer class="border-t border-default px-3 py-2 flex items-center justify-between text-[11px] text-muted shrink-0">
+    <span><kbd>Esc</kbd> 关闭 · <kbd>E</kbd> 编辑 · <kbd>P</kbd> 置顶 · <kbd>⇧</kbd><kbd>⏎</kbd> 整页</span>
+    <span>/note/<span id="detail-id">1</span></span>
+  </footer>
+</aside>
+
+<!-- ===== 行内 more 弹层（详情 & 列表行共用） ===== -->
+<div class="more-popover" id="more-popover" onclick="event.stopPropagation()">
+  <button onclick="moreAction('edit')"><i data-lucide="pencil"></i>编辑</button>
+  <button onclick="moreAction('duplicate')"><i data-lucide="copy"></i>复制为新</button>
+  <button onclick="moreAction('export')"><i data-lucide="download"></i>导出</button>
+  <button onclick="moreAction('move')"><i data-lucide="folder"></i>移动到…</button>
+  <button class="danger" onclick="moreAction('archive')"><i data-lucide="archive"></i>归档</button>
+  <button class="danger" onclick="moreAction('delete')"><i data-lucide="trash-2"></i>删除</button>
+</div>
+
+<script>
+  if(window.lucide)lucide.createIcons();
+  // state switching
+  function switchState(s){
+    document.querySelectorAll('.state').forEach(el=>el.classList.toggle('active',el.dataset.state===s));
+    document.querySelectorAll('[data-state-btn]').forEach(b=>{
+      const a=b.dataset.stateBtn===s;b.classList.toggle('text-muted',!a);b.classList.toggle('text-fg',a);b.classList.toggle('bg-card',a);b.classList.toggle('shadow-sm',a);
+    });
+    // 视图设置弹层内「卡片专属」区段：仅在有数据 + 卡片模式时显示
+    const showCard = (s==='data' && viewMode==='card');
+    const cs=document.getElementById('vp-card-section'), gs=document.getElementById('vp-gap-section');
+    if(cs) cs.style.display = showCard ? 'block' : 'none';
+    if(gs) gs.style.display = showCard ? 'block' : 'none';
+  }
+  // ===== 侧边栏 · 新交互 =====
+  // 折叠/展开
+  function toggleSidebarCollapse(){
+    const sb = document.getElementById('sidebar');
+    if(!sb) return;
+    const collapsed = sb.classList.toggle('collapsed');
+    document.documentElement.style.setProperty('--sidebar-w', collapsed ? '60px' : '220px');
+    const icon = document.getElementById('sidebar-collapse-icon');
+    if(icon){ icon.setAttribute('data-lucide', collapsed ? 'chevrons-right' : 'chevrons-left'); if(window.lucide) lucide.createIcons(); }
+    try{ localStorage.setItem('blinko_sidebar_collapsed', collapsed ? '1' : '0'); }catch(e){}
+  }
+  // 标签面板折叠
+  function toggleTagsPanel(){
+    const t = document.getElementById('tags-toggle');
+    const l = document.getElementById('tags-list');
+    if(!t || !l) return;
+    const collapsed = l.classList.toggle('collapsed');
+    t.classList.toggle('collapsed', collapsed);
+    try{ localStorage.setItem('blinko_tags_collapsed', collapsed ? '1' : '0'); }catch(e){}
+  }
+  // 初始化：恢复折叠态
+  function initSidebarState(){
+    try{
+      if(localStorage.getItem('blinko_sidebar_collapsed')==='1'){
+        const sb = document.getElementById('sidebar');
+        if(sb){ sb.classList.add('collapsed'); document.documentElement.style.setProperty('--sidebar-w','60px'); const icon=document.getElementById('sidebar-collapse-icon'); if(icon){ icon.setAttribute('data-lucide','chevrons-right'); if(window.lucide) lucide.createIcons(); } }
+      }
+      if(localStorage.getItem('blinko_tags_collapsed')==='1'){
+        const l=document.getElementById('tags-list'); const t=document.getElementById('tags-toggle');
+        if(l) l.classList.add('collapsed'); if(t) t.classList.add('collapsed');
+      }
+    }catch(e){}
+    // 标记 has-new（演示：闪念有 3 条新）
+    const cb = document.getElementById('nav-count-blinko');
+    if(cb){ cb.classList.add('has-new'); cb.textContent = '3'; }
+  }
+  // 侧边栏点击：切换主区域 + 路由（保留旧 switchMode 调用）
+  function sidebarNav(el, target, e){
+    if(e) e.preventDefault();
+    document.querySelectorAll('#sidebar .nav-row').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+    // 切到对应模式（如果定义了 switchMode）
+    if(typeof switchMode === 'function' && (target==='blinko'||target==='notes'||target==='todo')){
+      switchMode(target);
+    } else {
+      // 归档/统计等：toast 提示
+      const titles = { archive:'归档', trash:'回收站', analytics:'统计', resources:'资源管理', plugin:'插件', settings:'设置' };
+      if(titles[target]) toast(`已切换到「${titles[target]}」（占位）`);
+    }
+    // 标签过滤
+    if(target.startsWith('tag:')){
+      const tag = target.slice(4);
+      toast(`按标签 #${tag} 过滤列表（占位）`);
+    }
+    // 清除 has-new
+    const cnt = el.querySelector('.nav-count');
+    if(cnt) cnt.classList.remove('has-new');
+  }
+  // 快速新建（行内 + 按钮）
+  function quickAdd(type){
+    if(typeof openCmdk === 'function'){ openCmdk(); return; }
+    toast(`新建 ${type}（占位）`);
+  }
+  // 快捷键
+  document.addEventListener('keydown', (e) => {
+    // ⌘[ 折叠/展开侧边栏
+    if((e.metaKey||e.ctrlKey) && e.key==='['){ e.preventDefault(); toggleSidebarCollapse(); return; }
+    // ⌘1/2/3 切记录区
+    if((e.metaKey||e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key==='1'||e.key==='2'||e.key==='3')){
+      e.preventDefault();
+      const map = {'1':'blinko','2':'notes','3':'todo'};
+      const m = map[e.key];
+      const el = document.querySelector(`#sidebar .nav-row[data-mode="${m}"]`);
+      if(el) sidebarNav(el, m, e);
+    }
+  });
+  initSidebarState();
+
+  // mode switching
+  function switchMode(m){
+    const conf={blinko:{title:'⚡ 闪念',count:'12 条',empty:'闪念',chip:'⚡ 闪念',types:['blinko','notes','todo']},
+      notes:{title:'📝 笔记',count:'34 条',empty:'笔记',chip:'📝 笔记',types:['notes']},
+      todo:{title:'✅ 待办',count:'5 条',empty:'待办',chip:'✅ 待办',types:['todo']}};
+    const c=conf[m]||conf.blinko;
+    document.getElementById('modeTitle').textContent=c.title;
+    document.getElementById('modeCount').textContent=c.count;
+    document.getElementById('emptyType').textContent=c.empty;
+    document.getElementById('modeChip').textContent=c.chip;
+    document.querySelectorAll('.row').forEach(r=>r.style.display=c.types.includes(r.dataset.type)?'':'none');
+    // sidebar highlight
+    document.querySelectorAll('.nav-row').forEach(el=>el.classList.remove('selected'));
+    const sidemap={blinko:0,notes:1,todo:2};
+    const idx=sidemap[m];
+    if(idx!=null)document.querySelectorAll('.nav-row')[idx]?.classList.add('selected');
+    // 卡片模式：按当前 mode 过滤重渲染（笔记模式只留笔记卡）
+    currentMode=m;
+    if(viewMode==='card') renderMasonry();
+  }
+  // tag filter
+  function filterTag(el){
+    document.querySelectorAll('#tagChips .chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ===== 卡片模式（瀑布流 + 闪念图片方案，对齐真实 BlinkoImageGallery 微博式规则） =====
+  // 多图列数规则：2/4/7/8 张 → 2 列（末行更满），其余 → 3 列
+  function gridCols(n){ return [2,4,7,8].indexOf(n)>=0 ? 2 : 3; }
+  const CARDS = [
+    {kind:'blinko', text:'产品改版要点：把导入导出做到一键，参考飞书的「…」菜单层级', tags:['改版'], time:'2 分钟前'},
+    {kind:'blinko', text:'一张好看的封面图能让笔记点击率提升 40%，数据不会骗人。', imgs:{type:'single', cls:'land', g:'g1'}, tags:['灵感'], time:'20 分钟前'},
+    {kind:'note', cover:'cover-a', icon:'📐', title:'Notion 风格设计语言：行即组件、空白大于边框', excerpt:'极简不是简陋，而是克制。Notion 的列表每一行就是信息单位，没有多余的卡片包裹，靠留白与层级组织内容。', tags:['设计','shadcn'], attach:2, time:'今天'},
+    {kind:'blinko', text:'团建随手拍，海边小镇的光线太治愈了 🌊', imgs:{type:'grid', cells:['g2','g3','g4']}, tags:['生活','摄影'], time:'1 小时前'},
+    {kind:'note', icon:'📊', title:'Blinko 统计模块 V2 复盘：从 13 个 bug 看产品设计', excerpt:'这轮迭代让我意识到：性能问题往往不是单一原因，而是多个边缘条件叠加，埋点和监控要前置。', tags:['工作','复盘'], time:'昨天'},
+    {kind:'blinko', text:'竖屏截图胜千言，移动端 UI 草稿终于定了', imgs:{type:'single', cls:'port', g:'g5'}, tags:['设计'], time:'3 小时前'},
+    {kind:'blinko', text:'灵感收藏：4 张仪表盘设计，第 2 张的配色可以直接抄', imgs:{type:'grid', cells:['g6','g1','g2','g3']}, tags:['灵感','收藏'], time:'昨天'},
+    {kind:'note', cover:'cover-c', icon:'🚀', title:'从 Notion 迁移笔记到 Blinko：HTML 导入路径设计', excerpt:'Notion 导出默认是 HTML + 附件 zip，是最大的迁移源，导入器要处理好内链与图片。', tags:['设计','迁移'], attach:5, time:'周一'},
+    {kind:'blinko', text:'《简约至上》第三章的「移除」原则同样适用于笔记应用：去掉不必要的按钮、去掉冗余的层级，用户才能专注内容本身。设计不是加法，是减法。', tags:['阅读','设计'], time:'周二'},
+    {kind:'note', icon:'🎨', title:'Tailwind + shadcn/ui 设计 token 体系', excerpt:'CSS variables 控制颜色、圆角、阴影是 shadcn/ui 的精髓，换主题只改变量即可。', tags:['技术','设计'], time:'周三'},
+    {kind:'blinko', text:'对比图：旧版 vs 新版首页，差异一目了然', imgs:{type:'grid', cells:['g4','g5']}, tags:['改版'], time:'周二'},
+    {kind:'blinko', text:'本周设计灵感九宫格（先放 6 张）', imgs:{type:'grid', cells:['g1','g2','g3','g4','g5','g6']}, tags:['灵感'], time:'周三'}
+  ];
+  function galleryHtml(imgs){
+    if(!imgs) return '';
+    if(imgs.type==='single'){
+      return `<div class="m-single"><div class="ph ${imgs.cls} ${imgs.g}"><span class="ph-icon"><i data-lucide="image"></i></span></div></div>`;
+    }
+    if(imgs.type==='grid'){
+      const cols=gridCols(imgs.cells.length);
+      const cells=imgs.cells.map(g=>`<div class="ph sq ${g}"><span class="ph-icon"><i data-lucide="image"></i></span></div>`).join('');
+      return `<div class="m-gallery c${cols}">${cells}</div>`;
+    }
+    return '';
+  }
+  function cardHtml(c){
+    const actions=`<div class="m-actions"><button title="置顶"><i data-lucide="pin"></i></button><button title="更多"><i data-lucide="more-horizontal"></i></button></div>`;
+    const tags=(c.tags||[]).map(t=>`<span class="chip"># ${t}</span>`).join('');
+    if(c.kind==='note'){
+      const cover=c.cover?`<div class="m-cover ${c.cover}"></div>`:'';
+      return `<div class="m-card">${actions}${cover}<div class="m-body">`+
+        `<div class="m-title"><span class="emoji">${c.icon||'📄'}</span><span>${c.title}</span></div>`+
+        `<div class="m-excerpt">${c.excerpt}</div>`+
+        `<div class="m-meta">${tags}${c.attach?`<span>· ${c.attach} 附件</span>`:''}<span>· ${c.time}</span></div>`+
+      `</div></div>`;
+    }
+    return `<div class="m-card">${actions}<div class="m-body">`+
+      `<div class="m-text">${c.text}</div>`+
+      galleryHtml(c.imgs)+
+      `<div class="m-meta">${tags}<span>· ${c.time}</span></div>`+
+    `</div></div>`;
+  }
+  let cardCols=2, cardGap=16, viewMode='list', currentMode='blinko';
+  function renderMasonry(){
+    const wrap=document.getElementById('masonry');
+    if(!wrap) return;
+    // 笔记模式只展示笔记卡；闪念/全部展示混排
+    const list = currentMode==='notes' ? CARDS.filter(c=>c.kind==='note') : CARDS;
+    const cols=[]; for(let i=0;i<cardCols;i++) cols.push([]);
+    list.forEach((c,i)=> cols[i%cardCols].push(cardHtml(c)));
+    wrap.innerHTML=cols.map(cells=>`<div class="m-col">${cells.join('')}</div>`).join('');
+    wrap.style.setProperty('--card-gap', cardGap+'px');
+    if(window.lucide) lucide.createIcons();
+  }
+  function setViewMode(m){
+    viewMode=m;
+    const isCard=m==='card';
+    const lv=document.getElementById('list-view'); if(lv) lv.style.display=isCard?'none':'';
+    const cv=document.getElementById('card-view'); if(cv) cv.classList.toggle('show',isCard);
+    const inData=document.getElementById('state-data').classList.contains('active');
+    // 视图设置内卡片专属区段：仅「卡片 + 有数据」时显示
+    const showCard = isCard && inData;
+    const cs=document.getElementById('vp-card-section'), gs=document.getElementById('vp-gap-section');
+    if(cs) cs.style.display = showCard ? 'block' : 'none';
+    if(gs) gs.style.display = showCard ? 'block' : 'none';
+    document.querySelectorAll('#view-seg button').forEach(b=>b.classList.toggle('active',b.dataset.view===m));
+    if(isCard) renderMasonry();
+  }
+  function toggleViewPopover(){
+    const pop=document.getElementById('view-popover');
+    const trig=document.getElementById('vp-trigger');
+    if(!pop) return;
+    const open=pop.classList.toggle('open');
+    if(trig) trig.classList.toggle('active', open);
+  }
+  function setColumns(n){
+    cardCols=n;
+    document.querySelectorAll('#col-seg button').forEach(b=>b.classList.toggle('active',+b.dataset.col===n));
+    const hint=document.getElementById('vp-col-hint'); if(hint) hint.textContent=String(n);
+    if(viewMode==='card') renderMasonry();
+  }
+  function setSpacing(px){
+    cardGap=px;
+    const v=document.getElementById('spacing-val'); if(v) v.textContent=px+'px';
+    if(viewMode==='card') renderMasonry();
+  }
+
+  // ===== 视图设置 · 列表显示选项（驱动 main 上的 data-*，CSS 响应） =====
+  function setDensity(d){
+    const main=document.querySelector('main'); if(main) main.dataset.density=d;
+    document.querySelectorAll('#seg-density button').forEach(b=>b.classList.toggle('active',b.dataset.density===d));
+  }
+  function setListStyle(s){
+    const main=document.querySelector('main'); if(main) main.dataset.listStyle=s;
+    document.querySelectorAll('#seg-liststyle button').forEach(b=>b.classList.toggle('active',b.dataset.listStyle===s));
+  }
+  function setSort(s){
+    const main=document.querySelector('main'); if(main) main.dataset.sort=s;
+    document.querySelectorAll('#seg-sort button').forEach(b=>b.classList.toggle('active',b.dataset.sort===s));
+    // 排序真实数据时调用后端；原型里记录状态即可
+  }
+  // 初始化默认值（默认按天分组，保持当前视觉）
+  setDensity('standard'); setListStyle('byDay'); setSort('updated');
+
+  // popover 行为：点击外部 / Esc 关闭
+  document.addEventListener('click', (e) => {
+    const pop=document.getElementById('view-popover');
+    const trig=document.getElementById('vp-trigger');
+    if(!pop||!pop.classList.contains('open')) return;
+    if(pop.contains(e.target)||trig.contains(e.target)) return;
+    pop.classList.remove('open'); trig.classList.remove('active');
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key==='Escape'){const p=document.getElementById('view-popover');if(p&&p.classList.contains('open')){p.classList.remove('open');document.getElementById('vp-trigger')?.classList.remove('active');}}
+  });
+
+  function openCmdk(){alert('⌘K 命令面板\n\n搜索笔记、待办、设置，或运行命令...\n↑↓ 选择 · ↵ 打开 · ⌘↵ 新建 · ESC 关闭')}
+  function toggleTheme(){document.documentElement.classList.toggle('dark');if(window.lucide)lucide.createIcons()}
+
+  // ===== 每日回顾 · 整页 Random Walk（顶栏灯泡入口，对齐真实 app /review） =====
+  const REVIEW_POOL = [
+    {id:'r1', tag:'闪念', date:'2026 · 09 · 22', emoji:'💡', cover:'#fbbf24,#fb923c', text:'这篇示例文章介绍 blinko 最重要的两种内容：Blinko 和 Note。', sub:'先弄清 Blinko 和 Note', tags:['Blinko','开始使用']},
+    {id:'r2', tag:'笔记', date:'2026 · 09 · 18', emoji:'📐', cover:'#a78bfa,#f472b6', text:'极简不是简陋，而是克制。Notion 的列表每一行就是信息单位，没有多余的卡片包裹，靠留白与层级组织内容。', sub:'Notion 风格 设计语言', tags:['设计','shadcn']},
+    {id:'r3', tag:'闪念', date:'2026 · 09 · 14', emoji:'🌊', cover:'#34d399,#06b6d4', text:'团建随手拍，海边小镇的光线太治愈了。\n光 + 风 + 慢，是治愈的三元素。', sub:'海边小镇的午后', tags:['生活','摄影']},
+    {id:'r4', tag:'笔记', date:'2026 · 09 · 09', emoji:'🚀', cover:'#60a5fa,#818cf8', text:'Notion 导出默认是 HTML+附件 zip，是最大的迁移源，导入器要处理好内链与图片。', sub:'从 Notion 迁移', tags:['设计','迁移']},
+    {id:'r5', tag:'闪念', date:'2026 · 08 · 30', emoji:'📊', cover:'#f87171,#fbbf24', text:'这轮迭代让我意识到：性能问题往往不是单一原因，而是多个边缘条件叠加，埋点和监控要前置。', sub:'V2 复盘', tags:['工作','复盘']},
+    {id:'r6', tag:'笔记', date:'2026 · 08 · 21', emoji:'🎨', cover:'#f472b6,#fb7185', text:'CSS variables 控制颜色、圆角、阴影是 shadcn/ui 的精髓，换主题只改变量即可。', sub:'Tailwind + shadcn/ui token', tags:['技术','设计']},
+    {id:'r7', tag:'闪念', date:'2026 · 08 · 14', emoji:'📚', cover:'#fbbf24,#f59e0b', text:'《简约至上》第三章的「移除」原则同样适用于笔记应用：去掉不必要的按钮、去掉冗余的层级。', sub:'简约至上 第三章', tags:['阅读','设计']},
+    {id:'r8', tag:'笔记', date:'2026 · 08 · 02', emoji:'✨', cover:'#a78bfa,#818cf8', text:'设计不是加法，是减法。每一行是一个信息单位，靠留白与层级组织内容。', sub:'设计的减法', tags:['设计']},
+    {id:'r9', tag:'闪念', date:'2026 · 07 · 25', emoji:'☕', cover:'#fb923c,#f97316', text:'下午茶时间最适合做一些不费脑的事：整理标签、回顾上周、给笔记加封面。', sub:'下午茶时段', tags:['生活']},
+    {id:'r10', tag:'笔记', date:'2026 · 07 · 10', emoji:'🧠', cover:'#22d3ee,#3b82f6', text:'RAG 的本质是「找最相关的上下文喂给 LLM」，关键不在模型，而在 embedding 质量与召回策略。', sub:'RAG 系统设计', tags:['技术','AI']},
+    {id:'r11', tag:'闪念', date:'2026 · 06 · 28', emoji:'🌅', cover:'#f59e0b,#ef4444', text:'日落时分的对比度最适合做封面图。', sub:'日落封面', tags:['摄影','灵感']},
+    {id:'r12', tag:'笔记', date:'2026 · 06 · 15', emoji:'🎯', cover:'#10b981,#22d3ee', text:'产品改版最忌讳「一刀切」，分阶段灰度 + 收集反馈 + 逐项迁移才是稳妥路径。', sub:'产品改版的节奏', tags:['工作','产品']}
+  ];
+  // 范围过滤（按月数）
+  const RANGE_DAYS = { '1w':7, '1m':30, '3m':90, '6m':180, '1y':365, 'all':99999 };
+  let reviewRange = '1m';
+  let reviewIdx = 0;
+  let reviewList = [];
+  let reviewRemoved = new Set();
+
+  function filterReviewPool(){
+    const days = RANGE_DAYS[reviewRange] || 30;
+    const cutoff = new Date('2026-10-09').getTime() - days*86400000;
+    return REVIEW_POOL.filter(r => {
+      const d = new Date(r.date.replace(/·/g,'-').replace(/\s/g,'').replace(/(\d+) - (\d+) - (\d+)/, '$1-$2-$3')).getTime();
+      return d >= cutoff;
+    });
+  }
+
+  function renderReviewCard(item){
+    const main = document.getElementById('rw-main');
+    document.getElementById('rw-tag').textContent = item.tag;
+    document.getElementById('rw-date').textContent = item.date;
+    document.getElementById('rw-cover-emoji').textContent = item.emoji;
+    const cover = document.getElementById('rw-cover');
+    cover.style.background = `linear-gradient(135deg, ${item.cover})`;
+    document.getElementById('rw-text').textContent = item.text;
+    const subEl = document.getElementById('rw-subhead');
+    const [hl, sub] = item.sub.split(' ');
+    subEl.innerHTML = `<span class="hl">${hl}</span> <span class="sub">${sub||''}</span>`;
+    document.getElementById('rw-tags').innerHTML = item.tags.map(t=>`<span class="chip"># ${t}</span>`).join('');
+    document.getElementById('rw-progress').textContent = `${reviewIdx+1} / ${reviewList.length}`;
+    // 背景堆叠卡片
+    renderReviewStack();
+    if(window.lucide) lucide.createIcons();
+  }
+  function renderReviewStack(){
+    const stack = document.getElementById('rw-card-stack');
+    const idx = reviewIdx;
+    const offsets = [
+      {d:-2, x:-90,  y:18, rot:-6, op:.55, sc:.92},
+      {d:-1, x:-32,  y:8,  rot:-2, op:.85, sc:.96},
+      {d:1,  x:60,   y:6,  rot:3,  op:.7,  sc:.95}
+    ];
+    stack.innerHTML = '';
+    offsets.forEach(o => {
+      const i = idx + o.d;
+      if(i<0 || i>=reviewList.length) return;
+      const r = reviewList[i];
+      const div = document.createElement('div');
+      div.className = 'rw-bg-card show';
+      div.style.transform = `translate(${o.x}px, ${o.y}px) rotate(${o.rot}deg) scale(${o.sc})`;
+      div.style.opacity = o.op;
+      div.style.zIndex = String(10 - Math.abs(o.d));
+      div.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:10.5px;font-weight:500;padding:2px 8px;border-radius:5px;background:hsl(var(--warning)/.12);color:hsl(var(--warning))">${r.tag}</span>
+          <span style="font-size:11px;color:hsl(var(--muted-fg));font-variant-numeric:tabular-nums">${r.date}</span>
+        </div>
+        <div style="width:100%;height:140px;border-radius:8px;background:linear-gradient(135deg,${r.cover});display:grid;place-items:center;font-size:48px">${r.emoji}</div>
+        <div style="font-size:12.5px;line-height:1.6;color:hsl(var(--fg));margin-top:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${r.text}</div>`;
+      stack.appendChild(div);
+    });
+  }
+
+  function reviewGo(delta){
+    if(!reviewList.length) return;
+    const newIdx = Math.max(0, Math.min(reviewList.length-1, reviewIdx+delta));
+    if(newIdx === reviewIdx) return;
+    const main = document.getElementById('rw-main');
+    main.classList.add(delta>0 ? 'slide-out-left' : 'slide-in-right');
+    setTimeout(() => {
+      reviewIdx = newIdx;
+      main.classList.remove('slide-out-left','slide-in-right');
+      renderReviewCard(reviewList[reviewIdx]);
+    }, 180);
+  }
+
+  function setReviewRange(el){
+    const sel = el.querySelector('select');
+    if(sel){ reviewRange = sel.value; el.classList.add('active'); }
+    document.querySelectorAll('.rw-filter[data-range]').forEach(f => f.classList.toggle('active', f===el));
+    reviewList = filterReviewPool().filter(r => !reviewRemoved.has(r.id));
+    reviewIdx = 0;
+    if(reviewList.length){ renderReviewCard(reviewList[0]); }
+    else { document.getElementById('rw-text').textContent = '该时间范围内没有可回顾的笔记。'; document.getElementById('rw-progress').textContent='0 / 0'; }
+  }
+  function setReviewView(el){
+    document.querySelectorAll('.rw-filter[data-view]').forEach(f => f.classList.toggle('active', f===el));
+    alert('[占位] 记忆星图：以节点/连线展示笔记的关联网络。');
+  }
+
+  // 工具条动作
+  function reviewShare(){ if(!reviewList[reviewIdx]) return; const r=reviewList[reviewIdx]; navigator.clipboard?.writeText(`[Blinko] ${r.sub} - ${r.text.split('\n')[0]}`); toast('已复制分享链接'); }
+  function reviewCopy(){ if(!reviewList[reviewIdx]) return; navigator.clipboard?.writeText(reviewList[reviewIdx].text); toast('已复制全文'); }
+  function reviewSaveImg(){
+    if(!reviewList[reviewIdx]) return;
+    const r = reviewList[reviewIdx];
+    // 真实实现：html2canvas → PNG；原型里用 SVG 占位
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${r.cover.split(',')[0]}"/><stop offset="1" stop-color="${r.cover.split(',')[1]}"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/><text x="40" y="100" font-size="48">${r.emoji}</text><text x="40" y="180" font-size="22" fill="white" font-weight="700">${r.sub}</text><text x="40" y="220" font-size="14" fill="white">${r.text.slice(0,30)}...</text></svg>`;
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`blinko-${r.id}.svg`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    toast('已保存为图片');
+  }
+  function reviewDelete(){
+    if(!reviewList[reviewIdx]) return;
+    if(!confirm(`删除「${reviewList[reviewIdx].sub}」？`)) return;
+    reviewRemoved.add(reviewList[reviewIdx].id);
+    reviewList = reviewList.filter(r => !reviewRemoved.has(r.id));
+    if(reviewIdx >= reviewList.length) reviewIdx = Math.max(0, reviewList.length-1);
+    if(reviewList.length) renderReviewCard(reviewList[reviewIdx]);
+    else { document.getElementById('rw-text').textContent='已删除所有卡片。'; document.getElementById('rw-progress').textContent='0 / 0'; }
+  }
+  function reviewArchive(){
+    if(!reviewList[reviewIdx]) return;
+    toast(`已归档「${reviewList[reviewIdx].sub}」`);
+    reviewGo(1);
+  }
+  function reviewToNote(){
+    if(!reviewList[reviewIdx]) return;
+    toast(`已转换为笔记（占位）：${reviewList[reviewIdx].sub}`);
+  }
+  // 简易 toast
+  function toast(msg){
+    let t = document.getElementById('rw-toast');
+    if(!t){ t = document.createElement('div'); t.id='rw-toast'; t.className='rw-toast'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1600);
+  }
+
+  // 打开/关闭
+  function openReview(){
+    document.querySelector('.review-trigger')?.classList.add('active');
+    reviewList = filterReviewPool();
+    reviewIdx = 0;
+    document.getElementById('rw-page')?.classList.add('open');
+    if(reviewList.length) renderReviewCard(reviewList[0]);
+    if(window.lucide) lucide.createIcons();
+  }
+  function closeReview(){
+    document.getElementById('rw-page')?.classList.remove('open');
+    document.querySelector('.review-trigger')?.classList.remove('active');
+  }
+
+  // 方向键 / 滚轮
+  document.addEventListener('keydown', (e) => {
+    if(!document.getElementById('rw-page')?.classList.contains('open')) return;
+    if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); reviewGo(-1); }
+    else if(e.key==='ArrowRight' || e.key==='ArrowDown' || e.key===' '){ e.preventDefault(); reviewGo(1); }
+  });
+  document.addEventListener('wheel', (e) => {
+    if(!document.getElementById('rw-page')?.classList.contains('open')) return;
+    // 仅在中央卡片区域滚轮才触发（避开选择器）
+    if(e.target.closest('.rw-filter, .rw-toolbar, .rw-hint, .rw-header')) return;
+    if(Math.abs(e.deltaY) < 20 && Math.abs(e.deltaX) < 20) return;
+    if(e.deltaY > 0 || e.deltaX < 0) reviewGo(1);
+    else reviewGo(-1);
+  }, { passive: true });
+
+  // 拖动切换（pointer events）
+  (() => {
+    let dragging = false, startX = 0, dx = 0;
+    const stage = () => document.getElementById('rw-stage');
+    const onDown = (e) => {
+      if(!document.getElementById('rw-page')?.classList.contains('open')) return;
+      if(e.target.closest('.rw-toolbar, .rw-filters, .rw-header, .rw-bg-card')) return;
+      dragging = true; startX = e.clientX; dx = 0;
+    };
+    const onMove = (e) => {
+      if(!dragging) return;
+      dx = e.clientX - startX;
+      const main = document.getElementById('rw-main');
+      main.style.transform = `translateX(${dx}px) rotate(${dx/30}deg)`;
+    };
+    const onUp = () => {
+      if(!dragging) return;
+      dragging = false;
+      const main = document.getElementById('rw-main');
+      main.style.transform = '';
+      if(Math.abs(dx) > 80) reviewGo(dx<0?1:-1);
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  })();
+
+  // Esc 关闭
+  document.addEventListener('keydown', (e) => { if(e.key==='Escape') closeReview(); });
+
+  // ===== 行内 / 详情数据（原型 demo，与 HTML 中 9 行 row 一一对应） =====
+  const NOTES = {
+    1: {id:1, type:'blinko', title:'', content:'产品改版要点：把导入导出做到一键，参考 #飞书 的"..."菜单层级。@Brian 你看下？!high\n\n- 一级菜单放新建/导入/导出\n- 二级菜单才放格式/选项\n- 关键操作直接挂主界面', tags:[], time:'2 分钟前', created:'今天 09:18', updated:'2 分钟前', charCount: 95, attach:[{name:'改版方案.md', size:'4.2 KB'}]},
+    2: {id:2, type:'notes',  title:'Notion 风格设计语言：行即组件、空白大于边框', content:'极简不是简陋，而是克制。@DesignTeam 看一下。\n\nNotion 的列表每一行就是信息单位，没有多余的卡片包裹，靠留白与层级组织内容。\n\n## 关键原则\n\n- **行即组件**：每一行 = 一个信息单位\n- **空白大于边框**：用间距代替分隔线\n- **hover 反馈**：不是加色块，而是加微弱的背景色\n\n> 设计的减法是更高阶的加法。\n\n```css\n.row { padding: 8px 12px; }\n.row:hover { background: var(--row-hover); }\n```\n\n迁移到 Blinko 时，要把 #BlinkoNoteList 的卡片化改成行式。', tags:['设计','shadcn'], time:'今天', created:'今天 14:20', updated:'今天 14:30', charCount: 268, images:[{g:'g1', ratio:'16/9', caption:'Notion 风格 vs 卡片风格对比'}], attach:[{name:'design-tokens.json', size:'2.1 KB'},{name:'对比截图.png', size:'156 KB'}]},
+    3: {id:3, type:'todo',   title:'提交 Blinko Notion 风格 HTML 原型评审', content:'## 目标\n\n把首页 Notion 风格原型给团队评审，收集反馈决定是否进入正式改版。\n\n- [x] 完成统计模块重构\n- [x] 完成卡片模式\n- [ ] 团队评审会（今天 18:00）\n- [ ] 整理反馈\n- [ ] 决定是否进正式改版\n\n!high @全组 评审材料在附件里。', tags:['改版'], time:'今天 18:00', created:'今天 10:00', updated:'今天 14:00', priority:'高', subDone:2, subTotal:4, attach:[{name:'原型评审材料.pdf', size:'2.8 MB'}]},
+    4: {id:4, type:'notes',  title:'Blinko 统计模块 V2 复盘：从 13 个 bug 看产品设计', content:'这轮迭代让我意识到：性能问题往往不是单一原因，而是多个边缘条件叠加，埋点和监控要前置。\n\n13 个 bug 中有 8 个是边界条件（空数据 / 跨年 / 时区），2 个是真 bug，3 个是 UI 显示。\n\n## 复盘要点\n\n- 数据层做边界检查\n- UI 层做空态\n- 监控做时延埋点\n\n@SREGroup 帮忙 review 一下监控埋点方案。', tags:['工作','复盘'], time:'昨天', created:'昨天 16:30', updated:'昨天 18:00', charCount: 205, images:[{g:'g3', ratio:'16/9', caption:'HeatMap 按天聚合效果'}], attach:[]},
+    5: {id:5, type:'blinko', title:'', content:'提交统计模块热力图改天的 PR。#统计模块 #改版', tags:['工作'], time:'昨天', created:'昨天 14:00', updated:'昨天 16:00', done:true, attach:[]},
+    6: {id:6, type:'todo',   title:'整理 Blinko 内容管理模块需求列表', content:'## 范围\n\n- 笔记 CRUD 已有\n- 待办 / 闪念 整合\n- 标签 / 归档\n- 导入 / 导出（HTML / MD / Word）\n\n!mid @PM 帮忙补充用户场景。', tags:['PM'], time:'明天', created:'周一 11:00', updated:'昨天 17:00', priority:'中', subDone:0, subTotal:0, attach:[{name:'PRD-template.docx', size:'38 KB'}]},
+    7: {id:7, type:'notes',  title:'从 Notion 迁移笔记到 Blinko：HTML 导入路径设计', content:'Notion 导出默认是 HTML+附件 zip，是最大迁移源，导入器要处理好内链与图片。\n\n## 导入器设计\n\n1. 解析 HTML → AST\n2. 处理内链（notion.so → /note/xxx）\n3. 下载附件到本地存储\n4. 替换图片 src 为本地 URL\n5. 写入数据库\n\n@Backend 这部分要 3 天左右。', tags:['设计','迁移'], time:'周一', created:'周一 20:00', updated:'周二 09:00', charCount: 168, images:[{g:'g2', ratio:'4/3', caption:'迁移流程图'}], attach:[{name:'迁移流程图.png', size:'98 KB'},{name:'schema.sql', size:'4.2 KB'},{name:'html-grammar.md', size:'8.1 KB'},{name:'test-data.zip', size:'1.2 MB'},{name:'edge-cases.md', size:'3.4 KB'}]},
+    8: {id:8, type:'blinko', title:'', content:'《简约至上》第三章的"移除"原则同样适用于笔记应用。#阅读 #设计\n\n- 去掉不必要的按钮\n- 去掉冗余的层级\n- 去掉说明文字', tags:['阅读','设计'], time:'周二', created:'周二 22:00', updated:'周二 22:00', attach:[]},
+    9: {id:9, type:'notes',  title:'Tailwind + shadcn/ui 设计 token 体系', content:'CSS variables 控制颜色、圆角、阴影是 shadcn/ui 的精髓，换主题只改变量即可。\n\n## Token 层级\n\n- `--bg` / `--fg` / `--primary`：基础\n- `--card` / `--muted`：表面\n- `--border` / `--ring`：交互\n- `--success` / `--warning` / `--danger`：状态\n\n> 改主题只改 CSS 变量。\n\n#技术 #设计', tags:['技术','设计'], time:'周三', created:'周三 10:00', updated:'周三 11:30', charCount: 195, attach:[]}
+  };
+  var currentDetailId = null;
+  function _syncDetailId(v){ try{ globalThis.__currentDetailId=v; }catch(e){} }
+
+  // ===== 列表行内交互 =====
+  function getRowFromEl(el){ while(el && el!==document.body && !el.classList?.contains('row')) el=el.parentElement; return el; }
+  function getRowId(el){ const r=getRowFromEl(el); return r? +r.dataset.id : null; }
+
+  function toggleRowPin(btn){
+    const row=getRowFromEl(btn); if(!row) return;
+    const pin = row.dataset.pinned==='1' ? '0' : '1';
+    row.dataset.pinned = pin;
+    row.classList.toggle('is-pinned', pin==='1');
+    // 同步到详情
+    if(currentDetailId===row.dataset.id) updateDetailPin();
+  }
+  function toggleRowTodo(cb){
+    const row=getRowFromEl(cb); if(!row) return;
+    const done = row.dataset.done==='1' ? '0' : '1';
+    row.dataset.done = done;
+    cb.classList.toggle('done', done==='1');
+    row.classList.toggle('is-done', done==='1');
+  }
+  function shareRow(btn){
+    const id=getRowId(btn);
+    const n=NOTES[id]; if(!n) return;
+    navigator.clipboard?.writeText(`[Blinko] ${n.title||n.content.split('\n')[0]}`);
+    // 简易反馈
+    const orig=btn.innerHTML; btn.innerHTML='<i data-lucide="check" class="w-3.5 h-3.5"></i>'; if(window.lucide)lucide.createIcons();
+    setTimeout(()=>{ btn.innerHTML=orig; if(window.lucide)lucide.createIcons(); }, 1200);
+  }
+  function scheduleRow(btn){
+    const id=getRowId(btn);
+    const n=NOTES[id]; if(!n) return;
+    alert(`安排时间：${n.title||n.content.slice(0,20)}\n\n[占位] 调用日期时间选择器`);
+  }
+  function moreRow(e, btn){
+    openMorePopover(e, btn, () => moreActionForRow(getRowId(btn)));
+  }
+
+  // ===== more 弹层（列表行 / 详情 共用） =====
+  let _moreCb = null;
+  function openMorePopover(e, anchor, cb){
+    e?.preventDefault(); e?.stopPropagation();
+    closeMorePopover();
+    const pop = document.getElementById('more-popover');
+    if(!pop) return;
+    const r = anchor.getBoundingClientRect();
+    pop.style.top = (r.bottom + 4) + 'px';
+    pop.style.left = Math.min(r.right, window.innerWidth - 180) + 'px';
+    pop.classList.add('open');
+    _moreCb = cb || null;
+  }
+  function closeMorePopover(){
+    document.getElementById('more-popover')?.classList.remove('open');
+    _moreCb = null;
+  }
+  function moreAction(act){
+    if(_moreCb) _moreCb(act);
+    else if(currentDetailId) moreActionForDetail(act);
+    closeMorePopover();
+  }
+  function moreActionForRow(id){
+    const n=NOTES[id]; if(!n) return;
+    if(act==='delete'){ if(confirm(`删除「${n.title||n.content.slice(0,20)}」？`)){ alert('[占位] 已删除'); } }
+    else if(act==='archive'){ alert(`[占位] 已归档 ${n.title||'闪念'}`); }
+    else if(act==='duplicate'){ alert('[占位] 复制为新笔记'); }
+    else if(act==='export'){ alert('[占位] 打开导出菜单'); }
+    else if(act==='move'){ alert('[占位] 打开移动对话框'); }
+    else if(act==='edit'){ openDetail(id); setTimeout(()=>toggleDetailEdit(), 50); }
+  }
+  // 点击外部关闭 more
+  document.addEventListener('click', (e) => {
+    const pop = document.getElementById('more-popover');
+    if(!pop || !pop.classList.contains('open')) return;
+    if(pop.contains(e.target)) return;
+    if(e.target.closest('[onclick*="moreRow"], [onclick*="moreDetail"]')) return;
+    closeMorePopover();
+  });
+
+  // ===== Fullscreen Editor（hash 路由 + 全屏编辑，对齐真实 app /detail?id=X） =====
+  let fsEditing = true;
+  let fsCurrentId = null;
+  let fsPageWidth = 'standard';
+  let fsIsFullscreen = false;
+
+  // hash 路由：点击行 → 改 hash
+  function navigateToNote(contentEl){
+    const row = getRowFromEl(contentEl);
+    if(!row) return;
+    const id = row.dataset.id;
+    if(!id) return;
+    location.hash = `#/detail?id=${id}`;
+  }
+  // 读 hash 决定打开哪个笔记
+  function getIdFromHash(){
+    const m = location.hash.match(/[#&?]id=(\d+)/);
+    return m ? m[1] : null;
+  }
+  function openFullscreenEditor(id){
+    const n = NOTES[+id];
+    if(!n){ closeFullscreenEditor(); return; }
+    fsCurrentId = +id;
+    // 类型 chip
+    const chip = document.getElementById('fs-type-chip');
+    const typeMap = { blinko: {t:'⚡ 闪念', cls:'bg-primary/10 text-primary'},
+                      notes:  {t:'📝 笔记', cls:'bg-blue-500/10 text-blue-500'},
+                      todo:   {t:'✅ 待办', cls:'bg-green-500/10 text-green-500'} };
+    const tm = typeMap[n.type] || typeMap.blinko;
+    chip.textContent = tm.t;
+    chip.className = 'fs-type-chip ' + tm.cls;
+    // 标题
+    document.getElementById('fs-title-breadcrumb').textContent = n.title || (n.content||'').split('\n')[0].slice(0,30) || '未命名';
+    document.getElementById('fs-h1').value = n.title || '';
+    // 标签
+    const tagWrap = document.getElementById('fs-tags-container');
+    tagWrap.innerHTML = (n.tags||[]).map(t=>`<span class="fs-tag"># ${t} <span class="x">×</span></span>`).join('');
+    // 优先级标签（仅 todo）
+    const prioTag = document.querySelector('.fs-tag[data-type="priority"]');
+    if(n.type==='todo' && n.priority){
+      prioTag.style.display = '';
+      prioTag.className = 'fs-tag priority-' + ({'高':'high','中':'mid','低':'low'}[n.priority]||'mid');
+      prioTag.querySelector('.t').textContent = n.priority;
+    } else prioTag.style.display='none';
+    // 正文（保留 markdown 源码，可编辑）
+    document.getElementById('fs-content').textContent = n.content || '';
+    // 元信息
+    const meta = [];
+    meta.push(`字数 <b>${(n.content||'').length}</b>`);
+    if(n.type==='todo' && n.subTotal) meta.push(`子任务 <b>${n.subDone||0}/${n.subTotal}</b>`);
+    if(n.created) meta.push(`创建 <b>${n.created}</b>`);
+    if(n.updated) meta.push(`更新 <b>${n.updated||n.time||'—'}</b>`);
+    document.getElementById('fs-meta').innerHTML = meta.join(' <span class="sep">·</span> ');
+    // todo 完成按钮显隐
+    document.getElementById('fs-todo-fab').style.display = n.type==='todo' ? '' : 'none';
+    document.getElementById('fs-todo-fab').classList.toggle('is-on', n.done===true);
+    // 字数
+    updateFsWordCount();
+    // 编辑态
+    fsEditing = true;
+    document.getElementById('fs-content').setAttribute('contenteditable','true');
+    document.getElementById('fs-h1').readOnly = false;
+    document.getElementById('fs-edit-fab').classList.add('is-on');
+    // 显示
+    document.getElementById('fs-editor').classList.add('open');
+    if(window.lucide) lucide.createIcons();
+    // 自动聚焦正文末尾
+    setTimeout(()=>{
+      const c = document.getElementById('fs-content');
+      c.focus();
+      const range = document.createRange();
+      range.selectNodeContents(c);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }, 50);
+  }
+  function closeFullscreenEditor(){
+    document.getElementById('fs-editor').classList.remove('open');
+    fsCurrentId = null;
+    // 退出全屏态
+    if(fsIsFullscreen){ fsIsFullscreen=false; document.body.style.overflow=''; }
+    // 关闭后清 hash
+    if(location.hash.startsWith('#/detail')) history.replaceState(null,'','#');
+  }
+  // hash 变化监听（前进后退 / 直接改 URL 都触发）
+  window.addEventListener('hashchange', () => {
+    const id = getIdFromHash();
+    if(id) openFullscreenEditor(id);
+    else closeFullscreenEditor();
+  });
+  // 初始化：如果打开时已带 hash，直接进编辑器
+  document.addEventListener('DOMContentLoaded', () => {
+    const id = getIdFromHash();
+    if(id) setTimeout(()=>openFullscreenEditor(id), 100);
+  });
+
+  function updateFsWordCount(){
+    const txt = (document.getElementById('fs-content').textContent || '');
+    document.getElementById('fs-word-count').textContent = `${txt.length} 字`;
+  }
+  // 监听输入
+  document.addEventListener('input', (e) => {
+    if(e.target && e.target.id==='fs-content') updateFsWordCount();
+    if(e.target && e.target.id==='fs-h1') document.getElementById('fs-title-breadcrumb').textContent = e.target.value || '未命名';
+  });
+  function toggleFsEdit(){
+    fsEditing = !fsEditing;
+    const content = document.getElementById('fs-content');
+    const h1 = document.getElementById('fs-h1');
+    const btn = document.getElementById('fs-edit-fab');
+    if(fsEditing){
+      content.setAttribute('contenteditable','true');
+      h1.readOnly = false;
+      btn.classList.add('is-on');
+      content.focus();
+    } else {
+      content.removeAttribute('contenteditable');
+      h1.readOnly = true;
+      btn.classList.remove('is-on');
+    }
+  }
+  function toggleFsPageWidth(){
+    document.getElementById('fs-pw-menu')?.classList.toggle('open');
+  }
+  function setFsPageWidth(w){
+    fsPageWidth = w;
+    document.getElementById('fs-container').dataset.width = w;
+    document.querySelectorAll('#fs-pw-menu button').forEach(b => b.classList.toggle('active', b.dataset.width===w));
+    document.getElementById('fs-pw-menu')?.classList.remove('open');
+  }
+  function toggleFsFullscreen(){
+    fsIsFullscreen = !fsIsFullscreen;
+    document.body.style.overflow = fsIsFullscreen ? 'hidden' : '';
+    const btn = document.getElementById('fs-fullscreen-btn');
+    btn.innerHTML = fsIsFullscreen ? '<i data-lucide="minimize-2"></i>' : '<i data-lucide="maximize-2"></i>';
+    if(window.lucide) lucide.createIcons();
+  }
+  function saveEditor(){
+    if(!fsCurrentId) return;
+    // 简易反馈
+    const btn = document.getElementById('fs-save-fab');
+    btn.classList.add('is-on');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check-check"></i>';
+    if(window.lucide) lucide.createIcons();
+    setTimeout(()=>{ btn.innerHTML = orig; if(window.lucide) lucide.createIcons(); }, 1200);
+  }
+  function addAttachment(){ if(fsCurrentId) toast('已添加附件占位（原型未连文件选择器）'); }
+  function addImage(){ if(fsCurrentId) toast('已插入图片占位（原型未连文件选择器）'); }
+  function toggleTodoComplete(){
+    if(!fsCurrentId) return;
+    const n = NOTES[fsCurrentId];
+    if(!n || n.type!=='todo') return;
+    n.done = !n.done;
+    // 同步到行
+    const row = document.querySelector(`.row[data-id="${fsCurrentId}"]`);
+    if(row){
+      row.dataset.done = n.done ? '1' : '0';
+      const cb = row.querySelector('.cb');
+      if(cb) cb.classList.toggle('done', n.done);
+      row.classList.toggle('is-done', n.done);
+    }
+    document.getElementById('fs-todo-fab').classList.toggle('is-on', n.done);
+    toast(n.done ? '已标记为完成' : '已标记为未完成');
+  }
+  // Esc + 快捷键
+  document.addEventListener('keydown', (e) => {
+    const open = document.getElementById('fs-editor')?.classList.contains('open');
+    if(e.key==='Escape' && open){ e.preventDefault(); closeFullscreenEditor(); }
+    if(!open) return;
+    if(e.key==='e' || e.key==='E'){ if(document.activeElement && document.activeElement.tagName==='INPUT') return; toggleFsEdit(); }
+    else if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); saveEditor(); }
+    else if((e.metaKey||e.ctrlKey) && e.shiftKey && (e.key==='f'||e.key==='F')){ e.preventDefault(); toggleFsFullscreen(); }
+  });
+  // 关闭更多弹层（点击 page-width 外部）
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('fs-pw-menu');
+    const trig = document.getElementById('fs-pw');
+    if(!menu || !menu.classList.contains('open')) return;
+    if(trig.contains(e.target)) return;
+    menu.classList.remove('open');
+  });
+
+  // ===== 详情抽屉（保留作为「查看」次级入口，对齐 Notion 阅读体验） =====
+  function openRowDetail(contentEl){
+    const row = getRowFromEl(contentEl);
+    if(!row) return;
+    openDetail(row.dataset.id);
+  }
+  // ===== 详情正文渲染（标签 / @ 引用 / ! 重要度 / 图片 / 附件 / 任务） =====
+  // 解析正文成行，再按 token 切成 #tag / @user / !high / 普通
+  function renderInlineBody(content, note){
+    if(!content) return '';
+    // 1) HTML 转义（先把 & < > 替换为实体）
+    let html = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // 2) 抽出代码块并占位（避免后续 \n / 标签 token 处理破坏它）
+    const codeStash = [];
+    html = html.replace(/```([\s\S]*?)```/g, (m,code)=>{
+      codeStash.push(code);
+      return `\u0001CODE${codeStash.length-1}\u0001`;
+    });
+    // 3) 块级结构
+    html = html
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
+      .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^- \[( |x)\] (.+)$/gm, (m,done,t)=>`<li class="subtask-li"><span class="sc${done==='x'?' done':''}"></span><span class="st${done==='x'?' done':''}">${t}</span></li>`)
+      .replace(/^- (.+)$/gm, '<li>$1</li>');
+    // 4) 块间双换行 → </p><p>（但 h1/h2/h3/blockquote/li/pre/ul 前后不要插入）
+    html = html
+      .replace(/\n{2,}/g, '\u0001PBREAK\u0001')
+      .replace(/(<\/(?:h[1-6]|blockquote|ul|pre|li)>)\u0001PBREAK\u0001/g, '$1')
+      .replace(/\u0001PBREAK\u0001(<\/?(?:h[1-6]|blockquote|ul|pre|li))/g, '$1')
+      .replace(/\u0001PBREAK\u0001/g, '</p><p>')
+      .replace(/\n/g,'<br>');
+    // 5) 包 <ul>：连续 <li>
+    html = html.replace(/(?:<li[^>]*>.*?<\/li>(?:<br>)*)+/g, (m)=>{
+      const inner = m.replace(/<br>/g,'');
+      const isSub = inner.includes('subtask-li');
+      return `<ul class="${isSub?'subtask-list':''}">${inner}</ul>`;
+    });
+    // 6) 整体包 <p>（如果不是以块级标签开头）
+    if(!html) return '';
+    if(!/^<(h[1-6]|p|ul|ol|blockquote|pre|div)/.test(html)) html = `<p>${html}</p>`;
+    // 7) 行内 token：#tag / @user / !level（前后允许中文标点 / 空白 / 标签边界）
+    const tagRe = /(^|[\s，。！？、；：（）()\u3000>])(#)([\u4e00-\u9fa5A-Za-z0-9_\-]{1,20})(?=[\s，。！？、；：（）()\u3000.,!?;:]|$|&|<)/g;
+    const menRe = /(^|[\s，。！？、；：（）()\u3000>])(@)([\u4e00-\u9fa5A-Za-z0-9_\-]{1,20})(?=[\s，。！？、；：（）()\u3000.,!?;:]|$|&|<)/g;
+    const impRe = /(^|[\s，。！？、；：（）()\u3000>])(!)([\u4e00-\u9fa5A-Za-z0-9]+)(?=[\s，。！？、；：（）()\u3000.,!?;:]|$|&|<)/g;
+    html = html.replace(tagRe, (m,pre,hash,tag)=>`${pre}<span class="inline-tag" onclick="event.stopPropagation()">#${tag}</span>`);
+    html = html.replace(menRe, (m,pre,at,user)=>`${pre}<span class="inline-mention" onclick="event.stopPropagation()">${user}</span>`);
+    html = html.replace(impRe, (m,pre,bang,lv)=>{
+      const l = lv.toLowerCase();
+      let cls = l;
+      if(l==='高'||l==='high'||l==='urgent') cls='high';
+      else if(l==='中'||l==='mid'||l==='medium') cls='mid';
+      else if(l==='低'||l==='low') cls='low';
+      else return m;
+      return `${pre}<span class="inline-imp" data-level="${cls}" onclick="event.stopPropagation()">${lv}</span>`;
+    });
+    // 8) 还原代码块
+    html = html.replace(/\u0001CODE(\d+)\u0001/g, (m,i)=>`<pre><code>${codeStash[+i]}</code></pre>`);
+    return html;
+  }
+  function renderInlineAttach(att){
+    return `<div class="inline-attach" onclick="event.stopPropagation()">
+      <span class="ia-icon"><i data-lucide="paperclip"></i></span>
+      <span class="ia-name">${att.name}</span>
+      <span class="ia-size">${att.size||''}</span>
+      <span class="ia-dl" title="下载"><i data-lucide="download"></i></span>
+    </div>`;
+  }
+  function renderInlineImage(img){
+    const cap = img.caption ? `<div class="inline-img-caption">${img.caption}</div>` : '';
+    const g = img.g || 'g1';
+    return `<div class="ph ${g}" style="width:100%;aspect-ratio:${img.ratio||'16/9'};border-radius:8px;margin:12px 0;border:1px solid hsl(var(--border));position:relative;overflow:hidden"><span class="ph-icon" style="position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.72)"><i data-lucide="image"></i></span></div>${cap}`;
+  }
+
+  // ===== 阅读模式 + 折叠 =====
+  function setDetailMode(m){
+    const drawer = document.getElementById('detail-drawer');
+    if(!drawer) return;
+    drawer.dataset.mode = m;
+    drawer.classList.toggle('fullpage', m==='fullpage');
+    document.querySelectorAll('.mode-seg button').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+    if(window.lucide) lucide.createIcons();
+  }
+  function toggleDetailCollapse(){
+    const drawer = document.getElementById('detail-drawer');
+    if(!drawer) return;
+    const collapsed = drawer.classList.toggle('collapsed');
+    // 收起时若在 fullpage 退回 side（不然收不下）
+    if(collapsed && drawer.dataset.mode==='fullpage') setDetailMode('side');
+    const icon = document.getElementById('detail-collapse-icon');
+    if(icon){ icon.setAttribute('data-lucide', collapsed ? 'chevrons-left' : 'chevrons-right'); if(window.lucide) lucide.createIcons(); }
+  }
+
+  function openDetail(id){
+    const n = NOTES[+id]; if(!n) return;
+    currentDetailId = +id; _syncDetailId(currentDetailId);
+    document.getElementById('detail-id').textContent = id;
+    document.getElementById('detail-meta-line').textContent = n.time;
+    // 类型 chip
+    const chip = document.getElementById('detail-type-chip');
+    const typeMap = { blinko: {t:'⚡ 闪念', cls:'bg-primary/10 text-primary'},
+                      notes:  {t:'📝 笔记', cls:'bg-blue-500/10 text-blue-500'},
+                      todo:   {t:'✅ 待办', cls:'bg-green-500/10 text-green-500'} };
+    const tm = typeMap[n.type] || typeMap.blinko;
+    chip.textContent = tm.t;
+    chip.className = 'text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0 ' + tm.cls;
+    // 标题（仅 notes）
+    const title = document.getElementById('detail-title');
+    if(n.type==='notes' && n.title){
+      title.textContent = n.title; title.classList.remove('hidden');
+    } else { title.classList.add('hidden'); }
+    // 正文：先渲染富文本，再用 inline 节点（图片/附件）按顺序拼入
+    let bodyHtml = renderInlineBody(n.content||'', n);
+    // 嵌入图片（在 content 后或前面）
+    if(n.images && n.images.length){
+      bodyHtml += n.images.map(renderInlineImage).join('');
+    }
+    // 行内附件
+    if(n.attach && n.attach.length){
+      bodyHtml += '<div class="mt-2">' + n.attach.map(renderInlineAttach).join('') + '</div>';
+    }
+    document.getElementById('detail-body').innerHTML = bodyHtml;
+    // 收束后的元信息条
+    document.getElementById('detail-meta-words').innerHTML = `字数 <b>${n.charCount||(n.content||'').length}</b>`;
+    document.getElementById('detail-meta-creator').innerHTML = `创建 <b>${n.created||'—'}</b>`;
+    document.getElementById('detail-meta-updated').innerHTML = `更新 <b>${n.updated||n.time||'—'}</b>`;
+    const prioEl = document.getElementById('detail-meta-prio');
+    if(n.type==='todo' && n.priority){ prioEl.style.display=''; prioEl.innerHTML = `优先级 <b>${n.priority}</b>`; }
+    else prioEl.style.display='none';
+    // pin / edit 按钮态
+    updateDetailPin();
+    document.getElementById('detail-edit-btn').classList.remove('is-on');
+    // 默认收起态
+    document.getElementById('detail-drawer').classList.remove('collapsed');
+    const ic = document.getElementById('detail-collapse-icon'); if(ic){ ic.setAttribute('data-lucide','chevrons-right'); }
+    // 打开抽屉
+    document.getElementById('detail-drawer')?.classList.add('open');
+    document.getElementById('detail-backdrop')?.classList.add('open');
+    if(window.lucide) lucide.createIcons();
+  }
+  function closeDetail(){
+    document.getElementById('detail-drawer')?.classList.remove('open');
+    document.getElementById('detail-backdrop')?.classList.remove('open');
+    currentDetailId = null; _syncDetailId(null);
+  }
+  function updateDetailPin(){
+    if(!currentDetailId) return;
+    const n = NOTES[currentDetailId];
+    const row = document.querySelector(`.row[data-id="${currentDetailId}"]`);
+    const isPinned = row?.dataset.pinned==='1' || n?.pinned;
+    document.getElementById('detail-pin-btn')?.classList.toggle('is-on', !!isPinned);
+  }
+  function togglePinDetail(){
+    if(!currentDetailId) return;
+    const row = document.querySelector(`.row[data-id="${currentDetailId}"]`);
+    if(!row) return;
+    // 同步：把行当前 pin 态取反（与 toggleRowPin 一致）
+    const newPin = row.dataset.pinned==='1' ? '0' : '1';
+    row.dataset.pinned = newPin;
+    row.classList.toggle('is-pinned', newPin==='1');
+    updateDetailPin();
+  }
+  function toggleDetailEdit(){
+    if(!currentDetailId) return;
+    const btn = document.getElementById('detail-edit-btn');
+    const on = btn.classList.toggle('is-on');
+    const body = document.getElementById('detail-body');
+    if(on){
+      body.setAttribute('contenteditable','true');
+      body.focus();
+    } else {
+      body.removeAttribute('contenteditable');
+    }
+  }
+  function shareDetail(){
+    if(!currentDetailId) return;
+    const n = NOTES[currentDetailId];
+    navigator.clipboard?.writeText(`[Blinko] ${n.title||n.content.split('\n')[0]}`);
+    const btn = document.querySelector('#detail-drawer header button[onclick*="shareDetail"]');
+    if(btn){ const o=btn.innerHTML; btn.innerHTML='<i data-lucide="check" class="w-4 h-4"></i>'; if(window.lucide)lucide.createIcons(); setTimeout(()=>{ btn.innerHTML=o; if(window.lucide)lucide.createIcons(); }, 1200); }
+  }
+  function moreDetail(e){
+    const btn = e.currentTarget;
+    openMorePopover(e, btn, (act) => moreActionForDetail(act));
+  }
+  function moreActionForDetail(act){
+    if(!currentDetailId) return;
+    const n = NOTES[currentDetailId];
+    if(act==='delete'){
+      if(confirm(`删除「${n.title||n.content.slice(0,20)}」？`)){ alert('[占位] 已删除'); closeDetail(); }
+    } else if(act==='archive'){
+      alert(`[占位] 已归档 ${n.title||'闪念'}`); closeDetail();
+    } else if(act==='export'){
+      alert('[占位] 打开导出菜单（md/html/docx…）');
+    } else if(act==='edit'){
+      toggleDetailEdit();
+    } else if(act==='duplicate'){
+      alert('[占位] 复制为新笔记');
+    } else if(act==='move'){
+      alert('[占位] 打开移动对话框');
+    }
+  }
+  // 详情抽屉 Esc + 快捷键
+  document.addEventListener('keydown', (e) => {
+    if(e.key==='Escape'){ closeDetail(); closeMorePopover(); return; }
+    if(!currentDetailId) return;
+    if(e.key==='e' || e.key==='E'){ toggleDetailEdit(); }
+    else if(e.key==='p' || e.key==='P'){ togglePinDetail(); }
+    else if(e.key==='m' || e.key==='M'){ setDetailMode('centered'); }
+    else if(e.key==='f' || e.key==='F'){ setDetailMode('fullpage'); }
+    else if(e.shiftKey && e.key==='Enter'){ setDetailMode(e.target.closest('.detail-body')?'fullpage':'side'); }
+  });
+</script>
+</body>
+</html>

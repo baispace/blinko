@@ -1,3 +1,4 @@
+import { mergeProfileIdentity } from '@/lib/profileIdentity';
 // import { User } from 'next-auth';
 // import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
@@ -39,15 +40,15 @@ export class UserStore implements Store {
   }
 
   get name(): string {
-    return this.tokenData.value?.user?.name || '';
+    return (String(this.userInfo.value?.id) === String(this.id) ? this.userInfo.value?.name : null) ?? this.tokenData.value?.user?.name ?? '';
   }
 
   get nickname(): string {
-    return this.tokenData.value?.user?.nickname || '';
+    return (String(this.userInfo.value?.id) === String(this.id) ? this.userInfo.value?.nickName : null) ?? this.tokenData.value?.user?.nickname ?? '';
   }
 
   get image(): string {
-    return this.userInfo.value?.image || '';
+    return (String(this.userInfo.value?.id) === String(this.id) ? this.userInfo.value?.image : null) ?? this.tokenData.value?.user?.image ?? '';
   }
 
   get role(): string {
@@ -91,9 +92,21 @@ export class UserStore implements Store {
 
   userInfo = new PromiseState({
     function: async (id: number) => {
-      return await api.users.detail.query({ id });
+      const profile = await api.users.detail.query({ id });
+      if(profile && String(id) === String(this.id)) this.tokenData.save(mergeProfileIdentity(this.tokenData.value, profile));
+      return profile;
     }
   });
+
+  async refreshProfile() {
+    const id = Number(this.id);
+    if(!id) return;
+    const profile = await api.users.detail.query({ id });
+    if(!profile || String(id) !== String(this.id)) return;
+    this.userInfo.setValue(profile);
+    this.tokenData.save(mergeProfileIdentity(this.tokenData.value, profile));
+    return profile;
+  }
 
   canRegister = new PromiseState({
     function: async () => {
@@ -202,10 +215,21 @@ export class UserStore implements Store {
     document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appTitle);
   }
 
+  updateAppIcon(icon?: string) {
+    const href = icon || '/favicon.ico';
+    for (const relation of ['icon', 'shortcut icon', 'apple-touch-icon']) {
+      let link = document.querySelector<HTMLLinkElement>(`link[rel="${relation}"]`);
+      if (!link) { link = document.createElement('link'); link.rel = relation; document.head.appendChild(link); }
+      link.href = href;
+      if (icon) link.type = 'image/png'; else link.removeAttribute('type');
+    }
+  }
+
   async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
     const base = RootStore.Get(BaseStore);
     const config = await this.blinko.config.call()
     this.updateAppTitle(config?.customTitle);
+    this.updateAppIcon(config?.customIcon);
     const handleFeatureRoute = (
       featureKey: 'hub' | 'ai',
       storageKey: string,
@@ -448,6 +472,7 @@ export class UserStore implements Store {
     useEffect(() => {
       this.updateAppTitle(this.blinko.config.value?.customTitle);
     }, [this.blinko.config.value?.customTitle]);
+    useEffect(() => { this.updateAppIcon(this.blinko.config.value?.customIcon); }, [this.blinko.config.value?.customIcon]);
 
     useEffect(() => {
       setTauriTheme(theme).catch(console.error);

@@ -4,7 +4,7 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { CollapsibleCard } from '../../Common/CollapsibleCard';
 import { ModelIcon, ProviderIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { useTranslation } from 'react-i18next';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
@@ -12,7 +12,8 @@ import { api } from '@/lib/trpc';
 import { AiSettingStore } from '@/store/aiSettingStore';
 
 export const DefaultModelsSection = observer(() => {
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
+  const [advanced,setAdvanced]=useState(false);
   const aiSettingStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
 
@@ -42,21 +43,21 @@ export const DefaultModelsSection = observer(() => {
   }, []);
 
   return (
-    <CollapsibleCard icon="hugeicons:settings-02" title="Default Models Configuration">
+    <CollapsibleCard icon="hugeicons:settings-02" title={t('settings-default-models')}>
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={advanced ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "grid grid-cols-1 gap-4"}>
           {/* Main Chat Model */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Icon icon="hugeicons:cpu" width="16" height="16" />
-              <label className="text-sm font-medium">Main Chat Model</label>
+              <label className="text-sm font-medium">{t('settings-chat-model')}</label>
             </div>
             <Select
               classNames={{
                 trigger: "h-12",
               }}
-              aria-label="Main Chat Model"
-              placeholder={'select'}
+              aria-label={t('settings-chat-model')}
+              placeholder={t('settings-choose-model')}
               selectedKeys={selectedKeyIfPresent(blinko.config.value?.mainModelId, aiSettingStore.inferenceModels)}
               renderValue={(items) => {
                 return items.map((item) => {
@@ -105,18 +106,19 @@ export const DefaultModelsSection = observer(() => {
             </Select>
           </div>
 
+          {advanced && <>
           {/* Embedding Model */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Icon icon="hugeicons:database-01" width="16" height="16" />
-              <label className="text-sm font-medium">Embedding Model</label>
+              <label className="text-sm font-medium">{t('embedding-model')}</label>
             </div>
             <Select
               classNames={{
                 trigger: "h-12",
               }}
-              aria-label="Embedding Model"
-              placeholder="Select embedding model"
+              aria-label={t('embedding-model')}
+              placeholder={t('settings-choose-model')}
               selectedKeys={selectedKeyIfPresent(blinko.config.value?.embeddingModelId, aiSettingStore.embeddingModels)}
               renderValue={(items) => {
                 return items.map((item) => {
@@ -169,14 +171,14 @@ export const DefaultModelsSection = observer(() => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Icon icon="hugeicons:mic-01" width="16" height="16" />
-              <label className="text-sm font-medium">Voice Model</label>
+              <label className="text-sm font-medium">{t('settings-voice-model')}</label>
             </div>
             <Select
               classNames={{
                 trigger: "h-12",
               }}
-              aria-label="Voice Model"
-              placeholder="Select voice model"
+              aria-label={t('settings-voice-model')}
+              placeholder={t('settings-choose-model')}
               selectedKeys={selectedKeyIfPresent(blinko.config.value?.voiceModelId, aiSettingStore.voiceModels)}
               renderValue={(items) => {
                 return items.map((item) => {
@@ -229,14 +231,14 @@ export const DefaultModelsSection = observer(() => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Icon icon="hugeicons:view" width="16" height="16" />
-              <label className="text-sm font-medium">Vision Model</label>
+              <label className="text-sm font-medium">{t('settings-vision-model')}</label>
             </div>
             <Select
               classNames={{
                 trigger: "h-12",
               }}
-              aria-label="Vision Model"
-              placeholder="Select vision model"
+              aria-label={t('settings-vision-model')}
+              placeholder={t('settings-choose-model')}
               selectedKeys={selectedKeyIfPresent(blinko.config.value?.imageModelId, aiSettingStore.imageModels)}
               renderValue={(items) => {
                 return items.map((item) => {
@@ -284,7 +286,9 @@ export const DefaultModelsSection = observer(() => {
               ))}
             </Select>
           </div>
+          </>}
         </div>
+        <Button size="sm" variant="light" onPress={()=>setAdvanced(value=>!value)}>{i18n.language.startsWith('zh')?(advanced?'收起其他默认模型':'其他默认模型：知识库、语音、视觉'):(advanced?'Hide other models':'Other defaults: embedding, voice & vision')}</Button>
       </div>
     </CollapsibleCard>
   );

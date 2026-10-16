@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
+import { ViewportItem } from '@/components/Common/ViewportItem';
 import { ListComposer } from '@/components/Common/ListComposer';
 import { ScrollArea, type ScrollAreaHandles } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
@@ -52,7 +53,13 @@ const Home = observer(() => {
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
   const scrollAreaRef = useRef<ScrollAreaHandles>(null);
-  const [activeTab, setActiveTab] = useState<string>('today');
+  const activeTab = blinko.todoBucket;
+  const setActiveTab = (value: string) => {
+    if (!['today','upcoming','done'].includes(value) || value === blinko.todoBucket) return;
+    blinko.todoBucket = value as typeof blinko.todoBucket;
+    blinko.todoFeed.setValue([]);
+    void blinko.todoFeed.resetAndCall({});
+  };
 
   // 当前视图真正渲染的列表。映射收敛到 store，筛选面板 / 批量选择共用同一份，
   // 避免「改了筛选却刷了别的列表」。
@@ -79,78 +86,12 @@ const Home = observer(() => {
     }
   }))
 
-  // 已完成的「当日完成」也算当前列表：updatedAt 是今天
-  // - 今天列表：未完成 + 当日完成（due ≤ 今天）
-  // - 接下来几天：未完成 + 当日完成（due > 今天）
-  // - 已完成列表：只显示「完成日期非当天」的历史已完成
-  const isCompletedToday = (todo: any): boolean => {
-    if (!todo.isArchived || !todo.updatedAt) return false;
-    return dayjs().isSame(dayjs(todo.updatedAt), 'day');
-  };
-
-  // 三个 section 的 todo 列表
-  const todayList = useMemo(() => {
-    if (!isTodoView) return [];
-    const todayStart = dayjs().startOf('day');
-    const source: any[] = [
-      ...(currentListState.value ?? []),
-      ...(blinko.doneTodoList.value ?? []).filter(isCompletedToday),
-    ];
-    return source.filter((todo: any) => {
-      const d = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
-      const due = d && d.isValid() ? d.startOf('day') : null;
-      return !due || !due.isAfter(todayStart, 'day'); // 今天到期 + 逾期
-    }).sort(compareTodoPriority);
-  }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
-
-  const upcomingList = useMemo(() => {
-    if (!isTodoView) return [];
-    const todayStart = dayjs().startOf('day');
-    const source: any[] = [
-      ...(currentListState.value ?? []),
-      ...(blinko.doneTodoList.value ?? []).filter(isCompletedToday),
-    ];
-    return source
-      .filter((todo: any) => {
-        const d = todo.metadata?.expireAt ? dayjs(todo.metadata.expireAt) : null;
-        const due = d && d.isValid() ? d.startOf('day') : null;
-        return due && due.isAfter(todayStart, 'day');
-      })
-      .sort((a: any, b: any) => {
-        const da = dayjs(a.metadata.expireAt).valueOf();
-        const db = dayjs(b.metadata.expireAt).valueOf();
-        return da - db || compareTodoPriority(a, b);
-      });
-  }, [isTodoView, currentListState.value, blinko.doneTodoList.value, blinko.updateTicker]);
-
-  const visibleTodayList = useMemo(
-    () => todayList.filter((todo: any) => todo.isArchived || !['ui', 'in'].includes(getTodoPriority(todo.metadata))),
-    [todayList]
-  );
-
-
-  // 「重要」是跨今天/接下来的一个正交视图：只要打了「重要」旗子就进来，
-  // 不论截止日。数据早已存在（metadata.priorityImportant），只是没有露出来。
-  // 同时从 todayList / upcomingList 里排除，避免同一条被渲染两次。
-  const importantList = useMemo(() => {
-    if (!isTodoView) return [];
-    const seen = new Set<number>();
-    return [...todayList, ...upcomingList]
-      .filter((todo: any) => !todo.isArchived && ['ui', 'in'].includes(getTodoPriority(todo.metadata)))
-      .filter((todo: any) => (seen.has(todo.id) ? false : seen.add(todo.id)))
-      .sort(compareTodoPriority);
-  }, [isTodoView, todayList, upcomingList]);
-
-  const importantTodayList = importantList.filter((item: any) => todayList.some((today: any) => today.id === item.id));
-
-  const doneList = useMemo(
-    () => (blinko.doneTodoList.value ?? []).filter((n: any) => !isCompletedToday(n)),
-    [blinko.doneTodoList.value]
-  );
-
-  useEffect(() => {
-    if (!isTodoView) setActiveTab('today');
-  }, [isTodoView]);
+  // The server classifies, ranks and counts the entire filtered task set.
+  const todayList = isTodoView && activeTab === 'today' ? currentListState.value ?? [] : [];
+  const upcomingList = isTodoView && activeTab === 'upcoming' ? currentListState.value ?? [] : [];
+  const doneList = isTodoView && activeTab === 'done' ? currentListState.value ?? [] : [];
+  const importantTodayList = todayList.filter((item: any) => !item.isArchived && ['ui','in'].includes(getTodoPriority(item.metadata)));
+  const visibleTodayList = todayList.filter((item: any) => item.isArchived || !['ui','in'].includes(getTodoPriority(item.metadata)));
 
   // Restore scroll position when returning from editor
   useEffect(() => {
@@ -213,9 +154,9 @@ const Home = observer(() => {
   const loadedItemCount = currentListState.value?.length ?? 0;
 
   const todoTabs = [
-    { key: 'today', label: t('today-list'), count: todayList.length },
-    { key: 'upcoming', label: t('upcoming-list'), count: upcomingList.length },
-    { key: 'done', label: t('done-list'), count: doneList.length },
+    { key: 'today', label: t('today-list'), count: blinko.todoCounts.today },
+    { key: 'upcoming', label: t('upcoming-list'), count: blinko.todoCounts.upcoming },
+    { key: 'done', label: t('done-list'), count: blinko.todoCounts.done },
   ];
 
   const renderTodoSection = ({
@@ -266,7 +207,7 @@ const Home = observer(() => {
       </header>}
       <div className="flex flex-col gap-2">
         {items.length > 0
-          ? items.map((todo: any) => <TodoCard key={todo.id} todo={todo} />)
+          ? items.map((todo: any, index: number) => <ViewportItem key={todo.id} initial={index < 5} estimate={160}><TodoCard todo={todo} /></ViewportItem>)
           : <ListEmptyState variant="todo" compact />}
       </div>
     </section>
@@ -291,11 +232,10 @@ const Home = observer(() => {
         fixMobileTopBar
         onRefresh={async () => {
           await currentListState.resetAndCall({});
-          if (isTodoView) await blinko.doneTodoList.resetAndCall({});
+
         }}
         onBottom={() => {
-          if (isTodoView && activeTab === 'done') void blinko.doneTodoList.callNextPage({});
-          else void blinko.onBottom();
+          void blinko.onBottom();
         }}
         className={`mt-0 h-full min-h-0 w-full flex-1 !transition-all scroll-area ${effectiveHideEditor ? 'md:mt-0' : 'md:mt-3'}`}
       >
@@ -398,7 +338,7 @@ const Home = observer(() => {
                     <span className="text-[10.5px] tabular-nums text-default-400">{group.notes.length}</span>
                   </header>
                   <div className="overflow-hidden rounded-xl border border-default-200/60 bg-card px-3 shadow-sm">
-                    {group.notes.map(note => <BlinkoListRow key={note.id} blinkoItem={note} />)}
+                    {group.notes.map((note, index) => <ViewportItem key={note.id} initial={index < 5} estimate={110}><BlinkoListRow blinkoItem={note} /></ViewportItem>)}
                   </div>
                 </section>
               ))}
@@ -421,16 +361,17 @@ const Home = observer(() => {
                 className="card-masonry-grid"
                 columnClassName="card-masonry-grid_column"
               >
-                {localNotes.map(item => {
+                {localNotes.map((item, index) => {
                   const showInsertLine = insertPosition === item.id && activeId !== item.id;
                   return (
+                    <ViewportItem key={item.id} initial={index < 8} estimate={320} disabled={noteListSortBy === 'manual'}>
                     <DraggableBlinkoCard
-                      key={item.id}
                       blinkoItem={item}
                       showInsertLine={showInsertLine}
                       insertPosition="top"
                       isDragForbidden={isDragForbidden && showInsertLine}
                     />
+                    </ViewportItem>
                   );
                 })}
               </Masonry>
@@ -444,6 +385,7 @@ const Home = observer(() => {
             </DndContext>
           )}
 
+          {!currentListState.isLoadAll && loadedItemCount > 0 && <button type="button" disabled={currentListState.isLoading} onClick={() => currentListState.callNextPage({})} className="mx-auto my-4 block rounded-lg px-4 py-2 text-xs text-default-500 hover:bg-default-100 disabled:opacity-50">{currentListState.isLoading ? '正在加载…' : '加载更多'}</button>}
           {store.showLoadAll && loadedItemCount > 0 && (
             <div className="my-5 flex w-full items-center justify-center gap-2 text-[11px] text-default-400">
               <span className="h-px w-8 bg-default-200" />

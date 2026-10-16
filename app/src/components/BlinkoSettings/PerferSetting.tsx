@@ -1,3 +1,4 @@
+import { SiteBrandingSettings } from './SiteBrandingSettings';
 import { observer } from "mobx-react-lite";
 import { Switch, Input, Tooltip, Textarea, Slider, Button } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -9,11 +10,12 @@ import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PageSize, PromiseCall } from "@/store/standard/PromiseState";
 import { api } from "@/lib/trpc";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { GradientBackground } from "../Common/GradientBackground";
 import { UserStore } from "@/store/user";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { BaseStore } from "@/store/baseStore";
 import FontSwitcher from "../Common/FontSwitcher";
 import { Icon } from "@/components/Common/Iconify/icons";
@@ -39,7 +41,7 @@ const SettingSection = observer(({
         </div>
         {desc && <div className="text-xs text-default-400 mt-0.5">{desc}</div>}
       </div>
-      <div className="rounded-xl bg-content1 shadow-sm px-4 py-1 divide-y divide-default-100">
+      <div className="rounded-xl border border-default-200/70 bg-background px-4 py-1 divide-y divide-default-100">
         {children}
       </div>
     </section>
@@ -87,9 +89,10 @@ const TypoNumberRow = ({
   onComplete: (next: number) => void | Promise<void>;
 }) => {
   const [draft, setDraft] = useState<string>(value.toFixed(decimals));
+  const editing = useRef(false);
 
   useEffect(() => {
-    setDraft(value.toFixed(decimals));
+    if (!editing.current) setDraft(value.toFixed(decimals));
   }, [value, decimals]);
 
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
@@ -109,18 +112,20 @@ const TypoNumberRow = ({
           type="number"
           size="sm"
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onFocus={() => { editing.current = true; }}
+          onChange={e => {
+            const raw = e.target.value; setDraft(raw);
+            const number = Number(raw);
+            if (raw.trim() && Number.isFinite(number) && number >= min && number <= max) onChange(number);
+          }}
           onBlur={e => {
+            editing.current = false;
             const next = parseFloat(e.target.value);
             const clamped = apply(Number.isFinite(next) ? next : value);
             void onComplete(clamped);
           }}
           onKeyDown={e => {
-            if (e.key === 'Enter') {
-              const next = parseFloat((e.target as HTMLInputElement).value);
-              const clamped = apply(Number.isFinite(next) ? next : value);
-              void onComplete(clamped);
-            }
+            if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
           }}
           min={min}
           max={max}
@@ -162,7 +167,7 @@ const TypoNumberRow = ({
   );
 };
 
-export const PerferSetting = observer(() => {
+export const PerferSetting = observer(({ section = 'appearance' }: { section?: 'appearance' | 'typography' | 'reading' | 'advanced' }) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
@@ -172,7 +177,6 @@ export const PerferSetting = observer(() => {
   const [maxHomePageWidth, setMaxHomePageWidth] = useState(blinko.config.value?.maxHomePageWidth?.toString() || '0');
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
   const [signinFooterText, setSigninFooterText] = useState(blinko.config.value?.signinFooterText || '');
-  const [customTitle, setCustomTitle] = useState(blinko.config.value?.customTitle || '');
   const user = RootStore.Get(UserStore)
 
   // 全局排版：字号 12-20px / 字重 300-700 / 行高 1.0-2.5 / 段间距 0-30px /
@@ -204,13 +208,15 @@ export const PerferSetting = observer(() => {
   } as const;
 
   useEffect(() => {
-    blinko.config.call();
+    void blinko.config.call();
+  }, []);
+
+  useEffect(() => {
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '1000');
     setFoldLength(blinko.config.value?.cardFoldLength?.toString() || '300');
     setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
     setSigninFooterText(blinko.config.value?.signinFooterText || '');
-    setCustomTitle(blinko.config.value?.customTitle || '');
     setFontSize(blinko.config.value?.fontSize ?? TYPOGRAPHY_DEFAULTS.fontSize);
     setFontWeight(blinko.config.value?.fontWeight ?? TYPOGRAPHY_DEFAULTS.fontWeight);
     setLineHeight(blinko.config.value?.lineHeight ?? TYPOGRAPHY_DEFAULTS.lineHeight);
@@ -309,12 +315,9 @@ export const PerferSetting = observer(() => {
     blinko.config.call();
   };
 
-  return <CollapsibleCard
-    icon="tabler:brush"
-    title={t('preference')}
-  >
+  return <div className="flex flex-col gap-6">
     {/* ============ 外观与语言 ============ */}
-    <SettingSection
+    {section === 'appearance' && (<SettingSection
       icon="solar:palette-outline"
       title={t('appearance-and-language')}
       desc={t('appearance-and-language-desc')}
@@ -332,29 +335,21 @@ export const PerferSetting = observer(() => {
         rightContent={<ThemeColor
           value={blinko.config.value?.themeColor}
           onChange={async (background, foreground) => {
-            await PromiseCall(api.config.update.mutate({
-              key: 'themeColor',
-              value: background
-            }), { autoAlert: false })
-            await PromiseCall(api.config.update.mutate({
-              key: 'themeForegroundColor',
-              value: foreground
-            }))
-
-            const darkElement = document.querySelector('.dark')
-            if (darkElement) {
-              //@ts-ignore
-              darkElement.style.setProperty('--primary', background || "#4d8bff")
-              //@ts-ignore
-              darkElement.style.setProperty('--primary-foreground', foreground || "#000000")
-            }
-
-            const lightElement = document.querySelector('.light')
-            if (lightElement) {
-              //@ts-ignore
-              lightElement.style.setProperty('--primary', background || "#2f6feb")
-              //@ts-ignore
-              lightElement.style.setProperty('--primary-foreground', foreground || "hsl(210 40% 98%)")
+            try {
+              await Promise.all([
+                api.config.update.mutate({ key:'themeColor', value:background }),
+                api.config.update.mutate({ key:'themeForegroundColor', value:foreground }),
+              ]);
+              if (blinko.config.value) blinko.config.value = { ...blinko.config.value, themeColor:background, themeForegroundColor:foreground };
+              for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) {
+                const dark=element.classList.contains('dark');
+                element.style.setProperty('--primary', background || (dark?'#4d8bff':'#2f6feb'));
+                element.style.setProperty('--primary-foreground',foreground || (dark?'#000000':'#ffffff'));
+                if(background) element.style.setProperty('--tag',background); else element.style.removeProperty('--tag');
+              }
+            } catch(error) {
+              RootStore.Get(ToastPlugin).error(error instanceof Error ? error.message : t('operation-failed'));
+              throw error;
             }
           }}
         />} />
@@ -403,10 +398,10 @@ export const PerferSetting = observer(() => {
             />
           </Tooltip>
         } />
-    </SettingSection>
+    </SettingSection>)}
 
     {/* ============ 全局排版 ============ */}
-    <SettingSection
+    {section === 'typography' && (<SettingSection
       icon="fluent:text-font-24-regular"
       title={t('global-typography')}
       desc={t('global-typography-desc')}
@@ -638,20 +633,24 @@ export const PerferSetting = observer(() => {
       {/* 实时预览 */}
       <div className="py-3">
         <div
-          className="rounded-xl border border-default-200 bg-default-50 dark:bg-default-100 px-4 py-3.5 select-none markdown-body"
+          className="rounded-xl border border-default-200 bg-default-50 px-4 py-3.5 markdown-body"
           style={{
+            '--app-font-size': `${fontSize}px`, '--app-font-weight':fontWeight,
+            '--app-line-height':lineHeight, '--app-paragraph-spacing':`${paragraphSpacing}px`,
+            '--app-line-width':`${lineWidthChars}ch`, '--app-first-line-indent':`${firstLineIndentChars}em`,
+            '--app-h1-size':`${h1Size}px`, '--app-h2-size':`${h2Size}px`, '--app-h3-size':`${h3Size}px`, '--app-table-size':`${tableSize}px`,
+            maxWidth:`min(${lineWidthChars}ch, 100%)`, marginInline:'auto',
             fontSize: `${fontSize}px`,
             fontWeight: fontWeight,
             lineHeight: lineHeight,
             transition: 'font-size .15s ease, font-weight .15s ease, line-height .15s ease',
-            textIndent: `${firstLineIndentChars}em`,
-          }}
+          } as React.CSSProperties}
         >
           <h1 style={{ fontSize: `${h1Size}px`, margin: '0 0 4px' }}># {t('h1-preview-title')}</h1>
           <h2 style={{ fontSize: `${h2Size}px`, margin: '0 0 4px' }}>## {t('h2-preview-title')}</h2>
           <h3 style={{ fontSize: `${h3Size}px`, margin: '0 0 4px' }}>### {t('h3-preview-title')}</h3>
-          <p style={{ marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text')}</p>
-          <p style={{ marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text-2')}</p>
+          <p style={{ fontSize:`${fontSize}px`, fontWeight, lineHeight, textIndent:`${firstLineIndentChars}em`, marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text')}</p>
+          <p style={{ fontSize:`${fontSize}px`, fontWeight, lineHeight, textIndent:`${firstLineIndentChars}em`, marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text-2')}</p>
           <table style={{ fontSize: `${tableSize}px`, width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--desc, #ccc)' }}>
@@ -680,10 +679,10 @@ export const PerferSetting = observer(() => {
           {t('restore-defaults')}
         </Button>
       </div>
-    </SettingSection>
+    </SettingSection>)}
 
     {/* ============ 导航与阅读 ============ */}
-    <SettingSection
+    {section === 'reading' && (<SettingSection
       icon="solar:route-linear"
       title={t('navigation-and-reading')}
       desc={t('navigation-and-reading-desc')}
@@ -879,10 +878,10 @@ export const PerferSetting = observer(() => {
           />
         </div>}
       />
-    </SettingSection>
+    </SettingSection>)}
 
     {/* ============ 内容显示 ============ */}
-    <SettingSection
+    {section === 'reading' && (<SettingSection
       icon="solar:document-add-outline"
       title={t('content-display')}
       desc={t('content-display-desc')}
@@ -963,37 +962,16 @@ export const PerferSetting = observer(() => {
             }}
           />
         } />
-    </SettingSection>
+    </SettingSection>)}
 
     {/* ============ 高级（管理员） ============ */}
     {
-      user.isSuperAdmin && (
-        <SettingSection
+      user.isSuperAdmin && section === 'advanced' && (<SettingSection
           icon="solar:shield-keyhole-minimalistic-linear"
           title={t('advanced')}
           desc={t('advanced-desc')}
         >
-          <Item
-            type={isPc ? 'row' : 'col'}
-            leftContent={<ItemLabel title={t('custom-title')} desc={t('custom-title-tip')} />}
-            rightContent={<Input
-              className="w-full md:w-[400px]"
-              placeholder={t('custom-title-placeholder')}
-              type="text"
-              maxLength={50}
-              value={customTitle}
-              onChange={e => {
-                setCustomTitle(e.target.value)
-              }}
-              onBlur={async () => {
-                const titleValue = customTitle.trim().slice(0, 50);
-                setCustomTitle(titleValue);
-                await PromiseCall(api.config.update.mutate({
-                  key: 'customTitle',
-                  value: titleValue
-                }));
-                blinko.config.call();
-              }} />} />
+          <SiteBrandingSettings />
           <Item
             type={isPc ? 'row' : 'col'}
             leftContent={<ItemLabel title={t('custom-background-url')} desc={t('custom-bg-tip')} />}
@@ -1052,5 +1030,5 @@ export const PerferSetting = observer(() => {
         </SettingSection>
       )
     }
-  </CollapsibleCard>
+  </div>
 })

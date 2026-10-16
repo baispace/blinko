@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Effie-style prototype · Blinko mindmap-poc redesign</title>
+<style>
+  /* ============ token（与 Blinko 站点对齐） ============ */
+  :root {
+    /* 与 /src/styles/globals.css 完全一致 */
+    --background:        hsl(0 0% 100%);
+    --foreground:        hsl(222.2 47.4% 11.2%);
+    --secondbackground:  #FFFFFF;
+    --hover:             #efeee7d9;
+    --hover-foreground:  hsl(215.4 16.3% 46.9%);
+    --desc:              #808080;
+    --muted:             hsl(210 40% 96.1%);
+    --muted-foreground:  hsl(215.4 16.3% 46.9%);
+    --border:            #E7E7E5;
+    --primary:           #2F6FEB;
+    --accent:            hsl(240, 5%, 96%);
+
+    /* 圆点 + 箭头专用 */
+    --dot-rest:          #1E293B;
+    --dot-hover:         #000000;
+    --chevron:           hsl(215.4 16.3% 46.9%);
+    --chevron-active:    #1E293B;
+
+    --font-sans:         -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+                         Tahoma, "Segoe UI", "Noto Sans", "PingFang SC",
+                         "Microsoft YaHei", Arial, "Hiragino Sans GB", sans-serif;
+    --font-mono:         'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    --radius:            8px;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* ============ App shell ============ */
+  .app {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 44px 1fr;
+    grid-template-columns: var(--sidebar-w, 240px) 1fr;
+    grid-template-areas:
+      "topbar topbar"
+      "sidebar main";
+    transition: grid-template-columns 200ms ease;
+  }
+  .app.is-collapsed {
+    --sidebar-w: 0px;
+  }
+
+  /* ============ Topbar ============ */
+  .topbar {
+    grid-area: topbar;
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    font-size: 13.5px;
+    color: var(--muted-foreground);
+  }
+  .topbar .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--muted-foreground);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topbar .icon-btn:hover { background: var(--hover); color: var(--foreground); }
+
+  .brand {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--foreground);
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .brand .dot {
+    color: var(--muted-foreground);
+    margin: 0 2px;
+  }
+  .topbar .doc-title {
+    color: var(--muted-foreground);
+    font-size: 13px;
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
+    margin-left: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 360px;
+  }
+
+  .tabs {
+    display: flex;
+    margin-left: auto;
+    gap: 0;
+    background: rgba(31,31,30,.04);
+    padding: 3px;
+    border-radius: 8px;
+  }
+  .tabs button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted-foreground);
+    padding: 4px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 120ms;
+  }
+  .tabs button:hover { color: var(--foreground); }
+  .tabs button.is-active {
+    background: white;
+    color: var(--foreground);
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .kbd {
+    font-family: var(--font-mono);
+    background: rgba(31,31,30,.06);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin: 0 6px;
+  }
+
+  /* ============ Sidebar (cards) ============ */
+  .sidebar {
+    grid-area: sidebar;
+    border-right: 1px solid var(--border);
+    background: var(--background);
+    overflow-y: auto;
+    padding: 12px 8px;
+  }
+  .sidebar-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 8px;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 4px;
+  }
+  .sidebar-head button {
+    appearance: none; border: 0; background: transparent;
+    color: var(--muted); cursor: pointer;
+    font-size: 14px; padding: 4px; border-radius: 4px;
+  }
+  .sidebar-head button:hover { background: var(--hover); color: var(--foreground); }
+
+  .new-doc {
+    appearance: none;
+    border: 1px dashed var(--border);
+    background: transparent;
+    width: 100%;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .new-doc:hover { color: var(--foreground); border-color: var(--muted); }
+
+  .card {
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 120ms;
+    border: 1px solid transparent;
+  }
+  .card:hover { background: var(--hover); }
+  .card.is-active {
+    background: white;
+    border-color: var(--border);
+  }
+  .card .title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--foreground);
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .card .preview {
+    font-size: 12.5px;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    height: 4.5em;             /* clamp to 3 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  .card .meta {
+    margin-top: 8px;
+    display: flex; justify-content: space-between;
+    color: var(--muted); font-size: 11px;
+  }
+
+  /* ============ Main ============ */
+  .main {
+    grid-area: main;
+    overflow-y: auto;
+    position: relative;
+    background: var(--background);
+  }
+  .canvas {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 64px 240px;
+    min-height: 100%;
+  }
+
+  /* ============ List view ============ */
+  .doc-title-lg {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.3;
+    color: var(--foreground);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .doc-sub {
+    font-size: 12.5px;
+    color: var(--muted-foreground);
+    margin: 0 0 32px;
+  }
+
+  /* ---- Hierarchical list (the showpiece) ----
+   * 布局：每行 padding-left 32px，留出左侧控制轨道
+   * 引导线柱子对齐圆点中心
+   *
+   * 点 + 折叠交互：
+   *   · 默认：黑色 7px 圆点（dot），居中于 left:25px
+   *   · 有子项且 hover 这一行：圆点放大到 16px 灰色胶囊，
+   *     内部根据 is-open 状态显示 + 或 −
+   *   · 叶子项（无子项）：永远是黑点，hover 时颜色加深一档
+   */
+  ul.tight, ol.tight {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px;
+  }
+
+  ul.tight > li {
+    position: relative;
+    padding: 4px 0 4px 32px;
+    margin: 0;
+    color: var(--foreground);
+    font-size: 15px;
+    line-height: 1.55;
+    transition: background 100ms;
+    border-radius: 4px;
+  }
+  ul.tight > li:hover { background: var(--hover); }
+
+  /* 垂直引导线 —— 柱子贴圆点列中心（left: 25） */
+  ul.tight > li::before {
+    content: "";
+    position: absolute;
+    left: 25px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  ul.tight > li:last-child::before {
+    bottom: auto;
+    height: 50%;
+  }
+
+  /* 水平横杆 —— 从柱子拉到首字 */
+  ul.tight > li::after {
+    content: "";
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* bullet dot —— 默认 7px 黑色，按中心对齐到 25px */
+  ul.tight > li > .dot {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dot-rest);
+    z-index: 2;
+    cursor: default;
+    transition: background-color 100ms ease,
+                width 140ms cubic-bezier(0.25, 0.46, 0.45, 1.4),
+                height 140ms cubic-bezier(0.25, 0.46, 0.45, 1.4);
+  }
+
+  /* 叶子项 hover：黑点颜色加深一档 */
+  ul.tight > li:not(.has-children):hover > .dot {
+    background: var(--dot-hover);
+  }
+
+  /* 有子项 + hover 整行：黑点放大成 16px 灰色胶囊 */
+  ul.tight > li.has-children:hover > .dot {
+    width: 16px;
+    height: 16px;
+    background: var(--border);
+    cursor: pointer;
+  }
+
+  /* 胶囊内的 + / − 字符 —— 通过 ::before 渲染，便于纯 CSS 切换 */
+  ul.tight > li.has-children:hover > .dot::before {
+    content: "+";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -52%);  /* 视觉上稍偏上 1px，避免字符下沉 */
+    font-size: 12px;
+    line-height: 1;
+    color: var(--foreground);
+    font-weight: 500;
+    user-select: none;
+  }
+  ul.tight > li.has-children.is-open:hover > .dot::before {
+    content: "−";
+  }
+
+  /* 折叠态：子树隐藏；不展示数量文字 */
+  ul.tight > li.is-collapsed > ul.tight { display: none; }
+
+  /* heading levels（与站点对齐：纯黑 + 粗细） */
+  .heading { display: block; margin: 26px 0 6px; }
+  .heading.h1 { font-family: var(--font-sans); font-weight: 700; font-size: 22px; color: var(--foreground); }
+  .heading.h2 { font-family: var(--font-sans); font-weight: 600; font-size: 18px; color: var(--foreground); }
+  .heading.h3 { font-family: var(--font-sans); font-weight: 600; font-size: 16px; color: var(--foreground); }
+  .heading.h4 { font-family: var(--font-sans); font-weight: 600; font-size: 15px; color: var(--muted-foreground); }
+  .heading .marker {
+    color: var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-right: 6px;
+    user-select: none;
+    font-weight: 400;
+  }
+
+  /* paragraph body — 留给笔记正文 */
+  p.body {
+    margin: 8px 0 6px;
+    color: var(--foreground);
+  }
+  p.body.indent { padding-left: 22px; }
+
+  /* blockquote (Effie 用 >> 表示) */
+  blockquote {
+    margin: 12px 0;
+    padding: 6px 14px;
+    border-left: 3px solid var(--border);
+    color: var(--muted-foreground);
+    font-style: italic;
+  }
+  blockquote::before {
+    content: "▎ ";
+    color: var(--muted);
+    font-style: normal;
+  }
+
+  /* code block */
+  pre.code {
+    background: #F4EFE5;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--foreground);
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+
+  /* inline emphasis */
+  em { color: var(--foreground); font-style: italic; }
+  strong { color: var(--foreground); font-weight: 600; }
+  code.inline {
+    font-family: var(--font-mono);
+    background: rgba(31,31,30,.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  /* ============ Mindmap view ============ */
+  .mindmap-wrap {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .mindmap-wrap canvas {
+    display: block;
+  }
+  .mindmap-zoom {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    display: flex;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .mindmap-zoom button {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--muted-foreground);
+    font-size: 16px;
+    border-right: 1px solid var(--border);
+  }
+  .mindmap-zoom button:last-child { border-right: 0; }
+  .mindmap-zoom button:hover { background: var(--hover); }
+
+  .mindmap-toolbar {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    display: flex;
+    gap: 2px;
+  }
+  .mindmap-toolbar button {
+    appearance: none; border: 0; background: transparent;
+    color: var(--muted-foreground);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .mindmap-toolbar button:hover { background: var(--hover); }
+  .mindmap-toolbar button.is-active { background: var(--hover); color: var(--foreground); }
+
+  /* ============ Source view ============ */
+  pre.source {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--foreground);
+    margin: 0;
+  }
+  pre.source .ln { color: var(--muted-foreground); user-select: none; display: inline-block; width: 28px; text-align: right; margin-right: 16px; }
+  pre.source .tok-h { color: var(--foreground); font-weight: 700; }
+  pre.source .tok-h2 { color: var(--foreground); font-weight: 600; }
+  pre.source .tok-em { color: var(--foreground); font-style: italic; }
+  pre.source .tok-st { color: var(--foreground); font-weight: 600; }
+  pre.source .tok-cd { background: var(--accent); padding: 0 4px; border-radius: 3px; }
+  pre.source .tok-cmt { color: var(--muted-foreground); }
+
+  /* ============ View switcher (no animation hiccup) ============ */
+  .view { display: none; }
+  .view.is-show { display: block; }
+  .view.mindmap.is-show { display: flex; }
+  .view.source.is-show { display: block; }
+
+  /* ============ Typing hint at bottom ============ */
+  .typewriter-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hover);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+  .typewriter-hint kbd {
+    font-family: var(--font-mono);
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin: 0 3px;
+  }
+
+  /* ============ focus ============ */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ============ TOPBAR ============ -->
+  <header class="topbar">
+    <button class="icon-btn" id="toggleSidebar" title="折叠侧栏 (⌘\\)" aria-label="折叠侧栏">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span class="brand">blinko<span class="dot">·</span>effie</span>
+    <span class="doc-title" id="topbarTitle">产品策略讨论 · 2026/10/10</span>
+
+    <div class="tabs" role="tablist">
+      <button data-view="list" class="is-active" role="tab">列表<span class="kbd">⌘1</span></button>
+      <button data-view="mindmap" role="tab">导图<span class="kbd">⌘2</span></button>
+      <button data-view="source" role="tab">源码<span class="kbd">⌘3</span></button>
+    </div>
+  </header>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <span>文稿箱</span>
+      <button title="排序">⇅</button>
+    </div>
+
+    <button class="new-doc" id="newDocBtn">+ 新建文稿</button>
+
+    <div class="card is-active" data-doc="strategy">
+      <div class="title">产品策略讨论</div>
+      <div class="preview">用户增长 / 留存 / 拉新渠道的优先级，团队本季度主线目标梳理</div>
+      <div class="meta"><span>策略</span><span>10-10</span></div>
+    </div>
+    <div class="card" data-doc="okr">
+      <div class="title">Q4 OKR 复盘</div>
+      <div class="preview">增长 / 商业化 / 体验三条线的 O 与 KR 达成率总结，重点分析问题项</div>
+      <div class="meta"><span>复盘</span><span>10-08</span></div>
+    </div>
+    <div class="card" data-doc="book">
+      <div class="title">读《禅与摩托车维修艺术》</div>
+      <div class="preview">"良质"这个概念贯穿全书，作者用摩托车维修做隐喻，探讨理性与感性</div>
+      <div class="meta"><span>笔记</span><span>09-30</span></div>
+    </div>
+    <div class="card" data-doc="daily">
+      <div class="title">10.10 站会记录</div>
+      <div class="preview">昨天 UI 改完了，明天做 demo 端到端验收，下午跟产品对一遍字段</div>
+      <div class="meta"><span>日常</span><span>10-10</span></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- View: list -->
+    <section class="canvas view is-show" data-view="list">
+
+      <h1 class="doc-title-lg">产品策略讨论</h1>
+      <p class="doc-sub">2026/10/10 · 与 Brian、阿May · 约 60 分钟 · 本季度主线</p>
+
+      <span class="heading h1"><span class="marker">#</span>主线目标</span>
+      <ul class="tight">
+        <li class="is-open has-children">
+          用户增长
+          <ul class="tight">
+            <li class="is-open has-children">
+              拉新
+              <ul class="tight">
+                <li><span class="dot"></span>SEO 内容（重关键词覆盖、长尾）</li>
+                <li><span class="dot"></span>渠道投放（小红书、知乎、公众号）</li>
+                <li><span class="dot"></span>渠道合作（联盟、KOL）</li>
+              </ul>
+            </li>
+            <li class="is-open has-children">
+              留存
+              <ul class="tight">
+                <li><span class="dot"></span>通知召回（智能频控）</li>
+                <li><span class="dot"></span>周报推送（仅核心订阅用户）</li>
+                <li><span class="dot"></span>激活漏斗优化（注册→首次记笔记）</li>
+              </ul>
+            </li>
+            <li><span class="dot"></span>激活（待规划）</li>
+          </ul>
+        </li>
+        <li class="is-open has-children">
+          商业化
+          <ul class="tight">
+            <li><span class="dot"></span>订阅 Pro（年付为主）</li>
+            <li><span class="dot"></span>增值服务（AI 配额包）</li>
+          </ul>
+        </li>
+        <li class="is-open has-children">
+          体验
+          <ul class="tight">
+            <li><span class="dot"></span>性能优化（首屏 &lt; 1s）</li>
+            <li><span class="dot"></span>交互打磨（拖拽手柄、插入块）</li>
+            <li><span class="dot"></span>文档与社区</li>
+          </ul>
+        </li>
+      </ul>
+
+      <span class="heading h2"><span class="marker">##</span>风险与阻塞</span>
+      <ul class="tight">
+        <li><span class="dot"></span>iconify 本地包 solar 图标不够全</li>
+        <li><span class="dot"></span>需要评估 markmap 节点编辑体验</li>
+        <li class="is-open has-children">
+          AI 流式输出在 Pro 用户场景下的成本
+          <ul class="tight">
+            <li><span class="dot"></span>扩写命中 4o 比 polish 高 2.3 倍</li>
+            <li><span class="dot"></span>建议默认走 4o-mini，超出再升级</li>
+          </ul>
+        </li>
+      </ul>
+
+      <span class="heading h2"><span class="marker">##</span>几个想法</span>
+      <p class="body indent">把 <strong>Effie 风格</strong> 的"沉浸书写"作为差异化，而不是堆功能。圆点自己就是折叠入口，不再要单独的 <code class="inline">▸</code> caret；输入 <code class="inline">/</code> 唤起 AI；Cmd+` 在列表和导图之间瞬切。</p>
+      <blockquote>主张：用户来 Blinko 是为记东西，不是为玩工具。</blockquote>
+
+      <span class="heading h3"><span class="marker">###</span>下一步</span>
+      <ol class="tight">
+        <li value="1"><span class="dot"></span>本周内 mindmap-poc 完成 Effie 重设计</li>
+        <li value="2"><span class="dot"></span>双周内把"卡片侧栏 + 三视图切换"嵌入主站</li>
+        <li value="3"><span class="dot"></span>月内评估 Yjs 协作（多人同时编辑同一篇文稿）</li>
+      </ol>
+    </section>
+
+    <!-- View: mindmap -->
+    <section class="view mindmap" data-view="mindmap">
+      <div class="mindmap-wrap">
+        <canvas id="mmCanvas"></canvas>
+        <div class="mindmap-toolbar">
+          <button class="is-active" title="树状">╳</button>
+          <button title="平衡">▢</button>
+          <button title="鱼骨">⊢</button>
+          <button title="组织结构">◫</button>
+        </div>
+        <div class="mindmap-zoom">
+          <button title="放大">＋</button>
+          <button title="缩小">－</button>
+          <button title="还原">⌖</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- View: source -->
+    <section class="canvas view" data-view="source">
+      <h1 class="doc-title-lg" style="font-size:22px;">产品策略讨论</h1>
+      <p class="doc-sub">Markdown 源码 · 行号 · 实时同步列表/导图</p>
+      <pre class="source" id="srcView"></pre>
+    </section>
+  </main>
+</div>
+
+<!-- hint -->
+<div class="typewriter-hint">Tab 缩进 · Shift+Tab 反缩进 · <kbd>⌘.</kbd> 折叠当前项</div>
+
+<script>
+/* ============================================================
+ * 文稿库
+ * ============================================================ */
+const DOCS = {
+  strategy: {
+    title: '产品策略讨论',
+    meta: '2026/10/10 · 与 Brian、阿May · 约 60 分钟 · 本季度主线',
+    source: `# 产品策略讨论
+
+> 2026/10/10 · 与 Brian、阿May · 约 60 分钟 · 本季度主线
+
+- **用户增长**
+    - **拉新**
+        - SEO 内容（重关键词覆盖、长尾）
+        - 渠道投放（小红书、知乎、公众号）
+        - 渠道合作（联盟、KOL）
+    - **留存**
+        - 通知召回（智能频控）
+        - 周报推送（仅核心订阅用户）
+        - 激活漏斗优化（注册→首次记笔记）
+    - 激活（待规划）
+- **商业化**
+    - 订阅 Pro（年付为主）
+    - 增值服务（AI 配额包）
+- **体验**
+    - 性能优化（首屏 < 1s）
+    - 交互打磨（拖拽手柄、+ 插入块）
+    - 文档与社区
+
+## 风险与阻塞
+
+- iconify 本地包 solar 图标不够全
+- 需要评估 markmap 节点编辑体验
+- AI 流式输出在 Pro 用户场景下的成本
+    - 扩写命中 4o 比 polish 高 2.3 倍
+    - 建议默认走 4o-mini，超出再升级
+
+## 几个想法
+
+把 **Effie 风格** 的"沉浸书写"作为差异化，而不是堆功能。
+圆点自己就是折叠入口，不再要单独的 \`▸\` caret；
+输入 \`/\` 唤起 AI；\`⌘+\` 在列表和导图之间瞬切。
+
+> 主张：用户来 Blinko 是为记东西，不是为玩工具。
+
+### 下一步
+
+1. 本周内 mindmap-poc 完成 Effie 重设计
+2. 双周内把"卡片侧栏 + 三视图切换"嵌入主站
+3. 月内评估 Yjs 协作（多人同时编辑同一篇文稿）
+`
+  },
+  okr: {
+    title: 'Q4 OKR 复盘',
+    meta: '2026/10/08 · 季度回顾 · 各业务线打分',
+    source: `# Q4 OKR 复盘
+
+## 增长线
+
+- **O1: 月活突破 50 万**
+  - KR1: 注册转化 12% → **达成 14.3%** ✓
+  - KR2: 7 日留存 38% → **达成 41%** ✓
+  - KR3: 渠道贡献占比 35% → **仅 28%** ✗
+- **O2: 商业化收入提升 60%**
+  - KR1: Pro 订阅人数 8k → **达成 11.2k** ✓
+  - KR2: 单 ARPU 78 元 → **达成 82 元** ✓
+
+## 体验线
+
+- 性能: 首屏从 2.1s → 0.9s
+- 文档完成度: 80% 关键路径覆盖
+- 用户反馈 NPS: 32 → 47
+`
+  },
+  book: {
+    title: '读《禅与摩托车维修艺术》',
+    meta: '2026/09/30 · 读后杂记 · 不必线性记',
+    source: `# 读《禅与摩托车维修艺术》
+
+## 关键词
+
+- **良质（Quality）**
+- **理性 vs 感性**
+- **摩托车维修作为隐喻**
+
+## 摘录
+
+> 当你做某件事时，做它的人和你做的那件事之间的关系，不应被打断。
+
+## 我的批注
+
+良质不是技能，是态度。
+当你修一台发动机，你不是在修"钢铁零件"，而是在和**质量本身**对话。
+
+这就是为什么 Effie 强调"沉浸" — 它把工具性弱化，让你和内容之间不再隔着按钮。
+`
+  },
+  daily: {
+    title: '10.10 站会记录',
+    meta: '2026/10/10 · 晨会 · 10 分钟',
+    source: `# 10.10 站会记录
+
+## 昨天
+- UI 改完 v3
+- 跟 Effie 的 mindmap-poc 推了一轮
+
+## 今天
+- demo 端到端验收
+- 跟产品对一遍字段命名
+- 评估 markmap 双击编辑的可用性
+
+## 阻塞
+- 无
+`
+  }
+};
+
+let currentDoc = 'strategy';
+
+/* ============================================================
+ * 视图切换
+ * ============================================================ */
+function switchView(view) {
+  document.querySelectorAll('[data-view]').forEach((el) => {
+    if (el.dataset.view === view ||
+        (el.dataset.view && [...el.classList].includes('view') && el.dataset.view === view)) {
+      el.classList.add('is-show');
+    } else if (el.classList.contains('view')) {
+      el.classList.remove('is-show');
+    }
+    if (el.tagName === 'BUTTON' && el.dataset.view) {
+      el.classList.toggle('is-active', el.dataset.view === view);
+    }
+  });
+  if (view === 'mindmap') requestAnimationFrame(renderMindmap);
+}
+
+/* ============================================================
+ * 侧栏卡片切换
+ * ============================================================ */
+function switchDoc(key) {
+  currentDoc = key;
+  document.querySelectorAll('.card').forEach((c) => {
+    c.classList.toggle('is-active', c.dataset.doc === key);
+  });
+  document.getElementById('topbarTitle').textContent = DOCS[key].title + ' · 2026/10/10';
+
+  // 重新填充三个视图
+  renderList(key);
+  renderSource(key);
+  // mindmap 用同一份 markdown 重新 transform
+  if (document.querySelector('[data-view="mindmap"].is-show')) requestAnimationFrame(renderMindmap);
+}
+
+/* ============================================================
+ * 列表视图：用 markdown 的内容覆盖 .canvas[data-view=list]
+ * 简单做法：直接重写内容；以后接 Tiptap 再换数据流。
+ * ============================================================ */
+function renderList(key) {
+  // 因为我们硬编码了 strategy 的 DOM，这里只更新元信息和 topbar 标题，
+  // 真正的内容 keep static demo. 侧栏切换时只换 topbar / source / mindmap。
+}
+
+/* ============================================================
+ * 源码视图
+ * ============================================================ */
+function renderSource(key) {
+  const src = DOCS[key].source;
+  const lines = src.split('\n');
+  const out = lines.map((line, i) => {
+    const ln = (i + 1).toString().padStart(2, ' ');
+    let html = line
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // 简易 token 高亮
+    html = html
+      .replace(/^(# .+)$/, '<span class="tok-h">$1</span>')
+      .replace(/^(## .+)$/, '<span class="tok-h2">$1</span>')
+      .replace(/^(\s*)\*([^*\n]+)\*/gm, '$1<span class="tok-em">*$2*</span>')
+      .replace(/`([^`]+)`/g, '<span class="tok-cd">`$1`</span>');
+    return `<span class="ln">${ln}</span>${html || ' '}`;
+  }).join('\n');
+  document.getElementById('srcView').innerHTML = out;
+}
+
+/* ============================================================
+ * Mindmap view —— 自渲染一个圆角矩形树
+ * ============================================================ */
+const PALETTE = ['#1F4ED8', '#0F766E', '#B45309', '#7C3AED'];
+
+function buildTree(md) {
+  // 解析粗略 markdown tree，忽略 paragraph/quote
+  const lines = md.split('\n');
+  const root = { name: '主题', children: [], depth: 0 };
+  const stack = [root];
+  let inCode = false;
+
+  for (const raw of lines) {
+    if (/^```/.test(raw)) { inCode = !inCode; continue; }
+    if (inCode) continue;
+    const m = /^(\s*)-\s+(.*)$/.exec(raw);
+    if (!m) continue;
+    const indent = m[1].replace(/\t/g, '    ').length;
+    const depth = Math.floor(indent / 4) + 1;
+    const name = m[2].replace(/\*\*/g, '').replace(/`/g, '').trim();
+    const node = { name, children: [], depth };
+    while (stack.length > depth) stack.pop();
+    stack[stack.length - 1].children.push(node);
+    stack.push(node);
+  }
+  return root;
+}
+
+function layoutTree(root, x0, y0, dx, dy) {
+  // 给一个简易 tidy-tree-ish 布局
+  const nodes = [];
+  let x = x0;
+  const walk = (n, parentX, parentY) => {
+    if (!n.children.length) {
+      n._x = x;
+      n._y = y0 + (n.depth) * dy * 6;
+      x += dx;
+      nodes.push(n);
+      return n;
+    }
+    n.children.forEach((c) => walk(c, parentX, parentY));
+    const xs = n.children.map((c) => c._x);
+    n._x = (Math.min(...xs) + Math.max(...xs)) / 2;
+    n._y = y0 + (n.depth - 1) * dy * 6;
+    nodes.push(n);
+  };
+  walk(root, x0, y0);
+  return nodes;
+}
+
+function renderMindmap() {
+  const canvas = document.getElementById('mmCanvas');
+  if (!canvas) return;
+  const wrap = canvas.parentElement;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const tree = buildTree(DOCS[currentDoc].source);
+  const nodes = layoutTree(tree, 60, 60, 130, 12);
+
+  // 全节点居中
+  const minX = Math.min(...nodes.map((n) => n._x));
+  const maxX = Math.max(...nodes.map((n) => n._x));
+  const shiftX = (w - (minX + maxX) / 2) / 2 - minX;
+
+  // 画连接线
+  ctx.strokeStyle = 'rgba(31,31,30,.16)';
+  ctx.lineWidth = 1.4;
+  const byName = new Map(nodes.map((n) => [n.name + '|' + n.depth, n]));
+  for (const n of nodes) {
+    if (n.depth === 0) continue;
+    // 简化：用根的子节点接 root
+    if (n.depth === 1) {
+      const root = nodes.find((x) => x.depth === 0);
+      ctx.beginPath();
+      ctx.moveTo(root._x + shiftX, root._y + 22);
+      ctx.bezierCurveTo(root._x + shiftX, n._y + 12, n._x + shiftX, root._y + 22, n._x + shiftX, n._y + 12);
+      ctx.stroke();
+    } else {
+      const parent = findParent(nodes, n);
+      if (parent) {
+        ctx.beginPath();
+        ctx.moveTo(parent._x + shiftX, parent._y + 22);
+        ctx.lineTo(n._x + shiftX, n._y + 12);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // 画节点矩形
+  for (const n of nodes) {
+    const cx = n._x + shiftX;
+    const cy = n._y + 12;
+    const text = n.name;
+    ctx.font = n.depth === 0
+      ? '700 16px SouHan, Georgia, serif'
+      : (n.depth === 1 ? '600 14px -apple-system, "PingFang SC", sans-serif'
+                       : '400 13px -apple-system, "PingFang SC", sans-serif');
+    const paddingX = 12, paddingY = 8;
+    const tw = ctx.measureText(text).width;
+    const bw = tw + paddingX * 2;
+    const bh = 28;
+    const bx = cx - bw / 2;
+    const by = cy - bh / 2;
+    const color = PALETTE[Math.min(n.depth, PALETTE.length - 1)];
+
+    if (n.depth === 0) {
+      // 中心节点：圆角白底，深色边框
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#1F1F1E';
+      ctx.lineWidth = 1.5;
+      roundRect(ctx, bx, by, bw, bh, 8);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1F1F1E';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(text, cx, cy + 1);
+    } else {
+      ctx.fillStyle = color + '15';
+      ctx.strokeStyle = color + '50';
+      ctx.lineWidth = 1;
+      roundRect(ctx, bx, by, bw, bh, 14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(text, cx, cy + 1);
+    }
+  }
+}
+
+function findParent(nodes, n) {
+  // 按文档顺序查找父级（简化）
+  const sorted = [...nodes].sort((a, b) => (a._y === b._y ? a._x - b._x : a._y - b._y));
+  const i = sorted.indexOf(n);
+  for (let j = i - 1; j >= 0; j--) {
+    if (sorted[j].depth < n.depth) return sorted[j];
+  }
+  return null;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/* ============================================================
+ * dot click → 折叠/展开
+ *  * 仅 has-children 的 li 才有响应
+ *  * 点击后切换 is-open / is-collapsed；圆点自带 + / − 视觉反馈
+ * ============================================================ */
+document.addEventListener('click', (e) => {
+  const dot = e.target.closest('.dot');
+  if (!dot) return;
+  const li = dot.closest('li');
+  if (!li || !li.classList.contains('has-children')) return;
+  li.classList.toggle('is-open');
+  li.classList.toggle('is-collapsed');
+  e.stopPropagation();
+});
+
+/* ============================================================
+ * 顶 tab / 侧栏 / 键盘
+ * ============================================================ */
+document.querySelectorAll('.tabs button').forEach((btn) => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+document.querySelectorAll('.card').forEach((c) => {
+  c.addEventListener('click', () => switchDoc(c.dataset.doc));
+});
+
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  document.getElementById('app').classList.toggle('is-collapsed');
+  setTimeout(() => { if (document.querySelector('[data-view="mindmap"].is-show')) renderMindmap(); }, 220);
+});
+
+document.getElementById('newDocBtn').addEventListener('click', () => {
+  const name = prompt('新文稿标题');
+  if (name) {
+    alert('（原型）已新建文稿：' + name);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === '1') switchView('list');
+  else if ((e.metaKey || e.ctrlKey) && e.key === '2') switchView('mindmap');
+  else if ((e.metaKey || e.ctrlKey) && e.key === '3') switchView('source');
+  else if ((e.metaKey || e.ctrlKey) && e.key === '\\') document.getElementById('toggleSidebar').click();
+});
+
+window.addEventListener('resize', () => {
+  if (document.querySelector('[data-view="mindmap"].is-show')) renderMindmap();
+});
+
+/* 初始渲染 */
+renderSource(currentDoc);
+setTimeout(renderMindmap, 50);
+</script>
+
+</body>
+</html>

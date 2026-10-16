@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blinko 高保真原型 · 全站 20 页</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#F5F6F8;--surface:#fff;--surface2:#FAFBFC;--hair:#E8EAEE;--hair2:#DDE0E6;
+ --ink:#14161A;--ink2:#5B6270;--ink3:#8A92A0;--ink4:#B4BAC6;
+ --acc:#3370FF;--accInk:#1F53D8;--accSoft:#EDF2FF;--ok:#12A150;--warn:#B4742F;--bad:#D9453F;--vio:#7C3AED;
+ --sh1:0 1px 2px rgba(16,20,28,.05);--sh2:0 2px 8px -2px rgba(16,20,28,.07);
+ --sh3:0 10px 28px -8px rgba(16,20,28,.13);--sh4:0 24px 56px -16px rgba(16,20,28,.2);
+ --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Outfit',-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+html.dk{--pg:#0E1013;--surface:#16191E;--surface2:#11141A;--hair:#252A32;--hair2:#333A45;
+ --ink:#E8EAED;--ink2:#9BA3B0;--ink3:#6E7683;--ink4:#4A515C;--acc:#5A8AFF;--accInk:#8AB0FF;--accSoft:#182031;
+ --sh1:0 1px 2px rgba(0,0,0,.4);--sh2:0 2px 8px -2px rgba(0,0,0,.5);--sh3:0 10px 28px -8px rgba(0,0,0,.6);--sh4:0 24px 56px -16px rgba(0,0,0,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--pg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+
+/* ═══ 原型外壳 ═══ */
+.proto{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--pg) 92%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--hair)}
+.prow{display:flex;align-items:center;gap:12px;padding:9px 20px;max-width:1640px;margin:0 auto}
+.pb{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;flex:none}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px var(--accSoft)}
+.ppills{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.ppills::-webkit-scrollbar{display:none}
+.pgroup{font-family:var(--mono);font-size:9.5px;color:var(--ink4);padding:0 9px 0 4px;flex:none;align-self:center;letter-spacing:.05em}
+.pill{border:0;background:transparent;color:var(--ink2);font-family:inherit;font-size:12.5px;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.15s;flex:none}
+.pill:hover{background:var(--surface);color:var(--ink)}
+.pill.on{background:var(--acc);color:#fff;font-weight:500}
+.ptools{display:flex;gap:7px;flex:none;align-items:center}
+.seg{display:flex;background:var(--surface);border:1px solid var(--hair2);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;color:var(--ink2);font-family:inherit;font-size:12px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;white-space:nowrap}
+.seg button.on{background:var(--acc);color:#fff;font-weight:500}
+.ib{border:1px solid var(--hair2);background:var(--surface);color:var(--ink2);width:30px;height:30px;border-radius:8px;cursor:pointer;display:grid;place-items:center;transition:.15s}
+.ib:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:1640px;margin:0 auto;padding:18px 20px 50px}
+.pg{display:none}.pg.on{display:block}
+.pgtitle{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pgtitle h2{font-size:18px;font-weight:600;letter-spacing:-.015em}
+.pgtitle p{font-size:12.5px;color:var(--ink3);margin:0}
+.pgtitle .r{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink4)}
+
+/* ═══ 产品 token ═══ */
+.p{--p-bg:#FAFAFB;--p-sur:#fff;--p-sub:#F3F4F6;--p-hair:#ECEDF0;--p-hair2:#DCDEE3;
+ --p-ink:#1A1C1F;--p-ink2:#5A6070;--p-ink3:#939AA8;
+ --p-acc:#3370FF;--p-accInk:#2B5FD9;--p-accSoft:#EDF2FF;--p-accSofter:#F5F8FF;
+ --p-tag:#2E6BE6;--p-tagBg:#E9F0FF;--p-rxs:6px;--p-rsm:8px;--p-rmd:10px;--p-rlg:14px;
+ --p-s1:0 1px 2px rgba(16,20,28,.05);--p-s2:0 2px 8px -2px rgba(16,20,28,.07);
+ --p-s3:0 10px 28px -8px rgba(16,20,28,.13);--p-ease:cubic-bezier(.2,.8,.2,1);--p-dur:180ms;
+ font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+ color:var(--p-ink);font-size:14px;line-height:1.65;background:var(--p-bg);
+ border:1px solid var(--hair);border-radius:14px;overflow:hidden;position:relative}
+.p.now{--p-bg:#f8f8f8;--p-sub:#efeee7d9;--p-hair:#E7E7E5;--p-hair2:#D8D8D6;
+ --p-ink:hsl(222.2 47.4% 11.2%);--p-ink2:hsl(215.4 16.3% 46.9%);--p-ink3:#808080;
+ --p-acc:#000;--p-accInk:#fff;--p-accSoft:#000;--p-accSofter:#000;
+ --p-tag:#c35af7;--p-tagBg:color-mix(in srgb,#c35af7 12%,transparent);
+ --p-rxs:12px;--p-rsm:12px;--p-rmd:8px;--p-rlg:17px;
+ --p-s1:1px 1px 7px 3px #b1b1b42e;--p-s2:1px 1px 7px 3px #b1b1b42e;--p-s3:1px 1px 7px 3px #b1b1b42e}
+.p.now .tag{border-radius:7px;padding:2px 7px}
+.p.now .bd,.p.now .gc,.p.now .tg,.p.now .qa,.p.now .row,.p.now .frow{border:0;box-shadow:var(--p-s1)}
+.p.now .bd:hover,.p.now .gc:hover,.p.now .tg:hover{transform:translateY(-4px)}
+.p.now .nav.on{background:#000;color:#fff;border-radius:12px}
+.p.now .pbtn,.p.now .send{background:#000;color:#fff}
+.p.now .cbx{border-radius:50%}
+.p.now .pbtn:hover{filter:brightness(.8)}
+.p.now .qtools{display:none}
+.p.now .imgs .im{border-radius:4px}
+.p.now .frow:hover{background:#f0f0f0}
+.hal{display:none;position:absolute;left:-40px;top:-40px;width:190px;height:190px;border-radius:50%;background:#ffc65c;opacity:.5;filter:blur(30px);pointer-events:none}
+.p.now .hal{display:block}
+
+/* ═══ App 骨架 ═══ */
+.bar{display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--hair)}
+html.dk .bar{background:#101318}
+.tl{display:flex;gap:5px}.tl i{width:9px;height:9px;border-radius:50%;display:block}
+.url{flex:1;max-width:230px;margin:0 auto;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:var(--pg);border:1px solid var(--hair);border-radius:99px;padding:3px 0}
+.app{display:grid;grid-template-columns:212px 1fr;min-height:620px}
+.side{background:var(--p-sur);border-right:1px solid var(--p-hair);padding:13px 9px;display:flex;flex-direction:column;gap:2px;position:relative;z-index:2}
+.b2{display:flex;align-items:center;gap:8px;padding:3px 8px 13px;font-weight:600;font-size:14px}
+.b2 .mk{width:19px;height:19px;border-radius:6px;background:var(--p-acc);display:grid;place-items:center;color:#fff;font-size:10.5px}
+.nav{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--p-rxs);color:var(--p-ink2);font-size:13.5px;transition:background var(--p-dur) var(--p-ease),color var(--p-dur) var(--p-ease);cursor:pointer}
+.nav svg{width:16px;height:16px;flex:none;opacity:.72}
+.nav:hover{background:var(--p-sub)}
+.nav.on{background:var(--p-accSoft);color:var(--p-accInk);font-weight:500}
+.nav.on svg{opacity:1}
+.nav .ct{margin-left:auto;font-family:var(--mono);font-size:10.5px;opacity:.6}
+.sep{height:1px;background:var(--p-hair);margin:9px 8px}
+.slab{font-size:11px;color:var(--p-ink3);padding:3px 9px;font-weight:500}
+.tn{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:var(--p-rxs);font-size:13px;color:var(--p-ink2);transition:background var(--p-dur) var(--p-ease);cursor:pointer}
+.tn:hover{background:var(--p-sub)}
+.tn .d{width:6px;height:6px;border-radius:2px;flex:none}
+.tn .n{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--p-ink3)}
+.avatar{margin-top:auto;display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--p-rxs);cursor:pointer;transition:background var(--p-dur) var(--p-ease)}
+.avatar:hover{background:var(--p-sub)}
+.avatar .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#60A5FA,#3B82F6);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:600}
+.avatar .an{font-size:12.5px;color:var(--p-ink2)}
+.main{background:var(--p-bg);display:flex;flex-direction:column;min-width:0}
+.head{display:flex;align-items:center;gap:9px;padding:11px 18px;border-bottom:1px solid var(--p-hair);background:var(--p-sur)}
+.search{flex:1;max-width:290px;display:flex;align-items:center;gap:7px;background:var(--p-sub);border:1px solid transparent;border-radius:var(--p-rsm);padding:5px 10px;color:var(--p-ink3);font-size:12.5px;transition:border-color var(--p-dur) var(--p-ease);cursor:pointer}
+.search:hover{border-color:var(--p-hair2)}
+.kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--p-hair2);border-radius:4px;padding:1px 5px;color:var(--p-ink3);margin-left:auto}
+.iact{width:30px;height:30px;border-radius:var(--p-rsm);display:grid;place-items:center;color:var(--p-ink2);cursor:pointer;transition:background var(--p-dur) var(--p-ease),color var(--p-dur) var(--p-ease)}
+.iact:hover{background:var(--p-sub);color:var(--p-ink)}
+.iact.on{background:var(--p-accSoft);color:var(--p-accInk)}
+.pbtn{background:var(--p-acc);color:#fff;border-radius:var(--p-rsm);padding:6px 12px;font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;box-shadow:0 1px 2px rgba(51,112,255,.28);transition:filter var(--p-dur) var(--p-ease);white-space:nowrap}
+.pbtn:hover{filter:brightness(1.08)}
+.pbtn.ghost{background:transparent;color:var(--p-ink2);box-shadow:none;border:1px solid var(--p-hair2)}
+.pbtn.ghost:hover{background:var(--p-sub);filter:none;color:var(--p-ink)}
+.send{background:var(--p-acc);color:#fff;border-radius:6px;padding:3px 11px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer}
+
+/* ═══ 新增框 ═══ */
+.qa{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:10px 13px 8px;box-shadow:var(--p-s1);transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease)}
+.qa:hover{border-color:var(--p-hair2)}
+.qa.on{border-color:var(--p-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--p-acc) 16%,transparent),var(--p-s1)}
+.qa .r1{display:flex;align-items:flex-start;gap:9px}
+.qa .ic{width:26px;height:26px;border-radius:7px;background:var(--p-sub);display:grid;place-items:center;color:var(--p-ink3);flex:none;margin-top:1px}
+.qa.on .ic{background:var(--p-accSoft);color:var(--p-accInk)}
+.qa .tx{flex:1;font-size:14px;line-height:1.65;min-height:22px}
+.qa .ph{color:var(--p-ink3);font-size:13.5px}
+.qt{display:flex;align-items:center;gap:1px;margin-top:8px;padding-top:7px;border-top:1px solid var(--p-hair)}
+.ti{height:26px;padding:0 7px;border-radius:6px;display:flex;align-items:center;gap:4px;color:var(--p-ink3);font-size:12px;cursor:pointer;transition:background var(--p-dur) var(--p-ease),color var(--p-dur) var(--p-ease)}
+.ti:hover{background:var(--p-sub);color:var(--p-ink)}
+.ti svg{width:14px;height:14px}
+.kbdtip{font-family:var(--mono);font-size:10px;color:var(--p-ink3);margin-left:auto}
+.sticky{position:sticky;top:0;z-index:6;background:var(--p-bg);padding-bottom:10px}
+
+/* ═══ 列表条目 ═══ */
+.feed{padding:12px 18px 24px;flex:1;overflow-y:auto}
+.day{position:sticky;top:0;z-index:2;background:linear-gradient(var(--p-bg) 72%,transparent);padding:9px 0 7px}
+.day .d1{font-size:12.5px;font-weight:600}
+.day .d2{font-size:11px;color:var(--p-ink3)}
+.item{display:grid;grid-template-columns:44px 1fr;gap:11px;padding:6px 0}
+.item .tm{font-family:var(--mono);font-size:11px;color:var(--p-ink3);padding-top:4px}
+.bd{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:10px 13px;font-size:13.5px;line-height:1.72;box-shadow:var(--p-s1);transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease);cursor:pointer}
+.bd:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.meta{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:11.5px;color:var(--p-ink3);flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;background:var(--p-tagBg);color:var(--p-tag);border-radius:5px;padding:1px 6px;font-size:12px;font-weight:500;margin:0 1px;cursor:pointer;transition:filter var(--p-dur) var(--p-ease)}
+.tag:hover{filter:brightness(.95);text-decoration:underline}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--p-sub);color:var(--p-ink3);font-family:var(--mono)}
+
+/* ═══ 图片 ═══ */
+.imgs{display:grid;gap:3px;max-width:392px;margin-top:8px}
+.imgs.c1{grid-template-columns:1fr}.imgs.c2{grid-template-columns:1fr 1fr}.imgs.c3{grid-template-columns:repeat(3,1fr)}
+.im{position:relative;border-radius:9px;overflow:hidden;background:var(--p-sub);display:grid;place-items:center;color:var(--p-ink3);aspect-ratio:1/1;cursor:zoom-in;transition:transform var(--p-dur) var(--p-ease)}
+.im:hover{transform:scale(1.015)}
+.im.s1{aspect-ratio:auto;min-height:140px;max-height:270px}
+.im svg{width:19px;height:19px;opacity:.5}
+.im .more{background:var(--p-sub);color:var(--p-ink3);font-family:var(--mono);font-size:13px}
+.gA{background:linear-gradient(135deg,#CBD5E1,#94A3B8)}.gB{background:linear-gradient(135deg,#FDE68A,#F59E0B)}
+.gC{background:linear-gradient(135deg,#BBF7D0,#34D399)}.gD{background:linear-gradient(135deg,#E9D5FF,#A78BFA)}
+.gE{background:linear-gradient(135deg,#FECACA,#F87171)}.gF{background:linear-gradient(135deg,#BAE6FD,#38BDF8)}
+html.dk .gA{background:linear-gradient(135deg,#334155,#475569)}html.dk .gB{background:linear-gradient(135deg,#78350F,#B45309)}
+html.dk .gC{background:linear-gradient(135deg,#14532D,#166534)}html.dk .gD{background:linear-gradient(135deg,#4C1D95,#6D28D9)}
+html.dk .gE{background:linear-gradient(135deg,#7F1D1D,#991B1B)}html.dk .gF{background:linear-gradient(135deg,#0C4A6E,#0369A1)}
+.cover{border-radius:9px;overflow:hidden;position:relative;display:grid;place-items:center;color:#fff;cursor:pointer}
+.cover .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 11px 7px;background:linear-gradient(transparent,rgba(0,0,0,.62));font-size:11.5px;color:#fff}
+.thumbs{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.thumb{width:52px;height:52px;border-radius:8px;overflow:hidden;display:grid;place-items:center;color:#fff;flex:none;cursor:zoom-in}
+.thumb svg{width:15px;height:15px;opacity:.85}
+.thumb.more{background:var(--p-sub);color:var(--p-ink3);font-family:var(--mono);font-size:11px}
+.fchip{display:flex;align-items:center;gap:7px;background:var(--p-sub);border-radius:7px;padding:5px 9px;font-size:12px;color:var(--p-ink2);margin-top:7px;cursor:pointer}
+.fchip svg{width:13px;height:13px;flex:none;color:var(--p-ink3)}
+
+/* ═══ 笔记 ═══ */
+.gcards{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;padding:16px 18px 24px}
+.gcards.m3{grid-template-columns:repeat(3,1fr)}
+.gc{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);box-shadow:var(--p-s1);overflow:hidden;cursor:pointer;transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease)}
+.gc:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.gc .cv{height:92px;display:grid;place-items:center;color:#fff}
+.gc .cv svg{width:19px;height:19px;opacity:.7}
+.gcb{padding:12px 14px 13px}
+.gc .ttl{font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:5px}
+.gc .txt{font-size:13px;color:var(--p-ink2);line-height:1.68}
+.gc .ft{display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:8px;border-top:1px solid var(--p-hair);font-size:11.5px;color:var(--p-ink3);flex-wrap:wrap}
+.lhead{display:flex;align-items:center;gap:8px;padding:7px 18px;font-size:11px;color:var(--p-ink3);font-family:var(--mono);border-bottom:1px solid var(--p-hair)}
+.frow{display:flex;align-items:flex-start;gap:11px;padding:10px 18px;border-bottom:1px solid var(--p-hair);transition:background var(--p-dur) var(--p-ease);cursor:pointer}
+.frow:hover{background:var(--p-sub)}
+.frow .li{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:11px;flex:none;margin-top:1px}
+.frow .lm{flex:1;min-width:0}
+.frow .lt{font-size:13.5px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:7px}
+.frow .ld{font-size:12.5px;color:var(--p-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .tp{width:38px;height:38px;border-radius:7px;display:grid;place-items:center;color:#fff;flex:none}
+.frow .tp svg{width:14px;height:14px;opacity:.8}
+.frow .lr{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--p-ink3);flex:none;padding-top:2px}
+
+/* ═══ 详情 ═══ */
+.read{padding:0;flex:1;overflow-y:auto}
+.rcov{height:158px;display:grid;place-items:center;color:#fff;position:relative}
+.rcov svg{width:23px;height:23px;opacity:.7}
+.rbd{padding:22px 34px 36px;max-width:700px}
+.rt{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.4}
+.rm{display:flex;align-items:center;gap:8px;margin:8px 0 18px;font-size:11.5px;color:var(--p-ink3);flex-wrap:wrap}
+.para{font-size:15.5px;line-height:1.85}
+.para+.para{margin-top:13px}
+.rbd h4{font-size:16px;font-weight:600;margin:22px 0 9px}
+.rbd ul{margin:7px 0 0 17px;font-size:15px;line-height:1.85}
+.rbd li{margin-bottom:4px}
+.callout{border-left:2.5px solid var(--p-acc);background:var(--p-accSofter);padding:10px 14px;border-radius:0 var(--p-rsm) var(--p-rsm) 0;font-size:14px;color:var(--p-ink2);margin:16px 0}
+.p.now .callout{border-left:2.5px solid #000;background:#f0f0f0;border-radius:0}
+.zoom{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;padding:2px 7px;border-radius:5px;display:flex;align-items:center;gap:4px;font-family:var(--mono)}
+.zoom svg{width:11px;height:11px}
+.rbar{display:flex;align-items:center;gap:8px;padding:9px 18px;border-bottom:1px solid var(--p-hair);background:var(--p-sur)}
+
+/* ═══ 待办 ═══ */
+.todo{padding:12px 18px 24px;flex:1;overflow-y:auto}
+.tg{margin-bottom:16px}
+.tg .th{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;margin-bottom:8px}
+.tg .th .n{font-family:var(--mono);font-size:10.5px;color:var(--p-ink3);font-weight:400}
+.ti2{display:flex;align-items:flex-start;gap:10px;background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:9px 12px;margin-bottom:6px;box-shadow:var(--p-s1);transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease);cursor:pointer}
+.ti2:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.cbx{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--p-hair2);flex:none;margin-top:3px;display:grid;place-items:center;transition:background var(--p-dur) var(--p-ease),border-color var(--p-dur) var(--p-ease)}
+.cbx svg{opacity:0;color:#fff;width:10px;height:10px}
+.cbx.on{background:var(--p-acc);border-color:var(--p-acc)}.cbx.on svg{opacity:1}
+.ti2 .tx{font-size:13.5px;line-height:1.6;flex:1}
+.ti2.done .tx{color:var(--p-ink3);text-decoration:line-through}
+.pri{font-size:11px;padding:1.5px 7px;border-radius:99px;flex:none;margin-top:2px;white-space:nowrap}
+.pri.h{background:#FDECEC;color:#C43B3B}.pri.m{background:#FFF4E5;color:#A9702A}.pri.l{background:#EAF6EE;color:#2F7D4F}
+.due{font-family:var(--mono);font-size:11px;color:var(--p-ink3);flex:none;margin-top:4px}
+.due.od{color:#C43B3B}
+
+/* ═══ 统计 ═══ */
+.ana{padding:16px 18px 24px;flex:1;overflow-y:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:12px 14px;box-shadow:var(--p-s1)}
+.kpi .kl{font-size:11.5px;color:var(--p-ink3);margin-bottom:5px}
+.kpi .kv{font-size:23px;font-weight:600;letter-spacing:-.02em;font-family:var(--mono)}
+.kpi .kd{font-size:11px;margin-top:3px;color:var(--p-ok);font-family:var(--mono)}
+.pnl{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:14px 16px;box-shadow:var(--p-s1);margin-bottom:12px}
+.pnl .pt{font-size:13.5px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:110px}
+.bars i{flex:1;background:color-mix(in srgb,var(--p-acc) 26%,transparent);border-radius:3px 3px 0 0;min-height:2px;transition:background .15s}
+.bars i:hover{background:var(--p-acc)}
+.bars i.hi{background:var(--p-acc)}
+.bx{display:flex;align-items:center;gap:10px;padding:5px 0}
+.bx .n{width:88px;font-size:12.5px;color:var(--p-ink2);flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx .tk{flex:1;height:15px;background:var(--p-sub);border-radius:5px;overflow:hidden}
+.bx .tf{height:100%;background:var(--p-acc);border-radius:5px}
+.bx .v{width:38px;text-align:right;font-family:var(--mono);font-size:11.5px;color:var(--p-ink3);flex:none}
+.heat{display:grid;grid-template-columns:repeat(15,1fr);gap:3px}
+.heat i{aspect-ratio:1;border-radius:2.5px;background:var(--p-sub)}
+.donut{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--p-acc) 0 62%,var(--p-tag) 62% 81%,#F5A524 81% 92%,var(--p-ink4) 92% 100%);display:grid;place-items:center;flex:none}
+.donut::after{content:"";width:66px;height:66px;border-radius:50%;background:var(--p-sur)}
+.dl{display:flex;flex-direction:column;gap:7px;flex:1}
+.dl div{display:flex;align-items:center;gap:7px;font-size:12.5px}
+.dl i{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* ═══ 资源库 ═══ */
+.resgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:16px 18px 24px}
+.rtile{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:12px;box-shadow:var(--p-s1);cursor:pointer;transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease)}
+.rtile:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.rtile .ri{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;margin-bottom:9px}
+.rtile .ri svg{width:17px;height:17px}
+.rtile .rn{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtile .rs{font-size:11px;color:var(--p-ink3);font-family:var(--mono);margin-top:2px}
+
+/* ═══ 设置 ═══ */
+.setapp{display:grid;grid-template-columns:170px 1fr;flex:1;overflow-y:auto}
+.snav{padding:13px 9px;border-right:1px solid var(--p-hair);background:var(--p-sur)}
+.snav a{display:block;padding:7px 9px;border-radius:var(--p-rxs);font-size:13px;color:var(--p-ink2);cursor:pointer;transition:background var(--p-dur) var(--p-ease)}
+.snav a:hover{background:var(--p-sub)}
+.snav a.on{background:var(--p-accSoft);color:var(--p-accInk);font-weight:500}
+.sbody{padding:18px 24px 30px;max-width:620px}
+.srow2{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--p-hair)}
+.srow2:last-child{border:0}
+.srow2 .sl2{flex:1}
+.srow2 .sn{font-size:13.5px;font-weight:500}
+.srow2 .sd{font-size:12px;color:var(--p-ink3);margin-top:2px;line-height:1.55}
+.tg2{width:36px;height:20px;border-radius:99px;background:var(--p-hair2);position:relative;flex:none;cursor:pointer;transition:background var(--p-dur) var(--p-ease)}
+.tg2::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform var(--p-dur) var(--p-ease);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tg2.on{background:var(--p-acc)}
+.tg2.on::after{transform:translateX(16px)}
+.sel{border:1px solid var(--p-hair2);border-radius:var(--p-rsm);padding:5px 10px;font-size:12.5px;color:var(--p-ink2);background:var(--p-sur);cursor:pointer;display:flex;align-items:center;gap:6px}
+.sel:hover{border-color:var(--p-acc);color:var(--p-acc)}
+.inp{border:1px solid var(--p-hair2);border-radius:var(--p-rsm);padding:5px 10px;font-size:12.5px;background:var(--p-sur);min-width:150px}
+.inp:focus{outline:none;border-color:var(--p-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--p-acc) 18%,transparent)}
+
+/* ═══ AI / 聊天 ═══ */
+.chat{padding:16px 18px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:88%}
+.msg.me{margin-left:auto;flex-direction:row-reverse}
+.msg .av{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;font-size:11px;font-weight:600}
+.msg .mc{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:10px 13px;font-size:13.5px;line-height:1.7;box-shadow:var(--p-s1)}
+.msg.me .mc{background:var(--p-acc);color:#fff;border-color:transparent}
+.ainp{border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:9px 12px;background:var(--p-sur);box-shadow:var(--p-s1)}
+.ainp .ar{display:flex;align-items:flex-end;gap:9px}
+.ainp textarea{flex:1;border:0;outline:none;background:transparent;font-family:inherit;font-size:13.5px;resize:none;color:var(--p-ink);line-height:1.6}
+
+/* ═══ 复习 ═══ */
+.rv{padding:20px 18px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.rvcard{width:100%;max-width:460px;min-height:210px;background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rlg);box-shadow:var(--p-s2);padding:24px;display:flex;flex-direction:column;justify-content:center}
+.rvfront{font-size:19px;font-weight:600;text-align:center;line-height:1.5}
+.rvback{margin-top:16px;padding-top:16px;border-top:1px dashed var(--p-hair);font-size:14px;color:var(--p-ink2);line-height:1.75}
+.rvbtns{display:flex;gap:8px}
+.rvb{border:1px solid var(--p-hair2);border-radius:var(--p-rsm);padding:7px 15px;font-size:12.5px;cursor:pointer;color:var(--p-ink2);background:var(--p-sur)}
+.rvb:hover{border-color:var(--p-acc);color:var(--p-acc)}
+.rvb.pri1{background:var(--p-acc);color:#fff;border-color:transparent}
+
+/* ═══ 分享 / 登录 ═══ */
+.auth{min-height:620px;display:grid;grid-template-columns:1fr 1fr}
+.aform{padding:40px 44px;display:flex;flex-direction:column;justify-content:center}
+.aform h3{font-size:21px;font-weight:600;letter-spacing:-.02em;margin-bottom:5px}
+.aform .as{font-size:13px;color:var(--p-ink3);margin-bottom:24px}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:12px;color:var(--p-ink2);margin-bottom:5px;font-weight:500}
+.fld input{width:100%;border:1px solid var(--p-hair2);border-radius:var(--p-rsm);padding:8px 11px;font-size:13.5px;background:var(--p-sur);color:var(--p-ink);font-family:inherit}
+.fld input:focus{outline:none;border-color:var(--p-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--p-acc) 18%,transparent)}
+.abtn{width:100%;background:var(--p-acc);color:#fff;border-radius:var(--p-rsm);padding:9px;font-size:13.5px;font-weight:500;text-align:center;cursor:pointer;margin-top:6px;box-shadow:0 1px 2px rgba(51,112,255,.28)}
+.aaside{background:linear-gradient(150deg,#EEF3FF,#F5F8FF);display:grid;place-items:center;padding:40px;position:relative;overflow:hidden}
+html.dk .aaside{background:linear-gradient(150deg,#141A26,#0F1114)}
+.aaside .quote{max-width:290px;text-align:center}
+.aaside .quote p{font-size:16px;line-height:1.75;color:var(--p-ink2)}
+.aaside .quote .qm{font-size:30px;color:var(--p-acc);opacity:.35;margin-bottom:10px}
+
+/* ═══ 弹窗 / 浮层 ═══ */
+.ovl{position:absolute;inset:0;background:rgba(15,17,20,.5);display:grid;place-items:center;z-index:30;padding:24px;backdrop-filter:blur(2px)}
+.modal{width:100%;max-width:460px;background:var(--p-sur);border-radius:var(--p-rlg);box-shadow:var(--p-s3);overflow:hidden}
+.mhd{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--p-hair)}
+.mhd .mt{font-size:14px;font-weight:600;flex:1}
+.mbd{padding:16px}
+.cmd .in{display:flex;align-items:center;gap:9px;padding:12px 15px;border-bottom:1px solid var(--p-hair);color:var(--p-ink3);font-size:14px}
+.cmd .list{padding:6px;max-height:250px;overflow-y:auto}
+.cmd .it{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--p-rsm);font-size:13.5px;color:var(--p-ink2);cursor:pointer}
+.cmd .it.on{background:var(--p-accSoft);color:var(--p-accInk)}
+.cmd .it .kb{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)}
+.cmd .ft{display:flex;gap:14px;padding:7px 14px;border-top:1px solid var(--p-hair);font-size:11px;color:var(--p-ink3);background:var(--p-sub)}
+
+/* ═══ 插件 / Hub ═══ */
+.plg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;padding:16px 18px 24px}
+.pcard{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:14px;box-shadow:var(--p-s1);cursor:pointer;transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease)}
+.pcard:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.pcard .pi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;margin-bottom:10px}
+.pcard .pn{font-size:13.5px;font-weight:600}
+.pcard .pd{font-size:12px;color:var(--p-ink3);margin-top:3px;line-height:1.6}
+.pcard .pf{margin-top:10px;display:flex;align-items:center;gap:7px}
+.hubgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;padding:18px}
+.hcard{background:var(--p-sur);border:1px solid var(--p-hair);border-radius:var(--p-rmd);padding:16px;box-shadow:var(--p-s1);cursor:pointer;text-align:center;transition:border-color var(--p-dur) var(--p-ease),box-shadow var(--p-dur) var(--p-ease),transform var(--p-dur) var(--p-ease)}
+.hcard:hover{border-color:var(--p-hair2);box-shadow:var(--p-s2);transform:translateY(-1px)}
+.hcard .hi{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;margin:0 auto 10px}
+.hcard .hn{font-size:13.5px;font-weight:600}
+.hcard .hd{font-size:11.5px;color:var(--p-ink3);margin-top:3px}
+/* ── 核查页 ── */
+.bdg2{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 7px;border-radius:5px;font-weight:500;white-space:nowrap}
+.b-ex{background:#EAF6EE;color:#1E7A46}.b-bug{background:#FDECEC;color:#B93A3A}
+.b-style{background:#E8F0FE;color:#1A56C4}.b-new{background:#F3E8FF;color:#7C3AED}
+.b-dec{background:#FFF4E5;color:#9A5B12}
+.corr{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+.corr th{text-align:left;padding:11px 14px;font-size:11px;font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--surface2);border-bottom:1px solid var(--hair2);white-space:nowrap}
+.corr td{padding:12px 14px;border-bottom:1px solid var(--hair);vertical-align:top;line-height:1.6}
+.corr tr:last-child td{border-bottom:0}
+.corr code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);border:1px solid var(--hair);padding:1px 5px;border-radius:4px;color:var(--ink2)}
+.corr .wrong{color:var(--bad);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--bad) 45%,transparent);text-decoration-thickness:1.5px}
+.corr .right{color:var(--ok);font-weight:500}
+.batch{background:var(--surface);border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.batch .bh{padding:12px 16px;border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:10px;background:var(--surface2);flex-wrap:wrap}
+.batch .bh .bt{font-size:14px;font-weight:600;flex:1}
+.batch .bi{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--hair);align-items:flex-start}
+.batch .bi:last-child{border-bottom:0}
+.batch .bi .path{font-family:var(--mono);font-size:11.5px;color:var(--ink2);flex:0 0 296px;line-height:1.5}
+.batch .bi .what{font-size:13px;flex:1;line-height:1.6}
+.decide{background:var(--surface);border:1px solid var(--hair);border-left:3px solid #F5A524;border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.decide .dq{font-size:13.5px;font-weight:600;margin-bottom:5px}
+.decide .dd{font-size:12.5px;color:var(--ink2);line-height:1.65}
+.decide .opt{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.decide .opt span{font-size:11.5px;padding:4px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--hair);color:var(--ink2)}
+@media(max-width:900px){.batch .bi{flex-direction:column;gap:6px}.batch .bi .path{flex:none}}
+@media(max-width:1200px){.app{grid-template-columns:180px 1fr}.resgrid{grid-template-columns:repeat(3,1fr)}.plg{grid-template-columns:repeat(2,1fr)}.hubgrid{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="proto"><div class="prow">
+  <div class="pb"><span class="pdot"></span>Blinko 高保真原型</div>
+  <div class="ppills" id="pills">
+    <span class="pgroup">先看</span>
+    <button class="pill" data-pg="audit">⚑ 核查结论</button>
+    <span class="pgroup">内容</span>
+    <button class="pill on" data-pg="blinko">闪念</button>
+    <button class="pill" data-pg="notes">笔记</button>
+    <button class="pill" data-pg="detail">详情</button>
+    <button class="pill" data-pg="todo">待办</button>
+    <button class="pill" data-pg="all">全部</button>
+    <span class="pgroup">管理</span>
+    <button class="pill" data-pg="archived">归档</button>
+    <button class="pill" data-pg="trash">回收站</button>
+    <button class="pill" data-pg="resources">资源库</button>
+    <span class="pgroup">洞察</span>
+    <button class="pill" data-pg="analytics">统计</button>
+    <button class="pill" data-pg="review">复习</button>
+    <button class="pill" data-pg="ai">AI</button>
+    <button class="pill" data-pg="hub">Hub</button>
+    <span class="pgroup">系统</span>
+    <button class="pill" data-pg="plugin">插件</button>
+    <button class="pill" data-pg="settings">设置</button>
+    <span class="pgroup">对外</span>
+    <button class="pill" data-pg="share">分享列表</button>
+    <button class="pill" data-pg="sharedetail">分享详情</button>
+    <button class="pill" data-pg="signin">登录</button>
+    <span class="pgroup">浮层</span>
+    <button class="pill" data-pg="quicknote">快速笔记</button>
+    <button class="pill" data-pg="quickai">快速 AI</button>
+    <button class="pill" data-pg="quicktool">快速工具</button>
+    <button class="pill" data-pg="cmdk">命令面板</button>
+  </div>
+  <div class="ptools">
+    <div class="seg" id="seg"><button data-m="now" class="on">现状</button><button data-m="pro">提案</button></div>
+    <button class="ib" id="dk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+<!-- ═══════ 核查结论 ═══════ -->
+<div class="pg" id="pg-audit">
+  <div class="pgtitle"><h2>核查结论：我上一版提案错了 4 条</h2><p>逐条比对源码后的修正版方案</p><span class="r">先看这页再评审其他 20 页</span></div>
+
+  <div class="box" style="padding:0;overflow:hidden;margin-bottom:14px">
+    <table class="corr">
+      <thead><tr><th style="width:23%">我上一版说</th><th style="width:38%">源码里的实际情况</th><th style="width:12%">成本</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td>闪念要做<b>常驻新增框</b></td><td><b>PC 端早就有了</b>，还带高度联动<br><code>pages/index.tsx:205-211</code>；只有移动端是弹窗</td><td><span class="bdg2 b-ex">已存在</span></td><td class="right">桌面端零改动</td></tr>
+        <tr><td>要<b>统一 ⌘K 入口</b></td><td><b>⌘K 已存在</b>，可搜笔记/资源/设置/AI/标签<br><code>Layout/BarSearchInput.tsx:29-34</code></td><td><span class="bdg2 b-ex">已存在</span></td><td class="right">只需修两个缺陷</td></tr>
+        <tr><td>当前是 masonry，<b>要改成时间线</b></td><td><b>时间线分支也在</b>，按 <code>YYYY-MM-DD</code> 分组<br><code>pages/index.tsx:351-384</code>，只是 UI 开关被删了</td><td><span class="bdg2 b-ex">已存在</span></td><td class="right">捡回开关即可</td></tr>
+        <tr><td>待办卡片<b>不显示附件</b>，要加</td><td><b>已经渲染了</b> <code>columns={3}</code> 的附件网格<br><code>BlinkoCard/TodoCard.tsx:210-214</code></td><td><span class="bdg2 b-ex">已存在</span></td><td class="right">只需改样式</td></tr>
+        <tr><td>笔记要加 <code>?view=list</code> 列表视图</td><td>确实不存在，全仓零命中，也没有 notes 独立页</td><td><span class="bdg2 b-new">真新增</span></td><td>说法正确</td></tr>
+        <tr><td>图片 <b>2 张排 3 列留空位</b></td><td>属实，且<b>不止 2 张</b>（见下）</td><td><span class="bdg2 b-bug">真 bug</span></td><td>说法方向对</td></tr>
+        <tr><td>待办要加<b>重要/今天分区</b></td><td>分区已存在（今天/接下来/已完成），但<b>维度不同</b>；「重要」数据也有（<code>metadata.priorityImportant</code>）</td><td><span class="bdg2 b-style">换维度</span></td><td>说法部分正确</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box" style="padding:0;overflow:hidden;margin-bottom:14px;border-color:#F5A524">
+    <div style="padding:12px 16px;background:#FFF9EF;border-bottom:1px solid #F5A524;display:flex;align-items:center;gap:9px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B4742F" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <span style="font-size:14px;font-weight:600;color:#8A5410">我低估的一个 bug：不止 2 张图</span>
+    </div>
+    <div style="padding:14px 16px">
+      <p style="font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:10px">根因在 <code style="font-family:var(--mono);font-size:11.5px;background:var(--surface2);border:1px solid var(--hair);padding:1px 5px;border-radius:4px">imageGallery.tsx:29</code> 一行表达式漏了 case，注释里写的原意其实是「2 图并排」：</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:10px">
+        <div style="border:1px solid #F0C9C9;background:#FEF4F4;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#B93A3A;font-weight:600">2 张</div><div style="font-size:10.5px;color:#B93A3A;margin-top:2px">留 1 空位</div></div>
+        <div style="border:1px solid #C8E6CF;background:#F2FBF5;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#1E7A46;font-weight:600">3 张</div><div style="font-size:10.5px;color:#1E7A46;margin-top:2px">整齐</div></div>
+        <div style="border:1px solid #C8E6CF;background:#F2FBF5;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#1E7A46;font-weight:600">4 张</div><div style="font-size:10.5px;color:#1E7A46;margin-top:2px">2×2 整齐</div></div>
+        <div style="border:1px solid #F0C9C9;background:#FEF4F4;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#B93A3A;font-weight:600">5 张</div><div style="font-size:10.5px;color:#B93A3A;margin-top:2px">留 1 空位</div></div>
+        <div style="border:1px solid #C8E6CF;background:#F2FBF5;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#1E7A46;font-weight:600">6 张</div><div style="font-size:10.5px;color:#1E7A46;margin-top:2px">整齐</div></div>
+        <div style="border:1px solid #F0C9C9;background:#FEF4F4;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#B93A3A;font-weight:600">7 张</div><div style="font-size:10.5px;color:#B93A3A;margin-top:2px">留 2 空位</div></div>
+        <div style="border:1px solid #C8E6CF;background:#F2FBF5;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#1E7A46;font-weight:600">8 张</div><div style="font-size:10.5px;color:#1E7A46;margin-top:2px">整齐</div></div>
+        <div style="border:1px solid #F0C9C9;background:#FEF4F4;border-radius:7px;padding:8px;text-align:center"><div style="font-family:var(--mono);font-size:15px;color:#B93A3A;font-weight:600">9 张</div><div style="font-size:10.5px;color:#B93A3A;margin-top:2px">留 1 空位</div></div>
+        <div style="border:1px solid #C8E6CF;background:#F2FBF5;border-radius:7px;padding:8px;text-align:center;grid-column:span 2"><div style="font-family:var(--mono);font-size:11.5px;color:#1E7A46;font-weight:600">规律</div><div style="font-size:10.5px;color:#1E7A46;margin-top:2px">3 的倍数才整齐，4 张单独走 2×2</div></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);line-height:1.6">影响范围仅限<b>紧凑闪念</b>（<code style="font-family:var(--mono);font-size:11px">BlinkoCard/index.tsx:139</code> + <code style="font-family:var(--mono);font-size:11px">:221-224</code>），笔记和待办的图片在正文 markdown 里内联渲染，不走这条路径。</p>
+    </div>
+  </div>
+
+  <div class="batch">
+    <div class="bh"><span class="bt">第一批 · 零架构风险</span><span class="bdg2 b-style">纯样式 + 1 行 bug</span><span style="font-size:12px;color:var(--ink3);font-family:var(--mono)">半天</span></div>
+    <div class="bi"><div class="path">app/src/styles/globals.css</div><div class="what">替换 <b>:root</b> / <b>.dark</b> 全部色值、圆角、阴影；删掉非对称的 <b>--shadow: 1px 1px 7px 3px</b>；<b>.blinko-tag</b> 改用新令牌</div></div>
+    <div class="bi"><div class="path">Layout/Sidebar.tsx:116-118</div><div class="what">删除侧栏底部那块 <b>模糊黄光斑</b>（<span class="bdg2 b-style">已存在·纯删除</span>）</div></div>
+    <div class="bi"><div class="path">Layout/index.tsx:29</div><div class="what"><b>SideBarItem</b> 从纯黑胶囊改为浅蓝底 + 蓝字，圆角 12px → 6px</div></div>
+    <div class="bi"><div class="path">BlinkoCard/imageGallery.tsx:29</div><div class="what"><b>修列数规则</b>：补上 2 张和 5/7/9 张的 case，圆角 4px → 9px</div></div>
+    <div class="bi"><div class="path">pages/index.tsx:370</div><div class="what">时间线<b>日期头吸顶</b>（加 <span class="bdg2" style="font-family:var(--mono)">sticky top-0</span> + 渐变底）</div></div>
+  </div>
+
+  <div class="batch">
+    <div class="bh"><span class="bt">第二批 · 捡回被删的开关 + 修现有缺陷</span><span class="bdg2 b-ex">低成本</span><span style="font-size:12px;color:var(--ink3);font-family:var(--mono)">1 天</span></div>
+    <div class="bi"><div class="path">PopoverFloat/blinkoHomeSettingsPop.tsx</div><div class="what">加回「<b>按天 / 按周</b>」分区开关 —— <b>时间线分支一直在跑，只差这个入口</b>（<span class="bdg2" style="font-family:var(--mono)">updatePageViewSetting</span> 已现成）</div></div>
+    <div class="bi"><div class="path">Layout/BarSearchInput.tsx:29-34</div><div class="what">⌘K 监听器从组件内<b>上移到 document 层</b>。现在绑在组件上，换布局就失效</div></div>
+    <div class="bi"><div class="path">Layout/GlobalSearch.tsx:205, 405-443</div><div class="what"><b>标签搜索是死代码</b>：<span class="bdg2" style="font-family:var(--mono)">tags: []</span> 写死，UI 提示「# 搜标签」，结果区却<b>没有 tags section</b>。把 <span class="bdg2" style="font-family:var(--mono)">renderTagItem</span> 接上</div></div>
+    <div class="bi"><div class="path">pages/index.tsx:128-166, 262-348</div><div class="what">待办加「<b>重要</b>」分区。<span class="bdg2" style="font-family:var(--mono)">metadata.priorityImportant</span> 数据和卡片色条<b>都已存在</b>，只缺一个过滤分区</div></div>
+  </div>
+
+  <div class="sec" style="margin-top:20px">
+    <h2 style="font-size:17px;margin-bottom:10px">3 个需要你拍板的取舍</h2>
+    <div class="decide">
+      <div class="dq">① 时间线 vs 拖拽排序 —— 二选一，不能都要</div>
+      <div class="dd">拖拽（<code>DndContext</code>）只存在于 masonry 分支（<code>index.tsx:387-393, 407-414</code>），时间线分支（<code>:368-382</code>）完全没有。恢复时间线 = 放弃闪念拖拽排序。</div>
+      <div class="opt"><span>保留 masonry + 拖拽</span><span>切时间线 + 放弃拖拽</span><span>两者都要（需重构，工作量翻倍）</span></div>
+    </div>
+    <div class="decide">
+      <div class="dq">② 笔记列表视图会抢同一个分支</div>
+      <div class="dd">列表视图确实不存在，但 <code>index.tsx:351-429</code> 已经是「时间线 / masonry」二选一结构，再加第三个要重构分支，且同样丢拖拽。是否值得？</div>
+      <div class="opt"><span>先不做</span><span>做，接受丢拖拽</span><span>做成独立维度（不与时间线共存）</span></div>
+    </div>
+    <div class="decide">
+      <div class="dq">③ 移动端常驻新增框有真实阻碍</div>
+      <div class="dd"><code>BlinkoEditor</code> 用硬编码 <code>id='global-editor'</code> + <code>getElementById</code> 跨树取实例（<code>BlinkoEditor/index.tsx:205, 242</code>）。同屏出现新建 + 编辑两个实例会 id 重复取错。改法是改成 ref，不是纯样式活。</div>
+      <div class="opt"><span>移动端保持弹窗</span><span>改 ref 支持双实例</span><span>改 ref 且保证互斥</span></div>
+    </div>
+  </div>
+
+  <div class="box" style="margin-top:16px;background:#F2FBF5;border-color:#C8E6CF">
+    <div style="font-size:13.5px;font-weight:600;color:#1E7A46;margin-bottom:6px">一个未核实的点</div>
+    <p style="font-size:12.5px;color:#2A6B47;line-height:1.7;margin:0">恢复「按天/按周」开关前，需要先读一次数据库里 <code style="font-family:var(--mono);font-size:11px">pageViewSettings.noteListStyle</code> 的现值 —— 项目记忆文件记的是 <code style="font-family:var(--mono);font-size:11px">continuous</code>，但那是 2026-09-28 的记录，之后可能被改过。这个我没连库确认。</p>
+  </div>
+</div>
+
+<!-- ═══════ 闪念 ═══════ -->
+<div class="pg on" id="pg-blinko">
+  <div class="pgtitle"><h2>闪念</h2><p>时间线 + 常驻新增框，Enter 发送</p><span class="bdg2 b-ex">常驻新增框 PC 已存在</span><span class="bdg2 b-ex">时间线分支已存在</span><span class="r">/?path=blinko</span></div>
+  <div class="p"><div class="hal"></div>
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">127.0.0.1:1111</div></div>
+   <div class="app">
+    <div class="side">
+      <div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念<span class="ct">128</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记<span class="ct">46</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待办<span class="ct">9</span></div>
+      <div class="sep"></div>
+      <div class="slab">标签</div>
+      <div class="tn"><span class="d" style="background:#3370FF"></span>读书<span class="n">32</span></div>
+      <div class="tn"><span class="d" style="background:#F5A524"></span>产品<span class="n">21</span></div>
+      <div class="tn"><span class="d" style="background:#12A150"></span>AI<span class="n">18</span></div>
+      <div class="tn"><span class="d" style="background:#8B5CF6"></span>新人指南<span class="n">7</span></div>
+      <div class="tn" style="padding-left:21px"><span class="d" style="background:#8B5CF6;opacity:.55"></span>更多资料<span class="n">4</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div>
+    </div>
+    <div class="main">
+      <div class="head">
+        <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索闪念、笔记、标签<span class="kbd">⌘K</span></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M7 12h13M11 18h9"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg></div>
+        <div class="pbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>写闪念</div>
+      </div>
+      <div class="feed">
+        <div class="sticky"><div class="qa">
+          <div class="r1"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><div class="tx"><span class="ph">记点什么…&nbsp;&nbsp;支持 #标签 与图片拖拽</span></div></div>
+          <div class="qt"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>标签</span><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>图片</span><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>附件</span><span class="kbdtip">Enter 发送 · ⇧Enter 换行</span></div>
+        </div></div>
+        <div class="day"><div class="d1">今天 · 10 月 6 日 周二</div><div class="d2">已记录 3 条</div></div>
+        <div class="item"><div class="tm">11:42</div><div class="bd">1px 描边在浅灰底上已经足够分层，阴影只在 hover 时出现。
+          <div class="imgs c2"><div class="im gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="im gB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/></svg></div></div>
+          <div class="meta"><span class="tag">设计</span><span>2 分钟前</span></div></div></div>
+        <div class="item"><div class="tm">10:15</div><div class="bd">滴答清单的「今天」只放三件事：重要、今天、日程。这种克制值得抄。<span class="tag">产品</span><span class="tag">设计</span></div></div>
+        <div class="item"><div class="tm">09:30</div><div class="bd">新人指南第二版：标签体系单独抽成一节。
+          <div class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>标签体系-终稿.pdf<span style="margin-left:auto;font-family:var(--mono);font-size:10.5px">1.2 MB</span></div>
+          <div class="meta"><span class="tag">新人指南/更多资料</span></div></div></div>
+        <div class="day" style="margin-top:12px"><div class="d1">昨天 · 10 月 5 日 周一</div><div class="d2">已记录 2 条</div></div>
+        <div class="item"><div class="tm">22:08</div><div class="bd">「克制」是产品设计里最难的能力 —— 减掉一个功能要勇气，删掉一个按钮只要一秒。</div></div>
+        <div class="item"><div class="tm">16:20</div><div class="bd">飞书文档的排版几乎全靠字重和留白分层，没有一条分割线也有清晰层级。<span class="tag">设计</span></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 笔记 ═══════ -->
+<div class="pg" id="pg-notes">
+  <div class="pgtitle"><h2>笔记</h2><p>卡片 / 列表双视图，保留顶栏新建按钮</p><span class="bdg2 b-new">列表视图真新增</span><span class="bdg2 b-dec">与时间线抢分支</span><span class="r">/?path=notes · ?view=list</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/notes</div></div>
+   <div class="app">
+    <div class="side">
+      <div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念<span class="ct">128</span></div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记<span class="ct">46</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待办<span class="ct">9</span></div>
+      <div class="sep"></div>
+      <div class="slab">视图</div>
+      <div class="tn"><span class="d" style="background:var(--p-acc)"></span>卡片视图</div>
+      <div class="tn"><span class="d" style="background:var(--p-hair2)"></span>列表视图</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div>
+    </div>
+    <div class="main">
+      <div class="head">
+        <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索笔记<span class="kbd">⌘K</span></div>
+        <div class="iact on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+        <div class="pbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建笔记</div>
+      </div>
+      <div class="gcards">
+        <div class="gc"><div class="cv gD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="gcb"><div class="ttl">📘 如何用好 Blinko 的标签体系</div><div class="txt">标签不是分类，是检索入口。先想三个月后搜什么，再决定打什么标签。</div><div class="ft"><span class="tag">读书</span><span class="tag">产品</span><span style="margin-left:auto">3 天前 · 1.2k 字</span></div></div></div>
+        <div class="gc"><div class="gcb"><div class="ttl">🧠 AI 编程工具横评 2026</div><div class="txt">按补全质量、上下文长度、能否本地部署三个维度重新评了一遍。</div><div class="ft"><span class="tag">AI</span><span style="margin-left:auto">1 周前 · 3.4k 字</span></div></div></div>
+        <div class="gc"><div class="cv gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="gcb"><div class="ttl">📊 2026 上半年知识管理复盘</div><div class="txt">从每天记录 40 条到 8 条，产出反而翻倍。问题在筛选不在收集。</div><div class="ft"><span class="tag">读书</span><span style="margin-left:auto">2 周前 · 2.1k 字</span></div></div></div>
+        <div class="gc"><div class="gcb"><div class="ttl">🧭 新人指南 · 标签体系章节</div><div class="txt">给新用户的标签速成教程，含层级规则和常见误区。</div><div class="ft"><span class="tag">新人指南</span><span style="margin-left:auto">3 周前</span></div></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 详情 ═══════ -->
+<div class="pg" id="pg-detail">
+  <div class="pgtitle"><h2>笔记详情</h2><p>阅读态即编辑态，点哪写哪</p><span class="r">/detail/:id</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/detail</div></div>
+   <div class="app">
+    <div class="side">
+      <div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记</div>
+      <div class="sep"></div><div class="slab">大纲</div>
+      <div class="tn" style="font-size:12.5px">为什么不要照搬文件夹</div>
+      <div class="tn" style="font-size:12.5px;padding-left:18px">三层规则</div>
+      <div class="tn" style="font-size:12.5px;padding-left:18px">层级深度</div>
+      <div class="tn" style="font-size:12.5px">三条实践规则</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div>
+    </div>
+    <div class="main">
+      <div class="rbar">
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4M12 2v13"/></svg></div>
+        <div style="margin-left:auto;display:flex;gap:7px">
+          <div class="pbtn ghost"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>导出</div>
+          <div class="pbtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4M12 2v13"/></svg>分享</div>
+        </div>
+      </div>
+      <div class="read">
+        <div class="rcov gD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><div class="cap">如何用好 Blinko 的标签体系</div></div>
+        <div class="rbd">
+          <div class="rt">如何用好 Blinko 的标签体系</div>
+          <div class="rm"><span>3 天前</span><span>·</span><span>1.2k 字</span><span class="tag">读书</span><span class="tag">产品</span></div>
+          <div class="callout">核心结论：标签是检索入口，不是分类树。三个月后你不会记得当时怎么分的，但你会记得当时想找什么。</div>
+          <h4>为什么不要照搬文件夹那套思路</h4>
+          <div class="para">文件夹假设你事先知道东西要去哪。而闪念的场景是：记录的时候并不知道它属于哪一类，三个月后才可能需要找回来。标签天然支持这种「后置归类」。</div>
+          <div class="imgs c1" style="margin-top:12px"><div class="im s1 gF" style="max-height:130px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><div class="zoom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>1 / 2</div></div></div>
+          <h4>三条实践规则</h4>
+          <ul><li>命名用名词，不用句子。<b>#读书</b> 而不是 #关于读书的思考。</li><li>一个标签能在三秒内解释清楚，就合格；解释不清就合并。</li><li>同一批笔记的标签控制在 2–4 个，超过说明没想清楚重点。</li></ul>
+          <div class="para" style="margin-top:16px;font-size:15px;color:var(--p-ink3)">层级只保留两层。第三层开始，标签名本身就要写成 <b>A/B/C</b> 这样的形式，三个月后没人记得 B 是什么。</div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 待办 ═══════ -->
+<div class="pg" id="pg-todo">
+  <div class="pgtitle"><h2>待办</h2><p>常驻单行框 + 重要/今天分区</p><span class="bdg2 b-ex">分区机制已存在</span><span class="bdg2 b-ex">附件已渲染</span><span class="bdg2 b-style">仅换分区维度</span><span class="r">/?path=todo</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/todo</div></div>
+   <div class="app">
+    <div class="side">
+      <div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念<span class="ct">128</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记<span class="ct">46</span></div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待办<span class="ct">9</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div>
+    </div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索待办<span class="kbd">⌘K</span></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M7 12h13M11 18h9"/></svg></div>
+        <div class="pbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>添加待办</div></div>
+      <div class="todo">
+        <div class="sticky"><div class="qa on" style="padding:8px 12px">
+          <div class="r1"><span class="ic" style="margin-top:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><div class="tx" style="min-height:20px">整理新人指南的后续资料</div></div>
+          <div class="qt" style="margin-top:6px;padding-top:6px"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>今天</span><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>高</span><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>标签</span><span class="send"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+        </div></div>
+        <div class="tg"><div class="th">重要<span class="n">2 项</span></div>
+          <div class="ti2 done"><span class="cbx on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">把新人指南的标签章节重写一版</div><span class="due">今天</span><span class="pri h">高</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">整理 #新人指南/更多资料 的后续内容
+            <div class="thumbs"><div class="thumb gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="thumb gB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="thumb gC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="thumb more">+2</div></div>
+            <div class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>标签体系-终稿.pdf<span style="margin-left:auto;font-family:var(--mono);font-size:10.5px">1.2 MB</span></div>
+          </div><span class="due od">已逾期 2 天</span><span class="pri h">高</span></div>
+        </div>
+        <div class="tg"><div class="th">今天<span class="n">3 项</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">回复上游关于同步延迟的邮件</div><span class="due">今天</span><span class="pri m">中</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">把上周的闪念归档到 2026-10</div><span class="due">今天</span><span class="pri l">低</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">整理书桌 <b>图片</b> 里的收据</div><span class="thumb gE" style="width:26px;height:26px;border-radius:6px"></span><span class="due">今天</span><span class="pri l">低</span></div>
+        </div>
+        <div class="tg"><div class="th">无截止日<span class="n">2 项</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">调研支持 PostgreSQL 的向量扩展</div><span class="tag">AI</span><span class="due">—</span></div>
+          <div class="ti2"><span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="tx">给新人指南补一段常见误区</div><span class="tag">新人指南</span><span class="due">—</span></div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 全部 ═══════ -->
+<div class="pg" id="pg-all">
+  <div class="pgtitle"><h2>全部内容</h2><p>闪念 + 笔记 + 待办混合时间线</p><span class="r">/all</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/all</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>全部<span class="ct">183</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索全部<span class="kbd">⌘K</span></div>
+        <div class="sel"><span class="badge">全部类型</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div></div>
+      <div class="feed">
+        <div class="day"><div class="d1">今天 · 10 月 6 日 周二</div><div class="d2">闪念 3 · 笔记 1 · 待办 1</div></div>
+        <div class="item"><div class="tm">11:42</div><div class="bd">1px 描边已经足够分层。<div class="imgs c2"><div class="im gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="im gB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div></div><div class="meta"><span class="tag">设计</span><span class="badge">闪念</span></div></div></div>
+        <div class="item"><div class="tm">11:20</div><div class="bd"><b>📘 如何用好 Blinko 的标签体系</b><div class="txt" style="font-size:12.5px;color:var(--p-ink3);margin-top:3px">笔记 · 1.2k 字 · 3 天前更新</div><div class="meta"><span class="tag">读书</span><span class="badge">笔记</span></div></div></div>
+        <div class="item"><div class="tm">10:15</div><div class="bd">滴答清单的「今天」只放三件事。<div class="meta"><span class="tag">产品</span><span class="badge">闪念</span></div></div></div>
+        <div class="item"><div class="tm">09:00</div><div class="bd" style="display:flex;align-items:flex-start;gap:9px"><span class="cbx" style="margin-top:4px"></span><div style="flex:1">整理新人指南的后续资料</div><span class="pri m">中</span><span class="due">今天</span></div><div class="meta"><span class="badge">待办</span></div></div>
+        <div class="day" style="margin-top:12px"><div class="d1">昨天 · 10 月 5 日 周一</div></div>
+        <div class="item"><div class="tm">22:08</div><div class="bd">「克制」是产品设计里最难的能力。</div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 归档 ═══════ -->
+<div class="pg" id="pg-archived">
+  <div class="pgtitle"><h2>归档</h2><p>只读时间线，可随时还原</p><span class="r">/?path=archived</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/?path=archived</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念<span class="ct">128</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM4 12h16v4H4zM4 20h10v4H4z"/></svg>归档<span class="ct">214</span></div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>回收站<span class="ct">3</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索归档<span class="kbd">⌘K</span></div>
+        <div class="sel"><span class="badge">按时间</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div></div>
+      <div class="feed" style="opacity:.86">
+        <div class="day"><div class="d1">2026 年 9 月 · 归档 96 条</div></div>
+        <div class="item"><div class="tm">09-28</div><div class="bd">2026 年 8 月的读书清单。<span class="tag">读书</span><div class="meta"><span class="badge">归档于 10-01</span><span class="badge" style="color:var(--p-ink3)">可还原</span></div></div></div>
+        <div class="item"><div class="tm">09-21</div><div class="bd">项目 A 的技术选型记录（已结束）。<div class="meta"><span class="tag">产品</span><span class="badge">归档于 10-01</span></div></div></div>
+        <div class="day" style="margin-top:12px"><div class="d1">2026 年 8 月 · 归档 118 条</div></div>
+        <div class="item"><div class="tm">08-15</div><div class="bd">夏天的照片记录。<div class="imgs c3"><div class="im gF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="im gC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="im gB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="im gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div></div><div class="meta"><span class="badge">归档于 09-01</span></div></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 回收站 ═══════ -->
+<div class="pg" id="pg-trash">
+  <div class="pgtitle"><h2>回收站</h2><p>30 天后自动清除</p><span class="r">/?path=trash</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/?path=trash</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM4 12h16v4H4zM4 20h10v4H4z"/></svg>归档<span class="ct">214</span></div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>回收站<span class="ct">3</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div style="flex:1;font-size:12.5px;color:var(--p-ink3)">3 项将被永久删除</div>
+        <div class="pbtn ghost">清空回收站</div></div>
+      <div class="lhead"><span style="flex:1">内容</span><span style="width:120px">删除于</span><span style="width:132px">剩余</span><span style="width:112px"></span></div>
+      <div class="frow"><span class="li" style="background:#FECACA;color:#B91C1C">✕</span><div class="lm"><div class="lt">测试闪念 · 临时内容</div><div class="ld">这是一条被删除的闪念，用于验证回收站</div></div><div class="lr" style="width:120px">10-04 12:30</div><div class="lr" style="width:132px;color:#C43B3B;font-family:var(--mono)">28 天后清除</div><div class="lr" style="width:112px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">还原</span></div></div>
+      <div class="frow"><span class="li" style="background:#FECACA;color:#B91C1C">✕</span><div class="lm"><div class="lt">旧版标签体系草稿</div><div class="ld">包含三级标签的旧方案，已经被新方案取代</div></div><div class="lr" style="width:120px">10-02 09:15</div><div class="lr" style="width:132px;color:#C43B3B;font-family:var(--mono)">26 天后清除</div><div class="lr" style="width:112px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">还原</span></div></div>
+      <div class="frow"><span class="li" style="background:#FECACA;color:#B91C1C">✕</span><div class="lm"><div class="lt">重复导入的笔记 ×12</div><div class="ld">批量导入时产生的重复项</div></div><div class="lr" style="width:120px">09-28 16:40</div><div class="lr" style="width:132px;color:#C43B3B;font-family:var(--mono)">22 天后清除</div><div class="lr" style="width:112px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">还原</span></div></div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 资源库 ═══════ -->
+<div class="pg" id="pg-resources">
+  <div class="pgtitle"><h2>资源库</h2><p>文件与文件夹，支持 S3</p><span class="r">/resources</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/resources</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>资源<span class="ct">1.2k</span></div>
+      <div class="sep"></div><div class="slab">位置</div>
+      <div class="tn"><span class="d" style="background:var(--p-acc)"></span>全部文件</div>
+      <div class="tn"><span class="d" style="background:#F5A524"></span>图片</div>
+      <div class="tn"><span class="d" style="background:#12A150"></span>文档</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索文件<span class="kbd">⌘K</span></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div class="pbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>上传文件</div></div>
+      <div class="resgrid">
+        <div class="rtile"><div class="ri" style="background:#F59E0B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h6l2 2h8v14H4z"/></svg></div><div class="rn">截图归档</div><div class="rs">428 项 · 1.8 GB</div></div>
+        <div class="rtile"><div class="ri" style="background:#3B82F6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h6l2 2h8v14H4z"/></svg></div><div class="rn">项目资料</div><div class="rs">126 项 · 340 MB</div></div>
+        <div class="rtile"><div class="ri" style="background:#10B981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h6l2 2h8v14H4z"/></svg></div><div class="rn">收据与发票</div><div class="rs">64 项 · 42 MB</div></div>
+        <div class="rtile"><div class="ri gA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="rn">IMG_2841.jpg</div><div class="rs">3.2 MB · 今天</div></div>
+        <div class="rtile"><div class="ri gC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="rn">白板-架构.png</div><div class="rs">840 KB · 昨天</div></div>
+        <div class="rtile"><div class="ri" style="background:#EF4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="rn">标签体系-终稿.pdf</div><div class="rs">1.2 MB · 3 天前</div></div>
+        <div class="rtile"><div class="ri" style="background:#8B5CF6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="rn">访谈记录.docx</div><div class="rs">320 KB · 1 周前</div></div>
+        <div class="rtile"><div class="ri" style="background:#0EA5E9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div><div class="rn">产品演示.mp4</div><div class="rs">86 MB · 2 周前</div></div>
+        <div class="rtile"><div class="ri" style="background:#64748B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="rn">会议纪要模板.md</div><div class="rs">12 KB · 1 个月前</div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 统计 ═══════ -->
+<div class="pg" id="pg-analytics">
+  <div class="pgtitle"><h2>统计分析</h2><p>记录趋势、标签分布、活跃热力</p><span class="r">/analytics</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/analytics</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>统计</div>
+      <div class="sep"></div><div class="slab">时间范围</div>
+      <div class="tn"><span class="d" style="background:var(--p-acc)"></span>最近 30 天</div>
+      <div class="tn"><span class="d" style="background:var(--p-hair2)"></span>最近 90 天</div>
+      <div class="tn"><span class="d" style="background:var(--p-hair2)"></span>今年</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main"><div class="ana">
+      <div class="kpis">
+        <div class="kpi"><div class="kl">总记录</div><div class="kv">1,247</div><div class="kd">↑ 12% 环比</div></div>
+        <div class="kpi"><div class="kl">日均</div><div class="kv">41.6</div><div class="kd">↑ 5 环比</div></div>
+        <div class="kpi"><div class="kl">连续记录</div><div class="kv">128 天</div><div class="kd">历史最长 214 天</div></div>
+        <div class="kpi"><div class="kl">完成待办</div><div class="kv">86</div><div class="kd">↑ 18% 环比</div></div>
+      </div>
+      <div class="pnl"><div class="pt">每日记录量 <span style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--p-ink3);font-weight:400">最近 30 天</span></div>
+        <div class="bars">
+          <i style="height:34%"></i><i style="height:52%"></i><i style="height:41%"></i><i style="height:67%"></i><i style="height:48%"></i><i style="height:23%"></i><i style="height:38%"></i>
+          <i style="height:71%"></i><i style="height:58%"></i><i style="height:82%"></i><i style="height:64%"></i><i style="height:91%"></i><i style="height:74%"></i><i style="height:46%"></i>
+          <i style="height:59%"></i><i class="hi" style="height:100%"></i><i style="height:77%"></i><i style="height:62%"></i><i style="height:85%"></i><i style="height:55%"></i><i style="height:43%"></i>
+          <i style="height:69%"></i><i style="height:88%"></i><i style="height:72%"></i><i style="height:51%"></i><i style="height:63%"></i><i style="height:47%"></i><i style="height:31%"></i>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="pnl" style="margin:0"><div class="pt">标签分布 Top 6</div>
+          <div class="bx"><span class="n">#读书</span><div class="tk"><div class="tf" style="width:100%"></div></div><span class="v">32</span></div>
+          <div class="bx"><span class="n">#产品</span><div class="tk"><div class="tf" style="width:66%"></div></div><span class="v">21</span></div>
+          <div class="bx"><span class="n">#AI</span><div class="tk"><div class="tf" style="width:56%"></div></div><span class="v">18</span></div>
+          <div class="bx"><span class="n">#设计</span><div class="tk"><div class="tf" style="width:44%"></div></div><span class="v">14</span></div>
+          <div class="bx"><span class="n">#新人指南</span><div class="tk"><div class="tf" style="width:22%"></div></div><span class="v">7</span></div>
+          <div class="bx"><span class="n">#生活</span><div class="tk"><div class="tf" style="width:16%"></div></div><span class="v">5</span></div>
+        </div>
+        <div class="pnl" style="margin:0"><div class="pt">内容类型占比</div>
+          <div style="display:flex;align-items:center;gap:18px">
+            <div class="donut"></div>
+            <div class="dl">
+              <div><i style="background:var(--p-acc)"></i>闪念 <span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--p-ink3)">62%</span></div>
+              <div><i style="background:var(--p-tag)"></i>笔记 <span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--p-ink3)">19%</span></div>
+              <div><i style="background:#F5A524"></i>待办 <span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--p-ink3)">11%</span></div>
+              <div><i style="background:var(--p-ink4)"></i>其他 <span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--p-ink3)">8%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pnl" style="margin-top:12px"><div class="pt">活跃热力 <span style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--p-ink3);font-weight:400">最近 15 周</span></div>
+        <div class="heat">
+          <i style="background:#DCE9FF"></i><i style="background:#B8D2FF"></i><i style="background:#8FB6FF"></i><i style="background:var(--p-acc)"></i><i style="background:#DCE9FF"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:#8FB6FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:#DCE9FF"></i><i style="background:#8FB6FF"></i>
+          <i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:#8FB6FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:#DCE9FF"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:#DCE9FF"></i><i style="background:#8FB6FF"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:#B8D2FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:#8FB6FF"></i>
+          <i style="background:#DCE9FF"></i><i style="background:#B8D2FF"></i><i style="background:var(--p-acc)"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:#8FB6FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:#B8D2FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:#8FB6FF"></i><i style="background:#DCE9FF"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:var(--p-acc)"></i><i style="background:#8FB6FF"></i>
+          <i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i>
+          <i style="background:#8FB6FF"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i><i style="background:#DCE9FF"></i><i style="background:var(--p-acc)"></i>
+          <i style="background:var(--p-acc)"></i><i style="background:#B8D2FF"></i><i style="background:#8FB6FF"></i><i style="background:var(--p-acc)"></i><i style="background:var(--p-acc)"></i>
+        </div>
+      </div>
+    </div></div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 复习 ═══════ -->
+<div class="pg" id="pg-review">
+  <div class="pgtitle"><h2>复习</h2><p>把旧笔记翻出来重读</p><span class="r">/review</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/review</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>复习<span class="ct">7</span></div>
+      <div class="sep"></div><div class="slab">队列</div>
+      <div class="tn"><span class="d" style="background:#F59E0B"></span>3 天前<span class="n">3</span></div>
+      <div class="tn"><span class="d" style="background:#10B981"></span>1 周前<span class="n">2</span></div>
+      <div class="tn"><span class="d" style="background:#3B82F6"></span>1 个月前<span class="n">2</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main"><div class="rv">
+      <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--p-ink3)"><span style="font-family:var(--mono)">3 / 7</span><div style="width:180px;height:5px;border-radius:99px;background:var(--p-sub);overflow:hidden"><div style="width:43%;height:100%;background:var(--p-acc);border-radius:99px"></div></div><span>今天还剩 4 条</span></div>
+      <div class="rvcard">
+        <div class="rvfront">标签应该用在哪一层？</div>
+        <div class="rvback">层级只保留两层。第三层开始标签名本身要写成 <b>A/B/C</b>，三个月后没人记得 B 是什么。<br><br>—— 摘自《如何用好 Blinko 的标签体系》，3 天前</div>
+      </div>
+      <div class="rvbtns">
+        <div class="rvb">还没记住</div><div class="rvb">再看看</div><div class="rvb pri1">记住了</div>
+      </div>
+      <div style="font-size:11.5px;color:var(--p-ink4)">按空格翻面 · ← → 选择 · esc 退出</div>
+    </div></div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ AI ═══════ -->
+<div class="pg" id="pg-ai">
+  <div class="pgtitle"><h2>AI 助手</h2><p>对话式记录与整理</p><span class="r">/ai</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/ai</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 0 6v1a4 4 0 0 1-8 0v-1a3 3 0 0 1 0-6V6a4 4 0 0 1 4-4Z"/><path d="M12 18v4"/></svg>AI</div>
+      <div class="sep"></div><div class="slab">会话</div>
+      <div class="tn" style="background:var(--p-sub)">整理上周闪念</div>
+      <div class="tn">帮我写新人指南</div>
+      <div class="tn">标签体系建议</div>
+      <div class="tn">AI 工具横评</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="sel"><span class="badge">gpt-4o-mini</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div style="flex:1"></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></div>
+        <div class="iact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg></div></div>
+      <div class="chat">
+        <div class="msg"><span class="av" style="background:var(--p-acc);color:#fff">AI</span><div class="mc">我把上周的 18 条闪念整理了一下，按主题归成了 4 组：<br><br><b>1. 产品设计判断</b>（5 条）—— 「克制是最难的能力」「今天只看今天」<br><b>2. 技术选型</b>（4 条）—— PostgreSQL 向量扩展调研<br><b>3. 阅读与思考</b>（6 条）—— 信息密度、复利效应<br><b>4. 团队协作</b>（3 条）<br><br>要我帮你合成一篇笔记吗？</div></div>
+        <div class="msg me"><span class="av" style="background:#E9D5FF;color:#6D28D9">B</span><div class="mc">合成第一组，标题沿用「克制是最难的能力」</div></div>
+        <div class="msg"><span class="av" style="background:var(--p-acc);color:#fff">AI</span><div class="mc">已生成草稿并保存为<b>笔记</b>，同时保留 5 条原始闪念作为引用。要不要顺手打上 #产品 和 #设计 两个标签？</div></div>
+        <div class="msg me"><span class="av" style="background:#E9D5FF;color:#6D28D9">B</span><div class="mc">打上，然后总结成三条原则</div></div>
+        <div class="msg"><span class="av" style="background:var(--p-acc);color:#fff">AI</span><div class="mc"><b>已保存</b> · <span class="tag">产品</span><span class="tag">设计</span><br><br>三条原则：<br>1. 默认界面只显示今天要做的事<br>2. 强调色只给状态，不给装饰<br>3. 一次只做一次减法</div></div>
+      </div>
+      <div style="padding:0 18px 16px">
+        <div class="ainp"><div class="ar">
+          <textarea rows="2" placeholder="问点什么，或让它帮你整理闪念…"></textarea>
+          <div class="send"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
+        </div><div class="qt" style="margin-top:7px;padding-top:6px"><span class="ti">@ 引用闪念</span><span class="ti">/ 命令</span><span class="kbdtip">⏎ 发送</span></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ Hub ═══════ -->
+<div class="pg" id="pg-hub">
+  <div class="pgtitle"><h2>Hub</h2><p>工具入口聚合</p><span class="r">/hub</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/hub</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Hub</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索工具<span class="kbd">⌘K</span></div></div>
+      <div class="hubgrid">
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#60A5FA,#3B82F6)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="hn">快速记一笔</div><div class="hd">全局热键唤起</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#A78BFA,#7C3AED)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 0 6v1a4 4 0 0 1-8 0v-1a3 3 0 0 1 0-6V6a4 4 0 0 1 4-4Z"/></svg></div><div class="hn">AI 速记</div><div class="hd">说完直接存成闪念</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#34D399,#10B981)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></div><div class="hn">今日复习</div><div class="hd">7 条待复习</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#FBBF24,#F59E0B)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><div class="hn">本周回顾</div><div class="hd">看统计和趋势</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#F87171,#EF4444)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4M12 2v13"/></svg></div><div class="hn">导入导出</div><div class="hd">Markdown / 附件</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#38BDF8,#0EA5E9)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="hn">API 文档</div><div class="hd">接入第三方工具</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#94A3B8,#64748B)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></div><div class="hn">快捷指令</div><div class="hd">iOS / Android</div></div>
+        <div class="hcard"><div class="hi" style="background:linear-gradient(135deg,#C084FC,#9333EA)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div><div class="hn">插件市场</div><div class="hd">12 个可用</div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 插件 ═══════ -->
+<div class="pg" id="pg-plugin">
+  <div class="pgtitle"><h2>插件</h2><p>扩展功能与集成</p><span class="r">/plugin</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/plugin</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4M9 8V2M15 8V2M6 8H4a2 2 0 0 0-2 2v4c0 3 5 6 10 6s10-3 10-6v-4a2 2 0 0 0-2-2h-2"/></svg>插件<span class="ct">4</span></div>
+      <div class="sep"></div><div class="slab">分类</div>
+      <div class="tn"><span class="d" style="background:var(--p-acc)"></span>已启用<span class="n">4</span></div>
+      <div class="tn"><span class="d" style="background:var(--p-hair2)"></span>可用<span class="n">12</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索插件<span class="kbd">⌘K</span></div></div>
+      <div class="plg">
+        <div class="pcard"><div class="pi" style="background:linear-gradient(135deg,#60A5FA,#3B82F6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div><div class="pn">快捷指令桥接</div><div class="pd">用 iOS 快捷指令快速记录到 Blinko</div><div class="pf"><span class="tg2 on"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v1.4.2</span></div></div>
+        <div class="pcard"><div class="pi" style="background:linear-gradient(135deg,#A78BFA,#7C3AED)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM4 12h16v4H4zM4 20h10v4H4z"/></svg></div><div class="pn">Notion 双向同步</div><div class="pd">笔记与 Notion 数据库双向同步</div><div class="pf"><span class="tg2 on"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v2.0.1</span></div></div>
+        <div class="pcard"><div class="pi" style="background:linear-gradient(135deg,#34D399,#10B981)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></div><div class="pn">WebDAV 备份</div><div class="pd">定时把数据库备份到你的 NAS</div><div class="pf"><span class="tg2 on"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v1.0.6</span></div></div>
+        <div class="pcard"><div class="pi" style="background:linear-gradient(135deg,#FBBF24,#F59E0B)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 0 6v1a4 4 0 0 1-8 0v-1a3 3 0 0 1 0-6V6a4 4 0 0 1 4-4Z"/></svg></div><div class="pn">语音转文字</div><div class="pd">录音转写后自动存为闪念</div><div class="pf"><span class="tg2 on"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v0.9.3</span></div></div>
+        <div class="pcard"><div class="pi" style="background:var(--p-hair2);color:var(--p-ink3)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4M9 8V2M15 8V2M6 8H4a2 2 0 0 0-2 2v4c0 3 5 6 10 6s10-3 10-6v-4a2 2 0 0 0-2-2h-2"/></svg></div><div class="pn">Telegram Bot</div><div class="pd">通过 Telegram 随手记录</div><div class="pf"><span class="tg2"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v1.1.0</span></div></div>
+        <div class="pcard"><div class="pi" style="background:var(--p-hair2);color:var(--p-ink3)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="pn">日历视图</div><div class="pd">按日历浏览带日期的内容</div><div class="pf"><span class="tg2"></span><span style="font-size:11.5px;color:var(--p-ink3);margin-left:auto">v0.4.0</span></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 设置 ═══════ -->
+<div class="pg" id="pg-settings">
+  <div class="pgtitle"><h2>设置</h2><p>基础 · 偏好 · AI · 存储 · 通知 · 快捷键</p><span class="r">/settings</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/settings</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>闪念</div>
+      <div class="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>笔记</div>
+      <div class="nav on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>设置</div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div style="flex:1;font-size:15px;font-weight:600">偏好设置</div><div class="pbtn">保存</div></div>
+      <div class="setapp">
+        <div class="snav">
+          <a>基础设置</a><a>偏好设置</a><a>AI 设置</a><a>存储设置</a><a>通知</a><a>快捷键</a><a>HTTP 代理</a><a>音乐</a><a>关于</a>
+        </div>
+        <div class="sbody">
+          <div style="font-size:17px;font-weight:600;margin-bottom:4px">外观</div>
+          <p class="note" style="margin-top:0;margin-bottom:8px">这些参数会写入 <code>--primary</code> / <code>--tag</code> 等设计令牌</p>
+          <div class="srow2"><div class="sl2"><div class="sn">主题</div><div class="sd">跟随系统或手动指定</div></div><div class="sel"><span class="badge">跟随系统</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div></div>
+          <div class="srow2"><div class="sl2"><div class="sn">主题色</div><div class="sd">影响强调色与标签色</div></div><div style="display:flex;gap:6px">
+            <span style="width:24px;height:24px;border-radius:7px;background:#3370FF;border:2px solid var(--p-ink);cursor:pointer"></span>
+            <span style="width:24px;height:24px;border-radius:7px;background:#F5A524;cursor:pointer"></span>
+            <span style="width:24px;height:24px;border-radius:7px;background:#10B981;cursor:pointer"></span>
+            <span style="width:24px;height:24px;border-radius:7px;background:#8B5CF6;cursor:pointer"></span>
+            <span style="width:24px;height:24px;border-radius:7px;background:#EF4444;cursor:pointer"></span>
+            <span style="width:24px;height:24px;border-radius:7px;background:#14161A;cursor:pointer"></span></div></div>
+          <div class="srow2"><div class="sl2"><div class="sn">界面字号</div><div class="sd">提案建议 15px（现状 16px）</div></div><div class="sel"><span class="badge">15 px</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div></div>
+          <div class="srow2"><div class="sl2"><div class="sn">字重</div><div class="sd">系统默认</div></div><div class="sel"><span class="badge">常规 400</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div></div>
+          <div class="srow2"><div class="sl2"><div class="sn">背景动画</div><div class="sd">关闭可省一点 GPU</div></div><span class="tg2"></span></div>
+          <div class="srow2"><div class="sl2"><div class="sn">卡片折叠长度</div><div class="sd">超过多少字折叠正文</div></div><div class="inp" style="min-width:80px">300</div></div>
+          <div class="srow2"><div class="sl2"><div class="sn">按创建时间排序</div><div class="sd">关闭则按更新时间</div></div><span class="tg2 on"></span></div>
+          <div class="srow2"><div class="sl2"><div class="sn">隐藏移动端底栏</div><div class="sd">只影响小屏</div></div><span class="tg2"></span></div>
+          <div style="font-size:17px;font-weight:600;margin:26px 0 4px">闪念与待办</div>
+          <div class="srow2"><div class="sl2"><div class="sn">显示常驻新增框</div><div class="sd">关闭后退回顶栏按钮模式</div></div><span class="tg2 on"></span></div>
+          <div class="srow2"><div class="sl2"><div class="sn">闪念 Enter 发送</div><div class="sd">关闭后 Enter 换行、⌘Enter 发送</div></div><span class="tg2 on"></span></div>
+          <div class="srow2"><div class="sl2"><div class="sn">时间线按日分组</div><div class="sd">关闭后退回平铺列表</div></div><span class="tg2 on"></span></div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 分享列表 ═══════ -->
+<div class="pg" id="pg-share">
+  <div class="pgtitle"><h2>分享列表</h2><p>公开链接与访问控制</p><span class="r">/share</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/share</div></div>
+   <div class="app">
+    <div class="side"><div class="b2"><span class="mk">B</span>Blinko</div>
+      <div class="nav on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>分享<span class="ct">4</span></div>
+      <div class="avatar"><span class="av">B</span><span class="an">baihe</span></div></div>
+    <div class="main">
+      <div class="head"><div style="flex:1;font-size:15px;font-weight:600">公开内容</div><div class="pbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>创建分享</div></div>
+      <div class="lhead"><span style="flex:1">内容</span><span style="width:112px">访问权限</span><span style="width:96px">浏览</span><span style="width:132px">创建于</span><span style="width:96px"></span></div>
+      <div class="frow"><span class="li" style="background:#EDE9FE;color:#6D28D9">📘</span><div class="lm"><div class="lt">如何用好 Blinko 的标签体系<span class="badge">公开</span></div><div class="ld">blinko.example.com/s/aX7k2m</div></div><div class="lr" style="width:112px"><span class="badge">任何人可读</span></div><div class="lr" style="width:96px;font-family:var(--mono)">1,204</div><div class="lr" style="width:132px">3 天前</div><div class="lr" style="width:96px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">复制链接</span></div></div>
+      <div class="frow"><span class="li" style="background:#DBEAFE;color:#1D4ED8">🧠</span><div class="lm"><div class="lt">AI 编程工具横评 2026<span class="badge">公开</span></div><div class="ld">blinko.example.com/s/bN4p9q</div></div><div class="lr" style="width:112px"><span class="badge">任何人可读</span></div><div class="lr" style="width:96px;font-family:var(--mono)">387</div><div class="lr" style="width:132px">1 周前</div><div class="lr" style="width:96px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">复制链接</span></div></div>
+      <div class="frow"><span class="li" style="background:#FEF3C7;color:#B45309">📊</span><div class="lm"><div class="lt">知识管理复盘 2026 H1<span class="badge" style="color:#C43B3B;background:#FDECEC">私密</span></div><div class="ld">仅自己可见</div></div><div class="lr" style="width:112px"><span class="badge">仅自己</span></div><div class="lr" style="width:96px;font-family:var(--mono)">0</div><div class="lr" style="width:132px">2 周前</div><div class="lr" style="width:96px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">复制链接</span></div></div>
+      <div class="frow"><span class="li" style="background:#D1FAE5;color:#047857">🧭</span><div class="lm"><div class="lt">新人指南 · 标签体系章节<span class="badge">公开</span></div><div class="ld">blinko.example.com/s/cR8t1w</div></div><div class="lr" style="width:112px"><span class="badge">需密码</span></div><div class="lr" style="width:96px;font-family:var(--mono)">92</div><div class="lr" style="width:132px">3 周前</div><div class="lr" style="width:96px;justify-content:flex-end"><span class="pbtn ghost" style="padding:3px 9px;font-size:11.5px">复制链接</span></div></div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 分享详情（无侧栏） ═══════ -->
+<div class="pg" id="pg-sharedetail">
+  <div class="pgtitle"><h2>分享详情页</h2><p>无侧栏、无搜索，标签不可点</p><span class="r">/share/:id</span></div>
+  <div class="p" style="background:var(--p-sur)">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">blinko.example.com/s/aX7k2m</div>
+     <div style="margin-left:auto;display:flex;gap:7px;align-items:center"><span style="font-size:11.5px;color:var(--ink3)">只读</span><div class="pbtn ghost">复制链接</div><div class="pbtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></div></div>
+   </div>
+   <div class="read" style="min-height:520px">
+     <div class="rbd" style="max-width:660px;margin:0 auto;padding:32px 24px 44px">
+       <div style="display:flex;align-items:center;gap:9px;margin-bottom:20px">
+         <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#60A5FA,#3B82F6);display:grid;place-items:center;color:#fff;font-weight:600;font-size:14px">B</div>
+         <div><div style="font-size:13.5px;font-weight:500">baihe</div><div style="font-size:11.5px;color:var(--ink3)">发布于 3 天前</div></div>
+       </div>
+       <div class="rt">如何用好 Blinko 的标签体系</div>
+       <div class="rm"><span>1.2k 字</span><span class="tag" style="cursor:default">读书</span><span class="tag" style="cursor:default">产品</span></div>
+       <div class="callout">核心结论：标签是检索入口，不是分类树。三个月后你不会记得当时怎么分的，但你会记得当时想找什么。</div>
+       <h4>为什么不要照搬文件夹那套思路</h4>
+       <div class="para">文件夹假设你事先知道东西要去哪。而闪念的场景是：记录的时候并不知道它属于哪一类，三个月后才可能需要找回来。</div>
+       <h4>三条实践规则</h4>
+       <ul><li>命名用名词，不用句子。</li><li>一个标签能在三秒内解释清楚，就合格。</li><li>同一批笔记的标签控制在 2–4 个。</li></ul>
+       <div style="margin-top:34px;padding-top:18px;border-top:1px solid var(--hair);text-align:center">
+         <div style="font-size:13px;color:var(--ink3)">由 <b style="color:var(--ink2)">Blinko</b> 分享</div>
+         <div style="display:flex;gap:8px;justify-content:center;margin-top:12px"><div class="pbtn">在 Blinko 中查看原文</div></div>
+       </div>
+     </div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 登录（无侧栏） ═══════ -->
+<div class="pg" id="pg-signin">
+  <div class="pgtitle"><h2>登录 / 注册</h2><p>无侧栏，左右分栏</p><span class="r">/signin · /signup</span></div>
+  <div class="p">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">127.0.0.1:1111/signin</div></div>
+   <div class="auth">
+     <div class="aform">
+       <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px"><span class="mk" style="width:24px;height:24px;border-radius:7px;background:var(--p-acc);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:600">B</span><span style="font-weight:600;font-size:15px">Blinko</span></div>
+       <h3>欢迎回来</h3>
+       <div class="as">登录以继续你的记录</div>
+       <div class="fld"><label>用户名或邮箱</label><input value="baihe"></div>
+       <div class="fld"><label>密码</label><input value="••••••••••" type="password"></div>
+       <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 6px">
+         <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--p-ink2)"><span class="cbx on" style="width:15px;height:15px;border-radius:4px;margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>保持登录</span>
+         <span style="font-size:12.5px;color:var(--p-acc);cursor:pointer">忘记密码？</span>
+       </div>
+       <div class="abtn">登录</div>
+       <div style="display:flex;align-items:center;gap:11px;margin:19px 0;color:var(--p-ink4);font-size:11.5px"><div style="flex:1;height:1px;background:var(--p-hair)"></div>或<div style="flex:1;height:1px;background:var(--p-hair)"></div></div>
+       <div style="display:flex;gap:8px">
+         <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--p-hair2);border-radius:8px;padding:8px;font-size:12.5px;color:var(--p-ink2);cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84Z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38Z"/></svg>Google</div>
+         <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--p-hair2);border-radius:8px;padding:8px;font-size:12.5px;color:var(--p-ink2);cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08ZM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25Z"/></svg>GitHub</div>
+       </div>
+       <div style="text-align:center;margin-top:18px;font-size:12.5px;color:var(--p-ink3)">还没有账号？<span style="color:var(--p-acc);cursor:pointer">立即注册</span></div>
+     </div>
+     <div class="aaside"><div class="quote"><div class="qm">"</div><p>记录不是为了记住，而是为了让未来的自己知道，此刻在想什么。</p></div></div>
+   </div>
+  </div>
+</div>
+
+<!-- ═══════ 浮层 ═══════ -->
+<div class="pg" id="pg-quicknote">
+  <div class="pgtitle"><h2>快速笔记</h2><p>全局热键唤起的小窗，保存后即消失</p><span class="r">/quicknote</span></div>
+  <div class="p" style="padding:0">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/quicknote</div></div>
+   <div style="position:relative;height:440px;background:var(--p-bg);display:grid;place-items:center;padding:24px">
+     <div style="width:100%;max-width:520px;background:var(--p-sur);border-radius:14px;box-shadow:var(--p-s3);overflow:hidden">
+       <div style="display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--p-hair)">
+         <span style="font-size:12.5px;color:var(--p-ink3)">快速记一笔</span>
+         <div style="margin-left:auto;display:flex;gap:3px">
+           <span class="iact" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+           <span class="iact" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/></svg></span>
+           <span class="iact" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+         </div>
+       </div>
+       <div style="padding:14px 15px">
+         <div style="font-size:15px;line-height:1.75;min-height:96px">把刚看到的这段写下来，稍后再整理：<b>信息密度不是塞更多，是让人一眼找到重点。</b></div>
+       </div>
+       <div style="padding:0 15px 13px">
+         <div class="imgs c2" style="margin-top:0"><div class="im" style="aspect-ratio:16/10" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><div class="im" style="aspect-ratio:16/10"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div></div>
+       </div>
+       <div style="display:flex;align-items:center;gap:7px;padding:10px 15px;border-top:1px solid var(--p-hair);background:var(--p-sub)">
+         <span class="tag">#设计</span>
+         <span class="badge">2 张图片</span>
+         <span style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--p-ink3)">⏎ 保存 · esc 取消</span>
+         <div class="pbtn" style="padding:4px 12px;font-size:12px">保存</div>
+       </div>
+     </div>
+   </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-quickai">
+  <div class="pgtitle"><h2>快速 AI</h2><p>热键唤起，说完直接存成闪念</p><span class="r">/quickai</span></div>
+  <div class="p" style="padding:0">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/quickai</div></div>
+   <div style="position:relative;height:440px;background:var(--p-bg);display:grid;place-items:center;padding:24px">
+     <div style="width:100%;max-width:520px;background:var(--p-sur);border-radius:14px;box-shadow:var(--p-s3);overflow:hidden">
+       <div style="display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--p-hair)">
+         <span style="width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,#A78BFA,#7C3AED);display:grid;place-items:center;color:#fff"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 0 6v1a4 4 0 0 1-8 0v-1a3 3 0 0 1 0-6V6a4 4 0 0 1 4-4Z"/></svg></span>
+         <span style="font-size:12.5px;color:var(--p-ink2)">正在聆听…</span>
+         <span style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--p-ink3)"><span style="width:6px;height:6px;border-radius:50%;background:#EF4444;animation:blink 1s infinite"></span> 00:08</span>
+       </div>
+       <div style="padding:16px 15px;min-height:150px">
+         <div style="font-size:10.5px;color:var(--p-ink4);font-family:var(--mono);margin-bottom:7px">实时转写</div>
+         <div style="font-size:14.5px;line-height:1.8">帮我记一下，关于<span style="border-bottom:2px solid var(--p-acc)">信息密度</span>的三个要点，第一，</div>
+         <div style="display:flex;align-items:flex-end;gap:3px;height:22px;margin-top:12px">
+           <i style="width:3px;height:9px;background:var(--p-acc);border-radius:2px"></i><i style="width:3px;height:16px;background:var(--p-acc);border-radius:2px"></i>
+           <i style="width:3px;height:6px;background:var(--p-acc);border-radius:2px"></i><i style="width:3px;height:19px;background:var(--p-acc);border-radius:2px"></i>
+           <i style="width:3px;height:12px;background:var(--p-acc);border-radius:2px"></i><i style="width:3px;height:21px;background:var(--p-acc);border-radius:2px"></i>
+           <i style="width:3px;height:8px;background:var(--p-acc);border-radius:2px"></i><i style="width:3px;height:15px;background:var(--p-acc);border-radius:2px"></i>
+         </div>
+       </div>
+       <div style="display:flex;align-items:center;gap:7px;padding:10px 15px;border-top:1px solid var(--p-hair);background:var(--p-sub)">
+         <span class="badge">自动分段</span><span class="badge">自动打标签</span>
+         <span style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--p-ink3)">⏎ 结束并保存</span>
+         <div class="pbtn" style="padding:4px 12px;font-size:12px">结束</div>
+       </div>
+     </div>
+   </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-quicktool">
+  <div class="pgtitle"><h2>快速工具</h2><p>常用操作的快捷面板</p><span class="r">/quicktool</span></div>
+  <div class="p" style="padding:0">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">/quicktool</div></div>
+   <div style="position:relative;height:440px;background:var(--p-bg);display:grid;place-items:center;padding:24px">
+     <div style="width:100%;max-width:520px;background:var(--p-sur);border-radius:14px;box-shadow:var(--p-s3);overflow:hidden">
+       <div class="in" style="display:flex;align-items:center;gap:9px;padding:12px 15px;border-bottom:1px solid var(--p-hair);color:var(--p-ink3);font-size:14px">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>做什么
+       </div>
+       <div style="padding:6px">
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>新建闪念<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)">⌘⇧F</span></div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;background:var(--p-accSoft);color:var(--p-accInk)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>新建笔记</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>新建待办</div>
+         <div style="height:1px;background:var(--p-hair);margin:6px 10px"></div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>今日复习</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM4 12h16v4H4zM4 20h10v4H4z"/></svg>归档上周内容</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4M12 2v13"/></svg>导入 Markdown</div>
+       </div>
+       <div style="display:flex;gap:14px;padding:7px 14px;border-top:1px solid var(--p-hair);font-size:11px;color:var(--p-ink3);background:var(--p-sub)"><span>↑↓ 选择</span><span>⏎ 执行</span><span>esc 关闭</span></div>
+     </div>
+   </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-cmdk">
+  <div class="pgtitle"><h2>命令面板</h2><p>⌘K 全局入口：搜索 / 跳转 / 筛选 / 新建</p><span class="r">覆盖层</span></div>
+  <div class="p" style="padding:0">
+   <div class="bar"><div class="tl"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url">任意页面 · ⌘K</div></div>
+   <div style="position:relative;height:470px;background:var(--p-bg);display:grid;place-items:start center;padding:30px 24px">
+     <div style="width:100%;max-width:520px;background:var(--p-sur);border-radius:14px;box-shadow:var(--p-s3);overflow:hidden">
+       <div style="display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--p-hair);color:var(--p-ink3);font-size:14px">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>标签
+         <span class="badge" style="margin-left:auto">含全部类型</span>
+       </div>
+       <div style="padding:6px;max-height:290px;overflow-y:auto">
+         <div style="font-size:10.5px;font-family:var(--mono);color:var(--p-ink4);padding:6px 10px 3px">新建</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;background:var(--p-accSoft);color:var(--p-accInk)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>新建标签「标签」<span style="margin-left:auto;font-family:var(--mono);font-size:10px">⏎</span></div>
+         <div style="font-size:10.5px;font-family:var(--mono);color:var(--p-ink4);padding:9px 10px 3px">筛选</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>按标签筛选：读书<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)">32 条</span></div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>按标签筛选：产品<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)">21 条</span></div>
+         <div style="font-size:10.5px;font-family:var(--mono);color:var(--p-ink4);padding:9px 10px 3px">跳转</div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>打开统计分析<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)">⌘3</span></div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>打开回收站<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--p-ink3)">⌘⌫</span></div>
+         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--p-ink2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>打开设置</div>
+       </div>
+       <div style="display:flex;gap:14px;padding:7px 14px;border-top:1px solid var(--p-hair);font-size:11px;color:var(--p-ink3);background:var(--p-sub)"><span>↑↓ 选择</span><span>⏎ 确认</span><span>esc 关闭</span></div>
+     </div>
+   </div>
+  </div>
+</div>
+
+</div>
+
+<style>@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}</style>
+<script>
+const pills=document.getElementById('pills'),seg=document.getElementById('seg');
+pills.addEventListener('click',e=>{
+  const b=e.target.closest('.pill'); if(!b)return;
+  pills.querySelectorAll('.pill').forEach(t=>t.classList.toggle('on',t===b));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+b.dataset.pg));
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+function applyMode(m){
+  seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  document.querySelectorAll('.p').forEach(p=>p.classList.toggle('now',m==='now'));
+}
+seg.addEventListener('click',e=>{const b=e.target.closest('button');if(b)applyMode(b.dataset.m);});
+document.getElementById('dk').addEventListener('click',()=>document.documentElement.classList.toggle('dk'));
+applyMode('now');
+</script>
+</body>
+</html>

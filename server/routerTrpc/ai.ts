@@ -1,3 +1,5 @@
+import { quickModelSetupSchema } from '../../shared/lib/quickModelSetup';
+import { quickModelSetup } from '../lib/quickModelSetup';
 import { router, authProcedure } from '../middleware';
 import { z } from 'zod';
 import { AiService } from '@server/aiServer';
@@ -14,11 +16,13 @@ import { helper } from '@shared/lib/helper';
 import { cleanConversationTitle } from '../../shared/lib/conversationTitle';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
+import { getChatContext } from '../lib/conversationPages';
 import { workflowKeys } from '../../shared/lib/aiWorkflows';
 import { dailySyncInput, syncDailyWorkflow } from '../lib/dailyWorkflow';
 import { getChatCapabilities } from '../lib/chatCapabilities';
 
 export const aiRouter = router({
+  quickModelSetup: authProcedure.input(quickModelSetupSchema).mutation(({ input, ctx }) => quickModelSetup(input, ctx.role)),
   chatCapabilities: authProcedure.input(z.object({ modelId: z.number().int().positive().optional() })).query(({ input }) => getChatCapabilities(input.modelId)),
   skillSources: authProcedure.input(z.object({ skill: z.enum(workflowKeys), from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), includeNotes: z.boolean().default(false), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
     const now = new Date();
@@ -132,6 +136,8 @@ export const aiRouter = router({
   completions: authProcedure
     .input(z.object({
       question: z.string(),
+      conversationId: z.number().int().positive().optional(),
+      questionMessageId: z.number().int().positive().optional(),
       modelId: z.number().int().positive().optional(),
       withTools: z.boolean().optional(),
       withOnline: z.boolean().optional(),
@@ -147,7 +153,7 @@ export const aiRouter = router({
         const withTools = !!input.withTools && available.tools;
         const withOnline = !!input.withOnline && available.online;
         const withRAG = (input.withRAG ?? true) && available.rag;
-        let _conversations = conversations as CoreMessage[]
+        let _conversations = (input.conversationId && input.questionMessageId ? await getChatContext(input.conversationId, input.questionMessageId, Number(ctx.id)) : conversations) as CoreMessage[]
         if (input.modelId) {
           const model = await prisma.aiModels.findUnique({ where: { id: input.modelId } });
           if (!model || !(model.capabilities as any)?.inference) throw new TRPCError({ code: 'BAD_REQUEST', message: '所选模型不可用于对话，请重新选择。' });

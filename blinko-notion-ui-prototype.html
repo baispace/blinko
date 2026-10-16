@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blinko · Notion-style UI Prototype (shadcn/ui)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    /* shadcn/ui tokens — light theme (zinc-based, Notion-leaning) */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 252 87% 67%;          /* indigo-500 — Notion-style accent */
+    --primary-foreground: 0 0% 98%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --border: 240 5.9% 90%;
+    --ring: 252 87% 67%;
+    --radius: 0.625rem;
+    /* extra Notion tokens */
+    --row-hover: 240 5% 96%;
+    --row-selected: 252 87% 67% / 0.08;
+  }
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 252 87% 67%;
+    --primary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --ring: 252 87% 67%;
+    --row-hover: 240 3.7% 15.9%;
+    --row-selected: 252 87% 67% / 0.15;
+  }
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .text-fg { color: hsl(var(--foreground)); }
+  .text-muted { color: hsl(var(--muted-foreground)); }
+  .bg-muted { background: hsl(var(--muted)); }
+  .bg-hover { background: hsl(var(--row-hover)); }
+  .border-default { border-color: hsl(var(--border)); }
+  .text-primary { color: hsl(var(--primary)); }
+  .bg-primary { background: hsl(var(--primary)); }
+  .ring-primary { --tw-ring-color: hsl(var(--ring)); }
+
+  /* Notion-style row — minimal, hover-light */
+  .notion-row {
+    transition: background-color 120ms ease;
+  }
+  .notion-row:hover { background: hsl(var(--row-hover)); }
+  .notion-row.selected {
+    background: hsl(var(--row-selected));
+  }
+  .notion-row.selected::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px;
+    background: hsl(var(--primary)); border-radius: 1px;
+  }
+
+  /* Soft scrollbar */
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / .5); }
+
+  /* Tab transition */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 200ms ease-out; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* kbd */
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* tag chip */
+  .chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 8px; border-radius: 999px;
+    font-size: 12px; line-height: 18px;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+  .chip-primary {
+    background: hsl(var(--primary) / .12);
+    color: hsl(var(--primary));
+  }
+
+  /* sidebar collapse animation */
+  .sidebar { transition: width 200ms ease; }
+  .sidebar.collapsed { width: 56px !important; }
+  .sidebar.collapsed .label { display: none; }
+  .sidebar.collapsed .sidebar-section-title { display: none; }
+  .sidebar.collapsed .nav-row { justify-content: center; padding-left: 0; padding-right: 0; }
+
+  /* editor placeholder */
+  .editor-h1 {
+    font-size: 36px; font-weight: 700; line-height: 1.2;
+    outline: none; border: none; background: transparent;
+    width: 100%; color: hsl(var(--foreground));
+  }
+  .editor-h1:empty::before {
+    content: attr(data-placeholder); color: hsl(var(--muted-foreground));
+  }
+
+  /* command palette overlay */
+  .overlay { background: hsl(var(--foreground) / .4); backdrop-filter: blur(2px); }
+
+  /* checkbox */
+  .cb {
+    width: 16px; height: 16px;
+    border: 1.5px solid hsl(var(--border));
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 120ms;
+  }
+  .cb.done { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
+  .cb.done::after { content: '✓'; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ TOP PROTO BAR ============ -->
+<div class="fixed top-0 left-0 right-0 z-50 bg-card border-b border-default" style="background:hsl(var(--card))">
+  <div class="max-w-[1400px] mx-auto px-6 h-12 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-sm">
+      <i data-lucide="palette" class="w-4 h-4 text-muted"></i>
+      <span class="font-semibold">Blinko · Notion-style Prototype</span>
+      <span class="text-muted">/ shadcn/ui</span>
+    </div>
+    <div class="flex items-center gap-1 text-xs">
+      <button data-tab="blinks" class="proto-tab px-3 py-1.5 rounded-md font-medium text-muted hover:text-fg hover:bg-muted transition-colors">闪念</button>
+      <button data-tab="notes" class="proto-tab px-3 py-1.5 rounded-md font-medium text-muted hover:text-fg hover:bg-muted transition-colors">笔记</button>
+      <button data-tab="todos" class="proto-tab px-3 py-1.5 rounded-md font-medium text-muted hover:text-fg hover:bg-muted transition-colors">待办</button>
+      <button data-tab="detail" class="proto-tab px-3 py-1.5 rounded-md font-medium text-muted hover:text-fg hover:bg-muted transition-colors">详情</button>
+      <span class="mx-2 w-px h-5 bg-default inline-block"></span>
+      <button onclick="toggleCmdK()" class="px-2.5 py-1.5 rounded-md text-xs text-muted hover:text-fg hover:bg-muted transition-colors flex items-center gap-1.5 border border-default">
+        <i data-lucide="command" class="w-3.5 h-3.5"></i> 命令面板
+        <kbd>⌘K</kbd>
+      </button>
+      <button onclick="toggleTheme()" class="ml-1 px-2 py-1.5 rounded-md text-muted hover:text-fg hover:bg-muted transition-colors" title="切换主题">
+        <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN SHELL ============ -->
+<div class="pt-12 flex min-h-screen">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar w-[240px] shrink-0 border-r border-default flex flex-col py-3 px-2 sticky top-12 h-[calc(100vh-48px)]">
+    <!-- workspace -->
+    <div class="px-2 py-1.5 flex items-center gap-2 mb-1 cursor-pointer rounded-md hover:bg-muted">
+      <div class="w-5 h-5 rounded bg-primary flex items-center justify-center text-white text-[10px] font-bold">B</div>
+      <span class="label text-sm font-semibold flex-1 truncate">Brian's Space</span>
+      <i data-lucide="chevrons-left" class="label w-3.5 h-3.5 text-muted"></i>
+    </div>
+
+    <!-- search -->
+    <button onclick="toggleCmdK()" class="nav-row label w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted hover:bg-muted transition-colors mb-1">
+      <i data-lucide="search" class="w-4 h-4"></i>
+      <span class="flex-1 text-left">搜索</span>
+      <kbd>⌘K</kbd>
+    </button>
+
+    <!-- section: 私人空间 -->
+    <div class="sidebar-section-title px-2 pt-3 pb-1 text-[11px] font-medium text-muted uppercase tracking-wider">私人空间</div>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer" data-section="all">
+      <i data-lucide="inbox" class="w-4 h-4 text-muted"></i><span class="label">全部</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer notion-row selected" data-section="blinks">
+      <i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i><span class="label">闪念</span>
+      <span class="label ml-auto text-xs text-muted">12</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer" data-section="notes">
+      <i data-lucide="notebook-pen" class="w-4 h-4 text-blue-500"></i><span class="label">笔记</span>
+      <span class="label ml-auto text-xs text-muted">34</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer" data-section="todos">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i><span class="label">待办</span>
+      <span class="label ml-auto text-xs text-muted">5</span>
+    </a>
+
+    <!-- section: 分组 -->
+    <div class="sidebar-section-title px-2 pt-3 pb-1 flex items-center justify-between">
+      <span class="text-[11px] font-medium text-muted uppercase tracking-wider">分组</span>
+      <i data-lucide="plus" class="w-3.5 h-3.5 text-muted cursor-pointer hover:text-fg"></i>
+    </div>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+      <i data-lucide="folder" class="w-4 h-4 text-amber-500"></i><span class="label">工作</span>
+      <span class="label ml-auto text-xs text-muted">8</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+      <i data-lucide="folder" class="w-4 h-4 text-amber-500"></i><span class="label">生活</span>
+      <span class="label ml-auto text-xs text-muted">3</span>
+    </a>
+
+    <!-- section: 标签 -->
+    <div class="sidebar-section-title px-2 pt-3 pb-1 flex items-center justify-between">
+      <span class="text-[11px] font-medium text-muted uppercase tracking-wider">标签</span>
+      <i data-lucide="plus" class="w-3.5 h-3.5 text-muted cursor-pointer hover:text-fg"></i>
+    </div>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+      <span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="label truncate"># 重要</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+      <span class="w-2 h-2 rounded-full bg-sky-500"></span><span class="label truncate"># 灵感</span>
+    </a>
+    <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+      <span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="label truncate"># 周报</span>
+    </a>
+
+    <div class="mt-auto">
+      <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+        <i data-lucide="settings" class="w-4 h-4 text-muted"></i><span class="label">设置</span>
+      </a>
+      <a class="nav-row relative flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted cursor-pointer">
+        <i data-lucide="trash-2" class="w-4 h-4 text-muted"></i><span class="label">回收站</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="flex-1 min-w-0">
+
+    <!-- ============ PAGE: BLINKS ============ -->
+    <section class="page active" data-page="blinks">
+      <!-- breadcrumb + title -->
+      <div class="max-w-[860px] mx-auto px-12 pt-12 pb-3">
+        <div class="text-xs text-muted mb-2 flex items-center gap-1">
+          <i data-lucide="home" class="w-3 h-3"></i>
+          <span>私人空间</span>
+          <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          <span class="text-fg">闪念</span>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-3xl">⚡</span>
+          <h1 class="text-3xl font-bold tracking-tight">闪念</h1>
+        </div>
+        <p class="text-sm text-muted">快速捕捉灵感。打开即写，Enter 保存，Cmd+Enter 创建闪念。</p>
+      </div>
+
+      <!-- quick capture -->
+      <div class="max-w-[860px] mx-auto px-12 mb-6">
+        <div class="border border-default rounded-lg px-4 py-3 bg-card hover:bg-muted transition-colors cursor-text flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4 text-muted"></i>
+          <span class="text-sm text-muted">写一条闪念...</span>
+          <span class="ml-auto text-xs text-muted"><kbd>⌘</kbd>+<kbd>↵</kbd></span>
+        </div>
+      </div>
+
+      <!-- list header -->
+      <div class="max-w-[860px] mx-auto px-12 pb-2 flex items-center gap-3 text-xs text-muted">
+        <span>12 条</span>
+        <span class="w-px h-3 bg-default"></span>
+        <button class="hover:text-fg flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i>最近编辑</button>
+        <span class="ml-auto flex items-center gap-3">
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="list-filter" class="w-3 h-3"></i>筛选</button>
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="arrow-up-down" class="w-3 h-3"></i>排序</button>
+        </span>
+      </div>
+
+      <!-- rows -->
+      <div class="max-w-[860px] mx-auto px-12 pb-16">
+        <!-- row -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-fg">产品改版要点：把导入导出做到一键，参考飞书的"..."菜单层级</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="chip"># 产品</span>
+              <span class="chip"># 改版</span>
+              <span>· 2 分钟前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group selected">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-fg">shadcn/ui 比 HeroUI 更克制，做笔记应用调性更合适</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="chip chip-primary"># 灵感</span>
+              <span>· 12 分钟前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-fg">周日去西湖，路线：断桥 → 平湖秋月 → 雷峰塔</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span>· 1 小时前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+          <span class="cb done mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-muted line-through">提交统计模块热力图改天的 PR</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="chip"># 工作</span>
+              <span>· 昨天</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-fg">书籍《简约至上》第三章的"移除"原则同样适用于笔记应用</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="chip"># 阅读</span>
+              <span class="chip"># 设计</span>
+              <span>· 2 天前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 truncate text-fg">用户研究：Brian 说想要 shadcn 风格，跟我的想法一致</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="chip"># 周报</span>
+              <span>· 3 天前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <!-- more rows: 折叠提示 -->
+        <div class="px-3 py-2 text-xs text-muted cursor-pointer hover:text-fg">还有 6 条 ↓</div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: NOTES ============ -->
+    <section class="page" data-page="notes">
+      <div class="max-w-[860px] mx-auto px-12 pt-12 pb-3">
+        <div class="text-xs text-muted mb-2 flex items-center gap-1">
+          <i data-lucide="home" class="w-3 h-3"></i>
+          <span>私人空间</span>
+          <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          <span class="text-fg">笔记</span>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-3xl">📝</span>
+          <h1 class="text-3xl font-bold tracking-tight">笔记</h1>
+        </div>
+        <p class="text-sm text-muted">结构化长文。支持 # 双链、@ 引用、附件。</p>
+      </div>
+
+      <!-- tag chips -->
+      <div class="max-w-[860px] mx-auto px-12 mb-4 flex items-center gap-2 flex-wrap">
+        <button class="chip chip-primary">全部 <span class="opacity-70">34</span></button>
+        <button class="chip"># 设计 <span class="opacity-70">8</span></button>
+        <button class="chip"># 工作 <span class="opacity-70">12</span></button>
+        <button class="chip"># 生活 <span class="opacity-70">6</span></button>
+        <button class="chip"># 学习 <span class="opacity-70">5</span></button>
+        <button class="chip"># 项目 <span class="opacity-70">3</span></button>
+      </div>
+
+      <!-- list header -->
+      <div class="max-w-[860px] mx-auto px-12 pb-2 flex items-center gap-3 text-xs text-muted">
+        <span>34 条</span>
+        <span class="w-px h-3 bg-default"></span>
+        <button class="hover:text-fg flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i>最近编辑</button>
+        <button class="text-fg flex items-center gap-1"><i data-lucide="arrow-up-down" class="w-3 h-3"></i>按更新时间 ↓</button>
+        <span class="ml-auto flex items-center gap-3">
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="list-filter" class="w-3 h-3"></i>筛选</button>
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="layout-grid" class="w-3 h-3"></i>视图</button>
+        </span>
+      </div>
+
+      <div class="max-w-[860px] mx-auto px-12 pb-16">
+        <!-- note row (richer preview) -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="text-2xl mt-0.5">📐</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-medium text-fg truncate">Notion 风格设计语言：行即组件、空白大于边框</div>
+            <div class="text-[13px] text-muted leading-5 truncate mt-0.5">
+              极简不是简陋，而是克制。Notion 的列表每一行就是信息单位，没有多余的卡片包裹；分隔靠 24-32px 空白，而不是 1px 边框...
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-xs text-muted">
+              <span class="chip"># 设计</span>
+              <span class="chip"># shadcn</span>
+              <span>· 2 个附件</span>
+              <span>· 今天</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="history" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="text-2xl mt-0.5">📊</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-medium text-fg truncate">Blinko 统计模块 V2 复盘：从 13 个 bug 看产品设计</div>
+            <div class="text-[13px] text-muted leading-5 truncate mt-0.5">
+              这轮迭代让我意识到：性能问题往往不是单一原因，而是多个边缘条件叠加。热力图"没值"是数据问题，"cells 太小"是布局问题...
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-xs text-muted">
+              <span class="chip"># 工作</span>
+              <span class="chip"># 复盘</span>
+              <span>· 昨天</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="history" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="text-2xl mt-0.5">🚀</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-medium text-fg truncate">从 Notion 迁移笔记到 Blinko：HTML 导入路径设计</div>
+            <div class="text-[13px] text-muted leading-5 truncate mt-0.5">
+              Notion 导出默认是 HTML+附件 zip，是最大迁移源。turndown + 图片提取是 80% 场景的解法...
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-xs text-muted">
+              <span class="chip"># 设计</span>
+              <span class="chip"># 迁移</span>
+              <span>· 5 个附件</span>
+              <span>· 3 天前</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="history" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="text-2xl mt-0.5">🎨</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-medium text-fg truncate">Tailwind + shadcn/ui 设计 token 体系</div>
+            <div class="text-[13px] text-muted leading-5 truncate mt-0.5">
+              CSS variables 控制颜色、圆角、阴影是 shadcn/ui 的精髓。每个组件不直接写死样式，而是引用 token...
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-xs text-muted">
+              <span class="chip"># 技术</span>
+              <span class="chip"># 设计</span>
+              <span>· 上周</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="pin" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="history" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="px-3 py-2 text-xs text-muted cursor-pointer hover:text-fg">还有 30 条 ↓</div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: TODOS ============ -->
+    <section class="page" data-page="todos">
+      <div class="max-w-[860px] mx-auto px-12 pt-12 pb-3">
+        <div class="text-xs text-muted mb-2 flex items-center gap-1">
+          <i data-lucide="home" class="w-3 h-3"></i>
+          <span>私人空间</span>
+          <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          <span class="text-fg">待办</span>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-3xl">✅</span>
+          <h1 class="text-3xl font-bold tracking-tight">待办</h1>
+          <span class="ml-2 text-sm text-muted">5 个进行中 · 2 个今天到期</span>
+        </div>
+        <p class="text-sm text-muted">支持优先级、截止日期、子任务。完成自动归档到「已完成」。</p>
+      </div>
+
+      <!-- quick add -->
+      <div class="max-w-[860px] mx-auto px-12 mb-6">
+        <div class="border border-default rounded-lg px-4 py-3 bg-card hover:bg-muted transition-colors cursor-text flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4 text-muted"></i>
+          <span class="text-sm text-muted">添加待办，输入 / 选择优先级...</span>
+        </div>
+      </div>
+
+      <!-- segmented filter -->
+      <div class="max-w-[860px] mx-auto px-12 mb-4 flex items-center justify-between">
+        <div class="inline-flex bg-muted rounded-md p-0.5">
+          <button class="px-3 py-1 rounded text-xs font-medium bg-card shadow-sm text-fg">进行中 <span class="text-muted">5</span></button>
+          <button class="px-3 py-1 rounded text-xs font-medium text-muted hover:text-fg">今天 <span class="text-muted">2</span></button>
+          <button class="px-3 py-1 rounded text-xs font-medium text-muted hover:text-fg">即将到期 <span class="text-muted">1</span></button>
+          <button class="px-3 py-1 rounded text-xs font-medium text-muted hover:text-fg">已完成 <span class="text-muted">23</span></button>
+        </div>
+        <div class="text-xs text-muted flex items-center gap-3">
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="list-filter" class="w-3 h-3"></i>筛选</button>
+          <button class="hover:text-fg flex items-center gap-1"><i data-lucide="arrow-up-down" class="w-3 h-3"></i>排序</button>
+        </div>
+      </div>
+
+      <div class="max-w-[860px] mx-auto px-12 pb-16">
+        <!-- todo row: high priority -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 text-fg">提交 Blinko Notion 风格 HTML 原型评审</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1 text-rose-500 font-medium">
+                <i data-lucide="flag" class="w-3 h-3"></i>高
+              </span>
+              <span class="text-rose-500 inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>今天 18:00</span>
+              <span class="chip"># 改版</span>
+              <span>· 3/5 子任务</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <!-- todo row: medium -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 text-fg">整理 Blinko 内容管理模块的需求列表</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1 text-amber-500 font-medium">
+                <i data-lucide="flag" class="w-3 h-3"></i>中
+              </span>
+              <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>明天</span>
+              <span class="chip"># PM</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <!-- todo row: medium, today -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 text-fg">回 Brian 关于 shadcn 迁移路径的方案</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1 text-amber-500 font-medium">
+                <i data-lucide="flag" class="w-3 h-3"></i>中
+              </span>
+              <span class="text-rose-500 inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>今天 22:00</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <!-- todo row: low -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 text-fg">周末整理 todo 历史</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1 text-blue-500 font-medium">
+                <i data-lucide="flag" class="w-3 h-3"></i>低
+              </span>
+              <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>本周</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <!-- todo row: low, overdue -->
+        <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+          <span class="cb mt-1.5 shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] leading-6 text-fg line-through text-muted">写 Blinko 移动端体验调研报告</div>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1 text-blue-500 font-medium">
+                <i data-lucide="flag" class="w-3 h-3"></i>低
+              </span>
+              <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>上周</span>
+            </div>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i></button>
+            <button class="p-1 rounded hover:bg-muted text-muted"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: DETAIL ============ -->
+    <section class="page" data-page="detail">
+      <!-- top breadcrumb + actions bar -->
+      <div class="border-b border-default sticky top-12 bg-card z-10" style="background:hsl(var(--card))">
+        <div class="max-w-[860px] mx-auto px-12 h-11 flex items-center gap-2 text-sm">
+          <button class="p-1.5 rounded hover:bg-muted text-muted"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+          <div class="text-muted flex items-center gap-1.5 text-xs">
+            <i data-lucide="home" class="w-3 h-3"></i>
+            <span>笔记</span>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-fg">Notion 风格设计语言：行即组件、空白大于边框</span>
+          </div>
+          <div class="ml-auto flex items-center gap-1">
+            <button class="p-1.5 rounded hover:bg-muted text-muted" title="分享"><i data-lucide="share-2" class="w-4 h-4"></i></button>
+            <button class="p-1.5 rounded hover:bg-muted text-muted" title="评论"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+            <button class="p-1.5 rounded hover:bg-muted text-muted" title="收藏"><i data-lucide="star" class="w-4 h-4"></i></button>
+            <button class="p-1.5 rounded hover:bg-muted text-muted" title="导出"><i data-lucide="download" class="w-4 h-4"></i></button>
+            <button class="p-1.5 rounded hover:bg-muted text-muted" title="更多"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            <span class="text-xs text-muted mx-2">已保存</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- editor body -->
+      <article class="max-w-[760px] mx-auto px-12 pt-10 pb-32">
+        <!-- emoji + meta -->
+        <div class="text-7xl mb-3 cursor-pointer hover:bg-muted inline-block rounded-lg p-1 -ml-1">📐</div>
+        <div class="text-xs text-muted mb-4 flex items-center gap-3">
+          <span>Brian's Space</span>
+          <span>·</span>
+          <span>笔记</span>
+          <span>·</span>
+          <span>今天 14:23</span>
+          <span>·</span>
+          <span>2 分钟前更新</span>
+        </div>
+
+        <!-- title -->
+        <h1 contenteditable="true" class="editor-h1 text-[40px] font-bold mb-6 tracking-tight">Notion 风格设计语言：行即组件、空白大于边框</h1>
+
+        <!-- content -->
+        <div class="prose-like space-y-4 text-[16px] leading-7 text-fg">
+          <p>
+            这是一篇关于 <span class="chip chip-primary"># 设计</span> <span class="chip chip-primary"># shadcn</span> 风格的笔记。
+            极简不是简陋，而是克制。Notion 的成功在于把"信息架构"做到了极致。
+          </p>
+
+          <h2 class="text-2xl font-semibold mt-8 mb-3">行即组件</h2>
+          <p>
+            Notion 的列表每一行就是一个完整的信息单位。它没有厚重的卡片包裹，没有"卡片标题 + 卡片内容 + 卡片操作"的三段式结构。
+          </p>
+          <p>
+            每条 note 就是一行。点击进入详情，回到列表自动滚回原位。
+          </p>
+
+          <!-- callout -->
+          <div class="flex gap-3 px-4 py-3 bg-muted rounded-lg my-4">
+            <i data-lucide="lightbulb" class="w-5 h-5 text-yellow-500 shrink-0 mt-0.5"></i>
+            <div class="text-sm leading-6">
+              <strong>关键认知：</strong>极简不是简陋，而是克制。设计语言的一致性比"看起来漂亮"更重要。
+            </div>
+          </div>
+
+          <h2 class="text-2xl font-semibold mt-8 mb-3">空白大于边框</h2>
+          <p>
+            分隔靠 <code class="px-1.5 py-0.5 bg-muted rounded text-sm">24-32px 空白</code>，而不是 1px 边框。
+            选中态靠 <span class="inline-block w-0.5 h-4 align-middle bg-primary mr-1"></span>左侧 2px 高亮条，而不是整块蓝。
+            阴影尽量避免，最多 0 1px 2px rgba(0,0,0,.04)。
+          </p>
+
+          <ul class="space-y-1.5 pl-6 list-disc marker:text-muted">
+            <li>无边框、靠空白分组</li>
+            <li>列表项 hover 用极浅灰（接近透明）</li>
+            <li>选中态：左侧 2px 蓝条 + 浅蓝背景</li>
+            <li>操作按钮 hover 才浮现</li>
+          </ul>
+
+          <h2 class="text-2xl font-semibold mt-8 mb-3">shadcn/ui 的角色</h2>
+          <p>
+            shadcn/ui 提供底层组件（Button / Dialog / DropdownMenu 等）和设计 token 系统。
+            真正的 Notion 化由你的 layout / spacing / typography 决定，不是组件本身。
+          </p>
+
+          <!-- code block -->
+          <pre class="bg-muted rounded-lg p-4 text-sm font-mono overflow-x-auto my-4"><code>:root {
+  --background: 0 0% 100%;
+  --primary: 252 87% 67%;
+  --radius: 0.625rem;
+}
+
+.notion-row {
+  transition: background-color 120ms ease;
+}
+.notion-row:hover { background: hsl(var(--row-hover)); }</code></pre>
+
+          <p class="text-muted text-sm italic">💡 设计应该像水一样，无形却能装进任何容器。</p>
+        </div>
+
+        <!-- bottom meta + actions -->
+        <div class="mt-12 pt-6 border-t border-default flex items-center gap-3 text-sm text-muted">
+          <span class="chip"># 设计</span>
+          <span class="chip"># shadcn</span>
+          <span class="chip"># Notion</span>
+          <span class="ml-auto">最后编辑 2 分钟前</span>
+        </div>
+
+        <!-- comments placeholder -->
+        <div class="mt-8">
+          <div class="text-xs font-medium text-muted mb-3 uppercase tracking-wider">评论 · 2</div>
+          <div class="border border-default rounded-lg p-3 flex items-center gap-2 text-sm text-muted">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            <span>添加评论...</span>
+            <span class="ml-auto"><kbd>@</kbd> 提及</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ COMMAND PALETTE ============ -->
+<div id="cmdk" class="fixed inset-0 z-[100] hidden items-start justify-center pt-[15vh] overlay" onclick="if(event.target===this)toggleCmdK()">
+  <div class="w-[640px] max-w-[92vw] bg-card rounded-xl border border-default shadow-2xl overflow-hidden" style="background:hsl(var(--card))">
+    <!-- input -->
+    <div class="flex items-center gap-2 px-4 h-12 border-b border-default">
+      <i data-lucide="search" class="w-4 h-4 text-muted"></i>
+      <input id="cmdkInput" class="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted" placeholder="搜索笔记、待办、设置，或运行命令..." />
+      <kbd>ESC</kbd>
+    </div>
+
+    <!-- results -->
+    <div class="max-h-[60vh] overflow-y-auto py-2">
+      <!-- group: 最近 -->
+      <div class="px-2 pb-1">
+        <div class="px-2 pt-2 pb-1 text-[11px] font-medium text-muted uppercase tracking-wider">最近</div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="text-xl">📐</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-fg truncate">Notion 风格设计语言：行即组件、空白大于边框</div>
+            <div class="text-xs text-muted truncate">极简不是简陋，而是克制。Notion 的成功在于把"信息架构"做到了...</div>
+          </div>
+          <span class="chip"># 设计</span>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="text-xl">📊</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-fg truncate">Blinko 统计模块 V2 复盘</div>
+            <div class="text-xs text-muted truncate">从 13 个 bug 看产品设计</div>
+          </div>
+          <span class="chip"># 工作</span>
+        </div>
+      </div>
+
+      <!-- group: 笔记 -->
+      <div class="px-2 pb-1">
+        <div class="px-2 pt-2 pb-1 text-[11px] font-medium text-muted uppercase tracking-wider">笔记</div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="text-xl">🚀</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-fg truncate">从 Notion 迁移笔记到 Blinko</div>
+          </div>
+          <span class="text-xs text-muted">3 天前</span>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="text-xl">🎨</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-fg truncate">Tailwind + shadcn/ui 设计 token 体系</div>
+          </div>
+          <span class="text-xs text-muted">上周</span>
+        </div>
+      </div>
+
+      <!-- group: 待办 -->
+      <div class="px-2 pb-1">
+        <div class="px-2 pt-2 pb-1 text-[11px] font-medium text-muted uppercase tracking-wider">待办</div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="cb done shrink-0"></span>
+          <div class="flex-1 min-w-0 text-sm text-muted line-through truncate">提交 Blinko Notion 风格 HTML 原型评审</div>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <span class="cb shrink-0"></span>
+          <div class="flex-1 min-w-0 text-sm text-fg truncate">整理 Blinko 内容管理模块的需求列表</div>
+          <span class="text-xs text-rose-500">明天</span>
+        </div>
+      </div>
+
+      <!-- group: 命令 -->
+      <div class="px-2 pb-1">
+        <div class="px-2 pt-2 pb-1 text-[11px] font-medium text-muted uppercase tracking-wider">命令</div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <i data-lucide="plus" class="w-4 h-4 text-muted"></i>
+          <div class="flex-1 text-sm text-fg">新建笔记</div>
+          <kbd>⌘N</kbd>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <i data-lucide="zap" class="w-4 h-4 text-muted"></i>
+          <div class="flex-1 text-sm text-fg">新建闪念</div>
+          <kbd>⌘⇧N</kbd>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-muted"></i>
+          <div class="flex-1 text-sm text-fg">新建待办</div>
+          <kbd>⌘T</kbd>
+        </div>
+        <div class="cmdk-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer hover:bg-muted">
+          <i data-lucide="settings" class="w-4 h-4 text-muted"></i>
+          <div class="flex-1 text-sm text-fg">打开设置</div>
+          <kbd>⌘,</kbd>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="border-t border-default px-3 h-9 flex items-center justify-between text-[11px] text-muted">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1"><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+        <span class="flex items-center gap-1"><kbd>↵</kbd> 打开</span>
+        <span class="flex items-center gap-1"><kbd>⌘↵</kbd> 新建</span>
+      </div>
+      <span class="flex items-center gap-1"><i data-lucide="search" class="w-3 h-3"></i> Blinko Search</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FOOTER (info) ============ -->
+<div class="border-t border-default bg-muted text-xs text-muted">
+  <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
+    <span>🎨 shadcn/ui 设计 token 已应用：<code class="px-1 bg-card border border-default rounded">CSS variables</code> · <code class="px-1 bg-card border border-default rounded">Inter 字体</code> · <code class="px-1 bg-card border border-default rounded">lucide 图标</code></span>
+    <span>纯 HTML/CSS/JS 原型 · 非生产 · 不动 Blinko 代码</span>
+  </div>
+</div>
+
+<script>
+  // Init lucide icons
+  if (window.lucide) lucide.createIcons();
+
+  // Tab switching
+  document.querySelectorAll('.proto-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  function switchTab(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.dataset.page === name));
+    document.querySelectorAll('.proto-tab').forEach(b => {
+      const active = b.dataset.tab === name;
+      b.classList.toggle('text-muted', !active);
+      b.classList.toggle('text-fg', active);
+      b.classList.toggle('bg-muted', active);
+    });
+  }
+  // default tab highlight
+  switchTab('blinks');
+
+  // Sidebar nav switching
+  document.querySelectorAll('[data-section]').forEach(a => {
+    a.addEventListener('click', () => {
+      const map = { all: 'notes', blinks: 'blinks', notes: 'notes', todos: 'todos' };
+      const target = map[a.dataset.section];
+      if (target) switchTab(target);
+    });
+  });
+
+  // Theme toggle
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Command palette
+  function toggleCmdK() {
+    const el = document.getElementById('cmdk');
+    const willShow = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !willShow);
+    el.classList.toggle('flex', willShow);
+    if (willShow) setTimeout(() => document.getElementById('cmdkInput').focus(), 50);
+  }
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault(); toggleCmdK();
+    }
+    if (e.key === 'Escape') {
+      const el = document.getElementById('cmdk');
+      if (!el.classList.contains('hidden')) toggleCmdK();
+    }
+  });
+</script>
+</body>
+</html>

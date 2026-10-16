@@ -1,0 +1,4468 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Folding prototype · v1</title>
+<style>
+/* ============================================================
+   tokens (照 Blinko globals.css)
+   ============================================================ */
+:root {
+  --background:        hsl(0 0% 100%);
+  --foreground:        hsl(222.2 47.4% 11.2%);
+  --muted:             hsl(210 40% 96.1%);
+  --muted-foreground:  hsl(215.4 16.3% 46.9%);
+  --border:            #E7E7E5;
+  --primary:           #2F6FEB;
+  --hover:             #efeee7d9;
+  --accent:            hsl(240, 5%, 96%);
+
+  /* bullet 设计（这一版的决定项）
+     真实 mubu：.content { padding: 3px 0 3px 31px } + bullet-wrapper absolute left 3 + 18×18
+     这里改用 flex 排版，但保持 bullet-zone 永远 31px、bullet 中心对齐父 bullet 中心
+     bullet-zone 拆分：左 padding-left(31) - bullet 宽(18) = 13px bullet→text 间距 */
+  --bullet-zone:       31px;          /* content padding-left 一致；bullet 永远占前 31px */
+  --bullet-size:       18px;          /* bullet border 尺寸（不变） */
+  --bullet-dot:        6px;           /* 默认黑点；hover 自身撑到 18×18 灰胶囊 */
+  --bullet-bg:         #1f1f1f;       /* 统一黑点（叶子和父节点都是这个色） */
+  --bullet-bg-hover:   #ebecec;       /* mubu hover pill 真实色 */
+  --bullet-fg-hover:   #47494b;       /* mubu hover 内部 dot 色 */
+
+  /* 节奏（按 mubu 真实 typography 量得 — Outliner-e1fc7c663a30b077.css + 9615-*.css）
+     mubu 真实：font-size 16 / line-height 1.6 / content padding 3px 0 / indent 28px
+     row 实际高 = 16 × 1.6 + 3×2 = 31.6 ≈ 32px
+     bullet→text 视觉 gap = 10px：bullet-wrapper(31) 内含 bullet-border(left:3, 18px)
+     → bullet 右 = 21px；text 起点 = 31px（紧接 bullet-wrapper 之后）= gap 10px */
+  --row-pad-y:         3px;           /* 与 mubu .content padding 上下 3px 对齐 */
+  --row-pad-x:         8px;
+  --content-pad-x:     0px;           /* text 起点 = bullet-zone 右边界（= mubu 10px gap） */
+  --bullet-to-text:    0px;           /* 见 .topic-content：现在 bullet-zone 31 已由 wrapper 占满 */
+  --indent-step:       32px;          /* 每深入一级 +32px：
+                                       32 = bullet-zone(31) + 1px 呼吸，
+                                       让 bullet-zone 不重叠，深层级有空气感
+                                       （mubu 实测 28，但 v1 视觉上 32 更舒服） */
+  --row-radius:        4px;
+  --row-font-size:     16px;          /* mubu .mm-editor 真实字号（不是 14） */
+  --row-line-height:   1.6;           /* mubu .mm-editor 真实行高 */
+  --guide-line:        #dee0e3;       /* mubu .indent-item border-left 真实色 */
+}
+
+/* ============================================================
+   base
+   ============================================================ */
+html, body {
+  margin: 0; padding: 0;
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+               Tahoma, "PingFang SC", "Microsoft YaHei",
+               "Hiragino Sans GB", sans-serif;
+  font-size: var(--row-font-size);
+  line-height: var(--row-line-height);
+  -webkit-font-smoothing: antialiased;
+}
+*, *::before, *::after { box-sizing: border-box; }
+button { font-family: inherit; }
+
+.stage {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 60px 64px 200px;
+}
+
+.kicker {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--foreground);
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  margin: 0 0 32px;
+}
+
+/* ============================================================
+   outline —— 大纲视图（思维导图视图的样式见文件底部 mindmap 区块）
+   ============================================================ */
+.outline, .outline ul { list-style: none; padding: 0; margin: 0; }
+
+.outline .topic {
+  position: relative;
+  padding: 1px 0;
+}
+
+/* 嵌套缩进：每深入一级 +var(--indent-step)
+   + 子项容器画一条浅灰竖线（mubu 标志性缩进引导线）对齐父级 bullet 中心 */
+.outline .topic .topic-children {
+  position: relative;
+  padding-left: var(--indent-step);
+}
+.outline .topic .topic-children::before {
+  content: '';
+  position: absolute;
+  /* 父 bullet 中心 = bullet-wrapper left(3) + bullet-size/2(9) = 12px
+     —— 模拟 mubu .indent-item { width:28; border-left:1px; transform:translate(11.5px) }
+     视觉上：1px 线条对齐父 bullet 中心 */
+  left: calc(3px + var(--bullet-size) / 2 - 0.5px);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--guide-line);
+}
+
+/* ----- topic-row: 一行，flex，bullet-zone 永远在左 ----- */
+.topic-row {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--row-pad-y) var(--row-pad-x);
+  border-radius: var(--row-radius);
+  transition: background 80ms;
+}
+/* 不再加全行 hover 背景：mubu 真实行为只高亮 bullet 本身，
+   全行灰条是噪音，v1 prototype 之前留下的——去掉。 */
+
+/* ----- bullet zone: 永远 31px 宽（= mubu .content padding-left），不抖 -----
+   内部 18×18 bullet-border 居中放：left:3, top:50%, transform translateY(-50%)
+   —— 模拟 mubu bullet-wrapper { position:absolute; left:3px; height:100% } */
+.bullet-wrapper {
+  width: var(--bullet-zone);          /* 31px 永远占 */
+  align-self: stretch;
+  flex-shrink: 0;
+  position: relative;
+  /* 不在 wrapper 上画 bullet；bullet-border 用 absolute 定位 */
+}
+
+/* ----- bullet-border: 18×18 hotzone，cursor: pointer -----
+   mubu 真实：width/height 18px、border-radius 9px、background #ebecec */
+.bullet-border {
+  position: absolute;
+  left: 3px;                          /* mubu bullet-wrapper left:3px */
+  top: 50%;
+  transform: translateY(-50%);        /* row 垂直居中 */
+  width: var(--bullet-size);          /* 18px */
+  height: var(--bullet-size);
+  border-radius: 9px;                 /* mubu 真实：9px（50% 也行） */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 叶子节点（无 [data-state]）= 无 children = 无折叠操作
+   bullet 视觉应该完全静止：cursor 默认、不响应 row hover 的 pill
+   —— 用 :not 直接隔离，不靠后面规则间接拒绝 */
+.topic:not([data-state]) .bullet-border,
+.topic:not([data-state]) .bullet-wrapper {
+  cursor: default;
+}
+/* 兜底：即使将来某条规则漏写 [data-state] 守卫，叶子 bullet-dot 也不会撑成 pill */
+.topic:not([data-state]) .bullet-dot {
+  width: var(--bullet-dot);
+  height: var(--bullet-dot);
+}
+.topic:not([data-state]) .bullet-dot::before {
+  content: none;
+}
+
+/* ----- bullet-dot
+   全部统一成 6×6 实心黑点（leaf 和 parent 同款），颜色用 #1f1f1f。
+   折叠操作改由 hover 撑成 18×18 灰胶囊 + 画 +/− 来表达（下面那条规则）。
+   ─────────────────────────────────────────────────────────────── */
+.bullet-dot {
+  width: var(--bullet-dot);
+  height: var(--bullet-dot);
+  border-radius: 50%;
+  background: var(--bullet-bg);
+  transition:
+    width 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+/* parent 默认状态——和叶子统一的实心黑点（hover / is-current 由下面那条覆盖） */
+.topic[data-state] > .topic-row > .bullet-wrapper > .bullet-border > .bullet-dot {
+  width: var(--bullet-dot);
+  height: var(--bullet-dot);
+  background: var(--bullet-bg);
+}
+
+/* 主题行 hover：dot 撑满整个 18×18，背景变成灰
+   ─ 关键修复：用 > 直接子级把 .topic-row 绑回 .topic 自身
+     之前用空格（后代选择器）会让祖先的 [data-state] 漏下来——
+     例如 hover "猜你喜欢"（叶子）时，祖先 "场景" 的 [data-state="open"]
+     顺着空格让本规则命中，dot 错误地撑成 pill。
+     is-current 那条原本就是 > 直接子级，所以它没事。
+   ─ 叶子节点无 data-state，规则不会命中；兜底还有 :not([data-state]) 那一组 */
+.topic[data-state] > .topic-row:hover > .bullet-wrapper > .bullet-border > .bullet-dot,
+.topic.is-current[data-state] > .topic-row > .bullet-wrapper > .bullet-border > .bullet-dot {
+  width: 100%;
+  height: 100%;
+  background: var(--bullet-bg-hover);
+  border: none;                        /* 8px ring → 18px pill 时把 1.5px border 也去掉 */
+  position: relative;
+}
+
+/* 在 hover/focus 胶囊里画 + 或 − */
+.topic[data-state] > .topic-row:hover > .bullet-wrapper > .bullet-border > .bullet-dot::before,
+.topic.is-current[data-state] > .topic-row > .bullet-wrapper > .bullet-border > .bullet-dot::before {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bullet-fg-hover);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+  transform: translateY(-0.5px);
+}
+
+/* 状态机 → 字符
+   [open]    → −   (展开态，提示"点我可以收起来")
+   [folded]  → +   (折叠态，提示"点我可以展开")
+*/
+.topic[data-state="open"]   > .topic-row:hover > .bullet-wrapper > .bullet-border > .bullet-dot::before,
+.topic.is-current[data-state="open"]   > .topic-row > .bullet-wrapper > .bullet-border > .bullet-dot::before {
+  content: "−";
+}
+.topic[data-state="folded"] > .topic-row:hover > .bullet-wrapper > .bullet-border > .bullet-dot::before,
+.topic.is-current[data-state="folded"] > .topic-row > .bullet-wrapper > .bullet-border > .bullet-dot::before {
+  content: "+";
+}
+
+/* 折叠态：子树隐藏（CSS 副作用，状态仍然是 data-state） */
+.topic[data-state="folded"] > .topic-children { display: none; }
+
+/* 折叠态：在 hover 上还是显示 +（已经由上面 ::before 解决） */
+.topic[data-state="folded"] .topic-row { opacity: 0.85; }
+
+/* ----- 内容区：可编辑 ----- */
+.topic-content {
+  flex: 1;
+  min-width: 0;
+  /* 不设上下 padding（由 .topic-row 提供），避免双倍 */
+  /* bullet-zone 31 已由 bullet-wrapper 占，文字紧贴 bullet 右边缘外侧 13px */
+  padding: 0 0 0 var(--bullet-to-text);
+  outline: none;
+  word-break: break-word;
+}
+.topic-content[contenteditable=true]:focus { outline: none; }
+
+/* 标题层级：用 ::before 加 # 标记，不改 DOM */
+.topic[data-heading="1"] > .topic-row > .topic-content { font-weight: 700; }
+.topic[data-heading="2"] > .topic-row > .topic-content { font-weight: 600; }
+.topic[data-heading="3"] > .topic-row > .topic-content { font-weight: 600; color: var(--muted-foreground); }
+
+/* drill-down：hover 圆点 → 当前 + 全部子项内容加粗
+   mubu 真实行为（.outliner-node.drilled-node .outliner-node-content）:
+   非标题从 400 → 500，标题保留原 weight（h1 700 / h2 h3 600）
+   用后代选择器 + 故意比 [data-heading] 选择器 specificity 低，
+   让标题权重不被覆盖。 */
+.topic.drill-down .topic-content { font-weight: 500; }
+
+/* ============================================================
+   底部 hint（用 m15 处理）
+   ============================================================ */
+.hint {
+  position: fixed;
+  bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: var(--accent);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.hint kbd, .mm-hint kbd {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  margin: 0 2px;
+  font-size: 11px;
+  color: var(--foreground);
+}
+
+/* ============================================================
+   selection toolbar：选区上方浮起的操作条
+   ============================================================ */
+.selection-toolbar {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 6px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 1000;
+  user-select: none;
+  transform: translateX(-50%);
+  font-family: inherit;
+  /* 默认隐藏；选区变化时由 JS 显隐 */
+}
+.selection-toolbar[hidden] { display: none; }
+
+.selection-toolbar button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0;
+  transition: background 80ms;
+}
+.selection-toolbar button:hover { background: var(--hover); }
+.selection-toolbar button.is-active { background: var(--muted); }
+
+.selection-toolbar .divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+/* 标记样式（用户在选区上应用的格式） */
+.topic-content mark { background: #FFF3A3; padding: 0 1px; border-radius: 2px; }
+.topic-content .bl-comment { background: #E8DCFF; padding: 0 1px; border-radius: 2px; }
+.topic-content code {
+  background: var(--muted);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+.topic-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================================
+   视图切换（大纲 / 思维导图）—— mubu 式分段控件，右上角常驻
+   ============================================================ */
+.view-switch {
+  position: fixed;
+  top: 16px; right: 24px;
+  z-index: 700;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  user-select: none;
+}
+.view-switch button {
+  border: 0; background: transparent; cursor: pointer;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  transition: background 120ms, color 120ms, box-shadow 120ms;
+}
+.view-switch button:hover { color: var(--foreground); }
+.view-switch button.is-active {
+  background: var(--background);
+  color: var(--foreground);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 思维导图模式：藏掉大纲舞台和快捷键 hint */
+body.mm-mode .stage,
+body.mm-mode .hint { display: none; }
+
+/* ============================================================
+   mindmap 视图
+   坐标体系：.mm-canvas 内所有节点 absolute + translate 定位，
+   pan/zoom 只动 canvas 的 transform（一处真值，节点坐标不变）
+   ============================================================ */
+.mindmap {
+  position: fixed; inset: 0;
+  z-index: 600;
+  background: var(--background);
+  overflow: hidden;
+  cursor: grab;
+}
+.mindmap[hidden] { display: none; }
+.mindmap.is-panning { cursor: grabbing; }
+
+.mm-canvas {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+}
+.mm-links {
+  position: absolute; top: 0; left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.mm-links path { fill: none; stroke-linecap: round; }
+.mm-nodes { position: absolute; top: 0; left: 0; }
+
+/* ----- markmap 引擎容器 -----
+   markmap 的缩放/平移被我们关掉（options.zoom:false / pan:false），
+   改由 .mm-mk-stage 上的 mmView transform 统一驱动 —— 两个实例各挂一个 d3.zoom 会打架。
+   两种引擎互斥显示：思维导图 → markmap；逻辑图/括号图 → 内置。 */
+.mm-mk-stage {
+  position: absolute; inset: 0;
+  transform-origin: 0 0;
+  display: none;
+}
+body[data-mm-layout='mindmap'] .mm-mk-stage { display: block; }
+body[data-mm-layout='mindmap'] .mm-links,
+body[data-mm-layout='mindmap'] .mm-nodes { display: none; }
+
+/* 两个 svg 铺满舞台并叠在一起。pointer-events 全关，
+   否则后声明的左 svg 会整块吃掉事件、右半边的节点点不到；
+   只给真正需要交互的 foreignObject / 折叠钮单独开回来。
+
+   ⚠ 盒子必须远大于舞台：svg 根元素默认 overflow:hidden，会把**自身盒子外**的内容全裁掉。
+   而我们的舞台坐标是「中心主题在原点」——左半边整片在负 x、上方分支在负 y，
+   盒子正好等于舞台的话，只剩下根右下角那一小块能看见（实测只剩右下 6 个节点）。
+   所以这里给到 5 倍并放开 overflow。 */
+.mm-mk {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.mm-mk .markmap-node > foreignObject { pointer-events: none; }
+.mm-mk .markmap-foreign > div { pointer-events: auto; }
+.mm-mk .markmap-node > circle { pointer-events: auto; cursor: pointer; }
+
+/* 左实例的根节点只用来占位（保证左右两侧的列距完全对称），不显示也不可点 */
+.mm-mk-l .markmap-node[data-depth='1'] { opacity: 0; pointer-events: none !important; }
+
+/* 左半边的镜像只差这一次翻转：
+   整棵左树的 <g> 已经挂了 scaleX(-1)（盒子、连线、文字全翻了），
+   内层 div 再翻一次把字翻回来 —— 两次翻转 = 盒子到根的另一侧，字还是正的。
+   ⚠ 千万别再给 foreignObject 或外层 div 加翻转：那是第三次，字又会翻回镜像
+   （翻转次数必须是偶数）。 */
+.mm-mk-l .markmap-foreign > div > div { transform: scaleX(-1); }
+
+/* markmap 节点是 foreignObject 里的 HTML，正好能用普通 CSS 做幕布那套视觉分层：
+   中心主题实底圆角、depth2 分支色圆角、depth3+ 纯文本。分支色由 JS 打成 --mm-c。
+
+   ⚠ 两层 div 的尺寸关系是 markmap 的硬约束，动之前先想清楚：
+     · foreignObject 宽度 = 内层 scrollWidth（`_relayout` 量出来的），
+       并且 foreignObject 会**裁掉自己盒子外的内容**
+     · 外层 div 是 markmap 写死的 `width: var(--markmap-max-width)`（默认 9999px），
+       它只是一把「无限宽的量尺」，让内层能按 max-content 定宽 —— 它自己的宽度没有意义
+   所以：所有视觉样式（内边距/底色/圆角/换行宽度）必须挂**内层**，外层一个字都别动。
+   内层宽度 == foreignObject 宽度，镜像才不会溢出被裁。
+   （试过把外层改成 width:auto 让它收缩包裹，结果 foreignObject 宽度反过来又去约束内层，
+     形成 fo.width → 内层宽度 → scrollWidth → fo.width 的死循环，整棵树塌成一字一行的细长条。） */
+.mm-mk .markmap-node {
+  font-family: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+  /* markmap 自带 `--markmap-text-color: #333`，深色主题下深层节点会黑底黑字。
+     统一吃主题的中性文字 token（--mm-node-fg，主题块里已经定义好了）。 */
+  color: var(--mm-node-fg, #333);
+}
+.mm-mk .markmap-node > foreignObject > div { text-align: left; }
+/* 内层保持 markmap 原生的 inline-block：它是 scrollWidth 的测量对象，
+   一旦改成 block 就会撑满外层，所有节点会被量成同一个宽度。 */
+.mm-mk .markmap-foreign > div > div {
+  padding: 3px 8px;
+  border-radius: 6px;
+  /* 换行宽度只挂内层：外层是 9999px 的量尺，内层在这里按 max-content 定宽，
+     280 就是节点的最大排版宽度（幕布约 240~360）。 */
+  max-width: 280px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mm-mk .markmap-node[data-mm-depth='1'] > foreignObject > div > div {
+  background: var(--mm-center, #2F6FEB);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 10px;
+  max-width: 384px;
+}
+.mm-mk .markmap-node[data-mm-depth='2'] > foreignObject > div > div {
+  background: color-mix(in srgb, var(--mm-c, #666) 14%, transparent);
+  color: var(--mm-c, #666);
+  font-weight: 600;
+}
+.mm-mk .markmap-node[data-mm-depth='3'] > foreignObject > div > div {
+  color: var(--mm-c, #666);
+  border-bottom: 1.5px solid var(--mm-c, #666);
+  border-radius: 0;
+  padding-bottom: 1px;
+}
+/* depth4+ 用中性文字：分支色在第 4 层已经够花，再上色反而难读
+   （分支归属靠连线颜色表达就够了 —— 和幕布的处理一致）。 */
+.mm-mk .markmap-node[data-mm-depth='4'] > foreignObject > div > div,
+.mm-mk .markmap-node[data-mm-depth='5'] > foreignObject > div > div,
+.mm-mk .markmap-node[data-mm-depth='6'] > foreignObject > div > div {
+  color: var(--mm-node-fg, #333);
+}
+/* markmap 模式选中节点右上方浮起的 FAB（幕布「+」入口的扩展版：子级 / 同级 / 删） */
+/* 实时连接预览线：从源节点中心 → 鼠标位置，按 drop 模式变色
+ * （蓝实线 = 有效落点；灰虚线 = 无目标；变子级 / 变兄弟仅线条粗细区分） */
+.mm-drag-line {
+  position: fixed; inset: 0; z-index: 9988;
+  pointer-events: none; overflow: visible;
+  display: none;   /* ⚠️ 默认隐藏；hidden 属性被 UA 默认 [hidden]{display:none} 压不住，必须显式声明 */
+}
+.mm-drag-line path {
+  fill: none; stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: stroke 100ms ease, stroke-width 100ms ease;
+}
+.mm-drag-line.is-child path {
+  stroke: var(--mm-center, #2F6FEB);
+  stroke-width: 2.8;
+  stroke-dasharray: none;
+}
+.mm-drag-line.is-sibling path {
+  stroke: var(--mm-center, #2F6FEB);
+  stroke-width: 2.8;
+}
+.mm-drag-line.is-none path {
+  stroke: #94a3b8;                /* 无目标 / 灰虚线 */
+  stroke-dasharray: 6 4;
+  stroke-width: 2;
+}
+/* 线条末端的小圆点（"落点"） */
+.mm-drag-line-circle { fill: var(--mm-center, #2F6FEB); transition: fill 100ms ease; }
+.mm-drag-line.is-none .mm-drag-line-circle { fill: #94a3b8; }
+
+/* ====== 抓手（六点图标）：hover 节点时显出，告诉用户"这玩意能拖" ====== */
+/* markmap 模式：单实例 fixed 定位，跟着 hover 的节点走 */
+.mm-mk-grip {
+  position: fixed; z-index: 9991;
+  width: 18px; height: 18px;
+  margin: -9px 0 0 -9px;       /* 把中心对齐到节点右上角 */
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 100ms ease;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+}
+.mm-mk-grip.is-visible { opacity: 1; }
+.mm-mk-grip:hover { transform: scale(1.15); background: var(--mm-center, #2F6FEB); }
+.mm-mk-grip:active { cursor: grabbing; }
+.mm-mk-grip svg { width: 12px; height: 12px; fill: currentColor; }
+/* 内置引擎：抓手是节点的子元素，纯 CSS 控显隐 */
+.mm-node .mm-grip {
+  position: absolute; top: -8px; right: -8px;
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 100ms ease;
+  pointer-events: auto;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+}
+.mm-node:hover .mm-grip,
+.mm-node.is-selected .mm-grip { opacity: 1; }
+.mm-node .mm-grip:hover { transform: scale(1.15); background: var(--mm-center, #2F6FEB); }
+.mm-node .mm-grip:active { cursor: grabbing; }
+.mm-node .mm-grip svg { width: 12px; height: 12px; fill: currentColor; }
+
+/* markmap 模式：drop 完 / 撤销重做 / 错误提示用的右下角 toast */
+.mm-toast {
+  position: fixed; right: 24px; bottom: 70px; z-index: 9992;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 6px 8px 14px;
+  background: rgba(15, 23, 42, 0.92); color: #fff;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500; line-height: 1.4;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(6px);
+  animation: mm-toast-in 160ms cubic-bezier(.2, .8, .2, 1);
+  pointer-events: auto;
+}
+@keyframes mm-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.mm-toast-msg { white-space: pre-wrap; }
+.mm-toast-undo {
+  border: 0; background: rgba(255, 255, 255, 0.14); color: #fff;
+  font-size: 12px; font-weight: 600; line-height: 1;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer;
+  font-family: inherit;
+  transition: background 100ms ease;
+}
+.mm-toast-undo:hover { background: rgba(255, 255, 255, 0.22); }
+
+.mm-fab {
+  position: fixed; z-index: 9991;
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px; border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25), 0 1px 2px rgba(15, 23, 42, 0.1);
+  transform: translate(-50%, -100%);     /* 默认按节点顶部居中放，再按节点右侧贴 */
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  animation: mm-fab-in 120ms ease-out;
+}
+.mm-fab[hidden] { display: none; }
+@keyframes mm-fab-in { from { opacity: 0; transform: translate(-50%, -90%); } to { opacity: 1; transform: translate(-50%, -100%); } }
+.mm-fab-btn {
+  border: 0; background: transparent; color: #fff;
+  font-size: 12px; font-weight: 600; line-height: 1;
+  padding: 6px 10px; border-radius: 999px; cursor: pointer;
+  font-family: inherit;
+  transition: background 100ms ease;
+}
+.mm-fab-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.mm-fab-btn.is-danger { color: #ffb3b3; }
+.mm-fab-btn.is-danger:hover { background: rgba(255, 99, 99, 0.22); color: #fff; }
+.mm-fab-sep { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.18); margin: 0 2px; }
+
+/* ====== 视觉态：hover / 选中（幕布那种深色填充，而不是浅 outline） ====== */
+/* 根节点本身就是深色填充（见 data-mm-depth='1'），hover/选中时再加深+轻微放大 */
+.mm-mk .markmap-node[data-mm-depth='1'].is-mm-hover > foreignObject > div > div,
+.mm-mk .markmap-node[data-mm-depth='1'].is-mm-selected > foreignObject > div > div {
+  filter: brightness(1.08) drop-shadow(0 6px 14px rgba(47, 111, 235, 0.35));
+  transform: translateY(-1px);
+}
+/* 一级分支（depth 2）：默认浅色填充 → hover 加深，选中变实心 + 白字 */
+.mm-mk .markmap-node[data-mm-depth='2'].is-mm-hover > foreignObject > div > div {
+  background: color-mix(in srgb, var(--mm-c, #666) 26%, transparent);
+}
+.mm-mk .markmap-node[data-mm-depth='2'].is-mm-selected > foreignObject > div > div {
+  background: var(--mm-c, #666);
+  color: #fff !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--mm-c, #666) 35%, transparent);
+}
+/* depth 3：默认仅下边框 + 文字色 → hover 给底色，选中给底色 + 白字 */
+.mm-mk .markmap-node[data-mm-depth='3'].is-mm-hover > foreignObject > div > div {
+  background: color-mix(in srgb, var(--mm-c, #666) 12%, transparent);
+}
+.mm-mk .markmap-node[data-mm-depth='3'].is-mm-selected > foreignObject > div > div {
+  background: var(--mm-c, #666);
+  color: #fff !important;
+  border-bottom-color: transparent !important;
+  border-radius: 6px;
+  padding: 3px 10px !important;
+}
+/* depth 4+：选中用主题中心色填充（与中心主题同色，但描边区分） */
+.mm-mk .markmap-node[data-mm-depth='4'].is-mm-selected > foreignObject > div > div,
+.mm-mk .markmap-node[data-mm-depth='5'].is-mm-selected > foreignObject > div > div,
+.mm-mk .markmap-node[data-mm-depth='6'].is-mm-selected > foreignObject > div > div {
+  background: var(--mm-center, #2F6FEB);
+  color: #fff !important;
+  border-radius: 6px;
+  padding: 3px 10px;
+}
+/* 拖拽时 dim 非候选节点 —— 跟手时只让目标凸显（焦点感） */
+body.mm-dragging .mm-mk .markmap-node:not(.is-mm-target):not(.is-mm-selected) > foreignObject > div > div {
+  opacity: 0.35;
+  transition: opacity 120ms ease;
+}
+/* 拖拽时目标节点自己再亮一档（hover preview） */
+.mm-mk .markmap-node.is-mm-target > foreignObject > div > div {
+  filter: brightness(1.06) drop-shadow(0 6px 16px color-mix(in srgb, var(--mm-center, #2F6FEB) 40%, transparent));
+  transform: translateY(-1px);
+}
+/* 节点轻微阴影（卡片化） —— 不在中心主题上，免得跟填充色抢 */
+.mm-mk .markmap-node:not([data-mm-depth='1']):not(.is-mm-selected) > foreignObject > div > div {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.mm-mk .markmap-foreign [contenteditable='true'] {
+  outline: 2px dashed var(--mm-center, #2F6FEB);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+/* ----- markmap 拖拽改层级：跟手的幽灵节点 + 落点指示 ----- */
+body.mm-dragging { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+body.mm-dragging .mm-mk { cursor: grabbing; }
+.mm-drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 9990;
+  max-width: 260px; padding: 4px 10px;
+  background: var(--mm-center, #2F6FEB); color: #fff;
+  border-radius: 6px; font-size: 13px; font-weight: 600; line-height: 1.45;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  pointer-events: none; opacity: 0.94;
+}
+/* 复制模式：加个"⊕ 副本"小角标 + 虚线边（和兄弟指示呼应） */
+.mm-drag-ghost.is-copy {
+  background: #fff; color: var(--mm-center, #2F6FEB);
+  border: 2px dashed var(--mm-center, #2F6FEB);
+  padding-left: 28px;
+  position: fixed;        /* 重声明以挂 ::before */
+}
+.mm-drag-ghost.is-copy::before {
+  content: '⊕'; position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; font-weight: 700;
+}
+.mm-drag-bar {
+  position: fixed; z-index: 9989; box-sizing: border-box; pointer-events: none;
+}
+/* 「变成子级」→ 套一圈虚线框 */
+.mm-drag-bar.is-ring {
+  border: 3px dashed var(--mm-center, #2F6FEB);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--mm-center, #2F6FEB) 9%, transparent);
+}
+/* 命中折叠中的父：虚线更明显，叠加 ⊕「展开后」角标 */
+.mm-drag-bar.is-ring.is-folded {
+  border-style: dashed;
+  border-width: 2.5px;
+  background: color-mix(in srgb, var(--mm-center, #2F6FEB) 14%, transparent);
+}
+/* 「变成兄弟」→ 一条插入横线（放大版：8px + 三角 + ⊕ 角标） */
+.mm-drag-bar.is-line {
+  height: 8px; border-radius: 4px;
+  background: var(--mm-center, #2F6FEB);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--mm-center, #2F6FEB) 50%, transparent);
+  overflow: visible;        /* 让 ::before/::after 三角不被裁 */
+}
+/* 两端三角：用纯 CSS 伪元素，不靠 JS 注入 DOM */
+.mm-drag-bar.is-line::before,
+.mm-drag-bar.is-line::after {
+  content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+  border: 6px solid transparent;
+}
+.mm-drag-bar.is-line::before { left: -10px; border-right-color: var(--mm-center, #2F6FEB); border-left: 0; }
+.mm-drag-bar.is-line::after  { right: -10px; border-left-color: var(--mm-center, #2F6FEB); border-right: 0; }
+/* 兄弟指示的 ⊕ 角标：深色胶囊 + 三角箭头指向横线 */
+.mm-drag-bar.is-line .mm-bar-badge {
+  position: absolute;
+  right: -64px; top: 50%; transform: translateY(-50%);
+  background: rgba(15, 23, 42, 0.92); color: #fff;
+  font-size: 11px; font-weight: 600; line-height: 1;
+  padding: 5px 9px; border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+}
+.mm-drag-bar.is-line .mm-bar-badge.is-copy { background: var(--mm-center, #2F6FEB); }
+.mm-drag-bar.is-line .mm-bar-badge::after {
+  content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+  border: 4px solid transparent; border-right-color: rgba(15, 23, 42, 0.92);
+}
+.mm-drag-bar.is-line .mm-bar-badge.is-copy::after { border-right-color: var(--mm-center, #2F6FEB); }
+
+/* 折叠态的兄弟指示：用虚线 + ⊕ 角标写「N 项」 */
+.mm-drag-bar.is-line.is-folded {
+  background: transparent;
+  border: 2px dashed var(--mm-center, #2F6FEB);
+  height: auto;
+}
+.mm-drag-bar.is-line.is-folded::before { border-right-color: var(--mm-center, #2F6FEB); }
+.mm-drag-bar.is-line.is-folded::after  { border-left-color: var(--mm-center, #2F6FEB); }
+/* 折叠迷你预览角标：包一个 div 进去显示「展开后 N 个子节点」 */
+.mm-drag-bar.is-line .mm-bar-mini {
+  position: absolute; right: -78px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 6px 8px 6px 10px;
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  min-width: 70px;
+}
+.mm-drag-bar.is-line .mm-bar-mini::after {
+  content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+  border: 4px solid transparent; border-right-color: rgba(15, 23, 42, 0.92);
+}
+.mm-drag-bar.is-line .mm-bar-mini .mini-title {
+  font-size: 10px; font-weight: 600; color: #fff;
+  letter-spacing: 0.5px; opacity: 0.7;
+  margin-bottom: 1px;
+}
+.mm-drag-bar.is-line .mm-bar-mini .mini-row {
+  height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.32);
+}
+.mm-drag-bar.is-line .mm-bar-mini .mini-row:nth-child(2) { width: 80%; }
+.mm-drag-bar.is-line .mm-bar-mini .mini-row:nth-child(3) { width: 64%; }
+.mm-drag-bar.is-line .mm-bar-mini .mini-row:nth-child(4) { width: 72%; }
+
+/* ----- 节点 -----
+   mubu 默认主题三层视觉：
+   depth-0 中心主题：主色实底白字
+   depth-1 一级分支：分支色实底白字
+   depth-2+ ：无框纯文本（mubu 标志性），连线带分支色 */
+.mm-node {
+  position: absolute; top: 0; left: 0;
+  display: flex; align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  --branch: #2F6FEB;
+}
+.mm-node .mm-text {
+  /* ⚠️ width: max-content 是必须的：.mm-nodes 是 absolute 无宽度容器（宽=0），
+     节点的 shrink-to-fit 可用宽为 0 → 会塌到 min-content（中文=1字/行，全竖排）。
+     max-content 让文本盒按内容定宽（超过 max-width 才换行），
+     节点的 min-content 贡献随之正确 → offsetWidth 测量才可信。 */
+  width: max-content;
+  /* ⚠️ 这个上限直接决定整张图能不能"看得全"：思维导图是按深度分列的，
+     某一列里只要有一个超长 topic，maxW[列] 就会把后面所有列整体推远，
+     包围盒跟着涨一倍、fit 缩到 20% 出头，文字小到读不了。
+     幕布的做法是 topic 换行、列宽收紧 —— 这里 15 个汉字左右一行。 */
+  max-width: 240px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-width: 1em;
+  /* ⚠️ min-height 必须给：contentEditable 空 div 高度会塌成 0 → 节点比兄弟矮，
+     tidy tree 里"父居中于子"就算错位（新建未输入的节点尤其明显）。
+     1.5em = 单行行高，保证空节点与有字节点同高。 */
+  min-height: 1.5em;
+  outline: none;
+}
+/* 新建但还没输入文字的空节点：给一个像样的最小宽度，
+   否则节点盒只有 padding 宽 → 折叠钮会压到父级文字上 */
+.mm-node.is-empty .mm-text { min-width: 3.5em; }
+.mm-node.mm-depth-0 {
+  background: var(--branch);                 /* = 主题中心色（JS 给根节点注入 --branch） */
+  color: var(--mm-center-fg, #fff);
+  font-size: 18px; font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 10px;
+  max-width: 360px;                          /* 中心主题字号最大，可以宽一点 */
+  box-shadow: var(--mm-center-shadow, 0 2px 8px rgba(47, 111, 235, 0.25));
+}
+.mm-node.mm-depth-1 {
+  background: var(--branch);
+  color: var(--mm-branch-fg, #fff);
+  font-size: 15px; font-weight: 600;
+  padding: 6px 12px;
+}
+.mm-node.mm-depth-2 {
+  background: transparent;
+  color: var(--mm-node-fg, var(--foreground));
+  font-size: 14px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+/* 幕布标志性细节：叶子节点用「下划线」而不是胶囊/边框，
+   让无限延伸的末端层级在视觉上退到背景里。 */
+.mm-node.is-leaf.mm-depth-2 .mm-text,
+.mm-node.is-leaf.mm-depth-3 .mm-text {
+  border-bottom: 1px solid var(--mm-guide, #d8d8d8);
+  padding-bottom: 1px;
+}
+.mm-node[data-heading] .mm-text { font-weight: 600; }
+
+/* 选中 / 编辑：双环（内白外分支色），mubu 选中框风格 */
+.mm-node.is-selected,
+.mm-node.is-editing {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--branch);
+}
+.mm-node.is-editing { cursor: text; }
+.mm-node.is-editing .mm-text { user-select: text; cursor: text; }
+
+/* hover：底色稍微深一档，给拖拽一个明确的「起点感」 */
+.mm-node:not(.is-selected):not(.is-editing):not(.is-dragging):hover {
+  filter: brightness(0.97);
+}
+/* depth-2（透明底）的节点：hover 给个浅色块 */
+.mm-node.mm-depth-2:not(.is-selected):not(.is-editing):not(.is-dragging):hover {
+  background: color-mix(in srgb, var(--branch) 10%, transparent);
+}
+
+/* 拖动中：抬到最上层 + 轻微放大投影，让"被搬起的纸片"感明确 */
+.mm-node.is-dragging {
+  z-index: 30;
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  opacity: 0.92;
+}
+
+/* hover：和 markmap 的 .is-mm-hover 对齐 —— 让用户清楚「这块能交互」。
+   内置引擎之前只有抓手亮，节点本体没反应，体感比 markmap 模式冷一截。 */
+.mm-node:not(.is-selected):not(.is-dragging):hover {
+  background-color: var(--mm-mute, rgba(0, 0, 0, 0.04));
+}
+
+/* 拖完落点（短暂闪现一下原位置）：让用户看出位移幅度，
+   等同 markmap 模式 drop-toast 的视觉锚点。 */
+.mm-node.is-dropped-from {
+  outline: 2px dashed var(--mm-center, #2F6FEB);
+  outline-offset: 2px;
+  animation: mm-drop-fade 600ms ease-out forwards;
+}
+@keyframes mm-drop-fade {
+  from { opacity: 0.85; }
+  to { opacity: 0; }
+}
+
+/* drop anchor：跟节点本体尺寸一致的虚线框，原位闪现 ~600ms */
+.mm-drop-anchor {
+  position: absolute;
+  border: 1.5px dashed var(--mm-center, #2F6FEB);
+  border-radius: 6px;
+  pointer-events: none;
+  animation: mm-anchor-fade 600ms ease-out forwards;
+}
+@keyframes mm-anchor-fade {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+/* ----- 折叠钮：幕布风格（灰圆 / 折叠态显示后代数）
+   --fx/--fy = 按钮中心相对本节点盒左上角的偏移，由 mmDrawLinks 写入：
+   --fx = 节点朝向父节点那一侧的边缘（子在右 → 右缘 w；子在左 → 左缘 0）
+   --fy = 节点垂直中点。这样按钮跨坐在自己那一侧的边缘上，永不压正文。 ----- */
+.mm-fold {
+  position: absolute;
+  left: var(--fx, -9px);
+  top: var(--fy, 50%);
+  transform: translate(-50%, -50%);
+  min-width: 17px; height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  /* 幕布：浅灰实心圆 + 深灰字，展开态是减号、折叠态是后代数 */
+  background: #d0d0d0;
+  border: 0;
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 120ms, transform 120ms;
+}
+.mm-fold[hidden] { display: none; }
+.mm-fold:hover { background: #a8a8a8; transform: translate(-50%, -50%) scale(1.15); }
+/* 折叠态：数字按钮也是灰圆，但要更实一点（幕布同色同宽） */
+.mm-node.is-folded .mm-fold { background: #b4b4b4; }
+
+/* ----- 右下角缩放控件 ----- */
+.mm-controls {
+  position: absolute; right: 20px; bottom: 20px;
+  z-index: 650;
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  user-select: none;
+}
+.mm-controls button {
+  border: 0; background: transparent; cursor: pointer;
+  min-width: 30px; height: 30px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--foreground);
+  display: flex; align-items: center; justify-content: center;
+}
+.mm-controls button:hover { background: var(--hover); }
+.mm-controls .mm-pct { font-size: 12px; color: var(--muted-foreground); min-width: 44px; }
+.mm-controls .mm-divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
+/* ============================================================
+   展示主题（mubu / Effie 式主题切换）
+   主题 = 两处真值：
+   ① CSS：body[data-mm-theme] 覆盖设计 token —— 画布 / 控件 /
+      view-switch / hint 全部自动跟随（含深色主题）
+   ② JS：MM_THEMES[key].center + palette —— 中心主题色 / 分支色轮
+   属性只在思维导图模式挂载（setView 管理），大纲视图恒浅色不受影响
+   ink（蓝墨）= 默认 token，无覆盖块
+   ============================================================ */
+body[data-mm-theme="dark"] {
+  --background: #17191f;
+  --foreground: #e6e8ee;
+  --muted: #23262f;
+  --muted-foreground: #9aa0ae;
+  --border: #2c2f3a;
+  --hover: #262a34;
+  --accent: #1f222b;
+  --mm-branch-fg: #14161c;           /* 深色主题的亮色分支上用深字 */
+  --mm-node-fg: #d6d9e2;
+  --mm-center-fg: #fff;
+  --mm-center-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+body[data-mm-theme="macaron"] {
+  --background: #fbf8f3;
+  --foreground: #57506a;
+  --muted: #f3eee3;
+  --muted-foreground: #a298b0;
+  --border: #ece4d8;
+  --hover: #f2ecdf;
+  --accent: #f6f1e7;
+  --mm-branch-fg: #4a4458;           /* 粉彩底 → 深字才可读 */
+  --mm-node-fg: #6b6478;
+  --mm-center-fg: #fff;
+  --mm-center-shadow: 0 2px 8px rgba(155, 140, 245, 0.35);
+}
+body[data-mm-theme="mono"] {
+  --background: #fafafa;
+  --foreground: #35383d;
+  --muted: #f0f0f0;
+  --muted-foreground: #8a8f98;
+  --border: #e3e3e3;
+  --hover: #ececec;
+  --accent: #f4f4f4;
+  --mm-branch-fg: #fff;
+  --mm-node-fg: #4a4f57;
+  --mm-center-fg: #fff;
+  --mm-center-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+body[data-mm-theme="forest"] {
+  --background: #f7faf5;
+  --foreground: #2e3d33;
+  --muted: #edf3e9;
+  --muted-foreground: #7d8a7f;
+  --border: #e0e8db;
+  --hover: #e9f0e3;
+  --accent: #f1f5ee;
+  --mm-branch-fg: #fff;
+  --mm-node-fg: #415046;
+  --mm-center-fg: #fff;
+  --mm-center-shadow: 0 2px 8px rgba(47, 158, 99, 0.3);
+}
+
+/* ----- mm 模式快捷键 hint（底部 pill；在 .mindmap 内 → 只随导图模式出现） ----- */
+.mm-hint {
+  position: absolute;
+  bottom: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 640;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  user-select: none;
+  pointer-events: none;               /* 不挡平移 */
+}
+
+/* ----- 主题选择器弹层 ----- */
+.mm-theme-pop {
+  position: absolute; right: 20px; bottom: 64px;
+  z-index: 660;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 150px;
+  padding: 6px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  user-select: none;
+}
+.mm-theme-pop[hidden] { display: none; }
+.mm-theme-item {
+  display: flex; align-items: center; gap: 8px;
+  border: 0; background: transparent; cursor: pointer;
+  padding: 6px 8px; border-radius: 8px;
+  font-size: 13px; color: var(--foreground);
+  text-align: left; font-family: inherit;
+}
+.mm-theme-item:hover { background: var(--hover); }
+.mm-theme-swatch {
+  width: 34px; height: 14px; border-radius: 7px; flex-shrink: 0;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+}
+.mm-theme-item .tick {
+  margin-left: auto; font-size: 12px;
+  color: var(--primary); visibility: hidden;
+}
+.mm-theme-item.is-active .tick { visibility: visible; }
+
+/* ----- 结构选择器缩略图（纯 CSS 画三种结构，和主题 swatch 同一视觉语言） ----- */
+.mm-layout-ico {
+  width: 34px; height: 18px; flex-shrink: 0;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 5px;
+  position: relative;
+  background: var(--background);
+}
+.mm-layout-ico i {           /* 节点方块 */
+  position: absolute; width: 5px; height: 3px; border-radius: 1.5px;
+  background: var(--foreground); opacity: 0.55;
+}
+.mm-layout-ico s {           /* 连线 */
+  position: absolute; height: 1px; background: var(--foreground);
+  opacity: 0.3; transform-origin: 0 50%;
+}
+/* 思维导图：中心节点居中，两侧各一个分支 */
+.mm-ico-mindmap i:nth-child(1) { left: 14px; top: 7px; width: 6px; }
+.mm-ico-mindmap i:nth-child(2) { left: 3px;  top: 3px; }
+.mm-ico-mindmap i:nth-child(3) { left: 3px;  top: 12px; }
+.mm-ico-mindmap i:nth-child(4) { left: 25px; top: 3px; }
+.mm-ico-mindmap i:nth-child(5) { left: 25px; top: 12px; }
+.mm-ico-mindmap s:nth-child(1) { left: 8px; top: 5px;  width: 6px; }
+.mm-ico-mindmap s:nth-child(2) { left: 8px; top: 12px; width: 6px; }
+.mm-ico-mindmap s:nth-child(3) { left: 20px; top: 5px;  width: 6px; }
+.mm-ico-mindmap s:nth-child(4) { left: 20px; top: 12px; width: 6px; }
+/* 逻辑图：根在左，子级右向一层 */
+.mm-ico-logic i:nth-child(1) { left: 3px; top: 7px; width: 6px; }
+.mm-ico-logic i:nth-child(2) { left: 18px; top: 3px; }
+.mm-ico-logic i:nth-child(3) { left: 18px; top: 8px; }
+.mm-ico-logic i:nth-child(4) { left: 18px; top: 13px; }
+.mm-ico-logic s:nth-child(1) { left: 9px; top: 9px;  width: 9px; }
+.mm-ico-logic s:nth-child(2) { left: 9px; top: 6px;  width: 8px; transform: rotate(-28deg); }
+.mm-ico-logic s:nth-child(3) { left: 9px; top: 11px; width: 8px; transform: rotate(24deg); }
+/* 括号图：根在左，右边一条竖括号 */
+.mm-ico-bracket i:nth-child(1) { left: 3px; top: 7px; width: 6px; }
+.mm-ico-bracket i:nth-child(2) { left: 21px; top: 2px; }
+.mm-ico-bracket i:nth-child(3) { left: 21px; top: 7px; }
+.mm-ico-bracket i:nth-child(4) { left: 21px; top: 12px; }
+.mm-ico-bracket s:nth-child(1) { left: 9px; top: 8px;  width: 7px; }
+.mm-ico-bracket s:nth-child(2) { left: 16px; top: 3px;  width: 1px; height: 12px; }
+.mm-ico-bracket s:nth-child(3) { left: 16px; top: 3px;  width: 5px; }
+.mm-ico-bracket s:nth-child(4) { left: 16px; top: 14px; width: 5px; }
+.mm-ico-bracket s:nth-child(5) { left: 16px; top: 8px;  width: 5px; }
+</style>
+</head>
+<body>
+
+<main class="stage">
+  <div class="kicker">Folding prototype · v1 · outline + mindmap</div>
+  <h1>推荐策略体系知识点</h1>
+  <p class="subtitle">303 条主题 · 5.4k 字</p>
+
+  <ul class="outline" id="outline"></ul>
+</main>
+
+<!-- 视图切换：大纲 / 思维导图（mubu 式，右上角常驻，两个模式都可见） -->
+<div class="view-switch" id="view-switch" role="tablist" aria-label="视图切换">
+  <button type="button" data-view="outline" class="is-active" role="tab" aria-selected="true">大纲</button>
+  <button type="button" data-view="mindmap" role="tab" aria-selected="false">思维导图</button>
+</div>
+
+<!-- 思维导图视图（默认隐藏；数据 = 大纲 DOM 实时快照） -->
+<div class="mindmap" id="mindmap" hidden>
+  <!-- 思维导图引擎：markmap（d3-flextree 树布局）。
+       ⚠ 必须放在 .mm-canvas **外面**：.mm-canvas 挂的是内置引擎的节点层，
+       两套引擎靠 body[data-mm-layout] 互斥显示。
+
+       幕布是「中心主题 + 左右双侧展开」，而 markmap 原生只有单向（根在左、子全在右）。
+       d3-flextree 本身没有双侧模式，与其去改它的坐标（会连带把连线算错），
+       不如**拆成两个 Markmap 实例**：
+         · 右实例 = 根 + 后半段一级分支，原样渲染
+         · 左实例 = 根 + 前半段一级分支，整棵 <g> 做 scaleX(-1) 镜像，
+                    文字层再用一层 scaleX(-1) 反镜像回来（双反 = 正常显示）
+       两边根节点尺寸天然一致，各自的子树也各自垂直居中在根上，
+       对齐后就是标准幕布：中心主题在正中，左半支右半支对称展开。
+       markmap 自带的 d3.zoom 关掉（zoom:false/pan:false），
+       平移缩放统一交给 .mm-mk-stage 上我们自己的 mmView —— 否则两个实例各挂一个 zoom 会打架。 -->
+  <div class="mm-mk-stage" id="mm-mk-stage">
+    <svg class="mm-mk mm-mk-r" id="mm-mk-r" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="mm-mk mm-mk-l" id="mm-mk-l" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="mm-canvas" id="mm-canvas">
+    <svg class="mm-links" id="mm-svg" xmlns="http://www.w3.org/2000/svg"><g id="mm-links-g"></g></svg>
+    <div class="mm-nodes" id="mm-nodes"></div>
+  </div>
+  <div class="mm-controls" id="mm-controls">
+    <button type="button" id="mm-zoom-out" title="缩小">−</button>
+    <button type="button" id="mm-zoom-pct" class="mm-pct" title="恢复 100%">100%</button>
+    <button type="button" id="mm-zoom-in" title="放大">＋</button>
+    <span class="mm-divider"></span>
+    <button type="button" id="mm-fit" title="适应画布">适应</button>
+    <span class="mm-divider"></span>
+    <button type="button" id="mm-tidy" title="整理布局（清除手动拖动的位置）">整理</button>
+    <span class="mm-divider"></span>
+    <!-- 2026-10-12：导图结构切换器已下线（只保留 mindmap），但 mm-layout-btn 这个 id
+         在多处代码仍被引用（mmSyncLayoutUI / mmLayoutPop / document.getElementById('mm-layout-btn')），
+         留一个 hidden 节点占位 + 事件不挂，避免连带改动。 -->
+    <button type="button" id="mm-layout-btn" title="导图结构" hidden>☰</button>
+    <span class="mm-divider"></span>
+    <button type="button" id="mm-theme-btn" title="展示主题">🎨</button>
+  </div>
+  <div class="mm-theme-pop" id="mm-theme-pop" hidden></div>
+  <div class="mm-theme-pop" id="mm-layout-pop" hidden></div>
+  <div class="mm-hint">
+    <kbd>↑↓←→</kbd> 导航 · <kbd>Tab</kbd> 新建子级 · <kbd>Enter</kbd> 新建同级 · <kbd>Alt+←/→</kbd> 提级/降级 · <kbd>F2</kbd> 编辑
+    · <kbd>Del</kbd> 删除（子级保留） · <kbd>⌘/Ctrl C·X·V</kbd> 子树复制剪切粘贴 · <kbd>Ctrl</kbd>+<kbd>.</kbd> 折叠
+    · <kbd>☰</kbd> 切换结构（思维导图 / 逻辑图 / 括号图）
+  </div>
+  <!-- 实时连接预览线（从源节点中心到鼠标，按 drop 模式变色） -->
+  <svg class="mm-drag-line" id="mm-drag-line" hidden aria-hidden="true">
+    <path id="mm-drag-line-path" d=""/>
+  </svg>
+  <!-- markmap 模式：抓手（跟着 hover 节点走，mmMkPositionGrip 改 left/top） -->
+  <div class="mm-mk-grip" id="mm-mk-grip" hidden role="button" aria-label="拖动节点" title="拖动改变结构">
+    <svg viewBox="0 0 12 12" aria-hidden="true">
+      <circle cx="2" cy="2" r="1.3"/><circle cx="6" cy="2" r="1.3"/><circle cx="10" cy="2" r="1.3"/>
+      <circle cx="2" cy="6" r="1.3"/><circle cx="6" cy="6" r="1.3"/><circle cx="10" cy="6" r="1.3"/>
+      <circle cx="2" cy="10" r="1.3"/><circle cx="6" cy="10" r="1.3"/><circle cx="10" cy="10" r="1.3"/>
+    </svg>
+  </div>
+  <!-- markmap 模式：选中节点右上角浮起一组「+」入口（鼠标流 / 触屏流） -->
+  <div class="mm-fab" id="mm-fab" hidden>
+    <button type="button" class="mm-fab-btn" data-act="child" title="新建子级（Tab）">+ 子级</button>
+    <button type="button" class="mm-fab-btn" data-act="sibling" title="新建同级（Enter）">+ 同级</button>
+    <span class="mm-fab-sep"></span>
+    <button type="button" class="mm-fab-btn is-danger" data-act="delete" title="删除（Delete）">删</button>
+  </div>
+</div>
+
+<!-- selection toolbar（选区上方浮起） -->
+<div class="selection-toolbar" id="selection-toolbar" hidden role="toolbar" aria-label="选区操作">
+  <button data-cmd="bold" title="粗体 · ⌘B" style="font-weight:700">B</button>
+  <button data-cmd="italic" title="斜体 · ⌘I" style="font-style:italic;font-family:Georgia,serif">I</button>
+  <button data-cmd="underline" title="下划线 · ⌘U" style="text-decoration:underline">U</button>
+  <button data-cmd="strikeThrough" title="删除线" style="text-decoration:line-through">S</button>
+  <span class="divider"></span>
+  <button data-cmd="highlight" title="高亮" aria-label="高亮">
+    <span style="background:#FFF3A3;padding:0 4px;border-radius:2px">A</span>
+  </button>
+  <button data-cmd="comment" title="评论" aria-label="评论">
+    <span style="background:#E8DCFF;padding:0 4px;border-radius:2px">A</span>
+  </button>
+  <span class="divider"></span>
+  <button data-cmd="h1" title="切换标题 1" style="font-weight:700">H₁</button>
+  <span class="divider"></span>
+  <button data-cmd="link" title="插入链接 · ⌘K" aria-label="链接">🔗</button>
+  <button data-cmd="code" title="行内代码 · ⌘E" aria-label="代码" style="font-family:ui-monospace,Menlo,monospace">&lt;/&gt;</button>
+</div>
+
+<div class="hint">
+  <kbd>Ctrl</kbd>+<kbd>.</kbd> 折叠当前
+  · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> 同级
+  · <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> 按级
+  · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>.</kbd> 全部
+</div>
+
+<!-- 布局引擎有两套，按「切换结构」里选的结构二选一：
+       · 思维导图（双侧）→ markmap（d3-flextree 树布局，走 jsDelivr 的 +esm 端点动态 import）
+       · 逻辑图 / 括号图  → 本文件内置的 tidy tree 引擎（markmap 做不了这两种）
+     （中途试过 elkjs：ELK 的 layered 是给 DAG 用的 Sugiyama 分层，对树没有优势，
+       而且它是异步的 —— 和同步布局两套坐标系叠加会让画面在重排后二次跳变、
+       根节点与半区错位。simple-mind-map 也不行：最新版 mindMap 布局初始化崩溃。） -->
+
+<script>
+/* ============================================================
+ * 数据 + 状态机
+ *   .topic[data-state="open"]    显示子树
+ *   .topic[data-state="folded"]  隐藏子树
+ *   .topic.is-current            进入主题（Mubu drill-down 简化版：
+ *                                  把光标留在那里，胶囊常驻用于看 − 提示）
+ * ============================================================ */
+const DATA = [
+  { id: 't1', heading: 0, text: '策略实现的思路', children: [
+    { id: 't1-1', heading: 0, text: '结合业务及场景，明确核心问题及目标', children: [
+      { id: 't1-1-1', heading: 1, text: '场景', children: [
+        { id: 't1-1-1a', text: '猜你喜欢' },
+        { id: 't1-1-1b', text: '相关推荐' },
+      ]},
+      { id: 't1-1-2', heading: 1, text: '目标设计', children: [
+        { id: 't1-1-2a', text: '综合考虑多模型' },
+      ]},
+      { id: 't1-1-3', heading: 1, text: '用户', children: [
+        { id: 't1-1-3a', text: '消费者' },
+        { id: 't1-1-3b', text: '平台' },
+      ]},
+    ]},
+    { id: 't1-2', text: '基于数据及用户明确问题及痛点', children: [
+      { id: 't1-2-1', text: '问题归因' },
+    ]},
+    { id: 't1-3', text: '方案假设及验证' },
+    { id: 't1-4', text: '策略上线及放量' },
+    { id: 't1-5', text: '复盘及迭代' },
+  ]},
+  { id: 't2', heading: 1, text: '推荐系统的作用', children: [
+    { id: 't2-1', text: '高效的流量分发' },
+    { id: 't2-2', text: '助力于生态的建设' },
+  ]},
+  { id: 't3', heading: 0, text: '数据处理', children: [
+    { id: 't3-1', text: '业务调研' },
+    { id: 't3-2', text: '数据调研', children: [
+      { id: 't3-2-1', text: '埋点调研' },
+      { id: 't3-2-2', text: '画像标签调研' },
+    ]},
+    { id: 't3-3', text: '物料', children: [
+      { id: 't3-3-1', text: '物料类型' },
+      { id: 't3-3-2', text: '用户' },
+      { id: 't3-3-3', text: '物料' },
+      { id: 't3-3-4', text: '用户与物料交互行为' },
+    ]},
+    { id: 't3-4', text: '索引类型', children: [
+      { id: 't3-4-1', text: '倒排索引' },
+      { id: 't3-4-2', text: '正派索引' },
+    ]},
+    { id: 't3-5', text: '数据处理方法论', children: [
+      { id: 't3-5-1', text: '整合' },
+      { id: 't3-5-2', text: '过滤' },
+      { id: 't3-5-3', text: '补全' },
+      { id: 't3-5-4', text: '归一化和标准化' },
+    ]},
+  ]},
+  { id: 't4', heading: 2, text: '特征' },
+  { id: 't5', heading: 2, text: '画像' },
+  { id: 't6', heading: 2, text: '召回' },
+  { id: 't7', heading: 3, text: '粗排' },
+  { id: 't8', heading: 3, text: '过滤' },
+  { id: 't9', heading: 3, text: '精排' },
+  { id: 't10', heading: 3, text: '重排' },
+  { id: 't11', heading: 2, text: '前端' },
+  { id: 't12', heading: 2, text: '策略评估' },
+  { id: 't13', heading: 2, text: '策略制定过程中其他要考虑的内容' },
+  { id: 't14', heading: 1, text: '整体推荐机制' },
+];
+
+/* ============================================================
+ * 渲染
+ * ============================================================ */
+function buildTopic(node, depth) {
+  const hasChildren = !!(node.children && node.children.length);
+  const li = document.createElement('li');
+  li.className = 'topic';
+  li.dataset.id = node.id;
+  li.dataset.depth = String(depth);
+  if (hasChildren) li.dataset.state = 'open';   // 叶子节点无 data-state，hover 不展开 pill
+  if (node.heading && node.heading > 0) {
+    li.dataset.heading = String(node.heading);
+  }
+
+  /* topic-row */
+  const row = document.createElement('div');
+  row.className = 'topic-row';
+
+  /* bullet zone */
+  const bw = document.createElement('div');
+  bw.className = 'bullet-wrapper';
+  const bb = document.createElement('div');
+  bb.className = 'bullet-border';
+  bb.setAttribute('role', 'button');
+  bb.setAttribute('aria-label', '折叠 / 展开');
+  bb.tabIndex = 0;
+  const bd = document.createElement('div');
+  bd.className = 'bullet-dot';
+
+  /* click / Enter / Space → toggle state
+     ⚠️ 监听器必须始终挂载，在 handler 里实时检查 li.dataset.state：
+     叶子节点之后可能通过 Enter+Tab 晋升为 parent（indent 时才动态补
+     data-state，见 promote 逻辑）。旧写法 `if (hasChildren)` 在 build
+     时快照判定，晋升后的 parent 圆环画出来了（CSS 走属性选择器）但
+     click 监听从未挂上 → 点击无反应，表现为"无法收纳"。
+     真叶子（无 data-state）：early return，不 preventDefault 不
+     stopPropagation，保持与无监听时完全一致的行为。 */
+  bb.addEventListener('click', (e) => {
+    if (!li.dataset.state) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggleTopic(li);
+  });
+  bb.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (!li.dataset.state) return;
+    e.preventDefault();
+    toggleTopic(li);
+  });
+  bb.appendChild(bd);
+  bw.appendChild(bb);
+  /* drill-down：鼠标进入 bullet-zone → 给 li 加 .drill-down（高亮当前 + 所有子项）
+     mubu 真实行为：hover 圆点 = "聚焦此分支"，整个子树内容加粗 */
+  bw.addEventListener('mouseenter', () => li.classList.add('drill-down'));
+  bw.addEventListener('mouseleave', () => li.classList.remove('drill-down'));
+  row.appendChild(bw);
+
+  /* content */
+  const c = document.createElement('div');
+  c.className = 'topic-content';
+  c.contentEditable = 'true';
+  c.spellcheck = false;
+  c.textContent = node.text;
+  /* click 内容 → mark current (drill-down 视觉占位) */
+  c.addEventListener('focus', () => {
+    document.querySelectorAll('.topic.is-current').forEach((t) => t.classList.remove('is-current'));
+    li.classList.add('is-current');
+  });
+  /* Enter：当前 caret 位置 split 出新 sibling；Shift+Enter 走默认软换行 */
+  c.addEventListener('keydown', (e) => {
+    if (e.isComposing || e.keyCode === 229) return;   /* IME 组合期：选候选的 Enter 不是拆行 */
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    e.preventDefault();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    /* caret 必须在这个 content 内 */
+    if (!c.contains(range.commonAncestorContainer) && range.commonAncestorContainer !== c) return;
+    /* 选中状态 = 整段提到新 sibling */
+    const beforeText = (range.toString().length > 0 && sel.isCollapsed === false)
+      ? c.textContent.slice(0, range.startOffset)
+      : (sel.isCollapsed
+          ? (range.startContainer.nodeType === 3
+              ? range.startContainer.textContent.slice(0, range.startOffset)
+              : '')
+          : c.textContent.slice(0, range.startOffset));
+    const afterText = (range.toString().length > 0 && sel.isCollapsed === false)
+      ? c.textContent.slice(range.endOffset)
+      : (sel.isCollapsed
+          ? (range.startContainer.nodeType === 3
+              ? range.startContainer.textContent.slice(range.startOffset)
+              : c.textContent)
+          : c.textContent.slice(range.endOffset));
+    /* 创建新 sibling topic，继承当前节点的 hasChildren / heading */
+    const parent = li.parentElement;
+    const depth = parseInt(li.dataset.depth, 10) || 0;
+    const newNode = {
+      id: 'new-' + Math.random().toString(36).slice(2, 8),
+      heading: node.heading || 0,
+      text: afterText,
+      children: undefined,
+    };
+    const newLi = buildTopic(newNode, depth);
+    /* 插到当前 li 之后（同级） */
+    li.after(newLi);
+    /* 更新当前 content：只保留 beforeText */
+    c.textContent = beforeText;
+    /* 同步状态：原 li 的 hasChildren 已经体现在 DOM 上，不动 */
+    /* 焦点移到新 sibling 的 content，光标置末尾 */
+    setTimeout(() => {
+      const newC = newLi.querySelector('.topic-content');
+      if (!newC) return;
+      newC.focus();
+      const r = document.createRange();
+      r.selectNodeContents(newC);
+      r.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }, 0);
+  });
+
+  /* Tab → indent（变前一个 sibling 的 child）
+     Shift+Tab → outdent（提到父的同级） */
+  c.addEventListener('keydown', (e) => {
+    if (e.isComposing || e.keyCode === 229) return;   /* IME 组合期：Tab 可能被用于候选切换 */
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+    if (e.shiftKey) outdentTopic(li);
+    else indentTopic(li);
+    /* 保持焦点在新 li 的 content 上 */
+    setTimeout(() => {
+      const newC = li.querySelector('.topic-content');
+      if (newC) {
+        newC.focus();
+        const r = document.createRange();
+        r.selectNodeContents(newC);
+        r.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    }, 0);
+  });
+
+  /* `- ` 行首触发：行首输入 "- " 自动剥掉前缀（mubu 把段落转 outline 节点；
+     prototype 已经全部在 outline 内，所以只剥前缀，让"-" 视觉上不被吃掉）
+     注意：浏览器输入时可能分裂 text node 或包 <font>/<span>，所以不能用
+     startContainer === c.firstChild 这类严格判断；改用纯 textContent 计算 caret。 */
+  c.addEventListener('input', (e) => {
+    if (e.isComposing) return;   /* IME 组合期不触发 '- ' 前缀剥离 */
+    if (!c.textContent.startsWith('- ')) return;
+    /* 算 caret 在 c.textContent 里的偏移 */
+    const sel = window.getSelection();
+    let caretOffset = 0;
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      if (c.contains(range.startContainer)) {
+        const pre = document.createRange();
+        pre.selectNodeContents(c);
+        pre.setEnd(range.startContainer, range.startOffset);
+        caretOffset = pre.toString().length;
+      }
+    }
+    /* 剥前缀，caret 跟着前移 */
+    c.textContent = c.textContent.slice(2);
+    caretOffset = Math.max(0, caretOffset - 2);
+    const tn = c.firstChild;
+    if (tn && tn.nodeType === 3) {
+      const r = document.createRange();
+      r.setStart(tn, Math.min(caretOffset, tn.length));
+      r.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }
+  });
+  row.appendChild(c);
+
+  li.appendChild(row);
+
+  /* children */
+  if (hasChildren) {
+    const ul = document.createElement('ul');
+    ul.className = 'topic-children';
+    node.children.forEach((c) => ul.appendChild(buildTopic(c, depth + 1)));
+    li.appendChild(ul);
+  }
+  return li;
+}
+
+function render() {
+  const root = document.getElementById('outline');
+  root.innerHTML = '';
+  DATA.forEach((t) => root.appendChild(buildTopic(t, 0)));
+}
+
+/* ============================================================
+ * 缩进：Tab / Shift+Tab
+ *   indentTopic(li)    li 变 prev sibling 的最后一个 child
+ *   outdentTopic(li)   li 提到 parent.parentElement 的下一个 sibling
+ *   updateDepth(li, d) 递归更新 li + 后代 depth
+ * ============================================================ */
+function updateDepth(li, newDepth) {
+  li.dataset.depth = String(newDepth);
+  li.querySelectorAll(':scope > .topic-children > .topic').forEach((c) => {
+    updateDepth(c, newDepth + 1);
+  });
+}
+
+function indentTopic(li) {
+  const prev = li.previousElementSibling;
+  /* 必须有前一个 sibling（同深度）；没有就不能 indent */
+  if (!prev || !prev.classList.contains('topic')) return;
+  /* 给 prev 加 children 容器（如果还没有） */
+  let prevChildren = prev.querySelector(':scope > .topic-children');
+  if (!prevChildren) {
+    prevChildren = document.createElement('ul');
+    prevChildren.className = 'topic-children';
+    prev.appendChild(prevChildren);
+  }
+  /* 把 li 挪进去 */
+  prevChildren.appendChild(li);
+  /* depth 重算：prev.depth + 1 */
+  updateDepth(li, parseInt(prev.dataset.depth, 10) + 1);
+  /* prev 现在有 children → state = 'open'（折叠态自动展开，用户能看到自己移进去的节点） */
+  if (prev.dataset.state !== 'open') prev.dataset.state = 'open';
+}
+
+function outdentTopic(li) {
+  /* li 的父 = .topic-children（如果父不是 topic-children，说明已经到 root，不能 outdent） */
+  const parentUl = li.parentElement;
+  if (!parentUl || !parentUl.classList.contains('topic-children')) return;
+  /* grand = li 的祖父 = 真正的 .topic（当前 li 之前挂在那） */
+  const grand = parentUl.parentElement;
+  if (!grand || !grand.classList.contains('topic')) return;
+  /* 把 li 挪到 grand 的下一个 sibling 位置（同级） */
+  grand.after(li);
+  /* depth = grand.depth */
+  updateDepth(li, parseInt(grand.dataset.depth, 10));
+  /* parentUl 如果空了 → 删掉，让 grand 不再有 topic-children */
+  if (parentUl.children.length === 0) parentUl.remove();
+  /* grand 现在没 children → 删掉 data-state */
+  if (!grand.querySelector(':scope > .topic-children')) {
+    delete grand.dataset.state;
+  }
+}
+
+/* ============================================================
+ * 折叠状态机（5 个操作）
+ *   setState(node, state)   : 切换
+ *   toggleTopic(node)        : 单个 + drill-down 视觉
+ *   toggleSiblings(node)
+ *   toggleByLevel(depth)
+ *   toggleAll()
+ * ============================================================ */
+function setState(li, state) {
+  if (!li.querySelector('.topic-children')) return;  // 叶子节点无状态
+  li.dataset.state = state;
+}
+
+/* 下面四个「大纲折叠状态机」函数都在改完 data-state 后自己调 mmAfterToggle()。
+   通知放在状态机里而不是各个调用点，是为了保证**任何入口**都能让导图跟上：
+   之前只有键盘快捷键那条路径通知，结果在大纲里点折叠钮 / 走导图自己的折叠，
+   导图纹丝不动。mmAfterToggle 在 mmActive 为 false 时是空转，不会影响大纲模式。 */
+function toggleTopic(li) {
+  if (!li || !li.querySelector('.topic-children')) return;
+  const next = li.dataset.state === 'folded' ? 'open' : 'folded';
+  setState(li, next);
+  mmAfterToggle();
+}
+
+function toggleSiblings(li) {
+  if (!li) return;
+  const parent = li.parentElement;
+  if (!parent) return;
+  /* 把所有同级「向当前态翻转」：当前 open → 全部 folded；当前 folded → 全部 open */
+  const target = li.dataset.state === 'open' ? 'folded' : 'open';
+  parent.querySelectorAll(':scope > .topic').forEach((t) => {
+    if (t.querySelector('.topic-children')) t.dataset.state = target;
+  });
+  mmAfterToggle();
+}
+
+function toggleByLevel(level) {
+  /* 取该层级的一致态 → 一次性翻转（避免逐个 toggle 产生混合状态） */
+  const nodes = Array.from(document.querySelectorAll('.topic'))
+    .filter((t) => parseInt(t.dataset.depth, 10) === level && t.querySelector('.topic-children'));
+  if (!nodes.length) return;
+  const allOpen = nodes.every((t) => t.dataset.state === 'open');
+  const target = allOpen ? 'folded' : 'open';
+  nodes.forEach((t) => { t.dataset.state = target; });
+  mmAfterToggle();
+}
+
+function toggleAll() {
+  /* 取当前可见状态：若当前有任一 open，全部收；否则全部展 */
+  let anyOpen = false;
+  document.querySelectorAll('.topic').forEach((t) => {
+    if (t.dataset.state === 'open' && t.querySelector('.topic-children')) anyOpen = true;
+  });
+  const target = anyOpen ? 'folded' : 'open';
+  document.querySelectorAll('.topic').forEach((t) => {
+    if (t.querySelector('.topic-children')) t.dataset.state = target;
+  });
+  mmAfterToggle();
+}
+
+/* ============================================================
+ * 键盘：从 selection 反查 .topic
+ * ============================================================ */
+function currentTopicFromSelection() {
+  /* 思维导图模式：caret 不在 outline 内 → 用 mm 选中节点对应的 outline li */
+  if (mmActive && mmSelectedId && mmSelectedId !== MM_ROOT_ID) {
+    const li = document.querySelector(`#outline li[data-id="${CSS.escape(mmSelectedId)}"]`);
+    if (li) return li;
+  }
+  const sel = window.getSelection();
+  if (sel && sel.anchorNode) {
+    let el = sel.anchorNode;
+    while (el && el.nodeType !== 1) el = el.parentElement;
+    while (el && !el.classList?.contains('topic')) el = el.parentElement;
+    if (el) return el;
+  }
+  /* 兜底：上次 focus 的 is-current */
+  return document.querySelector('.topic.is-current');
+}
+
+document.addEventListener('keydown', (e) => {
+  const isMod = e.metaKey || e.ctrlKey;
+  if (!isMod) return;
+  /* 同时认 e.code='Period'（真键盘 Shift+.）和 e.key='.' / '>'（合成事件 + Shift 变 >） */
+  const isPeriod = e.code === 'Period' || e.key === '.' || e.key === '>';
+  /* Ctrl+Shift+Alt+.  全局 */
+  if (e.shiftKey && e.altKey && isPeriod) {
+    e.preventDefault();
+    toggleAll();
+    return;
+  }
+  /* Ctrl+Alt+1/2/3 按级 */
+  if (e.altKey && !e.shiftKey && ['1', '2', '3'].includes(e.key)) {
+    e.preventDefault();
+    toggleByLevel(parseInt(e.key, 10) - 1);
+    return;
+  }
+  /* Ctrl+Shift+. 同级 */
+  if (e.shiftKey && !e.altKey && isPeriod) {
+    e.preventDefault();
+    toggleSiblings(currentTopicFromSelection());
+    return;
+  }
+  /* Ctrl+. 当前 */
+  if (!e.shiftKey && !e.altKey && isPeriod) {
+    e.preventDefault();
+    toggleTopic(currentTopicFromSelection());
+    return;
+  }
+});
+
+/* ============================================================
+ * selection toolbar：选区上方浮起，9 个操作分 3 组
+ * ============================================================ */
+const toolbar = document.getElementById('selection-toolbar');
+
+/* 把当前 selection 包到一个新标签里 */
+function wrapSelection(tagName, attrs = {}) {
+  const sel = window.getSelection();
+  if (sel.isCollapsed || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  /* range 不能跨多个 element；surroundContents 在这种情况下抛错 */
+  try {
+    const wrapper = document.createElement(tagName);
+    Object.entries(attrs).forEach(([k, v]) => wrapper.setAttribute(k, v));
+    range.surroundContents(wrapper);
+    sel.removeAllRanges();
+    return true;
+  } catch (e) {
+    /* 退化方案：document.execCommand('hiliteColor') 等 */
+    return false;
+  }
+}
+
+/* 移除 selection 内所有指定 tag 的 wrapper（toggle 行为） */
+function unwrapSelection(className) {
+  const sel = window.getSelection();
+  if (sel.isCollapsed || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  /* 收集所有选区内的 wrapper */
+  const wrappers = [];
+  const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_ELEMENT);
+  while (walker.nextNode()) {
+    const n = walker.currentNode;
+    if (n.classList && n.classList.contains(className) && range.intersectsNode(n)) {
+      wrappers.push(n);
+    }
+  }
+  wrappers.forEach(w => {
+    while (w.firstChild) w.parentNode.insertBefore(w.firstChild, w);
+    w.remove();
+  });
+  sel.removeAllRanges();
+}
+
+/* 选中行所在 topic 的 heading 等级 */
+function toggleHeading() {
+  const topic = currentTopicFromSelection();
+  if (!topic) return;
+  const cur = topic.dataset.heading;
+  const next = cur === '1' ? undefined : '1';
+  if (next === undefined) delete topic.dataset.heading;
+  else topic.dataset.heading = next;
+}
+
+function applyCommand(cmd) {
+  /* execCommand 适用于粗体 / 斜体 / 下划线 / 删除线 / 链接 */
+  if (['bold', 'italic', 'underline', 'strikeThrough'].includes(cmd)) {
+    document.execCommand(cmd, false, null);
+  } else if (cmd === 'highlight') {
+    /* 用 surroundContents 包一个 mark；如选区跨 element 失败 → execCommand hiliteColor */
+    if (!wrapSelection('mark')) {
+      document.execCommand('hiliteColor', false, '#FFF3A3');
+    }
+  } else if (cmd === 'comment') {
+    if (!wrapSelection('span', { class: 'bl-comment' })) {
+      /* 跨多 element 时无法 surroundContents：fallback 给整个 range 加背景 */
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        const span = document.createElement('span');
+        span.className = 'bl-comment';
+        try {
+          range.surroundContents(span);
+          sel.removeAllRanges();
+        } catch (e) { /* ignore */ }
+      }
+    }
+  } else if (cmd === 'h1') {
+    toggleHeading();
+  } else if (cmd === 'link') {
+    const url = window.prompt('链接 URL：', 'https://');
+    if (url && url !== 'https://') document.execCommand('createLink', false, url);
+  } else if (cmd === 'code') {
+    wrapSelection('code');
+  }
+  /* 触发一次 selectionchange 让 toolbar 重新检查 active 态 */
+  document.dispatchEvent(new Event('selectionchange'));
+}
+
+/* 监听 toolbar button：mousedown 阻止默认（避免 selection 丢失） */
+toolbar.addEventListener('mousedown', (e) => {
+  if (e.target.tagName === 'BUTTON') e.preventDefault();
+});
+toolbar.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  applyCommand(btn.dataset.cmd);
+});
+
+/* 选区变化 → 重新定位 + 检查 active 态 */
+function updateToolbar() {
+  /* 思维导图模式：选区在 mm-text 内，不属于 .topic-content → 直接收起 */
+  if (mmActive) { toolbar.hidden = true; return; }
+  const sel = window.getSelection();
+  if (sel.isCollapsed || sel.rangeCount === 0) {
+    toolbar.hidden = true;
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  /* 选区必须在某个 .topic-content 内 */
+  const inContent = range.commonAncestorContainer.nodeType === 1
+    ? range.commonAncestorContainer.closest('.topic-content')
+    : range.commonAncestorContainer.parentElement?.closest('.topic-content');
+  if (!inContent) { toolbar.hidden = true; return; }
+
+  const rect = range.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) { toolbar.hidden = true; return; }
+
+  /* 定位：选区下方 8px，水平居中；空间不够则放上方 */
+  const margin = 8;
+  const tbRect = toolbar.getBoundingClientRect();
+  const belowY = rect.bottom + margin;
+  const aboveY = rect.top - tbRect.height - margin;
+  const place = (belowY + tbRect.height <= window.innerHeight) ? belowY : aboveY;
+  toolbar.style.left = (rect.left + rect.width / 2) + 'px';
+  toolbar.style.top = place + 'px';
+  toolbar.hidden = false;
+
+  /* 检查 active 态（粗体 / 斜体 / 下划线 / 删除线） */
+  toolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
+    const cmd = btn.dataset.cmd;
+    let active = false;
+    if (['bold', 'italic', 'underline', 'strikeThrough'].includes(cmd)) {
+      try { active = document.queryCommandState(cmd); } catch (e) { /* ignore */ }
+    } else if (cmd === 'h1') {
+      const topic = inContent.closest('.topic');
+      active = topic && topic.dataset.heading === '1';
+    } else if (cmd === 'link') {
+      const a = range.commonAncestorContainer.nodeType === 1
+        ? range.commonAncestorContainer.closest('a')
+        : range.commonAncestorContainer.parentElement?.closest('a');
+      active = !!a;
+    } else if (cmd === 'code') {
+      const c = range.commonAncestorContainer.nodeType === 1
+        ? range.commonAncestorContainer.closest('code')
+        : range.commonAncestorContainer.parentElement?.closest('code');
+      active = !!c;
+    }
+    btn.classList.toggle('is-active', active);
+  });
+}
+document.addEventListener('selectionchange', updateToolbar);
+window.addEventListener('scroll', updateToolbar, true);
+
+/* 防止点击 toolbar 自身导致选区丢失（toolbar 的 mousedown 已 preventDefault） */
+/* Esc 关闭 toolbar */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') toolbar.hidden = true;
+});
+
+/* ============================================================
+ * 思维导图视图（mubu/effie 式「大纲 ⇄ 思维导图」切换）
+ *
+ * 设计要点：
+ *  1. 单一数据源 = 大纲 DOM。每次进入 / 折叠 / 编辑提交时都从 #outline
+ *     实时快照；折叠点击直接复用 toggleTopic(li)（已全量测试的状态机），
+ *     文本编辑提交时写回对应 li 的 .topic-content —— 两个视图永远同步。
+ *  2. 中心主题 = 文档标题（虚拟根 __doc__，mubu 切导图的真实行为：
+ *     大纲 depth-0 变成一级分支），水平向右展开（logic-chart 布局）。
+ *  3. 布局：two-pass tidy tree —— 先量每个节点真实尺寸（offsetWidth/Height），
+ *     列 x 按「每深度最大宽 + 列距」累加；y 后序遍历：叶子顺序占位，
+ *     父节点取首尾子节点垂直居中。折叠节点隐藏全部后代（count 仍统计）。
+ *  4. 动画：rAF 插值（280ms ease-out cubic）。展开时子节点从父节点位置
+ *     飞出；折叠时飞回最近可见祖先并淡出；连线每帧重画 —— mubu 手感。
+ *  5. 视觉：mubu 默认主题 —— 中心主题主色实底白字；一级分支分支色实底
+ *     白字（10 色循环，一支一色、后代继承）；二级+ 无框纯文本；
+ *     连线为分支色 bezier（越深越细）。
+ * ============================================================ */
+const MM_ROOT_ID = '__doc__';
+const MM_H_GAPS = [68, 48, 38, 30, 24];   /* depth d 之后的水平列距 */
+const MM_V_GAP = 14;                       /* 同父兄弟之间的缝 */
+const MM_V_GAP_WIDE = 34;                 /* 跨父（叔侄/堂亲）之间的缝 —— 不加宽会黏成一片 */
+const MM_TRUNK = 22;                       /* 连线竖主干离父节点边缘的距离 */
+const MM_BRACKET_GAP = 34;                /* 括号图：父右缘到括号竖线的距离（要放得下折叠钮） */
+const MM_SVG_NS = 'http://www.w3.org/2000/svg';
+
+/* ============================================================
+ * 导图结构（三种，可切换；持久化在 localStorage('mm-layout')）
+ *   mindmap 思维导图：中心主题居中，一级分支左右均衡展开（幕布/亿图默认）
+ *   logic   逻辑图  ：中心主题在左，整棵树向右展开（XMind 逻辑图）
+ *   bracket 括号图  ：中心主题在左，子级右对齐成一列，父子用 } 括号连接
+ * ============================================================ */
+/* 导图结构：当前只剩思维导图（markmap 双侧）。
+ * 内置引擎（逻辑图 / 括号图）2026-10-12 整体砍掉 —— 与需求不符。
+ * MM_LAYOUTS 留一个占位是为了不破坏 mmSyncLayoutUI / data-mm-layout 的 body 属性契约。 */
+const MM_LAYOUTS = [
+  { key: 'mindmap', name: '思维导图', hint: '中心主题居中，左右均衡展开' },
+];
+let mmLayout = MM_LAYOUTS[0];
+try {
+  /* 老用户 localStorage 里可能残留 'logic' / 'bracket' —— 静默忽略，强制回 mindmap。 */
+  const stored = localStorage.getItem('mm-layout');
+  if (stored === 'mindmap') {/* OK */} else {/* ignore */}
+} catch (e) { /* 隐私模式等场景静默降级为默认结构 */}
+
+/* ============================================================
+ * 展示主题（JS 侧真值；CSS 侧见 body[data-mm-theme] token 覆盖块）
+ *   center  : 中心主题色（根的 --branch）+ 连线兜底色
+ *   palette : 一级分支色轮（按分支序号取色），更深层继承所在分支色
+ * 选择持久化在 localStorage('mm-theme')
+ * ============================================================ */
+const MM_THEMES = [
+  { key: 'ink', name: '蓝墨', center: '#2F6FEB',
+    palette: ['#e8684a', '#f6bd16', '#5ad8a6', '#5b8ff9', '#9270ca',
+              '#ff9d4d', '#6dc8ec', '#f08bb4', '#269a99', '#78d3f8'] },
+  { key: 'macaron', name: '马卡龙', center: '#9b8cf5',
+    palette: ['#f4a7b9', '#f6c99f', '#a8d8b9', '#9ec1f0', '#c3b0e8',
+              '#f2e394', '#a0d6d4', '#efb8a5'] },
+  { key: 'dark', name: '深空', center: '#4d8dff',
+    palette: ['#ff8f73', '#ffd666', '#69e8b6', '#7aa5ff', '#b794f6',
+              '#ffa940', '#5fc9e8', '#f78fbe'] },
+  { key: 'mono', name: '极简', center: '#3a3f47',
+    palette: ['#6e7681', '#8b939e', '#525a64', '#a3aab4', '#77808b', '#5c646e'] },
+  { key: 'forest', name: '青野', center: '#2f9e63',
+    palette: ['#43a047', '#7cb342', '#26a69a', '#9ccc65', '#00897b',
+              '#aed581', '#009688'] },
+];
+let mmTheme = MM_THEMES[0];
+try {
+  const hit = MM_THEMES.find((t) => t.key === localStorage.getItem('mm-theme'));
+  if (hit) mmTheme = hit;
+} catch (e) { /* 隐私模式等场景静默降级为默认主题 */ }
+
+const mmEl = {
+  root: document.getElementById('mindmap'),
+  canvas: document.getElementById('mm-canvas'),
+  svg: document.getElementById('mm-svg'),
+  linksG: document.getElementById('mm-links-g'),
+  nodes: document.getElementById('mm-nodes'),
+  stage: document.getElementById('mm-mk-stage'),
+  mkR: document.getElementById('mm-mk-r'),
+  mkL: document.getElementById('mm-mk-l'),
+  pct: document.getElementById('mm-zoom-pct'),
+};
+
+/* ============================================================
+ * 撤销 / 重做栈（仅记录结构性操作，不上文本输入）
+ *
+ * 单一数据源是大纲 DOM，最简单的快照方式就是序列化 #outline.outerHTML。
+ *   · 深度 50，超过自动弹最旧的
+ *   · mmHistoryCursor 指向当前状态；undo = --cursor 还原；redo = ++cursor 应用
+ *   · 仅在 commit 结构性操作时（拖拽改父 / 新建 / 删除 / 提降级）push
+ *   · 文本编辑（mmStartEdit → mmCommitEdit）不 push，避免打字刷满栈
+ * ============================================================ */
+const MM_HISTORY_LIMIT = 50;
+const mmHistory = [];          /* outerHTML 字符串数组 */
+let mmHistoryCursor = -1;      /* 指向当前状态在 mmHistory 里的位置；-1 = 无 */
+let mmHistorySuspend = 0;      /* 还原 / 重做期间自增，期间 push 调用被吃掉 */
+
+function mmSnapshotOutline() {
+  /* outline 自身就是 ul，省去外层包 */
+  return document.getElementById('outline').outerHTML;
+}
+function mmRestoreSnapshot(html) {
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  const fresh = wrap.firstElementChild;
+  const cur = document.getElementById('outline');
+  cur.replaceWith(fresh);
+  mmRelayout(true);
+  /* 选中态暂时丢；落到第一个节点 */
+  const firstLi = fresh.querySelector('.topic');
+  if (firstLi) mmSelect(firstLi.dataset.id);
+  /* ⚠ 已知限制：替换后 .topic-content 上的 Enter 拆行 / focus → is-current 等
+   * JS 监听器会丢。contentEditable 属性还在、文本可直接编辑；要做"回车拆行"
+   * 等高级编辑能力需手动刷新（撤销栈里点 ↶ 再点 ↷ 也能临时恢复） */
+}
+function mmHistoryPush() {
+  if (mmHistorySuspend) return;            /* undo/redo 自己别记自己 */
+  /* 截掉 cursor 后面的 redo 段 */
+  mmHistory.length = mmHistoryCursor + 1;
+  mmHistory.push(mmSnapshotOutline());
+  if (mmHistory.length > MM_HISTORY_LIMIT) mmHistory.shift();
+  mmHistoryCursor = mmHistory.length - 1;
+}
+function mmHistoryUndo() {
+  if (mmHistoryCursor <= 0) return false;
+  mmHistorySuspend++;
+  try {
+    mmHistoryCursor -= 1;
+    mmRestoreSnapshot(mmHistory[mmHistoryCursor]);
+    return true;
+  } finally { mmHistorySuspend--; }
+}
+function mmHistoryRedo() {
+  if (mmHistoryCursor >= mmHistory.length - 1) return false;
+  mmHistorySuspend++;
+  try {
+    mmHistoryCursor += 1;
+    mmRestoreSnapshot(mmHistory[mmHistoryCursor]);
+    return true;
+  } finally { mmHistorySuspend--; }
+}
+
+/* ============================================================
+ * Toast 提示（drop 完、撤销 / 重做反馈都用它）
+ *
+ * 设计：右下角浮一条，1.5s 自动消失；可配撤销按钮。
+ * ============================================================ */
+let mmToastTimer = null;
+function mmToast(message, opts = {}) {
+  let host = document.getElementById('mm-toast');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'mm-toast';
+    host.className = 'mm-toast';
+    document.body.appendChild(host);
+  }
+  host.innerHTML = '';
+  const msg = document.createElement('span');
+  msg.className = 'mm-toast-msg';
+  msg.textContent = message;
+  host.appendChild(msg);
+  if (opts.undo) {
+    const btn = document.createElement('button');
+    btn.className = 'mm-toast-undo';
+    btn.type = 'button';
+    btn.textContent = '↶ 撤销';
+    btn.addEventListener('click', () => {
+      mmHistoryUndo();
+      mmToastClear();
+    });
+    host.appendChild(btn);
+  }
+  if (mmToastTimer) clearTimeout(mmToastTimer);
+  mmToastTimer = setTimeout(mmToastClear, opts.duration || 2200);
+}
+function mmToastClear() {
+  const host = document.getElementById('mm-toast');
+  if (host) host.innerHTML = '';
+  if (mmToastTimer) { clearTimeout(mmToastTimer); mmToastTimer = null; }
+}
+
+/* 内置引擎：节点 hover 反馈（事件委托；markmap 那个 stage 的 hover 监听同款模式） */
+let mmNodeHover = null;
+mmEl.nodes.addEventListener('mousemove', (e) => {
+  if (mmEditingId) return;            /* 编辑态别盖「可输入」光标 */
+  const n = e.target.closest && e.target.closest('.mm-node');
+  if (mmNodeHover && mmNodeHover !== n) mmNodeHover.classList.remove('is-hover');
+  /* 选中态 / 拖动中的节点自己就有视觉态，别再叠 hover */
+  if (n && !n.classList.contains('is-selected') && !n.classList.contains('is-editing') && !n.classList.contains('is-dragging')) {
+    n.classList.add('is-hover');
+    mmNodeHover = n;
+  } else {
+    mmNodeHover = null;
+  }
+});
+mmEl.nodes.addEventListener('mouseleave', () => {
+  if (mmNodeHover) { mmNodeHover.classList.remove('is-hover'); mmNodeHover = null; }
+});
+let mmActive = false;
+let mmSelectedId = null;
+let mmEditingId = null;
+let mmEditRestore = '';
+let mmView = { tx: 0, ty: 0, s: 1 };
+/* 用户是否手动缩放/平移过视口 —— 用于判断重排后该不该自动 fit。
+   手动调过视角后就不再自动跟随，避免把用户拉走。 */
+let mmViewUserMoved = false;
+let mmEls = new Map();      /* id → 节点元素（跨 relayout 复用，动画才有起点） */
+let mmModel = new Map();    /* id → 布局模型（x/y/w/h + 树信息），**仅内置引擎** */
+/* markmap 模式的纯树模型。
+   markmap 的节点坐标是 d3-flextree 算的，不对外承诺也拿不到稳定值，
+   所以 markmap 模式没有「布局模型」，只有「树模型」：
+   键盘导航（↑↓←→）、Enter 新建同级、Alt+←→ 提降级、Delete 这套结构操作
+   只需要父子关系和深度，不需要 x/y/w/h —— 这份模型就够用了。
+   插入顺序 = DFS 前序，和 mmBuildModels 一致，所以上下键的顺序感两套引擎一致。 */
+let mmTree = new Map();
+function mmBuildTree() {
+  const map = new Map();
+  const outline = document.getElementById('outline');
+  const h1 = document.querySelector('.stage h1');
+  const rootIds = Array.from(outline.querySelectorAll(':scope > .topic')).map((li) => li.dataset.id);
+  map.set(MM_ROOT_ID, {
+    id: MM_ROOT_ID, parentId: null, depth: 0,
+    html: h1 ? h1.textContent : '思维导图',
+    folded: false, hasChildren: rootIds.length > 0, childIds: rootIds,
+    side: 1, x: 0, y: 0, w: 0, h: 0,
+  });
+  const walk = (ul, parentId, depth) => {
+    ul.querySelectorAll(':scope > .topic').forEach((li) => {
+      const id = li.dataset.id;
+      const kids = li.querySelector(':scope > .topic-children');
+      const childIds = kids ? Array.from(kids.children).map((k) => k.dataset.id) : [];
+      const folded = li.dataset.state === 'folded';
+      const content = li.querySelector(':scope > .topic-row > .topic-content');
+      map.set(id, {
+        id, parentId, depth,
+        html: content ? content.innerHTML : '',
+        folded, hasChildren: childIds.length > 0,
+        childIds: folded ? [] : childIds,
+        side: 1, x: 0, y: 0, w: 0, h: 0,
+      });
+      if (!folded && kids) walk(kids, id, depth + 1);
+    });
+  };
+  walk(outline, MM_ROOT_ID, 1);
+  return map;
+}
+/* 结构操作统一从这里取模型，两套引擎各取各的，别再直接摸 mmModel。 */
+function mmModelOf(id) {
+  if (mmMkIsActive()) return mmTree.get(id) || null;
+  return mmModel.get(id) || null;
+}
+/* 节点自由拖动：id → {dx, dy}（相对自动布局位置的手动偏移）。
+   布局跑完后叠加回去，所以任何一次重排（编辑/折叠/换结构）都不会把用户摆好的位置弹回去。
+   幕布/XMind 的心智模型：自动排布给初始位置，你拖过的节点归你。 */
+let mmDrags = new Map();
+let mmLayoutSize = { w: 0, h: 0 };
+let mmAnim = null;          /* rAF handle */
+
+function mmEscape(s) {
+  return s.replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+/* ----- 快照：大纲 DOM → 树 ----- */
+function mmSnapshot() {
+  const fromLi = (li) => {
+    const content = li.querySelector(':scope > .topic-row > .topic-content');
+    return {
+      id: li.dataset.id,
+      heading: li.dataset.heading || '',
+      html: content ? content.innerHTML : '',
+      folded: li.dataset.state === 'folded',
+      children: Array.from(li.querySelectorAll(':scope > .topic-children > .topic')).map(fromLi),
+    };
+  };
+  const h1 = document.querySelector('.stage h1');
+  return {
+    id: MM_ROOT_ID,
+    heading: '',
+    html: mmEscape(h1 ? h1.textContent : '思维导图'),
+    folded: false,
+    children: Array.from(document.querySelectorAll('#outline > .topic')).map(fromLi),
+  };
+}
+
+/* ----- 树 → Map<id, model>；folded 节点本体入 Map，后代不入 ----- */
+function mmBuildModels(snap) {
+  const models = new Map();
+  const countDesc = (n) => n.children.reduce((a, k) => a + 1 + countDesc(k), 0);
+  const walk = (n, parentId, depth, color) => {
+    models.set(n.id, {
+      id: n.id, parentId, depth, color,
+      html: n.html,
+      heading: n.heading || undefined,
+      hasChildren: n.children.length > 0,
+      folded: n.folded,
+      count: countDesc(n),
+      childIds: n.folded ? [] : n.children.map((k) => k.id),
+      x: 0, y: 0, w: 0, h: 0,
+      side: 1,                   /* mindmap 布局：+1 右半区 / -1 左半区 */
+      spawned: false,
+    });
+    if (!n.folded) {
+      n.children.forEach((k, i) => {
+        /* 一级分支按顺序取色；更深层继承所在分支的颜色（色轮来自当前主题） */
+        walk(k, n.id, depth + 1, depth === 0 ? mmTheme.palette[i % mmTheme.palette.length] : color);
+      });
+    }
+  };
+  walk(snap, null, 0, mmTheme.center);
+  return models;
+}
+
+/* ----- 节点元素：创建（含事件绑定）/ 更新 ----- */
+function mmCreateNode(m) {
+  const el = document.createElement('div');
+  el.dataset.id = m.id;
+  const t = document.createElement('div');
+  t.className = 'mm-text';
+  el.appendChild(t);
+  const f = document.createElement('div');
+  f.className = 'mm-fold';
+  f.title = '折叠 / 展开（与大纲同步）';
+  f.hidden = true;
+  el.appendChild(f);
+  /* 抓手（六点图标）：hover/选中时显出；点中后让 mousedown 自然冒泡到 el 的
+   * mmNodeDragStart，由那个函数识别 e.target === grip 来跳过 5px 阈值。 */
+  const grip = document.createElement('div');
+  grip.className = 'mm-grip';
+  grip.title = '拖动改变位置';
+  grip.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true">'
+    + '<circle cx="2" cy="2" r="1.3"/><circle cx="6" cy="2" r="1.3"/><circle cx="10" cy="2" r="1.3"/>'
+    + '<circle cx="2" cy="6" r="1.3"/><circle cx="6" cy="6" r="1.3"/><circle cx="10" cy="6" r="1.3"/>'
+    + '<circle cx="2" cy="10" r="1.3"/><circle cx="6" cy="10" r="1.3"/><circle cx="10" cy="10" r="1.3"/>'
+    + '</svg>';
+  el.appendChild(grip);
+
+  /* ============================================================
+   节点自由拖动
+   幕布/XMind 的手势分工：
+     · 空白处按下拖 = 平移画布（canvas pan，见下方 root 的 mousedown）
+     · 节点上按下拖 = 搬动这个节点（node drag）
+   之前两者混在一起（节点不 stopPropagation → 一律平移），所以节点搬不动。
+   现在节点接管自己的 mousedown，空白才平移。
+   拖动位移记进 mmDrags（相对自动布局的增量），
+   之后任何一次重排都会把这个偏移叠回去 —— 摆好的位置不会被弹回。
+   ============================================================ */
+let mmDrag = null;            /* {id, el, startX, startY, baseX, baseY, moved} */
+let mmDragKilledClick = false;
+
+function mmNodeDragStart(e) {
+  if (e.button !== 0) return;
+  /* 上一次拖动留下的"吃掉 click"标记在这里才清 —— 不能在 mouseup 里用
+     setTimeout(0) 清：click 事件紧随 mouseup 在同一轮任务派发，会先于定时器跑到，
+     标记被提前清掉 → 拖完一下鼠标就误触发"选中并进入编辑"。 */
+  mmDragKilledClick = false;
+  if (e.target.closest('.mm-fold')) return;   /* 点折叠钮是点击，不是拖动 */
+  if (mmEditingId) return;                    /* 编辑中放行给 caret 定位 */
+  const el = e.currentTarget;
+  const id = el.dataset.id;
+  if (!id || id === MM_ROOT_ID) return;       /* 中心主题固定，幕布同样不可拖 */
+  const m = mmModel.get(id);
+  if (!m) return;
+
+  e.stopPropagation();      /* 节点拖动优先：别让画布同时平移 */
+  e.preventDefault();      /* 别在拖动中触发文本选中 / 原生拖拽 */
+
+  if (mmAnim) { cancelAnimationFrame(mmAnim); mmAnim = null; }   /* 中断入场动画，从当前视觉位置接上 */
+  mmDrag = {
+    id, el, m,
+    startX: e.clientX, startY: e.clientY,
+    baseX: m.x, baseY: m.y,      /* 自动布局算出的原位（偏移量的基准） */
+    moved: !!e.target.closest('.mm-grip'),   /* 抓手 = 明确想拖，跳过 5px 阈值 */
+  };
+  window.addEventListener('mousemove', mmNodeDragMove);
+  window.addEventListener('mouseup', mmNodeDragEnd);
+}
+
+function mmNodeDragMove(e) {
+  const d = mmDrag;
+  if (!d) return;
+  /* 除以缩放比：视口位移要换算回画布坐标，否则 zoom != 100% 时节点会飞 */
+  const dx = (e.clientX - d.startX) / mmView.s;
+  const dy = (e.clientY - d.startY) / mmView.s;
+  if (!d.moved && Math.abs(dx) + Math.abs(dy) < 3) return;   /* 阈值：区分点击与拖动 */
+  d.moved = true;
+  mmDragKilledClick = true;
+  d.el.classList.add('is-dragging');
+  /* 直接改 model 的坐标 → mmDrawLinks 无 posMap 时读的就是它，连线实时跟随 */
+  d.m.x = d.baseX + dx;
+  d.m.y = d.baseY + dy;
+  d.el.style.transform = `translate(${d.m.x}px, ${d.m.y}px)`;
+  mmDrawLinks();
+  /* 实时连接预览线：源节点中心 → 鼠标位置。
+   * 内置引擎是"挪位置"语义，不是改父 → 用 'none'（灰虚线）老实讲「我只是在拖」，
+   * 别用 child / sibling 那种暗示"会接 / 会排"的色，避免误导。 */
+  const src = d.el.getBoundingClientRect();
+  mmUpdateDragLine({
+    sx: src.left + src.width / 2,
+    sy: src.top + src.height / 2,
+    ex: e.clientX, ey: e.clientY,
+    mode: 'none',            /* 跟 markmap 模式保持一致的语义：none = 单纯位移，不是结构改动 */
+  });
+}
+
+function mmNodeDragEnd() {
+  window.removeEventListener('mousemove', mmNodeDragMove);
+  window.removeEventListener('mouseup', mmNodeDragEnd);
+  const d = mmDrag;
+  mmDrag = null;
+  if (!d) return;
+  d.el.classList.remove('is-dragging');
+  mmHideDragLine();
+  if (!d.moved) return;                     /* 只是点了一下 → 交给 click 处理选中 */
+  /* 把位移固化成「相对自动布局的偏移」：
+     此刻 d.m.x 是最终位置，baseX/baseY 是本轮自动布局给的原位，差值即偏移。
+     存偏移（而不是绝对坐标）→ 文本变长/折叠/换结构后重排仍能正确叠加。 */
+  mmDrags.set(d.id, { dx: d.m.x - d.baseX, dy: d.m.y - d.baseY });
+  /* 连线不用额外修：总线主干每次都按当前几何重算，节点一动主干和支线自动跟过去。 */
+  mmRelayout(false);                         /* 重算包围盒 + 连线终态，视觉不跳 */
+  /* drop 落点反馈：在自动布局的原位短暂闪现一圈虚线框，~600ms 后淡出。
+   * 跟 markmap 模式的 drop-toast 同一个目的 —— 告诉用户「刚才从这儿到这儿」。
+   * 不用 toast：位置拖没有"做了什么动作"的语义可描述，留视觉锚点更轻。 */
+  if (Math.abs(d.m.x - d.baseX) + Math.abs(d.m.y - d.baseY) >= 4) {
+    mmDropAnchor(d.id, d.baseX, d.baseY);
+  }
+  /* 标记不在这里清 —— 留给下一次 mousedown 清，保证本次拖动的尾巴 click 一定被吃掉 */
+}
+
+/* 在画布坐标 (x, y) 注入一个虚线框，~600ms 后自动 remove。
+   跟 mmNode 同一个坐标系，inset 直接填 baseX/baseY（已经是 canvas 坐标，不是视口坐标）。
+   挂到 #mm-canvas —— 它是 pan/zoom 的容器（mmRelayout 改 transform），用它的子层绝对定位
+   能跟着画布走；markmap 模式 #mm-mk-stage 是另一套，这里走内置引擎路径就行。 */
+function mmDropAnchor(id, x, y) {
+  const target = document.getElementById('mm-canvas');
+  if (!target) return;
+  const m = mmModel.get(id);
+  if (!m) return;
+  const anchor = document.createElement('div');
+  anchor.className = 'mm-drop-anchor';
+  anchor.style.left = x + 'px';
+  anchor.style.top = y + 'px';
+  anchor.style.width = m.w + 'px';
+  anchor.style.height = m.h + 'px';
+  target.appendChild(anchor);
+  setTimeout(() => anchor.remove(), 620);
+}
+
+el.addEventListener('mousedown', mmNodeDragStart);
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('.mm-fold')) return;
+    if (mmDragKilledClick) return;         /* 刚拖完：别把拖动当点击 */
+    e.stopPropagation();
+    const id = el.dataset.id;
+    if (mmEditingId === id) return;              /* 编辑中：放行 caret 定位 */
+    if (mmSelectedId === id) { if (id !== MM_ROOT_ID) mmStartEdit(id); }
+    else mmSelect(id);
+  });
+  el.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (el.dataset.id !== MM_ROOT_ID) mmStartEdit(el.dataset.id);
+  });
+  f.addEventListener('click', (e) => {
+    e.stopPropagation();
+    mmToggleFold(el.dataset.id);
+  });
+  mmEl.nodes.appendChild(el);
+  return el;
+}
+
+function mmUpdateNode(el, m) {
+  const keepSelected = el.classList.contains('is-selected');
+  el.className = 'mm-node mm-depth-' + Math.min(m.depth, 2)
+    + (keepSelected ? ' is-selected' : '')
+    + (mmEditingId === m.id ? ' is-editing' : '');
+  if (m.heading) el.dataset.heading = m.heading;
+  else delete el.dataset.heading;
+  el.style.setProperty('--branch', m.color);
+  const t = el.querySelector('.mm-text');
+  if (mmEditingId !== m.id && t.innerHTML !== m.html) t.innerHTML = m.html;
+  /* className 已被整体重写，这里补状态类：
+     is-empty  新建未输入的节点给最小宽度，避免折叠钮压到父级
+     （data-side 由 mmComputeLayout 在布局后统一同步） */
+  el.classList.toggle('is-empty', !t.textContent.trim());
+  el.classList.toggle('is-folded', !!m.folded);
+  el.classList.toggle('is-leaf', !m.hasChildren);
+  const f = el.querySelector('.mm-fold');
+  if (m.hasChildren && m.id !== MM_ROOT_ID) {
+    f.hidden = false;
+    f.textContent = m.folded ? String(m.count) : '−';   /* mubu：折叠态显示后代数 */
+  } else {
+    f.hidden = true;
+  }
+}
+
+/* ----- 布局收尾：x/y 归一化到 ≥0，算包围盒，撑开 svg ----- */
+function mmFinishLayout(models) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  models.forEach((m) => {
+    minX = Math.min(minX, m.x);
+    minY = Math.min(minY, m.y);
+    maxX = Math.max(maxX, m.x + m.w);
+    maxY = Math.max(maxY, m.y + m.h);
+  });
+  if (!isFinite(minX)) { minX = minY = 0; maxX = maxY = 0; }
+  const w = maxX - minX, h = maxY - minY;
+  if (minX !== 0 || minY !== 0) {
+    models.forEach((m) => { m.x -= minX; m.y -= minY; });
+  }
+  mmLayoutSize = { w, h };
+  mmEl.svg.setAttribute('width', String(w + 60));
+  mmEl.svg.setAttribute('height', String(h + 60));
+}
+
+/* 每列最大宽（三种布局共用） */
+function mmColumnWidths(models) {
+  const maxW = [];
+  models.forEach((m) => { maxW[m.depth] = Math.max(maxW[m.depth] || 0, m.w); });
+  return maxW;
+}
+
+/* 深度 d 相对「中心主题外缘」的水平偏移（d=1 是第一个子级列） */
+function mmColumnOffsets(maxW) {
+  const off = [0, MM_H_GAPS[0]];
+  for (let d = 1; d < maxW.length; d++) {
+    off[d + 1] = off[d] + maxW[d] + MM_H_GAPS[Math.min(d, MM_H_GAPS.length - 1)];
+  }
+  return off;
+}
+
+/* ----- tidy tree（Reingold–Tilford 简化版：轮廓 + 中位子对齐）-----
+ * y 一律用「盒子上沿」表示（mmDrawLinks / mmFinishLayout 都按 top 消费）。
+ * 三条不变量，对应幕布/XMind 的观感：
+ *   ① 子树连续：兄弟子树在 y 轴上永不交错（后序依次占槽）
+ *   ② 父贴子：父对齐「中位子」并夹在子树跨度内
+ *      —— 旧写法取首尾子中点，遇到"一边巨粗 + 一边单叶"会把父拽到子树外，
+ *         连线只能先上后下，出现发卡弯
+ *   ③ 缝距分层：同父兄弟用 MM_V_GAP，跨父（叔侄/堂亲）用 MM_V_GAP_WIDE，
+ *      否则叔叔的尾叶会黏在侄子的头叶上
+ */
+function mmTidyY(ids, models) {
+  if (!ids.length) return 0;
+  let cursor = 0;
+  let prevParent = null;                  /* 上一个占槽叶子属于哪个父，用来判断要不要加宽缝 */
+  const top = new Map(), bottom = new Map();
+
+  const place = (id, parentId) => {
+    const m = models.get(id);
+    if (!m.childIds.length) {
+      if (prevParent !== null && prevParent !== parentId) cursor += MM_V_GAP_WIDE - MM_V_GAP;
+      m.y = cursor;
+      top.set(id, cursor);
+      bottom.set(id, cursor + m.h);
+      cursor += m.h + MM_V_GAP;
+      prevParent = parentId;
+      return;
+    }
+    m.childIds.forEach((cid) => place(cid, id));
+
+    const kids = m.childIds.map((cid) => models.get(cid));
+    /* 父对齐「子树跨度中心」：t 是首孩子的上沿，b 是末孩子的下沿，
+       (t+b)/2 天然落在子树内，且对"一边巨粗 + 一边单叶"稳健。
+       旧写法取首尾孩子的中心点中点 —— 一侧子树高时会把父拽偏，
+       再叠加 (n-1)>>1 的中位子索引在偶数个孩子时退化成"第一个孩子"，
+       两者叠加就是截图里那种父节点外飘、连线先上后下的发卡弯。 */
+    const t = Math.min(...kids.map((k) => top.get(k.id)));
+    const b = Math.max(...kids.map((k) => bottom.get(k.id)));
+    const y = t + (b - t - m.h) / 2;     /* 居中于子树跨度（父比子树矮/高都成立） */
+    m.y = y;
+    top.set(id, Math.min(t, y));
+    bottom.set(id, Math.max(b, y + m.h));
+  };
+
+  ids.forEach((id) => place(id, null));
+  const minTop = Math.min(...ids.map((id) => top.get(id)));
+  const maxBot = Math.max(...ids.map((id) => bottom.get(id)));
+  return maxBot - minTop;
+}
+
+/* ① 逻辑图：中心主题在左，整棵树向右展开（列 x 累加 + tidy tree） */
+function mmLayoutLogic(models, root) {
+  const maxW = mmColumnWidths(models);
+  const colX = [0];
+  for (let d = 0; d < maxW.length; d++) {
+    colX[d + 1] = colX[d] + maxW[d] + MM_H_GAPS[Math.min(d, MM_H_GAPS.length - 1)];
+  }
+  models.forEach((m) => { m.x = colX[m.depth] || 0; });   /* 列 x */
+  mmTidyY([MM_ROOT_ID], models);
+}
+
+/* ② 括号图：与逻辑图同坐标（子级自然右对齐成一列），
+   层级关系改由 } 括号连线表达 —— 差异全在 mmDrawLinks */
+function mmLayoutBracket(models, root) {
+  mmLayoutLogic(models, root);
+}
+
+/* 干跑一次 tidy，量出某棵子树真实需要的高度。
+   用"节点数"当重量是错的：一棵 15 节点的链和一棵 15 节点的扇形，
+   在画面上占的高度差一个量级。直接用布局引擎自己算的高度最准。 */
+function mmSubtreeHeight(id, models) {
+  mmTidyY([id], models);            /* 只为拿高度，y 随后会被正式布局覆盖 */
+  let lo = Infinity, hi = -Infinity;
+  const walk = (cid) => {
+    const c = models.get(cid);
+    if (!c) return;
+    lo = Math.min(lo, c.y);
+    hi = Math.max(hi, c.y + c.h);
+    c.childIds.forEach(walk);
+  };
+  walk(id);
+  return isFinite(lo) ? hi - lo : 0;
+}
+
+/* 一级分支分左右：按子树实际高度降序丢给较矮的一侧，再各自按文档顺序排回。
+   两条约束：
+     ① 贪心时先保证两侧非空 —— 只有 1 个一级分支就全放一侧，否则整张图会偏死；
+     ② 同高度时按下标交替，让"叶子兄弟"自然左右开花，而不是全堆一边。
+   返回 [左半区一级分支, 右半区一级分支]。 */
+function mmSplitSides(models, root) {
+  const kids = root.childIds.slice();
+  if (kids.length <= 1) return [[], kids];
+  const h = new Map(kids.map((id) => [id, mmSubtreeHeight(id, models)]));
+  const order = new Map(kids.map((id, i) => [id, i]));
+  const left = [], right = [];
+  let lh = 0, rh = 0;
+  kids.slice().sort((a, b) => (h.get(b) - h.get(a)) || (order.get(a) - order.get(b)))
+    .forEach((id) => {
+      if (!left.length || (right.length && lh <= rh)) { left.push(id); lh += h.get(id); }
+      else { right.push(id); rh += h.get(id); }
+    });
+  const byDoc = (a, b) => order.get(a) - order.get(b);
+  left.sort(byDoc);
+  right.sort(byDoc);
+  return [left, right];
+}
+
+/* ③ 思维导图：中心主题居中，左右两半各自 tidy 占位。
+ *
+ * ⚠️ 顺序是硬约束：**先定根、再排两侧**。
+ *   旧写法先把两侧按 root.x=0 排好，最后才 root.x = -root.w/2 把根挪到中心，
+ *   于是左半区是按「根的左缘在 x=0」算的，根一挪过去就整体压到根身上，
+ *   而右半区又多出一截空白 —— 包围盒被撑到近两倍宽、fit 缩到 40%，
+ *   观感就是"左边空一大片、几根线从画布外横穿进来"。 */
+function mmLayoutMindmap(models, root) {
+  const maxW = mmColumnWidths(models);
+  const off = mmColumnOffsets(maxW);
+  const [left, right] = mmSplitSides(models, root);
+
+  /* ① 根先落位：以 x=0 为中心线，两侧全部相对它算 */
+  root.side = 1;
+  root.x = -root.w / 2;
+  root.y = 0;
+
+  /* ② 每半区：x 按深度列 + side 镜像，y 独立 tidy 占位（从 0 起） */
+  const placeSide = (ids, side) => {
+    if (!ids.length) return 0;
+    ids.forEach((id) => {
+      const stack = (cid) => {
+        const m = models.get(cid);
+        m.side = side;
+        m.x = side > 0 ? root.x + root.w + off[m.depth]
+                       : root.x - off[m.depth] - m.w;
+        m.childIds.forEach(stack);
+      };
+      stack(id);
+    });
+    return mmTidyY(ids, models);
+  };
+  const hL = placeSide(left, -1);
+  const hR = placeSide(right, 1);
+
+  /* ③ 根垂直居中于两侧合起来的大矩形，两侧各自对齐到根的中心线 */
+  const maxH = Math.max(hL, hR, root.h);
+  root.y = (maxH - root.h) / 2;
+  const mid = root.y + root.h / 2;
+  models.forEach((m) => {
+    if (m.id === MM_ROOT_ID) return;
+    m.y += mid - (m.side < 0 ? hL : hR) / 2;
+  });
+}
+
+
+function mmDrawLinks(posMap) {
+  const g = mmEl.linksG;
+  g.textContent = '';
+  const get = (id) => (posMap && posMap.get(id)) || mmModel.get(id) || null;
+  const ids = posMap ? Array.from(posMap.keys()) : Array.from(mmModel.keys());
+  const addPath = (d, color, width, opacity) => {
+    const path = document.createElementNS(MM_SVG_NS, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', color || mmTheme.center);
+    path.setAttribute('stroke-width', width);
+    path.setAttribute('opacity', opacity);
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('fill', 'none');
+    g.appendChild(path);
+  };
+
+  /* 按「父 + 朝向」分组：同一个父的所有**同侧**子节点共用一根竖主干。
+     ⚠️ 必须把 side 算进分组键：中心主题的子节点是**左右分居**的 ——
+        一半在左一半在右。旧代码按 kids[0] 算一个方向就套给全部子级，
+        于是右半区的子级被画成"从根左边的竖干横穿根身再折回来"，
+        屏幕上就是那几条从画布外横穿进来的长线 —— 这就是"看着很乱"的真凶。
+     同侧之外的父子连线必须各自独立成组。 */
+  const groups = new Map();
+  ids.forEach((id) => {
+    const m = get(id);
+    if (!m || !m.parentId) return;
+    const p = get(m.parentId);
+    if (!p) return;
+    const dir = m.x >= p.x ? 1 : -1;          /* 方向按实际几何判定，不依赖 side 标记 */
+    const key = m.parentId + (dir > 0 ? '|r' : '|l');
+    let grp = groups.get(key);
+    if (!grp) { grp = { p, dir, kids: [] }; groups.set(key, grp); }
+    grp.kids.push(m);
+  });
+
+  const stroke = (m) => ({
+    color: m.color || mmTheme.center,
+    w: m.depth === 1 ? '2.4' : m.depth === 2 ? '2' : '1.6',
+    o: m.depth === 1 ? '0.85' : '0.65',
+  });
+
+  groups.forEach(({ p, dir, kids }) => {
+    kids.sort((a, b) => a.y - b.y);       /* 上下顺序稳定，主干端点才不闪 */
+
+    if (mmLayout.key === 'bracket') {
+      /* 括号图：父节点右侧一条带上下钩的竖线（像 }），各子级从竖线横向接入 */
+      const x0 = p.x + p.w;
+      const bx = x0 + MM_BRACKET_GAP;           /* 竖线位置：父右缘外固定距离 */
+      const py = p.y + p.h / 2;
+      const yTop = kids[0].y + kids[0].h / 2;
+      const yBot = kids[kids.length - 1].y + kids[kids.length - 1].h / 2;
+      const base = stroke(kids[0]);
+      if (kids.length > 1 && Math.abs(yBot - yTop) > 0.5) {
+        const hook = Math.min(10, Math.abs(yBot - yTop) / 2);
+        const r = Math.min(8, hook);
+        addPath(
+          `M${bx - hook},${yTop} L${bx - r},${yTop} Q${bx},${yTop} ${bx},${yTop + r}`
+          + ` L${bx},${yBot - r} Q${bx},${yBot} ${bx - r},${yBot} L${bx - hook},${yBot}`,
+          base.color, base.w, base.o
+        );
+      }
+      kids.forEach((k) => {
+        const st = stroke(k);
+        const cy = k.y + k.h / 2;
+        const cx = k.x;
+        if (Math.abs(cy - py) < 0.5 && kids.length === 1) {
+          addPath(`M${x0},${py} L${cx},${cy}`, st.color, st.w, st.o);   /* 单子级：直连 */
+        } else {
+          addPath(`M${x0},${py} L${bx},${py}`, st.color, st.w, st.o);  /* 父 → 竖线 */
+          addPath(`M${bx},${cy} L${cx},${cy}`, st.color, st.w, st.o);  /* 竖线 → 子 */
+        }
+      });
+      return;
+    }
+
+    /* dir 在分组时已按几何定好（见上），这里直接用 */
+    const pEdge = dir > 0 ? p.x + p.w : p.x;
+    const cEdge = (k) => (dir > 0 ? k.x : k.x + k.w);
+    const midY = (k) => k.y + k.h / 2;
+    const py = p.y + p.h / 2;
+
+    /* 单子级且与父同行 → 一条直线，不画主干 */
+    if (kids.length === 1 && Math.abs(midY(kids[0]) - py) < 0.5) {
+      const st = stroke(kids[0]);
+      addPath(`M${pEdge},${py} L${cEdge(kids[0])},${py}`, st.color, st.w, st.o);
+      return;
+    }
+
+    /* 竖主干位置：默认 MM_TRUNK 离父缘，但不许越过最近的子节点，也不贴到父身上 */
+    const minGap = Math.min.apply(null, kids.map((k) => Math.abs(cEdge(k) - pEdge)));
+    const stemX = pEdge + dir * Math.max(10, Math.min(MM_TRUNK, minGap * 0.4));
+    /* 拐角半径：粗一点的线（depth 1）半径稍大，让曲线更明显；细线收紧不显钝 */
+    const R = kids[0].depth === 1 ? 14 : kids[0].depth === 2 ? 10 : 7;
+    const yTop = Math.min(py, kids[0].y + kids[0].h / 2);
+    const yBot = Math.max(py, kids[kids.length - 1].y + kids[kids.length - 1].h / 2);
+
+    /* ① 父 → 主干：横向到（stemX - R），cubic 拐到（stemX, py ± R）
+     *    cubic 的两个控制点都放在 (stemX, py) 附近 —— 一边走水平、一边走垂直，
+     *    切线方向天然对齐父边和主干，过渡更"流"，没有 Q 那种直线拐弯的硬感。 */
+    const base = stroke(kids[0]);
+    const down = (yBot - py) >= (py - yTop) ? 1 : -1;
+    const r0 = R;
+    addPath(
+      `M${pEdge},${py} L${stemX - dir * r0 * 1.2},${py}`
+      + ` C${stemX - dir * r0 * 0.4},${py} ${stemX},${py + down * r0 * 0.4} ${stemX},${py + down * r0}`,
+      base.color, base.w, base.o
+    );
+    /* ② 主干竖线（顶 / 底留 R 空间给后面 cubic 用） */
+    addPath(`M${stemX},${yTop + (down > 0 ? r0 : 0)} L${stemX},${yBot - (down > 0 ? 0 : r0)}`, base.color, base.w, base.o);
+    /* ③ 每个子节点从主干水平接入，拐角 cubic 化（控制点在 stemX / y 附近） */
+    kids.forEach((k) => {
+      const st = stroke(k);
+      const y = midY(k), xe = cEdge(k);
+      const rk = Math.min(R, Math.abs(xe - stemX) * 0.45);
+      if (Math.abs(y - py) < 0.5) {            /* 与父同行：无需拐角 */
+        addPath(`M${stemX},${y} L${xe},${y}`, st.color, st.w, st.o);
+        return;
+      }
+      const from = y > py ? 1 : -1;            /* 主干从上方/下方过来，cubic 也走同向 */
+      addPath(
+        `M${stemX},${y - from * rk * 1.2}`
+        + ` C${stemX},${y - from * rk * 0.4} ${stemX + dir * rk * 0.4},${y} ${stemX + dir * rk},${y}`
+        + ` L${xe},${y}`,
+        st.color, st.w, st.o
+      );
+    });
+  });
+
+  /* 折叠钮：幕布风格 —— 贴在节点「朝向父节点」那一侧的边缘上，纵向居中。
+   幕布截图实证：子级在右、折叠钮在节点左缘；子级在左、折叠钮在右缘 —— 即永远朝父。
+   --fx/--fy = 按钮中心相对本节点盒左上角的偏移，由 mmDrawLinks 写入。 */
+  const foldSrc = posMap || mmModel;
+  foldSrc.forEach((m, id) => {
+    if (!m.parentId) return;
+    const p = foldSrc.get(m.parentId);
+    const el = mmEls.get(id);
+    if (!p || !el) return;
+    const parentOnLeft = m.x >= p.x;              /* 子在父右边 → 朝父的一侧是左缘 */
+    el.style.setProperty('--fx', (parentOnLeft ? 0 : m.w) + 'px');
+    el.style.setProperty('--fy', (m.h / 2) + 'px');
+  });
+}
+
+/* 布局后的公共收尾：同步 DOM 归属 + 叠加拖动偏移 + 归一化。 */
+function mmApplyDragsAndFinish(models) {
+  models.forEach((m, id) => {
+    const el = mmEls.get(id);
+    if (!el) return;
+    if (m.side < 0) el.dataset.side = '-1';
+    else delete el.dataset.side;
+  });
+  models.forEach((m, id) => {
+    const d = mmDrags.get(id);
+    if (d) { m.x += d.dx; m.y += d.dy; m.dragged = true; }
+  });
+  mmDrags.forEach((_, id) => { if (!models.has(id)) mmDrags.delete(id); });
+  mmFinishLayout(models);
+}
+
+/* ============================================================
+ * markmap 引擎适配层（只服务于「思维导图」结构）
+ *
+ *   大纲 DOM 仍然是唯一数据源。这里做三件事：
+ *     ① 快照 → 左右两棵 markmap 纯节点树（双侧投影）
+ *     ② 两棵树在 stage 上各自对齐 + 左树镜像，拼成幕布那种「中心主题 + 左右展开」
+ *     ③ 导图上的点击 / 编辑 / 折叠 回写大纲 DOM
+ *
+ *   markmap 原生只有单向布局（根在左、全部子节点在右），而幕布是左右双侧。
+ *   与其去改 d3-flextree 的坐标（改了就得连带重算每条 link 的 path），不如
+ *   **拆成两个 Markmap 实例**，左实例整棵 <g> 做 scaleX(-1)：
+ *     · 两边根节点是同一份内容、同一套 options，量出来的尺寸天然一致 → 精确对称
+ *     · markmap 自己保证「根垂直居中于自己那半边的子树」，两边根一重合，
+ *       左右就自动以中心主题对称展开 —— 正是幕布的样子
+ *   左树的文字靠两层 scaleX(-1) 反镜像回来（盒子位置翻一次、字翻两次）。
+ *
+ *   markmap 的 d3.zoom / wheel pan 全关（zoom:false / pan:false / autoFit:false），
+ *   平移缩放统一由 .mm-mk-stage 上的 mmView 驱动 —— 两个实例各挂一个 zoom 必然打架，
+ *   而且我们本来就需要「两个实例一起动」的统一视角。
+ *
+ * ⚠ 四条实测踩出来的契约（照直觉写必炸，官方文档也没写全）：
+ *   ① children 必须是**数组**，叶节点给 []，不能给 undefined
+ *      —— renderData 里是 node.children.map(...)，给 undefined 直接抛
+ *   ② payload.fold 语义是「**已折叠**」：1 = 折叠，缺省/0 = 展开
+ *      —— 反了的话整棵树只渲染出根节点（foreignObject 数 == 1）
+ *   ③ Markmap 要的是 <svg> 元素，喂 div 会静默不渲染（不报错、就是空白）
+ *   ④ 节点身份认准 <g>.__data__（d3 绑的数据），别按 DOM 顺序、也别按 data-path 反查
+ *      —— markmap 的 join key 含先序编号和文本哈希，插删改一个字就让下游整段 key 全变，
+ *         旧 <g> 进 exit 后**不会被删除**（它从不调 .exit().remove()），
+ *         却还带着上一帧的 data-path 和文本留在 DOM 里当幽灵；
+ *         data-path 也只在 enter 时写一次，复用旧壳时永远停在上一帧。
+ *         __data__ 才是唯一可靠的（d3 的 exit 选择器不更新 __data__，见 mmMkStampIds）
+ * ============================================================ */
+/* markmap 模块就绪握手：模块脚本在主脚本之后执行，这里既要接事件，
+   也要兜底检查一次（模块可能在主脚本之后就已经 ready 了）。 */
+function mmMkOnReady() {
+  mmMkApi = window.MM_MK_API;
+  if (!mmMkApi) { console.warn('[mm] markmap 不可用，思维导图暂用内置引擎占位'); return; }
+  mmMkBindDom();
+  if (mmActive && mmMkIsActive()) mmMkEnsure();
+}
+window.addEventListener('mm-mk-ready', mmMkOnReady);
+if (window.MM_MK_API !== undefined) mmMkOnReady();
+let mmMkApi = null;                 /* { Markmap, defaultOptions } */
+let mmMk = null;                    /* { r, l } 两个 Markmap 实例 */
+
+function mmMkIsActive() { return mmLayout.key === 'mindmap'; }
+
+/* ---- ① 快照 → 左右两棵 markmap 树 ---- */
+
+/* 一级分支按「累计叶子数过半」切一刀：靠前的兄弟走左、靠后的走右。
+   这样左右都是文档里连续的一段，读起来符合从上到下的顺序（幕布/XMind 的做法），
+   而不是左右交替把顺序打乱。 */
+function mmMkSplit(root) {
+  const kids = root.children || [];
+  if (kids.length === 0) return { left: [], right: [] };
+  const weight = (n) => 1 + (n.children || []).reduce((s, c) => s + weight(c), 0);
+  const total = kids.reduce((s, k) => s + weight(k), 0);
+  let acc = 0, cut = 0;
+  while (cut < kids.length - 1 && acc < total / 2) { acc += weight(kids[cut]); cut += 1; }
+  return { left: kids.slice(0, cut), right: kids.slice(cut) };
+}
+
+/* 快照节点 → markmap 纯节点。ci = 分支配色序号（取自**原始**兄弟下标，
+   这样左右两棵树里同一条分支颜色一致，不会各从 palette[0] 重新数一遍）。 */
+function mmMkConv(n, ci) {
+  const payload = { __id: n.id, __ci: ci };
+  if (n.folded) payload.fold = 1;
+  return {
+    content: n.html,
+    payload,
+    children: (n.children || []).map((c, i) => mmMkConv(c, i)),
+  };
+}
+/* 一侧 = 根 + 该侧一级分支。两侧的根是同一个节点（左右都会出现一份），
+   左实例那份用 visibility:hidden 藏掉，只保留它的尺寸用于对称。 */
+function mmMkTree(root, kids) {
+  const conv = (n, ci) => mmMkConv(n, ci);
+  return conv({ ...root, children: kids }, 0);
+}
+function mmMkBuild() {
+  const snap = mmSnapshot();
+  const { left, right } = mmMkSplit(snap);
+  return {
+    snap,
+    r: mmMkTree(snap, right),
+    l: mmMkTree(snap, left),
+    color: (branchIndex) => {
+      const palette = mmTheme.palette || ['#888'];
+      return palette[(branchIndex || 0) % palette.length];
+    },
+  };
+}
+
+/* ---- ② 布局对齐 + 包围盒 ---- */
+
+function mmMkRootRect(inst) {
+  const d = inst && inst.mk && inst.mk.state && inst.mk.state.data;
+  return d && d.state ? d.state.rect : null;
+}
+
+/* 某个实例的 state.rect（markmap 自己的坐标）换算到 stage 坐标。
+   右实例：原样 + 居中平移；左实例：先把 x 取反（scaleX(-1)）再居中平移。 */
+function mmMkBoundsOf(inst, mirrored) {
+  const root = mmMkRootRect(inst);
+  const r = inst.mk.state.rect;
+  if (!root || (!r.x1 && !r.y1 && !r.x2 && !r.y2)) return null;
+  /* mmMkPlace 把根盒中心摆在 stage 原点 */
+  const dy = -root.y - root.height / 2;
+  if (!mirrored) return { x1: r.x1, y1: r.y1 + dy, x2: r.x2, y2: r.y2 + dy };
+  const ax = -root.width / 2;
+  return { x1: ax - r.x2, y1: r.y1 + dy, x2: ax - r.x1, y2: r.y2 + dy };
+}
+function mmMkBounds() {
+  if (!mmMk) return null;
+  const a = mmMkBoundsOf(mmMk.r, false);
+  const b = mmMkBoundsOf(mmMk.l, true);
+  if (!a) return b;
+  if (!b) return a;
+  return {
+    x1: Math.min(a.x1, b.x1), y1: Math.min(a.y1, b.y1),
+    x2: Math.max(a.x2, b.x2), y2: Math.max(a.y2, b.y2),
+  };
+}
+
+/* 渲染完成后把 stage 坐标对齐好：两个实例的根盒中心都摆到 (0,0)，
+   左树整体 x 取反，于是中心主题正好压在 stage 原点、左右两半对称展开。
+   ⚠ mk.g 是 d3 selection（不是 DOM 元素），要改 transform 得走 .attr()。 */
+function mmMkPlace() {
+  if (!mmMk) return;
+  const rr = mmMkRootRect(mmMk.r);
+  const lr = mmMkRootRect(mmMk.l);
+  if (rr) {
+    mmMk.r.mk.g.attr('transform',
+      `translate(${-rr.x - rr.width / 2},${-rr.y - rr.height / 2})`);
+  }
+  if (lr) {
+    mmMk.l.mk.g.attr('transform',
+      `translate(${lr.width / 2},${-lr.y - lr.height / 2}) scale(-1,1)`);
+  }
+  const b = mmMkBounds();
+  if (b) mmLayoutSize = { w: b.x2 - b.x1, h: b.y2 - b.y1 };
+}
+
+/* ---- markmap options ---- */
+/* 主题 → color / lineWidth 回调。分支色按 payload.__ci 取，
+   保证左右两侧同一条分支同色。 */
+function mmMkOptions() {
+  const { defaultOptions } = mmMkApi;
+  const center = mmTheme.center || '#666';
+  return {
+    ...defaultOptions,
+    embedGlobalCSS: true,
+    duration: 200,
+    initialExpandLevel: -1,     /* 折叠状态完全由大纲决定 */
+    /* 三件套必须关：markmap 自己的 zoom / 滚轮平移 / 自动 fit，
+       全部让位给我们统一的 mmView（两个实例共用一个视角）。 */
+    zoom: false,
+    pan: false,
+    autoFit: false,
+    fitRatio: 0.86,
+    paddingX: 8,
+    spacingHorizontal: 88,      /* 父子列距 */
+    spacingVertical: 16,        /* 同父兄弟缝；markmap 内部对跨父自动 ×2 */
+    color: (node) => {
+      /* markmap 的 depth 是 1-based：根 = 1，根的孩子（一级分支）= 2。
+         只有根自己用中心色，一级分支往下全用自己那条分支的颜色 —— 幕布就是这样分色的。 */
+      if (!node.parent) return center;
+      return mmMkColorOf(node);
+    },
+    lineWidth: (node) => (node.state.depth <= 2 ? 2.5 : 1.6),
+  };
+}
+let mmMkColorFn = () => '#888';
+function mmMkColorOf(node) {
+  const p = node && node.payload;
+  return mmMkColorFn(p ? p.__ci : 0);
+}
+
+/* 渲染完成后给每个节点组打身份标记。
+ *
+ * ⚠ 顺带必须做一件 markmap 自己不做的事：**把退出的幽灵 <g> 摘掉**。
+ * markmap-view 的 renderData 里 `mmGExit` 只用来取 originNode，从头到尾没有
+ * `.exit().remove()`（见 markmap-view@0.18.12 src/view.ts L380-390）。而它的
+ * join key = `父先序id.自己先序id + hash(文本)` —— 插入/删除/改一个字，
+ * 后面所有兄弟的先序 id 全变，key 全变，于是那一整段旧 <g> 全都进了 exit，
+ * 却还留在 DOM 里，带着上一帧的 data-mm-id 和上一帧的文本。
+ *
+ * 后果实测很具体：mmEditBox(id) 用 querySelector 抓到的是幽灵，于是把焦点
+ * 打进一个即将被复用的壳里，下一帧它被拿去渲染别的节点 —— focus/blur 当场
+ * 把用户的编辑掐掉，Enter 新建的节点一进去就掉出编辑态。
+ *
+ * 判活办法：d3 的 exit 选择器**不会**更新 node.__data__（bindKey 里只有
+ * update/enter 会写），而 live 节点的 __data__ 一定在当前这棵 state.data 里。
+ * 所以「__data__ 不在当前树中」= 幽灵，直接 remove。
+ *
+ * 身份取 __data__ 而不是 data-path：data-path 只在 enter 时写一次，
+ * 被复用的旧壳永远带着上一帧的路径。 */
+function mmMkStampIds(inst) {
+  const data = inst && inst.mk && inst.mk.state && inst.mk.state.data;
+  if (!data) return;
+  /* ⚠️ 必须按 state.key（join key）判活，不能按引用。
+   * d3 的 exit 选择器**不会**更新 __data__，所以旧 <g> 的 __data__ 指向旧树对象，
+   * 引用比较能命中；但 markmap 在每个 <g> 里加一条 <line> 指向父 <circle>，
+   * 如果父 <g> 是 update 而子 <g> 是 exit，子 <g> 没摘掉时 <line> 仍指旧坐标，
+   * 会画出那条诡异的粗曲线。
+   * 用 state.key 比较：旧 key 不在新树的 liveKey 集合里 → 直接摘。 */
+  const liveKeys = new Set();
+  (function walk(n) {
+    if (n && n.state && n.state.key) liveKeys.add(n.state.key);
+    (n.children || []).forEach(walk);
+  })(data);
+  const groups = inst.el.querySelectorAll('g.markmap-node');
+  for (const g of groups) {
+    const node = g.__data__;
+    const k = node && node.state && node.state.key;
+    if (!k || !liveKeys.has(k)) { g.remove(); continue; }
+    if (!node.payload || !node.payload.__id) continue;
+    g.setAttribute('data-mm-id', node.payload.__id);
+    g.setAttribute('data-mm-depth', String(node.state.depth));
+    g.style.setProperty('--mm-c', mmMkColorOf(node));
+  }
+}
+
+/* ---- ③ 同步 / 创建 / 销毁 ---- */
+
+function mmMkSync() {
+  if (!mmMk || !mmMkIsActive() || !mmActive) return;
+  const built = mmMkBuild();
+  mmMkColorFn = built.color;
+  const opts = mmMkOptions();
+  mmMk.r.mk.setOptions(opts);
+  mmMk.l.mk.setOptions(opts);
+  /* 钩在 renderData 上（见 mmMkHook），对齐/fit 每次重算都会跑，这里只管喂数据 */
+  Promise.all([
+    Promise.resolve(mmMk.r.mk.setData(built.r)),
+    Promise.resolve(mmMk.l.mk.setData(built.l)),
+  ]).catch((e) => console.warn('[mm] markmap 渲染失败', e));
+}
+
+function mmMkDestroy() {
+  if (!mmMk) return;
+  /* 切走 markmap 模式时把 FAB 顺手藏了，否则会浮在不该有的地方 */
+  const fab = document.getElementById('mm-fab');
+  if (fab) fab.hidden = true;
+  ['r', 'l'].forEach((s) => { try { mmMk[s].mk.destroy(); } catch (e) { /* ignore */ } });
+  mmMk = null;
+}
+
+/* ⚠ 必须钩 renderData，而不是 setData 的 then。
+   markmap 首次渲染时节点尺寸还是 [0,0]（`_relayout` 量的是 foreignObject 里的
+   el.scrollWidth），要等 ResizeObserver 异步回调再触发一次 renderData 才量得到真值。
+   也就是说 setData().then() 里拿到的多半是**首帧的空布局**——
+   之前就因为这个只算出了半张图的位置，左半边整片跑到视口外。 */
+function mmMkHook(inst) {
+  const mk = inst.mk;
+  const orig = mk.renderData.bind(mk);
+  mk.renderData = function () {
+    return orig().then(() => {
+      const d = mk.state.data;
+      /* 首帧尺寸还没量出来，跳过 —— 否则会按空包围盒闪一下 */
+      if (!d || !d.state || !(d.state.rect.width > 0)) return;
+      mmMkStampIds(inst);
+      mmMkPlace();
+      /* 树模型跟着重排刷新：键盘导航/提降级/拖拽命中都靠它 */
+      mmTree = mmBuildTree();
+      syncMmSelectionClasses();
+      mmAutoFit();
+      mmPositionFab();          /* markmap 每次重排后，FAB 跟着选中节点重新摆位 */
+      mmMkPositionGrip();       /* 抓手也得跟上 */
+    });
+  };
+}
+
+function mmMkEnsure() {
+  if (mmMk || !mmMkApi || !mmActive) return;
+  try {
+    const opts = mmMkOptions();
+    mmMk = {
+      r: { el: mmEl.mkR, mk: new mmMkApi.Markmap(mmEl.mkR, opts) },
+      l: { el: mmEl.mkL, mk: new mmMkApi.Markmap(mmEl.mkL, opts) },
+    };
+    mmMkHook(mmMk.r);
+    mmMkHook(mmMk.l);
+    mmMkSync();
+  } catch (e) {
+    console.warn('[mm] markmap 初始化失败', e);
+  }
+}
+
+/* ---- 交互回写大纲 ---- */
+/* markmap-view 0.18 没有事件系统，事件都挂在渲染出来的节点 DOM 上，
+   这里用事件委托 + data-mm-id 反查（见 mmMkStampIds）。 */
+function mmMkBindDom() {
+  const stage = mmEl.stage;
+  if (!stage || stage.dataset.mkBound) return;
+  stage.dataset.mkBound = '1';
+
+  const idOf = (e) => {
+    const g = e.target.closest && e.target.closest('g.markmap-node[data-mm-id]');
+    return g ? g.getAttribute('data-mm-id') : null;
+  };
+
+  /* ⚠ 三个监听器**必须用捕获阶段**。
+     markmap 给每个 foreignObject 绑了 `mousedown` / `dblclick` 的 stopPropagation
+     （见 markmap-view 的 mmFoEnter），事件根本冒泡不到 stage ——
+     用默认的冒泡监听的话，点节点会完全没反应（选中、编辑、折叠同步全失效）。
+     捕获在目标之前就跑完，stopPropagation 拦不住它。 */
+  stage.addEventListener('mousedown', (e) => {
+    const id = idOf(e);
+    if (!id) return;
+    /* 点节点本体 = 选中；点折叠钮由 markmap 自己处理，别抢 */
+    if (e.target.closest('circle')) return;
+    if (e.button !== 0) return;
+    mmSelect(id);
+    /* 按下先不拖，move 超过阈值才升级成拖拽 —— 这样单击仍然是「选中」。
+       中心主题固定不可拖（和幕布一致）。 */
+    if (id !== MM_ROOT_ID && !mmEditingId) mmMkDragStart(e, id);
+  }, true);
+
+  /* 双击进编辑：把 markmap 节点的文本层变成 contenteditable，
+     失焦/回车时写回大纲 DOM —— 大纲仍是唯一数据源。 */
+  stage.addEventListener('dblclick', (e) => {
+    const id = idOf(e);
+    if (!id) return;
+    if (!e.target.closest('.markmap-foreign')) return;
+    e.preventDefault();
+    /* 和 F2 / Enter / Tab 走同一条编辑生命周期（mmStartEdit + mmCommitEdit） */
+    mmStartEdit(id);
+  }, true);
+
+  /* 折叠状态同步：markmap 收起一个节点 → 大纲里对应 topic 也标成 folded。
+     同样要捕获（折叠钮的 click 是 markmap 自己绑的），
+     而且 markmap 的 renderData 是异步的，冒泡到我们这里时 payload.fold 还没落定，
+     所以再延 300ms 等它算完。 */
+  stage.addEventListener('click', (e) => {
+    if (!e.target.closest || !e.target.closest('circle')) return;
+    setTimeout(() => mmMkWriteBackFold(), 300);
+  }, true);
+
+  /* ---- hover 高亮 + 拖拽时给候选节点打 is-mm-target ----
+     markmap 自己的鼠标事件会 stopPropagation 拦不到 stage 冒泡，
+     但 mousemove 不在拦截名单里，捕获阶段跑就够了。 */
+  stage.addEventListener('mousemove', (e) => {
+    if (mmEditingId) return;            /* 编辑态别盖「可输入」光标 */
+    const g = e.target.closest && e.target.closest('g.markmap-node[data-mm-id]');
+    if (mmMk && mmMk.hover) mmMk.hover.classList.remove('is-mm-hover');
+    if (g && g.getAttribute('data-mm-id') !== mmSelectedId) {
+      g.classList.add('is-mm-hover');
+      mmMk.hover = g;
+    } else {
+      mmMk.hover = null;
+    }
+  }, true);
+  stage.addEventListener('mouseleave', () => {
+    if (mmMk && mmMk.hover) { mmMk.hover.classList.remove('is-mm-hover'); mmMk.hover = null; }
+  });
+}
+
+/* ============================================================
+ * markmap 模式：拖拽改层级（改父节点 / 改兄弟顺序）
+ *
+ * 内置引擎的拖拽是「挪位置」（位移记进 mmDrags 的偏移量）。
+ * markmap 的坐标由 d3-flextree 决定，挪不动也没意义 ——
+ * 它的拖拽语义是**改结构**：把节点挂到别的父节点下，或插到别的兄弟位置。
+ *
+ * 判定规则（幕布 / XMind 同款心智模型，细则见 mmMkFindTarget）：
+ *   · 指针**压在某个节点上** → 成为它的**子级**（它自动展开）
+ *   · 指针落在节点之间的**空档** → 成为那一列的**兄弟**，插入位置按纵坐标定
+ *   · 不允许落进自己的子树里（否则整棵子树会变成自己的后代）
+ *
+ * 落点最终写回大纲 DOM（唯一数据源），再走一次 mmMkSync 重新分侧 + 重排。
+ * ============================================================ */
+let mmMkDrag = null;
+
+function mmMkSubtreeIds(id) {
+  const set = new Set([id]);
+  const walk = (x) => {
+    const m = mmTree.get(x);
+    if (!m) return;
+    m.childIds.forEach((c) => { if (!set.has(c)) { set.add(c); walk(c); } });
+  };
+  walk(id);
+  return set;
+}
+
+/* 收集当前**可见**节点的屏幕矩形（被折叠的子树不在 DOM 里，自然就不参与命中）。
+   这是 markmap 双侧唯一的坐标系来源：DOM rect 就是事实，不需要反推布局。 */
+function mmMkCollectRects(exclude) {
+  const map = new Map();
+  document.querySelectorAll('#mm-mk-stage g.markmap-node[data-mm-id]').forEach((g) => {
+    const id = g.getAttribute('data-mm-id');
+    if (!id || exclude.has(id)) return;
+    /* 左实例的根只是占位（visibility:hidden），不是真实节点，排除掉 */
+    if (g.closest('#mm-mk-l') && g.getAttribute('data-mm-depth') === '1') return;
+    const fo = g.querySelector('foreignObject');
+    if (!fo) return;
+    const b = fo.getBoundingClientRect();
+    if (!b.width && !b.height) return;
+    map.set(id, {
+      id,
+      side: g.closest('#mm-mk-l') ? -1 : 1,
+      depth: parseInt(g.getAttribute('data-mm-depth'), 10) || 1,
+      left: b.left, right: b.right, top: b.top, bottom: b.bottom,
+      cy: (b.top + b.bottom) / 2,
+    });
+  });
+  return map;
+}
+
+/* 落点判定。判定的是「意图」，不是几何 —— 坐标由 d3-flextree 摆出来，
+ * 指针落在哪不等于用户想要什么。
+ *
+ * 手感对齐 XMind / 幕布：
+ *   · 指针**压在某个节点盒子上** → 成为它的**子级**（拖到谁身上就是谁的孩子）
+ *   · 指针落在盒子之间的**空档**里 → 成为那一列的**兄弟**，插入位置看纵向坐标
+ *   · 离所有列都远 → 本次没有落点，取消
+ *
+ * ⚠ 别再用早期那套「外半边=子级 / 内半边=兄弟」：双侧镜像下「外」的方向
+ * 是跟着左右翻的（左边那半棵树的外侧朝左），用户根本判断不出自己在往里拖
+ * 还是往外拖，实测就出现了「明明把节点拖到了它右边缘却成了兄弟」。
+ * 压在节点上永远是「我要当它的孩子」，没有歧义。 */
+function mmMkFindTarget(rects, cx, cy) {
+  const PAD = 5;                /* 压中盒子的容差 */
+  const V_TOL = 48;             /* 空档判定的纵向容差（屏幕像素） */
+
+  /* ① 压中盒子 → 子级。左右两侧各有一棵树，同一坐标可能被两个盒子同时罩住
+        （左右列宽接近中心时），取更深的那一个 —— 那才是用户视觉上点中的。 */
+  let hit = null;
+  rects.forEach((c) => {
+    if (cx < c.left - PAD || cx > c.right + PAD) return;
+    if (cy < c.top - PAD || cy > c.bottom + PAD) return;
+    if (!hit || c.depth > hit.depth) hit = c;
+  });
+  if (hit) return { mode: 'child', parentId: hit.id, index: -1, rect: hit, parentRect: hit };
+
+  /* ② 空档 → 兄弟。横向代价用「到盒子跨度外的距离」而不是到中点的距离：
+        盒子横向跨度内代价恒为 0，于是在同一列里纯粹比纵向谁最近；
+        一旦跑到某一列的左边或右边，才开始按横向距离罚分选列。 */
+  let best = null;
+  rects.forEach((c) => {
+    const dy = Math.abs(c.cy - cy);
+    if (dy > V_TOL) return;
+    const dx = cx < c.left ? c.left - cx : (cx > c.right ? cx - c.right : 0);
+    const cost = dx + dy * 0.6;
+    if (!best || cost < best.cost) best = { c, cost };
+  });
+  if (!best) return null;
+
+  const cm = mmTree.get(best.c.id);
+  const parentId = cm ? cm.parentId : MM_ROOT_ID;
+  /* 插入下标 = 「最后一个纵坐标在指针上方的可见兄弟」的下标 +1。
+     注意不能遇到没有矩形的（被折叠的）就 break —— 那样下标会算少。 */
+  const siblings = mmMkSiblingIds(parentId);
+  let index = 0;
+  for (let i = 0; i < siblings.length; i++) {
+    const r = rects.get(siblings[i]);
+    if (r && r.cy < cy) index = i + 1;
+  }
+  const pr = parentId === MM_ROOT_ID ? null : rects.get(parentId);
+  return { mode: 'sibling', parentId, index, rect: best.c, parentRect: pr || best.c };
+}
+
+function mmMkSiblingIds(parentId) {
+  const sel = parentId === MM_ROOT_ID
+    ? '#outline > .topic'
+    : `#outline li[data-id="${CSS.escape(parentId)}"] > .topic-children > .topic`;
+  return Array.from(document.querySelectorAll(sel)).map((li) => li.dataset.id);
+}
+
+function mmMkPaintDrop(d, cy) {
+  const t = d.target;
+  if (_mmBarBadge) _mmBarBadge.style.display = 'none';
+  if (_mmBarMini)  _mmBarMini.style.display  = 'none';
+  if (!t) { d.bar.hidden = true; d.bar.dataset.folded = '0'; return; }
+  d.bar.hidden = false;
+  if (t.mode === 'child') {
+    const r = t.rect;
+    /* 命中折叠中的父 → 用迷你预览样式（虚线 + 角标"展开后含 N 项"） */
+    const isFolded = !!(d.targetEl && d.targetEl.classList.contains('markmap-fold'));
+    let cnt = 0;
+    if (isFolded) {
+      const m = mmTree.get(t.rect.id);
+      cnt = m ? m.childIds.length : 0;
+    }
+    d.bar.dataset.folded = isFolded ? '1' : '0';
+    d.bar.dataset.foldedCount = String(cnt);
+    d.bar.className = isFolded ? 'mm-drag-bar is-ring is-folded' : 'mm-drag-bar is-ring';
+    d.bar.style.left = (r.left - 5) + 'px';
+    d.bar.style.top = (r.top - 5) + 'px';
+    d.bar.style.width = (r.right - r.left + 10) + 'px';
+    d.bar.style.height = (r.bottom - r.top + 10) + 'px';
+    if (isFolded && _mmBarMini) {
+      _mmBarMini.querySelector('.mini-title').textContent = `展开后 ${cnt} 个子`;
+      _mmBarMini.style.display = 'flex';
+    }
+    return;
+  }
+  /* 同级插入：放大版横线 —— 8px 高度，两端三角，末端"⊕ 插入这里"小角标。
+   * 横跨父节点所在的那一列，让用户一眼能看出"插到这两行之间"。 */
+  const pr = t.parentRect;
+  const left = Math.min(pr.left, t.rect.left) - 18;
+  const right = Math.max(pr.right, t.rect.right) + 18;
+  d.bar.className = 'mm-drag-bar is-line';
+  d.bar.style.left = left + 'px';
+  d.bar.style.width = (right - left) + 'px';
+  d.bar.style.top = (cy - 4) + 'px';
+  if (_mmBarBadge) {
+    _mmBarBadge.textContent = d.copyMode ? '⊕ 复制到此' : '⊕ 插入这里';
+    _mmBarBadge.classList.toggle('is-copy', !!d.copyMode);
+    _mmBarBadge.style.display = 'block';
+  }
+}
+
+function mmMkDragStart(e, id) {
+  mmMkDrag = {
+    id, startX: e.clientX, startY: e.clientY, moved: false,
+    target: null, rects: null, ghost: null, bar: null,
+    copyMode: !!(e && e.altKey),   /* Alt/Option + drop = 复制而非移动 */
+  };
+  window.addEventListener('mousemove', mmMkDragMove);
+  window.addEventListener('mouseup', mmMkDragEnd);
+  window.addEventListener('keydown', mmMkDragKey, true);
+}
+
+/* 兄弟指示的「⊕ 插入这里」角标：纯 DOM 注入，避免和 ::before/::after 三角冲突 */
+let _mmBarBadge = null;        /* 单例，重复利用 */
+let _mmBarMini = null;
+function mmMkEnsureBarBadges(bar) {
+  if (!_mmBarBadge) {
+    _mmBarBadge = document.createElement('div');
+    _mmBarBadge.className = 'mm-bar-badge';
+    _mmBarBadge.textContent = '⊕ 插入这里';
+  }
+  if (!_mmBarMini) {
+    _mmBarMini = document.createElement('div');
+    _mmBarMini.className = 'mm-bar-mini';
+    _mmBarMini.innerHTML = '<div class="mini-title">展开后</div>'
+      + '<div class="mini-row"></div><div class="mini-row"></div><div class="mini-row"></div>';
+  }
+  if (!_mmBarBadge.parentElement) bar.appendChild(_mmBarBadge);
+  if (!_mmBarMini.parentElement) bar.appendChild(_mmBarMini);
+  _mmBarBadge.style.display = 'none';
+  _mmBarMini.style.display = 'none';
+}
+
+function mmMkDragMove(e) {
+  const d = mmMkDrag;
+  if (!d) return;
+  if (!d.moved) {
+    if (Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) < 5) return;
+    d.moved = true;
+    e.preventDefault();
+    d.rects = mmMkCollectRects(mmMkSubtreeIds(d.id));
+    d.ghost = document.createElement('div');
+    d.ghost.className = 'mm-drag-ghost';
+    const m = mmTree.get(d.id);
+    d.ghost.innerHTML = (m && m.html) || '';
+    document.body.appendChild(d.ghost);
+    d.bar = document.createElement('div');
+    d.bar.className = 'mm-drag-bar';
+    d.bar.hidden = true;
+    document.body.appendChild(d.bar);
+    mmMkEnsureBarBadges(d.bar);   /* 首次创建时挂上「⊕ 插入这里」+ 折叠迷你预览 DOM */
+    document.body.classList.add('mm-dragging');
+  }
+  d.ghost.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 12}px)`;
+  /* Alt 切换复制模式：ghost 角标 + bar 角标同步 */
+  d.copyMode = !!e.altKey;
+  if (d.ghost._copy !== d.copyMode) {
+    d.ghost._copy = d.copyMode;
+    /* 复制模式：ghost 角标加个「+副本」前缀，CSS 会用 ::before 渲染 */
+    d.ghost.classList.toggle('is-copy', d.copyMode);
+  }
+  d.target = mmMkFindTarget(d.rects, e.clientX, e.clientY);
+  /* 把当前候选节点打上 is-mm-target —— CSS 会让它变亮一档，非候选节点则 dim。
+     移开 / 取消时要清干净。 */
+  const wantId = d.target && d.target.rect && d.target.rect.id;
+  if (d.targetElId !== wantId) {
+    if (d.targetEl) d.targetEl.classList.remove('is-mm-target');
+    d.targetEl = wantId
+      ? document.querySelector(`#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(wantId)}"]`)
+      : null;
+    d.targetElId = wantId;
+    if (d.targetEl) d.targetEl.classList.add('is-mm-target');
+  }
+  mmMkPaintDrop(d, e.clientY);
+  /* 实时连接预览线：源节点中心 → 鼠标。
+   * source center = d.id 那个 markmap <g> 里的 foreignObject 中心；
+   * mode 跟 d.target.mode 走：有目标 = child / sibling，无目标 = none。 */
+  const srcEl = document.querySelector(`#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(d.id)}"] foreignObject`);
+  if (srcEl) {
+    const r = srcEl.getBoundingClientRect();
+    mmUpdateDragLine({
+      sx: r.left + r.width / 2,
+      sy: r.top + r.height / 2,
+      ex: e.clientX, ey: e.clientY,
+      mode: d.target ? d.target.mode : 'none',
+    });
+  }
+}
+
+function mmMkDragKey(e) {
+  if (e.key !== 'Escape' || !mmMkDrag) return;
+  e.preventDefault();
+  e.stopPropagation();
+  mmMkDrag.target = null;
+  mmMkDragEnd();
+}
+
+function mmMkDragEnd() {
+  window.removeEventListener('mousemove', mmMkDragMove);
+  window.removeEventListener('mouseup', mmMkDragEnd);
+  window.removeEventListener('keydown', mmMkDragKey, true);
+  document.body.classList.remove('mm-dragging');
+  const d = mmMkDrag;
+  mmMkDrag = null;
+  if (!d) return;
+  if (d.ghost) d.ghost.remove();
+  if (d.bar) d.bar.remove();
+  if (d.targetEl) { d.targetEl.classList.remove('is-mm-target'); d.targetEl = null; d.targetElId = null; }
+  mmHideDragLine();
+  if (!d.moved || !d.target) return;      /* 只是点了一下 / 没有落点 → 交给选中逻辑 */
+  mmMkApplyDrop(d.id, d.target, { copy: d.copyMode });
+}
+
+/* 落点写回大纲 DOM。深度、父的展开态一起修好，之后一次 mmRelayout 让两套引擎各自重排。
+ * opts.copy = true：复制模式（Alt + drop）—— 把整棵子树克隆 + 重新发 id 后插入落点。 */
+function mmMkApplyDrop(id, t, opts) {
+  let li = mmLi(id);
+  if (!li) return;
+  opts = opts || {};
+  /* 落点会改成结构 → 撤销栈要能回到原状，调用前先快照（仅 move；copy 也要记，
+   * 因为原节点没动但大纲多了一组节点 —— 撤销 = 删掉新节点）。 */
+  mmHistoryPush();
+  let copyRoot = null;            /* 复制模式下：新建子树挂在哪个 li 下？ */
+  if (opts.copy) {
+    const clone = li.cloneNode(true);
+    /* 克隆要重新发 id，否则会与原节点冲突（data-id 重复、mmTree 双重条目） */
+    const oldToNew = new Map();
+    clone.dataset.id = mmNewId();
+    oldToNew.set(li.dataset.id, clone.dataset.id);
+    clone.querySelectorAll('[data-id]').forEach((el) => {
+      const nid = mmNewId();
+      oldToNew.set(el.dataset.id, nid);
+      el.dataset.id = nid;
+    });
+    /* markmap 的 mmTree 也得克隆一份 + 重新发 __id（payload.__id / __ci） */
+    const oldTree = mmTree;
+    const cloneSubtree = (oldId) => {
+      const om = oldTree.get(oldId);
+      if (!om) return null;
+      const newId = oldToNew.get(oldId);
+      const cm = {
+        id: newId, parentId: null, depth: om.depth,
+        html: om.html, folded: om.folded, hasChildren: om.hasChildren,
+        childIds: om.childIds.map(cloneSubtree).filter(Boolean),
+      };
+      cm.childIds.forEach((c) => { c.parentId = newId; });
+      mmTree.set(newId, cm);
+      return cm;
+    };
+    cloneSubtree(id);
+    /* 折叠态清掉：克隆出来默认展开，强制有子级时是父节点 */
+    delete clone.dataset.state;
+    copyRoot = clone;
+    /* 注意：li 仍指向原节点，下面用 copyRoot 插入到 t 落点 */
+  }
+  let parentLi = null, parentUl = null;
+  if (t.parentId === MM_ROOT_ID) {
+    parentUl = document.getElementById('outline');
+  } else {
+    parentLi = mmLi(t.parentId);
+    if (!parentLi) return;
+    /* 不能落进自己的子树里 */
+    if (parentLi === li || li.contains(parentLi)) return;
+    parentUl = parentLi.querySelector(':scope > .topic-children');
+    if (!parentUl) {
+      parentUl = document.createElement('ul');
+      parentUl.className = 'topic-children';
+      parentLi.appendChild(parentUl);
+    }
+  }
+  let index = t.index;
+  /* 复制模式：插入克隆（不移动原 li）；move 模式：原 li 直接 insertBefore */
+  if (copyRoot) {
+    /* 同父插入：摘掉自身这一步不存在（克隆不在 outline 里），
+       直接算 ref 然后 insertBefore。 */
+    const ref = index < 0 ? null : (parentUl.children[index] || null);
+    parentUl.insertBefore(copyRoot, ref);
+    const depth = parentLi ? (parseInt(parentLi.dataset.depth, 10) || 0) + 1 : 1;
+    updateDepth(copyRoot, depth);
+    if (parentLi) parentLi.dataset.state = 'open';
+    mmRelayout(true);
+    /* 选中新克隆（id 已重发，原 id 仍指向原 li） */
+    const newId = copyRoot.dataset.id;
+    mmSelect(newId);
+    mmMkScrollIntoView(newId);
+    const label = (copyRoot.querySelector('.topic-content')?.textContent || newId).slice(0, 16);
+    const parentLabel = parentLi
+      ? (parentLi.querySelector(':scope > .topic-row > .topic-content')?.textContent || '').slice(0, 16)
+      : '（一级）';
+    mmToast(`已复制「${label}」到「${parentLabel}」下`, { undo: true });
+    return;
+  }
+  /* 摘掉自身会改变同父兄弟的下标：从原位置往后插要让一格，否则会差一位 */
+  const curUl = li.parentElement;
+  if (curUl === parentUl) {
+    const curIdx = Array.prototype.indexOf.call(parentUl.children, li);
+    if (curIdx !== -1 && index > curIdx) index -= 1;
+  }
+  const ref = index < 0 ? null : (parentUl.children[index] || null);
+  if (ref === li) return;
+  parentUl.insertBefore(li, ref);
+  const depth = parentLi ? (parseInt(parentLi.dataset.depth, 10) || 0) + 1 : 1;
+  updateDepth(li, depth);
+  if (parentLi) parentLi.dataset.state = 'open';   /* 折叠中的父自动展开 */
+  mmRelayout(true);
+  mmSelect(id);
+  mmMkScrollIntoView(id);
+  /* 操作反馈：右下角 toast 描述本次移动 + 配撤销按钮 */
+  const label = (li.querySelector('.topic-content')?.textContent || id).slice(0, 16);
+  const parentLabel = parentLi
+    ? (parentLi.querySelector(':scope > .topic-row > .topic-content')?.textContent || '').slice(0, 16)
+    : '（一级）';
+  const verb = t.mode === 'child' ? '移到' : (parentLabel === '（一级）' ? '移到一级' : '改成兄弟');
+  mmToast(`已把「${label}」${verb}「${parentLabel}」下`, { undo: true });
+}
+
+/* markmap 模式把选中节点滚进视口（用 DOM 矩形，不依赖模型坐标） */
+function mmMkScrollIntoView(id) {
+  const fo = document.querySelector(
+    `#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(id)}"] foreignObject`);
+  if (!fo) return;
+  const r = fo.getBoundingClientRect();
+  const pad = 60;
+  const W = window.innerWidth, H = window.innerHeight;
+  let dx = 0, dy = 0;
+  if (r.left < pad) dx = pad - r.left;
+  else if (r.right > W - pad) dx = (W - pad) - r.right;
+  if (r.top < pad) dy = pad - r.top;
+  else if (r.bottom > H - pad) dy = (H - pad) - r.bottom;
+  if (dx || dy) { mmView.tx += dx; mmView.ty += dy; mmApplyView(); }
+}
+
+/* markmap 渲染完的树 → 大纲 DOM 的 folded 状态（左右两棵树取并集） */
+function mmMkWriteBackFold() {
+  if (!mmMk) return;
+  const state = new Map();
+  ['r', 'l'].forEach((side) => {
+    const root = mmMk[side].mk.state && mmMk[side].mk.state.data;
+    if (!root) return;
+    (function walk(n) {
+      state.set(n.payload && n.payload.__id, n.payload && n.payload.fold ? 1 : 0);
+      (n.children || []).forEach(walk);
+    })(root);
+  });
+  state.forEach((folded, id) => {
+    if (!id || id === MM_ROOT_ID) return;
+    const li = document.querySelector(`#outline li[data-id="${CSS.escape(id)}"]`);
+    if (!li) return;
+    const now = li.dataset.state === 'folded';
+    if (now !== !!folded) li.dataset.state = folded ? 'folded' : 'open';
+  });
+}
+
+/* 大纲副标题（条主题 · 字数）在导图里改字后要跟着走 */
+function mmUpdateSubtitle() {
+  const el = document.querySelector('.stage .subtitle');
+  if (!el) return;
+  let topics = 0, chars = 0;
+  document.querySelectorAll('#outline .topic').forEach((li) => {
+    const c = li.querySelector(':scope > .topic-row > .topic-content');
+    topics += 1;
+    chars += c ? c.textContent.trim().length : 0;
+  });
+  const h1 = document.querySelector('.stage h1');
+  if (h1) chars += h1.textContent.trim().length;
+  el.textContent = `${topics + 1} 条主题 · ${(chars / 1000).toFixed(1)}k 字`;
+}
+
+function mmComputeLayout(models) {
+  const root = models.get(MM_ROOT_ID);
+  if (mmLayout.key === 'mindmap') mmLayoutMindmap(models, root);
+  else if (mmLayout.key === 'bracket') mmLayoutBracket(models, root);
+  else mmLayoutLogic(models, root);
+  mmApplyDragsAndFinish(models);
+}
+
+/* ----- 重布局（含动画）：快照 → 元素同步 → 测量 → 布局 → rAF 插值 ----- */
+function mmRelayout(animate = true) {
+  if (!mmActive) return;
+  /* markmap 引擎接管：它自己管渲染/缩放/平移/连线，
+     我们只需要把大纲快照推过去。内置引擎的整条链路在下面，不动。 */
+  if (mmMkIsActive()) {
+    if (!mmMk) { mmMkEnsure(); if (mmMk) return; }
+    mmMkSync();
+    return;
+  }
+  const prev = mmModel;
+  mmModel = mmBuildModels(mmSnapshot());
+  const models = mmModel;
+
+  /* 元素同步 + 测量（新建的先挂 DOM 再量 offsetWidth/Height） */
+  models.forEach((m, id) => {
+    let el = mmEls.get(id);
+    if (!el) { el = mmCreateNode(m); mmEls.set(id, el); m.spawned = true; }
+    mmUpdateNode(el, m);
+    m.w = el.offsetWidth;
+    m.h = el.offsetHeight;
+  });
+
+  mmComputeLayout(models);
+
+  /* 退出可见集的节点（被折叠收进）→ 飞向最近可见祖先并淡出 */
+  const removed = [];
+  mmEls.forEach((el, id) => {
+    if (models.has(id)) return;
+    const pm = prev.get(id);
+    let a = pm ? pm.parentId : null;
+    while (a && !models.has(a)) a = prev.get(a) ? prev.get(a).parentId : null;
+    removed.push({ id, el, anchorId: a, pm });
+  });
+
+  const setPos = (el, x, y) => { el.style.transform = `translate(${x}px, ${y}px)`; };
+
+  if (!animate) {
+    removed.forEach((r) => { r.el.remove(); mmEls.delete(r.id); });
+    models.forEach((m) => setPos(mmEls.get(m.id), m.x, m.y));
+    mmDrawLinks();
+    mmAutoFit();
+    mmPositionFab();
+    return;
+  }
+
+  const entries = [];
+  models.forEach((m) => {
+    let fx = m.x, fy = m.y;
+    if (m.spawned) {
+      /* 新出现的节点（展开）：从父节点当前位置飞出 */
+      const pp = m.parentId ? prev.get(m.parentId) : null;
+      const pt = m.parentId ? models.get(m.parentId) : null;
+      fx = pp ? pp.x : (pt ? pt.x : m.x);
+      fy = pp ? pp.y : (pt ? pt.y : m.y);
+      m.spawned = false;
+    } else {
+      const cm = prev.get(m.id);
+      if (cm) { fx = cm.x; fy = cm.y; }
+    }
+    entries.push({ ref: m, el: mmEls.get(m.id), fx, fy, tx: m.x, ty: m.y });
+  });
+  removed.forEach((r) => {
+    const cm = r.pm;
+    const anchor = r.anchorId ? models.get(r.anchorId) : null;
+    entries.push({
+      ref: cm, el: r.el,
+      fx: cm ? cm.x : 0, fy: cm ? cm.y : 0,
+      tx: anchor ? anchor.x : (cm ? cm.x : 0),
+      ty: anchor ? anchor.y : (cm ? cm.y : 0),
+      removeId: r.id, fade: true,
+    });
+  });
+
+  if (mmAnim) cancelAnimationFrame(mmAnim);
+  /* 起点先落位，防止新节点在 (0,0) 闪一帧 */
+  entries.forEach((en) => setPos(en.el, en.fx, en.fy));
+  const dur = 280, t0 = performance.now();
+  const posMap = new Map();
+  const frame = (now) => {
+    const p = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);            /* ease-out cubic */
+    posMap.clear();
+    entries.forEach((en) => {
+      const x = en.fx + (en.tx - en.fx) * e;
+      const y = en.fy + (en.ty - en.fy) * e;
+      setPos(en.el, x, y);
+      if (en.fade) en.el.style.opacity = String(1 - e * 0.7);
+      posMap.set(en.ref.id, {
+        x, y, w: en.ref.w, h: en.ref.h,
+        color: en.ref.color, depth: en.ref.depth, parentId: en.ref.parentId,
+        side: en.ref.side, childIds: en.ref.childIds,
+      });
+    });
+    mmDrawLinks(posMap);
+    if (p < 1) { mmAnim = requestAnimationFrame(frame); return; }
+    mmAnim = null;
+    entries.forEach((en) => {
+      if (en.removeId) { en.el.remove(); mmEls.delete(en.removeId); }
+      else en.el.style.opacity = '';
+    });
+    mmDrawLinks();                                /* 终态：从 model 画 */
+    mmAutoFit();
+    mmPositionFab();
+  };
+  mmAnim = requestAnimationFrame(frame);
+}
+
+/* ----- 选中 / 折叠 ----- */
+/* 两套引擎的选中态各管各的：内置引擎给 DOM 节点加类，markmap 给渲染出来的
+   <g class="markmap-node"> 加类（身份靠 mmMkStampIds 按 __data__ 盖上的 data-mm-id）。
+   左右两个实例都可能有同一个节点（只有根会），一起更新。 */
+function syncMmSelectionClasses() {
+  if (!mmEl.stage) return;
+  mmEl.stage.querySelectorAll('g.markmap-node.is-mm-selected')
+    .forEach((g) => g.classList.remove('is-mm-selected'));
+  if (!mmSelectedId) return;
+  mmEl.stage.querySelectorAll(
+    `g.markmap-node[data-mm-id="${CSS.escape(mmSelectedId)}"]`)
+    .forEach((g) => g.classList.add('is-mm-selected'));
+}
+function mmSelect(id) {
+  mmSelectedId = id;
+  mmEls.forEach((el, i) => el.classList.toggle('is-selected', i === id));
+  syncMmSelectionClasses();
+  /* 选中同步到大纲的 is-current：大纲是唯一数据源，选中态不该两边各记一份
+     （以前只在「切回大纲视图」那一刻才对齐，导图里点一下大纲是看不到的）。 */
+  document.querySelectorAll('#outline .topic.is-current').forEach((t) => t.classList.remove('is-current'));
+  if (id && id !== MM_ROOT_ID) {
+    const li = document.querySelector(`#outline li[data-id="${CSS.escape(id)}"]`);
+    if (li) li.classList.add('is-current');
+  }
+  /* markmap 模式：把「+」入口 FAB 摆到选中节点的右上角 */
+  mmPositionFab();
+}
+
+/* markmap 模式：把 FAB 摆在选中节点右侧偏上，markmap 重排 / 视图平移缩放后
+ * 都要重算一次位置。FAB 是 body 直属 fixed 定位，要按选中节点的视口 bbox 算。
+ *
+ * 内置引擎也复用同一个 FAB：.mm-nodes 里的节点 absolute 定位，
+ * 用 mmEls.get(id) 拿到 DOM，按 getBoundingClientRect 拿 bbox 即可。 */
+function mmPositionFab() {
+  const fab = document.getElementById('mm-fab');
+  if (!fab) return;
+  if (!mmActive || !mmSelectedId || mmSelectedId === MM_ROOT_ID || mmEditingId) {
+    fab.hidden = true;
+    return;
+  }
+  let rect;
+  if (mmMkIsActive()) {
+    const fo = document.querySelector(
+      `#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(mmSelectedId)}"] foreignObject`);
+    if (!fo) { fab.hidden = true; return; }
+    rect = fo.getBoundingClientRect();
+  } else {
+    const el = mmEls.get(mmSelectedId);
+    if (!el) { fab.hidden = true; return; }
+    rect = el.getBoundingClientRect();
+  }
+  if (rect.width === 0 && rect.height === 0) { fab.hidden = true; return; }
+  /* 节点被自动 fit 切到画外时也别硬贴 */
+  if (rect.right < 0 || rect.left > window.innerWidth || rect.bottom < 0 || rect.top > window.innerHeight) {
+    fab.hidden = true; return;
+  }
+  fab.hidden = false;
+  /* 节点右上角上方 6px 处居中；transform 已是 translate(-50%, -100%) */
+  fab.style.left = (rect.right - 8) + 'px';
+  fab.style.top = (rect.top - 6) + 'px';
+}
+function mmToggleFold(id) {
+  const li = document.querySelector(`#outline li[data-id="${CSS.escape(id)}"]`);
+  if (!li) return;                /* 虚拟根不在大纲 → 无折叠语义 */
+  toggleTopic(li);                /* 复用大纲状态机（单一数据源），内部已通知导图重排 */
+}
+function mmAfterToggle() { if (mmActive) mmRelayout(true); }
+
+/* 实时连接预览线 —— 从源节点中心到鼠标位置画一条贝塞尔曲线，
+ * 颜色 / 样式按 drop 模式（child / sibling / none）切换。
+ * SVG 是 body 直属 fixed 定位，line 画在 path 元素上。
+ * 用 cubic 控制点让线条朝"源 → 鼠标"方向优雅弯过去。 */
+function mmUpdateDragLine({ sx, sy, ex, ey, mode }) {
+  const svg = document.getElementById('mm-drag-line');
+  const path = document.getElementById('mm-drag-line-path');
+  if (!svg || !path) return;
+  svg.style.display = 'block';   /* 同 mmHideDragLine：必须用 display 不用 hidden */
+  svg.classList.toggle('is-child', mode === 'child');
+  svg.classList.toggle('is-sibling', mode === 'sibling');
+  svg.classList.toggle('is-none', mode === 'none' || !mode);
+  /* 立方贝塞尔：控制点放在两端中部 → 形成"先沿源方向走一段，再折向鼠标"的 S 形。
+   * 水平方向偏移越大越"流"，所以 dx * 0.5。 */
+  const dx = ex - sx, dy = ey - sy;
+  const cx1 = sx + dx * 0.4, cy1 = sy;
+  const cx2 = ex - dx * 0.4, cy2 = ey;
+  path.setAttribute('d', `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}`);
+  /* 末端圆点：额外加一个 circle 标记"落点" */
+  let dot = svg.querySelector('.mm-drag-line-circle');
+  if (!dot) {
+    dot = document.createElementNS(MM_SVG_NS, 'circle');
+    dot.setAttribute('class', 'mm-drag-line-circle');
+    dot.setAttribute('r', '4');
+    svg.appendChild(dot);
+  }
+  dot.setAttribute('cx', ex);
+  dot.setAttribute('cy', ey);
+}
+function mmHideDragLine() {
+  const svg = document.getElementById('mm-drag-line');
+  /* ⚠️ 必须用 display:none，不能用 hidden 属性：
+   * .mm-drag-line 有 `position:fixed; inset:0;` 让浏览器把 svg 算成 display:block，
+   * 于是 [hidden] { display:none } 这条 UA 默认被压住，hidden=true 仍然显示。
+   * 结果：drag 结束后残留 path 一直挂在画布上，就是用户看到的那条粗蓝线。
+   * inline style 同选择器优先级最高，直接盖掉。 */
+  if (svg) svg.style.display = 'none';
+}
+
+/* markmap 抓手：跟 hover / 选中的节点走，位置由 mmMkPositionGrip 重算。
+ * 抓手 mousedown 直接进入拖拽判定（不走 5px 阈值——抓手点中=明确想拖）。 */
+const mmMkGripEl = document.getElementById('mm-mk-grip');
+let mmMkGripId = null;
+function mmMkPositionGrip() {
+  if (!mmMkGripEl) return;
+  if (!mmMkIsActive() || !mmActive) { mmMkGripEl.hidden = true; return; }
+  /* 优先用 hover 节点，没有就退回选中节点（已选节点不显抓手 = 用户改完结构会看 toast 反馈） */
+  const id = (mmMk && mmMk.hover && mmMk.hover.getAttribute('data-mm-id'))
+          || mmSelectedId;
+  if (!id || id === MM_ROOT_ID) { mmMkGripEl.hidden = true; return; }
+  const fo = document.querySelector(
+    `#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(id)}"] foreignObject`);
+  if (!fo) { mmMkGripEl.hidden = true; return; }
+  const r = fo.getBoundingClientRect();
+  if (!r.width && !r.height) { mmMkGripEl.hidden = true; return; }
+  /* 抓在节点右上角偏外一点（margin: -9 让中心对齐到 r.right / r.top） */
+  mmMkGripEl.hidden = false;
+  mmMkGripEl.style.left = r.right + 'px';
+  mmMkGripEl.style.top  = r.top + 'px';
+  if (mmMkGripId !== id) {
+    mmMkGripId = id;
+    mmMkGripEl.dataset.mmId = id;
+  }
+  mmMkGripEl.classList.toggle('is-visible', !!mmMk.hover || id === mmSelectedId);
+}
+mmMkGripEl && mmMkGripEl.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  const id = mmMkGripEl.dataset.mmId;
+  if (!id || id === MM_ROOT_ID) return;
+  if (mmEditingId) return;
+  e.preventDefault();
+  e.stopPropagation();
+  /* 先选中（视觉态同步），再启动拖拽（直接走、不等 5px 阈值） */
+  mmSelect(id);
+  mmMkDragStart(e, id);
+  /* mmMkDragStart 注册的是 window 级 mousemove/up，但内部会用 d.moved=false 起手；
+   * 我们已经在抓手上 mousedown 了，下一次 mousemove 必然超阈值 —— 把 d.moved 提前置位
+   * 让 ghost / bar 立刻显出来。 */
+  if (mmMkDrag) mmMkDrag.moved = true;
+});
+
+/* ----- 编辑：dblclick / Enter 进入；Enter 提交、Esc 取消、blur 提交 ----- */
+function mmEditKeydown(e) {
+  /* ⚠️ IME 组合期（中文候选中）全部按键放行给输入法：
+     否则按 Enter 选候选词会被当成"提交"，直接关掉编辑 —— 中文输入必坏 */
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); mmCommitEdit(); }
+  else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); mmCommitEdit(true); }
+  else if (e.key === 'Tab') {
+    /* 编辑中 Tab = 提交并新建子级（与非编辑态 Tab 语义一致）；Shift+Tab = 提交并提级 */
+    e.preventDefault(); e.stopPropagation();
+    const id = mmEditingId;
+    mmCommitEdit();
+    if (id && mmModelOf(id)) {
+      mmSelect(id);
+      if (e.shiftKey) mmOutdent(); else mmInsertChild();
+    }
+  }
+  else if (e.key === 'Delete' || e.key === 'Backspace') {
+    /* 编辑态下只有空文本才把整节点删掉（幕布 / XMind 的习惯）；
+       有内容时放行给原生，让它正常删字。document keydown 在 mmEditingId
+       非空时直接 return 不会删树，所以必须在这里接。
+       还要 stopPropagation：mmCommitEdit 会顺带把光标选到兄弟节点上，
+       不挡的话 document handler 会跟着把这个兄弟也删了。 */
+    const t = e.target;
+    if (t && !t.textContent.trim()) {
+      e.preventDefault();
+      e.stopPropagation();
+      mmCommitEdit();   /* 空内容会顺带把刚建的空节点清掉（empty-cleanup），刚好等于删除 */
+    }
+  }
+}
+function mmEditBlur() { mmCommitEdit(); }
+/* 编辑输入 → rAF 节流实时重排：节点宽度跟着打字生长，不等提交才跳（丝滑关键） */
+let mmEditRaf = null;
+function mmEditInput() {
+  /* markmap 模式别主动重排：它内部有 ResizeObserver 盯着节点的
+     scrollWidth，文字一变宽就会自己重算；这里再 setData 一次纯属浪费，
+     还会把「适应」重算一遍，编辑时视角跟着抖。 */
+  if (mmMkIsActive()) return;
+  if (mmEditRaf) cancelAnimationFrame(mmEditRaf);
+  mmEditRaf = requestAnimationFrame(() => {
+    mmEditRaf = null;
+    if (mmEditingId) mmRelayout(false);
+  });
+}
+/* 可编辑元素：内置引擎是 .mm-node 里的 .mm-text，
+   markmap 是 foreignObject 里那两层 div 的内层（双击走的就是它）。
+   抽出来是为了让 F2 / Enter / Tab / 双击四条入口共用同一套编辑生命周期。 */
+function mmEditBox(id) {
+  if (!id || id === MM_ROOT_ID) return null;
+  if (mmMkIsActive()) {
+    return document.querySelector(
+      `#mm-mk-stage g.markmap-node[data-mm-id="${CSS.escape(id)}"] foreignObject > div > div`);
+  }
+  const el = mmEls.get(id);
+  return el ? el.querySelector('.mm-text') : null;
+}
+
+function mmStartEdit(id, retry) {
+  if (mmEditingId) mmCommitEdit();
+  const t = mmEditBox(id);
+  if (!t) {
+    /* markmap 的节点是**异步**渲染出来的：Enter / Tab 刚把节点写进大纲，
+       mmRelayout 只是把数据推给 markmap，真正的 <g> 要等下一次 renderData
+       才出现。这里不放弃 —— 等它出来再进编辑态（上限约 0.7s）。 */
+    if (!retry && mmMkIsActive()) {
+      let tries = 0;
+      const wait = () => {
+        if (mmEditingId) return;
+        tries += 1;
+        if (mmEditBox(id)) mmStartEdit(id, true);
+        else if (tries < 45) requestAnimationFrame(wait);
+      };
+      requestAnimationFrame(wait);
+    }
+    return;
+  }
+  mmEditingId = id;
+  mmEditRestore = t.innerHTML;
+  if (!mmMkIsActive()) t.closest('.mm-node').classList.add('is-editing');
+  t.contentEditable = 'true';
+  t.focus();
+  const r = document.createRange();
+  r.selectNodeContents(t);
+  r.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+  t.addEventListener('keydown', mmEditKeydown);
+  t.addEventListener('input', mmEditInput);
+  t.addEventListener('blur', mmEditBlur);
+}
+function mmCommitEdit(cancel = false) {
+  const id = mmEditingId;
+  if (!id) return;
+  mmEditingId = null;
+  let cleanupFocus;                     /* 空节点清理后的新选中 id */
+  const t = mmEditBox(id);
+  if (t) {
+    t.removeEventListener('keydown', mmEditKeydown);
+    t.removeEventListener('input', mmEditInput);
+    t.removeEventListener('blur', mmEditBlur);
+    const el = mmMkIsActive() ? null : t.closest('.mm-node');
+    if (el) el.classList.remove('is-editing');
+    t.contentEditable = 'false';
+    if (cancel) {
+      t.innerHTML = mmEditRestore;
+    } else {
+      /* 写回大纲（单一数据源）：innerHTML 保留行内格式（mark/b/code…） */
+      const li = document.querySelector(`#outline li[data-id="${CSS.escape(id)}"]`);
+      const content = li && li.querySelector(':scope > .topic-row > .topic-content');
+      if (content) content.innerHTML = t.innerHTML;
+      /* 空节点清理：新建节点没输入任何内容就回车 → 直接移除（mubu 行为，
+         避免导图上留空壳）。仅当"编辑前就是空 && 编辑后仍为空 && 无子级"。 */
+      const wasEmpty = !mmEditRestore.replace(/<br\s*\/?>/gi, '').trim();
+      if (li && wasEmpty && !t.textContent.trim() && !li.querySelector('.topic-children')) {
+        const parentUl = li.parentElement;
+        cleanupFocus = (li.nextElementSibling || li.previousElementSibling)?.dataset?.id
+          || (parentUl && parentUl.parentElement ? parentUl.parentElement.dataset.id : null)
+          || null;
+        li.remove();
+        mmCleanupEmptyParent(parentUl);
+      }
+    }
+  }
+  mmRelayout(false);              /* 文本长度可能变化 → 重新测量布局 */
+  if (cleanupFocus !== undefined) {
+    mmSelect(cleanupFocus && mmModelOf(cleanupFocus) ? cleanupFocus : null);
+  }
+}
+
+/* ----- 视图变换：pan / zoom / fit ----- */
+/* 两套引擎挂在各自的舞台上，但**共用同一个 mmView**：
+   内置引擎推 .mm-canvas，markmap 推 .mm-mk-stage（里面是左右两个 svg）。
+   同时写两处最省事 —— 互斥显示保证看不见的那套根本不渲染。 */
+function mmApplyView() {
+  const t = `translate(${mmView.tx}px, ${mmView.ty}px) scale(${mmView.s})`;
+  mmEl.canvas.style.transform = t;
+  if (mmEl.stage) mmEl.stage.style.transform = t;
+  mmEl.pct.textContent = Math.round(mmView.s * 100) + '%';
+  /* 平移缩放后 markmap 节点的屏幕位置变了，FAB 要跟上 */
+  mmPositionFab();
+  mmMkPositionGrip();
+}
+function mmZoomAt(cx, cy, factor) {
+  const s0 = mmView.s;
+  const s = Math.min(3, Math.max(0.15, s0 * factor));
+  if (s === s0) return;
+  mmView.tx = cx - (cx - mmView.tx) * (s / s0);
+  mmView.ty = cy - (cy - mmView.ty) * (s / s0);
+  mmView.s = s;
+  mmApplyView();
+}
+/* fit 的最小缩放下限。
+   思维导图是「深度分列」的：一份 5 层、二十多个节点的文档天然就有四五千像素宽，
+   硬塞进视口会缩到 20% 出头 —— 字全糊成马赛克，等于什么都看不见。
+   幕布 / XMind 的做法是**锁一个可读的缩放、视图锚在中心主题**，
+   让用户自己往外拖，而不是为了"全览"牺牲可读性。 */
+const MM_MIN_FIT_S = 0.5;
+function mmFit() {
+  const pad = 80;
+  const W = window.innerWidth, H = window.innerHeight;
+  /* markmap 的包围盒由左右两棵树合出来的（mmMkPlace 会写进 mmLayoutSize），
+     直接问它要中心点；内置引擎的布局是左上原点，中心就是 w/2, h/2。 */
+  const b = mmMkIsActive() ? mmMkBounds() : null;
+  const box = b
+    ? { w: b.x2 - b.x1, h: b.y2 - b.y1, cx: (b.x1 + b.x2) / 2, cy: (b.y1 + b.y2) / 2 }
+    : { w: mmLayoutSize.w, h: mmLayoutSize.h, cx: mmLayoutSize.w / 2, cy: mmLayoutSize.h / 2 };
+  const { w, h } = box;
+  if (!w || !h) return;
+  const s = Math.max(MM_MIN_FIT_S, Math.min((W - pad * 2) / w, (H - pad * 2) / h, 1));
+  mmView.s = s;
+  const fits = w * s <= W - pad * 2 && h * s <= H - pad * 2;
+  /* 锚点选择：
+     · 装得下 → 居中整张图，两边留白均匀；
+     · 装不下 → 思维导图锚中心主题（根就是视觉枢纽，进来第一眼看它）：
+         markmap 下 mmMkPlace 已把中心主题摆在 stage 原点，锚点就是 (0,0)；
+         内置引擎下根有真实坐标，取根盒中心。
+       逻辑图/括号图的根贴在最左边，锚根会让右半屏全空，所以退回居中包围盒。 */
+  let cx = box.cx, cy = box.cy;
+  if (!fits && mmLayout.key === 'mindmap') {
+    if (mmMkIsActive()) { cx = 0; cy = 0; }
+    else {
+      const root = mmModel.get(MM_ROOT_ID);
+      if (root) { cx = root.x + root.w / 2; cy = root.y + root.h / 2; }
+    }
+  }
+  mmView.tx = W / 2 - cx * s;
+  mmView.ty = H / 2 - cy * s;
+  mmApplyView();
+}
+/* 重排后的自动跟随。
+   刻意只在「内容真的装不下、且当前缩放还没触到下限」时才动视角：
+   编辑时每敲一个字包围盒都在长，无条件 fit 会让画布跟着抖，
+   用户根本没法看着自己正在编辑的那个节点。 */
+function mmAutoFit() {
+  if (mmViewUserMoved) return;
+  const { w, h } = mmLayoutSize;
+  if (!w || !h) return;
+  const W = window.innerWidth, H = window.innerHeight, pad = 80;
+  if (w * mmView.s <= W - pad * 2 && h * mmView.s <= H - pad * 2) return;   /* 完整可见 → 别动 */
+  if (mmView.s <= MM_MIN_FIT_S + 0.001) return;   /* 已在下限，本来就装不下，别反复拉 */
+  mmFit();
+  /* fit 后选中节点的屏幕位置变了 —— FAB 跟一下 */
+  mmPositionFab();
+}
+
+mmEl.root.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  mmViewUserMoved = true;                 /* 用户动过视角，之后不再自动 fit */
+  if (e.ctrlKey || e.metaKey) {
+    mmZoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01));  /* 捏合 / Ctrl+滚轮：定点缩放 */
+  } else {
+    mmView.tx -= e.deltaX;                                        /* 滚轮 / 触摸板：平移 */
+    mmView.ty -= e.deltaY;
+    mmApplyView();
+  }
+}, { passive: false });
+
+mmEl.root.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest('.mm-controls, .mm-theme-pop, .mm-layout-pop')) return;  /* 控件/弹层上不启动平移 */
+  /* 节点自己有拖动逻辑（内置引擎 mmNodeDragStart / markmap 节点选中），这里不抢 */
+  if (e.target.closest('.mm-node')) return;
+  if (mmMkIsActive() && e.target.closest('g.markmap-node')) return;
+  mmThemePop.hidden = true;                                               /* 点画布空白 → 收起弹层 */
+  mmLayoutPop.hidden = true;
+  const start = { x: e.clientX, y: e.clientY, tx: mmView.tx, ty: mmView.ty };
+  let moved = 0;
+  mmEl.root.classList.add('is-panning');
+  const onMove = (ev) => {
+    moved = Math.max(moved, Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y));
+    if (moved >= 4) mmViewUserMoved = true;
+    mmView.tx = start.tx + (ev.clientX - start.x);
+    mmView.ty = start.ty + (ev.clientY - start.y);
+    mmApplyView();
+  };
+  const onUp = () => {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    mmEl.root.classList.remove('is-panning');
+    if (moved < 4) {                       /* 视为点击空白：结束编辑 + 取消选中 */
+      if (mmEditingId) mmCommitEdit();
+      mmSelect(null);
+    }
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+});
+
+/* 手动缩放 = 用户接管了视角，之后不再自动跟随 */
+document.getElementById('mm-zoom-in').addEventListener('click', () => {
+  mmViewUserMoved = true;
+  mmZoomAt(window.innerWidth / 2, window.innerHeight / 2, 1.25);
+});
+document.getElementById('mm-zoom-out').addEventListener('click', () => {
+  mmViewUserMoved = true;
+  mmZoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 / 1.25);
+});
+document.getElementById('mm-zoom-pct').addEventListener('click', () => {
+  mmViewUserMoved = true;
+  mmZoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 / mmView.s);
+});
+document.getElementById('mm-fit').addEventListener('click', () => { mmViewUserMoved = false; mmFit(); });
+/* 整理布局：丢掉全部手动偏移，回到自动 tidy tree 结果 */
+document.getElementById('mm-tidy').addEventListener('click', () => {
+  mmViewUserMoved = false;
+  if (!mmDrags.size) { mmFit(); return; }
+  mmDrags.clear();
+  mmRelayout(false);
+  mmFit();
+});
+
+/* ============================================================
+ * 展示主题选择器（🎨 按钮 → 弹层；点击即切换 + localStorage 持久化）
+ * ============================================================ */
+const mmThemePop = document.getElementById('mm-theme-pop');
+MM_THEMES.forEach((t) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'mm-theme-item';
+  b.dataset.theme = t.key;
+  const dots = [t.center, t.palette[0], t.palette[2] || t.palette[1] || t.palette[0]];
+  b.innerHTML = `<span class="mm-theme-swatch" style="background:linear-gradient(135deg, ${dots.join(', ')})"></span>`
+    + `<span>${t.name}</span><span class="tick">✓</span>`;
+  b.addEventListener('click', () => { mmApplyTheme(t.key); mmThemePop.hidden = true; });
+  mmThemePop.appendChild(b);
+});
+function mmApplyTheme(key) {
+  const t = MM_THEMES.find((x) => x.key === key) || MM_THEMES[0];
+  mmTheme = t;
+  try { localStorage.setItem('mm-theme', t.key); } catch (e) { /* ignore */ }
+  document.querySelectorAll('.mm-theme-item')
+    .forEach((el) => el.classList.toggle('is-active', el.dataset.theme === t.key));
+  if (mmActive) {
+    document.body.dataset.mmTheme = t.key;   /* CSS token 覆盖生效 */
+    mmRelayout(false);                       /* 重建模型 → 新 palette 流入 --branch / 连线 */
+  }
+}
+document.getElementById('mm-theme-btn').addEventListener('click', () => {
+  mmThemePop.hidden = !mmThemePop.hidden;
+  mmLayoutPop.hidden = true;             /* 两个弹层互斥 */
+});
+mmApplyTheme(mmTheme.key);   /* 初始同步弹层 ✓ 标记（含 localStorage 恢复的主题） */
+/* 控件 / 弹层按钮点完即 blur：防止焦点留在 button 上时
+   Enter / Space 既触发按钮又撞上 mm 快捷键（Enter=新建同级） */
+document.getElementById('mm-controls').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) b.blur();
+});
+mmThemePop.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) b.blur();
+});
+
+/* ============================================================
+ * 导图结构选择器（☰ 按钮 → 弹层；思维导图 / 逻辑图 / 括号图）
+ * 切换 = 换 mmComputeLayout 的算法 + 换 mmDrawLinks 的画法，
+ * 数据源（大纲 DOM）与折叠/编辑状态机完全不变 → 即时生效、无需重建
+ * ============================================================ */
+const mmLayoutPop = document.getElementById('mm-layout-pop');
+/* 缩略图 = 3 个节点方块 + 若干连线，用 <i>/<s> 拼（数量按结构定） */
+const MM_LAYOUT_ICONS = {
+  mindmap: [3, 4],   /* 3 节点 / 4 连线 */
+};
+/* 2026-10-12：内置引擎（逻辑图 / 括号图）砍掉，layout popover 只渲染当前唯一结构。
+ * 留 MM_LAYOUTS + MM_LAYOUT_ICONS 是为了不破坏 mmSyncLayoutUI / data-mm-layout
+ * 这些跟"身体属性"耦合的契约，将来真要扩多 mark 时不必重写外壳。 */
+MM_LAYOUTS.forEach((l) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'mm-theme-item mm-layout-item';
+  b.dataset.layout = l.key;
+  b.title = l.hint;
+  const [n, s] = MM_LAYOUT_ICONS[l.key];
+  b.innerHTML = `<span class="mm-layout-ico mm-ico-${l.key}">`
+    + '<i></i>'.repeat(n) + '<s></s>'.repeat(s) + '</span>'
+    + `<span>${l.name}</span><span class="tick">✓</span>`;
+  b.addEventListener('click', () => { mmApplyLayout(l.key); mmLayoutPop.hidden = true; });
+  mmLayoutPop.appendChild(b);
+});
+function mmApplyLayout(key) {
+  /* 2026-10-12：内置引擎砍掉后，MM_LAYOUTS 只剩 mindmap。
+   * 即便老用户 localStorage 里残留 'logic' / 'bracket'，也只强制回 mindmap —— 不重排（结构没变）。 */
+  if (key !== 'mindmap') {
+    try { localStorage.setItem('mm-layout', 'mindmap'); } catch (e) { /* ignore */ }
+    mmSyncLayoutUI();
+    return;
+  }
+  const l = MM_LAYOUTS.find((x) => x.key === key);
+  if (!l || l.key === mmLayout.key) { mmSyncLayoutUI(); return; }
+  mmLayout = l;
+  try { localStorage.setItem('mm-layout', l.key); } catch (e) { /* ignore */ }
+  mmSyncLayoutUI();
+  if (mmActive) {
+    document.body.dataset.mmLayout = l.key;
+    /* 换结构 → 左右归属全变（原来在左的跑到右边去了），旧的拖动偏移已无意义，
+       必须清空，否则会出现"叠在新结构上"的诡异错位。 */
+    mmDrags.clear();
+    /* 换结构后旧坐标全部失效 → 不做逐点动画，直接落位再 fit（避免整树乱飞） */
+    mmRelayout(false);
+    mmFit();
+  }
+}
+function mmSyncLayoutUI() {
+  mmLayoutPop.querySelectorAll('.mm-layout-item')
+    .forEach((el) => el.classList.toggle('is-active', el.dataset.layout === mmLayout.key));
+}
+document.getElementById('mm-layout-btn').addEventListener('click', () => {
+  mmLayoutPop.hidden = !mmLayoutPop.hidden;
+  mmThemePop.hidden = true;              /* 两个弹层互斥 */
+});
+mmLayoutPop.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) b.blur();
+});
+mmSyncLayoutUI();
+
+/* markmap 选中节点右上角 FAB：「+ 子级 / + 同级 / 删」三件套
+ * —— 键盘党有快捷键，鼠标 / 触屏党有 FAB。点完按钮顺手把焦点抢回
+ * 选中节点（用 mmSelect 重写 mmSelectedId）让键盘 / 拖拽继续从这走。 */
+document.getElementById('mm-fab').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-act]');
+  if (!b || !mmSelectedId) return;
+  /* 失焦后下一帧 mmEditBox 才能正确拿到刚生成的 markmap 节点，
+   * 否则 commit 时 onblur 早跑了。保险起见藏一下 FAB。 */
+  document.getElementById('mm-fab').hidden = true;
+  if (b.dataset.act === 'child')        mmInsertChild();
+  else if (b.dataset.act === 'sibling') mmInsertSibling();
+  else if (b.dataset.act === 'delete')  mmDeleteSelected();
+});
+
+/* ============================================================
+ * mm 模式快捷键（对齐 mubu）
+ *   ↑ / ↓            按可见顺序（DFS 前序）前后选择
+ *   ← / →            父级 / 首个子级（折叠态 → 原地展开，选中不动）
+ *   Tab / Shift+Tab  新建子级并进编辑 / 提级（幕布语义）
+ *   Alt+← / Alt+→    提级 / 降级（缩进）—— 复用大纲逻辑
+ *   Enter            新建同级并进入编辑（中心主题上 = 追加一级分支）
+ *   F2 / 双击        编辑选中节点            Esc 取消选中
+ *   Delete/Backspace 删除节点 —— 子级原地晋升一级（不丢数据；
+ *                    整棵子树移除用 ⌘/Ctrl+X 剪切，仍可粘回）
+ *   Ctrl/⌘ + C/X/V   复制 / 剪切 / 粘贴子树（粘贴重发 id，可多次）
+ *   Ctrl+. 折叠系列由全局 handler 负责，mm 模式同样生效
+ * ============================================================ */
+function mmLi(id) {
+  if (!id || id === MM_ROOT_ID) return null;
+  return document.querySelector(`#outline li[data-id="${CSS.escape(id)}"]`);
+}
+function mmNewId() { return 'new-' + Math.random().toString(36).slice(2, 8); }
+
+/* li 移除后：空 children 容器删掉、父级退回叶子（无 data-state） */
+function mmCleanupEmptyParent(parentUl) {
+  if (!parentUl || !parentUl.classList.contains('topic-children')) return;
+  if (parentUl.children.length > 0) return;
+  const grand = parentUl.parentElement;
+  parentUl.remove();
+  if (grand && grand.classList.contains('topic') && !grand.querySelector(':scope > .topic-children')) {
+    delete grand.dataset.state;
+  }
+}
+
+/* 平移画布让节点回到视口内（方向键导航自动跟随） */
+function mmEnsureVisible(id) {
+  /* markmap 的坐标不在模型里（d3 算的），直接量 DOM 矩形 */
+  if (mmMkIsActive()) { mmMkScrollIntoView(id); return; }
+  const m = mmModel.get(id);
+  if (!m) return;
+  const pad = 60;
+  const W = window.innerWidth || 1280, H = window.innerHeight || 800;
+  const sx = m.x * mmView.s + mmView.tx;
+  const sy = m.y * mmView.s + mmView.ty;
+  const sw = m.w * mmView.s, sh = m.h * mmView.s;
+  let dx = 0, dy = 0;
+  if (sx < pad) dx = pad - sx;
+  else if (sx + sw > W - pad) dx = (W - pad) - (sx + sw);
+  if (sy < pad) dy = pad - sy;
+  else if (sy + sh > H - pad) dy = (H - pad) - (sy + sh);
+  if (dx || dy) { mmView.tx += dx; mmView.ty += dy; mmApplyView(); }
+}
+
+function mmMove(delta) {
+  const src = mmMkIsActive() ? mmTree : mmModel;
+  const ids = Array.from(src.keys());   /* 插入序 = DFS 前序 = 视觉自上而下 */
+  if (!ids.length) return;
+  let idx = mmSelectedId ? ids.indexOf(mmSelectedId) : -1;
+  idx = idx === -1 ? (delta > 0 ? 0 : ids.length - 1) : idx + delta;
+  idx = Math.max(0, Math.min(ids.length - 1, idx));
+  mmSelect(ids[idx]);
+  mmEnsureVisible(ids[idx]);
+}
+function mmMoveToEdge(first) {
+  const src = mmMkIsActive() ? mmTree : mmModel;
+  const ids = Array.from(src.keys());
+  if (!ids.length) return;
+  const id = first ? ids[0] : ids[ids.length - 1];
+  mmSelect(id);
+  mmEnsureVisible(id);
+}
+function mmGoParent() {
+  const m = mmModelOf(mmSelectedId);
+  if (!m || !m.parentId) return;
+  mmSelect(m.parentId);
+  mmEnsureVisible(m.parentId);
+}
+function mmGoChild() {
+  const m = mmModelOf(mmSelectedId);
+  if (!m) return;
+  if (m.folded && m.hasChildren) { mmToggleFold(m.id); return; }   /* → 折叠时先展开 */
+  if (m.childIds.length) { mmSelect(m.childIds[0]); mmEnsureVisible(m.childIds[0]); }
+}
+
+/* Enter = 新建同级并立即进入编辑（幕布语义）；中心主题 = 追加一级分支 */
+function mmInsertSibling() {
+  mmHistoryPush();
+  const newId = mmNewId();
+  const li = mmLi(mmSelectedId);
+  const newLi = buildTopic({ id: newId, heading: 0, text: '' },
+                           li ? (parseInt(li.dataset.depth, 10) || 0) : 0);
+  if (li) li.after(newLi);
+  else document.getElementById('outline').appendChild(newLi);   /* 中心主题 → 追加一级分支 */
+  mmRelayout(true);   /* 新节点从兄弟位置飞出就位 */
+  mmSelect(newId);
+  mmEnsureVisible(newId);
+  mmStartEdit(newId);
+}
+
+/* Tab = 新建子主题并立即进入编辑（幕布语义）。
+   已有子级 → 追加为最后一个子级；折叠的父节点自动展开；叶子自动晋升为父节点。
+   中心主题 / 无选中 → 退化为新建一级分支。 */
+function mmInsertChild() {
+  const m = mmModelOf(mmSelectedId);
+  if (!m || mmSelectedId === MM_ROOT_ID) { mmInsertSibling(); return; }
+  mmHistoryPush();
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  const depth = parseInt(li.dataset.depth, 10) || 0;
+  let ul = li.querySelector(':scope > .topic-children');
+  if (!ul) {
+    ul = document.createElement('ul');
+    ul.className = 'topic-children';
+    li.appendChild(ul);
+  }
+  const newId = mmNewId();
+  const newLi = buildTopic({ id: newId, heading: 0, text: '' }, depth + 1);
+  ul.appendChild(newLi);
+  li.dataset.state = 'open';   /* 折叠中则自动展开 */
+  mmRelayout(true);
+  mmSelect(newId);
+  mmEnsureVisible(newId);
+  mmStartEdit(newId);
+}
+
+function mmIndent() {
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  mmHistoryPush();
+  indentTopic(li);
+  mmRelayout(true);
+  mmEnsureVisible(mmSelectedId);
+}
+function mmOutdent() {
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  mmHistoryPush();
+  outdentTopic(li);
+  mmRelayout(true);
+  mmEnsureVisible(mmSelectedId);
+}
+
+/* Delete：移除节点本体，子级原地晋升（整树删除走 ⌘X） */
+function mmDeleteSelected() {
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  mmHistoryPush();
+  const parentUl = li.parentElement;
+  const depth = parseInt(li.dataset.depth, 10) || 0;
+  const kidsUl = li.querySelector(':scope > .topic-children');
+  let firstKidId = null;
+  if (kidsUl) {
+    const kids = Array.from(kidsUl.children);
+    kids.forEach((k) => { li.before(k); updateDepth(k, depth); });
+    firstKidId = kids.length ? kids[0].dataset.id : null;
+  }
+  const nextId = li.nextElementSibling ? li.nextElementSibling.dataset.id : null;
+  const prevId = li.previousElementSibling ? li.previousElementSibling.dataset.id : null;
+  li.remove();
+  mmCleanupEmptyParent(parentUl);
+  mmRelayout(true);
+  const focusId = firstKidId || nextId || prevId
+    || (parentUl && parentUl.parentElement ? parentUl.parentElement.dataset.id : null);
+  mmSelect(focusId && mmModelOf(focusId) ? focusId : null);
+  if (focusId) mmEnsureVisible(focusId);
+}
+
+/* ----- 子树剪贴板（内存级）：粘贴时重发 id，可重复粘贴 ----- */
+let mmClip = null;
+function mmReassignIds(li) {
+  li.dataset.id = mmNewId();
+  li.querySelectorAll('[data-id]').forEach((el) => { el.dataset.id = mmNewId(); });
+  return li;
+}
+function mmCopySelected(cut) {
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  mmClip = li.cloneNode(true);
+  mmClip.classList.remove('is-current', 'drill-down');
+  mmClip.querySelectorAll('.is-current, .drill-down')
+    .forEach((el) => el.classList.remove('is-current', 'drill-down'));
+  if (!cut) return;
+  const parentUl = li.parentElement;
+  const focusId = (li.nextElementSibling || li.previousElementSibling)?.dataset?.id
+    || (parentUl && parentUl.parentElement ? parentUl.parentElement.dataset.id : null) || null;
+  li.remove();
+  mmCleanupEmptyParent(parentUl);
+  mmRelayout(true);
+  mmSelect(focusId && mmModelOf(focusId) ? focusId : null);
+}
+function mmPaste() {
+  if (!mmClip) return;
+  const li = mmLi(mmSelectedId);
+  if (!li) return;
+  const clone = mmReassignIds(mmClip.cloneNode(true));
+  updateDepth(clone, parseInt(li.dataset.depth, 10) || 0);
+  li.after(clone);
+  mmRelayout(true);
+  mmSelect(clone.dataset.id);
+  mmEnsureVisible(clone.dataset.id);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!mmActive || mmEditingId) return;   /* 编辑中归 mmEditKeydown（Enter/Esc/Tab）管 */
+
+  if (e.metaKey || e.ctrlKey) {
+    if (e.altKey) return;                  /* Ctrl+Alt 系列归全局折叠 handler */
+    const k = e.key.toLowerCase();
+    if (e.shiftKey && k === 'z') {        /* ⌘⇧Z = 重做 */
+      e.preventDefault();
+      if (mmHistoryRedo()) mmToast('已重做');
+      else mmToast('已经是最新的了', { duration: 1500 });
+      return;
+    }
+    if (k === 'c') { e.preventDefault(); mmCopySelected(false); }
+    else if (k === 'x') { e.preventDefault(); mmCopySelected(true); }
+    else if (k === 'v') { e.preventDefault(); mmPaste(); }
+    else if (k === 'z') {                 /* ⌘Z = 撤销 */
+      e.preventDefault();
+      if (mmHistoryUndo()) mmToast('已撤销上一步');
+      else mmToast('已经是最早的一步了', { duration: 1500 });
+    }
+    return;
+  }
+  /* Alt+←/→ = 提级/降级（幕布）；其余 Alt 组合（Ctrl+Alt+1/2/3 等）归全局 handler */
+  if (e.altKey) {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); mmOutdent(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); mmIndent(); }
+    return;
+  }
+
+  switch (e.key) {
+    case 'ArrowUp':    e.preventDefault(); mmMove(-1); break;
+    case 'ArrowDown':  e.preventDefault(); mmMove(1); break;
+    case 'ArrowLeft':  e.preventDefault(); mmGoParent(); break;
+    case 'ArrowRight': e.preventDefault(); mmGoChild(); break;
+    case 'Tab':        e.preventDefault(); if (e.shiftKey) mmOutdent(); else mmInsertChild(); break;  /* Tab=新建子级（幕布）；缩进用 Alt+→ */
+    case 'Enter':      e.preventDefault(); mmInsertSibling(); break;
+    case 'F2':         e.preventDefault();
+      if (mmSelectedId && mmSelectedId !== MM_ROOT_ID) mmStartEdit(mmSelectedId);
+      break;
+    case 'Delete':
+    case 'Backspace':  e.preventDefault(); mmDeleteSelected(); break;
+    case 'Home':       e.preventDefault(); mmMoveToEdge(true); break;
+    case 'End':        e.preventDefault(); mmMoveToEdge(false); break;
+    case 'Escape':     if (mmSelectedId) mmSelect(null); break;
+  }
+});
+
+/* ----- 视图切换 ----- */
+function mmSetSwitchUI(v) {
+  document.querySelectorAll('#view-switch button').forEach((b) => {
+    const on = b.dataset.view === v;
+    b.classList.toggle('is-active', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+}
+function setView(v) {
+  if (v === 'mindmap' && !mmActive) {
+    mmActive = true;
+    document.body.classList.add('mm-mode');
+    document.body.dataset.mmTheme = mmTheme.key;   /* 主题 token 仅导图模式挂载 */
+    document.body.dataset.mmLayout = mmLayout.key; /* 结构 token（折叠钮方位等） */
+    mmEl.root.hidden = false;
+    /* 首次进入导图模式时记一份"出厂"快照，撤销栈起点 */
+    if (mmHistoryCursor === -1) {
+      mmHistory.length = 0;
+      mmHistory.push(mmSnapshotOutline());
+      mmHistoryCursor = 0;
+    }
+    mmSetSwitchUI('mindmap');
+    toolbar.hidden = true;                 /* 选区 toolbar 属于大纲模式 */
+    mmThemePop.hidden = true;
+    mmViewUserMoved = false;
+    mmRelayout(false);
+    mmFit();
+  } else if (v === 'outline' && mmActive) {
+    if (mmEditingId) mmCommitEdit();
+    mmActive = false;
+    document.body.classList.remove('mm-mode');
+    delete document.body.dataset.mmTheme;  /* 大纲视图恒浅色 */
+    delete document.body.dataset.mmLayout;
+    mmThemePop.hidden = true;
+    mmLayoutPop.hidden = true;
+    mmEl.root.hidden = true;
+    mmSetSwitchUI('outline');
+    /* mm 里选中的节点映射回大纲 is-current（视图连续性），并滚到可见 */
+    if (mmSelectedId && mmSelectedId !== MM_ROOT_ID) {
+      const li = document.querySelector(`#outline li[data-id="${CSS.escape(mmSelectedId)}"]`);
+      if (li) {
+        document.querySelectorAll('.topic.is-current').forEach((t) => t.classList.remove('is-current'));
+        li.classList.add('is-current');
+        li.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+}
+document.getElementById('view-switch').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-view]');
+  if (btn) setView(btn.dataset.view);
+});
+
+/* ============================================================
+ * 启动
+ * ============================================================ */
+render();
+
+/* 深链：?view=mindmap&layout=mindmap&theme=dark
+   除了方便分享，也让无头浏览器截图能直接落到指定状态（没法先点再拍）。 */
+(function deepLink() {
+  const q = new URLSearchParams(location.search);
+  const layout = q.get('layout');
+  if (layout) mmApplyLayout(layout);
+  const theme = q.get('theme');
+  if (theme) mmApplyTheme(theme);
+  if (q.get('view') === 'mindmap') {
+    setTimeout(() => setView('mindmap'), 0);
+  }
+})();
+</script>
+
+<!-- markmap：思维导图结构的布局/渲染引擎。
+     走 jsDelivr 的 +esm 端点（依赖已被内联并 tree-shake），比 dist 的 UMD 小一个量级。
+     加载完成后广播事件，主脚本那边负责创建实例 —— 主脚本是同步执行的，
+     不能直接 import（那时模块还没到），所以用「事件 + 兜底轮询」握手。 -->
+<script type="module">
+const MK_VER = '0.18.12';
+try {
+  const [view, lib] = await Promise.all([
+    import(`https://cdn.jsdelivr.net/npm/markmap-view@${MK_VER}/+esm`),
+    import(`https://cdn.jsdelivr.net/npm/markmap-lib@${MK_VER}/+esm`),
+  ]);
+  window.MM_MK_API = { ...view, Transformer: lib.Transformer, builtInPlugins: lib.builtInPlugins };
+} catch (e) {
+  console.warn('[mm] markmap 加载失败，思维导图将退化为空白（逻辑图/括号图不受影响）', e);
+  window.MM_MK_API = null;
+}
+window.dispatchEvent(new Event('mm-mk-ready'));
+</script>
+
+</body>
+</html>

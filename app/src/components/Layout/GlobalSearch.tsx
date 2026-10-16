@@ -4,6 +4,7 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { UserStore } from '@/store/user';
 import { AiStore } from '@/store/aiStore';
 import { observer } from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +12,7 @@ import { api } from '@/lib/trpc';
 import { allSettings } from '@/components/BlinkoSettings/settingsRegistry';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
-import { downloadFromLink } from '@/lib/tauriHelper';
+import { isDesktop, downloadFromLink } from '@/lib/tauriHelper';
 import { cn } from '@/lib/utils';
 import { searchSnippet, tagPath } from './searchUtils';
 
@@ -44,7 +45,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolea
       const tags = blinkoStore.tagList.value?.falttenTags ?? [];
       const type = category === 'flash' ? 0 : category === 'notes' ? 1 : category === 'todo' ? 2 : -1;
       const results = await Promise.allSettled([
-        !onlyTags && ['all', 'flash', 'notes', 'todo'].includes(category) ? api.notes.list.mutate({ searchText: term, type, page: 1, size: 21, isArchived: null, isRecycle: false, isUseAiQuery: false }) : Promise.resolve([]),
+        !onlyTags && ['all', 'flash', 'notes', 'todo'].includes(category) ? api.notes.list.mutate({ view: 'summary', searchText: term, type, page: 1, size: 21, isArchived: null, isRecycle: false, isUseAiQuery: false }) : Promise.resolve([]),
         !onlyTags && ['all', 'files'].includes(category) ? api.attachments.list.query({ searchText: term, page: 1, size: 21 }) : Promise.resolve([]),
       ]);
       if (id !== request.current) return;
@@ -59,7 +60,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolea
       });
       if (category === 'all' || category === 'tags' || onlyTags) tags.filter(tag => tagPath(tag, tags).toLocaleLowerCase().includes(term.toLocaleLowerCase())).slice(0, 12).forEach(tag => rows.push({ key: `tag-${tag.id}`, kind: 'tags', title: '#' + tagPath(tag, tags), info: t('tag'), action: () => { navigate(`/?path=all&tagId=${tag.id}`); close(); } }));
       files.slice(0, 20).forEach((file: any) => rows.push({ key: `file-${file.id}`, kind: 'files', title: file.name, info: label('文件 · 下载', 'File · Download'), action: () => { downloadFromLink(getBlinkoEndpoint(file.path)); close(); } }));
-      if (!onlyTags && ['all', 'settings'].includes(category)) allSettings.filter(setting => setting.key !== 'all' && [t(setting.title), ...(setting.keywords ?? [])].some(text => text.toLocaleLowerCase().includes(term.toLocaleLowerCase()))).slice(0, 5).forEach(setting => rows.push({ key: `setting-${setting.key}`, kind: 'settings', title: t(setting.title), info: t('settings'), action: () => { ShowSettingsDialog(setting.key); close(); } }));
+      if (!onlyTags && ['all', 'settings'].includes(category)) allSettings.filter(setting => (!setting.requireAdmin || RootStore.Get(UserStore).isSuperAdmin) && (setting.key !== 'hotkey' || isDesktop()) && [t(setting.title), t(setting.description), ...(setting.keywords ?? [])].some(text => text.toLocaleLowerCase().includes(term.toLocaleLowerCase()))).slice(0, 5).forEach(setting => rows.push({ key: `setting-${setting.key}`, kind: 'settings', title: t(setting.title), info: t('settings'), action: () => { ShowSettingsDialog(setting.key); close(); } }));
       setHits(rows); setLimited(notes.length > 20 || files.length > 20); setError(results.some(result => result.status === 'rejected')); setLoading(false);
     }, 250);
     return () => { clearTimeout(timer); request.current++; };

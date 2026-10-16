@@ -102,10 +102,26 @@ export class AiStore implements Store {
   currentConversation = new PromiseState({
     function: async () => {
       if (!this.currentConversationId) return null;
-      const res = await api.conversation.detail.query({ id: this.currentConversationId });
+      const res = await api.conversation.detail.query({ id: this.currentConversationId, messageLimit: 40 });
       return res;
     },
   });
+
+  olderMessagesLoading = false;
+  loadOlderMessages = async () => {
+    const id = this.currentConversationId;
+    const cursor = this.currentConversation.value?.nextMessageCursor;
+    if (!id || !cursor || this.olderMessagesLoading || this.isPreparing || this.isAnswering) return;
+    this.olderMessagesLoading = true;
+    try {
+      const page = await api.conversation.messages.query({ id, beforeId: cursor, size: 40 });
+      if (this.currentConversationId !== id || !this.currentConversation.value) return;
+      const current = this.currentConversation.value;
+      const ids = new Set(current.messages.map(message => message.id));
+      this.currentConversation.setValue({ ...current, messages: [...page.items.filter(message => !ids.has(message.id)), ...current.messages], nextMessageCursor: page.nextCursor });
+    } catch { RootStore.Get(ToastPlugin).error('加载历史消息失败，请重试'); }
+    finally { this.olderMessagesLoading = false; }
+  };
 
   conversactionList = new PromisePageState({
     function: async ({ page, size }) => {
@@ -166,27 +182,32 @@ export class AiStore implements Store {
       }
 
       if (this.currentConversationId != 0) {
+        let questionMessageId: number | undefined;
         if (!isRegenerate) {
-          await api.message.create.mutate({
+          const userMessage = await api.message.create.mutate({
             conversationId: this.currentConversationId,
             content: userQuestion,
             role: 'user',
             metadata: sourceContext
           });
+          questionMessageId = userMessage.id;
         }
 
         //update conversation message list
         await this.currentConversation.call();
 
         const filteredChatConversation = [...(this.currentConversation.value?.messages?.slice(0, -1) || [])];
+        questionMessageId ??= this.currentConversation.value?.messages.filter(message => message.role === 'user').at(-1)?.id;
         const startTime = Date.now();
         let isFristChunk = true;
         this.currentMessageResult.fristCharDelay = 0;
         const res = await streamApi.ai.completions.mutate(
           {
             question: userQuestion,
+            conversationId: this.currentConversationId,
+            questionMessageId,
+            conversations: [],
             modelId: this.chatModelId || undefined,
-            conversations: filteredChatConversation,
             withRAG: available.rag && !!this.withRAG.value,
             withTools: available.tools && !!this.withTools.value,
             withOnline: available.online && !!this.withOnline.value,

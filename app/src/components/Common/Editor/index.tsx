@@ -410,16 +410,12 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
                   <DocumentInsertMenu store={store} openAttachments={open} />
                   {store.noteType !== NoteType.NOTE && <DocumentImageUploadButton store={store} label="图片" />}
                 </div>}
-                {documentSidebar ? (
-                  <div className="flex min-w-0 items-start">
-                    {documentSidebar}
-                    <div className="min-w-0 flex-1">
-                      <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
-                    </div>
+                <div className={`flex min-w-0 items-start ${fillHeight && !pageScroll ? 'flex-1 min-h-0' : ''}`}>
+                  <div key="document-sidebar" className="shrink-0">{documentSidebar}</div>
+                  <div key="document-body" className={`min-w-0 flex-1 ${fillHeight && !pageScroll ? 'flex flex-col min-h-0' : ''}`}>
+                    <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
                   </div>
-                ) : (
-                  <TiptapEditorContent store={store} readOnly={!editable} fill={fillHeight} pageScroll={pageScroll} />
-                )}
+                </div>
               </div>
               {isPc && !showTopToolbar && !hideFullscreenButton && (
                 <Tooltip content={t(store.isFullscreen ? 'collapse-editor' : 'expand-editor')} placement="bottom" delay={300}>

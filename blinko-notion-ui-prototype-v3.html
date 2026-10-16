@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blinko · Notion-style Sidebar v3 (shadcn/ui)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --primary: 252 87% 67%;
+    --primary-foreground: 0 0% 98%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --border: 240 5.9% 90%;
+    --row-hover: 240 5% 96%;
+    --row-selected: 252 87% 67% / 0.08;
+  }
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --primary: 252 87% 67%;
+    --primary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 240 3.7% 15.9%;
+    --row-hover: 240 3.7% 15.9%;
+    --row-selected: 252 87% 67% / 0.15;
+  }
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .text-fg { color: hsl(var(--foreground)); }
+  .text-muted { color: hsl(var(--muted-foreground)); }
+  .text-primary { color: hsl(var(--primary)); }
+  .bg-muted { background: hsl(var(--muted)); }
+  .bg-hover { background: hsl(var(--row-hover)); }
+  .bg-card { background: hsl(var(--card)); }
+  .border-default { border-color: hsl(var(--border)); }
+  .bg-primary { background: hsl(var(--primary)); }
+
+  .notion-row { transition: background-color 120ms ease; position: relative; }
+  .notion-row:hover { background: hsl(var(--row-hover)); }
+  .notion-row.selected { background: hsl(var(--row-selected)); }
+  .notion-row.selected::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px;
+    background: hsl(var(--primary)); border-radius: 1px;
+  }
+
+  /* Top icon rail item — icon + label vertical layout */
+  .rail-item {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 6px 4px;
+    border-radius: 8px;
+    color: hsl(var(--muted-foreground));
+    transition: all 120ms ease;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+  }
+  .rail-item:hover {
+    background: hsl(var(--row-hover));
+    color: hsl(var(--foreground));
+  }
+  .rail-item.active {
+    background: hsl(var(--row-selected));
+    color: hsl(var(--primary));
+  }
+  .rail-item.active::after {
+    content: '';
+    position: absolute; left: -8px; top: 8px; bottom: 8px; width: 2px;
+    background: hsl(var(--primary)); border-radius: 0 1px 1px 0;
+  }
+
+  /* List row item — icon + label horizontal */
+  .nav-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: hsl(var(--foreground));
+    font-size: 13.5px;
+    transition: background-color 100ms;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+  }
+  .nav-row:hover { background: hsl(var(--row-hover)); }
+  .nav-row.selected { background: hsl(var(--row-selected)); }
+  .nav-row.selected::before {
+    content: ''; position: absolute; left: -8px; top: 4px; bottom: 4px; width: 2px;
+    background: hsl(var(--primary)); border-radius: 0 1px 1px 0;
+  }
+
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* chip */
+  .chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 6px; border-radius: 999px;
+    font-size: 11px; line-height: 16px;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* avatar */
+  .avatar {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: hsl(var(--primary));
+    color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / .5); }
+
+  /* tooltip on rail hover */
+  .rail-tip {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: hsl(var(--popover, 240 10% 3.9%));
+    color: hsl(var(--popover-foreground, 0 0% 98%));
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 100ms;
+    z-index: 50;
+    box-shadow: 0 4px 12px hsl(var(--foreground) / .12);
+  }
+  .rail-item:hover .rail-tip { opacity: 1; }
+
+  .section-title {
+    padding: 12px 8px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-title .add-btn {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: hsl(var(--muted-foreground));
+    transition: background-color 100ms;
+  }
+  .section-title .add-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ TOP PROTO BAR ============ -->
+<div class="fixed top-0 left-0 right-0 z-50 bg-card border-b border-default">
+  <div class="max-w-[1400px] mx-auto px-6 h-12 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-sm">
+      <i data-lucide="palette" class="w-4 h-4 text-muted"></i>
+      <span class="font-semibold">Blinko · Sidebar Prototype v3</span>
+      <span class="text-muted">/ shadcn/ui · 顶部图标栏 + 分组列表</span>
+    </div>
+    <div class="flex items-center gap-1 text-xs">
+      <button onclick="toggleTheme()" class="ml-1 px-2 py-1.5 rounded-md text-muted hover:text-fg hover:bg-muted transition-colors" title="切换主题">
+        <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN SHELL ============ -->
+<div class="pt-12 flex min-h-screen">
+
+  <!-- ============ SIDEBAR v3 ============ -->
+  <aside class="w-[240px] shrink-0 border-r border-default flex flex-col sticky top-12 h-[calc(100vh-48px)] bg-card">
+
+    <!-- === Top icon rail === -->
+    <div class="px-2 pt-2 pb-1 flex flex-col gap-0.5 border-b border-default">
+      <!-- workspace switcher (compact) -->
+      <div class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted mb-1">
+        <div class="w-5 h-5 rounded bg-primary flex items-center justify-center text-white text-[10px] font-bold">B</div>
+        <span class="text-[13px] font-semibold flex-1 truncate">Brian's Space</span>
+        <i data-lucide="chevrons-left" class="w-3.5 h-3.5 text-muted"></i>
+      </div>
+
+      <!-- top icon nav -->
+      <a class="rail-item active" data-section="home">
+        <i data-lucide="home" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">首页</span>
+        <div class="rail-tip">首页</div>
+      </a>
+      <a class="rail-item" data-section="blinks">
+        <i data-lucide="zap" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">闪念</span>
+        <div class="rail-tip">闪念</div>
+      </a>
+      <a class="rail-item" data-section="notes">
+        <i data-lucide="notebook-pen" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">笔记</span>
+        <div class="rail-tip">笔记</div>
+      </a>
+      <a class="rail-item" data-section="todos">
+        <i data-lucide="check-circle-2" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">待办</span>
+        <div class="rail-tip">待办</div>
+      </a>
+      <a class="rail-item" data-section="ai">
+        <i data-lucide="message-circle" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">AI 对话</span>
+        <div class="rail-tip">AI 对话</div>
+      </a>
+      <a class="rail-item" data-section="ai-voice">
+        <i data-lucide="mic" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">AI 速记</span>
+        <div class="rail-tip">AI 语音速记</div>
+      </a>
+      <a class="rail-item" data-section="inbox">
+        <i data-lucide="inbox" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">收件箱</span>
+        <div class="rail-tip">收件箱 · 3</div>
+      </a>
+      <a class="rail-item" data-section="search">
+        <i data-lucide="search" class="w-[18px] h-[18px]"></i>
+        <span class="text-[11px] mt-0.5">搜索</span>
+        <div class="rail-tip">搜索 · ⌘K</div>
+      </a>
+    </div>
+
+    <!-- === Section list === -->
+    <div class="flex-1 overflow-y-auto pb-2">
+
+      <!-- 私人 -->
+      <div class="section-title">
+        <span>私人</span>
+        <i data-lucide="plus" class="add-btn" style="width:14px;height:14px"></i>
+      </div>
+      <div class="px-2">
+        <a class="nav-row" data-section="meeting">
+          <i data-lucide="file-text" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">会议</span>
+          <span class="text-[11px] text-muted">@今天 22:37</span>
+        </a>
+        <a class="nav-row" data-section="new-personal">
+          <i data-lucide="plus" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 text-muted">新增</span>
+        </a>
+      </div>
+
+      <!-- 团队协作区 -->
+      <div class="section-title">
+        <span>团队协作区</span>
+        <i data-lucide="plus" class="add-btn" style="width:14px;height:14px"></i>
+      </div>
+      <div class="px-2">
+        <a class="nav-row selected" data-section="hq">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span class="flex-1 truncate">自贺BaiHe的工作空间</span>
+          <span class="chip">HQ</span>
+        </a>
+      </div>
+
+      <!-- 通用 -->
+      <div class="section-title">
+        <span>通用</span>
+      </div>
+      <div class="px-2">
+        <a class="nav-row" data-section="agent">
+          <i data-lucide="bot" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">添加代理</span>
+        </a>
+        <a class="nav-row" data-section="ai-voice-trial">
+          <i data-lucide="mic" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">试用 AI 速记</span>
+        </a>
+        <a class="nav-row" data-section="library">
+          <i data-lucide="library" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">库</span>
+        </a>
+        <a class="nav-row" data-section="help">
+          <i data-lucide="help-circle" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">帮助</span>
+        </a>
+        <a class="nav-row" data-section="trash">
+          <i data-lucide="trash-2" class="w-4 h-4 text-muted"></i>
+          <span class="flex-1 truncate">垃圾箱</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- === Bottom: user avatar + settings === -->
+    <div class="border-t border-default px-2 py-2">
+      <a class="nav-row" data-section="settings">
+        <i data-lucide="settings" class="w-4 h-4 text-muted"></i>
+        <span class="flex-1 truncate">设置</span>
+        <kbd>⌘,</kbd>
+      </a>
+      <div class="flex items-center gap-2 px-2 py-1.5 mt-1 rounded-md hover:bg-muted cursor-pointer">
+        <div class="avatar" style="background:hsl(252,87%,67%)">B</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[13px] font-medium truncate">Brian</div>
+          <div class="text-[11px] text-muted truncate">brian@blinko.com</div>
+        </div>
+        <i data-lucide="chevron-up" class="w-3.5 h-3.5 text-muted"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN CONTENT (placeholder) ============ -->
+  <main class="flex-1 min-w-0">
+    <div class="max-w-[860px] mx-auto px-12 pt-12 pb-16">
+      <!-- breadcrumb -->
+      <div class="text-xs text-muted mb-3 flex items-center gap-1.5">
+        <i data-lucide="home" class="w-3 h-3"></i>
+        <span>首页</span>
+      </div>
+
+      <!-- title + welcome -->
+      <div class="flex items-baseline justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight">早安, Brian ☀️</h1>
+          <p class="text-sm text-muted mt-1">10 月 8 日 · 连续记录第 <span class="font-semibold text-primary">12</span> 天</p>
+        </div>
+        <button class="text-xs text-muted hover:text-fg flex items-center gap-1">
+          <i data-lucide="refresh-ccw" class="w-3.5 h-3.5"></i>刷新
+        </button>
+      </div>
+
+      <!-- 4 stats inline -->
+      <div class="grid grid-cols-4 gap-x-6 mb-8">
+        <div class="py-3 border-t border-default">
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-500"></i>
+            <span>本周闪念</span>
+          </div>
+          <div class="text-2xl font-semibold mt-1">23</div>
+        </div>
+        <div class="py-3 border-t border-default">
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <i data-lucide="notebook-pen" class="w-3.5 h-3.5 text-blue-500"></i>
+            <span>笔记总数</span>
+          </div>
+          <div class="text-2xl font-semibold mt-1">142</div>
+        </div>
+        <div class="py-3 border-t border-default">
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i>
+            <span>待办完成</span>
+          </div>
+          <div class="text-2xl font-semibold mt-1">18<span class="text-base text-muted font-normal">/23</span></div>
+        </div>
+        <div class="py-3 border-t border-default">
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500"></i>
+            <span>连续记录</span>
+          </div>
+          <div class="text-2xl font-semibold mt-1">12 <span class="text-base text-muted font-normal">天</span></div>
+        </div>
+      </div>
+
+      <!-- today todos -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-semibold flex items-center gap-2">
+            <span class="w-1 h-3.5 bg-primary rounded-sm"></span>
+            今天
+            <span class="text-xs text-muted font-normal">2 个待办</span>
+          </h2>
+          <button class="text-xs text-muted hover:text-fg">查看全部 →</button>
+        </div>
+        <div>
+          <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+            <span class="cb mt-1.5 shrink-0" style="width:14px;height:14px;border:1.5px solid hsl(var(--border));border-radius:3px;display:inline-flex"></span>
+            <div class="flex-1 text-sm">提交 Blinko Notion 风格 HTML 原型评审</div>
+            <span class="text-xs text-danger flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>逾期 1h</span>
+          </div>
+          <div class="notion-row relative flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer group">
+            <span class="cb mt-1.5 shrink-0" style="width:14px;height:14px;border:1.5px solid hsl(var(--border));border-radius:3px;display:inline-flex"></span>
+            <div class="flex-1 text-sm">回 Brian 关于 shadcn 迁移路径的方案</div>
+            <span class="text-xs text-muted flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>22:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- recent edits -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-semibold flex items-center gap-2">
+            <span class="w-1 h-3.5 bg-blue-500 rounded-sm"></span>
+            最近编辑
+          </h2>
+          <button class="text-xs text-muted hover:text-fg">查看全部 →</button>
+        </div>
+        <div>
+          <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+            <span class="text-xl mt-0.5">📐</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-fg truncate">Notion 风格设计语言：行即组件、空白大于边框</div>
+              <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+                <span class="chip"># 设计</span>
+                <span>· 2 分钟前</span>
+              </div>
+            </div>
+          </div>
+          <div class="notion-row relative flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer group">
+            <span class="text-xl mt-0.5">📊</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-fg truncate">Blinko 统计模块 V2 复盘</div>
+              <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+                <span class="chip"># 工作</span>
+                <span>· 1 小时前</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<div class="border-t border-default bg-muted text-xs text-muted">
+  <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
+    <span>🎨 侧边栏 v3 · 8 个图标入口（参考 Blinko 现有功能）+ 分组列表（私人 / 团队 / 通用）</span>
+    <span>hover 图标看 tooltip · 点击切换 active 态</span>
+  </div>
+</div>
+
+<script>
+  if (window.lucide) lucide.createIcons();
+
+  // rail-item click → toggle active
+  document.querySelectorAll('.rail-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.rail-item').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+
+  // nav-row click → toggle selected
+  document.querySelectorAll('.nav-row').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-row').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  });
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    if (window.lucide) lucide.createIcons();
+  }
+</script>
+</body>
+</html>

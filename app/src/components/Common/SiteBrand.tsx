@@ -53,7 +53,7 @@ export const SiteBrand = observer(({
         />
       </span>
       {!compact && (
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-0.5">
+        <span className="flex min-w-0 shrink-0 flex-col gap-0.5 py-0.5">
           <span className="truncate text-sm font-semibold leading-none">{title}</span>
           {tagline && showTagline && (
             <span className="truncate text-[10.5px] font-normal leading-tight text-default-500">

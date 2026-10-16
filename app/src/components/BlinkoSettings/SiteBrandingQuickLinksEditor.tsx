@@ -57,16 +57,29 @@ const SEED_FOR_EMPTY = (): WorkspaceMenuItem[] => DEFAULT_WORKSPACE_MENU();
 
 const validate = (list: WorkspaceMenuItem[]): string | null => {
   if (list.length > 12) return '最多 12 项 / Up to 12 items';
+
+  const indexOf = (id: string) => list.findIndex(x => x.id === id) + 1;
+
   const ids = new Set<string>();
   for (const item of list) {
-    if (!item.label.trim()) return '每项都需要一个名称 / Each item needs a label';
-    if (item.type !== 'system' && !item.target.trim()) return '每项都需要一个目标 / Each item needs a target';
-    if (item.type === 'external' && !/^https?:\/\//i.test(item.target))
-      return '外部链接需要以 http:// 或 https:// 开头 / External links must start with http(s)://';
-    if (item.type === 'internal' && !item.target.startsWith('/'))
-      return '站内路径必须以 / 开头 / Internal paths must start with /';
-    if (item.target.length > 500) return '目标过长 / Target too long';
-    if (ids.has(item.id)) return '存在重复 ID，请刷新页面重试';
+    const pos = indexOf(item.id);
+    const tag = `第 ${pos} 项`;
+
+    if (item.type === 'system') {
+      // system 项的 label 可空 —— Sidebar 渲染时 resolveMenuLabel 会回退到 SYSTEM_LABEL_I18N。
+      if (item.label.trim().length > 20) return `${tag}「名称」过长 / Label too long`;
+    } else {
+      // internal / external: label 与 target 都必填，且 target 按 type 限定格式。
+      if (!item.label.trim()) return `${tag}缺「名称」/ Item #${pos} is missing a label`;
+      if (item.target.length > 500) return `${tag}「目标」过长 / Target too long`;
+      if (!item.target.trim()) return `${tag}缺「目标」（路径或 URL）/ Item #${pos} is missing a target`;
+      if (item.type === 'external' && !/^https?:\/\//i.test(item.target))
+        return `${tag}的外部链接必须以 http:// 或 https:// 开头 / Item #${pos} external link must start with http(s)://`;
+      if (item.type === 'internal' && !item.target.startsWith('/'))
+        return `${tag}的站内路径必须以 / 开头 / Item #${pos} internal path must start with /`;
+    }
+
+    if (ids.has(item.id)) return `${tag}与另一项 ID 重复 / Duplicate ID`;
     ids.add(item.id);
   }
   return null;

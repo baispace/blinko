@@ -1,3 +1,6 @@
+import { siteIconSchema } from '../../shared/lib/siteBranding';
+import { siteInfoSchema } from '../../shared/lib/siteInfo';
+import { readSiteInfo, saveSiteInfo } from '../lib/siteInfo';
 import { router, authProcedure, publicProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -8,7 +11,7 @@ import { reinitializeOAuthStrategies } from '../routerExpress/auth/config';
 
 export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context, useAdmin?: boolean }) => {
   const userId = Number(ctx?.id ?? 0);
-  const configs = await prisma.config.findMany();
+  const configs = await prisma.config.findMany({ where: { key: { not: 'siteInfo' } } });
   const isSuperAdmin = useAdmin ? true : ctx?.role === 'superadmin';
 
   const globalConfig = configs.reduce((acc, item) => {
@@ -28,12 +31,17 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'signinFooterEnabled'
       || item.key == 'signinFooterText'
       || item.key == 'customTitle'
+      || item.key == 'customIcon'
     ) {
       //if user not login, then use frist find config
       if (!userId) {
         acc[item.key] = config.value;
         return acc;
       }
+    }
+    if ((item.key === 'customTitle' || item.key === 'customIcon') && !item.userId) {
+      acc[item.key] = config.value;
+      return acc;
     }
     if (!isSuperAdmin && !item.userId) {
       return acc;
@@ -85,6 +93,8 @@ export const getAiModelConfig = async (type: 'mainModel' | 'embeddingModel' | 'v
 };
 
 export const configRouter = router({
+  siteInfo: authProcedure.query(() => readSiteInfo()),
+  saveSiteInfo: authProcedure.input(z.object({ data: siteInfoSchema, revision: z.string().length(64) })).mutation(({ input, ctx }) => saveSiteInfo(input.data, input.revision, ctx.role)),
   list: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/config/list', summary: 'Query user config list', protect: true, tags: ['Config'] } })
     .input(z.void())
@@ -102,6 +112,14 @@ export const configRouter = router({
     .mutation(async function ({ input, ctx }) {
       const userId = Number(ctx.id)
       const { key, value } = input
+      if (key === 'customIcon') siteIconSchema.parse(value);
+      if (key === 'customTitle') z.string().trim().max(50).parse(value);
+      if (key === 'customTagline') z.string().trim().max(50).parse(value);
+      if (key === 'customQuickLinks') {
+        z.string().max(20000).parse(value);
+        try { JSON.parse(value); } catch { throw new Error('customQuickLinks must be a valid JSON array'); }
+      }
+      if (key === 'siteInfo') throw new Error('请通过站点信息页面保存版本记录');
       const isUserPreferConfig = ZUserPerferConfigKey.safeParse(key).success;
       console.log('isUserPreferConfig', isUserPreferConfig)
       let updateResult;

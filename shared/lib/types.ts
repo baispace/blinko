@@ -1,3 +1,4 @@
+import { siteIconSchema } from './siteBranding';
 import { RouterOutput } from "../../server/routerTrpc/_app";
 import { z } from "zod";
 
@@ -124,6 +125,9 @@ export const ZConfigKey = z.union([
   z.literal('signinFooterEnabled'),
   z.literal('signinFooterText'),
   z.literal('customTitle'),
+  z.literal('customIcon'),
+  z.literal('customTagline'),
+  z.literal('customQuickLinks'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -222,6 +226,9 @@ export const ZConfigSchema = z.object({
   signinFooterEnabled: z.boolean().optional(),
   signinFooterText: z.string().optional(),
   customTitle: z.string().optional(),
+  customIcon: siteIconSchema.optional(),
+  customTagline: z.string().optional(),
+  customQuickLinks: z.string().optional(),
   cardSpacing: z.number().optional(),
   noteListStyle: z.string().optional(),
   noteListSortBy: z.string().optional(),

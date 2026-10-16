@@ -54,8 +54,7 @@ export const UpdateUserInfo = observer(() => {
         const updated = await PromiseCall(api.users.upsertUser.mutate({ id: Number(user.id), name: store.username, nickname: store.nickname, originalPassword: store.originalPassword }))
         if (!updated) return
         RootStore.Get(DialogStore).close()
-        eventBus.emit('user:signout')
-        navigate('/signin')
+        await user.refreshProfile().catch(error => RootStore.Get(ToastPlugin).error(error.message))
       }}>{t('save')}</Button>
     </div>
   </>

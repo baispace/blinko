@@ -54,11 +54,8 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   eventKey?: string;
   currentIndex: BaseState = new NumberState({ value: 0 });
   get current() {
-    if (Array.isArray(this.value) && this.value.length > 0 && !this.value[this.currentIndex.value]) {
-      this.currentIndex.setValue(0);
-    }
-    //@ts-ignore
-    return this.value[this.currentIndex.value];
+    if (Array.isArray(this.value)) return this.value[this.currentIndex.value] ?? this.value[0];
+    return (this.value as any)?.[this.currentIndex.value];
   }
 
   async wait({ call = false } = {}): Promise<Awaited<U>> {
@@ -93,6 +90,7 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
   async setValue(val) {
     let _val = val;
     this.value = _val;
+    if (Array.isArray(_val) && !_val[this.currentIndex.value]) this.currentIndex.setValue(0);
   }
 
   async getOrCall(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
@@ -154,6 +152,7 @@ export class PromiseState<T extends (...args: any[]) => Promise<any>, U = Return
 export const PageSize = new StorageState<number>({ key: "pageSize", value: 30, default: 30 })
 export class PromisePageState<T extends (...args: any) => Promise<any>, U = ReturnType<T>> {
   page: number = 1;
+  generation = 0;
   size = PageSize
   sid = "PromisePageState";
   key?: string;
@@ -211,6 +210,8 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
   private async call(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
     const toast = RootStore.Get(ToastPlugin);
     const base = RootStore.Get(BaseStore);
+    const generation = this.generation;
+    const requestedPage = this.page;
 
     try {
       if (this.loadingLock && this.loading.value == true) {
@@ -228,6 +229,7 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
       }
       if (this.isLoadAll) return this.value
       const res = await this.function.apply(this.context, args);
+      if (generation !== this.generation) return this.value;
       if (!Array.isArray(res)) throw new Error("PromisePageState function must return array")
       if (res.length == 0) {
         this.isLoadAll = true
@@ -257,7 +259,9 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
           this.isLoadAll = true
         } else {
           //@ts-ignore
-          this.setValue(this.value!.concat(res));
+          const byId = new Map((this.value || []).map((item: any) => [item.id,item]));
+          res.forEach((item: any) => byId.set(item.id,item));
+          this.setValue(Array.from(byId.values()));
           this.isLoadAll = true
         }
       }
@@ -267,6 +271,8 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
       }
       return this.value;
     } catch (error) {
+      if (generation !== this.generation) return this.value;
+      this.page = Math.max(1, requestedPage - 1);
       if (this.autoAlert && base.isOnline) {
         const message = error.message;
         if (message.includes("Unauthorized")) {
@@ -285,18 +291,21 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
         throw error;
       }
     } finally {
-      this.loading.setValue(false);
+      if (generation === this.generation) this.loading.setValue(false);
     }
   }
 
   async resetAndCall(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
+    ++this.generation;
+    this.errMsg = "";
+    this.loading.setValue(false);
     this.isLoadAll = false
     this.page = 1
     //@ts-ignore
     return await this.call(...args)
   }
   async callNextPage(...args: Parameters<T>): Promise<Awaited<U> | undefined> {
-    if (this.loading.value) return
+    if (this.loading.value || this.isLoadAll) return
     this.page++
     //@ts-ignore
     return await this.call(...args)

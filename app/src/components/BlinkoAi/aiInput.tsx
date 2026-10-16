@@ -159,6 +159,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           </Button>
         </div>
       </div>
+      {aiStore.currentConversation.value?.nextMessageCursor && <p className="mt-2 text-[11px] text-default-400">长对话使用最近40条消息及最近工作流背景；更早的关键资料可重新引用。</p>}
       {checking ? <p role="status" className="mt-2 text-xs text-default-400">正在检查可用功能…</p> : configError ? <p role="alert" className="mt-2 text-xs text-default-500">配置读取失败 <button className="text-primary" onClick={() => setConfigVersion(value => value + 1)}>重试</button></p> : !available?.canChat && <p className="mt-2 text-xs text-default-500">请先在 AI 设置中配置对话模型，或选择一个已配置的模型。</p>}
     </motion.div>
   );

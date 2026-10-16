@@ -1,7 +1,7 @@
 import i18n from "@/lib/i18n";
 import { _ } from "@/lib/lodash";
 import { observer } from "mobx-react-lite";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react";
 import { useMediaQuery } from "usehooks-ts";
 
 type IProps = {
@@ -43,10 +43,8 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   const canPullRef = useRef(true); // Initialize as true for initial state
   const currentInstanceRef = useRef(Math.random().toString(36)); // Unique identifier for this ScrollArea instance
 
-  let debounceBottom;
-  if (onBottom) {
-    debounceBottom = _.debounce(onBottom!, 500, { leading: true, trailing: false });
-  }
+  const debounceBottom = useMemo(() => onBottom ? _.debounce(onBottom, 500, { leading: true, trailing: false }) : undefined, [onBottom]);
+  useEffect(() => () => debounceBottom?.cancel(), [debounceBottom]);
 
   useImperativeHandle(ref, () => ({
     scrollToBottom: () => {
@@ -223,6 +221,7 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   return (
     <div
       ref={scrollRef}
+      data-scroll-viewport
       data-scroll-area-id={currentInstanceRef.current}
       style={{
         ...style,

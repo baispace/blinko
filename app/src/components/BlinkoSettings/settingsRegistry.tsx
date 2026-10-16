@@ -1,18 +1,18 @@
-import { JSX } from 'react';
-import { BasicSetting } from '@/components/BlinkoSettings/BasicSetting';
-import AiSetting from '@/components/BlinkoSettings/AiSetting/AiSetting';
-import { PerferSetting } from '@/components/BlinkoSettings/PerferSetting';
-import { TaskSetting } from '@/components/BlinkoSettings/TaskSetting';
-import { ImportSetting } from '@/components/BlinkoSettings/ImportSetting';
-import { UserSetting } from '@/components/BlinkoSettings/UserSetting';
-import { AboutSetting } from '@/components/BlinkoSettings/AboutSetting';
-import { StorageSetting } from '@/components/BlinkoSettings/StorageSetting';
-import { ExportSetting } from '@/components/BlinkoSettings/ExportSetting';
-import { MusicSetting } from '@/components/BlinkoSettings/MusicSetting';
-import { SSOSetting } from '@/components/BlinkoSettings/SSOSetting';
-import { HttpProxySetting } from '@/components/BlinkoSettings/HttpProxySetting';
-import { PluginSetting } from '@/components/BlinkoSettings/PluginSetting';
-import { HotkeySetting } from '@/components/BlinkoSettings/HotkeySetting';
+import { lazy, type ReactNode } from 'react';
+const BasicSetting = lazy(() => import('@/components/BlinkoSettings/BasicSetting').then(module => ({ default: module.BasicSetting })));
+const AiSetting = lazy(() => import('@/components/BlinkoSettings/AiSetting/AiSetting'));
+const PerferSetting = lazy(() => import('@/components/BlinkoSettings/PerferSetting').then(module => ({ default: module.PerferSetting })));
+const TaskSetting = lazy(() => import('@/components/BlinkoSettings/TaskSetting').then(module => ({ default: module.TaskSetting })));
+const ImportSetting = lazy(() => import('@/components/BlinkoSettings/ImportSetting').then(module => ({ default: module.ImportSetting })));
+const UserSetting = lazy(() => import('@/components/BlinkoSettings/UserSetting').then(module => ({ default: module.UserSetting })));
+const AboutSetting = lazy(() => import('@/components/BlinkoSettings/AboutSetting').then(module => ({ default: module.AboutSetting })));
+const StorageSetting = lazy(() => import('@/components/BlinkoSettings/StorageSetting').then(module => ({ default: module.StorageSetting })));
+const ExportSetting = lazy(() => import('@/components/BlinkoSettings/ExportSetting').then(module => ({ default: module.ExportSetting })));
+const MusicSetting = lazy(() => import('@/components/BlinkoSettings/MusicSetting').then(module => ({ default: module.MusicSetting })));
+const SSOSetting = lazy(() => import('@/components/BlinkoSettings/SSOSetting').then(module => ({ default: module.SSOSetting })));
+const HttpProxySetting = lazy(() => import('@/components/BlinkoSettings/HttpProxySetting').then(module => ({ default: module.HttpProxySetting })));
+const PluginSetting = lazy(() => import('@/components/BlinkoSettings/PluginSetting').then(module => ({ default: module.PluginSetting })));
+const HotkeySetting = lazy(() => import('@/components/BlinkoSettings/HotkeySetting').then(module => ({ default: module.HotkeySetting })));
 
 /**
  * Registry of every settings section.
@@ -22,34 +22,45 @@ import { HotkeySetting } from '@/components/BlinkoSettings/HotkeySetting';
  * → pages/settings → BlinkoSettings/* → Layout → Sidebar forms a cycle and the
  * overlay never mounts.
  */
-type SettingItem = {
+export type SettingItem = {
   key: string;
   title: string;
   icon: string;
-  component: JSX.Element;
+  component: ReactNode;
+  group: string;
+  description: string;
   requireAdmin: boolean;
   keywords?: string[];
 };
 export const allSettings: SettingItem[] = [
   {
     key: 'basic',
-    title: ('basic-information'),
-    icon: 'tabler:tool',
+    title: 'settings-account',
+    group: 'common',
+    description: 'settings-account-desc',
+    icon: 'tabler:user-circle',
     component: <BasicSetting />,
     requireAdmin: false,
     keywords: ['basic', 'information', '基本信息', '基础设置'],
   },
   {
     key: 'prefer',
-    title: ('preference'),
+    title: 'settings-appearance',
+    group: 'common',
+    description: 'settings-prefer-desc',
     icon: 'tabler:settings-2',
     component: <PerferSetting />,
     requireAdmin: false,
     keywords: ['preference', 'theme', 'language', '偏好设置', '主题', '语言'],
   },
+  { key: 'prefer-typography', title: 'global-typography', group: 'common', description: 'settings-typography-desc', icon: 'tabler:typography', component: <PerferSetting section="typography" />, requireAdmin: false, keywords: ['font', '字体', '字号', '标题', '行距', '段落'] },
+  { key: 'prefer-reading', title: 'settings-reading', group: 'common', description: 'settings-reading-desc', icon: 'tabler:layout-list', component: <PerferSetting section="reading" />, requireAdmin: false, keywords: ['list', '列表', '卡片', '阅读', '折叠', '分页', '时间格式', '导航'] },
+  { key: 'site', title: 'settings-site', group: 'common', description: 'settings-site-desc', icon: 'tabler:world', component: <PerferSetting section="advanced" />, requireAdmin: true, keywords: ['站点', '名字', '名称', 'icon', 'logo', '图标', '登录页', '页脚', '背景', '标题'] },
   {
     key: 'hotkey',
-    title: ('hotkeys'),
+    title: 'hotkeys',
+    group: 'personal',
+    description: 'settings-hotkey-desc',
     icon: 'material-symbols:keyboard',
     component: <HotkeySetting />,
     requireAdmin: false,
@@ -57,7 +68,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'user',
-    title: ('user-list'),
+    title: 'user-list',
+    group: 'system',
+    description: 'settings-user-desc',
     icon: 'tabler:users',
     component: <UserSetting />,
     requireAdmin: true,
@@ -65,15 +78,22 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'ai',
-    title: 'AI',
+    title: 'settings-ai-models',
+    group: 'common',
+    description: 'settings-ai-models-desc',
     icon: 'hugeicons:ai-beautify',
     component: <AiSetting />,
     requireAdmin: true,
-    keywords: ['ai', 'artificial intelligence', '人工智能'],
+    keywords: ['ai', 'model', 'provider', 'token', 'API', '模型', '服务商', '密钥', 'minimax', 'openai'],
   },
+  { key: 'ai-knowledge', title: 'settings-ai-knowledge', group: 'ai', description: 'settings-ai-knowledge-desc', icon: 'tabler:book-2', component: <AiSetting section="knowledge" />, requireAdmin: true, keywords: ['embedding', 'rerank', '向量', '知识库', '检索'] },
+  { key: 'ai-behavior', title: 'settings-ai-behavior', group: 'ai', description: 'settings-ai-behavior-desc', icon: 'tabler:adjustments', component: <AiSetting section="behavior" />, requireAdmin: true, keywords: ['prompt', '提示词', '自动标签', '后处理'] },
+  { key: 'ai-tools', title: 'settings-ai-tools', group: 'ai', description: 'settings-ai-tools-desc', icon: 'tabler:plug-connected', component: <AiSetting section="tools" />, requireAdmin: true, keywords: ['MCP', 'tools', '搜索', '工具', '连接', '联网'] },
   {
     key: 'httpproxy',
-    title: ('http-proxy'),
+    title: 'http-proxy',
+    group: 'system',
+    description: 'settings-proxy-desc',
     icon: 'tabler:cloud-network',
     component: <HttpProxySetting />,
     requireAdmin: true,
@@ -81,7 +101,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'task',
-    title: ('schedule-task'),
+    title: 'schedule-task',
+    group: 'system',
+    description: 'settings-task-desc',
     icon: 'tabler:list-check',
     component: <TaskSetting />,
     requireAdmin: true,
@@ -89,7 +111,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'storage',
-    title: ('storage'),
+    title: 'storage',
+    group: 'data',
+    description: 'settings-storage-desc',
     icon: 'tabler:database',
     component: <StorageSetting />,
     requireAdmin: true,
@@ -97,7 +121,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'music',
-    title: ('music-settings'),
+    title: 'music-settings',
+    group: 'extensions',
+    description: 'settings-music-desc',
     icon: 'tabler:music',
     component: <MusicSetting />,
     requireAdmin: true,
@@ -105,7 +131,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'import',
-    title: ('import'),
+    title: 'import',
+    group: 'data',
+    description: 'settings-import-desc',
     icon: 'tabler:file-import',
     component: <ImportSetting />,
     requireAdmin: true,
@@ -113,7 +141,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'sso',
-    title: ('sso-settings'),
+    title: 'sso-settings',
+    group: 'system',
+    description: 'settings-sso-desc',
     icon: 'tabler:key',
     component: <SSOSetting />,
     requireAdmin: true,
@@ -121,7 +151,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'export',
-    title: ('export'),
+    title: 'export',
+    group: 'data',
+    description: 'settings-export-desc',
     icon: 'tabler:file-export',
     component: <ExportSetting />,
     requireAdmin: false,
@@ -129,7 +161,9 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'plugin',
-    title: ('plugin-settings'),
+    title: 'plugin-settings',
+    group: 'extensions',
+    description: 'settings-plugin-desc',
     icon: 'hugeicons:plug-socket',
     component: <PluginSetting />,
     requireAdmin: true,
@@ -137,10 +171,16 @@ export const allSettings: SettingItem[] = [
   },
   {
     key: 'about',
-    title: ('about'),
+    title: 'settings-about-site',
+    group: 'about',
+    description: 'settings-about-desc',
     icon: 'tabler:info-circle',
     component: <AboutSetting />,
     requireAdmin: false,
     keywords: ['about', 'information', '关于', '信息'],
   },
 ];
+
+export const settingGroups = ['common', 'ai', 'personal', 'data', 'extensions', 'system', 'about'] as const;
+const settingOrder = ['ai', 'site', 'prefer-reading', 'prefer', 'prefer-typography', 'basic', 'ai-behavior', 'ai-knowledge', 'ai-tools', 'hotkey', 'export', 'import', 'storage', 'plugin', 'music', 'task', 'user', 'sso', 'httpproxy', 'about'];
+allSettings.sort((a,b) => settingOrder.indexOf(a.key) - settingOrder.indexOf(b.key));

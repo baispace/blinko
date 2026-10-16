@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { SettingsCardContext } from '../Common/CollapsibleCard';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown, Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -13,16 +15,17 @@ type IProps = {
 
 
 export const Item = observer(({ leftContent, rightContent, type = 'row', hidden = false, className }: IProps) => {
+  const settingsMode = useContext(SettingsCardContext);
   if (hidden) return null
   if (type == 'col') {
-    return <div className={`flex flex-col py-2 ${className}`}>
-      <div className="font-semibold">{leftContent}</div>
+    return <div className={`flex flex-col py-2 ${settingsMode ? 'settings-item' : ''} ${className ?? ''}`}>
+      <div className={settingsMode ? "settings-item-label" : "font-semibold"}>{leftContent}</div>
       <div className="mt-2 w-full">{rightContent}</div>
     </div>
   } else {
-    return <div className={`flex flex-row items-center py-2 ${className}`}>
-      {!!leftContent && <div className={rightContent ? "font-semibold" : 'w-full'}>{leftContent}</div>}
-      {!!rightContent && <div className="ml-auto">{rightContent}</div>}
+    return <div className={`flex flex-row items-center py-2 ${settingsMode ? 'settings-item' : ''} ${className ?? ''}`}>
+      {!!leftContent && <div className={rightContent ? (settingsMode ? "settings-item-label" : "font-semibold") : 'w-full'}>{leftContent}</div>}
+      {!!rightContent && <div className={settingsMode ? "settings-item-control" : "ml-auto"}>{rightContent}</div>}
     </div>
   }
 })

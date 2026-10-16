@@ -1,3 +1,6 @@
+import { getFullNote } from '@/lib/fullNote';
+import { RootStore } from '@/store';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
 import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { Note } from '@shared/lib/types';
@@ -74,7 +77,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
   const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
   const foldThreshold = foldLength ?? blinko.config.value?.cardFoldLength ?? 300;
-  const isLongText = (blinkoItem.content?.length ?? 0) > foldThreshold;
+  const isLongText = (blinkoItem.contentLength ?? blinkoItem.content?.length ?? 0) > foldThreshold;
   const [isTextExpanded, setTextExpanded] = useState(!!isExpanded);
   const [needsFold, setNeedsFold] = useState(isLongText);
   const isClamped = !!foldable && isLongText && !isTextExpanded && needsFold;
@@ -84,7 +87,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
   useEffect(() => {
     const el = contentRef.current;
     if (!foldable || !isLongText || !el) { setNeedsFold(false); return; }
-    setNeedsFold(el.scrollHeight > FOLD_MAX_HEIGHT + 40);
+    setNeedsFold((!!blinkoItem.isSummary && (blinkoItem.contentLength ?? 0) > (blinkoItem.content?.length ?? 0)) || el.scrollHeight > FOLD_MAX_HEIGHT + 40);
   }, [foldable, isLongText, blinkoItem.content]);
 
   const displayContent = useMemo(
@@ -95,11 +98,12 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         const idx = content.indexOf('\n');
         content = idx >= 0 ? content.slice(idx + 1) : '';
       }
+      if (foldable && !isTextExpanded && content.length > 1200) content = content.slice(0,1200);
       if (inlineTags) return content;
       const tagPaths = getNoteTagPaths(blinkoItem);
       return tagPaths.length ? stripTagTokens(content, tagPaths) : content;
     },
-    [blinkoItem.content, blinkoItem.tags, inlineTags, skipFirstLine]
+    [foldable, isTextExpanded, blinkoItem.content, blinkoItem.tags, inlineTags, skipFirstLine]
   );
 
   return (
@@ -112,9 +116,11 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         >
           <MarkdownRender
             content={displayContent}
-            onChange={(updater) => {
+            onChange={async (updater) => {
               if (isShareMode) return;
-              const newContent = updater(blinkoItem.content ?? '');
+              let full;
+              try { full = await getFullNote(blinkoItem); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，未修改内容'); return; }
+              const newContent = updater(full.content ?? '');
               blinkoItem.content = newContent
               blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
             }}
@@ -127,7 +133,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card via-card/80 to-transparent" />
             <button
               className="absolute bottom-1.5 right-2 text-[color:var(--tag)] text-sm font-medium flex items-center gap-0.5 bg-card/80 rounded px-1.5 py-0.5 hover:opacity-80"
-              onClick={(e) => { e.stopPropagation(); setTextExpanded(true); }}
+              onClick={async (e) => { e.stopPropagation(); try { const full = await getFullNote(blinkoItem); Object.assign(blinkoItem, full); setTextExpanded(true); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); } }}
             >
               {t('expand')}
               <Icon icon="mdi:chevron-down" width="14" height="14" />
@@ -144,6 +150,7 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
           <Icon icon="mdi:chevron-down" width="14" height="14" className="rotate-180" />
         </button>
       )}
+      {blinkoItem.isSummary && ((blinkoItem._count?.references || 0) + (blinkoItem._count?.referencedBy || 0) > 0 || (blinkoItem._count?.attachments || 0) > 6) && <a className="mt-2 block text-xs text-primary" href={`/detail?id=${blinkoItem.id}`}>查看完整附件和关联内容</a>}
       <ReferencesContent blinkoItem={blinkoItem} className={`${isExpanded ? 'my-4' : 'my-2'}`} />
       <div className={(attachments ?? blinkoItem.attachments)?.length != 0 ? 'my-2' : ''}>
         <FilesAttachmentRender files={attachments ?? blinkoItem.attachments ?? []} preview />

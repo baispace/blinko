@@ -10,7 +10,6 @@ import { SiteBrand } from '../Common/SiteBrand';
 import { Item } from './Item';
 import { SiteBrandingQuickLinksEditor } from './SiteBrandingQuickLinksEditor';
 
-const DEFAULT_TAGLINE = '闪念 · 笔记 · 待办 · AI 工作流';
 
 export const SiteBrandingSettings = observer(() => {
   const { t, i18n } = useTranslation();
@@ -104,9 +103,9 @@ export const SiteBrandingSettings = observer(() => {
   return (
     <div className="mb-5 space-y-4">
       <div className="rounded-xl border border-default-200 bg-default-50 p-4">
-        <SiteBrand showTagline={Boolean((blinko.config.value?.customTagline ?? '').trim() || DEFAULT_TAGLINE)} />
+        <div className="max-w-[260px]"><SiteBrand framed /></div>
         <p className="mt-3 text-xs text-default-400">
-          {text('名称、图标与副标用于侧边栏、登录页和浏览器标签页。', 'Your name, icon and tagline appear in the sidebar, sign-in page and browser tab.')}
+          {text('名称和图标用于站点各处；简短描述显示在侧边栏和登录页，留空则隐藏。', 'Your name and icon identify this workspace. The optional description appears in the sidebar and sign-in page.')}
         </p>
       </div>
       <Item
@@ -161,17 +160,17 @@ export const SiteBrandingSettings = observer(() => {
         type="col"
         leftContent={
           <div className="flex flex-col">
-            <span>{text('站点副标', 'Workspace tagline')}</span>
+            <span>{text('简短描述（可选）', 'Short description (optional)')}</span>
             <span className="mt-1 text-[11px] font-normal text-default-400">
-              {text('在站点名称下显示的一行短语，留空使用默认。', 'A short line shown below the workspace name; leave blank for the default.')}
+              {text('一句话说明这个空间的用途，最多 50 字，留空不显示。', 'Describe this workspace in up to 50 characters. Leave blank to hide.')}
             </span>
           </div>
         }
         rightContent={
           <div className="flex items-start gap-2">
             <Input
-              aria-label={text('站点副标', 'Workspace tagline')}
-              placeholder={DEFAULT_TAGLINE}
+              aria-label={text('简短描述（可选）', 'Short description (optional)')}
+              placeholder={text('例如：记录想法，推进工作', 'e.g. Ideas, work and everyday life')}
               maxLength={50}
               value={tagline}
               isDisabled={taglineSaving}

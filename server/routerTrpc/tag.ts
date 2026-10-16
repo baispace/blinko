@@ -41,44 +41,23 @@ export const tagRouter = router({
     .query(async function ({ ctx }) {
       const accountId = Number(ctx.id);
       const visibleNoteWhere = { isRecycle: false, isArchived: false };
-      const [tags, blinkoCount, noteCount, todoCount] = await Promise.all([
-        prisma.tag.findMany({
-          where: { accountId },
-          orderBy: { sortOrder: 'asc' },
-          distinct: ['id'],
-          include: {
-            tagsToNote: {
-              where: { note: visibleNoteWhere },
-              select: { noteId: true, note: { select: { type: true } } }
-            }
-          }
-        }),
-        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.BLINKO } }),
-        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.NOTE } }),
-        prisma.notes.count({ where: { accountId, ...visibleNoteWhere, type: NoteType.TODO } })
+      const [tags, relations, totals] = await Promise.all([
+        prisma.tag.findMany({ where: { accountId }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
+        prisma.$queryRaw<Array<{ tagId: number; count: number; blinko: number; notes: number; todos: number }>>`
+          SELECT nt."tagId", count(*)::int AS count,
+            count(*) FILTER (WHERE n.type = 0)::int AS blinko,
+            count(*) FILTER (WHERE n.type = 1)::int AS notes,
+            count(*) FILTER (WHERE n.type = 2)::int AS todos
+          FROM "tagsToNote" nt JOIN notes n ON n.id = nt."noteId" JOIN tag t ON t.id = nt."tagId"
+          WHERE t."accountId" = ${accountId} AND NOT n."isRecycle" AND NOT n."isArchived" GROUP BY nt."tagId"`,
+        prisma.$queryRaw<Array<{ type: number; count: number }>>`SELECT type,count(*)::int AS count FROM notes WHERE "accountId" = ${accountId} AND NOT "isRecycle" AND NOT "isArchived" GROUP BY type`,
       ]);
-      return {
-        tags: tags.map(tag => {
-          const relations = tag.tagsToNote;
-          return {
-            tag: {
-              id: tag.id,
-              name: tag.name,
-              icon: tag.icon,
-              parent: tag.parent,
-              sortOrder: tag.sortOrder,
-              createdAt: tag.createdAt,
-              updatedAt: tag.updatedAt
-            },
-            noteCount: relations.length,
-            blinkoNoteCount: relations.filter(r => r.note.type === NoteType.BLINKO).length,
-            noteNoteCount: relations.filter(r => r.note.type === NoteType.NOTE).length,
-            todoNoteCount: relations.filter(r => r.note.type === NoteType.TODO).length
-          };
-        }),
-        blinkoCount,
-        noteCount,
-        todoCount
+      const counts = new Map(relations.map(row => [row.tagId,row]));
+      return { tags: tags.map(tag => ({ tag, noteCount: counts.get(tag.id)?.count || 0,
+        blinkoNoteCount: counts.get(tag.id)?.blinko || 0, noteNoteCount: counts.get(tag.id)?.notes || 0, todoNoteCount: counts.get(tag.id)?.todos || 0 })),
+        blinkoCount: totals.find(row => row.type === 0)?.count || 0,
+        noteCount: totals.find(row => row.type === 1)?.count || 0,
+        todoCount: totals.find(row => row.type === 2)?.count || 0,
       };
     }),
 

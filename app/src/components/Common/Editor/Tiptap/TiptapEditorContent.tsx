@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
-import { EditorContent, BubbleMenu } from '@tiptap/react';
+import { EditorDocumentSurface, EditorBubbleSurface } from './EditorSurface';
 import type { Editor } from '@tiptap/core';
 import { CellSelection } from '@tiptap/pm/tables';
 import type { EditorStore } from '../editorStore';
@@ -37,13 +37,13 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
      so the editor body must grow naturally instead of scrolling internally. */
   return (
     <div className={`tiptap-wrap ${readOnly ? 'is-readonly' : ''} ${pageScroll ? 'page-scroll' : ''} ${!pageScroll && (fill || store.isFullscreen) ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
-      <EditorContent editor={editor} />
+      <EditorDocumentSurface editor={editor} />
       {/*
         这些浮层都不做条件卸载：Tiptap 的 BubbleMenu 在卸载时会去移除 tippy 节点，
         阅读态 ↔ 编辑态频繁切换容易触发 removeChild 崩溃。它们内部各自按
         editor.isEditable 决定是否显示，交给它们自己判断即可。
       */}
-      <BubbleMenu
+      <EditorBubbleSurface
         editor={editor}
         shouldShow={({ editor }) => {
           if (!editor || !editor.isEditable) return false;
@@ -88,7 +88,7 @@ export const TiptapEditorContent = observer(({ store, readOnly = false, fill = f
           <BubbleBtn editor={editor} title="清除文字格式（保留段落结构）" icon="tabler:clear-formatting"
             onClick={() => editor.chain().focus().unsetAllMarks().run()} />
           </div>
-      </BubbleMenu>
+      </EditorBubbleSurface>
       <SlashMenuView state={adapter.slashMenu} />
       {/* 两个 Suggestion 实例（@ 引用笔记、# 标签）共用这一个挂载点，
           只渲染其中之一会让另一个彻底失灵 */}

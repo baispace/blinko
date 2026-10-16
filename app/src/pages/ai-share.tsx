@@ -58,6 +58,7 @@ const AiSharePage = observer(() => {
                 // Set the conversation in aiStore for BlinkoChatBox to display
                 aiStore.currentConversation.value = {
                     id: data.id,
+                    source: null, metadata: null, externalId: null, nextMessageCursor: null,
                     title: data.title,
                     isShare: true,
                     accountId: data.account ? 1 : 1, // placeholder since we don't need this for display

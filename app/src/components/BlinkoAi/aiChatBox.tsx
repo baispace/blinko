@@ -22,6 +22,7 @@ import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { AiDraftResult, parseDraft } from './AiDraftResult';
 import { AiDailyResult } from './AiDailyResult';
 import { parseDailyDraft } from '@shared/lib/aiWorkflows';
+import { ViewportItem } from '../Common/ViewportItem';
 import './aiChat.css';
 
 const ChatAction = ({ label, icon, onClick, disabled = false }: { label: string; icon: string; onClick: () => void; disabled?: boolean }) => (
@@ -273,6 +274,12 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
     }
   }, [aiStore.currentMessageResult.content.length])
 
+  useEffect(() => {
+    if (aiStore.isAnswering && aiStore.currentConversation.value?.messages.at(-1)?.role === 'user') {
+      shouldAutoScrollRef.current = true; scrollToBottom();
+    }
+  }, [aiStore.currentConversation.value?.messages.at(-1)?.id]);
+
   // Reset state when switching conversations
   useEffect(() => {
     shouldAutoScrollRef.current = true
@@ -294,6 +301,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
     <div
       ref={containerRef}
       onScroll={handleScroll}
+      data-scroll-viewport
       className="ai-chat-scroll h-full overflow-y-auto overflow-x-hidden"
     >
 
@@ -304,6 +312,13 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
         {/* Flex spacer */}
         <div className="flex-grow" />
 
+        {!shareMode && aiStore.currentConversation.value?.nextMessageCursor && <button type="button" disabled={aiStore.olderMessagesLoading || aiStore.isAnswering || aiStore.isPreparing} className="mx-auto rounded-lg px-3 py-2 text-xs text-default-500 hover:bg-default-100 disabled:opacity-50" onClick={async () => {
+          const container = containerRef.current; if (!container) return;
+          shouldAutoScrollRef.current = false;
+          const before = container.scrollHeight; const top = container.scrollTop;
+          await aiStore.loadOlderMessages();
+          requestAnimationFrame(() => { container.scrollTop = top + container.scrollHeight - before; });
+        }}>{aiStore.olderMessagesLoading ? '正在加载…' : '加载更早的消息'}</button>}
         {/* Chat time header */}
         {firstMessageTime && (
           <div className="text-center text-desc mb-4 text-xs">
@@ -328,8 +343,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
           {
             aiStore.currentConversation.value?.messages.map((item, index) => (
               item.role == 'user' ? (
-                <UserMessage
-                  key={`user-${item.id ?? index}`}
+                <ViewportItem disabled key={`user-${item.id ?? index}`} initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={140}><UserMessage
                   content={(item.metadata as any)?.displayContent || item.content}
                   sources={(item.metadata as any)?.sources || []}
                   workflowTitle={(item.metadata as any)?.workflow?.title}
@@ -338,17 +352,16 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
                   onEdit={handleEditMessage}
                   busy={aiStore.isAnswering || aiStore.isPreparing}
                   shareMode={shareMode}
-                />
+                /></ViewportItem>
               ) : item.role == 'assistant' ? (
-                <AiMessage
-                  key={`assistant-${item.id ?? index}`}
+                <ViewportItem disabled={!!parseDailyDraft(item.content) || !!parseDraft(item.content)} key={`assistant-${item.id ?? index}`} initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={320}><AiMessage
                   id={item.id}
                   metadata={item.metadata as AssisantMessageMetadata}
                   content={item.content}
                   busy={aiStore.isAnswering || aiStore.isPreparing}
                   canRegenerate={!aiStore.currentMessageResult.id && item.id === aiStore.currentConversation.value?.messages.at(-1)?.id}
                   shareMode={shareMode}
-                />
+                /></ViewportItem>
               ) : null
             ))
           }

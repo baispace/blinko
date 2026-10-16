@@ -49,7 +49,7 @@ export class NoteMentionState {
       this.abortController = controller
       try {
         const result = await api.notes.list.mutate({
-          searchText: query.trim(), size: 15, type: -1, isArchived: null,
+          view: 'summary', searchText: query.trim(), size: 15, type: -1, isArchived: null,
         }, { signal: controller.signal })
         if (version !== this.requestVersion || !this.isOpen) return
         runInAction(() => {

@@ -1,3 +1,4 @@
+import { SiteBrand } from '@/components/Common/SiteBrand';
 import React, { useEffect, useState } from "react";
 import { Button, Input, Checkbox, Image, Divider } from "@heroui/react";
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -37,6 +38,11 @@ export default function Component() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const blinko = RootStore.Get(BlinkoStore);
+  useEffect(() => {
+    const user = RootStore.Get(UserStore);
+    user.updateAppTitle(blinko.config.value?.customTitle);
+    user.updateAppIcon(blinko.config.value?.customIcon);
+  }, [blinko.config.value?.customTitle, blinko.config.value?.customIcon]);
 
   useEffect(() => {
     blinko.config.call();
@@ -137,7 +143,7 @@ export default function Component() {
       <div className="flex h-full w-screen items-center justify-center p-2 sm:p-4 lg:p-8">
         <div className="flex w-full max-w-sm flex-col gap-4 rounded-large glass-effect px-8 pb-10 pt-6 shadow-large">
           <p className="pb-2 text-xl font-medium flex gap-2 items-center justiy-center">
-            Login With <Image src={theme === 'light' ? '/logo-light-title.png' : '/logo-dark-title.png'} width={100} radius="none"></Image>
+            <SiteBrand size={36} />
           </p>
 
           {providers.length > 0 && (

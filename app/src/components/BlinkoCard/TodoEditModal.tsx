@@ -1,3 +1,4 @@
+import { getFullNote } from '@/lib/fullNote';
 import { getTodoPriority, todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
@@ -39,7 +40,8 @@ const FlagIcon = ({ color, outline }: { color: string; outline?: boolean }) => (
  * (used by ShowEditBlinkoModel) does not expose TODO-specific metadata like
  * expireAt / priorityUrgent / priorityImportant — this dialog does.
  */
-export const ShowTodoEditModal = (note: Note) => {
+export const ShowTodoEditModal = async (note: Note) => {
+  try { note = await getFullNote(note); } catch { RootStore.Get(ToastPlugin).error('读取待办全文失败，请重试'); return; }
   const blinko = RootStore.Get(BlinkoStore);
   RootStore.Get(DialogStore).setData({
     isOpen: true,
@@ -104,8 +106,7 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
           },
         });
       // refresh store lists so the updated card shows up immediately
-      blinko.todoList.resetAndCall({});
-      blinko.doneTodoList.resetAndCall({});
+      void blinko.refreshData();
       close();
     } catch (error) {
       RootStore.Get(ToastPlugin).error('保存失败，修改已保留，请重试。');

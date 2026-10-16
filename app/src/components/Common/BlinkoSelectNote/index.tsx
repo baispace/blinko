@@ -1,3 +1,4 @@
+import { getFullNote } from '@/lib/fullNote';
 import { Input, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/trpc';
@@ -25,7 +26,7 @@ export const BlinkoSelectNote = ({ iconButton, onSelect, blackList = [], tooltip
     setLoading(true); setError('');
     const timer = setTimeout(async () => {
       try {
-        const result = await api.notes.list.mutate({ searchText: query.trim(), type: -1, isArchived: null, size: 20, page }, { signal: controller.signal });
+        const result = await api.notes.list.mutate({ view: 'summary', searchText: query.trim(), type: -1, isArchived: null, size: 20, page }, { signal: controller.signal });
         if (request !== version.current) return;
         setItems(previous => page === 1 ? result : [...previous, ...result.filter(note => !previous.some(item => item.id === note.id))]);
         setHasMore(result.length === 20); setLoading(false);
@@ -34,7 +35,13 @@ export const BlinkoSelectNote = ({ iconButton, onSelect, blackList = [], tooltip
     return () => { clearTimeout(timer); controller.abort(); };
   }, [open, query, page, retry]);
   const available = items.filter(item => !blackList.includes(item.id));
-  const pick = (item: any) => { if (!item) return; onSelect(item); setSelected(0); if (autoClose) setOpen(false); };
+  const pick = async (item: any) => {
+    if (!item || loading) return;
+    setLoading(true);
+    try { onSelect(await getFullNote(item)); setSelected(0); if (autoClose) setOpen(false); }
+    catch { setError('读取完整内容失败，请重新选择'); }
+    finally { setLoading(false); }
+  };
   return <Popover placement="top-start" isOpen={open} onOpenChange={next => { setOpen(next); if (next) { setPage(1); setQuery(''); setItems([]); setSelected(0); } }}>
     <PopoverTrigger><div>{iconButton || <IconButton tooltip={t(tooltip)} icon="ph:link" />}</div></PopoverTrigger>
     <PopoverContent className="w-[380px] max-w-[calc(100vw-24px)] p-2 items-stretch">

@@ -32,6 +32,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'signinFooterText'
       || item.key == 'customTitle'
       || item.key == 'customIcon'
+      || item.key == 'customTagline'
     ) {
       //if user not login, then use frist find config
       if (!userId) {
@@ -39,7 +40,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
         return acc;
       }
     }
-    if ((item.key === 'customTitle' || item.key === 'customIcon') && !item.userId) {
+    if ((item.key === 'customTitle' || item.key === 'customIcon' || item.key === 'customTagline') && !item.userId) {
       acc[item.key] = config.value;
       return acc;
     }

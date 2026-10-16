@@ -1,5 +1,6 @@
+import { getAvatarUrl } from '@/lib/profileIdentity';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Image } from '@heroui/react';
+import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
 import { observer } from 'mobx-react-lite';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
@@ -13,35 +14,35 @@ import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 interface UserAvatarDropdownProps {
   onItemClick?: () => void;
   collapsed?: boolean;
-  showOverlay?: boolean;
 }
 
-export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false, showOverlay = false }: UserAvatarDropdownProps) => {
+export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: UserAvatarDropdownProps) => {
   const base = RootStore.Get(BaseStore);
   const user = RootStore.Get(UserStore);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const accountLabel = i18n.language.startsWith('zh') ? '账户与设置' : 'Account & settings';
   const navigate = useNavigate()
   return (
     <Dropdown
-      placement="bottom-start"
+      placement="top-start"
       classNames={{
         content: 'bg-background border border-default-200 rounded-xl min-w-[220px] shadow-lg',
       }}
     >
       <DropdownTrigger>
-        <button type="button" aria-label="账户与管理菜单" title={user.nickname || user.name || "账户与管理"} className={`cursor-pointer rounded-lg p-1.5 hover:bg-default-100 transition-colors focus-visible:outline-primary flex items-center justify-center shrink-0`}>
-          <div className="relative group">
+        <button type="button" aria-label={accountLabel} title={collapsed ? accountLabel : (user.nickname || user.name || accountLabel)} className={`cursor-pointer rounded-lg p-2 hover:bg-default-100 transition-colors focus-visible:outline-primary flex items-center gap-2.5 ${collapsed ? 'justify-center' : 'w-full text-left'}`}>
+          <div className="relative shrink-0">
             {user.image ? (
-              <img src={getBlinkoEndpoint(`${user.image}?token=${user.tokenData.value?.token}`)} alt="avatar" className={`${collapsed ? 'w-9 h-9' : 'w-8 h-8'} rounded-lg object-cover !transition-all`} />
+              <img src={getAvatarUrl(user.image, user.token || '', getBlinkoEndpoint('/'))} alt="avatar" className={`${collapsed ? 'w-9 h-9' : 'w-8 h-8'} rounded-lg object-cover !transition-all`} />
             ) : (
-              <Image src="/logo.png" width={30} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-default-100 text-sm font-medium text-default-600">{(user.nickname || user.name || "U").slice(0, 1).toUpperCase()}</span>
             )}
 
           </div>
-
+          {!collapsed && <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-medium text-default-700">{user.nickname || user.name || accountLabel}</span><span className="block text-[11px] text-default-400">{accountLabel}</span></span>}
         </button>
       </DropdownTrigger>
-      <DropdownMenu aria-label="账户与管理">
+      <DropdownMenu aria-label={accountLabel}>
         <>
           {base.routerList
             .filter((i) => i.hiddenSidebar)

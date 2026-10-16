@@ -1,3 +1,4 @@
+import { getFullNote } from '@/lib/fullNote';
 import { getTodoPriority, todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { observer } from 'mobx-react-lite';
@@ -58,6 +59,7 @@ interface TodoCardProps {
 export const TodoCard = observer(({ todo }: TodoCardProps) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
+  const [toggleSaving, setToggleSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const done = Boolean(todo.isArchived);
   const quad = getTodoPriority(todo.metadata);
@@ -80,7 +82,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
 
   const content = stripContent(todo);
   const contentLines = content.split('\n');
-  const isLong = contentLines.length > 3 || content.length > 140;
+  const isLong = (todo.contentLength || content.length) > 140 || contentLines.length > 3;
 
   // 正文里的任务清单可直接在卡片上勾选。
   // updater 基于「原始 content」计算（stripContent 只删 #标签# token，任务项序号与原文一致），
@@ -88,8 +90,9 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
   const rawContentRef = useRef(todo.content ?? '');
   rawContentRef.current = todo.content ?? '';
 
-  const handleContentChange = (updater: (current: string) => string) => {
+  const handleContentChange = async (updater: (current: string) => string) => {
     if (todo.id == null) return;
+    try { const full = await getFullNote(todo); rawContentRef.current = full.content || ''; } catch { RootStore.Get(ToastPlugin).error('读取全文失败，未修改内容'); return; }
     const next = updater(rawContentRef.current);
     if (next === rawContentRef.current) return;
     rawContentRef.current = next;
@@ -98,39 +101,15 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     blinko.upsertNote.call({ id: todo.id, content: next, refresh: false });
   };
 
-  const toggle = (e: React.MouseEvent) => {
+  const toggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const willArchive = !done;
-
-    // 同步更新两份 list 的内存数据：保证「点完即生效」，
-    // 行为与刷新后一致，避免 updateTicker 只刷 todoList 不刷 doneTodoList
-    // 导致的「点完消失、刷新又出现」错位。
-    const todoList = (blinko.todoList.value ?? []) as any[];
-    const doneList = (blinko.doneTodoList.value ?? []) as any[];
-    const updated = {
-      ...todo,
-      isArchived: willArchive,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (willArchive) {
-      blinko.todoList.setValue(todoList.filter((n) => n.id !== todo.id));
-      if (!doneList.some((n) => n.id === todo.id)) {
-        blinko.doneTodoList.setValue([updated, ...doneList]);
-      }
-    } else {
-      blinko.doneTodoList.setValue(doneList.filter((n) => n.id !== todo.id));
-      if (!todoList.some((n) => n.id === todo.id)) {
-        blinko.todoList.setValue([updated, ...todoList]);
-      }
-    }
-
-    // 异步通知后端；refresh 默认会自增 updateTicker → refreshData() 再次拉 todoList
-    blinko.upsertNote.call({
-      id: todo.id,
-      type: NoteType.TODO,
-      isArchived: willArchive,
-    });
+    if (toggleSaving) return;
+    setToggleSaving(true);
+    try {
+      await api.notes.upsert.mutate({ id: todo.id, type: NoteType.TODO, isArchived: !done });
+      await blinko.refreshData();
+    } catch { RootStore.Get(ToastPlugin).error('状态更新失败，请重试'); }
+    finally { setToggleSaving(false); }
   };
 
   const openEdit = () => {
@@ -155,10 +134,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     if (todo.id == null || !window.confirm(`${t('confirm')}：${t('delete')}？`)) return;
     await PromiseCall(api.notes.deleteMany.mutate({ ids: [todo.id] }));
     void PromiseCall(api.ai.embeddingDelete.mutate({ id: todo.id }), { autoAlert: false });
-    await Promise.all([
-      blinko.todoList.resetAndCall({}),
-      blinko.doneTodoList.resetAndCall({}),
-    ]);
+    await blinko.refreshData();
   };
 
   const changePriority = async (key: TodoPriority) => {
@@ -167,9 +143,10 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     try {
       const saved = await api.notes.upsert.mutate({ id: todo.id, type: NoteType.TODO, metadata: todoPriorityMetadata(key) });
       // Replace list entries so both MobX readers and memoized groups update.
-      for (const list of [blinko.todoList, blinko.doneTodoList, blinko.noteList]) {
+      for (const list of [blinko.todoFeed, blinko.todoList, blinko.doneTodoList, blinko.noteList]) {
         list.setValue((list.value ?? []).map(item => item.id === todo.id ? { ...item, metadata: saved.metadata } : item));
       }
+      if (new URLSearchParams(window.location.search).get('path') === 'todo') await blinko.todoFeed.resetAndCall({});
     } catch { RootStore.Get(ToastPlugin).error('优先级修改失败，请重试。'); }
     finally { setPrioritySaving(false); }
   };
@@ -192,6 +169,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
       <button
         type="button"
         onClick={toggle}
+        disabled={toggleSaving}
         aria-label={done ? t('restore') : t('complete')}
         className="-ml-1 -mt-1 grid size-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-default-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
@@ -227,8 +205,9 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
           {isLong && (
             <button
               type="button"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
+                if (!expanded) { try { Object.assign(todo, await getFullNote(todo)); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); return; } }
                 setExpanded((v) => !v);
               }}
               className="mt-0.5 text-[11px] text-primary hover:underline"
@@ -293,7 +272,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
 
           {done && todo.updatedAt && (
             <div className="text-[11px] text-default-400 mt-1">
-              {t('completed-at')} {dayjs(todo.updatedAt).format('MM/DD HH:mm')}
+              {t('completed-at')} {dayjs((todo.metadata as any)?.completedAt || todo.updatedAt).format('MM/DD HH:mm')}
             </div>
           )}
         </div>

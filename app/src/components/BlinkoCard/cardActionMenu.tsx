@@ -1,3 +1,5 @@
+import { ToastPlugin } from '@/store/module/Toast/Toast';
+import { getFullNote } from '@/lib/fullNote';
 import { observer } from "mobx-react-lite";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
@@ -119,9 +121,9 @@ export const CardActionMenu = observer(({
    * would re-render this component (and the HeroUI collection) while the user
    * is hovering, causing flicker and lost presses.
    */
-  const withNote = (fn: () => void) => () => {
-    blinko.curSelectedNote = _.cloneDeep(blinkoItem);
-    fn();
+  const withNote = (fn: () => void) => async () => {
+    try { blinko.curSelectedNote = _.cloneDeep(await getFullNote(blinkoItem)); fn(); }
+    catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); }
   };
 
   return (

@@ -142,6 +142,7 @@ export class BlinkoStore implements Store {
     }
   }
 
+  private listCursors = new Map<string, number>();
   private async getFilteredNotes(params: {
     page: number;
     size: number;
@@ -160,12 +161,17 @@ export class BlinkoStore implements Store {
       const queryParams = {
         ...this.noteListFilterConfig,
         ...filterConfig,
+        view: 'summary' as const,
         searchText: this.searchText,
         sortBy,
         page,
         size
       };
-      notes = await api.notes.list.mutate(queryParams);
+      const cursorKey = JSON.stringify({ ...queryParams, page: undefined, size });
+      const cursor = page > 1 ? this.listCursors.get(cursorKey) : undefined;
+      notes = await api.notes.list.mutate({ ...queryParams, cursor });
+      const lastId = notes.at(-1)?.id;
+      if (lastId != null) this.listCursors.set(cursorKey, lastId);
 
       
       if (this.offlineNotes.length > 0) {
@@ -453,6 +459,25 @@ export class BlinkoStore implements Store {
     }
   })
 
+  todoBucket: 'today' | 'upcoming' | 'done' = 'today';
+  todoCounts = { today: 0, upcoming: 0, done: 0 };
+  private todoCursor: string | null = null;
+  todoFeed = new PromisePageState({
+    function: async ({ page, size }) => {
+      const generation = this.todoFeed.generation;
+      const result = await api.notes.todoPage.query({
+        ...this.noteListFilterConfig, bucket: this.todoBucket, searchText: this.searchText,
+        size: Math.min(100, Number(size)), cursor: page > 1 ? this.todoCursor || undefined : undefined,
+        withCounts: page === 1, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Shanghai',
+      });
+      if (generation !== this.todoFeed.generation) return [];
+      if (result.counts) this.todoCounts = result.counts;
+      this.todoCursor = result.nextCursor;
+      this.todoFeed.isLoadAll = !result.nextCursor;
+      return result.items;
+    }
+  });
+
   todoList = new PromisePageState({
     function: async ({ page, size }) => {
       return this.getFilteredNotes({
@@ -668,7 +693,7 @@ export class BlinkoStore implements Store {
     if (currentPath === 'notes') {
       await this.noteOnlyList.callNextPage({});
     } else if (currentPath === 'todo') {
-      await this.todoList.callNextPage({});
+      await this.todoFeed.callNextPage({});
     } else if (currentPath === 'archived') {
       await this.archivedList.callNextPage({});
     } else if (currentPath === 'trash') {
@@ -718,10 +743,7 @@ export class BlinkoStore implements Store {
     if (currentPath === 'notes') {
       this.noteOnlyList.resetAndCall({});
     } else if (currentPath === 'todo') {
-      await Promise.all([
-        this.todoList.resetAndCall({}),
-        this.doneTodoList.resetAndCall({}),
-      ]);
+      await this.todoFeed.resetAndCall({});
     } else if (currentPath === 'archived') {
       this.archivedList.resetAndCall({});
     } else if (currentPath === 'trash') {
@@ -867,7 +889,7 @@ export class BlinkoStore implements Store {
       case 'notes':
         return this.noteOnlyList;
       case 'todo':
-        return this.todoList;
+        return this.todoFeed;
       case 'archived':
         return this.archivedList;
       case 'trash':

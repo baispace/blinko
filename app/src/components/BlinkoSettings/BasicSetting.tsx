@@ -1,3 +1,5 @@
+import { getAvatarUrl } from '@/lib/profileIdentity';
+import { signOut } from '../Auth/auth-client';
 import { observer } from "mobx-react-lite";
 import { Alert, Button, Input, Switch, Tooltip, Image } from "@heroui/react";
 import { RootStore } from "@/store";
@@ -22,7 +24,7 @@ import { showTipsDialog } from "../Common/TipsDialog";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { UploadFileWrapper } from "../Common/UploadFile";
 import Avatar from "boring-avatars";
-import { signOut } from "../Auth/auth-client";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 
 export const BasicSetting = observer(() => {
@@ -31,6 +33,7 @@ export const BasicSetting = observer(() => {
   const CODE_SNIPPET = `\`\`\`javascript\n //blinko api document:${getBlinkoEndpoint() ?? window.location.origin}/api-doc\n ${CODE} \`\`\``
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore)
+  useEffect(() => { if(user.id) void user.refreshProfile().catch(() => {}); }, [user.id]);
 
   const store = RootStore.Local(() => ({
     webhookEndpoint: '',
@@ -88,34 +91,34 @@ export const BasicSetting = observer(() => {
         leftContent={<>{t('name')}</>}
         rightContent={
           <div className="flex gap-2 items-center">
-            <div className="text-desc">{user.name}</div>
+            <div className="min-w-0 text-right"><div className="truncate text-sm font-medium">{user.nickname || user.name}</div>{user.nickname && <div className="truncate text-xs text-default-400">@{user.name}</div>}</div>
             <div className="relative group">
               <UploadFileWrapper
                 acceptImage
                 onUpload={async ({ filePath }) => {
-                  if (!user.userInfo.value?.id) return
-                  await PromiseCall(api.users.upsertUser.mutate({
-                    id: user.userInfo.value?.id,
-                    image: filePath
-                  }));
-                  await user.userInfo.call(Number(user.id))
-                  await signOut({ callbackUrl: '/signin' })
-                  eventBus.emit('user:signout')
+                  if (!user.id) return;
+                  try {
+                    await api.users.upsertUser.mutate({ id:Number(user.id), image:filePath });
+                    await user.refreshProfile();
+                    RootStore.Get(ToastPlugin).success(t('operation-success'));
+                  } catch(error) {
+                    RootStore.Get(ToastPlugin).error(error instanceof Error ? error.message : t('operation-failed'));
+                  }
                 }}
               >
-                {user.userInfo.value?.image ? (
+                {user.image ? (
                   <img
-                    src={getBlinkoEndpoint(`${user.userInfo.value.image}?token=${user.tokenData.value?.token}`)}
+                    src={getAvatarUrl(user.image, user.token || '', getBlinkoEndpoint('/'))}
                     alt="avatar"
                     className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 ) : (
-                  <Image src="/logo.png" width={30} />
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-default-100 text-base text-default-500">{(user.nickname || user.name || "U").slice(0,1).toUpperCase()}</span>
                 )}
               </UploadFileWrapper>
             </div>
 
-            <Button variant="flat" isIconOnly startContent={<Icon icon="tabler:edit" width="20" height="20" />} size='sm'
+            <Button aria-label={t('change-user-info')} title={t('change-user-info')} variant="flat" isIconOnly startContent={<Icon icon="tabler:edit" width="20" height="20" />} size='sm'
               onPress={e => {
                 RootStore.Get(DialogStore).setData({
                   isOpen: true,
@@ -123,7 +126,7 @@ export const BasicSetting = observer(() => {
                   content: <UpdateUserInfo />
                 })
               }} />
-            <Button variant="flat" isIconOnly startContent={<Icon icon="material-symbols:password" width="20" height="20" />} size='sm'
+            <Button aria-label={t('rest-user-password')} title={t('rest-user-password')} variant="flat" isIconOnly startContent={<Icon icon="material-symbols:password" width="20" height="20" />} size='sm'
               onPress={e => {
                 RootStore.Get(DialogStore).setData({
                   title: t('rest-user-password'),

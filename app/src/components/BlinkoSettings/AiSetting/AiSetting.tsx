@@ -1,3 +1,4 @@
+import { QuickModelSetup } from './QuickModelSetup';
 import { observer } from 'mobx-react-lite';
 import { Button, Select, SelectItem, Input } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -25,8 +26,9 @@ import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
 type McpTransportExample = 'streamable-http' | 'sse'
 
-export default observer(function AiSetting() {
-  const { t } = useTranslation();
+export default observer(function AiSetting({ section = 'models' }: { section?: 'models' | 'knowledge' | 'behavior' | 'tools' }) {
+  const { t,i18n } = useTranslation();
+  const text=(zh:string,en:string)=>i18n.language.startsWith('zh')?zh:en;
   const aiStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
   const user = RootStore.Get(UserStore);
@@ -54,9 +56,10 @@ export default observer(function AiSetting() {
 
   return (
     <div className='flex flex-col gap-4'>
-      <CollapsibleCard icon="hugeicons:ai-magic" title="AI Providers & Models">
+      {section === 'models' && <>
+      <CollapsibleCard icon="hugeicons:ai-magic" title={t('settings-ai-providers')}>
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap justify-between items-center gap-2"><p className="text-xs text-default-500">{text('选择服务商 → 填写模型 → 开始对话','Choose provider → enter model → start chatting')}</p>
             <Button
               size='md'
               className='ml-auto'
@@ -66,12 +69,12 @@ export default observer(function AiSetting() {
                 RootStore.Get(DialogStore).setData({
                   isOpen: true,
                   size: '2xl',
-                  title: 'Add Provider',
-                  content: <ProviderDialogContent />,
+                  title: text('添加对话模型','Add chat model'),
+                  content: <QuickModelSetup />,
                 });
               }}
             >
-              {t('add-provider')}
+              {text('添加模型','Add model')}
             </Button>
           </div>
 
@@ -82,19 +85,24 @@ export default observer(function AiSetting() {
       </CollapsibleCard>
 
       <DefaultModelsSection />
+      <details className="rounded-lg border border-default-200/70 p-4"><summary className="cursor-pointer text-xs text-default-500">{text('高级接入：Azure 或其他特殊配置','Advanced connections: Azure and other configurations')}</summary><Button className="mt-3" size="sm" variant="flat" onPress={()=>RootStore.Get(DialogStore).setData({isOpen:true,size:'2xl',title:t('add-provider'),content:<ProviderDialogContent />})}>{t('add-provider')}</Button></details>
+      </>}
 
-      <EmbeddingSettingsSection />
+      {section === 'knowledge' && <EmbeddingSettingsSection />}
 
 
+      {section === 'behavior' && <>
       <GlobalPromptSection />
 
       <AiPostProcessingSection />
+      </>}
 
+      {section === 'tools' && <>
       <AiToolsSection />
 
       <McpServersSection />
 
-      <CollapsibleCard icon="hugeicons:api" title="MCP Integration">
+      <CollapsibleCard icon="hugeicons:api" title={t('settings-mcp-integration')}>
         <div className="space-y-4">
           <div className="text-sm text-default-600 mb-4">
             {t('mcp-integration-desc', 'Model Context Protocol (MCP) integration allows AI assistants to connect to Blinko and use its tools.')}
@@ -168,6 +176,7 @@ ${mcpClientConfig}
           </div>
         </div>
       </CollapsibleCard>
+      </>}
     </div>
   );
 });

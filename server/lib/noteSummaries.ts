@@ -10,9 +10,9 @@ export const summarySelect = {
   _count: { select: { comments: true, histories: true, attachments: true, references: true, referencedBy: true } },
   internalShares: { select: { id: true } },
 } satisfies Prisma.notesSelect;
-export async function summarizeNotes(rows: any[]) {
+export async function summarizeNotes(rows: any[], db: Prisma.TransactionClient = prisma) {
   if (!rows.length) return [];
-  const previews = await prisma.$queryRaw<{ id: number; content: string; contentLength: number }[]>(Prisma.sql`
+  const previews = await db.$queryRaw<{ id: number; content: string; contentLength: number }[]>(Prisma.sql`
     SELECT id, LEFT(content, ${SUMMARY_LENGTH}::int) AS content, length(content)::int AS "contentLength"
     FROM notes WHERE id IN (${Prisma.join(rows.map(note => note.id))})`);
   const byId = new Map(previews.map(row => [row.id, row]));

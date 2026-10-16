@@ -1,3 +1,4 @@
+import { getFullNote } from '@/lib/fullNote';
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@heroui/react';
@@ -181,8 +182,9 @@ export const ShowEditTimeModel = (showExpired: boolean = false) => {
   })
 }
 
-export const ShowEditBlinkoModel = (size: string = '2xl', mode: 'create' | 'edit' = 'edit', initialData?: { file?: File, text?: string }) => {
+export const ShowEditBlinkoModel = async (size: string = '2xl', mode: 'create' | 'edit' = 'edit', initialData?: { file?: File, text?: string }) => {
   const blinko = RootStore.Get(BlinkoStore)
+  if (mode === 'edit' && blinko.curSelectedNote) { try { blinko.curSelectedNote = await getFullNote(blinko.curSelectedNote); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); return; } }
   RootStore.Get(DialogStore).setData({
     size: size as any,
     isOpen: true,
@@ -289,10 +291,11 @@ export const handleArchived = () => {
   }
 }
 
-export const handleAITag = () => {
+export const handleAITag = async () => {
   const blinko = RootStore.Get(BlinkoStore)
   const aiStore = RootStore.Get(AiStore)
-  aiStore.autoTag.call(blinko.curSelectedNote?.id!, blinko.curSelectedNote?.content!)
+  if (!blinko.curSelectedNote) return;
+  try { const note = await getFullNote(blinko.curSelectedNote); aiStore.autoTag.call(note.id!, note.content!); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); }
 }
 
 export const handleTrash = () => {
@@ -374,8 +377,9 @@ export const handleExport = async () => {
 /** 复制正文 + 附件链接（compact 卡片把该操作从 header 收进菜单后仍需可达） */
 export const handleCopyContent = async () => {
   const blinko = RootStore.Get(BlinkoStore)
-  const note = blinko.curSelectedNote
+  let note = blinko.curSelectedNote
   if (!note) return
+  try { note = await getFullNote(note); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); return; }
   const text = [
     note.content ?? '',
     ...(note.attachments?.map(i => window.location.origin + i.path) ?? [])

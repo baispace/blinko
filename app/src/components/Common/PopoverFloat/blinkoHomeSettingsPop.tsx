@@ -135,7 +135,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
   const changeSort = async (next: SortKey) => {
     await updateScopedConfig(blinko, scope, 'noteListSortBy', next);
     await blinko.getListByPath(path).resetAndCall({});
-    if (isTodo) await blinko.doneTodoList.resetAndCall({});
+
   };
 
   return (

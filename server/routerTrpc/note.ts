@@ -1,4 +1,6 @@
 
+import { todoPageInput, getTodoPage } from '../lib/todoPages';
+import { summarySelect, summarizeNotes } from '../lib/noteSummaries';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { Prisma } from '@prisma/client';
@@ -64,13 +66,16 @@ const scheduleEmbedding = (noteId: number, run: () => void) => {
 };
 
 export const noteRouter = router({
+  todoPage: authProcedure.input(todoPageInput).query(({ input, ctx }) => getTodoPage(input, Number(ctx.id))),
   list: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list', summary: 'Query notes list', protect: true, tags: ['Note'] } })
     .input(
       z.object({
         tagId: z.union([z.number(), z.null()]).default(null),
-        page: z.number().default(1),
-        size: z.number().default(30),
+        view: z.enum(['full', 'summary']).default('full'),
+        cursor: z.number().int().positive().optional(),
+        page: z.number().int().min(1).default(1),
+        size: z.number().int().min(1).max(100).default(30),
         orderBy: z.enum(['asc', 'desc']).default('desc'),
         sortBy: z.enum(['createdAt', 'updatedAt', 'manual']).optional(),
         type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
@@ -127,10 +132,15 @@ export const noteRouter = router({
                 }),
               )
               .optional(),
+            isSummary: z.boolean().optional(),
+            contentLength: z.number().optional(),
             comments: z.any().optional(),
             _count: z.object({
               comments: z.number(),
               histories: z.number(),
+              attachments: z.number().optional(),
+              references: z.number().optional(),
+              referencedBy: z.number().optional(),
             }),
             owner: z.object({
               id: z.number(),
@@ -205,8 +215,7 @@ export const noteRouter = router({
       }
 
       if (tagId) {
-        const tags = await prisma.tagsToNote.findMany({ where: { tagId } });
-        where.id = { in: tags?.map((i) => i.noteId) };
+        andConditions.push({ tags: { some: { tagId } } });
       }
       if (withFile) {
         where.attachments = { some: {} };
@@ -244,9 +253,14 @@ export const noteRouter = router({
         || config?.noteListSortBy
         || (config?.isOrderByCreateTime ? 'createdAt' : 'updatedAt');
       const noteOrderBy: any[] = sortKey === 'manual'
-        ? [{ isTop: 'desc' }, { sortOrder: 'asc' }, { updatedAt: orderBy }]
-        : [{ isTop: 'desc' }, { [sortKey]: orderBy }, { sortOrder: 'asc' }];
+        ? [{ isTop: 'desc' }, { sortOrder: 'asc' }, { updatedAt: orderBy }, { id: orderBy }]
+        : [{ isTop: 'desc' }, { [sortKey]: orderBy }, { sortOrder: 'asc' }, { id: orderBy }];
 
+      if (input.view === 'summary') {
+        const rows = await prisma.notes.findMany({ where, orderBy: noteOrderBy,
+          ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : { skip: (page - 1) * size }), take: size, select: summarySelect });
+        return summarizeNotes(rows);
+      }
       const notes = await prisma.notes.findMany({
         where,
         orderBy: noteOrderBy,
@@ -1011,6 +1025,14 @@ export const noteRouter = router({
         ...(input.updatedAt && { updatedAt: input.updatedAt }),
       };
 
+      if (id) {
+        const task = await prisma.notes.findFirst({ where: { id, accountId: Number(ctx.id), type: 2 }, select: { metadata: true, isArchived: true, updatedAt: true } });
+        if (task) {
+          const previous: any = task.metadata || {};
+          if (isArchived !== null && isArchived !== task.isArchived) input.metadata = { ...input.metadata, completedAt: isArchived ? new Date().toISOString() : null };
+          else if (task.isArchived && !previous.completedAt) input.metadata = { ...input.metadata, completedAt: task.updatedAt.toISOString() };
+        }
+      }
       if (input.metadata && id) {
         const existingNote = await prisma.notes.findUnique({
           where: { id, accountId: Number(ctx.id) },

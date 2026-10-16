@@ -16,28 +16,28 @@ import {
 
 const newId = () => (globalThis.crypto?.randomUUID?.() ?? `wm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
 
-/** 精选 iconify 预设 —— 让用户在不离开 Settings 的情况下点选图标。 */
+/** 精选 iconify 预设 —— 仅选用项目已打包进 icons.tsx 的 icon 名，避免白占位。 */
 const PRESET_ICONS: { name: string; label: string }[] = [
-  { name: 'ph:globe', label: 'Globe' },
-  { name: 'ph:link', label: 'Link' },
-  { name: 'mingcute:apps-2-line', label: 'Apps' },
-  { name: 'hugeicons:message-01', label: 'Chat' },
-  { name: 'hugeicons:note', label: 'Note' },
-  { name: 'hugeicons:checkbox', label: 'Todo' },
-  { name: 'mdi:cog-outline', label: 'Settings' },
   { name: 'tabler:home', label: 'Home' },
-  { name: 'tabler:briefcase', label: 'Work' },
-  { name: 'tabler:book', label: 'Book' },
   { name: 'tabler:brush', label: 'Brush' },
+  { name: 'tabler:info-circle', label: 'Info' },
+  { name: 'tabler:star', label: 'Star' },
+  { name: 'tabler:book', label: 'Book' },
   { name: 'tabler:calendar', label: 'Calendar' },
   { name: 'tabler:bookmark', label: 'Bookmark' },
-  { name: 'tabler:star', label: 'Star' },
-  { name: 'tabler:bolt', label: 'Bolt' },
   { name: 'tabler:bell', label: 'Bell' },
+  { name: 'tabler:bolt', label: 'Bolt' },
+  { name: 'tabler:briefcase', label: 'Work' },
+  { name: 'tabler:layout-grid', label: 'Apps' },
   { name: 'tabler:search', label: 'Search' },
-  { name: 'tabler:plus', label: 'Plus' },
   { name: 'tabler:external-link', label: 'External' },
-  { name: 'tabler:layout-grid', label: 'Grid' },
+  { name: 'tabler:settings', label: 'Settings' },
+  { name: 'tabler:link', label: 'Link' },
+  { name: 'ph:globe', label: 'Globe' },
+  { name: 'ph:link', label: 'Link' },
+  { name: 'mdi:checkbox', label: 'Todo' },
+  { name: 'hugeicons:note', label: 'Note' },
+  { name: 'hugeicons:message-01', label: 'Chat' },
 ];
 
 const SYSTEM_ACTION_ICONS: Record<string, string> = {
@@ -235,73 +235,41 @@ const WorkspaceMenuRow = observer(({ item, index, total, onUpdate, onRemove, onM
       : '/ai';
 
   return (
-    <div className="grid grid-cols-1 gap-2 rounded-lg border border-default-200/70 bg-default-50/60 p-3 md:grid-cols-[140px_1fr_1fr_auto]">
-      <Select
-        aria-label={text('条目类型', 'Entry type')}
-        selectedKeys={[item.type]}
-        onSelectionChange={keys => {
-          const v = Array.from(keys)[0] as WorkspaceMenuItem['type'];
-          if (!v || v === item.type) return;
-          if (isSystem) return; // system 条目不允许切换到 internal/external
-          if (v === 'system') {
-            // 从 internal/external 切回 system 时，仅允许 home/about 两类 action
-            // 出现两个相同 action 的 system 项不会阻断（id 不冲突），由显示端去重。
-            onUpdate({ type: 'system', action: 'home', target: undefined, icon: SYSTEM_ACTION_ICONS['home'], iconSource: 'builtin' } as Partial<WorkspaceMenuItem>);
-          } else {
-            onUpdate({ type: v, target: '/', icon: 'ph:link', iconSource: 'preset' } as Partial<WorkspaceMenuItem>);
-          }
-        }}
-        size="sm"
-        classNames={{ trigger: 'h-9' }}
-      >
-        <SelectItem key="system">{text('内置', 'System')}</SelectItem>
-        <SelectItem key="internal">{text('站内', 'Internal')}</SelectItem>
-        <SelectItem key="external">{text('外部', 'External')}</SelectItem>
-      </Select>
-
-      <Input
-        aria-label={text('名称', 'Label')}
-        size="sm"
-        value={isSystem ? resolveMenuLabel(item, i18n.language.startsWith('zh')) : item.label}
-        maxLength={20}
-        placeholder={text('显示名', 'Label')}
-        onValueChange={value => onUpdate({ label: value } as any)}
-      />
-
-      {isSystem ? (
-        <Select
-          aria-label={text('内置动作', 'Action')}
-          selectedKeys={[item.action]}
-          onSelectionChange={keys => {
-            const v = Array.from(keys)[0] as 'home' | 'appearance' | 'about';
-            if (!v) return;
-            onUpdate({ action: v, icon: SYSTEM_ACTION_ICONS[v], iconSource: 'builtin' } as Partial<WorkspaceMenuItem>);
-          }}
-          size="sm"
-          classNames={{ trigger: 'h-9' }}
-        >
-          <SelectItem key="home">{text('跳到主页', 'Go to home')}</SelectItem>
-          <SelectItem key="appearance">{text('打开站点外观设置', 'Open site appearance')}</SelectItem>
-          <SelectItem key="about">{text('打开关于本站', 'Open about site')}</SelectItem>
-        </Select>
-      ) : (
-        <Input
-          aria-label={text('目标', 'Target')}
-          size="sm"
-          value={targetValue}
-          placeholder={targetPlaceholder}
-          onValueChange={value => onUpdate({ target: value } as any)}
-          description={
-            isExternal
-              ? text('完整 URL（含 https://）', 'Full URL including https://')
-              : text('站内路径（以 / 开头）', 'In-app path starting with /')
-          }
-        />
-      )}
-
-      <div className="flex flex-col gap-1.5 md:items-end">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-default-400">{text('位置', 'Order')}</span>
+    <div className="flex flex-col gap-2 rounded-lg border border-default-200/70 bg-default-50/60 p-3">
+      {/* Row 1: type · label · 工具按钮组 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[120px] flex-1">
+          <Select
+            aria-label={text('条目类型', 'Entry type')}
+            selectedKeys={[item.type]}
+            onSelectionChange={keys => {
+              const v = Array.from(keys)[0] as WorkspaceMenuItem['type'];
+              if (!v || v === item.type) return;
+              if (isSystem) return;
+              if (v === 'system') {
+                onUpdate({ type: 'system', action: 'home', target: undefined, icon: SYSTEM_ACTION_ICONS['home'], iconSource: 'builtin' } as Partial<WorkspaceMenuItem>);
+              } else {
+                onUpdate({ type: v, target: '/', icon: 'ph:link', iconSource: 'preset' } as Partial<WorkspaceMenuItem>);
+              }
+            }}
+            size="sm"
+          >
+            <SelectItem key="system">{text('内置', 'System')}</SelectItem>
+            <SelectItem key="internal">{text('站内', 'Internal')}</SelectItem>
+            <SelectItem key="external">{text('外部', 'External')}</SelectItem>
+          </Select>
+        </div>
+        <div className="min-w-[160px] flex-1">
+          <Input
+            aria-label={text('名称', 'Label')}
+            size="sm"
+            value={isSystem ? resolveMenuLabel(item, i18n.language.startsWith('zh')) : item.label}
+            maxLength={20}
+            placeholder={text('显示名', 'Label')}
+            onValueChange={value => onUpdate({ label: value } as any)}
+          />
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
           <Tooltip content={text('上移', 'Move up')}>
             <Button isIconOnly size="sm" variant="flat" isDisabled={index === 0} onPress={onMoveUp} aria-label={text('上移', 'Move up')}>
               <Icon icon="tabler:chevron-up" width={14} />
@@ -318,20 +286,60 @@ const WorkspaceMenuRow = observer(({ item, index, total, onUpdate, onRemove, onM
             </Button>
           </Tooltip>
         </div>
-        <div className="flex w-full items-center gap-1.5">
-          <Input
-            aria-label={text('图标（iconify 名）', 'Icon (iconify name)')}
-            size="sm"
-            value={iconifyName}
-            placeholder="ph:link"
-            onValueChange={value => {
-              setIconifyName(value);
-              if (value && !value.startsWith('data:')) onUpdate({ icon: value, iconSource: 'iconify' } as any);
-            }}
-          />
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-1 overflow-x-auto">
-          {PRESET_ICONS.slice(0, 12).map(preset => (
+      </div>
+
+      {/* Row 2: target / action */}
+      <div className="flex flex-wrap items-end gap-2">
+        {isSystem ? (
+          <div className="min-w-[180px] flex-1">
+            <Select
+              aria-label={text('内置动作', 'Action')}
+              selectedKeys={[item.action]}
+              onSelectionChange={keys => {
+                const v = Array.from(keys)[0] as 'home' | 'appearance' | 'about';
+                if (!v) return;
+                onUpdate({ action: v, icon: SYSTEM_ACTION_ICONS[v], iconSource: 'builtin' } as Partial<WorkspaceMenuItem>);
+              }}
+              size="sm"
+            >
+              <SelectItem key="home">{text('跳到主页', 'Go to home')}</SelectItem>
+              <SelectItem key="appearance">{text('打开站点外观设置', 'Open site appearance')}</SelectItem>
+              <SelectItem key="about">{text('打开关于本站', 'Open about site')}</SelectItem>
+            </Select>
+          </div>
+        ) : (
+          <div className="min-w-[180px] flex-1">
+            <Input
+              aria-label={text('目标', 'Target')}
+              size="sm"
+              value={targetValue}
+              placeholder={targetPlaceholder}
+              onValueChange={value => onUpdate({ target: value } as any)}
+              description={
+                isExternal
+                  ? text('完整 URL（含 https://）', 'Full URL including https://')
+                  : text('站内路径（以 / 开头）', 'In-app path starting with /')
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Row 3: iconify name input + 预设按钮组 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          aria-label={text('图标（iconify 名）', 'Icon (iconify name)')}
+          size="sm"
+          value={iconifyName}
+          placeholder="tabler:link"
+          className="max-w-[200px]"
+          onValueChange={value => {
+            setIconifyName(value);
+            if (value && !value.startsWith('data:')) onUpdate({ icon: value, iconSource: 'iconify' } as any);
+          }}
+        />
+        <div className="flex flex-wrap items-center gap-1">
+          {PRESET_ICONS.map(preset => (
             <Tooltip key={preset.name} content={preset.name}>
               <button
                 type="button"
@@ -339,7 +347,7 @@ const WorkspaceMenuRow = observer(({ item, index, total, onUpdate, onRemove, onM
                 className={`flex size-7 shrink-0 items-center justify-center rounded-md border text-default-600 transition-colors ${item.icon === preset.name ? 'border-primary bg-primary/10 text-primary' : 'border-default-200/70 bg-background hover:bg-default-100'}`}
                 aria-label={preset.label}
               >
-                <Icon icon={preset.name} width={14} height={14} />
+                <Icon icon={preset.name} width={13} height={13} />
               </button>
             </Tooltip>
           ))}
@@ -350,7 +358,7 @@ const WorkspaceMenuRow = observer(({ item, index, total, onUpdate, onRemove, onM
               className="flex size-7 shrink-0 cursor-not-allowed items-center justify-center rounded-md border border-dashed border-default-300 bg-background text-default-400 opacity-60"
               aria-label={text('AI 生成', 'AI generate')}
             >
-              <Icon icon="tabler:sparkles" width={14} height={14} />
+              <Icon icon="tabler:sparkles" width={13} height={13} />
             </button>
           </Tooltip>
         </div>

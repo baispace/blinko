@@ -44,25 +44,19 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
     }
   }, [notes, reorderEnabled]);
 
-  // Disable sensors when fullscreen editor is open.
-  // Previously we used an activationConstraint with both delay and distance,
-  // but @dnd-kit treats that as a delay constraint and expects a tolerance
-  // field – without it, every mousemove throws "Cannot use 'in' operator to
-  // search for 'x' in undefined" and cancels the drag. Removing the sensors
-  // entirely is the cleanest way to disable dragging.
-  const shouldEnableDrag = reorderEnabled && blinko.fullscreenEditorNoteId === null;
-
+  // Sensors 必须无条件 useSensor —— React hooks 规则要求每次渲染 hook 数量恒定。
+  // 之前把 useSensor 放在 spread 数组里根据 shouldEnableDrag 切换，
+  // 会让 hooks 数量在 0 ↔ 4 之间抖动，触发 "change in the order of Hooks" 警告和
+  // react-beautiful-dnd 的 'length' undefined 异常。
+  // 真正禁用拖拽的入口在 DraggableBlinkoCard 层 —— 当 fullscreenEditorNoteId
+  // 等于当前笔记时，不把 attributes/listeners 挂到 DOM 上即可。
   const sensors = useSensors(
-    ...(shouldEnableDrag
-      ? [
-          useSensor(MouseSensor, {
-            activationConstraint: { delay: 250, tolerance: 5 },
-          }),
-          useSensor(TouchSensor, {
-            activationConstraint: { delay: 250, tolerance: 5 },
-          }),
-        ]
-      : [])
+    useSensor(MouseSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
   );
 
   const handleDragStart = (event: any) => {

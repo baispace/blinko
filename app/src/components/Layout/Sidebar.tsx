@@ -1,17 +1,20 @@
+import { rememberHomeUrl } from '@/lib/profileIdentity';
+import { UserStore } from '@/store/user';
+import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
+import { SiteBrand } from '../Common/SiteBrand';
+import { SiteQuickLinksRow } from '../Common/SiteQuickLinks';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from 'mobx-react-lite';
-import { ScrollShadow, Tooltip } from '@heroui/react';
+import { ScrollShadow, Tooltip, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
 import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { UserAvatarDropdown } from '../Common/UserAvatarDropdown';
 import { TagListPanel } from '../Common/TagListPanel';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useTransition, type MouseEvent } from 'react';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useLocation, useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { eventBus } from '@/lib/event';
-import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
 
 import { AiStore } from '@/store/aiStore';
 import { AiConversactionList } from '../BlinkoAi/aiConversactionList';
@@ -41,19 +44,26 @@ const NAV_ICON_COLOR: Record<string, string> = {
 
 export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
+  const text=(zh:string,en:string)=>i18n.language.startsWith('zh')?zh:en;
+  const user=RootStore.Get(UserStore);
+  const [isSwitching,startTransition]=useTransition();
   const base = RootStore.Get(BaseStore);
   const blinkoStore = RootStore.Get(BlinkoStore);
   const location = useLocation();
   const navigate = useNavigate();
   const aiStore = RootStore.Get(AiStore);
   const aiMode = location.pathname === "/ai";
-  const [homeUrl, setHomeUrl] = useState("/");
-  useEffect(() => {
-    if (!aiMode) setHomeUrl(location.pathname + location.search);
-  }, [aiMode, location.pathname, location.search]);
+  const previousHome = useRef('/');
+  const homeUrl = rememberHomeUrl(location, previousHome.current);
+  useEffect(() => { previousHome.current = homeUrl; }, [homeUrl]);
+  const switchMode = (event:MouseEvent<HTMLAnchorElement>, destination:string) => {
+    if(event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    startTransition(() => { void navigate(destination); });
+    onItemClick?.();
+  };
   const [searchParams] = useSearchParams();
-  const [isHovering, setIsHovering] = useState(false);
 
   const routerInfo = {
     pathname: location.pathname,
@@ -71,11 +81,9 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   return (
     <div
       style={{ width: isPc ? `${base.sideBarWidth}px` : '100%', fontSize: '14px' }}
-      className={`flex h-full flex-1 flex-col py-2 relative isolate bg-background
-        ${!base.isDragging ? '!transition-all duration-300' : 'transition-none'}
+      className={`flex h-full min-h-0 flex-1 flex-col py-2 relative isolate bg-background
+        ${!base.isDragging ? 'transition-[width] duration-200' : 'transition-none'}
         group/sidebar`}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
     >
       {/* 浮动圆形折叠按钮 —— 原型设计：贴在侧边栏右边缘，常显。
           仅 PC 显示；用 absolute -right-3 让它压在侧边栏边缘上。 */}
@@ -107,44 +115,35 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         />
       )}
 
-      {/* 顶部：头像 + 设置入口（移动端用） */}
-      <div className={`flex items-center px-2 ${base.isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
-        <div className={`flex w-full ${base.isSidebarCollapsed ? 'flex-col gap-2 justify-center items-center' : 'items-center'}`}>
-          <UserAvatarDropdown onItemClick={onItemClick} collapsed={base.isSidebarCollapsed} showOverlay={isHovering} />
-
-          {/* 移动端：设置入口用按钮放在头像旁边（折叠按钮 PC 已用浮动版） */}
-          {!isPc && (
-            <button
-              type="button"
-              onClick={() => {
-                ShowSettingsDialog();
-                eventBus.emit('close-sidebar');
-              }}
-              aria-label={t('settings')}
-              className="ml-auto p-1.5 rounded-md text-default-500 hover:!bg-hover hover:!text-foreground !transition-all"
-            >
-              <Icon icon="hugeicons:settings-01" width="20" height="20" />
-            </button>
-          )}
-        </div>
+      {/* Workspace identity stays separate from the personal account menu. */}
+      <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'px-2.5'}`}>
+        <Dropdown placement="bottom-start"><DropdownTrigger>
+          <button type="button" aria-label={text('工作空间菜单','Workspace menu')} className="flex min-w-0 w-full items-center rounded-xl p-1 hover:bg-default-100/60 focus-visible:outline-primary">
+            <SiteBrand compact={base.isSidebarCollapsed} framed size={26} />
+          </button>
+        </DropdownTrigger><DropdownMenu aria-label={text('工作空间菜单','Workspace menu')}>
+          <DropdownItem key="home" startContent={<Icon icon="tabler:home" width="18" />} onPress={()=>{startTransition(()=>{ void navigate(homeUrl); });onItemClick?.();}}>{text('返回主页','Go to home')}</DropdownItem>
+          {user.isSuperAdmin ? <DropdownItem key="appearance" startContent={<Icon icon="tabler:brush" width="18" />} onPress={()=>{ShowSettingsDialog('site');onItemClick?.();}}>{t('settings-site')}</DropdownItem> : null}
+          <DropdownItem key="about" startContent={<Icon icon="tabler:info-circle" width="18" />} onPress={()=>{ShowSettingsDialog('about');onItemClick?.();}}>{t('settings-about-site')}</DropdownItem>
+        </DropdownMenu></Dropdown>
       </div>
 
-      <div className={`flex gap-1 px-2 mt-4 ${base.isSidebarCollapsed ? 'flex-col items-center' : 'items-center'}`}>
-        <Tooltip content="主页" placement="right">
-          <button type="button" aria-label="主页" aria-pressed={!aiMode}
-            onClick={() => { navigate(homeUrl); onItemClick?.(); }}
-            className={`flex shrink-0 items-center justify-center gap-2 rounded-full h-10 ${base.isSidebarCollapsed ? 'w-10 p-0' : 'px-3'} transition-colors ${!aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+      {!base.isSidebarCollapsed && <SiteQuickLinksRow />}
+
+      <div aria-busy={isSwitching} className={`shrink-0 gap-1 px-2 mt-2 ${base.isSidebarCollapsed ? 'flex flex-col items-center' : 'grid grid-cols-2'}`}>
+        <Tooltip content={text('主页','Home')} isDisabled={!base.isSidebarCollapsed} placement="right" delay={350} closeDelay={0}>
+          <Link to={homeUrl} aria-label={text('主页','Home')} aria-current={!aiMode?'page':undefined} onClick={event=>switchMode(event,homeUrl)}
+            className={`flex min-w-0 items-center justify-center gap-2 rounded-xl h-10 ${base.isSidebarCollapsed ? 'w-10' : 'w-full px-2'} ${!aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
             <Icon className="shrink-0" icon="tabler:home" width="21" height="21" />
-            {!base.isSidebarCollapsed && !aiMode && <span className="font-medium">主页</span>}
-          </button>
+            {!base.isSidebarCollapsed && !aiMode && <span className="truncate font-medium">{text('主页','Home')}</span>}
+          </Link>
         </Tooltip>
-        <Tooltip content="对话" placement="right">
-          <button type="button" aria-label="对话" aria-pressed={aiMode}
-            onClick={() => { navigate('/ai'); onItemClick?.(); }}
-            className={`flex shrink-0 items-center justify-center gap-2 rounded-full h-10 ${base.isSidebarCollapsed ? 'w-10 p-0' : 'px-3'} transition-colors ${aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
+        <Tooltip content={text('对话','Chat')} isDisabled={!base.isSidebarCollapsed} placement="right" delay={350} closeDelay={0}>
+          <Link to="/ai" aria-label={text('对话','Chat')} aria-current={aiMode?'page':undefined} onClick={event=>switchMode(event,'/ai')}
+            className={`flex min-w-0 items-center justify-center gap-2 rounded-xl h-10 ${base.isSidebarCollapsed ? 'w-10' : 'w-full px-2'} ${aiMode ? 'bg-default-100 text-foreground' : 'text-default-500 hover:bg-hover'}`}>
             <Icon className="shrink-0" icon="hugeicons:message-01" width="21" height="21" />
-            {!base.isSidebarCollapsed && aiMode && <span className="font-medium">对话</span>}
-          </button>
+            {!base.isSidebarCollapsed && aiMode && <span className="truncate font-medium">{text('对话','Chat')}</span>}
+          </Link>
         </Tooltip>
       </div>
 
@@ -159,7 +158,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             </button>
           </Tooltip>}
         </div>
-        <div className="p-3 mt-auto">
+        <div className="shrink-0 px-3 pb-3 pt-2">
           <button type="button" disabled={aiStore.isAnswering || aiStore.currentConversation.loading.value} onClick={() => { aiStore.newChat(); onItemClick?.(); }}
             aria-label={t('new-conversation')} className="w-full flex items-center justify-center gap-2 rounded-full border border-default-200 bg-background py-3 shadow-sm hover:bg-default-100 disabled:opacity-40 transition-colors">
             <Icon icon="hugeicons:edit-02" width="20" height="20" />
@@ -167,7 +166,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           </button>
         </div>
       </> : <>
-      <ScrollShadow className="-mr-[16px] mt-3 h-full max-h-full pr-4 hide-scrollbar">
+      <ScrollShadow className="-mr-[16px] mt-3 min-h-0 flex-1 pr-4 hide-scrollbar">
         <div className={`flex flex-col font-medium ${base.isSidebarCollapsed ? 'items-center gap-2' : ''}`}>
           {/* 三组导航：记录 / 整理 / 工具 */}
           {NAV_GROUPS.map((group) => {
@@ -278,6 +277,9 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         </div>
       </ScrollShadow>
       </>}
+      <div data-testid="sidebar-account" className={`mx-2 mt-2 flex shrink-0 items-center border-t border-default-200/60 pt-2 ${base.isSidebarCollapsed ? 'justify-center' : ''}`}>
+        <UserAvatarDropdown onItemClick={onItemClick} collapsed={base.isSidebarCollapsed} />
+      </div>
     </div>
   );
 });

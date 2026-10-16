@@ -32,7 +32,7 @@ export const SiteBrand = observer(({
   const title = config?.customTitle?.trim() || 'Blinko';
   const tagline = (config?.customTagline ?? '').trim() || (showTagline ? DEFAULT_TAGLINE : '');
   return (
-    <span className="flex min-w-0 items-center gap-2.5 self-stretch" title={title}>
+    <span className="flex min-w-0 items-center gap-1.5 self-stretch" title={title}>
       <span
         className={
           framed

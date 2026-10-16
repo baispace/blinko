@@ -4,6 +4,7 @@ import { Switch, Input, Tooltip, Textarea, Slider, Button } from "@heroui/react"
 import { useTranslation } from "react-i18next";
 import { Item, ItemWithTooltip, SelectDropdown } from "./Item";
 import ThemeSwitcher from "../Common/Theme/ThemeSwitcher";
+import { saveThemeColor } from '../Common/Theme/saveThemeColor';
 import { ThemeColor } from "../Common/Theme/ThemeColor";
 import LanguageSwitcher from "../Common/LanguageSwitcher";
 import { RootStore } from "@/store";
@@ -334,24 +335,7 @@ export const PerferSetting = observer(({ section = 'appearance' }: { section?: '
         leftContent={<ItemLabel title={t('theme-color')} desc={t('theme-color-desc')} />}
         rightContent={<ThemeColor
           value={blinko.config.value?.themeColor}
-          onChange={async (background, foreground) => {
-            try {
-              await Promise.all([
-                api.config.update.mutate({ key:'themeColor', value:background }),
-                api.config.update.mutate({ key:'themeForegroundColor', value:foreground }),
-              ]);
-              if (blinko.config.value) blinko.config.value = { ...blinko.config.value, themeColor:background, themeForegroundColor:foreground };
-              for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) {
-                const dark=element.classList.contains('dark');
-                element.style.setProperty('--primary', background || (dark?'#4d8bff':'#2f6feb'));
-                element.style.setProperty('--primary-foreground',foreground || (dark?'#000000':'#ffffff'));
-                if(background) element.style.setProperty('--tag',background); else element.style.removeProperty('--tag');
-              }
-            } catch(error) {
-              RootStore.Get(ToastPlugin).error(error instanceof Error ? error.message : t('operation-failed'));
-              throw error;
-            }
-          }}
+          onChange={saveThemeColor}
         />} />
       <Item
         leftContent={<ItemLabel title={t('language')} desc={t('language-desc')} />}

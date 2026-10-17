@@ -1,4 +1,5 @@
 import { observer } from "mobx-react-lite";
+import { notePreviewText } from '@/lib/notePreviewText';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Card } from '@heroui/react';
 import { RootStore } from '@/store';
@@ -99,7 +100,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   }
   // 卡片标题优先级：metadata.title > content 第一行（去掉 markdown 标记和行内 tag）> 空。
   // 没有标题时直接截断展示正文，由 NoteContent 负责；有标题时显示在 NoteTitleDisplay 行。
-  const rawFirstLine = blinkoItem.content?.split('\n').find(line => {
+  const rawFirstLine = notePreviewText(blinkoItem.content || '').split('\n').find(line => {
     if (!line.trim()) return false;
     if (helper.regex.isContainHashTag.test(line)) return false;
     return true;
@@ -270,7 +271,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     isShareMode={isShareMode}
                     isExpanded={defaultExpanded}
                     account={account}
-                    hideTime={false}
+                    hideTime={isCompactBlinko}
                     compactActions={isCompactBlinko && !isDetailPage}
                     isDetailPage={isDetailPage}
                   />
@@ -297,8 +298,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     attachments={isCompactBlinko ? otherAttachments : undefined}
                     foldable={!defaultExpanded && !isDetailPage && !isShareMode}
                     foldLength={blinko.config.value?.cardFoldLength ?? 300}
-                    inlineTags={isCompactBlinko}
-                    skipFirstLine={!blinkoItem.titleFromMetadata && !!blinkoItem.title}
+                    inlineTags={false}
+                    skipFirstLine={blinkoItem.type === NoteType.NOTE && !blinkoItem.titleFromMetadata && !!blinkoItem.title && !/<[^>]+>/.test(blinkoItem.content || '')}
                   />
                 )}
 
@@ -334,12 +335,12 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
 
                 {/* 紧凑闪念卡：时间已挪到 CardHeader 右侧，footer 不再渲染；
                     非紧凑卡保留 CardFooter 的标签和操作；时间统一由 header 显示。 */}
-                {!blinkoItem.isBlog && !isCompactBlinko && (
+                {!blinkoItem.isBlog && (
                   <CardFooter
                     blinkoItem={blinkoItem}
                     blinko={blinko}
                     isShareMode={isShareMode}
-                    showTime={false}
+                    showTime={isCompactBlinko}
                     hideTags={false}
                   />
                 )}

@@ -12,6 +12,7 @@ import { LinkPreview } from './LinkPreview';
 import { ImageWrapper } from './ImageWrapper';
 import { ListItem } from './ListItem';
 import { OutlineReadItem, OutlineReadList } from './OutlineReader';
+import { automaticOutline } from './automaticOutline';
 import { TableWrapper } from './TableWrapper';
 import { NoteLink, preprocessNoteLinks } from './NoteLink';
 import { InlineTag } from './InlineTag';
@@ -231,6 +232,7 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
           ]}
           rehypePlugins={[
             rehypeRaw,
+            automaticOutline,
             ...mathPlugins.rehype
           ]}
           components={{
@@ -435,4 +437,4 @@ export const StreamingCodeBlock = observer(({ markdown }: { markdown: string }) 
       {markdown}
     </ReactMarkdown>
   );
-}); 
+});

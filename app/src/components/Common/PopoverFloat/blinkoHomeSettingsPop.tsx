@@ -140,6 +140,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
 
   return (
     <Popover
+      disableAnimation
       placement="bottom-end"
       backdrop="transparent"
       isOpen={isOpen}

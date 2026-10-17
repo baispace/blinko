@@ -15,6 +15,7 @@ import { LeftCickMenu } from '../BlinkoRightClickMenu';
 import { CardActionMenu } from './cardActionMenu';
 import { ShareButton } from './cardHeader';
 import { useIsIOS } from '@/lib/hooks';
+import { notePreviewText } from '@/lib/notePreviewText';
 
 interface BlinkoListRowProps {
   blinkoItem: Note & { isBlog?: boolean; title?: string; titleFromMetadata?: boolean };
@@ -61,7 +62,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
   const isIOSDevice = useIsIOS();
 
   // 标题只做视图派生，不在 render 阶段写回 store 中的 note 对象。
-  const rawFirstLine = blinkoItem.content?.split('\n').find(line => {
+  const rawFirstLine = notePreviewText(blinkoItem.content || '').split('\n').find(line => {
     if (!line.trim()) return false;
     return true;
   });
@@ -149,6 +150,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
           {/* meta：tags + 附件数，muted；时间挪到 row 右侧，不再这里 */}
           <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
             {tags.slice(0, 3).map((tag, i) => <RowTagChip key={i} tag={tag} />)}
+            {tags.length > 3 && <span className="shrink-0" title={tags.slice(3).map(tag => tag.name).join(' · ')}>+{tags.length - 3}</span>}
             {(blinkoItem.attachments?.length ?? 0) > 0 && (
               <span className="shrink-0 inline-flex items-center gap-0.5">
                 <Icon icon="solar:paperclip-linear" width="11" height="11" />
@@ -187,6 +189,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
         </div>
         <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
           {(blinkoItem.tags ?? []).slice(0, 2).map((tag, i) => <RowTagChip key={i} tag={tag.tag} />)}
+          {(blinkoItem.tags?.length ?? 0) > 2 && <span className="shrink-0 text-default-400">+{blinkoItem.tags!.length - 2}</span>}
         </div>
       </>
     );

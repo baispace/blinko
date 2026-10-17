@@ -34,7 +34,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
   const zh = i18n.language.startsWith('zh');
   const rowClass = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] text-default-600 transition-colors hover:bg-default-100 focus-visible:outline-primary';
   return (
-    <Popover placement="top-start" isOpen={open} onOpenChange={value => { setOpen(value); if (!value) setAppearance(false); }}>
+    <Popover placement="top-start" disableAnimation isOpen={open} onOpenChange={value => { setOpen(value); if (!value) setAppearance(false); }}>
       <PopoverTrigger>
         <button type="button" aria-label={accountLabel} title={collapsed ? accountLabel : (user.nickname || user.name || accountLabel)} className={`cursor-pointer rounded-lg p-2 hover:bg-default-100 transition-colors focus-visible:outline-primary flex items-center gap-2.5 ${collapsed ? 'justify-center' : 'w-full text-left'}`}>
           <div className="relative shrink-0">

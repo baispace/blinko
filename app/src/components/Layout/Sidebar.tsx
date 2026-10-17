@@ -122,19 +122,18 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   return (
     <div
       style={{ width: isPc ? `${base.sideBarWidth}px` : '100%', fontSize: '14px' }}
-      className={`flex h-full min-h-0 flex-1 flex-col py-2 relative isolate bg-background
+      className={`flex h-full min-h-0 flex-1 flex-col py-2 relative isolate bg-background border-r border-default-200
         ${!base.isDragging ? 'transition-[width] duration-200' : 'transition-none'}
         group/sidebar`}
     >
-      {/* 浮动圆形折叠按钮 —— 原型设计：贴在侧边栏右边缘，常显。
-          仅 PC 显示；用 absolute -right-3 让它压在侧边栏边缘上。 */}
+      {/* Keep the entire hit area inside the sidebar, above the resize handle. */}
       {isPc && (
         <button
           type="button"
           onClick={base.toggleSidebar}
           aria-label={base.isSidebarCollapsed ? t('expand-sidebar') : t('collapse-sidebar')}
           data-testid="sidebar-collapse-btn"
-          className={`absolute top-3 -right-3 z-50 w-6 h-6 rounded-full
+          className={`absolute top-3 right-1 z-50 w-8 h-8 rounded-lg touch-manipulation
             bg-background border border-default-300 shadow-sm
             flex items-center justify-center text-default-500
             hover:!text-primary hover:!border-primary
@@ -157,8 +156,8 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       )}
 
       {/* Workspace identity stays separate from the personal account menu. */}
-      <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'px-2.5'}`}>
-        <Dropdown placement="bottom-start"><DropdownTrigger>
+      <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2 mt-9' : 'pl-2.5 pr-10'}`}>
+        <Dropdown placement="bottom-start" disableAnimation><DropdownTrigger>
           <button type="button" aria-label={text('工作空间菜单','Workspace menu')} className="flex min-w-0 w-full items-center rounded-xl p-1 hover:bg-default-100/60 focus-visible:outline-primary">
             <SiteBrand compact={base.isSidebarCollapsed} framed size={30} />
           </button>

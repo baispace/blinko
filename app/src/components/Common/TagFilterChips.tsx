@@ -94,6 +94,14 @@ export const TagFilterChips = observer(() => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [overflowing, setOverflowing] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
+  useEffect(() => {
+    const list = scrollRef.current;
+    const selected = list?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!list || !selected) return;
+    const area = list.getBoundingClientRect(), chip = selected.getBoundingClientRect();
+    if (chip.left < area.left) list.scrollLeft -= area.left - chip.left;
+    else if (chip.right > area.right - 56) list.scrollLeft += chip.right - area.right + 56;
+  }, [activeTagId, tagItems]);
 
   const measure = useCallback(() => {
     const el = scrollRef.current;
@@ -159,10 +167,10 @@ export const TagFilterChips = observer(() => {
 
   return (
     <div
-      className="sticky top-0 z-20 bg-background/80 pb-3 backdrop-blur-md"
+      className="flex min-w-0 flex-1 items-center gap-1 bg-background"
       data-testid="tag-filter-chips"
     >
-      <div className="relative">
+      <div className="relative min-w-0 flex-1">
         {/* 始终预留翻页按钮空间，避免按钮显隐反过来改变溢出测量结果。 */}
         <div
           ref={scrollRef}
@@ -233,10 +241,7 @@ export const TagFilterChips = observer(() => {
           </>
         )}
       </div>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-2 translate-y-full bg-gradient-to-b from-background/40 to-transparent"
-      />
+      {activeTagId !== null && <button type="button" onClick={goAll} aria-label="清除标签筛选" title="清除标签筛选" className="grid size-8 shrink-0 place-items-center rounded-lg text-default-500 hover:bg-default-100 focus-visible:outline-primary"><Icon icon="tabler:x" width={16} /></button>}
     </div>
   );
 });

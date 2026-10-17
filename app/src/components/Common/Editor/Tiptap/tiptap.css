@@ -1,4 +1,6 @@
 /* ================= Tiptap editor (Blinko style) ================= */
+.document-tag-summary .tiptap .document-tag-row:not(.is-editing-tags) { display: none; }
+.document-tag-summary .tiptap .document-tag-row.is-editing-tags { font-size: 13px; color: var(--desc); background: color-mix(in srgb, var(--primary) 5%, transparent); border-radius: 6px; padding: 6px 8px; }
 
 .tiptap-wrap {
   position: relative;

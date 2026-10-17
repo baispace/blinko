@@ -39,7 +39,7 @@ export const HashtagButton = observer(({ store, label, placement = 'cursor' }: P
     store.onChange?.(store.vditor?.getValue() ?? '');
     setOpen(false);
   };
-  return <Popover placement="bottom-start" isOpen={open} onOpenChange={next => {
+  return <Popover placement="bottom-start" disableAnimation isOpen={open} onOpenChange={next => {
     setOpen(next);
     if (next) { setSearch(''); setSelected(0); void load(); }
   }}>

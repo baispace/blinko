@@ -38,7 +38,7 @@ export const TagContentTypeTabs = observer(() => {
     <div
       role="tablist"
       aria-label={t('content-type')}
-      className="mb-2 flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-default-200/60 bg-default-100/55 p-1 hide-scrollbar"
+      className="flex max-w-[55%] shrink-0 items-center gap-1 overflow-x-auto border-r border-default-200 pr-2 hide-scrollbar"
     >
       {TYPES.map(type => {
         const selected = active === type.value;

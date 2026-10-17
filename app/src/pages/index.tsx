@@ -15,6 +15,7 @@ import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { ListEmptyState } from '@/components/Common/ListEmptyState';
 import { TagContentTypeTabs } from '@/components/Common/TagContentTypeTabs';
 import { TagFilterChips } from '@/components/Common/TagFilterChips';
+import { StickyListFilters } from '@/components/Common/StickyListFilters';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import dayjs from '@/lib/dayjs';
@@ -213,10 +214,8 @@ const Home = observer(() => {
     </section>
   );
 
-  return (
-    <div className="relative flex h-full min-h-0 w-full flex-col-reverse pt-1 md:flex-col md:p-0">
-      {store.showEditor && !effectiveHideEditor && (
-        <div className="mx-auto w-full px-2 md:px-6" style={maxWidthStyle}>
+  const composer = store.showEditor && !effectiveHideEditor && (
+        <div className={isPc ? 'mb-3' : 'mx-auto w-full px-2'} style={isPc ? undefined : maxWidthStyle}>
           <ListComposer
             key={searchParams.get('path') || 'blinko'}
             defaultType={isTodoView ? NoteType.TODO : pageScope === 'notes' ? NoteType.NOTE : NoteType.BLINKO}
@@ -224,7 +223,11 @@ const Home = observer(() => {
             tag={tagName}
           />
         </div>
-      )}
+      );
+
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col-reverse pt-1 md:flex-col md:p-0">
+      {!isPc && composer}
       {effectiveHideEditor && <BlinkoAddButton />}
 
       <ScrollArea
@@ -237,12 +240,16 @@ const Home = observer(() => {
         onBottom={() => {
           void blinko.onBottom();
         }}
-        className={`mt-0 h-full min-h-0 w-full flex-1 !transition-all scroll-area ${effectiveHideEditor ? 'md:mt-0' : 'md:mt-3'}`}
+        className="mt-0 h-full min-h-0 w-full flex-1 scroll-area"
       >
         <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
-          {isTagView && <TagContentTypeTabs />}
-          {!isTodoView && <TagFilterChips />}
+          {isPc && composer}
+          {!['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
+            {isTagView && <TagContentTypeTabs />}
+            <TagFilterChips />
+          </StickyListFilters>}
 
+          <div data-list-filter-results>
           {currentListState.isLoading && !currentListState.value?.length ? (
             <div className="flex min-h-48 items-center justify-center text-default-400" role="status" aria-label={t('loading')}>
               <Icon icon="eos-icons:three-dots-loading" width={38} height={38} />
@@ -393,6 +400,7 @@ const Home = observer(() => {
               <span className="h-px w-8 bg-default-200" />
             </div>
           )}
+          </div>
         </div>
       </ScrollArea>
     </div>

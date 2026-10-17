@@ -16,7 +16,7 @@ export const DocumentProperties = observer(({ store, content, editable, hideType
 }) => {
   const current = types.find(type => type.value === store.noteType) || types[0];
   return <div className="document-properties" aria-label="内容类型和标签">
-    {!hideType && (editable ? <Dropdown placement="bottom-start">
+    {!hideType && (editable ? <Dropdown placement="bottom-start" disableAnimation>
       <DropdownTrigger><Button size="sm" variant="light" radius="sm" className="document-property-type" aria-label={`内容类型：${current.label}，点击切换`}>
         <Icon icon={current.icon} width={15} /><span>{current.label}</span><Icon icon="tabler:chevron-down" width={12} />
       </Button></DropdownTrigger>

@@ -80,7 +80,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: { isOpen: boolea
     else if (event.key === 'Enter') { event.preventDefault(); if (!loading) visible[active]?.action(); }
     else if (event.key === 'Escape') close();
   };
-  return <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="top" hideCloseButton disableAnimation
+  return <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="top" hideCloseButton disableAnimation shouldBlockScroll={false}
     classNames={{ base: 'max-w-2xl mx-3 sm:mx-auto mt-[8dvh] rounded-xl border border-default-200 shadow-xl', wrapper:'!z-[10080]', backdrop: '!z-[10079] bg-black/25' }}
     motionProps={{ variants: { enter: { opacity: 1, y: 0, transition: { duration: 0.16 } }, exit: { opacity: 0, y: -6, transition: { duration: 0.12 } } } }}>
     <ModalContent><ModalBody className="gap-0 p-0" onKeyDown={handleKey}>

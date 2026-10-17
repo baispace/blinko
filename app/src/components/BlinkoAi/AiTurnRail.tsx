@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface AiTurnMarker {
   /** 该轮在对话里的序号（从 0 开始，按用户提问计数） */
@@ -22,11 +22,25 @@ export const AiTurnRail = ({ markers, activeIndex, onSelect }: {
   onSelect: (index: number) => void;
 }) => {
   const [hovered, setHovered] = useState<number | null>(null);
+  const track = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const parent = track.current;
+    const active = parent?.querySelector<HTMLButtonElement>('[aria-current="true"]');
+    if (parent && active) {
+      const top = active.offsetTop;
+      if (top < parent.scrollTop || top + 24 > parent.scrollTop + parent.clientHeight) parent.scrollTop = top - parent.clientHeight / 2;
+    }
+  }, [activeIndex, markers.length]);
   if (markers.length < 2) return null;
+  const preview = markers.find(marker => marker.index === hovered);
 
   return (
     <nav className="ai-turn-rail" aria-label="对话轮次导航">
-      <div className="ai-turn-rail-track">
+      <div ref={track} className="ai-turn-rail-track" onKeyDown={event => {
+        const position = markers.findIndex(marker => marker.index === activeIndex);
+        const next = event.key === 'ArrowDown' ? position + 1 : event.key === 'ArrowUp' ? position - 1 : event.key === 'Home' ? 0 : event.key === 'End' ? markers.length - 1 : -1;
+        if (next >= 0 && next < markers.length) { event.preventDefault(); onSelect(markers[next].index); }
+      }}>
         {markers.map(marker => {
           const active = marker.index === activeIndex;
           const passed = marker.index < activeIndex;
@@ -35,7 +49,7 @@ export const AiTurnRail = ({ markers, activeIndex, onSelect }: {
               key={marker.index}
               type="button"
               className={`ai-turn-tick${active ? ' is-active' : passed ? ' is-passed' : ''}`}
-              style={{ top: `${marker.ratio * 100}%` }}
+              title={`第 ${marker.index + 1} / ${markers.length} 轮 · ${marker.label}`}
               aria-current={active ? 'true' : undefined}
               aria-label={`跳到第 ${marker.index + 1} 轮提问：${marker.label}`}
               onMouseEnter={() => setHovered(marker.index)}
@@ -44,14 +58,14 @@ export const AiTurnRail = ({ markers, activeIndex, onSelect }: {
               onBlur={() => setHovered(null)}
               onClick={() => onSelect(marker.index)}
             >
-              <span className="ai-turn-tick-tip" role="tooltip" data-visible={hovered === marker.index || undefined}>
-                <span className="ai-turn-tick-tip-time">{marker.time}</span>
-                <span className="ai-turn-tick-tip-label">{marker.label}</span>
-              </span>
             </button>
           );
         })}
       </div>
+      {preview && <span className="ai-turn-tick-tip" role="tooltip" data-visible="true">
+        <span className="ai-turn-tick-tip-time">第 {preview.index + 1} / {markers.length} 轮 · {preview.time}</span>
+        <span className="ai-turn-tick-tip-label">{preview.label}</span>
+      </span>}
     </nav>
   );
 };

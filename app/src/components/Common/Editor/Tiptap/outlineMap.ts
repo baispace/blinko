@@ -130,7 +130,9 @@ export function mountOutlineMap(dom: HTMLElement, viewport: HTMLElement, list: H
         const own = typeof itemPos === 'number' ? editor?.state.doc.nodeAt(itemPos)?.firstChild : null
         item.dataset.mapSelected = String(typeof selected === 'number' && typeof itemPos === 'number' && (selected === itemPos || selected >= itemPos + 1 && selected <= itemPos + 1 + (own?.nodeSize || 0)))
         item.dataset.mapEditing = String(!!editor?.isFocused && editor.state.selection instanceof TextSelection && typeof selected === 'number' && typeof itemPos === 'number' && selected >= itemPos + 1 && selected <= itemPos + 1 + (own?.nodeSize || 0))
-        const p = item.querySelector<HTMLElement>(':scope > .outline-content > p')
+        // Imported branches may use a heading as their first text block.
+        // Do not stop traversing the entire subtree when there is no paragraph.
+        const p = item.querySelector<HTMLElement>(':scope > .outline-content > :is(p,h1,h2,h3,h4,h5,h6)')
         if (!p) continue
         connect(parent, p)
         const toggle = item.querySelector<HTMLElement>(':scope > .outline-toggle')
@@ -138,7 +140,7 @@ export function mountOutlineMap(dom: HTMLElement, viewport: HTMLElement, list: H
         if (toggle) { toggle.style.top = `${p.offsetTop + p.offsetHeight / 2 - 16}px`; toggle.style.left = `${p.offsetLeft + p.offsetWidth}px` }
         if (handle) { handle.style.top = `${p.offsetTop - 10}px`; handle.style.left = `${p.offsetLeft + p.offsetWidth - 18}px` }
         if (item.dataset.collapsed !== 'true') {
-          const sub = item.querySelector(':scope > .outline-content > .outline-view > .outline-viewport > .outline-map-stage > ul')
+          const sub = item.querySelector(':scope > .outline-content > .outline-view > .outline-viewport > .outline-map-stage > ul, :scope > .outline-content > ul[data-type="outline"]')
           if (sub) visit(sub, p, depth + 1)
         }
       }
@@ -161,6 +163,8 @@ export function mountOutlineMap(dom: HTMLElement, viewport: HTMLElement, list: H
       schedule(); return
     }
     svg.setAttribute('width', String(stage.offsetWidth)); svg.setAttribute('height', String(stage.offsetHeight))
+    // Keep the SVG coordinate space independent of responsive global SVG rules.
+    svg.style.width = `${stage.offsetWidth}px`; svg.style.height = `${stage.offsetHeight}px`
     svg.replaceChildren(...paths)
   }
   const schedule = () => { if (!frame && !disposed) frame = requestAnimationFrame(draw) }

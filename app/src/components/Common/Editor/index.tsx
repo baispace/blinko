@@ -146,7 +146,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
               }}
             />
           )}
-          <HashtagButton store={store} content={content} label={showLabels ? t('tag') : undefined} />
+          <HashtagButton store={store} content={content} label={showLabels ? t('tag') : undefined} placement="document" />
           {documentToolbar && <DocumentImageUploadButton store={store} label={showLabels ? t('insert-image') : undefined} />}
           <UploadImageButton
             getInputProps={getInputProps}
@@ -401,7 +401,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
             <div className={`relative ${fillHeight && !pageScroll ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
               <div
                 id={`vditor-${mode}`}
-                className={`tiptap-editor-root ${fillHeight && !pageScroll ? 'flex-1 min-h-0 flex flex-col' : ''}`}
+                className={`tiptap-editor-root ${documentToolbar ? 'document-tag-summary' : ''} ${fillHeight && !pageScroll ? 'flex-1 min-h-0 flex flex-col' : ''}`}
                 onClick={!editable ? handleReadOnlyLinkClick : undefined}
               >
                 {/* Cover & icon are a "note" feature; flashes (BLINKO) and todos stay clean. */}

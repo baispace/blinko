@@ -68,6 +68,10 @@ const HashtagHighlight = new Plugin({
     decorations(state) {
       const decorations: Decoration[] = []
       state.doc.descendants((node, pos) => {
+        if (node.type.name === 'paragraph' && /^(?:\s*#[^\s#]+)+\s*$/.test(node.textContent)) {
+          const editing = state.selection.from > pos && state.selection.from < pos + node.nodeSize;
+          decorations.push(Decoration.node(pos, pos + node.nodeSize, { class: editing ? 'document-tag-row is-editing-tags' : 'document-tag-row' }));
+        }
         if (!node.isText || !node.text) return
         for (const token of scanHashtagTokens(node.text)) {
           decorations.push(

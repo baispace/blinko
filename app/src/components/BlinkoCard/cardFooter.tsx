@@ -39,7 +39,7 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
 
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0 flex-1 overflow-hidden mr-2">
-      {tagPaths.map(path => (
+      {tagPaths.slice(0, 3).map(path => (
         <span
           key={path}
           className={`text-desc text-xs blinko-tag whitespace-nowrap font-bold select-none !transition-all max-w-full overflow-hidden text-ellipsis ${isShareMode ? '' : 'cursor-pointer hover:opacity-80'}`}
@@ -58,6 +58,7 @@ const CardTagChips = ({ blinkoItem, isShareMode }: { blinkoItem: BlinkoItem; isS
           #{path}
         </span>
       ))}
+      {tagPaths.length > 3 && <span className="text-xs text-default-400" title={tagPaths.slice(3).map(path => `#${path}`).join(' · ')}>+{tagPaths.length - 3}</span>}
     </div>
   );
 };
@@ -111,10 +112,10 @@ export const BlogCardBottomRow = ({ blinkoItem, blinko, isShareMode }: { blinkoI
 export const CardFooter = ({ blinkoItem, blinko, isShareMode, showTime, hideTags }: CardFooterProps) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center">
+    <div className="flex flex-wrap items-center gap-y-1.5 mt-2">
       {showTime && (
         <div className="flex items-center mr-2 shrink-0">
-          <NoteTime blinkoItem={blinkoItem} blinko={blinko} />
+          <NoteTime blinkoItem={blinkoItem} blinko={blinko} compact />
         </div>
       )}
       {!hideTags && <CardTagChips blinkoItem={blinkoItem} isShareMode={isShareMode} />}

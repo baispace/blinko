@@ -11,6 +11,7 @@ import { helper } from '@/lib/helper';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
+import { notePreviewText } from '@/lib/notePreviewText';
 
 interface NoteContentProps {
   blinkoItem: Note;
@@ -87,8 +88,8 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
   useEffect(() => {
     const el = contentRef.current;
     if (!foldable || !isLongText || !el) { setNeedsFold(false); return; }
-    setNeedsFold((!!blinkoItem.isSummary && (blinkoItem.contentLength ?? 0) > (blinkoItem.content?.length ?? 0)) || el.scrollHeight > FOLD_MAX_HEIGHT + 40);
-  }, [foldable, isLongText, blinkoItem.content]);
+    setNeedsFold(isLongText || el.scrollHeight > FOLD_MAX_HEIGHT + 40);
+  }, [foldable, isLongText, blinkoItem.content, foldThreshold]);
 
   const displayContent = useMemo(
     () => {
@@ -98,12 +99,15 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         const idx = content.indexOf('\n');
         content = idx >= 0 ? content.slice(idx + 1) : '';
       }
-      if (foldable && !isTextExpanded && content.length > 1200) content = content.slice(0,1200);
+      if (foldable && !isTextExpanded && content.length > foldThreshold) {
+        // Never cut through an HTML attribute or outline wrapper in a preview.
+        content = notePreviewText(content).slice(0, Math.max(1, foldThreshold)) + '…';
+      }
       if (inlineTags) return content;
       const tagPaths = getNoteTagPaths(blinkoItem);
       return tagPaths.length ? stripTagTokens(content, tagPaths) : content;
     },
-    [foldable, isTextExpanded, blinkoItem.content, blinkoItem.tags, inlineTags, skipFirstLine]
+    [foldable, foldThreshold, isTextExpanded, blinkoItem.content, blinkoItem.tags, inlineTags, skipFirstLine]
   );
 
   return (

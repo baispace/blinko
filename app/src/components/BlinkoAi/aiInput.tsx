@@ -141,7 +141,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
         <div className="w-full gap-1 flex flex-wrap items-center">
           <AiAttachmentMenu staged={staged} onChange={setStaged} disabled={busy} />
 
-          <Popover isOpen={skillsOpen} onOpenChange={setSkillsOpen} placement="top-start">
+          <Popover disableAnimation isOpen={skillsOpen} onOpenChange={setSkillsOpen} placement="top-start">
             <PopoverTrigger>
               <Button size="sm" variant="light" isDisabled={busy} aria-expanded={skillsOpen}
                 className={aiStore.selectedSkill ? 'bg-primary/10 text-primary' : 'text-default-500'}
@@ -179,6 +179,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           }}><Icon icon="tabler:settings" width="18" /></Button>
 
           <Button isIconOnly size="sm" color="primary"
+            isLoading={aiStore.chatStatus === 'stopping'}
             isDisabled={aiStore.chatStatus === 'stopping' || (!aiStore.isAnswering && !canSend)}
             aria-label={aiStore.chatStatus === 'stopping' ? '正在停止' : aiStore.isAnswering ? '停止生成' : '发送消息'}
             title={aiStore.isAnswering ? '停止生成，保留当前回复' : '发送消息'}
@@ -186,6 +187,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
             <Icon icon={aiStore.isAnswering ? 'tabler:player-stop-filled' : 'uil:arrow-up'} width="20" height="20" />
           </Button>
         </div>
+        <p className="mt-1 text-right text-[11px] text-default-400">{busy ? '生成中可停止，已生成内容会保留' : 'Enter 发送 · Shift + Enter 换行'}</p>
       </div>
       {aiStore.currentConversation.value?.nextMessageCursor && <p className="mt-2 text-[11px] text-default-400">长对话使用最近40条消息及最近工作流背景；更早的关键资料可重新引用。</p>}
       {checking ? <p role="status" className="mt-2 text-xs text-default-400">正在检查可用功能…</p> : configError ? <p role="alert" className="mt-2 text-xs text-default-500">配置读取失败 <button className="text-primary" onClick={() => setConfigVersion(value => value + 1)}>重试</button></p> : !available?.canChat && <p className="mt-2 text-xs text-default-500">请先在 AI 设置中配置对话模型，或选择一个已配置的模型。</p>}

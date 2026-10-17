@@ -23,9 +23,19 @@ export const DocumentVisibleTags = observer(({ store, content = '', className = 
   return (
     <div data-testid="document-visible-tags" className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {tags.map(tag => (
-        <span key={tag} className="inline-flex h-6 items-center rounded-md bg-primary/8 px-2 text-[11.5px] font-medium text-primary">
+        <button type="button" key={tag} title="在正文中编辑此标签" onClick={() => {
+          const editor = store.vditor?.editor;
+          if (!editor?.isEditable) return;
+          let target: number | null = null;
+          editor.state.doc.descendants((node, pos) => {
+            if (target != null || !node.isText) return;
+            const index = node.text?.indexOf(`#${tag}`) ?? -1;
+            if (index >= 0) target = pos + index;
+          });
+          if (target != null) editor.chain().focus().setTextSelection({ from: target, to: target + tag.length + 1 }).scrollIntoView().run();
+        }} className="inline-flex h-6 max-w-48 truncate items-center rounded-md bg-primary/8 px-2 text-[11.5px] font-medium text-primary hover:bg-primary/15 focus-visible:outline-primary">
           #{tag}
-        </span>
+        </button>
       ))}
     </div>
   );

@@ -3,7 +3,9 @@ import { Node, mergeAttributes, wrappingInputRule } from '@tiptap/core'
 import type { Editor } from '@tiptap/core'
 import ListItem from '@tiptap/extension-list-item'
 import { animateOutlineBranch, cancelOutlineBranch, outlineViewIcon, outlineControlIcon } from './outlinePresentation'
-import { DOMSerializer, Fragment } from '@tiptap/pm/model'
+import { DOMSerializer, Fragment, Slice } from '@tiptap/pm/model'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { pastedOutline } from './pastedOutline'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import { NodeSelection, Selection, TextSelection } from '@tiptap/pm/state'
 
@@ -88,6 +90,24 @@ export const OutlineList = Node.create({
   },
   addInputRules() {
     return [wrappingInputRule({ find: /^-\s$/, type: this.type, joinPredicate: () => false })]
+  },
+  onCreate() {
+    // Run the same recognition for initial Markdown, not just clipboard input.
+    this.editor.view.dispatch(this.editor.state.tr.setMeta('recognizeOutline', true))
+  },
+  addProseMirrorPlugins() {
+    return [new Plugin({ key: new PluginKey('automaticOutline'), appendTransaction(transactions, _old, state) {
+      if (!transactions.some(tr => tr.docChanged || tr.getMeta('recognizeOutline'))) return null
+      const next = pastedOutline(new Slice(state.doc.content, 0, 0), true)
+      if (next.content.eq(state.doc.content)) return null
+      // Node names change, positions and selections remain stable.
+      const tr = state.tr
+      next.content.forEach((node, offset) => {
+        if (!node.eq(state.doc.nodeAt(offset)!)) tr.replaceWith(offset, offset + node.nodeSize, node)
+      })
+      tr.setSelection(Selection.fromJSON(tr.doc, state.selection.toJSON()))
+      return tr.setMeta('addToHistory', false)
+    } })]
   },
   addKeyboardShortcuts() {
     return {

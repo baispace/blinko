@@ -35,6 +35,7 @@ import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
 import { OutlineList, OutlineItem } from '../Tiptap/outline';
 import { CollapsibleListItem } from '../Tiptap/collapsibleListItem';
+import { pastedOutline, parseOutlineClipboard } from '../Tiptap/pastedOutline';
 
 // Stable no-op reference so on/off can match by identity.
 // `() => {}` creates a new function each call — off() would never find it.
@@ -158,7 +159,7 @@ export const useEditorInit = (
           // 改为 true 后：单换行被解析/序列化为硬换行并稳定保留，符合笔记类应用直觉；
           // 对已有的段落与反斜杠形态完全向后兼容（实测序列化结果不变）。
           breaks: true,
-          transformPastedText: false,
+          transformPastedText: true,
           transformCopiedText: false,
         }),
         SlashCommand.configure({
@@ -192,6 +193,15 @@ export const useEditorInit = (
       content: initialContent,
       editable,
       editorProps: {
+        clipboardTextParser: (text, context, plainText) => {
+          // ProseMirror calls transformPasted with `plain=true` even for normal
+          // text-only clipboard data. Convert the Markdown slice here, while
+          // we can still distinguish ordinary paste from explicit Shift-paste.
+          return parseOutlineClipboard(adapter.editor, text, context, plainText) as any;
+        },
+        // Both parsed Markdown and clipboard HTML reach this path. Shift-paste
+        // and code-block pastes retain the default plain-text behavior.
+        transformPasted: (slice, view, plain) => plain || view.state.selection.$from.parent.type.spec.code ? slice : pastedOutline(slice, true),
         // 粘贴/拖放的图片统一交给 store.uploadFiles：分流（闪念→附件，笔记→正文内联）
         // 只在那里按 noteType 判定一次，这里不做类型判断，避免规则分散。
         handlePaste: (_view, event) => {

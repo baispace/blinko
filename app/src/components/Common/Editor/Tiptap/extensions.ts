@@ -324,6 +324,7 @@ export const SlashCommand = Extension.create<{
   addProseMirrorPlugins() {
     const { slashMenu, items, aiBridge } = this.options
     if (!slashMenu) return []
+    let typedSlashAt: number | null = null
 
     const slashAi: AiSlashBridge = {
       run: (writeType, content, onComplete, onSettled) =>
@@ -333,10 +334,21 @@ export const SlashCommand = Extension.create<{
     }
 
     return [
+      new Plugin({
+        key: new PluginKey('slashTypedTrigger'),
+        props: {
+          handleTextInput: (_view, from, _to, text) => {
+            if (text === '/') typedSlashAt = from
+            return false
+          },
+          handleDOMEvents: { mousedown: () => { typedSlashAt = null; slashMenu.close(); return false } },
+        },
+      }),
       Suggestion({
         editor: this.editor,
         pluginKey: SlashSuggestionKey,
         char: '/',
+        allow: ({ range }) => slashMenu.isOpen || typedSlashAt === range.from,
         allowSpaces: false,
         items: ({ query }) => {
           const q = query.toLowerCase()
@@ -362,8 +374,8 @@ export const SlashCommand = Extension.create<{
           props.command({ editor, range }, slashAi)
         },
         render: () => ({
-          onStart: (props: SuggestionProps) => slashMenu.open(props),
-          onUpdate: (props: SuggestionProps) => slashMenu.update(props),
+          onStart: (props: SuggestionProps) => { typedSlashAt = null; slashMenu.open(props) },
+          onUpdate: (props: SuggestionProps) => { if (slashMenu.isOpen) slashMenu.update(props) },
           onKeyDown: (props: SuggestionKeyDownProps) => slashMenu.onKeyDown(props),
           onExit: () => slashMenu.close(),
         }),

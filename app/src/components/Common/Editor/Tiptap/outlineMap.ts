@@ -323,7 +323,9 @@ export function attachOutlineDrag(button: HTMLButtonElement, item: HTMLElement, 
     event.preventDefault(); event.stopPropagation(); editTopic(event)
   }
   const keyDown = (event: KeyboardEvent) => {
-    if (!inMap() || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
+    // Every topic listens on the same editor DOM. A handled event must not run
+    // again in another topic's listener after the selection has moved.
+    if (event.defaultPrevented || event.isComposing || !inMap() || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
     if ((selected() || item.dataset.mapEditing === 'true') && event.key.toLowerCase() === 'a' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault(); event.stopPropagation()
       const pos = getPos()
@@ -342,13 +344,59 @@ export function attachOutlineDrag(button: HTMLButtonElement, item: HTMLElement, 
         item.querySelector<HTMLButtonElement>(':scope > .outline-toggle')?.click()
       } else if (event.key === 'Tab' && !event.metaKey && !event.ctrlKey && !event.altKey) {
         event.preventDefault(); event.stopPropagation(); editTopic()
-        editor.commands.keyboardShortcut(event.shiftKey ? 'Shift-Tab' : 'Tab')
+        // Do not synthesize another DOM keydown: it re-enters these capture
+        // listeners and competes with the generic list/table Tab shortcuts.
+        if (event.shiftKey) editor.commands.liftListItem('outlineItem')
+        else editor.commands.sinkListItem('outlineItem')
         const { $from } = editor.state.selection
+        const tr = editor.state.tr
+        for (let depth = $from.depth; depth > 0; depth--) {
+          const node = $from.node(depth)
+          if (node.type.name === 'outlineItem' && node.attrs.collapsed) {
+            tr.setNodeMarkup($from.before(depth), undefined, { ...node.attrs, collapsed: false })
+          }
+        }
         for (let depth = $from.depth; depth > 0; depth--) {
           if ($from.node(depth).type.name === 'outlineItem') {
-            editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, $from.before(depth))).scrollIntoView())
+            editor.view.dispatch(tr.setSelection(NodeSelection.create(tr.doc, $from.before(depth))).scrollIntoView())
             break
           }
+        }
+      } else if (event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
+        event.preventDefault(); event.stopPropagation()
+        const { $from } = editor.state.selection
+        const parent = $from.parent, index = $from.index()
+        const destination = index + (event.key === 'ArrowUp' ? -1 : 1)
+        if (parent.type.name !== 'outlineList' || destination < 0 || destination >= parent.childCount) return
+        const children: PMNode[] = []
+        parent.forEach(child => children.push(child))
+        ;[children[index], children[destination]] = [children[destination], children[index]]
+        const start = $from.start()
+        const tr = editor.state.tr.replaceWith(start, start + parent.content.size, children)
+        const pos = start + children.slice(0, destination).reduce((size, child) => size + child.nodeSize, 0)
+        editor.view.dispatch(tr.setSelection(NodeSelection.create(tr.doc, pos)).scrollIntoView())
+      } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault(); event.stopPropagation()
+        const root = item.closest('.outline-view[data-map-root="true"]')
+        let target: HTMLElement | null = null
+        if (event.key === 'ArrowLeft') {
+          target = item.parentElement?.closest<HTMLElement>('li[data-type="outline-item"]') ?? null
+        } else if (event.key === 'ArrowRight') {
+          const child = item.querySelector<HTMLElement>(':scope > .outline-content > .outline-view li[data-type="outline-item"]')
+          if (child) {
+            if (item.dataset.collapsed === 'true') item.querySelector<HTMLButtonElement>(':scope > .outline-toggle')?.click()
+            target = child
+          }
+        } else {
+          const topics = Array.from(root?.querySelectorAll<HTMLElement>('li[data-type="outline-item"]') || [])
+            .filter(topic => topic.getClientRects().length > 0)
+          const index = topics.indexOf(item)
+          target = topics[index + (event.key === 'ArrowUp' ? -1 : 1)] ?? null
+        }
+        const pos = target && outlinePositions.get(target)?.()
+        if (typeof pos === 'number') {
+          editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos)).scrollIntoView())
+          editor.view.focus()
         }
       } else if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) editTopic()
     } else if (item.dataset.mapEditing === 'true' && event.key === 'Escape') {

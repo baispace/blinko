@@ -36,6 +36,10 @@ import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankL
 import { OutlineList, OutlineItem } from '../Tiptap/outline';
 import { CollapsibleListItem } from '../Tiptap/collapsibleListItem';
 
+// Stable no-op reference so on/off can match by identity.
+// `() => {}` creates a new function each call — off() would never find it.
+const NOOP_LISTENER = () => { };
+
 export const useEditorInit = (
   store: EditorStore,
   onChange: ((content: string) => void) | undefined,
@@ -334,8 +338,10 @@ export const useEditorEvents = (store: EditorStore) => {
     eventBus.on('editor:insert', store.insertMarkdown);
     eventBus.on('editor:replace', store.replaceMarkdown);
     eventBus.on('editor:focus', store.focus);
-    // Tiptap is WYSIWYG-only; keep the listener for backward compatibility
-    eventBus.on('editor:setViewMode', () => { });
+    // Tiptap is WYSIWYG-only; keep the listener for backward compatibility.
+    // Must use a stable reference: off() compares by function identity, so
+    // passing a fresh `() => {}` on cleanup would never remove the original.
+    eventBus.on('editor:setViewMode', NOOP_LISTENER);
     const handleFullscreen = (value: boolean) => store.setFullscreen(value);
     eventBus.on('editor:setFullScreen', handleFullscreen);
     store.handleIOSFocus();
@@ -345,7 +351,7 @@ export const useEditorEvents = (store: EditorStore) => {
       eventBus.off('editor:insert', store.insertMarkdown);
       eventBus.off('editor:replace', store.replaceMarkdown);
       eventBus.off('editor:focus', store.focus);
-      eventBus.off('editor:setViewMode', () => { });
+      eventBus.off('editor:setViewMode', NOOP_LISTENER);
       eventBus.off('editor:setFullScreen', handleFullscreen);
     };
   }, []);

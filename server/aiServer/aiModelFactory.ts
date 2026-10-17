@@ -403,23 +403,32 @@ export class AiModelFactory {
     }
 
     const globalConfig = await AiModelFactory.globalConfig();
-    const defaultInstructions =
-      `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` +
-      'You are a versatile AI assistant who can:\n' +
+
+    // 默认人设：描述「它是谁、会做什么」。用户填写 globalPrompt 后由用户定义取代。
+    const defaultPersona = 'You are a versatile AI assistant who can:\n' +
       '1. Answer questions and explain concepts\n' +
       '2. Provide suggestions and analysis\n' +
       '3. Help with planning and organizing ideas\n' +
       '4. Assist with content creation and editing\n' +
-      '5. Perform basic calculations and reasoning\n\n' +
-      "6. When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page" +
-      "7. When using 'search-blinko-tool', The entire content of the note should not be returned unless specifically specified by the user " +
-      "Always respond in the user's language.\n" +
+      '5. Perform basic calculations and reasoning\n' +
       'Maintain a friendly and professional conversational tone.';
 
+    // 硬规则：与身份无关，无论用默认人设还是用户自定义人设都必须生效。
+    // 注意这三条绝不能并入 defaultPersona——globalPrompt 是「替换」人设而非叠加，
+    // 规则写死在人设里，一旦用户自定义就会被整段丢弃：表现为不跟随对话语言、
+    // 联网搜索结果不标来源、笔记检索直接回传全文。
+    const coreRules = [
+      "Always respond in the user's language.",
+      "When using 'web-search-tool' to return results, use the markdown link format to mark the origin of the page",
+      "When using 'search-blinko-tool', the entire content of the note should not be returned unless specifically specified by the user",
+    ].join('\n');
+
     // 注意优先级：`a + b || c` 会把 undefined 拼成字符串 "undefined"，必须是三元判断
-    const baseInstructions = globalConfig.globalPrompt
-      ? `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt
-      : defaultInstructions;
+    const baseInstructions = [
+      `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`,
+      globalConfig.globalPrompt || defaultPersona,
+      coreRules,
+    ].join('\n');
     const instructions = extraInstructions ? `${baseInstructions}\n\n${extraInstructions}` : baseInstructions;
 
     const BlinkoAgent = new Agent({

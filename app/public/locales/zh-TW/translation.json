@@ -417,6 +417,8 @@
   "github-api-limit-notice": "Note: Due to GitHub API rate limits, repository info may not load. The plugin will still install with default information.",
   "github-repository-url": "GitHub Repository URL",
   "global-prompt": "全局提示詞",
+  "settings-global-prompt": "全域提示詞",
+  "global-prompt-placeholder": "你是一名全能的 AI 助理，可以：\n1. 回答問題並解釋概念\n2. 提供建議與分析\n3. 協助規劃與整理思路\n\n始終使用用戶的語言回答。\n保持友善、專業的對話語氣。",
   "go-to-share-page": "转到分享页面",
   "grant-microphone-permission": "授權麥克風",
   "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "用於自動生成標籤的提示。如果設置為空，將使用預設的提示。",

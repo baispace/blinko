@@ -1237,6 +1237,7 @@
   "settings-search-count": "Found {{count}} matching sections. Choose one to configure.",
   "settings-no-results": "No matching settings. Try models, fonts or storage.",
   "settings-global-prompt": "Global prompt",
+  "global-prompt-placeholder": "You are a versatile AI assistant who can:\n1. Answer questions and explain concepts\n2. Provide suggestions and analysis\n3. Help with planning and organizing ideas\n\nAlways respond in the user's language.\nMaintain a friendly and professional conversational tone.",
   "settings-embedding": "Knowledge retrieval settings",
   "settings-post-processing": "Automatic content processing",
   "settings-default-models": "Default models",

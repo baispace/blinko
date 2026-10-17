@@ -50,13 +50,7 @@ export const GlobalPromptSection = observer(() => {
           value={globalPrompt}
           onChange={(e) => handlePromptChange(e.target.value)}
           onBlur={handlePromptBlur}
-          placeholder={`You are a versatile AI assistant who can:
-1. Answer questions and explain concepts
-2. Provide suggestions and analysis
-3. Help with planning and organizing ideas
-
-Always respond in the user's language.
-Maintain a friendly and professional conversational tone.`}
+          placeholder={t('global-prompt-placeholder')}
           className="w-full"
         />
       </div>

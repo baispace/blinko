@@ -1254,6 +1254,7 @@
   "settings-search-count": "找到 {{count}} 个相关模块，选择后前往配置。",
   "settings-no-results": "没有找到相关设置，试试模型、字体、存储等关键词。",
   "settings-global-prompt": "全局提示词",
+  "global-prompt-placeholder": "你是一名全能的 AI 助手，可以：\n1. 回答问题并解释概念\n2. 提供建议与分析\n3. 帮助规划与整理思路\n\n始终使用用户的语言回答。\n保持友好、专业的对话语气。",
   "settings-embedding": "知识库检索配置",
   "settings-post-processing": "内容自动处理",
   "settings-default-models": "默认模型",

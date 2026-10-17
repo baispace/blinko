@@ -1,11 +1,11 @@
 name: Build Prod Image
-# 生产镜像构建：main_baispace 分支 → ghcr.io/baispace/blinko:prod（附 sha-xxxxxxx）
+# 生产镜像构建：main 分支 → ghcr.io/baispace/blinko:prod（附 sha-xxxxxxx）
 # 设计意图：构建全部在 GitHub 机器上完成，服务器只 pull 镜像，不参与构建
 
 on:
   push:
     branches:
-      - main_baispace
+      - main
     paths-ignore:
       - '**.md'
   workflow_dispatch:

@@ -12,12 +12,14 @@ dependencies = [
  "macos-accessibility-client",
  "mouse_position",
  "objc2 0.6.3",
+ "objc2-foundation 0.3.2",
  "rdev",
  "serde",
  "serde_json",
  "sys-locale",
  "tauri",
  "tauri-build",
+ "tauri-nspanel",
  "tauri-plugin-autostart",
  "tauri-plugin-blinko",
  "tauri-plugin-dialog",
@@ -3411,6 +3413,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pastey"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
+
+[[package]]
 name = "pathdiff"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5023,6 +5031,19 @@ dependencies = [
  "syn 2.0.108",
  "tauri-codegen",
  "tauri-utils",
+]
+
+[[package]]
+name = "tauri-nspanel"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46152b976f2cf82dc8ea0b942bbe2d9caee100b944529b7ed9c3ab048fc2637d"
+dependencies = [
+ "objc2 0.6.3",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "pastey",
+ "tauri",
 ]
 
 [[package]]

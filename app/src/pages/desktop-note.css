@@ -1,56 +1,195 @@
-html.desktop-note-window,
-.desktop-note-window body,
-.desktop-note-window #root,
-.desktop-note-window .app-content {
+/* ─────────────────────────────────────────────────────────────────────────
+   桌面便签浮窗样式
+   - 不再使用 BlinkoEditor，所以 `#global-editor` / `.tiptap-*` 兼容代码全删
+   - 主题 = 一张便签纸的颜色，每个 data-paper 一组变量，没有亮/暗交叉定义
+   - Tauri 端已把窗口背景设为透明，圆角外区域交由根元素透出桌面
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* 整窗区域 + WebView 容器都透明，圆角才不会被白底挡掉 */
+html, body, #root, .app-content {
   background: transparent !important;
 }
-/* 确保整个窗口区域透明，包括圆角外的部分 */
-.desktop-note-shell { 
-  height:100dvh; 
-  padding:8px; 
-  background:transparent;
-  /* 添加透明蒙层确保圆角处无白色 */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, transparent);
-  mask-image: linear-gradient(to bottom, transparent, transparent);
+
+/* 便签本体：单层容器。默认纸色是黄色，其余在下面按 data-paper 覆盖 */
+.note-root {
+  --note-bg: #fff29a;
+  --note-fg: #514c35;
+  --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(81 76 53 / 0.55);
+  --note-hover: rgb(0 0 0 / 0.06);
+  --note-accent: #514c35;
+
+  position: relative;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--note-bg);
+  color: var(--note-fg);
+  border: 1px solid var(--note-bd);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.10);
 }
 
-/* 真正的HeroUI卡片效果 */
-.desktop-note-card {
-  height:100%; 
-  display:flex; 
-  flex-direction:column; 
-  overflow:hidden;
-  /* HeroUI标准边框 - 更浅、更柔和 */
-  border: 1px solid hsl(var(--heroui-default-200));
-  /* HeroUI标准圆角 - rounded-xl (16px) */
-  border-radius: 16px;
-  /* HeroUI卡片背景 */
-  background: hsl(var(--heroui-card));
-  /* HeroUI柔和阴影 - shadow-sm */
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  /* 可选：毛玻璃效果 */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  /* 确保卡片内部内容不会溢出圆角 */
-  isolation: isolate;
+/* 每种纸色一组：底色 + 文字 + 分隔线 + 次要文字 + 悬浮底 + 光标色 */
+.note-root[data-paper="peach"] {
+  --note-bg: #ffd9b8; --note-fg: #5c4433; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(92 68 51 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #5c4433;
+}
+.note-root[data-paper="pink"] {
+  --note-bg: #ffd6dd; --note-fg: #5c3a3f; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(92 58 63 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #5c3a3f;
+}
+.note-root[data-paper="rose"] {
+  --note-bg: #f6bfd2; --note-fg: #5c2f42; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(92 47 66 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #5c2f42;
+}
+.note-root[data-paper="blue"] {
+  --note-bg: #cfe6ff; --note-fg: #33465c; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(51 70 92 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #33465c;
+}
+.note-root[data-paper="cyan"] {
+  --note-bg: #c9f0f0; --note-fg: #2c4f52; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(44 79 82 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #2c4f52;
+}
+.note-root[data-paper="purple"] {
+  --note-bg: #ecd7ff; --note-fg: #4a3a5c; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(74 58 92 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #4a3a5c;
+}
+.note-root[data-paper="green"] {
+  --note-bg: #d5f0cd; --note-fg: #37513a; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(55 81 58 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #37513a;
+}
+.note-root[data-paper="cream"] {
+  --note-bg: #f7eedb; --note-fg: #5c5142; --note-bd: rgb(0 0 0 / 0.10);
+  --note-sub: rgb(92 81 66 / 0.55); --note-hover: rgb(0 0 0 / 0.06); --note-accent: #5c5142;
+}
+.note-root[data-paper="white"] {
+  --note-bg: #ffffff; --note-fg: #1a1a1a; --note-bd: #e4e4e7;
+  --note-sub: #a1a1aa; --note-hover: #f4f4f5; --note-accent: #3b82f6;
+}
+.note-root[data-paper="graphite"] {
+  --note-bg: #2b2b2e; --note-fg: #ececf0; --note-bd: rgb(255 255 255 / 0.12);
+  --note-sub: rgb(236 236 240 / 0.55); --note-hover: rgb(255 255 255 / 0.08); --note-accent: #7dd3fc;
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .desktop-note-card {
-    border-color: hsl(var(--heroui-default-200) / 0.5);
-    background: hsl(var(--heroui-card) / 0.9);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  }
+/* 顶部拖拽条：固定 32px，右侧 24×24 操作按钮 */
+.note-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--note-bd);
+  user-select: none;
+  flex-shrink: 0;
 }
-.desktop-note-header {
-  display:flex; flex-shrink:0; gap:4px; min-height:40px; padding:8px 12px;
-  border-bottom:1px solid color-mix(in srgb,var(--foreground) 6%,transparent);
-  user-select:none;
+.note-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--note-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.desktop-note-body { min-height:0; flex:1; overflow-y:auto; padding:6px 10px 10px; }
-.desktop-note-body.hidden { display:none; }
-.desktop-note-footer { display:flex; justify-content:space-between; flex-shrink:0; padding:8px 16px; font-size:11px; border-top:1px solid color-mix(in srgb,var(--foreground) 6%,transparent); }
-.desktop-note-card.is-collapsed { border-radius:14px; }
-.desktop-note-card.is-collapsed .desktop-note-header { border-bottom:0; height:100%; padding:4px 8px; }
-.desktop-note-body #global-editor [data-slot="base"] { box-shadow:none; }
+.note-bar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--note-sub);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.note-bar button:hover {
+  background: var(--note-hover);
+  color: var(--note-fg);
+}
+.note-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.note-bar button[aria-pressed="true"] {
+  color: var(--note-accent);
+}
+
+/* 主题色板：从调色按钮下方弹出的中性面板，配色由 data-paper 决定，跟纸色无关 */
+.note-palette {
+  position: absolute;
+  top: 34px;
+  right: 8px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(5, 26px);
+  gap: 8px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.18);
+}
+.note-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 0.12);
+  border-radius: 9px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.note-swatch:hover {
+  transform: scale(1.08);
+}
+.note-swatch[aria-pressed="true"] {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}
+/* 选中标记用深底 + 白勾，深浅纸色上都能看清 */
+.note-swatch-check {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.30);
+  /* Iconify 的勾用 currentColor */
+  color: #ffffff;
+}
+
+/* 输入区：撑满，自适应行高，沿用系统字体。
+   不加任何 transition/animation —— 万一 webview 重建要立刻成画 */
+.note-input {
+  flex: 1;
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  caret-color: var(--note-accent);
+}
+.note-input::placeholder {
+  color: var(--note-sub);
+}
+.note-input:read-only {
+  cursor: not-allowed;
+}
+
+/* 错误态 */
+.note-error-text {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  color: #e5484d;
+}

@@ -16,7 +16,10 @@
       "icons/ink/128x128.png",
       "icons/ink/128x128@2x.png",
       "icons/ink/icon.icns"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-"
+    }
   },
   "plugins": {
     "updater": {

@@ -16,6 +16,11 @@ pub fn run() {
         .plugin(tauri_plugin_blinko::init())
         .plugin(tauri_plugin_opener::init());
 
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.plugin(tauri_nspanel::init());
+    }
+
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         builder = builder
@@ -56,6 +61,7 @@ pub fn run() {
         builder
             .invoke_handler(tauri::generate_handler![
                 open_pinned_note,
+                close_pinned_note,
                 resize_pinned_note,
                 set_pinned_note_top,
                 toggle_editor_window,

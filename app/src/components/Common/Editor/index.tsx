@@ -196,8 +196,8 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   /** 自动保存开启时用它替代「已编辑」，让用户知道改动已经落库 */
   const renderStatusText = () => {
     if (autosaveStatus && autosaveStatus !== 'idle') {
-      if (autosaveStatus === 'saving') return <div className="text-default-400 text-xs mr-2">{t('saving')}</div>
-      if (autosaveStatus === 'saved') return <div className="text-default-400 text-xs mr-2">{t('saved')}</div>
+      if (autosaveStatus === 'saving') return <div className="text-default-400 text-[11px] mr-2 whitespace-nowrap" title="正在同步当前修改">{t('saving')}</div>
+      if (autosaveStatus === 'saved') return <div className="text-default-400 text-[11px] mr-2 whitespace-nowrap" title="修改已保存 · Ctrl / ⌘ S 可手动保存">{t('saved')}</div>
       return <button type="button" onClick={onManualSave} className="text-danger text-xs mr-2 whitespace-nowrap">{t('save-failed')} · 重试</button>
     }
     if (store.showIsEditText) return <div className="text-red-500 text-xs mr-2">{t('edited')}</div>
@@ -358,6 +358,12 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
     e.stopPropagation();
     window.open(href, '_blank', 'noopener,noreferrer');
   };
+
+  // Desktop floating notes only need the document surface. Do not mount the
+  // composer Card, cover, footer or toolbars inside their native paper window.
+  if (withoutOutline && hideDoneButton && hideFullscreenButton && hideNoteTypeButton) {
+    return <div className="desktop-note-document"><TiptapEditorContent store={store} readOnly={!editable} pageScroll />{store.files.length > 0 && <AttachmentsRender files={store.files} preview={!editable} />}</div>;
+  }
 
   return (
     <>

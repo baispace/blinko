@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Textarea } from '@heroui/react';
+import { Button, Textarea, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from 'usehooks-ts';
@@ -7,13 +7,14 @@ import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
 import { RootStore } from '@/store/root';
 import { DialogStore } from '@/store/module/Dialog';
-import { BlinkoSelectNote } from '../Common/BlinkoSelectNote';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '../Common/ScrollArea';
 import AiSetting from '../BlinkoSettings/AiSetting/AiSetting';
 import { AiSkills } from './AiSkills';
+import { AiAttachmentMenu, AiAttachmentCards, type StagedFile } from './AiAttachmentBar';
 import { workflows } from '@shared/lib/aiWorkflows';
 import { useRef, useEffect, useState } from 'react';
+import './aiInput.css';
 
 interface AiInputProps {
   mode?: 'card' | 'inline';
@@ -49,19 +50,27 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
     return () => { active = false; window.removeEventListener('focus', load); };
   }, [aiStore.chatModelId, configVersion, RootStore.Get(DialogStore).isOpen]);
   const available = aiStore.chatCapabilities.value;
-  const [showWorkflows, setShowWorkflows] = useState(false);
-  const canSend = !checking && !configError && !!available?.canChat && !aiStore.isPreparing && !aiStore.isAnswering && (!!aiStore.input.trim() || !!aiStore.referencesNotes.length);
+  const [skillsOpen, setSkillsOpen] = useState(false);
+  // 附件区的纯文本附件暂存在本地，发送时并入提问正文（见 handleSubmit）
+  const [staged, setStaged] = useState<StagedFile[]>([]);
+  const busy = aiStore.isAnswering || aiStore.isPreparing;
+  const canSend = !checking && !configError && !!available?.canChat && !busy
+    && (!!aiStore.input.trim() || !!aiStore.referencesNotes.length || !!staged.length);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  
+
   const handleSubmit = () => {
     if (!canSend) return;
+    // 附件以带来源标注的代码块并入提问，避免模型把文件内容误当成新指令
+    const merged = [aiStore.input.trim(), ...staged.map(file => `\n\n\`\`\`\n// 附件：${file.name}\n${file.text}\n\`\`\``)].join('');
     if (onSubmit) {
-      onSubmit(aiStore.input);
+      onSubmit(merged);
     } else {
+      aiStore.input = merged;
       aiStore.onInputSubmit();
     }
+    setStaged([]);
     // Blur textarea on mobile to dismiss keyboard
     if (!isPc) {
       setTimeout(() => {
@@ -77,27 +86,23 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
       }, 100);
     }
   };
-  
+
   return (
     <motion.div
-      className={`w-full max-w-3xl p-3 ${withoutOutline ? '' : 'rounded-2xl border border-default-200 bg-background'} ${className}`}
+      className={`w-full max-w-3xl p-3 ${withoutOutline ? '' : 'rounded-2xl ai-input-card bg-background'} ${className}`}
       animate={{
         width: '100%',
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
-      {(!aiStore.isChatting || showWorkflows || !!aiStore.selectedSkill) && <div className="mb-3 max-h-[min(26vh,240px)] md:max-h-[min(40vh,360px)] md:[mask-image:none] overflow-y-auto overscroll-contain pr-1 [mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]"><AiSkills /></div>}
-      <div className="flex items-center gap-1 px-1 pb-2">
-        <BlinkoSelectNote autoClose={false} blackList={aiStore.referencesNotes.map(note => note.id!)} onSelect={note => { if (!aiStore.isAnswering && !aiStore.isPreparing && !aiStore.referencesNotes.some(source => source.id === note.id)) aiStore.referencesNotes.push(note); }}
-          iconButton={<Button size="sm" variant="flat" isDisabled={aiStore.isAnswering || aiStore.isPreparing} startContent={<Icon icon="tabler:link" width={16} />}>引用历史内容</Button>} />
-        <Button size="sm" variant="light" isDisabled={aiStore.isAnswering || aiStore.isPreparing} aria-expanded={showWorkflows} onPress={() => setShowWorkflows(!showWorkflows)} startContent={<Icon icon="tabler:route" width={16} />}>工作流</Button>
-      </div>
-      {!!aiStore.referencesNotes.length && <div className="flex flex-wrap gap-2 px-2 pt-2 max-h-28 overflow-y-auto">
-        {aiStore.referencesNotes.map(note => <div key={note.id} className="flex items-center gap-2 max-w-full rounded-lg bg-default-100 px-2 py-1 text-xs">
-          <span className="truncate max-w-[210px]">{String(note.metadata?.title || (note.content ?? '').replace(/[#*`]/g, '')).slice(0, 45) || `内容 #${note.id}`}</span>
-          <button type="button" disabled={aiStore.isAnswering || aiStore.isPreparing} aria-label={`移除来源 ${note.id}`} onClick={() => { aiStore.referencesNotes = aiStore.referencesNotes.filter(n => n.id !== note.id); }} className="px-1 text-default-500">×</button>
-        </div>)}
-      </div>}
+      {/* 顶部只有已挂载的附件卡片（按文件格式呈现）。入口已收束到底部最前方的 + 按钮。 */}
+      <AiAttachmentCards
+        staged={staged}
+        onRemove={id => setStaged(prev => prev.filter(f => f.id !== id))}
+        onRemoveNote={id => { aiStore.referencesNotes = aiStore.referencesNotes.filter(n => n.id !== id); }}
+        disabled={busy}
+      />
+
       <div className="flex flex-col gap-2">
         <Textarea
           className="w-full"
@@ -132,13 +137,36 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           maxRows={8}
           placeholder={workflows.find(workflow => workflow.key === aiStore.selectedSkill?.key)?.placeholder || '输入你的问题，或引用历史内容继续讨论…'}
         />
+        {/* 底部一行收束全部操作：+ 附件 → 技能 / 能力开关在左，模型 / 设置 / 发送在右 */}
         <div className="w-full gap-1 flex flex-wrap items-center">
-          <>
-            {cardIcons.filter(item => !checking && !configError && available?.[item.capability]).map(item => <Button key={item.capability} size="sm" variant="light" isDisabled={aiStore.isAnswering || aiStore.isPreparing} aria-pressed={!!aiStore[item.state].value} onPress={() => aiStore[item.state].save(!aiStore[item.state].value)} className={aiStore[item.state].value ? 'bg-primary/10 text-primary' : 'text-default-500'}>{item.label}</Button>)}
-          </>
+          <AiAttachmentMenu staged={staged} onChange={setStaged} disabled={busy} />
+
+          <Popover isOpen={skillsOpen} onOpenChange={setSkillsOpen} placement="top-start">
+            <PopoverTrigger>
+              <Button size="sm" variant="light" isDisabled={busy} aria-expanded={skillsOpen}
+                className={aiStore.selectedSkill ? 'bg-primary/10 text-primary' : 'text-default-500'}
+                startContent={<Icon icon="tabler:route" width={16} />}>技能</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[min(92vw,520px)] max-h-[min(70vh,560px)] overflow-y-auto p-3">
+              <AiSkills />
+            </PopoverContent>
+          </Popover>
+
+          {aiStore.selectedSkill && (
+            <span className="ai-skill-chip">
+              <Icon icon="tabler:route" width={13} />
+              <span className="truncate">{aiStore.selectedSkill.title}</span>
+              <button type="button" aria-label={`取消技能 ${aiStore.selectedSkill.title}`} disabled={busy}
+                onClick={() => { aiStore.selectedSkill = null; aiStore.referencesNotes = []; setSkillsOpen(false); }}>
+                <Icon icon="tabler:x" width={12} />
+              </button>
+            </span>
+          )}
+
+          {cardIcons.filter(item => !checking && !configError && available?.[item.capability]).map(item => <Button key={item.capability} size="sm" variant="light" isDisabled={busy} aria-pressed={!!aiStore[item.state].value} onPress={() => aiStore[item.state].save(!aiStore[item.state].value)} className={aiStore[item.state].value ? 'bg-primary/10 text-primary' : 'text-default-500'}>{item.label}</Button>)}
 
           <div className="ml-auto min-w-0">
-            <select aria-label="对话模型" disabled={aiStore.isAnswering || checking || configError || aiStore.isPreparing}
+            <select aria-label="对话模型" disabled={busy || checking || configError}
               value={aiStore.chatModelId} onChange={e => { aiStore.chatModelId = Number(e.target.value); }}
               className="max-w-[180px] text-xs bg-transparent text-default-500 rounded-lg px-2 py-2 cursor-pointer hover:bg-default-100 transition-colors focus:outline-primary">
               <option value={0}>默认模型</option>

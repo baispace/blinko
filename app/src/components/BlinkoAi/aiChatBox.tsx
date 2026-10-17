@@ -13,6 +13,7 @@ import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@shared/lib/types";
 import { AiProcessDetails } from "./AiProcessDetails";
+import { AiTurnRail, type AiTurnMarker } from "./AiTurnRail";
 import { splitAssistantContent } from "./messagePresentation";
 import { useMediaQuery } from "usehooks-ts";
 import { Textarea } from "@heroui/react";
@@ -24,6 +25,10 @@ import { AiDailyResult } from './AiDailyResult';
 import { parseDailyDraft } from '@shared/lib/aiWorkflows';
 import { ViewportItem } from '../Common/ViewportItem';
 import './aiChat.css';
+
+/** 轮次导航 tooltip 用的一行摘要 */
+const turnSummary = (raw: string) =>
+  (raw || '').replace(/[#*`>_-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 28) || '（空消息）';
 
 const ChatAction = ({ label, icon, onClick, disabled = false }: { label: string; icon: string; onClick: () => void; disabled?: boolean }) => (
   <button type="button" className="ai-chat-action" onClick={onClick} disabled={disabled} aria-label={label} title={label}>
@@ -187,6 +192,12 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showJump, setShowJump] = useState(false);
 
+  // 轮次导航轨：marker 位置随文档高度变化，active 随滚动变化
+  const [markers, setMarkers] = useState<AiTurnMarker[]>([]);
+  const [activeTurn, setActiveTurn] = useState(0);
+  const turnNodesRef = useRef<HTMLElement[]>([]);
+  const activeTurnRef = useRef(0);
+
   // Refs for tracking scroll state
   const shouldAutoScrollRef = useRef(true)
   const lastContentLengthRef = useRef(0)
@@ -224,22 +235,70 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
     return () => observer.disconnect()
   }, [])
 
+  // 当前轮次 = 最后一个已经滚过顶部的用户轮次。
+  // 滚动处理和重新测量都要用它：切换会话时 scroll 事件可能早于轮次测量触发，
+  // 只挂在 scroll 上会让初始高亮停在第 1 轮。
+  const syncActiveTurn = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const currentScrollTop = container.scrollTop;
+    let active = 0;
+    for (let index = 0; index < turnNodesRef.current.length; index++) {
+      if (turnNodesRef.current[index].offsetTop - 120 <= currentScrollTop) active = index;
+      else break;
+    }
+    if (active !== activeTurnRef.current) {
+      activeTurnRef.current = active;
+      setActiveTurn(active);
+    }
+  }, [])
+
   // Handle scroll event - detect upward scroll to stop auto-scrolling
   const handleScroll = useCallback(() => {
-    if (!containerRef.current) return
+    const container = containerRef.current;
+    if (!container) return;
 
-    const currentScrollTop = containerRef.current.scrollTop
+    const currentScrollTop = container.scrollTop
 
     // User scrolled up more than 10px, stop auto-scroll
     if (currentScrollTop < lastScrollTopRef.current - 10) {
       shouldAutoScrollRef.current = false
     }
 
-    const nearBottom = containerRef.current.scrollHeight - currentScrollTop - containerRef.current.clientHeight < 90;
+    syncActiveTurn();
+
+    const nearBottom = container.scrollHeight - currentScrollTop - container.clientHeight < 90;
     setShowJump(!nearBottom);
     if (nearBottom) shouldAutoScrollRef.current = true;
     lastScrollTopRef.current = currentScrollTop
-  }, [])
+  }, [syncActiveTurn])
+
+
+  // 重新测量每一轮在可滚动文档中的位置，驱动左侧导航轨
+  const measureTurns = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const nodes = Array.from(container.querySelectorAll<HTMLElement>('[data-ai-turn]'));
+    turnNodesRef.current = nodes;
+    const total = Math.max(1, container.scrollHeight);
+    setMarkers(nodes.map(node => ({
+      index: Number(node.dataset.aiTurn ?? 0),
+      ratio: Math.min(1, Math.max(0, node.offsetTop / total)),
+      label: node.dataset.aiTurnLabel || '',
+      time: node.dataset.aiTurnTime || '',
+    })));
+    syncActiveTurn();
+  }, [syncActiveTurn]);
+
+  // 跳到指定轮次：手动跳转时关掉自动滚动，否则会被流式输出立刻拽回底部
+  const scrollToTurn = useCallback((index: number) => {
+    const container = containerRef.current;
+    const node = turnNodesRef.current[index];
+    if (!container || !node) return;
+    shouldAutoScrollRef.current = false;
+    container.scrollTo({ top: Math.max(0, node.offsetTop - 12), behavior: 'smooth' });
+  }, []);
+
 
   // Watch message list changes - scroll on new messages
   useEffect(() => {
@@ -285,8 +344,34 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
     shouldAutoScrollRef.current = true
     lastContentLengthRef.current = 0
     lastScrollTopRef.current = 0
+    activeTurnRef.current = 0
+    setActiveTurn(0)
     setTimeout(scrollToBottom, 50)
   }, [aiStore.currentConversationId, scrollToBottom])
+
+  // 消息条数变化后重新量一次（新增轮次）
+  useEffect(() => {
+    const raf = requestAnimationFrame(measureTurns);
+    return () => cancelAnimationFrame(raf);
+  }, [aiStore.currentConversation.value?.messages?.length, measureTurns])
+
+  // 正文高度变化（流式输出、Markdown 渲染、图片加载、字体切换）后重新量
+  useEffect(() => {
+    const transcript = containerRef.current?.querySelector('.ai-chat-transcript');
+    if (!transcript || typeof ResizeObserver === 'undefined') return;
+    let timer: number | undefined;
+    const observer = new ResizeObserver(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(measureTurns, 300);
+    });
+    observer.observe(transcript);
+    return () => { window.clearTimeout(timer); observer.disconnect(); };
+  }, [measureTurns])
+
+  useEffect(() => {
+    window.addEventListener('resize', measureTurns);
+    return () => window.removeEventListener('resize', measureTurns);
+  }, [measureTurns]);
 
   const handleEditMessage = async (id: number, content: string) => {
     if (shareMode) return false;
@@ -341,29 +426,39 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             })()
           }
           {
-            aiStore.currentConversation.value?.messages.map((item, index) => (
-              item.role == 'user' ? (
-                <ViewportItem disabled key={`user-${item.id ?? index}`} initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={140}><UserMessage
-                  content={(item.metadata as any)?.displayContent || item.content}
-                  sources={(item.metadata as any)?.sources || []}
-                  workflowTitle={(item.metadata as any)?.workflow?.title}
-                  time={item.createdAt.toLocaleString()}
-                  id={item.id}
-                  onEdit={handleEditMessage}
-                  busy={aiStore.isAnswering || aiStore.isPreparing}
-                  shareMode={shareMode}
-                /></ViewportItem>
-              ) : item.role == 'assistant' ? (
-                <ViewportItem disabled={!!parseDailyDraft(item.content) || !!parseDraft(item.content)} key={`assistant-${item.id ?? index}`} initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={320}><AiMessage
-                  id={item.id}
-                  metadata={item.metadata as AssisantMessageMetadata}
-                  content={item.content}
-                  busy={aiStore.isAnswering || aiStore.isPreparing}
-                  canRegenerate={!aiStore.currentMessageResult.id && item.id === aiStore.currentConversation.value?.messages.at(-1)?.id}
-                  shareMode={shareMode}
-                /></ViewportItem>
-              ) : null
-            ))
+            (() => {
+              // 用户轮次编号：导航轨按"第 N 轮提问"计数，助手回复不占号
+              let turn = -1;
+              return aiStore.currentConversation.value?.messages.map((item, index) => {
+                if (item.role == 'user') turn += 1;
+                const turnIndex = turn;
+                return item.role == 'user' ? (
+                  <div key={`user-${item.id ?? index}`} data-ai-turn={turnIndex}
+                    data-ai-turn-label={turnSummary((item.metadata as any)?.displayContent || item.content)}
+                    data-ai-turn-time={item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}>
+                    <ViewportItem disabled initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={140}><UserMessage
+                      content={(item.metadata as any)?.displayContent || item.content}
+                      sources={(item.metadata as any)?.sources || []}
+                      workflowTitle={(item.metadata as any)?.workflow?.title}
+                      time={item.createdAt.toLocaleString()}
+                      id={item.id}
+                      onEdit={handleEditMessage}
+                      busy={aiStore.isAnswering || aiStore.isPreparing}
+                      shareMode={shareMode}
+                    /></ViewportItem>
+                  </div>
+                ) : item.role == 'assistant' ? (
+                  <ViewportItem disabled={!!parseDailyDraft(item.content) || !!parseDraft(item.content)} key={`assistant-${item.id ?? index}`} initial={index >= (aiStore.currentConversation.value?.messages.length || 0) - 6} estimate={320}><AiMessage
+                    id={item.id}
+                    metadata={item.metadata as AssisantMessageMetadata}
+                    content={item.content}
+                    busy={aiStore.isAnswering || aiStore.isPreparing}
+                    canRegenerate={!aiStore.currentMessageResult.id && item.id === aiStore.currentConversation.value?.messages.at(-1)?.id}
+                    shareMode={shareMode}
+                  /></ViewportItem>
+                ) : null;
+              });
+            })()
           }
 
           {/* Loading: Show only when last message is from user and AI is answering but has no content yet */}
@@ -385,6 +480,7 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
         <div ref={bottomAnchorRef} className="h-4" />
       </div>
     </div>
+    {!shareMode && <AiTurnRail markers={markers} activeIndex={activeTurn} onSelect={scrollToTurn} />}
     {showJump && <button type="button" className="ai-jump-latest" onClick={() => { shouldAutoScrollRef.current = true; scrollToBottom(); setShowJump(false); }}><Icon icon="tabler:arrow-down" width={15} />回到最新</button>}
     </div>
   )

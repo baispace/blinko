@@ -16,9 +16,14 @@ silenceKnownDevNoise();
  *
  * 带 200ms 超时，缓存读取再慢也不会挡住首屏；失败时静默让位给后续的正常加载路径
  * （UserStore.initializeFonts）。
+ *
+ * 注意：这里必须用 async IIFE 而不是顶层 await —— vite build 的默认 target
+ * （chrome87 / edge88 / safari14 等）不支持顶层 await，写成 `await ...` 会让
+ * 生产构建直接失败，而 dev server 不做这项转译、照跑不误，问题会被藏住。
  */
-await FontManager.restoreSavedFont().catch(() => false);
-
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <App />
-);
+void (async () => {
+  await FontManager.restoreSavedFont().catch(() => false);
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <App />
+  );
+})();

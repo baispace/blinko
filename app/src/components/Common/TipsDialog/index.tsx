@@ -4,24 +4,35 @@ import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverTrigger, PopoverContent, Button } from "@heroui/react";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { useRef, useState } from 'react';
 
 const TipsDialog = observer(({ content, onConfirm, onCancel, buttonSlot }: any) => {
   const { t } = useTranslation()
+  const [busy,setBusy] = useState(false);
+  const [error,setError] = useState('');
+  const pending = useRef(false);
   return <div className='flex flex-col'>
     <div className='flex gap-4 items-center '>
-      <div className="ml-4">{content}</div>
+      <div className="text-sm leading-6 text-default-600">{content}</div>
     </div>
-    <div className='flex my-4 gap-4'>
+    {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
+    <div className='flex mt-5 gap-2 justify-end'>
       {
         buttonSlot ? buttonSlot : <>
-          <Button className="ml-auto" color='default'
+          <Button size="sm" radius="sm" variant="light" isDisabled={busy} color='default'
             onPress={e => {
               RootStore.Get(DialogStandaloneStore).close()
               onCancel?.()
             }}>{t('cancel')}</Button>
-          <Button color='danger' onPress={async e => {
-            onConfirm?.()
-          }}>{t('confrim')}</Button>
+          <Button size="sm" radius="sm" color='danger' isLoading={busy} isDisabled={busy} onPress={async () => {
+            if(pending.current)return;
+            pending.current=true;setBusy(true);setError('');
+            const modal=RootStore.Get(DialogStandaloneStore);
+            modal.preventClose=true;
+            try { await onConfirm?.(); }
+            catch (reason) { setError(reason instanceof Error ? reason.message : '操作失败，请重试'); }
+            finally { modal.preventClose=false;pending.current=false;setBusy(false); }
+          }}>{t('confirm')}</Button>
         </>
       }
     </div>

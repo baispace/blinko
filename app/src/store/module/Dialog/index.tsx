@@ -10,6 +10,9 @@ export class DialogStore implements Store {
   provider = () => <Provider />;
   isOpen = false;
   preventClose = false;
+  /** Timestamp of the last close(); used to defer the next setData until the
+   *  exit animation (dialogMotion: 0.12s + margin) has finished playing. */
+  closedAt = 0;
   placement!: "center" | "auto" | "top" | "bottom" | "top-center" | "bottom-center";
   title = "";
   noPadding = false;
@@ -33,18 +36,31 @@ export class DialogStore implements Store {
 
 
   setData(v: Partial<DialogStore>) {
+    // Exit animation in progress: applying the reset right now would blank
+    // the exiting modal mid-transition (content="" + size="md" width jump),
+    // which is the "flash" seen when a button closes one dialog and opens
+    // another in the same tick. Defer until the animation finishes.
+    if (!this.isOpen && this.closedAt > 0 && Date.now() - this.closedAt < 150 && (v as any).isOpen) {
+      const wait = 150 - (Date.now() - this.closedAt);
+      setTimeout(() => this.setData(v), wait);
+      return;
+    }
+    if (!this.isOpen) {
+      // Reset before opening, never during the closing animation.
+      Object.assign(this, { preventClose: false, noPadding: false,
+        transparent: false, className: "", classNames: undefined,
+        placement: "auto", theme: "default", title: "", content: "",
+        size: "md", isDismissable: true, onlyContent: false });
+    }
     this.showOnlyContentCloseButton = false
     Object.assign(this, v);
   }
 
   close() {
+    this.closedAt = Date.now();
     this.isOpen = false;
-    this.title = "";
-    this.content = "";
-    this.size = "md";
-    this.isDismissable = true;
-    this.onlyContent = false
-    this.showOnlyContentCloseButton = false
+    this.preventClose = false;
+    // Keep the rendered snapshot intact until the exit transition completes.
   }
 
   static show(v: Partial<DialogStore>) {

@@ -85,9 +85,15 @@ const AIPage = observer(() => {
       style={{
         height: isPc ? '100%' : `calc(100% - ${!isVisible ? '0px' : '60px'})`
       }}
-      className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[4vh] md:pt-[6vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
+      className={cn(
+        'flex flex-col items-center w-full gap-4 relative',
+        // 移动端顶栏是 fixed（h-14 / 56px），必须自己让出这段高度，否则欢迎语和聊天区
+        // 会被顶栏盖住并被 backdrop-blur 糊掉；桌面顶栏在文档流内，只需要 6vh 呼吸感。
+        aiStore.isChatting ? 'pt-14 md:pt-0' : 'pt-14 md:pt-[6vh]',
+        'md:h-[calc(100vh_-_80px)]'
+      )}>
       {!aiStore.isChatting ? (
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full px-4">
           <motion.div
             initial={{ width: 0, scaleX: 0 }}
             animate={{ width: "auto", scaleX: 1 }}
@@ -101,7 +107,7 @@ const AIPage = observer(() => {
                 mass: 0.5
               }
             }}
-            className="text-3xl font-bold overflow-hidden whitespace-nowrap origin-left"
+            className="text-2xl md:text-3xl font-bold overflow-hidden text-center whitespace-normal md:whitespace-nowrap origin-left px-2"
           >
             {t('welcome-to-blinko', { name: userStore.userInfo?.value?.nickName.toUpperCase() ?? userStore.userInfo?.value?.name.toUpperCase() })}!
           </motion.div>
@@ -119,7 +125,9 @@ const AIPage = observer(() => {
         className={cn(
           "flex flex-col items-center",
           isPc ? "w-[90%]" : "w-[95%]",
-          aiStore.isChatting ? "absolute bottom-2" : "mt-4"
+          // 窄屏非聊天态：输入框贴到容器底部（上方 60px 是 MobileNavBar），
+          // 中间留给技能卡；桌面沿用紧跟内容的流式排布。
+          aiStore.isChatting ? "absolute bottom-2" : (isPc ? "mt-4" : "mt-auto pt-4")
         )}
       >
 

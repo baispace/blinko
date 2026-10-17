@@ -86,7 +86,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
-      {(!aiStore.isChatting || showWorkflows || !!aiStore.selectedSkill) && <div className="mb-3 max-h-[min(40vh,360px)] overflow-y-auto overscroll-contain pr-1"><AiSkills /></div>}
+      {(!aiStore.isChatting || showWorkflows || !!aiStore.selectedSkill) && <div className="mb-3 max-h-[min(26vh,240px)] md:max-h-[min(40vh,360px)] md:[mask-image:none] overflow-y-auto overscroll-contain pr-1 [mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]"><AiSkills /></div>}
       <div className="flex items-center gap-1 px-1 pb-2">
         <BlinkoSelectNote autoClose={false} blackList={aiStore.referencesNotes.map(note => note.id!)} onSelect={note => { if (!aiStore.isAnswering && !aiStore.isPreparing && !aiStore.referencesNotes.some(source => source.id === note.id)) aiStore.referencesNotes.push(note); }}
           iconButton={<Button size="sm" variant="flat" isDisabled={aiStore.isAnswering || aiStore.isPreparing} startContent={<Icon icon="tabler:link" width={16} />}>引用历史内容</Button>} />

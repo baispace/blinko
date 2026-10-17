@@ -325,7 +325,10 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 */
 .tiptap ul:not([data-type="taskList"]):not([data-type="outline"]),
 .tiptap ol:not([data-type="taskList"]) {
-  list-style: none;
+  /* !important 是必需的：全局的 `ol { list-style-type: decimal !important }`
+     与 `ol, ul, menu { list-style: disc !important }` 会把原生 marker
+     重新打开，导致自定义 counter 序号与原生序号并排显示成「11」。 */
+  list-style: none !important;
   padding-left: 1.25rem;
   margin-top: 0.35em;
   margin-bottom: 0.35em;

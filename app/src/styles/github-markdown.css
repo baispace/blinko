@@ -1606,8 +1606,16 @@ ol {
   list-style-type: decimal !important;
 }
 
-.markdown-body ol ol, .markdown-body ol {
-  list-style-type: decimal !important;
+/* 有序序列号、无序圆点都由各 li::before 自行绘制（见本文件上方的
+   counter(md-ol) 与小灰点规则），原生 marker 必须关掉——
+   否则原生序号会与自定义序号并排显示成「11」「22」，
+   无序列表也会多出一个和自定义圆点重叠的原生 bullet。
+   必须带 !important：上面 `ol, ul, menu { list-style: disc !important }`
+   和 `ol { list-style-type: decimal !important }` 都是全局重置，
+   非 important 的选择器压不过它们。 */
+.markdown-body ol,
+.markdown-body ul:not(.contains-task-list) {
+  list-style: none !important;
 }
 
 .markdown-detail-body ul,

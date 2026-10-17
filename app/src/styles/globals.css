@@ -6,6 +6,20 @@
   outline:2px solid color-mix(in srgb,var(--primary,#2f6feb) 65%,transparent);
   outline-offset:2px;
 }
+/* HeroUI 2.4.x 给 Input/Textarea 的内层 <input>/<textarea> 硬编码了 `!outline-solid`
+   （见 @heroui/theme 的 input.ts / textarea.ts）。聚焦时它会画出 3px 描边，而配套的
+   `outline-transparent` 并未生效，颜色回落成 currentColor（前景深色），于是每处 HeroUI
+   输入框都会在已有边框的容器里套出一圈黑色方框。
+   必须写进 @layer 才能生效：级联层对 !important 声明的优先级是倒转的，Tailwind v4 把
+   工具类放在 @layer utilities（最后一层），而无层级的 !important 反而排在所有层之后，
+   压不过组件库这条 !outline-solid（实测无层级写法完全无效）。
+   HeroUI 原本的焦点提示落在 wrapper 上（group-data-[focus=true]:border-*），所以这里
+   只压掉内层描边，焦点提示不受影响。项目自身没有用到 outline-solid，选择器安全。 */
+@layer components {
+  :where(input, textarea)[class*="outline-solid"] {
+    outline: none !important;
+  }
+}
 @media (prefers-reduced-motion:reduce) {
   html,body { scroll-behavior:auto !important; }
 }

@@ -171,7 +171,7 @@ export const HeatMap = ({
                         disabled={count <= 0}
                         title={tooltipText}
                         aria-label={tooltipText}
-                        className="w-full aspect-square rounded-sm transition-transform hover:scale-150 focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-default"
+                        className="w-full aspect-square rounded-sm transition-shadow hover:ring-2 hover:ring-primary hover:z-10 hover:relative focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-default"
                         style={{
                           background: isFuture ? "transparent" : getColor(count),
                           border: isWeekend && !isFuture ? `1px dashed ${weekendOutline}` : "1px solid transparent",

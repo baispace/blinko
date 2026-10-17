@@ -64,7 +64,8 @@ export const NoteTime = ({ blinkoItem, blinko, isExpanded, compact = false }: { 
 
   return (
     <Tooltip content={t('edit-time')} delay={1000}>
-      <div
+      <button
+        type="button"
         data-testid="note-time"
         className={`${isExpanded ? 'text-sm' : compact ? 'text-[11px]' : 'text-xs'} cursor-pointer truncate whitespace-nowrap text-desc transition-colors`}
         title={display}
@@ -75,7 +76,7 @@ export const NoteTime = ({ blinkoItem, blinko, isExpanded, compact = false }: { 
         }}
       >
         {display}
-      </div>
+      </button>
     </Tooltip>
   );
 };
@@ -175,7 +176,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
                 <NoteTime blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} compact />
               </div>
             )}
-            <div className="flex shrink-0 items-center gap-2 opacity-55 transition-opacity group-hover/card:opacity-100">
+            <div className="flex shrink-0 items-center gap-2 opacity-70 transition-opacity group-hover/card:opacity-100 group-focus-within/card:opacity-100">
               {blinkoItem._count?.comments ? (
                 <CommentCount blinkoItem={blinkoItem} />
               ) : (

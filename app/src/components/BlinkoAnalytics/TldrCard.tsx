@@ -39,7 +39,7 @@ export const TldrCard = observer(({ snapshot }: TldrCardProps) => {
     return (
       <div className="flex items-start gap-3 p-4 rounded-lg bg-card border border-default-200 ">
         <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
-          <Icon icon="solar:ai-line" className="w-5 h-5" />
+          <Icon icon="hugeicons:ai-magic" className="w-5 h-5" />
         </div>
         <div className="text-sm leading-relaxed flex-1">
           {t("empty-period")} · <span className="text-primary cursor-pointer">{t("empty-period-cta")} →</span>
@@ -51,7 +51,7 @@ export const TldrCard = observer(({ snapshot }: TldrCardProps) => {
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg bg-card border border-default-200 ">
       <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
-        <Icon icon="solar:ai-line" className="w-5 h-5" />
+        <Icon icon="hugeicons:ai-magic" className="w-5 h-5" />
       </div>
       <div className="text-sm leading-relaxed flex-1">
         <strong className="text-primary font-semibold">

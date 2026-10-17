@@ -78,3 +78,19 @@
 .markdown-chat .chat-markdown-table :is(th,td) > :last-child { margin-bottom: 0; }
 .ai-answer-body .markdown-chat > :first-child { margin-top: 0; }
 .ai-answer-body .markdown-chat > :last-child { margin-bottom: 0; }
+
+/* One reading rhythm for answers; result forms own their action hierarchy. */
+.ai-chat-transcript { gap:28px; }
+.ai-answer-body .markdown-body { line-height:1.7; }
+.ai-answer-body .markdown-chat :is(p,li,blockquote,td,th) { line-height:1.7; }
+.ai-answer-body .markdown-chat blockquote { margin:12px 0; padding:4px 14px; border-left:3px solid hsl(var(--heroui-default-200)); }
+.ai-message-actions { gap:4px; padding-top:2px; }
+.ai-message-actions > button { min-width:0; }
+.ai-response-notice { padding:8px 11px; border-radius:8px; background:hsl(var(--heroui-default-100) / .6); }
+.ai-result-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
+.ai-result-item { background:hsl(var(--heroui-content1)); box-shadow:none; }
+.ai-result-item.is-saved { border-color:hsl(var(--heroui-success) / .3); background:hsl(var(--heroui-success) / .04); }
+.ai-draft-result [data-slot="input-wrapper"], .ai-draft-result [data-slot="trigger"] { box-shadow:none; }
+.ai-draft-result .tiptap { font-size:15px; line-height:1.7; }
+.ai-generating-label { display:inline-flex; align-items:center; gap:6px; }
+.ai-generating-label::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }

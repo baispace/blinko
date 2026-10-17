@@ -1,6 +1,6 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from "mobx-react-lite";
-import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { ScrollArea } from "../Common/ScrollArea";
 import { AnimatePresence } from "framer-motion";
 import { MarkdownRender } from "../Common/MarkdownRender";
@@ -109,8 +109,8 @@ const AiMessage = memo(({ content, id, metadata, shareMode = false, isStreaming 
     {(status === 'stopped' || status === 'error') && !isStreaming && <div className="ai-response-notice" role="status"><Icon icon={status === 'stopped' ? 'tabler:player-stop' : 'tabler:alert-circle'} width={14} />{status === 'stopped' ? (answer ? '已停止生成 · 已保留当前内容' : '已停止生成') : '回复未完成 · 当前内容已保留'}</div>}
     {!shareMode && !isStreaming && <div className="ai-message-actions">
       {!!answer.trim() && <ChatAction label="复制" icon="tabler:copy" onClick={() => { copy(copyContent); RootStore.Get(ToastPlugin).success('已复制'); }} />}
-      {!draft && !daily && resultKind !== 'daily' && !!answer.trim() && <Popover placement="top-start"><PopoverTrigger><button type="button" className="ai-chat-action" disabled={saving}><Icon icon="tabler:bookmark" width={15} />{saving ? '保存中…' : savedType ? `已存为${savedType}` : '保存为'}<Icon icon="tabler:chevron-down" width={12} /></button></PopoverTrigger>
-        <PopoverContent className="items-stretch p-1.5"><ChatAction label="保存为笔记" icon="tabler:notes" disabled={saving} onClick={() => void save(NoteType.NOTE)} /><ChatAction label="保存为闪念" icon="tabler:bolt" disabled={saving} onClick={() => void save(NoteType.BLINKO)} /></PopoverContent></Popover>}
+      {!draft && !daily && resultKind !== 'daily' && !!answer.trim() && <Dropdown placement="top-start"><DropdownTrigger><Button size="sm" variant="light" radius="sm" className="ai-chat-action" isLoading={saving} isDisabled={saving || !!savedType} aria-label="将回复保存为内容"><Icon icon="tabler:bookmark" width={15} />{saving ? '保存中…' : savedType ? `已存为${savedType}` : '保存为'}<Icon icon="tabler:chevron-down" width={12} /></Button></DropdownTrigger>
+        <DropdownMenu aria-label="保存回复" onAction={key=>void save(key==='note'?NoteType.NOTE:NoteType.BLINKO)}><DropdownItem key="note" startContent={<Icon icon="tabler:notes" width={16}/>}>保存为笔记</DropdownItem><DropdownItem key="flash" startContent={<Icon icon="tabler:bolt" width={16}/>}>保存为闪念</DropdownItem></DropdownMenu></Dropdown>}
       {!!id && canRegenerate && <ChatAction label={status === 'error' ? '重试' : '重新生成'} icon="tabler:refresh" disabled={busy} onClick={() => void RootStore.Get(AiStore).regenerate(id)} />}
       {status === 'stopped' && canRegenerate && !!answer.trim() && <ChatAction label="继续回答" icon="tabler:player-play" disabled={busy} onClick={() => { const store = RootStore.Get(AiStore); store.input = '请接着上一条未完成的回复继续回答，避免重复已输出的内容。'; void store.onInputSubmit(); }} />}
       <Popover placement="top-start"><PopoverTrigger><button type="button" className="ai-chat-action" aria-label="更多回复操作"><Icon icon="tabler:dots" width={16} /></button></PopoverTrigger>

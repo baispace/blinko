@@ -1,8 +1,8 @@
 export function searchSnippet(content: string, term: string) {
-  const text = content.replace(/<[^>]*>/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/^[#>\s*-]+/gm, '').replace(/[`*_]/g, '').trim();
+  const text = content.replace(/<[^>]*>/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/^[\t ]*(?:#{1,6}[\t ]+|>[\t ]*|[-*+][\t ]+(?:\[[ xX]\][\t ]*)?)/gm, '').replace(/[`*_]/g, '').trim();
   const title = text.split('\n').find(line => line.trim())?.trim().slice(0, 100) ?? '';
   const plain = text.replace(/\s+/g, ' ');
-  const start = Math.max(0, plain.toLocaleLowerCase().indexOf(term.toLocaleLowerCase()) - 45);
+  const start = Math.max(0, plain.toLocaleLowerCase().indexOf(term.trim().toLocaleLowerCase()) - 45);
   const summary = (start ? '…' : '') + plain.slice(start, start + 160) + (plain.length > start + 160 ? '…' : '');
   return { title, summary: summary === title ? '' : summary };
 }

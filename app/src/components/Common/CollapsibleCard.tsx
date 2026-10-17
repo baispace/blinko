@@ -76,7 +76,7 @@ export const CollapsibleCard = ({
     try { localStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* Storage may be unavailable. */ }
   };
 
-  if (settingsMode) return <section className={`min-w-0 rounded-xl border border-default-200/70 bg-background p-4 sm:p-5 ${className}`}>
+  if (settingsMode) return <section className={`settings-group min-w-0 ${className}`}>
     <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold"><Icon icon={icon} width="18" className="text-default-400" />{title}</h3>
     <div className="settings-card-body min-w-0">{children}</div>
   </section>;

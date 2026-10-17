@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip } from '@heroui/react';
+import { getTodoPriority, TODO_PRIORITIES } from '@shared/lib/todoPriority';
 import { Icon } from '@/components/Common/Iconify/icons';
 import dayjs from '@/lib/dayjs';
 import { Note, NoteType } from '@shared/lib/types';
@@ -62,13 +63,14 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
   // 标题只做视图派生，不在 render 阶段写回 store 中的 note 对象。
   const rawFirstLine = blinkoItem.content?.split('\n').find(line => {
     if (!line.trim()) return false;
-    if (/^#+\s/.test(line) || /^\s*[-*+]\s/.test(line)) return false;
     return true;
   });
   const metadataTitle = blinkoItem.metadata?.title?.trim();
   const titleFromContent = rawFirstLine ? rawFirstLine
     .replace(/^#{1,6}\s+/, '')
     .replace(/^\s*[-*+]\s+/, '')
+    .replace(/^\[[ xX]\]\s*/, '')
+    .replace(/\*\*|__|~~|`/g, '')
     .replace(/\s*#[^#\s]+/g, '')
     .trim() : undefined;
   const derivedTitle = metadataTitle || titleFromContent || '';
@@ -159,17 +161,18 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
     }
 
     if (isTodo) {
-      const priority = (blinkoItem as any).metadata?.priority;
-      const dueDate = (blinkoItem as any).metadata?.expireAt;
+      const priority = TODO_PRIORITIES.find(item => item.key === getTodoPriority(blinkoItem.metadata))!;
+      const rawDue = blinkoItem.metadata?.expireAt ? dayjs(blinkoItem.metadata.expireAt) : null;
+      const dueDate = rawDue?.isValid() ? rawDue : null;
+      const overdue = !isDone && dueDate?.isBefore(dayjs().startOf('day'), 'day');
       return (
         <>
           <div className={`text-[14.5px] leading-[1.45] truncate ${isDone ? 'text-default-400 line-through' : 'text-foreground'}`}>
-            {blinkoItem.content?.split('\n').find(l => l.trim()) || ''}
+            {derivedTitle || t('no-title')}
           </div>
           <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
-            {priority === 1 && <span className="text-danger font-medium inline-flex items-center gap-0.5 shrink-0"><Icon icon="solar:flag-bold" width="11" height="11" />{t('high-priority')}</span>}
-            {priority === 2 && <span className="text-warning font-medium inline-flex items-center gap-0.5 shrink-0"><Icon icon="solar:flag-bold" width="11" height="11" />{t('mid-priority')}</span>}
-            {dueDate && <span className="text-danger inline-flex items-center gap-0.5 shrink-0"><Icon icon="solar:clock-circle-bold" width="11" height="11" />{dayjs(dueDate).format('MM-DD HH:mm')}</span>}
+            <span className="inline-flex items-center gap-0.5 shrink-0" style={{color:isDone?undefined:priority.color}}><Icon icon="solar:flag-bold" width="11" height="11" />{t(priority.labelKey)}</span>
+            {dueDate && <span className={`${overdue?'text-danger':'text-default-500'} inline-flex items-center gap-0.5 shrink-0`} title={`${overdue?'已逾期 · ':''}${dueDate.format('YYYY-MM-DD HH:mm')}`}><Icon icon="solar:clock-circle-bold" width="11" height="11" />{dueDate.format('MM-DD HH:mm')}</span>}
             {(blinkoItem.tags ?? []).slice(0, 2).map((tag, i) => <RowTagChip key={i} tag={tag.tag} />)}
           </div>
         </>
@@ -180,7 +183,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
     return (
       <>
         <div className={`text-[14.5px] leading-[1.45] truncate ${isDone ? 'text-default-400 line-through' : 'text-foreground'}`}>
-          {blinkoItem.content?.split('\n').find(l => l.trim()) || ''}
+          {derivedTitle || t('no-title')}
         </div>
         <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
           {(blinkoItem.tags ?? []).slice(0, 2).map((tag, i) => <RowTagChip key={i} tag={tag.tag} />)}
@@ -235,13 +238,13 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
           </span>
         </button>
       ) : isNote ? (
-        <span className="text-xl mt-0.5 shrink-0 leading-none select-none">
+        <span title={t('note')} className="grid size-7 shrink-0 place-items-center text-lg leading-none select-none">
           {(blinkoItem as any).metadata?.icon || '📝'}
         </span>
       ) : (
         /* BLINKO 类型标识：⚡ muted，对齐 NOTE emoji 的大小和位置 */
-        <span className="mt-0.5 shrink-0 leading-none select-none text-default-400">
-          ⚡
+        <span title={t('blinko')} className="grid size-7 shrink-0 place-items-center leading-none select-none text-default-400">
+          <Icon icon="tabler:bolt" width={18} />
         </span>
       )}
 
@@ -252,13 +255,15 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
 
       {/* 时间在窄屏收起，操作菜单始终可达但不挤压正文。 */}
       <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+        {blinkoItem.isTop && <span title={t('top')} className="text-warning"><Icon icon="solar:pin-bold" width={13} /></span>}
         <span className="hidden whitespace-nowrap text-[11px] tabular-nums text-default-400 sm:inline">
           {formattedTime}
         </span>
-        <div className="hidden items-center gap-0.5 opacity-0 transition-opacity group-hover/row:opacity-100 md:flex">
+        <div className="hidden items-center gap-0.5 opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-within/row:opacity-100 md:flex">
           <Tooltip content={blinkoItem.isTop ? t('cancel-top') : t('top')} delay={500}>
             <button
               type="button"
+              aria-label={blinkoItem.isTop ? t('cancel-top') : t('top')}
               onClick={handlePinToggle}
               className={`rounded p-1 transition-colors hover:!bg-hover ${blinkoItem.isTop ? 'text-[#EFC646]' : 'text-default-500 hover:text-foreground'}`}
               title={blinkoItem.isTop ? t('cancel-top') : t('top')}

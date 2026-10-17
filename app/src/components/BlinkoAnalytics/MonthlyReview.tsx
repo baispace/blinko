@@ -49,7 +49,7 @@ export const MonthlyReview = observer(({ data, rangeLabel }: MonthlyReviewProps)
   }
   if (data.newTags.length > 0) {
     rows.push({
-      icon: <Icon icon="solar:hashtag-line" className="w-4 h-4" />,
+      icon: <Icon icon="solar:tag-outline" className="w-4 h-4" />,
       iconBg: "rgba(16,185,129,0.1)",
       iconColor: "#10b981",
       title: `${t("review-new-tags")}：${data.newTags.map(t => t.name).slice(0, 4).join(" · ")}${data.newTags.length > 4 ? " …" : ""}`,

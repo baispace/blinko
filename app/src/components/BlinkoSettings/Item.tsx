@@ -1,4 +1,6 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
+import { RootStore } from '@/store';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { SettingsCardContext } from '../Common/CollapsibleCard';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Button, DropdownTrigger, DropdownItem, DropdownMenu, Dropdown, Tooltip } from "@heroui/react";
@@ -61,20 +63,30 @@ export const SelectDropdown = ({
   onChange
 }: SelectDropdownProps) => {
   const { t } = useTranslation()
+  const [saving, setSaving] = useState(false);
+  const selected = options.find(option => option.key === value);
   return (
-    <Dropdown>
+    <Dropdown placement="bottom-end">
       <DropdownTrigger>
         <Button
-          variant='flat'
+          variant="bordered" size="sm" radius="sm" isLoading={saving} isDisabled={saving}
+          aria-label={placeholder || selected?.label || t('settings')}
+          endContent={<Icon icon="tabler:chevron-down" width={14} className="text-default-400" />}
           startContent={icon && <Icon icon={icon} width="20" height="20" />}
         >
-          {t(value as string) || placeholder}
+          {selected ? t(selected.label) : placeholder || value}
         </Button>
       </DropdownTrigger>
       <DropdownMenu
-        aria-label="Selection"
+        aria-label={placeholder || t('settings')}
+        selectionMode="single"
+        disallowEmptySelection
         onAction={async (key) => {
-          await onChange(key.toString())
+          if (saving || key.toString() === value) return;
+          setSaving(true);
+          try { await onChange(key.toString()); }
+          catch (error) { RootStore.Get(ToastPlugin).error(error instanceof Error ? error.message : t('operation-failed')); }
+          finally { setSaving(false); }
         }}
         selectedKeys={[value || '']}
       >

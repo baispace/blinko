@@ -184,7 +184,7 @@ const Analytics = observer(() => {
           <div className="rounded-lg border border-default-200 bg-card p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="flex items-center gap-2 text-sm font-medium">
-                <Icon icon="solar:hashtag-line" className="w-4 h-4 text-default-500" />
+                <Icon icon="solar:tag-outline" className="w-4 h-4 text-default-500" />
                 {t("tag-activity-heat")}
               </span>
               <span className="text-xs text-default-500">行=标签 · 列=月份</span>

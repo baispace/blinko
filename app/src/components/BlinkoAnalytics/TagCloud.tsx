@@ -50,6 +50,22 @@ export const TagCloud = observer(({ data }: TagCloudProps) => {
     const flat = colorize(data.length > 0 ? data : [])
     inst.current.setOption({
       tooltip: {
+        // 限定在 chart container 内，永远不出卡片右边界
+        confine: true,
+        // 自定义位置：右侧能放下就放右侧，否则放到矩形左侧；
+        // 都塞不下时交给 ECharts 的 confine 兜底
+        position: (point: number[], _params: any, _dom: any, rect: any, size: any) => {
+          const [tw, th] = size.contentSize
+          const rightX = rect.x + rect.width + 8
+          if (rightX + tw <= size.viewSize[0]) {
+            return [rightX, point[1] - th / 2]
+          }
+          const leftX = rect.x - tw - 8
+          if (leftX >= 0) {
+            return [leftX, point[1] - th / 2]
+          }
+          return [point[0], point[1] - th / 2]
+        },
         formatter: (p: any) => {
           const path = p.treePathInfo?.slice(1).map((x: any) => x.name).join(" / ") || p.name
           return `<strong>${path}</strong><br/>${p.value} 条`
@@ -66,7 +82,14 @@ export const TagCloud = observer(({ data }: TagCloudProps) => {
         top: 4, left: 4, right: 4, bottom: 4,
         label: {
           show: true,
-          formatter: (p: any) => `{name|${p.name}}\n{val|${p.value}}`,
+          // 标签名过长时自动省略号截断，不再溢出成两行
+          overflow: "truncate",
+          ellipsis: "…",
+          // 矩形太窄时只显示标签名，不显示数字行，避免挤爆
+          formatter: (p: any) => {
+            const v = typeof p.value === "number" ? p.value : 0
+            return v <= 2 ? `{name|${p.name}}` : `{name|${p.name}}\n{val|${p.value}}`
+          },
           rich: {
             name: { color: "#fff", fontSize: 12, fontWeight: 600, lineHeight: 16 },
             val: { color: "rgba(255,255,255,0.85)", fontSize: 11 },

@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { Input } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { SettingsCardContext } from '@/components/Common/CollapsibleCard';
@@ -43,14 +44,12 @@ export const SettingsWorkspace = observer(({ initialSection = 'basic', onSection
     <div className="settings-workspace">
       <aside className="settings-sidebar">
         <div className="settings-sidebar-heading">{t('settings')}</div>
-        <label className="settings-search">
-          <Icon icon="tabler:search" width="17" className="shrink-0 text-default-400" />
-          <input ref={search} type="search" aria-label={t('settings-search')} placeholder={t('settings-search')} value={keyword} onChange={event => setKeyword(event.target.value)} onKeyDown={event => {
+        <Input className="settings-search-field" ref={search} type="search" size="sm" variant="bordered" radius="sm" isClearable
+          startContent={<Icon icon="tabler:search" width="17" className="shrink-0 text-default-400" />}
+          aria-label={t('settings-search')} placeholder={t('settings-search')} value={keyword} onValueChange={setKeyword} onClear={()=>{setKeyword('');search.current?.focus();}} onKeyDown={event => {
             if (event.key === 'Escape' && keyword) { event.preventDefault(); event.stopPropagation(); setKeyword(''); }
             if (event.key === 'Enter' && query && results[0]) choose(results[0].key);
           }} />
-          {keyword && <button type="button" aria-label={t('settings-clear-search')} onClick={() => { setKeyword(''); search.current?.focus(); }}><Icon icon="tabler:x" width="15" /></button>}
-        </label>
         <nav className="settings-navigation" aria-label={t('settings')}>
           {navigation(allowed.filter(item => ['common','ai'].includes(item.group)))}
           {allowed.some(item => !['common','ai','about'].includes(item.group)) && <div className="settings-more">

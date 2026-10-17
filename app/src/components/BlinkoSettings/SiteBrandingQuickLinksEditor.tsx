@@ -35,7 +35,7 @@ const PRESET_ICONS: { name: string; label: string }[] = [
   { name: 'tabler:link', label: 'Link' },
   { name: 'ph:globe', label: 'Globe' },
   { name: 'ph:link', label: 'Link' },
-  { name: 'mdi:checkbox', label: 'Todo' },
+  { name: 'tabler:check', label: 'Todo' },
   { name: 'hugeicons:note', label: 'Note' },
   { name: 'hugeicons:message-01', label: 'Chat' },
 ];

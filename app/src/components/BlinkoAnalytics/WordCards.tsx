@@ -56,7 +56,7 @@ export const WordCards = observer(({ data }: WordCardsProps) => {
   }> = [
     {
       labelKey: "total-words",
-      icon: "solar:file-text-line",
+      icon: "tabler:file-text",
       value: fmtNum(data.total),
       diff: totalDiff,
       sub: data.rawTotal !== data.total
@@ -65,7 +65,7 @@ export const WordCards = observer(({ data }: WordCardsProps) => {
     },
     {
       labelKey: "word-daily-avg",
-      icon: "solar:line-chart-line",
+      icon: "hugeicons:analytics-01",
       value: fmtNum(data.avgPerActiveDay),
       diff: avgDiff,
       sub: `${data.activeDays} ${t("active-days")} · ${data.avgPerActiveDay > 0 ? "平均每天" : ""}`,

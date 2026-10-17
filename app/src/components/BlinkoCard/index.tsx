@@ -232,10 +232,10 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                       translateY    → -0.5px（轻浮起）
                     三个一起给 hover 一个「真的在悬停」的反馈。 */
                 ${isPc && !blinkoItem.isShare && !withoutHoverAnimation
-                  ? 'border border-default-300/60 hover:!border-primary/45 hover:shadow-md hover:-translate-y-0.5'
-                  : 'border border-default-300/60'}
+                  ? 'border border-default-200/80 hover:!border-primary/30 hover:shadow-sm focus-within:!border-primary/30'
+                  : 'border border-default-200/80'}
                 ${glassEffect ? 'bg-transparent' : 'bg-card'} rounded-lg
-                !transition-all !duration-200 group/card
+                transition-[border-color,box-shadow,background-color] duration-150 motion-reduce:transition-none group/card
                 ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? '!border-primary border-2 !bg-primary/5' : ''}
                 ${className}

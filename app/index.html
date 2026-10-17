@@ -28,6 +28,33 @@
   <link rel="shortcut icon" href="/favicon.ico" />
   <title>Blinko</title>
 
+  <!--
+    首屏字体补丁：同步执行，位置必须在 React 与业务请求之前。
+
+    字体偏好存在服务端 config 表，HTML 到达时浏览器还不知道该用哪个字体，只能先用
+    globals.css 的系统栈画首屏；等 config → fonts.list → getFontData 三段往返跑完
+    才切到用户字体，刷新时会看到一次明显的跳变（FOUT）。
+
+    这里在首帧之前把上次生效的 font-family 直接写进 <html> 的行内样式 —— 行内样式
+    优先级高于外部样式表里的 :root 规则，所以即使 CSS 还没加载完也能生效。
+
+    ⚠️ 下面三个 key 必须与 src/lib/fontPreference.ts 保持一致，
+       由 scripts/tests/font-preference.test.ts 校验。
+  -->
+  <script>
+    (function () {
+      try {
+        var stack = localStorage.getItem('ink:font-stack');
+        if (stack) {
+          document.documentElement.style.setProperty('--font-family', stack);
+          document.documentElement.style.fontFamily = stack;
+        }
+      } catch (e) {
+        /* 隐私模式 / 存储不可用：保持系统字体栈即可 */
+      }
+    })();
+  </script>
+
   <meta name="apple-mobile-web-app-status-bar-style" content="#ffffff" />
   <!-- 
   <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>

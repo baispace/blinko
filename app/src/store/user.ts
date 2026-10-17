@@ -186,12 +186,16 @@ export class UserStore implements Store {
         const fonts = await api.fonts.list.query();
         FontManager.initializeRegistry(fonts);
       }
-      await FontManager.applyFont(savedFontStyle);
+      // 首屏恢复路径已经在 main.tsx 里用缓存跑过一次了，这里走 'optional'
+      // 保证慢加载时也不会在用户眼前跳字体
+      await FontManager.applyFont(savedFontStyle, 'optional');
     } catch (error) {
       console.error('Failed to initialize fonts:', error);
-      if (savedFontStyle && savedFontStyle !== 'default') {
-        document.body.style.fontFamily = savedFontStyle;
-      }
+      // 回落到系统字体栈，而不是把裸字体名塞给 body ——
+      // 裸名字没有 fallback 栈，浏览器解析不到时会静默用不可控的默认值
+      await FontManager.applyFont('default').catch(() => {
+        if (document.body) document.body.style.fontFamily = '';
+      });
     }
   }
 

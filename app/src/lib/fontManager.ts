@@ -10,6 +10,15 @@
  */
 
 import { api } from './trpc';
+import {
+  clearSavedFontPreference,
+  readSavedFontPreference,
+  writeSavedFontPreference,
+} from './fontPreference';
+import {
+  readCachedFontBinary,
+  writeCachedFontBinary,
+} from './fontBinaryCache';
 
 // Font metadata (without binary data)
 export interface FontMetadata {
@@ -35,6 +44,23 @@ interface LoadedFont {
   loading: boolean;
   error: string | null;
   blobUrl?: string; // Store blob URL for cleanup
+}
+
+/**
+ * 首屏恢复用 `optional`：浏览器只给约 100ms 阻塞窗口，超时就一直用 fallback、
+ * 本次加载不再切换 —— 宁可这次不生效，也不要让用户看到字形跳变。
+ * 用户主动切换字体时用 `swap`，保证切换一定看得见。
+ */
+export type FontDisplay = 'swap' | 'optional' | 'block' | 'fallback';
+
+/**
+ * 给 Promise 加超时保护。首屏恢复路径不能被一个卡住的 IndexedDB 读取拖住。
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 }
 
 class FontManagerClass {
@@ -197,9 +223,52 @@ class FontManagerClass {
   }
 
   /**
+   * 首屏恢复：在 React 渲染之前，把上次选中的字体从 IndexedDB 缓存灌进 document.fonts。
+   *
+   * `index.html` 的内联脚本此时已经把 font-family 套好了，这里补的是字形本身。
+   * 命中缓存就完全不走网络；没命中直接返回 false，交给后续 `applyFont` 走正常加载。
+   *
+   * 带超时保护：字体动辄几 MB，缓存读取也不该无限期挡住首屏。
+   */
+  public async restoreSavedFont(timeoutMs: number = 200): Promise<boolean> {
+    const pref = readSavedFontPreference();
+    if (!pref) return false;
+    if (this.isFontLoaded(pref.name)) return true;
+
+    try {
+      const cached = await withTimeout(readCachedFontBinary(pref.name), timeoutMs);
+      if (!cached) return false;
+
+      // 与网络路径共用同一段构建逻辑，行为一致
+      await withTimeout(
+        this.loadFontFromBuffer(pref.name, cached.buffer, cached.format, pref.weights, 'optional'),
+        timeoutMs
+      );
+
+      this.currentFont = pref.name;
+      this.currentFontFamily = pref.stack;
+      this.loadedFonts.set(pref.name, {
+        name: pref.name,
+        loaded: true,
+        loading: false,
+        error: null,
+      });
+
+      // 让首屏内联脚本已经写好的 --font-family 与 FontManager 内部状态保持一致
+      if (document.body) document.body.style.fontFamily = pref.stack;
+      document.documentElement.style.setProperty('--font-family', pref.stack);
+
+      return true;
+    } catch {
+      // 缓存损坏 / 超时 / 环境不支持：静默回落到正常加载路径
+      return false;
+    }
+  }
+
+  /**
    * Load a font by injecting styles (local @font-face or Google Fonts CSS link)
    */
-  public async loadFont(fontName: string): Promise<boolean> {
+  public async loadFont(fontName: string, display: FontDisplay = 'swap'): Promise<boolean> {
     // Default font is always "loaded"
     if (fontName === 'default') {
       return true;
@@ -236,13 +305,16 @@ class FontManagerClass {
     try {
       // Check if it's a local font - need to fetch binary data on demand
       if (fontConfig.isLocal) {
-        // Fetch binary data from API (lazy loading)
-        const fontData = await api.fonts.getFontData.query({ name: fontName });
-        
-        if (fontData.fileData) {
-          await this.loadFontFromBinaryData(fontName, fontData.fileData, fontConfig.weights);
+        // 优先命中 IndexedDB 缓存，避免每次都走 getFontData 的网络往返
+        const cached = await readCachedFontBinary(fontName);
+        if (cached) {
+          await this.loadFontFromBuffer(fontName, cached.buffer, cached.format, fontConfig.weights, display);
         } else {
-          throw new Error(`No font data available for "${fontName}"`);
+          const fontData = await api.fonts.getFontData.query({ name: fontName });
+          if (!fontData.fileData) {
+            throw new Error(`No font data available for "${fontName}"`);
+          }
+          await this.loadFontFromBinaryData(fontName, fontData.fileData, fontConfig.weights, display);
         }
       } else if (fontConfig.url) {
         // CDN font - inject stylesheet
@@ -281,7 +353,8 @@ class FontManagerClass {
   private async loadFontFromBinaryData(
     fontName: string, 
     fileData: string, 
-    weights: number[]
+    weights: number[],
+    display: FontDisplay = 'swap'
   ): Promise<void> {
     // Check if already injected
     const existingStyle = document.querySelector(`style[data-font="${fontName}"]`);
@@ -299,15 +372,37 @@ class FontManagerClass {
 
     // Detect font format from magic bytes
     const format = this.detectFontFormat(binaryData);
-    
-    // Create a Blob from the binary data
-    const mimeType = format === 'woff2' ? 'font/woff2' : 
-                     format === 'woff' ? 'font/woff' : 
-                     format === 'ttf' ? 'font/ttf' : 
-                     'font/opentype';
-    
-    // Create Blob directly from existing Uint8Array
-    const blob = new Blob([binaryData], { type: mimeType });
+
+    // 存进 IndexedDB：下一次刷新可以直接命中缓存，省掉一次 getFontData 网络往返
+    void writeCachedFontBinary(fontName, binaryData.buffer.slice(0), format);
+
+    await this.loadFontFromBuffer(fontName, binaryData.buffer.slice(0), format, weights, display);
+  }
+
+  /**
+   * 从原始字节构建 FontFace 并注入 document.fonts。
+   * 网络下载路径（loadFontFromBinaryData）与 IndexedDB 缓存路径（restoreSavedFont /
+   * loadFont）共用这一段，避免两条路径行为不一致。
+   */
+  private async loadFontFromBuffer(
+    fontName: string,
+    buffer: ArrayBuffer,
+    format: string,
+    weights: number[],
+    display: FontDisplay = 'swap'
+  ): Promise<void> {
+    // 已经注入过就不要重复建 FontFace（blob URL 也随之省掉）
+    if (document.querySelector(`style[data-font="${fontName}"]`)) {
+      return;
+    }
+
+    const mimeType =
+      format === 'woff2' ? 'font/woff2'
+      : format === 'woff' ? 'font/woff'
+      : format === 'ttf' ? 'font/ttf'
+      : 'font/opentype';
+
+    const blob = new Blob([buffer], { type: mimeType });
     const blobUrl = URL.createObjectURL(blob);
 
     // Store blob URL for cleanup
@@ -325,7 +420,7 @@ class FontManagerClass {
       const fontFace = new FontFace(fontName, `url(${blobUrl})`, {
         weight: weightDescriptor,
         style: 'normal',
-        display: 'swap'
+        display
       });
 
       // Load the font
@@ -339,9 +434,9 @@ class FontManagerClass {
         @font-face {
           font-family: '${fontName}';
           src: url('${blobUrl}') format('${format}');
-          font-weight: ${isVariable ? '100 900' : weights.join(' ')};
+          font-weight: ${weightDescriptor};
           font-style: normal;
-          font-display: swap;
+          font-display: ${display};
         }
       `;
 
@@ -470,13 +565,18 @@ class FontManagerClass {
 
   /**
    * Apply a font to the document body and CSS variables
+   *
+   * @param fontName 字体名，`default` 表示系统字体栈
+   * @param display  `optional` 用于首屏恢复（宁可这次不生效也不跳变），
+   *                 `swap` 用于用户主动切换（保证切换可见）。默认 `swap`。
    */
-  public async applyFont(fontName: string): Promise<boolean> {
+  public async applyFont(fontName: string, display: FontDisplay = 'swap'): Promise<boolean> {
     if (fontName === 'default') {
       // Reset to system font stack
       this.currentFontFamily = '';
       document.body.style.fontFamily = '';
       document.documentElement.style.setProperty('--font-family', '');
+      clearSavedFontPreference();
       
       // Clear font from all elements
       const expandedContainers = document.querySelectorAll('.expanded-container');
@@ -508,6 +608,14 @@ class FontManagerClass {
     
     const fallback = this.getFallbackStack(fontConfig.category || 'sans-serif');
     const fontFamily = `"${fontName}", ${fallback}`;
+
+    // 镜像到 localStorage：下一次刷新时 index.html 的内联脚本能在首帧前套上同样的栈，
+    // 不用等 config → fonts.list 两段往返（见 lib/fontPreference.ts）
+    writeSavedFontPreference({
+      name: fontName,
+      stack: fontFamily,
+      weights: fontConfig.weights ?? [],
+    });
     
     // ⚡ IMMEDIATE: Apply font name right away (browser will use fallback until font loads)
     this.currentFontFamily = fontFamily;
@@ -535,7 +643,7 @@ class FontManagerClass {
     
     // 🔄 BACKGROUND: Load font asynchronously (browser will switch when ready)
     // Don't wait for this - let it happen in background
-    this.loadFont(fontName).catch((error) => {
+    this.loadFont(fontName, display).catch((error) => {
       console.warn(`FontManager: Background font load failed for "${fontName}":`, error);
       // Font name is already applied, so fallback will be used
     });

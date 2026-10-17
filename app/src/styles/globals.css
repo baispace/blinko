@@ -1,6 +1,24 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
+/* Shared keyboard feedback; individual components can provide a stronger ring. */
+:where(button, a, input, textarea, select, [role="button"]):focus-visible {
+  outline:2px solid color-mix(in srgb,var(--primary,#2f6feb) 65%,transparent);
+  outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce) {
+  html,body { scroll-behavior:auto !important; }
+}
+
+/* 弹窗打开时 HeroUI 会锁 body 滚动（overflow:hidden）。
+   本项目自定义了 ::-webkit-scrollbar width:8px（经典占宽模式），
+   滚动条消失会让整页内容右移 8px、关闭时又跳回——
+   这就是「点开弹窗闪一下」的根因。
+   scrollbar-gutter 让 html 永远预留滚动条槽位，内容零位移。 */
+html {
+  scrollbar-gutter: stable;
+}
+
 .bm-burger-button {
   display: none;
 }
@@ -16,8 +34,7 @@
 }
 
 ::selection {
-  background-color: #47a3f3;
-  color: #fefefe;
+  background-color: color-mix(in srgb, var(--primary, #2f6feb) 25%, transparent);
 }
 
 ::marker {
@@ -78,6 +95,8 @@ body {
   font-family: var(--font-family);
   font-size: var(--app-font-size, 16px);
   font-weight: var(--app-font-weight, 400);
+  line-height: 1.5;
+  color: var(--foreground);
 }
 
 .h-mobile-full {
@@ -207,13 +226,13 @@ body {
     --foreground: hsl(222.2 47.4% 11.2%);
     --secondbackground: #ffffff;
 
-    --hover: #efeee7d9;
+    --hover: #f1f3f5;
     --hover-foreground: hsl(215.4 16.3% 46.9%);
 
     /* like: time  */
-    --desc: #808080;
+    --desc: #667085;
     /* like: no data found  */
-    --ignore: #bababa;
+    --ignore: #808896;
     --tag: #c35af7;
     --tag-foreground: #fceefe;
     --scrollbar: #d6d7d9;
@@ -287,14 +306,14 @@ body {
 
     --scrollbar: #3f3f46;
 
-    --popover: hsl(224 71% 4%);
-    --popover-foreground: hsl(215 20.2% 65.1%);
+    --popover: #202023;
+    --popover-foreground: #E1E1E1;
 
-    --card: hsl(224 71% 4%);
+    --card: #18181b;
     --card-foreground: hsl(213 31% 91%);
 
-    --border: #0b0b0c;
-    --input: hsl(216 34% 17%);
+    --border: #343438;
+    --input: #343438;
 
     /* 暗色下的引导线要比亮色稍重一点才看得见，但仍远浅于 --border。
        参考飞书暗色文档的 rgba(255,255,255,.10)。 */

@@ -517,8 +517,33 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(116, 84, 252, 0.12);
+  background: hsl(var(--heroui-primary) / .14);
   pointer-events: none;
+}
+
+/* Keep document text readable when a selection loses focus to its bubble menu.
+   The site-wide white selection text is unsuitable for light topic/cell fills. */
+.tiptap::selection,
+.tiptap *::selection {
+  background-color: hsl(var(--heroui-primary) / .28);
+  color: var(--foreground, #111827);
+}
+
+/* NodeSelection/CellSelection hides the native background. Do not inherit
+   global highlight foregrounds into that transparent selection. */
+.tiptap.ProseMirror-hideselection *::selection {
+  background-color:transparent;
+  color:var(--foreground, #111827);
+}
+.tiptap .outline-view[data-map-root="true"] .outline-content > p::selection,
+.tiptap .outline-view[data-map-root="true"] .outline-content > p *::selection {
+  color:#fff;
+  background-color:rgba(22,119,255,.35);
+}
+.tiptap .outline-view[data-map-root="true"] li[data-map-depth="2"] .outline-content > p::selection,
+.tiptap .outline-view[data-map-root="true"] li[data-map-depth="2"] .outline-content > p *::selection {
+  color:var(--foreground, #111827);
+  background-color:rgba(22,119,255,.22);
 }
 
 .tiptap table td,
@@ -1281,3 +1306,18 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
 .document-property-type, .document-action-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; font-size: 12px; line-height: 18px; color: hsl(var(--heroui-default-500)); transition: background-color .15s, color .15s; }
 button.document-property-type:hover, .document-action-button:hover { background: hsl(var(--heroui-default-100)); color: hsl(var(--heroui-foreground)); }
 .document-property-type:focus-visible, .document-action-button:focus-visible { outline: 2px solid hsl(var(--heroui-primary)); outline-offset: 2px; }
+
+/* Document chrome stays quieter than the content it controls. */
+.document-properties { gap:6px 8px; margin-top:14px; padding-bottom:12px; }
+.document-properties > .document-property-type { min-width:0; height:28px; font-weight:500; }
+.document-action-button { min-width:0; height:30px; font-weight:400; }
+.document-properties > button:last-child { opacity:.7; }
+.document-properties > button:last-child:hover,
+.document-properties > button:last-child:focus-visible { opacity:1; }
+.tiptap-bubble { max-width:calc(100vw - 24px); }
+@media (max-width:640px) {
+  .tiptap-bubble { overflow-x:auto; scrollbar-width:thin; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .document-property-type, .document-action-button { transition:none; }
+}

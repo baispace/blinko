@@ -182,11 +182,11 @@
   padding: 12px 24px; border-radius: 6px; background: #64748b; color: white; text-align: center; font-size: 22px; line-height: 1.35; min-height: 42px;
 }
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="2"] { --map-topic-width: 140px; }
-:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="2"] > .outline-content > p { background: var(--background, Canvas); color: inherit; border: 1.5px solid var(--outline-map-line); font-size: 16px; padding: 8px 12px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="2"] > .outline-content > p { background: var(--background, Canvas); color: hsl(var(--heroui-foreground)); border: 1.5px solid var(--outline-map-line); font-size: 16px; padding: 8px 12px; }
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"],
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li { --map-topic-width: 120px; }
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] > .outline-content > p,
-:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li > .outline-content > p { background: var(--background, Canvas); color: inherit; border: 0; text-align: left; font-size: 16px; padding: 6px 10px; min-height: 32px; }
+:is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] li[data-map-depth="3"] li > .outline-content > p { background: var(--background, Canvas); color: hsl(var(--heroui-foreground)); border: 0; text-align: left; font-size: 16px; padding: 6px 10px; min-height: 32px; }
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > p:focus-within,
 :is(.tiptap, .markdown-body) .outline-map-root:focus { outline: 2px solid #83d8ff; outline-offset: 3px; }
 :is(.tiptap, .markdown-body) .outline-view[data-map-root="true"] .outline-content > .outline-view {

@@ -1,4 +1,5 @@
 import { mergeProfileIdentity } from '@/lib/profileIdentity';
+import { syncHeroAccent } from '@/lib/themeAccent';
 // import { User } from 'next-auth';
 // import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
@@ -345,6 +346,8 @@ export class UserStore implements Store {
       }
     }
 
+    for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) syncHeroAccent(element);
+
     // Apply saved font using FontManager
     if (config?.fontStyle) {
       // Initialize FontManager with fonts from database and apply saved font
@@ -486,10 +489,11 @@ export class UserStore implements Store {
         element.style.setProperty('--primary',config?.themeColor || (dark?'#4d8bff':'#2f6feb'));
         element.style.setProperty('--primary-foreground',config?.themeForegroundColor || (dark?'#000000':'#ffffff'));
         if (config?.themeColor) element.style.setProperty('--tag',config.themeColor); else element.style.removeProperty('--tag');
+        syncHeroAccent(element);
       }
       this.updatePWAColor(resolvedTheme);
       setTauriTheme(resolvedTheme).catch(console.error);
-    }, [resolvedTheme]);
+    }, [resolvedTheme, this.blinko.config.value?.themeColor, this.blinko.config.value?.themeForegroundColor]);
 
     useEffect(() => {
       eventBus.on('user:token', (tokenData) => {

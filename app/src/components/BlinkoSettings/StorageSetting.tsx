@@ -1,5 +1,6 @@
 import { observer } from "mobx-react-lite";
-import { Button, Checkbox, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, useDisclosure } from "@heroui/react";
+import { Button, Checkbox, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, ModalHeader, ModalBody, ModalFooter, Progress, useDisclosure } from "@heroui/react";
+import { StaticAssetUploadDialog } from './StaticAssetUploadDialog';
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { PromiseCall } from "@/store/standard/PromiseState";
@@ -52,12 +53,12 @@ export const StorageSetting = observer(() => {
     // configured s3CdnDomain keep their CDN acceleration behavior. The value may
     // arrive as a boolean or the string 'false'/'true' — treat both falsy forms
     // as disabled, anything else (incl. unset) as enabled.
-    const rawCdn = blinko.config.value?.cdnEnabled;
+    const rawCdn: unknown = blinko.config.value?.cdnEnabled;
     store.cdnEnabled = !(rawCdn === false || rawCdn === 'false');
     store.localCustomPath = blinko.config.value?.localCustomPath!
     store.staticCdnBaseUrl = blinko.config.value?.staticCdnBaseUrl ?? ''
     store.staticCdnPath = blinko.config.value?.staticCdnPath ?? ''
-    const rawStaticCdn = blinko.config.value?.staticCdnEnabled;
+    const rawStaticCdn: unknown = blinko.config.value?.staticCdnEnabled;
     store.staticCdnEnabled = rawStaticCdn === true || rawStaticCdn === 'true'
   }, [blinko.config.value])
 
@@ -65,11 +66,16 @@ export const StorageSetting = observer(() => {
   const [fileList, setFileList] = useState<{ path: string; size: number }[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [fileLoadError, setFileLoadError] = useState('');
+  const fileRequest = useRef<AbortController | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
 
   const onClose = () => {
+    fileRequest.current?.abort();
+    fileRequest.current = null;
+    setLoadingFiles(false);
     clearPoll();
     originalOnClose();
     // Reset upload progress state when the dialog closes so it reopens clean.
@@ -83,21 +89,33 @@ export const StorageSetting = observer(() => {
   };
 
   const openUploadDialog = async () => {
+    fileRequest.current?.abort();
+    const controller = new AbortController();
+    fileRequest.current = controller;
+    onOpen();
     setLoadingFiles(true);
+    setFileLoadError('');
+    setFileList([]);
+    setSelected([]);
+    store.uploadResult = '';
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const res = await api.attachments.listStaticAssets.query();
+      const res = await api.attachments.listStaticAssets.query(undefined, { signal: controller.signal });
+      if (fileRequest.current !== controller) return;
       const files = (res as any).files || [];
       setFileList(files);
       setSelected(files.map((f: any) => f.path));
     } catch (e: any) {
+      if (fileRequest.current !== controller) return;
       setFileList([]);
       setSelected([]);
-      store.uploadResult = `${t('upload-static-fail')}: ${e?.message ?? e}`;
+      setFileLoadError(controller.signal.aborted ? '读取资源列表超时，请检查服务连接后重试。' : `读取资源列表失败：${e?.message ?? e}`);
     } finally {
-      setLoadingFiles(false);
-      onOpen();
+      clearTimeout(timeout);
+      if (fileRequest.current === controller) { fileRequest.current = null; setLoadingFiles(false); }
     }
   };
+  useEffect(() => () => { fileRequest.current?.abort(); fileRequest.current = null; clearPoll(); }, []);
 
   const toggleFile = (p: string) => {
     setSelected(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -389,7 +407,7 @@ export const StorageSetting = observer(() => {
         <div>{t('static-cdn-upload')}</div>
       </>}
       rightContent={<div className="flex flex-col gap-1 items-end">
-        <Button color="primary" isLoading={store.uploading} onPress={openUploadDialog}>
+        <Button color="primary" isLoading={store.uploading || loadingFiles} onPress={openUploadDialog}>
           {t('upload-static-to-cdn')}
         </Button>
         {store.uploadResult && <div className="text-xs text-default-500 max-w-[240px] text-right">{store.uploadResult}</div>}
@@ -399,8 +417,7 @@ export const StorageSetting = observer(() => {
     </div>
   </CollapsibleCard>
 
-  <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-    <ModalContent>
+  <StaticAssetUploadDialog isOpen={isOpen} onClose={onClose} uploading={store.uploading}>
       <ModalHeader>{t('upload-to-cdn-title')}</ModalHeader>
       <ModalBody>
         <div className="flex flex-col gap-3">
@@ -408,6 +425,8 @@ export const StorageSetting = observer(() => {
 
           {loadingFiles ? (
             <div className="text-sm text-default-400 py-8 text-center">{t('loading')}</div>
+          ) : fileLoadError ? (
+            <div role="alert" className="flex flex-col items-center gap-3 py-8 text-sm text-default-500"><p>{fileLoadError}</p><Button size="sm" variant="flat" onPress={openUploadDialog}>重试</Button></div>
           ) : fileList.length === 0 ? (
             <div className="text-sm text-default-400 py-8 text-center">{t('upload-cdn-empty')}</div>
           ) : (
@@ -470,12 +489,11 @@ export const StorageSetting = observer(() => {
           color="primary"
           isLoading={store.uploading}
           onPress={handleConfirmUpload}
-          isDisabled={loadingFiles || fileList.length === 0 || store.uploading}
+          isDisabled={loadingFiles || !!fileLoadError || selected.length === 0 || store.uploading}
         >
           {t('confirm-upload')}{selected.length > 0 ? ` (${selected.length})` : ''}
         </Button>
       </ModalFooter>
-    </ModalContent>
-  </Modal>
+  </StaticAssetUploadDialog>
   </>)
 })

@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { router, authProcedure, publicProcedure } from '../middleware';
+import { getGlobalConfig } from './config';
+import { buildStaticCdnBase } from '@shared/lib/pathConstant';
+import { resolveFontStylesheetUrl } from '@shared/lib/fontStylesheetUrl';
 
 // Helper to convert Buffer to base64 string for JSON transmission
 function bufferToBase64(buffer: Buffer | null | undefined): string | null {
@@ -123,7 +126,13 @@ export const fontRouter = router({
         ],
       });
 
-      return fonts.map(transformFontMetadata);
+      const config = await getGlobalConfig({ useAdmin: true });
+      const enabled = config.staticCdnEnabled === true || config.staticCdnEnabled === 'true';
+      const base = enabled ? buildStaticCdnBase(config.staticCdnBaseUrl, config.staticCdnPath) : '';
+      return fonts.map(font => ({
+        ...transformFontMetadata(font),
+        url: font.url ? resolveFontStylesheetUrl(font.url, base) : font.url,
+      }));
     }),
 
   // Get font binary data by name (for lazy loading)

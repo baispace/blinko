@@ -7,7 +7,7 @@ import fs from 'fs';
 import { TRPCError } from '@trpc/server';
 import { getGlobalConfig } from './config';
 import { FileService } from '../lib/files';
-import { buildStaticCdnBase, buildStaticCdnKeyPrefix } from '@shared/lib/pathConstant';
+import { buildStaticCdnBase, buildStaticCdnKeyPrefix, STATIC_CDN_DIRS } from '@shared/lib/pathConstant';
 import { resolveStaticPublicDir } from '../lib/cdnStaticDir';
 import { randomUUID } from 'crypto';
 
@@ -18,7 +18,7 @@ import { randomUUID } from 'crypto';
  * on real static resources and avoids pushing server runtime files if the
  * resolved directory happens to also contain the backend bundle.
  */
-const CDN_STATIC_DIRS = ['assets', 'fonts', 'icons', 'locales'];
+const CDN_STATIC_DIRS = STATIC_CDN_DIRS;
 // start.sh pre-compresses static files into sibling *.gz at container start, but
 // those are only ever read by the local servePrecompressed() middleware. When the
 // CDN is enabled the browser fetches the plain file from OSS/CDN (which applies

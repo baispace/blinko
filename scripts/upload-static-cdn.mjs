@@ -55,8 +55,8 @@ const S3_ACCESS_KEY_SECRET = args['access-key-secret'] || process.env.S3_ACCESS_
 const STATIC_CDN_PATH = args['cdn-path'] !== undefined ? args['cdn-path'] : (process.env.STATIC_CDN_PATH || '');
 
 // ---------- key 规则（对齐 pathConstant.ts） ----------
-const RESERVED_DIRS = ['assets', 'fonts', 'icons', 'locales'];
-const CDN_DIRS = ['assets', 'fonts', 'icons', 'locales'];
+const RESERVED_DIRS = ['assets', 'fonts', 'font-assets', 'icons', 'locales'];
+const CDN_DIRS = ['assets', 'fonts', 'font-assets', 'icons', 'locales'];
 
 function buildKeyPrefix(cdnPath) {
   const p = (cdnPath || '').trim().replace(/^\/+|\/+$/g, '');

@@ -10,6 +10,8 @@
  */
 
 import { api } from './trpc';
+import { getBlinkoEndpoint } from './blinkoEndpoint';
+import { resolveFontStylesheetUrl, WENKAI_LOCAL_CSS } from '@shared/lib/fontStylesheetUrl';
 import {
   clearSavedFontPreference,
   readSavedFontPreference,
@@ -47,9 +49,8 @@ interface LoadedFont {
 }
 
 /**
- * 首屏恢复用 `optional`：浏览器只给约 100ms 阻塞窗口，超时就一直用 fallback、
- * 本次加载不再切换 —— 宁可这次不生效，也不要让用户看到字形跳变。
- * 用户主动切换字体时用 `swap`，保证切换一定看得见。
+ * Startup prepares cached glyphs with `block` within a brief rendering budget.
+ * Font changes also await readiness before committing a new family.
  */
 export type FontDisplay = 'swap' | 'optional' | 'block' | 'fallback';
 
@@ -71,6 +72,7 @@ class FontManagerClass {
   private initialized: boolean = false;
   private observer: MutationObserver | null = null;
   private currentFontFamily: string = '';
+  private applyVersion = 0;
   /** Fonts that were requested but no longer exist, so we only warn once each. */
   private missingFontsWarned: Set<string> = new Set();
 
@@ -230,20 +232,22 @@ class FontManagerClass {
    *
    * 带超时保护：字体动辄几 MB，缓存读取也不该无限期挡住首屏。
    */
-  public async restoreSavedFont(timeoutMs: number = 200): Promise<boolean> {
+  public async restoreSavedFont(timeoutMs: number = 1500): Promise<boolean> {
     const pref = readSavedFontPreference();
     if (!pref) return false;
     if (this.isFontLoaded(pref.name)) return true;
+    const version = this.applyVersion;
+    const deadline = Date.now() + timeoutMs;
+    const remaining = () => Math.max(1, deadline - Date.now());
 
     try {
-      const cached = await withTimeout(readCachedFontBinary(pref.name), timeoutMs);
-      if (!cached) return false;
-
-      // 与网络路径共用同一段构建逻辑，行为一致
-      await withTimeout(
-        this.loadFontFromBuffer(pref.name, cached.buffer, cached.format, pref.weights, 'optional'),
-        timeoutMs
-      );
+      const cached = await withTimeout(readCachedFontBinary(pref.name), remaining());
+      if (cached) {
+        const ready = await withTimeout(this.loadFontFromBuffer(pref.name, cached.buffer, cached.format, pref.weights, 'block').then(() => true), remaining());
+        if (!ready) return false;
+      } else return false;
+      // A slow cache restore must not overwrite a newer user/config selection.
+      if (version !== this.applyVersion) return false;
 
       this.currentFont = pref.name;
       this.currentFontFamily = pref.stack;
@@ -444,6 +448,8 @@ class FontManagerClass {
       style.setAttribute('data-font', fontName);
       style.textContent = fontFaceCSS;
       document.head.appendChild(style);
+      // The CSS fallback creates a second face; load it too before first paint.
+      await document.fonts.load(`${weights[0] || 400} 16px ${JSON.stringify(fontName)}`);
 
     } catch (error) {
       // Cleanup blob URL on error
@@ -499,11 +505,21 @@ class FontManagerClass {
 
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = url;
+      link.href = getBlinkoEndpoint(resolveFontStylesheetUrl(url));
       link.setAttribute('data-font', fontName);
+      const originFontUrl = getBlinkoEndpoint(WENKAI_LOCAL_CSS);
+      let triedOrigin = false;
       
       link.onload = () => resolve();
-      link.onerror = () => reject(new Error(`Failed to load stylesheet for font: ${fontName}`));
+      link.onerror = () => {
+        // Existing CDN installations may not have uploaded these new files yet.
+        if (!triedOrigin && fontName === 'LXGW WenKai' && url.endsWith(WENKAI_LOCAL_CSS) && link.href !== originFontUrl) {
+          triedOrigin = true;
+          link.href = originFontUrl;
+          return;
+        }
+        reject(new Error(`Failed to load stylesheet for font: ${fontName}`));
+      };
       
       document.head.appendChild(link);
     });
@@ -571,11 +587,13 @@ class FontManagerClass {
    *                 `swap` 用于用户主动切换（保证切换可见）。默认 `swap`。
    */
   public async applyFont(fontName: string, display: FontDisplay = 'swap'): Promise<boolean> {
+    const version = ++this.applyVersion;
     if (fontName === 'default') {
       // Reset to system font stack
       this.currentFontFamily = '';
       document.body.style.fontFamily = '';
       document.documentElement.style.setProperty('--font-family', '');
+      document.documentElement.style.fontFamily = '';
       clearSavedFontPreference();
       
       // Clear font from all elements
@@ -608,6 +626,8 @@ class FontManagerClass {
     
     const fallback = this.getFallbackStack(fontConfig.category || 'sans-serif');
     const fontFamily = `"${fontName}", ${fallback}`;
+    // Keep the currently visible font until the replacement glyphs are ready.
+    if (!await this.loadFont(fontName, display) || version !== this.applyVersion) return false;
 
     // 镜像到 localStorage：下一次刷新时 index.html 的内联脚本能在首帧前套上同样的栈，
     // 不用等 config → fonts.list 两段往返（见 lib/fontPreference.ts）
@@ -617,7 +637,7 @@ class FontManagerClass {
       weights: fontConfig.weights ?? [],
     });
     
-    // ⚡ IMMEDIATE: Apply font name right away (browser will use fallback until font loads)
+    // Apply the family only after its font has loaded.
     this.currentFontFamily = fontFamily;
     this.currentFont = fontName;
     
@@ -640,13 +660,6 @@ class FontManagerClass {
     
     // Apply to vditor elements
     this.applyFontToVditor(fontFamily);
-    
-    // 🔄 BACKGROUND: Load font asynchronously (browser will switch when ready)
-    // Don't wait for this - let it happen in background
-    this.loadFont(fontName, display).catch((error) => {
-      console.warn(`FontManager: Background font load failed for "${fontName}":`, error);
-      // Font name is already applied, so fallback will be used
-    });
     
     return true;
   }

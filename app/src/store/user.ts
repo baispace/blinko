@@ -187,8 +187,8 @@ export class UserStore implements Store {
         const fonts = await api.fonts.list.query();
         FontManager.initializeRegistry(fonts);
       }
-      // 首屏恢复路径已经在 main.tsx 里用缓存跑过一次了，这里走 'optional'
-      // 保证慢加载时也不会在用户眼前跳字体
+      // Startup already prepared the cached face; applyFont awaits new glyphs
+      // before changing the visible family if the server preference differs.
       await FontManager.applyFont(savedFontStyle, 'optional');
     } catch (error) {
       console.error('Failed to initialize fonts:', error);

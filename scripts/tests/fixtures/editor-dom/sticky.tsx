@@ -5,11 +5,13 @@ import { StickyListFilters } from '../../../../app/src/components/Common/StickyL
 import.meta.glob('../../../../dist/public/assets/index-*.css', { eager: true });
 function Test() {
   const [filter, setFilter] = useState('all');
+  const [scope, setScope] = useState('flash');
   return <main style={{padding:24,maxWidth:900}}><h1>列表筛选吸顶验证</h1>
+    <nav><button onClick={()=>setScope('flash')}>闪念</button> · <button onClick={()=>setScope('notes')}>笔记</button> · <button onClick={()=>setScope('todo')}>待办</button><span>当前类型：{scope}</span></nav>
     <div data-testid="list-viewport" data-scroll-viewport tabIndex={0} style={{height:420,overflow:'auto',border:'1px solid #ccc'}}>
       <div style={{padding:'0 24px'}}>
         <div data-testid="composer" style={{height:240,padding:24}}>编辑框：随列表滚走</div>
-        <StickyListFilters filterKey={filter}>
+        <StickyListFilters filterKey={filter} scopeKey={scope}>
           <div style={{display:'flex',gap:16}}><button onClick={()=>setFilter('all')}>全部</button><button onClick={()=>setFilter('work')}>工作</button><button onClick={()=>setFilter('empty')}>空标签</button><span>当前：{filter}</span></div>
         </StickyListFilters>
         <div data-list-filter-results>

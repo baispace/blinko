@@ -34,6 +34,7 @@ async function build() {
         '@langchain/community',
         'sharp',
         'esbuild',
+        'fsevents', // macOS optional native watcher; never bundle its .node binary.
         'sqlite3',
         '@libsql/linux-x64-musl',
         '@libsql/linux-x64-gnu',
@@ -77,4 +78,4 @@ async function build() {
   }
 }
 
-build(); 
+build();

@@ -345,7 +345,7 @@ const servePrecompressed = (publicPath: string) => {
  */
 function rewriteCdnRefs(html: string, base: string): string {
   // Match a quote / ' / `, 0-2 leading dots, then /(assets|fonts|icons|locales)/
-  return html.replace(/(["'(`])\.{0,2}\/(assets|fonts|icons|locales)\//g, `$1${base}/$2/`);
+  return html.replace(/(["'(`])\.{0,2}\/(assets|fonts|font-assets|icons|locales)\//g, `$1${base}/$2/`);
 }
 
 // Common prefixes that should never be treated as SPA HTML pages.

@@ -135,7 +135,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
     });
   };
 
-  // 行主体内容：闪念/待办/笔记 各 2 段：title + meta
+  // Title and optional metadata share one desktop row; narrow screens wrap.
   // 时间单独渲染在 row 最右侧（跟 actions 同行），不再挤进 meta 行
   const renderContent = () => {
     if (isNote) {
@@ -148,7 +148,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
             {title || t('no-title')}
           </div>
           {/* meta：tags + 附件数，muted；时间挪到 row 右侧，不再这里 */}
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
+          <div className="flex items-center gap-1.5 text-[11px] text-default-500 min-w-0 overflow-hidden empty:hidden">
             {tags.slice(0, 3).map((tag, i) => <RowTagChip key={i} tag={tag} />)}
             {tags.length > 3 && <span className="shrink-0" title={tags.slice(3).map(tag => tag.name).join(' · ')}>+{tags.length - 3}</span>}
             {(blinkoItem.attachments?.length ?? 0) > 0 && (
@@ -172,7 +172,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
           <div className={`text-[14.5px] leading-[1.45] truncate ${isDone ? 'text-default-400 line-through' : 'text-foreground'}`}>
             {derivedTitle || t('no-title')}
           </div>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
+          <div className="flex items-center gap-1.5 text-[11px] text-default-500 min-w-0 overflow-hidden empty:hidden">
             <span className="inline-flex items-center gap-0.5 shrink-0" style={{color:isDone?undefined:priority.color}}><Icon icon="solar:flag-bold" width="11" height="11" />{t(priority.labelKey)}</span>
             {dueDate && <span className={`${overdue?'text-danger':'text-default-500'} inline-flex items-center gap-0.5 shrink-0`} title={`${overdue?'已逾期 · ':''}${dueDate.format('YYYY-MM-DD HH:mm')}`}><Icon icon="solar:clock-circle-bold" width="11" height="11" />{dueDate.format('MM-DD HH:mm')}</span>}
             {(blinkoItem.tags ?? []).slice(0, 2).map((tag, i) => <RowTagChip key={i} tag={tag.tag} />)}
@@ -187,7 +187,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
         <div className={`text-[14.5px] leading-[1.45] truncate ${isDone ? 'text-default-400 line-through' : 'text-foreground'}`}>
           {derivedTitle || t('no-title')}
         </div>
-        <div className="flex items-center gap-1.5 mt-1 text-[11px] text-default-500 min-w-0">
+        <div className="flex items-center gap-1.5 text-[11px] text-default-500 min-w-0 overflow-hidden empty:hidden">
           {(blinkoItem.tags ?? []).slice(0, 2).map((tag, i) => <RowTagChip key={i} tag={tag.tag} />)}
           {(blinkoItem.tags?.length ?? 0) > 2 && <span className="shrink-0 text-default-400">+{blinkoItem.tags!.length - 2}</span>}
         </div>
@@ -211,7 +211,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
       data-done={isDone ? '1' : '0'}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={`group/row relative -mx-3 flex min-h-14 cursor-pointer items-start gap-2.5 border-b border-default-200/40 px-3 py-2.5 transition-colors duration-150 last:border-b-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/35
+      className={`group/row relative -mx-3 flex min-h-12 cursor-pointer items-center gap-2.5 border-b border-default-200/40 px-3 py-2.5 transition-colors duration-150 last:border-b-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/35
         ${isSelected ? '!bg-primary/10' : 'md:hover:!bg-hover'}
       `}
     >
@@ -252,12 +252,12 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
       )}
 
       {/* 中：content（title + meta，无 time 无 excerpt） */}
-      <div className="flex-1 min-w-0 cursor-pointer">
+      <div className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 sm:flex-row sm:items-center sm:gap-3 [&>div:first-child]:min-w-0 [&>div:first-child]:flex-1 sm:[&>div:last-child:not(:first-child)]:max-w-[40%]">
         {renderContent()}
       </div>
 
       {/* 时间在窄屏收起，操作菜单始终可达但不挤压正文。 */}
-      <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
         {blinkoItem.isTop && <span title={t('top')} className="text-warning"><Icon icon="solar:pin-bold" width={13} /></span>}
         <span className="hidden whitespace-nowrap text-[11px] tabular-nums text-default-400 sm:inline">
           {formattedTime}

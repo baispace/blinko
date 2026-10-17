@@ -21,11 +21,11 @@ export const VECTOR_PATH = path.join(BASE_DIR, '.blinko/vector')
  * reused as the OSS key prefix — doing so would produce a doubled path like
  * `assets/assets/...` on both the upload key and the rewritten browser URL.
  */
-const STATIC_CDN_RESERVED_DIRS = ['assets', 'fonts', 'icons', 'locales'];
+export const STATIC_CDN_DIRS = ['assets', 'fonts', 'font-assets', 'icons', 'locales'];
 
 function isReservedCdnPath(cdnPath?: string | null): boolean {
   const p = (cdnPath || '').replace(/^\/+|\/+$/g, '').toLowerCase();
-  return STATIC_CDN_RESERVED_DIRS.includes(p);
+  return STATIC_CDN_DIRS.includes(p);
 }
 
 export function buildStaticCdnBase(cdnBaseUrl?: string | null, cdnPath?: string | null): string {

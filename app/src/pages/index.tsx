@@ -244,7 +244,7 @@ const Home = observer(() => {
       >
         <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
           {isPc && composer}
-          {!['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
+          {!['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters scopeKey={[searchParams.get('path') || 'blinko', searchParams.get('contentType') || 'all'].join(':')} filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
             {isTagView && <TagContentTypeTabs />}
             <TagFilterChips />
           </StickyListFilters>}
@@ -345,7 +345,7 @@ const Home = observer(() => {
                     <span className="text-[10.5px] tabular-nums text-default-400">{group.notes.length}</span>
                   </header>
                   <div className="overflow-hidden rounded-xl border border-default-200/60 bg-card px-3 shadow-sm">
-                    {group.notes.map((note, index) => <ViewportItem key={note.id} initial={index < 5} estimate={110}><BlinkoListRow blinkoItem={note} /></ViewportItem>)}
+                    {group.notes.map((note, index) => <ViewportItem key={note.id} initial={index < 5} estimate={56}><BlinkoListRow blinkoItem={note} /></ViewportItem>)}
                   </div>
                 </section>
               ))}

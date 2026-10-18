@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#263a5a"/><stop offset="1" stop-color="#111c30"/></linearGradient></defs><rect x="64" y="64" width="896" height="896" rx="208" fill="url(#bg)"/><path d="M370 280h284v60h-94v344h94v60H370v-60h94V340h-94z" fill="#f5f1e8"/><circle cx="724" cy="712" r="35" fill="#76a9fa"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Ink 应用图标：三行文本 + 闪烁光标，呼应「记下来」的产品定位。
+       底色 #2f6feb 渐变到 #06b6d4，与站点 globals.css 里的 primary 主色对齐。 -->
+  <defs>
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="140" y1="140" x2="884" y2="884">
+      <stop stop-color="#2f6feb"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#bg)"/>
+  <g fill="#ffffff">
+    <rect x="264" y="356" width="440" height="64" rx="32"/>
+    <rect x="264" y="480" width="272" height="64" rx="32"/>
+    <rect x="568" y="480" width="76" height="64" rx="26"/>
+    <rect x="264" y="604" width="368" height="64" rx="32"/>
+  </g>
+</svg>

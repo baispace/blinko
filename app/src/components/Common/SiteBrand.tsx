@@ -7,7 +7,7 @@ export const SiteBrand = observer(({ compact = false, size = 30, framed = false,
   compact?: boolean; size?: number; framed?: boolean; showTagline?: boolean;
 }) => {
   const config = RootStore.Get(BlinkoStore).config.value;
-  const title = config?.customTitle?.trim() || 'Blinko';
+  const title = config?.customTitle?.trim() || 'Ink';
   const tagline = showTagline ? config?.customTagline?.trim() || '' : '';
   return <span className="flex w-full min-w-0 items-center gap-3" title={[title,tagline].filter(Boolean).join('\n')}>
     <span className={framed

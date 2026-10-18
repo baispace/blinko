@@ -55,8 +55,8 @@ export default defineConfig({
         registerType: 'autoUpdate',
         includeAssets: ['icons/Square*.png'],
         manifest: {
-          name: 'Blinko',
-          short_name: 'Blinko',
+          name: 'Ink',
+          short_name: 'Ink',
           icons: [
             {
               src: '/icons/Square30x30Logo.png',
@@ -114,27 +114,30 @@ export default defineConfig({
         workbox: {
           // Maximum file size to cache (10MB)
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-          // Only precache what the first paint actually needs. Previously the
-          // default glob pulled in every lazily-imported chunk (mermaid diagrams,
-          // cytoscape, ...) — 10MB+ downloaded in the background on first visit,
-          // competing with the entry bundle for bandwidth.
+          // Assets use runtime CDN URLs. Precaching their origin URLs would
+          // download a second copy even when the page already loaded from CDN.
           globPatterns: [
-            'index.html',
             'registerSW.js',
-            'manifest.webmanifest',
             'icons/**/*.png',
-            'assets/entry-*.js',
-            'assets/react-vendor-*.js',
-            'assets/ui-components-*.js',
-            'assets/utils-*.js',
-            'assets/*.css'
           ],
-          // Don't cache API requests
-          navigateFallbackDenylist: [/^\/api\/.*/],
+          // HTML contains runtime CDN configuration; never serve a frozen app shell.
+          navigateFallback: null,
           // Clean old caches automatically
           cleanupOutdatedCaches: true,
           // Runtime caching strategy for better update control
           runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) => request.mode === 'navigate'
+                && url.origin === self.location.origin
+                && !/^\/(?:api|trpc|v1)\//.test(url.pathname),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'page-navigation',
+                networkTimeoutSeconds: 3,
+                cacheableResponse: { statuses: [200] },
+                expiration: { maxEntries: 10, maxAgeSeconds: 24 * 60 * 60 },
+              },
+            },
             {
               // Lazily-imported chunks (mermaid, echarts, route pages) are fetched
               // on demand — cache them after the first use instead of precaching.

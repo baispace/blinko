@@ -323,7 +323,8 @@ const servePrecompressed = (publicPath: string) => {
       res.set({
         'Content-Encoding': 'gzip',
         'Vary': 'Accept-Encoding',
-        'Cache-Control': 'public, max-age=604800, immutable',
+        'Cache-Control': ext === '.html' || /\/(?:sw|registerSW)\.js$/.test(urlPath)
+          ? 'no-cache, must-revalidate' : 'public, max-age=604800, immutable',
         'Content-Type': contentType
       });
       fs.createReadStream(gzPath).pipe(res);
@@ -394,7 +395,7 @@ const cdnStaticRewrite = (fallbackPublicPath: string) => {
       console.log(`[staticCdn] rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
       res.set({
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'no-cache, must-revalidate',
       });
       res.send(result.html);
     } catch (err) {
@@ -435,7 +436,7 @@ const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
       console.log(`[staticCdn] SPA fallback rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
       res.set({
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'no-cache, must-revalidate',
       });
       res.send(result.html);
     } catch (err) {
@@ -477,7 +478,7 @@ const cdnManifestRewrite = (fallbackPublicPath: string) => {
         'Content-Type': urlPath.endsWith('.webmanifest')
           ? 'application/manifest+json; charset=utf-8'
           : 'application/json; charset=utf-8',
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'no-cache, must-revalidate',
       });
       res.send(content);
     } catch (err) {
@@ -520,6 +521,10 @@ async function bootstrap() {
       immutable: true,
       setHeaders: (res: express.Response, path: string) => {
         const ext = path.split('.').pop()?.toLowerCase();
+        if (ext === 'html' || /\/(?:sw|registerSW)\.js$/.test(path) || ext === 'webmanifest') {
+          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+          return;
+        }
         if (['png', 'webp', 'svg', 'json', 'ico', 'gif', 'mp4'].includes(ext || '')) {
           res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
           res.setHeader('Expires', new Date(Date.now() + 604800000).toUTCString());

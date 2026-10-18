@@ -115,7 +115,7 @@ export const SiteBrandingSettings = observer(() => {
           <div className="flex items-start gap-2">
             <Input
               aria-label={text('站点名称', 'Workspace name')}
-              placeholder="Blinko"
+              placeholder="Ink"
               maxLength={50}
               value={name}
               isDisabled={saving}

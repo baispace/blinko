@@ -39,12 +39,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
   const isExistingNote = !!blinkoItem.id;
   const defaultEditorMode: 'preview' | 'edit' = isExistingNote ? 'edit' : 'preview';
   const [editorMode, setEditorMode] = useState<'preview' | 'edit'>(defaultEditorMode);
-  /**
-   * 「演示模式」：飞书式的阅读演示 —— 隐藏所有 chrome（顶栏、底栏、编辑器工具栏、
-   * BubbleMenu 等），只留可滚动正文 + 右上角"退出演示"按钮。与 `editorMode` 是
-   * 正交的两条轴：演示模式只看正文，editorMode 控制 Tiptap editable。
-   */
-  const [presentationMode, setPresentationMode] = useState(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   /** 阅读/编辑共用同一棵 Tiptap 树，这里持有它的实例 */
   const tiptapRef = useRef<Editor | null>(null);
@@ -73,7 +67,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
     blinko.fullscreenEditorNoteId = null;
     // 回到「打开即编辑」的默认态，而不是写死 preview，否则下一条笔记会继承上一条的阅读态
     setEditorMode(defaultEditorMode);
-    setPresentationMode(false);
     setDataReady(false);
     onClose();
   };
@@ -82,7 +75,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
     navigate('/');
     blinko.fullscreenEditorNoteId = null;
     setEditorMode(defaultEditorMode);
-    setPresentationMode(false);
     setDataReady(false);
     onClose();
   };
@@ -91,7 +83,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
   useEffect(() => {
     if (isOpen) {
       setEditorMode(defaultEditorMode);
-      setPresentationMode(false);
     }
   }, [isOpen]);
 
@@ -218,11 +209,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
           }
         }
         
-        // 演示模式优先退出 —— 飞书也是这个节奏（演示 → 阅读 → 关闭）
-        if (presentationMode) {
-          setPresentationMode(false);
-          return;
-        }
         // In edit mode, ESC goes back to preview mode first
         if (editorMode === 'edit') {
           setEditorMode('preview');
@@ -246,7 +232,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
       if (mobileHeader) mobileHeader.style.display = '';
       if (bottomBar) bottomBar.style.display = '';
     };
-  }, [isOpen, onClose, editorMode, presentationMode]);
+  }, [isOpen, onClose, editorMode]);
 
   const handleEditorSended = async () => {
     // Refresh the note data after saving
@@ -290,7 +276,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
 
   const editorContent = (
     <div
-      className={`fixed inset-0 z-[9999] bg-card expanded-container ${!presentationMode ? 'document-heading-guides' : ''} ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      className={`fixed inset-0 z-[9999] bg-card expanded-container document-heading-guides ${isPc ? 'overflow-y-auto' : 'overflow-hidden'}`}
       /**
        * 注意：这里曾经用 onPointerDownCapture / onTouchStartCapture 对
        * "不在 editorContainerRef 内"的事件 stopPropagation()，本意是防止拖到
@@ -309,7 +295,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
         bottom: 0
       }}
     >
-      {!presentationMode && isPc && (
+      {isPc && (
         <div data-testid="document-fixed-header" className="fixed inset-x-0 top-0 z-[10005] flex flex-col border-b border-border bg-card/95 shadow-sm backdrop-blur-xl">
           <div className="flex h-12 w-full items-center gap-1.5 px-3 md:px-5">
             <Button
@@ -367,8 +353,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
                   if (editorMode === 'preview') handleSwitchToEdit();
                   else handleSwitchToPreview();
                 }}
-                presentationMode={presentationMode}
-                onTogglePresentation={() => setPresentationMode((value) => !value)}
                 isDetailPage={isDetailPage}
                 hideShare
                 hidePin
@@ -381,7 +365,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
       {/* PC: window-level scrolling — cover, title and body scroll away together
           (Feishu behaviour), scrollbar sits at the viewport's right edge.
           Mobile keeps the previous internal-scroll layout. */}
-      <div className={`${isPc ? `min-h-full ${!presentationMode ? 'pt-12' : ''}` : 'h-full'} flex justify-center`}>
+      <div className={`${isPc ? `min-h-full pt-12` : 'h-full'} flex justify-center`}>
         <div
           ref={editorContainerRef}
           className={`w-full mx-auto ${isPc ? 'min-h-full' : 'h-full'} flex ${isPc ? 'flex-col ' + PAGE_WIDTH_PAD_CLASS[pageWidth.mode] : 'flex-col p-2'}`}
@@ -394,7 +378,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
             阅读态与编辑态是同一棵 Tiptap 树，只切 setEditable：
             打开即可直接写，切回阅读再点正文任意处也能接着写，
             两种模式来回切不重新 mount、不丢光标。
-            演示模式强制 readOnly（无论 editorMode 是什么）。
           */}
           <div
             className={`${isPc ? 'flex flex-col' : 'flex-1 flex flex-col min-h-0'} ${!isPc && isLongText ? 'editor-long-text' : ''}`}
@@ -406,7 +389,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
                 key={`editor-${blinkoItem.id}`}
                 mode="edit"
                 hideDoneButton
-                editable={!presentationMode && editorMode === 'edit'}
+                editable={editorMode === 'edit'}
                 onEditorReady={handleEditorReady}
                 onSended={handleEditorSended}
                 withoutOutline={true}
@@ -452,7 +435,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
           </div>
 
           {/* Mobile: scrollable document tools plus a stable navigation/action row. */}
-          {!presentationMode && !isPc && (
+          {!isPc && (
             <div
               className="sticky bottom-0 z-[10005] flex shrink-0 flex-col border-t border-border bg-card/95 px-2 pt-1.5 backdrop-blur-xl"
               style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
@@ -497,8 +480,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
                         if (editorMode === 'preview') handleSwitchToEdit();
                         else handleSwitchToPreview();
                       }}
-                      presentationMode={presentationMode}
-                      onTogglePresentation={() => setPresentationMode((value) => !value)}
                       isDetailPage={isDetailPage}
                       hideShare
                       hidePin
@@ -511,7 +492,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
         </div>
       </div>
 
-      {!presentationMode && !isPc && hasOutline && (
+      {!isPc && hasOutline && (
         <>
           <button
             type="button"
@@ -538,19 +519,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isDetai
         </>
       )}
 
-      {/* 演示模式浮动退出口：右上角，半透浮于正文之上，点 ESC 也退出。 */}
-      {presentationMode && (
-        <Button
-          isIconOnly
-          variant="flat"
-          size="sm"
-          onPress={() => setPresentationMode(false)}
-          aria-label={t('exit-presentation')}
-          className="fixed top-4 right-4 z-[10000] bg-card/80 backdrop-blur-md text-foreground  hover:bg-card"
-        >
-          <Icon icon="mdi:arrow-collapse" width={20} height={20} />
-        </Button>
-      )}
     </div>
   );
 

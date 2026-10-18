@@ -88,8 +88,6 @@ export const CardActionMenu = observer(({
   showPageWidth = false,
   editorMode,
   onToggleEditorMode,
-  presentationMode = false,
-  onTogglePresentation,
   isDetailPage = false,
   hideShare = false,
   hidePin = false,
@@ -98,9 +96,6 @@ export const CardActionMenu = observer(({
   showPageWidth?: boolean;
   editorMode?: 'preview' | 'edit';
   onToggleEditorMode?: () => void;
-  /** 飞书式演示模式：隐藏 chrome、只读正文、浮动退出演示按钮 */
-  presentationMode?: boolean;
-  onTogglePresentation?: () => void;
   isDetailPage?: boolean;
   /** Primary actions promoted beside the menu in the fullscreen document header. */
   hideShare?: boolean;
@@ -191,31 +186,12 @@ export const CardActionMenu = observer(({
         {onToggleEditorMode ? (
           <DropdownItem
             key="toggle-mode"
-            textValue={editorMode === 'preview' ? t('edit') : t('preview')}
+            textValue={editorMode === 'preview' ? t('document-edit-mode', { defaultValue: '编辑模式' }) : t('document-read-mode', { defaultValue: '阅读模式' })}
             onClick={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem); onToggleEditorMode(); }}
           >
             <div className="flex items-center gap-2">
               <Icon icon={editorMode === 'preview' ? 'tabler:edit' : 'tabler:eye'} width="20" height="20" />
-              <div>{editorMode === 'preview' ? t('edit') : t('preview')}</div>
-            </div>
-          </DropdownItem>
-        ) : null}
-
-        {/* 演示模式 = 飞书"演示"：隐藏 chrome、纯阅读、和编辑态正交。FullscreenEditor
-            顶栏 ⋯ 菜单独有，list / detail 页面不暴露这个项。 */}
-        {onTogglePresentation ? (
-          <DropdownItem
-            key="presentation"
-            textValue={presentationMode ? t('exit-presentation') : t('enter-presentation')}
-            onClick={() => onTogglePresentation()}
-          >
-            <div className="flex items-center gap-2">
-              <Icon
-                icon={presentationMode ? 'mdi:close' : 'mdi:play'}
-                width="20"
-                height="20"
-              />
-              <div>{presentationMode ? t('exit-presentation') : t('enter-presentation')}</div>
+              <div>{editorMode === 'preview' ? t('document-edit-mode', { defaultValue: '编辑模式' }) : t('document-read-mode', { defaultValue: '阅读模式' })}</div>
             </div>
           </DropdownItem>
         ) : null}

@@ -7,6 +7,7 @@ import { prisma } from '../prisma';
 import { Prisma } from '@prisma/client';
 import { helper, TagTreeNode } from '@shared/lib/helper';
 import { extractNoteLinkIds } from '@shared/lib/noteLink';
+import { isNumericLeadingTagName } from '@shared/lib/tags';
 import { _ } from '@shared/lib/lodash';
 import { NoteType } from '../../shared/lib/types';
 import { attachmentsSchema, historySchema, notesSchema, tagSchema, tagsToNoteSchema, commentsSchema } from '@shared/lib/prismaZodType';
@@ -953,6 +954,9 @@ export const noteRouter = router({
       // Check for internal sharing permission if updating an existing note
       let isSharedEditor = false;
       let existingTaskStatus:string|undefined;
+      // AI 工作流产出的笔记，来源 ID 不能落成标签。编辑器的自动保存只发 { id, content }，
+      // 不带 metadata，所以标记必须从库里这条笔记读，不能只看 input.metadata。
+      let isAiWorkflowNote = false;
       if (id) {
         const notePermission = await prisma.notes.findFirst({
           where: {
@@ -975,6 +979,7 @@ export const noteRouter = router({
         }
 
         if(notePermission.type===NoteType.TODO)existingTaskStatus=getTodoStatus(notePermission);
+        isAiWorkflowNote = !!(notePermission.metadata as any)?.workflow;
         // If user is not the owner but has edit permission, restrict certain operations
         if (notePermission.accountId !== Number(ctx.id)) {
           isSharedEditor = true;
@@ -986,7 +991,13 @@ export const noteRouter = router({
         }
       }
 
-      const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '));
+      // AI 工作流产出的笔记里，`#34` 这类 token 是来源待办 ID，不是标签：
+      // 提示词已经要求模型写成「来源「标题」(ID 34)」，这里兜底防止模型漂移把数字
+      // 写进 tag 表。只对 AI 笔记生效，用户自己写的 `#2024` 之类数字标签不受影响。
+      const dropNumericTags = isAiWorkflowNote || !!input.metadata?.workflow;
+      const tagTree = helper.buildHashTagTreeFromHashString(
+        extractHashtags(content?.replace(/\\/g, '') + ' ').filter(tag => !(dropNumericTags && isNumericLeadingTagName(tag.slice(1))))
+      );
       let newTags: Prisma.tagCreateManyInput[] = [];
       const config = await getGlobalConfig({ ctx });
       if(input.metadata?.taskStatus !== undefined && (type===NoteType.TODO || existingTaskStatus!==undefined)){

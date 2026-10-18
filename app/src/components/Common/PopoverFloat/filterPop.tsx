@@ -1,236 +1,60 @@
+import { useState } from 'react';
+import { observer } from 'mobx-react-lite';
+import { Button, Checkbox, DateRangePicker, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
+import { useSearchParams } from 'react-router-dom';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Popover, PopoverContent, PopoverTrigger, Select, SelectItem, Button, Radio, RadioGroup } from "@heroui/react";
-import { useTranslation } from "react-i18next";
-import { RootStore } from "@/store";
-import { BlinkoStore } from "@/store/blinkoStore";
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { RangeCalendar } from "@heroui/react";
-import { today, getLocalTimeZone } from "@internationalized/date";
-import dayjs from "@/lib/dayjs";
-import TagSelector from "@/components/Common/TagSelector";
+import dayjs from '@/lib/dayjs';
 
-export default function FilterPop() {
-  const { t } = useTranslation();
-  const blinkoStore = RootStore.Get(BlinkoStore);
-  const [searchParams] = useSearchParams();
-  // 筛选条件写在全局 noteListFilterConfig 上（getFilteredNotes 会合并），
-  // 但要刷新的是「当前视图真正渲染的那个列表」，否则闪念页改了筛选没反应。
-  const refreshCurrentList = () => {
-    blinkoStore.getListByPath(searchParams.get('path')).resetAndCall({});
+const flags = [
+  ['withoutTag', '无标签'], ['withFile', '包含附件'], ['withLink', '包含链接'],
+  ['hasTodo', '包含待办'], ['isShare', '已公开'],
+] as const;
+export const activeListFilterCount = (config: BlinkoStore['noteListFilterConfig']) =>
+  flags.filter(([key]) => !!config[key]).length + (config.startDate && config.endDate ? 1 : 0);
+const clearedFilters = {startDate:null, endDate:null, withoutTag:false, withFile:false, withLink:false, hasTodo:false, isShare:null};
+
+const FilterForm = observer(({onDone}: {onDone:()=>void}) => {
+  const store = RootStore.Get(BlinkoStore);
+  const [params] = useSearchParams();
+  const [draft, setDraft] = useState(() => ({...store.noteListFilterConfig}));
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const apply = async (reset=false) => {
+    if(saving) return;
+    setSaving(true); setError('');
+    store.noteListFilterConfig = {...store.noteListFilterConfig, ...(reset ? clearedFilters : draft)};
+    try { await store.getListByPath(params.get('path')).resetAndCall({}); onDone(); }
+    catch { setError('加载失败，请重试'); }
+    finally { setSaving(false); }
   };
+  const range = draft.startDate && draft.endDate ? {start:parseDate(dayjs(draft.startDate).format('YYYY-MM-DD')),end:parseDate(dayjs(draft.endDate).format('YYYY-MM-DD'))} : null;
+  return <div className="space-y-4 py-3 text-sm">
+    <p className="text-xs text-default-500">条件同时满足；标签通过列表上方的标签栏选择。</p>
+    <DateRangePicker label="创建时间" aria-label="创建时间范围" size="sm" value={range as any} onChange={(value: any) => setDraft(current=>({...current, startDate:value ? dayjs(value.start.toString()).startOf('day').toDate() : null, endDate:value ? dayjs(value.end.toString()).endOf('day').toDate() : null}))} isDisabled={saving} disableAnimation popoverProps={{disableAnimation:true}} />
+    {range && <button type="button" className="text-xs text-default-500 hover:text-foreground" onClick={()=>setDraft(current=>({...current,startDate:null,endDate:null}))}>清除时间范围</button>}
+    <div className="flex flex-col gap-3">{flags.map(([key,label])=><Checkbox key={key} size="sm" isSelected={!!draft[key]} isDisabled={saving} onValueChange={value=>setDraft(current=>({...current,[key]: key==='isShare' ? (value || null) : value}))}>{label}</Checkbox>)}</div>
+    {error && <p role="alert" className="text-danger text-xs">{error}</p>}
+    <div className="flex gap-2 border-t border-default-200 pt-3"><Button size="sm" variant="light" isDisabled={saving} onPress={()=>void apply(true)}>清空条件</Button><Button size="sm" color="primary" className="flex-1" isLoading={saving} onPress={()=>void apply()}>应用筛选</Button></div>
+  </div>;
+});
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{
-    start: any;
-    end: any;
-  }>({
-    start: null,
-    end: null
-  });
-  const [focusedValue, setFocusedValue] = useState(today(getLocalTimeZone()));
-  const [tagStatus, setTagStatus] = useState<string>("all");
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
+const FilterPop = ({inline=false,onDone=()=>{}}:{inline?:boolean;onDone?:()=>void}) => {
+  const [open,setOpen]=useState(false);
+  if(inline)return <FilterForm onDone={onDone}/>;
+  return <Popover isOpen={open} onOpenChange={setOpen} disableAnimation placement="bottom-end"><PopoverTrigger><Button isIconOnly size="sm" variant="light" aria-label="筛选内容"><Icon icon="tabler:filter" width={20}/></Button></PopoverTrigger><PopoverContent className="w-80 p-4"><FilterForm onDone={()=>setOpen(false)}/></PopoverContent></Popover>;
+};
+export default FilterPop;
 
-  const conditions = [
-    { label: t('has-link'), value: 'hasLink' },
-    { label: t('has-file'), value: 'hasFile' },
-    { label: t('public'), value: 'isShare' },
-    { label: t('has-todo'), value: 'hasTodo' },
-  ];
-
-  const handleApplyFilter = () => {
-    blinkoStore.noteListFilterConfig = {
-      ...blinkoStore.noteListFilterConfig,
-      startDate: dateRange.start ? new Date(dateRange.start.toString()) : null,
-      endDate: dateRange.end ? new Date(dateRange.end.toString()) : null,
-      tagId: selectedTag ? Number(selectedTag) : null,
-      withoutTag: tagStatus === 'without',
-      withFile: selectedCondition === 'hasFile',
-      withLink: selectedCondition === 'hasLink',
-      isShare: selectedCondition === 'isShare' ? true : false,
-      hasTodo: selectedCondition === 'hasTodo',
-      isArchived: null
-    };
-    refreshCurrentList();
-    setIsOpen(false);
-  };
-
-  const handleReset = () => {
-    setDateRange({ start: null, end: null });
-    setTagStatus("all");
-    setSelectedTag(null);
-    setSelectedCondition(null);
-
-    blinkoStore.noteListFilterConfig = {
-      ...blinkoStore.noteListFilterConfig,
-      startDate: null,
-      endDate: null,
-      tagId: null,
-      withoutTag: false,
-      withFile: false,
-      withLink: false,
-      isArchived: false,
-      isShare: null,
-      hasTodo: false
-    };
-    refreshCurrentList();
-    setIsOpen(false);
-  };
-
-  return (
-    <Popover placement="bottom-end" disableAnimation isOpen={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger>
-        <Button isIconOnly size="sm" variant="light">
-          <Icon className="cursor-pointer text-default-600" icon="tabler:filter-bolt" width="24" height="24" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent>
-        <div className="p-4 flex flex-col gap-4 min-w-[300px]">
-          <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <Icon icon="solar:sort-by-time-broken" width="24" height="24" />
-              {t('time-range')}
-            </div>
-            <Popover placement="bottom" classNames={{
-              content: [
-                "p-0 bg-transparent border-none shadow-none",
-              ],
-            }}>
-              <PopoverTrigger>
-                <div className="flex items-center gap-2 bg-default-100 rounded-lg p-3">
-                  <Icon icon="solar:calendar-bold" className="text-default-500" width="20" height="20" />
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">
-                      {dateRange.start ? dayjs(new Date(dateRange.start.toString())).format('YYYY-MM-DD') : t('start-date')}
-                    </span>
-                    <span className="text-default-500">{t('to')}</span>
-                    <span className="text-sm">
-                      {dateRange.end ? dayjs(new Date(dateRange.end.toString())).format('YYYY-MM-DD') : t('end-date')}
-                    </span>
-                  </div>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent>
-                <div className="flex flex-col gap-2">
-                  <RangeCalendar
-                    className="bg-background"
-                    value={dateRange.start && dateRange.end ? dateRange : undefined}
-                    onChange={setDateRange}
-                    focusedValue={focusedValue}
-                    onFocusChange={setFocusedValue}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <Icon icon="fluent:tag-search-24-regular" width="20" height="20" />
-              {t('tag-status')}
-            </div>
-            <Select
-              aria-label={t('tag-status')}
-              value={tagStatus}
-              onChange={(e) => setTagStatus(e.target.value)}
-              className="w-full"
-              defaultSelectedKeys={['all']}
-              classNames={{
-                trigger: "h-12",
-              }}
-              labelPlacement="outside"
-              placeholder={t('select-tag-status')}
-              renderValue={(items) => {
-                const item = items[0];
-                const getIcon = (value: string) => {
-                  switch (value) {
-                    case 'all':
-                      return <Icon icon="solar:notes-bold" width="20" height="20" />;
-                    case 'with':
-                      return <Icon icon="lucide:tags" width="20" height="20" />;
-                    case 'without':
-                      return <Icon icon="majesticons:tag-off-line" width="20" height="20" />;
-                    default:
-                      return null;
-                  }
-                };
-                return (
-                  <div className="flex items-center gap-2">
-                    {getIcon(item?.key as string)}
-                    <span>{item?.textValue}</span>
-                  </div>
-                );
-              }}
-            >
-              {[
-                { key: 'all', label: t('all'), icon: <Icon icon="solar:notes-bold" width="20" height="20" /> },
-                { key: 'with', label: t('with-tags'), icon: <Icon icon="lucide:tags" width="20" height="20" /> },
-                { key: 'without', label: t('without-tags'), icon: <Icon icon="majesticons:tag-off-line" width="20" height="20" /> }
-              ].map((item) => (
-                <SelectItem key={item.key} textValue={item.label}>
-                  <div className="flex gap-2 items-center">
-                    {item.icon}
-                    <span className="text-small">{item.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-
-          {tagStatus === "with" && (
-            <div className="flex flex-col gap-2">
-              <div className="text-sm font-medium flex items-center gap-2">
-                <Icon icon="solar:tag-bold" width="20" height="20" />
-                {t('select-tags')}
-              </div>
-              
-              <TagSelector
-                selectedTag={selectedTag}
-                onSelectionChange={(key) => setSelectedTag(key)}
-              />
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <Icon icon="material-symbols:conditions" width="20" height="20" />
-              {t('additional-conditions')}
-            </div>
-            <RadioGroup
-              value={selectedCondition || ""}
-              onValueChange={setSelectedCondition}
-            >
-              <Radio value="">{t('no-condition')}</Radio>
-              {conditions.map(condition => (
-                <Radio key={condition.value} value={condition.value}>
-                  {condition.label}
-                </Radio>
-              ))}
-            </RadioGroup>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              color="primary"
-              onClick={handleApplyFilter}
-              className="flex-1"
-              startContent={<Icon icon="solar:filter-bold" width="20" height="20" />}
-            >
-              {t('apply-filter')}
-            </Button>
-            <Button
-              variant="flat"
-              onClick={handleReset}
-              className="flex-1"
-              startContent={<Icon icon="fluent:arrow-reset-20-filled" width="20" height="20" />}
-            >
-              {t('reset')}
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
+export const ActiveListFilters = observer(() => {
+  const store=RootStore.Get(BlinkoStore);
+  const [params]=useSearchParams();
+  const config=store.noteListFilterConfig;
+  const chips: {key:string;label:string;patch:Partial<typeof config>}[]=flags.filter(([key])=>!!config[key]).map(([key,label])=>({key,label,patch:{[key]:key==='isShare'?null:false}}));
+  if(config.startDate && config.endDate)chips.unshift({key:'date',label:`创建于 ${dayjs(config.startDate).format('YYYY/MM/DD')} – ${dayjs(config.endDate).format('YYYY/MM/DD')}`,patch:{startDate:null,endDate:null}});
+  if(!chips.length)return null;
+  const remove=(patch:Partial<typeof config>)=>{store.noteListFilterConfig={...config,...patch};void store.getListByPath(params.get('path')).resetAndCall({});};
+  return <div aria-label="已生效的筛选条件" className="flex flex-wrap items-center gap-2 py-2 text-xs"><span className="text-default-500">筛选</span>{chips.map(chip=><button type="button" key={chip.key} aria-label={`移除筛选：${chip.label}`} onClick={()=>remove(chip.patch)} className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-primary hover:bg-primary/20">{chip.label}<Icon icon="tabler:x" width={13}/></button>)}<button type="button" className="px-1 py-1 text-default-500 hover:text-foreground" onClick={()=>remove(clearedFilters)}>清空筛选</button></div>;
+});

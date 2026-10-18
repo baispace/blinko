@@ -66,7 +66,12 @@ function scanProjectIcons() {
     
     // Scan all tsx and jsx files in the src directory
     const srcPath = path.join(__dirname, '..', '..', '..', '..');
-    const files = scanDirectory(path.join(srcPath, 'src'), ['.tsx', '.jsx', '.ts']);
+    const files = [
+      ...scanDirectory(path.join(srcPath, 'src'), ['.tsx', '.jsx', '.ts']),
+      // shared/ 也在前端消费范围内：aiWorkflows.ts 里各工作流的 icon 会直接传给 <Icon />，
+      // 只扫 app/src 会让周报 / 文章练习的图标渲染成空白。
+      ...scanDirectory(path.join(srcPath, '..', 'shared'), ['.tsx', '.jsx', '.ts']),
+    ];
     
     // Extract icon names
     // 1. Match JSX attributes: icon="collection:name-with-hyphen" or icon='collection:name-with-hyphen'

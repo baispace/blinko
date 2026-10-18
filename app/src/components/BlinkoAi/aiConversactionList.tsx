@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { cleanConversationTitle } from '@shared/lib/conversationTitle';
 import { RootStore } from "@/store/root"
 import { AiStore } from "@/store/aiStore"
@@ -14,6 +15,7 @@ import { useTranslation } from "react-i18next"
 import { useMediaQuery } from "usehooks-ts"
 
 export const AiConversactionList = observer(({ inline = false, onSelect }: { inline?: boolean; onSelect?: () => void }) => {
+  const navigate = useNavigate();
   const aiStore = RootStore.Get(AiStore)
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -105,6 +107,7 @@ export const AiConversactionList = observer(({ inline = false, onSelect }: { inl
                 aiStore.currentConversationId = item.id;
                 aiStore.currentConversation.call();
                 aiStore.isChatting = true;
+                navigate('/ai');
                 if (!inline) RootStore.Get(DialogStore).close();
                 onSelect?.();
               }}

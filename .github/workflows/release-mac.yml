@@ -1,0 +1,166 @@
+name: Release macOS App
+# Ink macOS 正式发版：手动指定版本 → 构建 .app → 发布 GitHub Release（含 latest.json）
+#
+# 与 app-release.yml 的关系：那条是上游 Blinko 的多平台发版线（Docker/Android/Windows/Linux），
+# 本仓库仍保留它用于其它分发线。本文件只负责 macOS 的 Ink 应用，职责单一、便于排查。
+#
+# 与 build-mac.yml 的关系：build-mac.yml 是「每次 push 出个包自己下载」的研发流，
+# 不产生 Release、不带更新清单；本文件才产出应用内自动更新所需的 latest.json。
+#
+# 签名现状：仅做 Tauri updater 的 minisign 签名（INK_TAURI_PRIVATE_KEY），
+# 不做 Apple Developer ID 代码签名与公证。产物只能在构建者本机运行，
+# 分发给他人会被 Gatekeeper 拦截。等申请到 Apple 账号后再补
+# APPLE_CERTIFICATE / APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID 即可切换。
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号，如 1.9.1（不要带 v，不要带预发布后缀）'
+        required: true
+        type: string
+      target:
+        description: '构建架构'
+        required: false
+        default: 'aarch64-apple-darwin'
+        type: string
+      release_notes:
+        description: '更新说明（可留空）'
+        required: false
+        default: ''
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-mac
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.INK_TAURI_PRIVATE_KEY }}
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.INK_TAURI_PRIVATE_KEY_PASSWORD }}
+
+jobs:
+  release:
+    name: Build & Publish Ink ${{ inputs.version || github.ref_name }}
+    runs-on: macos-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 归一化版本号
+        id: ver
+        run: |
+          set -euo pipefail
+          RAW="${{ inputs.version }}"
+          if [ -z "$RAW" ]; then RAW="${GITHUB_REF_NAME}"; fi
+          V="${RAW#v}"
+          # 预发布后缀会让 latest.json 的版本在语义上低于正式版，
+          # 已安装正式版的用户将永远判定「无需更新」，所以直接拒绝
+          if [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+            echo "::error::版本号不能带预发布后缀（收到 '$V'）。预发布版本低于正式版，安装端会判定无需更新。"
+            exit 1
+          fi
+          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::版本号格式应为 x.y.z（如 1.9.1），收到 '$V'"
+            exit 1
+          fi
+          echo "value=$V" >> "$GITHUB_OUTPUT"
+          echo "版本: $V"
+
+      - name: 拉取密钥
+        env:
+          KEY: ${{ secrets.INK_TAURI_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KEY" ]; then
+            echo "::error::INK_TAURI_PRIVATE_KEY secret 未配置，无法签名更新包"
+            exit 1
+          fi
+          printf '%s' "$KEY" > "$RUNNER_TEMP/ink-updater.key"
+          chmod 600 "$RUNNER_TEMP/ink-updater.key"
+          echo "updater 私钥已就位"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: 提高 Node 内存上限
+        run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.8
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ inputs.target || 'aarch64-apple-darwin' }}
+
+      - name: Rust 缓存
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+          cache-on-failure: true
+
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+
+      - name: 写入版本号
+        run: |
+          V="${{ steps.ver.outputs.value }}"
+          jq --arg v "$V" '.version = $v' app/src-tauri/tauri.conf.json > tmp.json \
+            && mv tmp.json app/src-tauri/tauri.conf.json
+          # tauri.macos.conf.json 刻意不带 version，让 macOS 继承主线，避免版本脱钩
+          grep '"version"' app/src-tauri/tauri.conf.json | head -1
+
+      - name: 构建并发布
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: 'app'
+          tauriScript: 'bun run tauri'
+          args: --target ${{ inputs.target || 'aarch64-apple-darwin' }}
+          tagName: ${{ steps.ver.outputs.value }}
+          releaseName: Ink ${{ steps.ver.outputs.value }}
+          releaseBody: ${{ inputs.release_notes || 'Ink 桌面端新版本。' }}
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          # 前端构建交给我们显式指定，以便把生产端点打进产物；
+          # 与 tauri.macos.conf.json 里的 beforeBuildCommand 保持一致
+          beforeBuildCommand: 'VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa'
+
+      - name: 校验更新清单
+        run: |
+          set -euo pipefail
+          URL="https://github.com/baispace/blinko/releases/latest/download/latest.json"
+          for i in $(seq 1 12); do
+            if curl -fsSL "$URL" -o "$RUNNER_TEMP/latest.json"; then break; fi
+            echo "等待 latest.json 可访问 ($i/12)…"
+            sleep 10
+          done
+          test -s "$RUNNER_TEMP/latest.json" || { echo "::error::latest.json 始终无法访问"; exit 1; }
+          echo "--- latest.json ---"
+          cat "$RUNNER_TEMP/latest.json" | python3 -m json.tool
+          python3 - "$RUNNER_TEMP/latest.json" "${{ steps.ver.outputs.value }}" <<'PY'
+          import json, sys
+          data = json.load(open(sys.argv[1]))
+          want = sys.argv[2]
+          got = str(data.get("version", "")).lstrip("v")
+          if got != want:
+              raise SystemExit(f"::error::清单版本 {got} 与发布版本 {want} 不一致")
+          plats = data.get("platforms", {})
+          missing = [p for p in ("darwin-aarch64", "darwin-x86_64") if p not in plats]
+          print(f"版本 {got} 校验通过")
+          print("平台:", ", ".join(plats) or "（空）")
+          if missing:
+              print("::warning::清单中缺少平台:", ", ".join(missing))
+          PY

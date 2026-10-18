@@ -51,3 +51,18 @@ export const scanHashtagTokens = (content?: string | null): HashtagToken[] => {
   }
   return tokens
 }
+
+/**
+ * token 名是不是「数字开头的来源引用」而非标签。
+ *
+ * AI 的日报/周报/笔记会用 `#34` 标注来源待办 ID，但本应用里 `#` 是标签语法，于是
+ * `来源 #34「测试下」已于` 会被贪婪解析成一个叫「34「测试下」已于」的标签。提示词
+ * 已经要求模型改用「来源「标题」(ID 34)」，这里是兜底：模型不听话时也别写进 tag 表。
+ *
+ * 判据取「首个字符是数字」而不是「纯数字」：来源引用天然会带上标题和后半句，
+ * `#34` / `#107` 只占少数，`#34「测试下」已于` 这类才是大头。
+ *
+ * 只在建标签关系时按需过滤，不要拿它改渲染 —— 展示层仍按 scanHashtagTokens 原样高亮，
+ * 免得动到既有笔记里用户自己写的 `#2024`、`#3D模型` 这类数字开头的正经标签。
+ */
+export const isNumericLeadingTagName = (name: string): boolean => /^\p{N}/u.test(name)

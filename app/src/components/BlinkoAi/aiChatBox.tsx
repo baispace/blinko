@@ -21,7 +21,6 @@ import { api } from '@/lib/trpc';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
 import { AiDraftResult, parseDraft } from './AiDraftResult';
-import { AiDailyResult } from './AiDailyResult';
 import { parseDailyDraft } from '@shared/lib/aiWorkflows';
 import { ViewportItem } from '../Common/ViewportItem';
 import './aiChat.css';
@@ -67,6 +66,43 @@ const UserMessage = memo(({ content, time, id, onEdit, sources = [], workflowTit
   </article>;
 });
 
+/**
+ * 对话流里的日报入口卡。
+ * 完整结果在工作区渲染，这里只回答「产出了什么、还剩多少没处理」，
+ * 并提供跳转到结果区的动作——避免几十行表单占据聊天记录。
+ */
+// 必须是 observer：入口卡要跟随 ai.dailyWorkspaceId 变化切换「打开工作区 / 在工作区」，
+// 而 memo 会因为 props（draft/id/initialSaved）没变而直接跳过渲染，导致面板打开后按钮文案不更新。
+const AiDailyEntry = observer(({ draft, id, initialSaved }: { draft: any; id: number; initialSaved?: { reportId?: number; actions?: Record<string, number> } }) => {
+  const ai = RootStore.Get(AiStore);
+  const saved = initialSaved || {};
+  const syncedCount = Object.keys(saved.actions || {}).length;
+  const total = draft.actions.length;
+  const done = !!saved.reportId && syncedCount === 0 && total === 0;
+  const remaining = total - syncedCount;
+  const open = ai.dailyWorkspaceId === id;
+  return <div className={`ai-daily-entry rounded-xl border p-3 ${open ? 'border-primary/40 bg-primary/[.04]' : 'border-default-200'}`}>
+    <div className="flex items-start gap-2.5">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon icon={done ? 'tabler:circle-check' : 'tabler:calendar-check'} width="16" height="16" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{draft.title || '日报与待办同步'}</p>
+        <p className="mt-0.5 text-xs text-default-500">
+          {done ? '已保存' : remaining > 0
+            ? `${remaining > 0 ? `${remaining} 项` : ''}待办变更待确认${syncedCount ? ` · 已同步 ${syncedCount} 项` : ''}`
+            : `无待办变更${syncedCount ? ` · 已同步 ${syncedCount} 项` : ''}`}
+        </p>
+      </div>
+      {!done && <Button size="sm" variant="flat" className="shrink-0" startContent={<Icon icon="tabler:external-link" width="14" height="14" />}
+        onPress={() => { ai.dailyWorkspaceId = id; }}>{open ? '在工作区' : '打开工作区'}</Button>}
+    </div>
+    {open && <p className="mt-2 flex items-center gap-1.5 border-t border-default-200/70 pt-2 text-xs text-default-400">
+      <Icon icon="tabler:layout-columns" width="13" height="13" />结果区正在右侧展示，可直接拖动边缘调整宽度
+    </p>}
+  </div>;
+});
+
 const AiMessage = memo(({ content, id, metadata, shareMode = false, isStreaming = false, busy = false, canRegenerate = false }:
   { content: string; id?: number; metadata?: AssisantMessageMetadata; shareMode?: boolean; isStreaming?: boolean; busy?: boolean; canRegenerate?: boolean; withoutAnimation?: boolean; withStreamAnimation?: boolean }) => {
   const presented = splitAssistantContent(content);
@@ -105,7 +141,7 @@ const AiMessage = memo(({ content, id, metadata, shareMode = false, isStreaming 
       {metadata.notes.map(note => <a className="text-primary text-xs rounded-md bg-primary/5 px-2 py-1" key={note.id} href={`/detail?id=${note.id}`} target="_blank" rel="noreferrer">{String((note.metadata as any)?.title || note.content?.split('\n')[0] || `内容 ${note.id}`).slice(0, 64)}</a>)}
     </div></details>}
     <div className="ai-answer-body">
-      {resultKind && (isStreaming || (!id && busy)) ? <div className="ai-artifact-pending" role="status"><Icon icon="tabler:file-text" width={22} /><div><p className="text-sm font-medium">{resultKind === 'daily' ? '正在整理日报与待办变更…' : resultKind === 'note' ? '正在整理笔记草稿…' : '正在提取待办事项…'}</p><p className="text-xs text-default-500 mt-1">完成后可编辑、确认并保存</p></div></div> : daily && !shareMode && !isStreaming && !!id && status !== 'stopped' && status !== 'error' ? <AiDailyResult draft={daily} messageId={id} initialSaved={(metadata as any)?.dailySaved} /> : !shareMode && !isStreaming && !!id && draft && status !== 'stopped' && status !== 'error'
+      {resultKind && (isStreaming || (!id && busy)) ? <div className="ai-artifact-pending" role="status"><Icon icon="tabler:file-text" width={22} /><div><p className="text-sm font-medium">{resultKind === 'daily' ? '正在整理日报与待办变更…' : resultKind === 'note' ? '正在整理笔记草稿…' : '正在提取待办事项…'}</p><p className="text-xs text-default-500 mt-1">完成后可编辑、确认并保存</p></div></div> : daily && !shareMode && !isStreaming && !!id && status !== 'stopped' && status !== 'error' ? <AiDailyEntry draft={daily} id={id} initialSaved={(metadata as any)?.dailySaved} /> : !shareMode && !isStreaming && !!id && draft && status !== 'stopped' && status !== 'error'
         ? <AiDraftResult key={id} draft={draft} messageId={id} initialSaved={(metadata as any)?.savedDrafts} />
         : malformedDaily ? <p role="alert" className="text-sm text-default-500">日报结构未生成完整或包含无效任务变更，暂不能同步。请重新生成；原始内容可复制保留。</p> : resultKind && !draft && !daily && (status === 'stopped' || status === 'error')
           ? <p className="text-sm text-default-500">草稿尚未生成完整，可以继续回答或重新生成。</p>

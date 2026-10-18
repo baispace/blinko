@@ -1,3 +1,4 @@
+import FilterPop, { activeListFilterCount } from './filterPop';
 import { observer } from 'mobx-react-lite';
 import { useState, type ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger, Slider, Switch } from '@heroui/react';
@@ -119,6 +120,8 @@ export const BlinkoHomeSettingsPop = observer(() => {
   const scope = getPageViewScope(searchParams);
   const path = searchParams.get('path');
   const [isOpen, setIsOpen] = useState(false);
+  const [tab, setTab] = useState<'view'|'filter'>('view');
+  const filterCount = activeListFilterCount(blinko.noteListFilterConfig);
 
   const cardSpacing = Number(getPageViewSetting(blinko, scope, 'cardSpacing') ?? 16);
   const cardColumns = Number(getPageViewSetting(blinko, scope, 'largeDeviceCardColumns') ?? 1);
@@ -152,11 +155,12 @@ export const BlinkoHomeSettingsPop = observer(() => {
           data-testid="home-view-settings"
           aria-label={t('blinko-view-settings')}
           title={t('blinko-view-settings')}
-          className={`grid size-8 shrink-0 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+          className={`relative grid size-8 shrink-0 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
             isOpen ? 'bg-default-100 text-foreground' : 'text-default-600 hover:bg-default-100 hover:text-foreground'
           }`}
         >
           <ViewOptionsGlyph />
+          {!isTodo && filterCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-[9px] text-white">{filterCount}</span>}
         </button>
       </PopoverTrigger>
 
@@ -169,6 +173,8 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </p>
           </div>
 
+          {!isTodo && <div className="flex border-b border-default-200" aria-label="视图设置分类">{(['view','filter'] as const).map(key=><button key={key} type="button" aria-pressed={tab===key} onClick={()=>setTab(key)} className="flex-1 border-b-2 border-transparent py-2 text-xs text-default-500 aria-pressed:border-primary aria-pressed:text-primary">{key==='view'?'展示与排序':`筛选${filterCount ? ` · ${filterCount}` : ''}`}</button>)}</div>}
+          {!isTodo && tab==='filter' ? <FilterPop key={location.search} inline onDone={()=>setIsOpen(false)}/> : <>
           {!isTodo && (
             <Section label={t('list-style')}>
               <SegmentedButtons
@@ -267,6 +273,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </section>
           )}
 
+          </>}
           <button
             type="button"
             onClick={() => setIsOpen(false)}

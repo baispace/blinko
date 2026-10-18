@@ -41,6 +41,9 @@ const isHomeSubHeaderScope = (location: ReturnType<typeof useLocation>, searchPa
   return p == null || (HOME_HEADER_SCOPES as readonly string[]).includes(p);
 };
 
+/** AI 对话页：顶栏右侧只留通知，其余全局入口在这里都是噪音或无效控件。 */
+const isAiPage = (location: ReturnType<typeof useLocation>): boolean => location.pathname === '/ai';
+
 export const getFixedHeaderBackground = () => {
   if (document?.documentElement?.classList?.contains('dark')) {
     return '#00000080';
@@ -187,18 +190,20 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
 
               <div className="flex-1 min-w-0" />
 
-              {/* RIGHT：全局操作（筛选 / 每日回顾 / 通知 —— 收紧到 prototype 风格的
-                   ghost 小按钮）。FilterPop 内部自渲染 trigger Button，宽度收紧靠
-                   该组件内 className；Bulb / Bell 在此 inline 保证视觉一致。 */}
+              {/* AI 页顶栏只保留通知铃铛：这里的筛选筛不到任何东西（/ai 不渲染笔记列表，
+                  弹层能打开但「应用筛选」没有任何可见效果），搜索与每日回顾在笔记 / 待办 /
+                  闪念页都有入口，聊天页再各占一个位置纯属噪音。
+                  搜索用 hideButton 而不是整块不渲染 —— ⌘K 监听挂在 BarSearchInput 内部，
+                  连组件一起去掉会让聊天页的全局搜索快捷键一起失效。 */}
               <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
-                <BarSearchInput isPc={isPc} />
+                <BarSearchInput isPc={isPc} hideButton={isAiPage(location)} />
                 {/* 待办页也挂页面设置浮层：待办工作区自己管筛选/排序/分组/视图，
                     但页宽这类页面级设置对它同样生效（尤其是看板要靠宽度决定列数），
                     之前连浮层一起排除掉，等于把入口也一起砍了。
                     浮层内部对 todo 只保留页宽，见 blinkoHomeSettingsPop 的 isTodo 分支。 */}
                 {isHomeSubHeaderScope(location, searchParams) && <BlinkoHomeSettingsPop />}
-                {searchParams.get('path') !== 'todo' && <FilterPop />}
-                {!blinkoStore.config.value?.isCloseDailyReview && (
+                {!isAiPage(location) && !isHomeSubHeaderScope(location, searchParams) && <FilterPop />}
+                {!isAiPage(location) && !blinkoStore.config.value?.isCloseDailyReview && (
                   <Tooltip content={t('daily-review')} delay={400}>
                   <Badge size="sm" className="shrink-0" isInvisible={!blinkoStore.dailyReviewNoteList.value?.length} content={blinkoStore.dailyReviewNoteList.value?.length} color="primary">
                     <Button

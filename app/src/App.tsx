@@ -32,6 +32,7 @@ const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
 const SignUpPage = lazy(() => import('./pages/signup'));
 const HubPage = lazy(() => import('./pages/hub'));
+const AiTasksPage = lazy(() => import('./pages/ai-tasks'));
 const AIPage = lazy(() => import('./pages/ai'));
 const ResourcesPage = lazy(() => import('./pages/resources'));
 const ReviewPage = lazy(() => import('./pages/review'));
@@ -264,6 +265,7 @@ function AppRoutes() {
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/hub" element={<ProtectedRoute><HubPage /></ProtectedRoute>} />
+            <Route path="/ai/tasks/:taskId?" element={<ProtectedRoute><AiTasksPage /></ProtectedRoute>} />
             <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />
             <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />

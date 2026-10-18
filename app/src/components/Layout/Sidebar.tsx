@@ -22,6 +22,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { useLocation, useSearchParams, useNavigate, Link } from 'react-router-dom';
 
 import { AiStore } from '@/store/aiStore';
+import { AiTaskSidebar } from '@/components/BlinkoAi/AiTaskSidebar';
 import { AiConversactionList } from '../BlinkoAi/aiConversactionList';
 
 interface SidebarProps {
@@ -58,7 +59,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const aiStore = RootStore.Get(AiStore);
-  const aiMode = location.pathname === "/ai";
+  const aiMode = (location.pathname === "/ai" || location.pathname.startsWith("/ai/"));
   const previousHome = useRef('/');
   const homeUrl = rememberHomeUrl(location, previousHome.current);
   const workspaceMenuConfig = parseWorkspaceMenu(blinkoStore.config.value?.customQuickLinks);
@@ -188,7 +189,11 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       </div>
 
       {aiMode ? <>
-        <div className="flex-1 min-h-0 mt-5 overflow-y-auto px-2">
+        {/* 与主页内容导航一致：固定快捷入口，不在侧边栏展开任务表单或列表。 */}
+        <div className="shrink-0 px-2 pt-3">
+          <AiTaskSidebar compact={base.isSidebarCollapsed} onSelect={onItemClick} />
+        </div>
+        <div className="flex-1 min-h-0 mt-2 overflow-y-auto px-2">
           {!base.isSidebarCollapsed ? <>
             <div className="px-2 mb-3 text-xs text-default-600">{t('conversation-history')}</div>
             <AiConversactionList inline onSelect={onItemClick} />
@@ -197,13 +202,6 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
               <Icon icon="hugeicons:clock-01" width="20" height="20" />
             </button>
           </Tooltip>}
-        </div>
-        <div className="shrink-0 px-3 pb-3 pt-2">
-          <button type="button" disabled={aiStore.isAnswering || aiStore.currentConversation.loading.value} onClick={() => { aiStore.newChat(); onItemClick?.(); }}
-            aria-label={t('new-conversation')} className="w-full flex items-center justify-center gap-2 rounded-full border border-default-200 bg-background py-3 shadow-sm hover:bg-default-100 disabled:opacity-40 transition-colors">
-            <Icon icon="hugeicons:edit-02" width="20" height="20" />
-            {!base.isSidebarCollapsed && <span>{t('new-conversation')}</span>}
-          </button>
         </div>
       </> : <>
       <ScrollShadow className="-mr-[16px] mt-3 min-h-0 flex-1 pr-4 hide-scrollbar">

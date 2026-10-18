@@ -14,6 +14,7 @@ import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { ListEmptyState } from '@/components/Common/ListEmptyState';
 import { TagContentTypeTabs } from '@/components/Common/TagContentTypeTabs';
 import { TagFilterChips } from '@/components/Common/TagFilterChips';
+import { ActiveListFilters } from '@/components/Common/PopoverFloat/filterPop';
 import { StickyListFilters } from '@/components/Common/StickyListFilters';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -169,8 +170,11 @@ const Home = observer(() => {
         <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
           {isPc && !isTodoView && composer}
           {!isTodoView && !['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters scopeKey={[searchParams.get('path') || 'blinko', searchParams.get('contentType') || 'all'].join(':')} filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
-            {isTagView && <TagContentTypeTabs />}
-            <TagFilterChips />
+            <div className="flex min-w-0 items-center gap-2">
+              {isTagView && <TagContentTypeTabs />}
+              <TagFilterChips />
+            </div>
+            <ActiveListFilters />
           </StickyListFilters>}
 
           <div data-list-filter-results>

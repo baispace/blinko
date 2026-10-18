@@ -1007,6 +1007,8 @@
   "installing-update": "Installing updates",
   "update-completed": "Update completed",
   "app-update": "Application Update",
+  "restart-app": "Restart now",
+  "check-for-updates": "Check for updates",
   "updating-to-version": "Update to",
   "live-preview": "Live Preview",
   "real-time-rendering-as-you-type": "Real-time rendering as you type",

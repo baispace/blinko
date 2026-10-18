@@ -8,9 +8,16 @@ import { GlobalSearch } from './GlobalSearch';
 
 interface BarSearchInputProps {
   isPc: boolean;
+  /**
+   * 只藏掉触发按钮，⌘K 监听与全局搜索弹窗照常工作。
+   *
+   * 这个组件把「快捷键 + 弹窗」和「按钮」绑在一起了：AI 页顶栏不需要这个按钮入口，
+   * 但直接不渲染组件会让 ⌘K 在聊天页一起失效，所以要分开控制。
+   */
+  hideButton?: boolean;
 }
 
-export const BarSearchInput = observer(({}: BarSearchInputProps) => {
+export const BarSearchInput = observer(({ hideButton }: BarSearchInputProps) => {
   const { t } = useTranslation();
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
 
@@ -39,12 +46,12 @@ export const BarSearchInput = observer(({}: BarSearchInputProps) => {
   const searchLabel = `${t('search')} · ${shortcut}`;
   return <>
     <GlobalSearch isOpen={isGlobalSearchOpen} onOpenChange={setIsGlobalSearchOpen} />
-    <Tooltip content={searchLabel} delay={400}>
+    {!hideButton && <Tooltip content={searchLabel} delay={400}>
       <Button isIconOnly size="sm" variant="light" aria-label={searchLabel}
         className="text-default-500 hover:text-foreground rounded-lg"
         onPress={() => setIsGlobalSearchOpen(true)}>
         <Icon icon="lets-icons:search" width="22" height="22" />
       </Button>
-    </Tooltip>
+    </Tooltip>}
   </>;
 });

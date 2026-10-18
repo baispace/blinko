@@ -126,6 +126,8 @@
   "api-key": "API金鑰",
   "api-version": "API 版本",
   "app-update": "應用更新",
+  "restart-app": "立即重新啟動",
+  "check-for-updates": "檢查更新",
   "app-upgrade-required": "需要升級應用程式",
   "apply-filter": "应用过滤器",
   "archive": "歸檔",

@@ -5,6 +5,24 @@ export function StickyListFilters({ filterKey, scopeKey = '', children }: { filt
   const anchor = useRef<HTMLDivElement>(null);
   const previousKey = useRef(filterKey);
   const previousScope = useRef(scopeKey);
+  const wasPinned = useRef(false);
+  // Remember the position before filtering replaces the results. Clicking a
+  // filter must not itself scroll a previously unpinned bar to the top.
+  useLayoutEffect(() => {
+    const marker = anchor.current;
+    const viewport = marker?.closest<HTMLElement>('[data-scroll-viewport]');
+    const surface = marker?.nextElementSibling as HTMLElement | null;
+    if (!marker || !viewport || !surface) return;
+    const trackPosition = () => {
+      const inset = parseFloat(getComputedStyle(surface).top) || 0;
+      wasPinned.current = viewport.scrollTop > 0 &&
+        marker.getBoundingClientRect().top <= viewport.getBoundingClientRect().top + viewport.clientTop + inset + 0.5;
+    };
+    wasPinned.current = false;
+    if (previousScope.current === scopeKey) trackPosition();
+    viewport.addEventListener('scroll', trackPosition, { passive: true });
+    return () => viewport.removeEventListener('scroll', trackPosition);
+  }, [scopeKey]);
   useLayoutEffect(() => {
     const marker = anchor.current;
     const viewport = marker?.closest<HTMLElement>('[data-scroll-viewport]');
@@ -23,7 +41,7 @@ export function StickyListFilters({ filterKey, scopeKey = '', children }: { filt
     observer.observe(viewport);
     observer.observe(surface);
     return () => { observer.disconnect(); results.style.removeProperty('min-height'); };
-  }, [filterKey]);
+  }, [scopeKey]);
   useLayoutEffect(() => {
     const scopeChanged = previousScope.current !== scopeKey;
     previousScope.current = scopeKey;
@@ -33,9 +51,11 @@ export function StickyListFilters({ filterKey, scopeKey = '', children }: { filt
     const viewport = marker?.closest<HTMLElement>('[data-scroll-viewport]');
     if (!marker || !viewport) return;
     if (scopeChanged) {
+      wasPinned.current = false;
       viewport.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
+    if (!wasPinned.current) return;
     const surface = marker.nextElementSibling;
     const inset = surface ? parseFloat(getComputedStyle(surface).top) || 0 : 0;
     const top = viewport.scrollTop + marker.getBoundingClientRect().top - viewport.getBoundingClientRect().top - viewport.clientTop - inset;
@@ -44,7 +64,7 @@ export function StickyListFilters({ filterKey, scopeKey = '', children }: { filt
 
   return <>
     <div ref={anchor} aria-hidden="true" />
-    <div data-testid="sticky-list-filters" className="sticky top-14 z-20 -mx-2 mb-3 flex min-w-0 items-center gap-2 border-b border-default-200 bg-background px-2 py-1 empty:hidden md:top-0 md:-mx-6 md:px-6">
+    <div data-testid="sticky-list-filters" className="sticky top-14 z-20 -mx-2 mb-3 flex min-w-0 flex-col items-stretch border-b border-default-200 bg-background px-2 py-1 empty:hidden md:top-0 md:-mx-6 md:px-6">
       {children}
     </div>
   </>;

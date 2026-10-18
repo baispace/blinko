@@ -10,7 +10,7 @@
       "app",
       "dmg"
     ],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/ink/32x32.png",
       "icons/ink/128x128.png",
@@ -23,11 +23,12 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": [],
-      "pubkey": ""
+      "endpoints": [
+        "https://github.com/baispace/blinko/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZFNDI0NDlGQzFCODdEMEEKUldRS2ZiakJuMFJDYnZ4NDEvWFB4OUNnWEcxaFh1RVE2Ym9BY1pPckNUajRib3RnY2xyMDluMjcK"
     }
   },
-  "version": "1.9.0",
   "app": {
     "macOSPrivateApi": true
   }

@@ -8,6 +8,8 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { UserStore } from '@/store/user';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { UpdateProgressDialog } from '@/components/Common/UpdateProgressDialog';
+import { isDesktop, isInTauri } from '@/lib/tauriHelper';
 import { api } from '@/lib/trpc';
 import { siteInfoSchema, type SiteInfo, type SiteRelease } from '@shared/lib/siteInfo';
 
@@ -21,6 +23,9 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
   const [editingDescription, setEditingDescription] = useState(false), [description, setDescription] = useState('');
   const [draft, setDraft] = useState<SiteRelease | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  // 更新通道只存在于桌面壳里；浏览器端没有 Tauri 运行时，按钮不出现
+  const canUpdate = isInTauri() && isDesktop();
   const load = async () => {
     setLoading(true); setFailed(false);
     try { setSnapshot(await api.config.siteInfo.query()); }
@@ -85,6 +90,7 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
       </div></article>)}</div>}
     </section>
 
-    {!updatesOnly && <details className="border-t border-default-200/60 pt-4"><summary className="cursor-pointer text-xs text-default-400">{text('运行信息与维护', 'Runtime & maintenance')}</summary><div className="mt-4 space-y-4 text-xs text-default-500"><p>{text('当前地址', 'Address')} · {window.location.origin}</p><p>{text('基于开源项目', 'Built on')} <a href="https://github.com/blinko-space/blinko" target="_blank" rel="noreferrer" className="text-primary">Blinko</a>{serverVersion ? ` · ${serverVersion}` : ''}</p><div className="flex flex-wrap items-center justify-between gap-3"><span>{text('页面显示异常时，可清除页面缓存后重新加载。', 'If the page looks incorrect, clear its cache and reload.')}</span><Button size="sm" variant="flat" isLoading={clearing} onPress={clearCache}>{t('clear-browser-cache')}</Button></div></div></details>}
+    {!updatesOnly && <details className="border-t border-default-200/60 pt-4"><summary className="cursor-pointer text-xs text-default-400">{text('运行信息与维护', 'Runtime & maintenance')}</summary><div className="mt-4 space-y-4 text-xs text-default-500"><p>{text('当前地址', 'Address')} · {window.location.origin}</p><p>{text('基于开源项目', 'Built on')} <a href="https://github.com/blinko-space/blinko" target="_blank" rel="noreferrer" className="text-primary">Blinko</a>{serverVersion ? ` · ${serverVersion}` : ''}</p><div className="flex flex-wrap items-center justify-between gap-3"><span>{text('页面显示异常时，可清除页面缓存后重新加载。', 'If the page looks incorrect, clear its cache and reload.')}</span><Button size="sm" variant="flat" isLoading={clearing} onPress={clearCache}>{t('clear-browser-cache')}</Button></div>{canUpdate && <div className="flex flex-wrap items-center justify-between gap-3"><span>{text('桌面端可在此检查并安装新版本。', 'Check and install a new version from the desktop app.')}</span><Button size="sm" variant="flat" startContent={<Icon icon="tabler:refresh" width="16" />} onPress={() => setUpdating(true)}>{t('check-for-updates')}</Button></div>}</div></details>}
+    <UpdateProgressDialog isOpen={updating} onClose={() => setUpdating(false)} />
   </div>;
 });

@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { dailyDraftSchema, parseDailyDraft, workflows, hasSavedWorkflowResult } from '../../shared/lib/aiWorkflows';
 import { buildDailyTaskPatch } from '../../shared/lib/dailyTaskPatch';
+import { isNumericLeadingTagName } from '../../shared/lib/tags';
 const base = { action: 'update' as const, taskId: 7, title: null, description: null, due: null, priority: null, status: null, reason: '用户明确说明', postponeReason: '' };
 const task = { content: '原任务\n\n保留描述 #工作', isArchived: false, metadata: { title: '原任务', expireAt: '2026-10-15T15:59:59.000Z', priorityUrgent: false, priorityImportant: true, snoozeCount: 2, custom: '保留字段' } };
 test('daily schema rejects invented update ids, duplicate updates and invalid calendar dates', () => {
@@ -45,4 +46,28 @@ test('saved workflow results are protected from destructive regeneration', () =>
   expect(hasSavedWorkflowResult({ dailySaved: { reportId: 13, actions: {} } })).toBe(true);
   expect(hasSavedWorkflowResult({ dailySaved: { actions: { 0: 7 } } })).toBe(true);
   expect(hasSavedWorkflowResult({ savedDrafts: {}, dailySaved: { actions: {} } })).toBe(false);
+});
+
+test('AI workflows forbid "#" for source ids because it is this app’s tag syntax', () => {
+  // `#34` 在本应用里就是标签；模型用它标注来源待办 ID 会生成一排垃圾标签。
+  for (const key of ['daily', 'weekly', 'note', 'ideas']) {
+    const prompt = workflows.find(workflow => workflow.key === key)?.prompt ?? '';
+    expect(prompt).toContain('(ID 数字)');
+    expect(prompt).toContain('严禁使用 # 前缀');
+    expect(prompt).not.toMatch(/来源\s*#\d/);
+  }
+  // 提取待办本来就不产出正文，不要求带来源规范
+  expect(workflows.find(workflow => workflow.key === 'tasks')?.prompt ?? '').not.toContain('严禁使用 # 前缀');
+});
+
+test('digit-leading hashtag names are recognized so AI notes never persist them as tags', () => {
+  // 贪心解析会把 `来源 #34「测试下」已于` 整串当成标签，所以要判「数字开头」而不是「纯数字」
+  expect(isNumericLeadingTagName('34')).toBe(true);
+  expect(isNumericLeadingTagName('107')).toBe(true);
+  expect(isNumericLeadingTagName('34「测试下」已于')).toBe(true);
+  expect(isNumericLeadingTagName('36「AI')).toBe(true);
+  // 用户自己写的正经标签不能被误伤
+  expect(isNumericLeadingTagName('工作')).toBe(false);
+  expect(isNumericLeadingTagName('3D模型')).toBe(true);
+  expect(isNumericLeadingTagName('Welcome')).toBe(false);
 });

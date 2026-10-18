@@ -1,0 +1,134 @@
+name: Build macOS App
+# macOS 应用自动构建：push 到 main → GitHub 机器上出 .app → 作为 artifact 上传
+# 定位：给「自己下载安装来用」的日常研发流服务。
+#   - 不碰版本号（用 0.0.0-dev.<run>.<sha>，不提交回仓库）
+#   - 不产生 GitHub Release，不污染正式发版链路
+#   - 不需要任何 Secret，也不需要 Apple 开发者账号（沿用 tauri.macos.conf.json 的 ad-hoc 签名）
+# 正式发布 + 应用内自动更新走 app-release.yml + 通道 B（需要密钥与签名证书）
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '构建架构（Intel Mac 用 universal-apple-darwin）'
+        required: false
+        default: 'aarch64-apple-darwin'
+        type: string
+
+# 同分支连续推送时取消旧构建，避免排队烧分钟
+concurrency:
+  group: mac-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SHA_SHORT: ${{ github.sha }}
+
+jobs:
+  build:
+    name: Build Ink.app
+    runs-on: macos-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 确定构建架构
+        id: tgt
+        run: |
+          T="${{ inputs.target || 'aarch64-apple-darwin' }}"
+          echo "value=$T" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: 提高 Node 内存上限
+        run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.8
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ steps.tgt.outputs.value }}
+
+      - name: Rust 缓存
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+          cache-on-failure: true
+
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+
+      # dev 版本号：只在本次构建里生效，不提交回仓库，
+      # 且 0.0.0-dev.* 低于任何正式版本，确保 dev 包永远不会被应用内更新通道拉走
+      - name: 写入 dev 版本号
+        run: |
+          V="0.0.0-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA:0:7}"
+          echo "DEV_VERSION=$V" >> "$GITHUB_ENV"
+          jq --arg v "$V" '.version = $v' app/src-tauri/tauri.conf.json > tmp.json \
+            && mv tmp.json app/src-tauri/tauri.conf.json
+          echo "dev 版本号: $V"
+          grep '"version"' app/src-tauri/tauri.conf.json | head -1
+
+      # 只出 .app，不打 DMG：省掉压缩与挂载步骤，下载后直接拖进「应用程序」。
+      # 不覆盖 beforeBuildCommand —— tauri.macos.conf.json 里那条会构建前端并把
+      # VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn 打进产物，与本地
+      # `bun run tauri:mac:build` 行为保持一致。
+      - name: 构建 .app
+        run: |
+          cd app
+          bun run tauri build \
+            --target "${{ steps.tgt.outputs.value }}" \
+            --bundles app
+
+      - name: 打包为 tar.gz
+        run: |
+          set -euo pipefail
+          SRC="app/src-tauri/target/${{ steps.tgt.outputs.value }}/release/bundle/macos"
+          test -d "$SRC/Ink.app" || { echo "::error::未找到 $SRC/Ink.app"; ls -la "$SRC"; exit 1; }
+          OUT="$RUNNER_TEMP/Ink-${{ env.SHA_SHORT }}.app.tar.gz"
+          tar -C "$SRC" -czf "$OUT" "Ink.app"
+          echo "产物: $OUT"
+          du -h "$OUT"
+          # 把版本号写进 CFBundleShortVersionString 便于安装后肉眼确认
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$SRC/Ink.app/Contents/Info.plist" || true
+
+      - name: 上传 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ink-macOS-${{ steps.tgt.outputs.value }}-${{ env.SHA_SHORT }}
+          path: ${{ runner.temp }}/Ink-*.app.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: 输出安装说明
+        run: |
+          {
+            echo "### macOS 应用已构建"
+            echo
+            echo "| 项 | 值 |"
+            echo "|---|---|"
+            echo "| 提交 | \`${GITHUB_SHA}\` |"
+            echo "| 架构 | \`${{ steps.tgt.outputs.value }}\` |"
+            echo "| 版本 | \`${DEV_VERSION}\` |"
+            echo
+            echo "在本次运行的 **Artifacts** 区域下载 \`Ink.app.tar.gz\`，"
+            echo "解压后把 \`Ink.app\` 拖进「应用程序」文件夹。"
+            echo
+            echo "首次打开若提示「无法验证开发者」，**右键点击 Ink.app → 打开** 即可绕过"
+            echo "（这是未做 Apple 公证的 ad-hoc 签名包的正常现象）。"
+          } >> "$GITHUB_STEP_SUMMARY"

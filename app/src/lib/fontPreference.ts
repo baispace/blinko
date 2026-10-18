@@ -17,6 +17,7 @@
 export const FONT_STACK_KEY = 'ink:font-stack';
 export const FONT_NAME_KEY = 'ink:font-name';
 export const FONT_WEIGHTS_KEY = 'ink:font-weights';
+export const FONT_CSS_KEY = 'ink:font-css';
 
 export interface SavedFontPreference {
   /** 字体名，同时用作 FontFace 的 family 名 */
@@ -25,6 +26,7 @@ export interface SavedFontPreference {
   stack: string;
   /** 字重列表，长度 > 4 视为可变字体 */
   weights: number[];
+  stylesheet?: string;
 }
 
 /**
@@ -57,6 +59,8 @@ export function writeSavedFontPreference(pref: SavedFontPreference): void {
     localStorage.setItem(FONT_NAME_KEY, pref.name);
     localStorage.setItem(FONT_STACK_KEY, pref.stack);
     localStorage.setItem(FONT_WEIGHTS_KEY, JSON.stringify(pref.weights));
+    if (pref.stylesheet) localStorage.setItem(FONT_CSS_KEY, pref.stylesheet);
+    else localStorage.removeItem(FONT_CSS_KEY);
   } catch {
     // 存储不可用不影响功能，忽略
   }
@@ -68,6 +72,7 @@ export function clearSavedFontPreference(): void {
     localStorage.removeItem(FONT_NAME_KEY);
     localStorage.removeItem(FONT_STACK_KEY);
     localStorage.removeItem(FONT_WEIGHTS_KEY);
+    localStorage.removeItem(FONT_CSS_KEY);
   } catch {
     // 同上，忽略
   }

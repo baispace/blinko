@@ -42,13 +42,34 @@ test('returning to system font cancels an older pending application',async()=>{
   expect(document.documentElement.style.fontFamily).toBe('');
 });
 test('bundled stylesheet missing from CDN falls back to the origin',async()=>{
-  FontManager.initializeRegistry([{...metadata('LXGW WenKai'),isLocal:false,url:'https://cdn.example.com/ink/font-assets/lxgw-wenkai/1.7.0/style.css'}]);
+  FontManager.initializeRegistry([{...metadata('LXGW WenKai'),isLocal:false,url:'https://cdn.example.com/ink/font-assets/lxgw-wenkai/1.7.0/style-v2.css'}]);
   const pending=FontManager.applyFont('LXGW WenKai');
-  expect(lastLink.href).toBe('https://cdn.example.com/ink/font-assets/lxgw-wenkai/1.7.0/style.css');
+  expect(lastLink.href).toBe('https://cdn.example.com/ink/font-assets/lxgw-wenkai/1.7.0/style-v2.css');
   lastLink.onerror();
-  expect(lastLink.href).toBe('http://ink.test/font-assets/lxgw-wenkai/1.7.0/style.css');
+  expect(lastLink.href).toBe('http://ink.test/font-assets/lxgw-wenkai/1.7.0/style-v2.css');
   faces.add({family:'LXGW WenKai',status:'loaded'});
   lastLink.onload();
   expect(await pending).toBe(true);
+});
+test('a loaded WenKai shard does not apply the font before visible regular and bold glyphs are ready',async()=>{
+  await FontManager.applyFont('default');
+  (FontManager as any).loadedFonts.delete('LXGW WenKai');
+  const originalLoad=document.fonts.load;
+  const requests:Array<{font:string,text:string}>=[];
+  let release!:()=>void;
+  const glyphs=new Promise<void>(resolve=>{release=resolve;});
+  (document.fonts as any).load=async(font:string,text:string)=>{requests.push({font,text});await glyphs;return [];};
+  try {
+    FontManager.initializeRegistry([{...metadata('LXGW WenKai'),isLocal:false,url:'/font-assets/lxgw-wenkai/1.7.0/style-v2.css'}]);
+    const pending=FontManager.applyFont('LXGW WenKai');
+    lastLink.onload();
+    await new Promise(resolve=>setTimeout(resolve,0));
+    expect(requests).toHaveLength(2);
+    expect(requests[0]!.text).toContain('闪');
+    expect(requests[1]!.font).toContain('700');
+    expect(document.body.style.fontFamily).toBe('');
+    release();
+    expect(await pending).toBe(true);
+  } finally {(document.fonts as any).load=originalLoad;}
 });
 afterAll(()=>{globalThis.document=originalDocument;globalThis.FontFace=originalFace;globalThis.localStorage=originalStorage;globalThis.window=originalWindow;});

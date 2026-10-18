@@ -252,10 +252,10 @@ export const cdnFonts: FontSeed[] = [
   {
     name: 'LXGW WenKai',
     displayName: '霞鹜文楷',
-    url: '/font-assets/lxgw-wenkai/1.7.0/style.css',
+    url: '/font-assets/lxgw-wenkai/1.7.0/style-v2.css',
     fileData: null,
     isLocal: false,
-    weights: [300, 400, 700],
+    weights: [400, 700],
     category: 'sans-serif',
     isSystem: false,
     sortOrder: 128,

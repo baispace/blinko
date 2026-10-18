@@ -22,6 +22,7 @@ import { StorageState } from './standard/StorageState';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { isInTauri, setTauriTheme } from '@/lib/tauriHelper';
 import { FontManager } from '@/lib/fontManager';
+import { resolveBodyFontWeight } from '@/lib/fontTypography';
 
 export class UserStore implements Store {
   sid = 'user';
@@ -214,7 +215,7 @@ export class UserStore implements Store {
   }
 
   updateAppTitle(customTitle?: string) {
-    const appTitle = customTitle?.trim() || 'Blinko';
+    const appTitle = customTitle?.trim() || 'Ink';
     document.title = appTitle;
     document.querySelector('meta[name="application-name"]')?.setAttribute('content', appTitle);
     document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appTitle);
@@ -360,7 +361,7 @@ export class UserStore implements Store {
     // 通过 `var(--app-*)` 一起消费 —— 单一信源覆盖三种内容类型（闪念/笔记/待办）。
     {
       const fontSize = Number(config?.fontSize) >= 12 && Number(config?.fontSize) <= 20 ? Number(config.fontSize) : 16;
-      const fontWeight = Number(config?.fontWeight) >= 300 && Number(config?.fontWeight) <= 700 ? Number(config.fontWeight) : 400;
+      const fontWeight = resolveBodyFontWeight(config?.fontStyle, config?.fontWeight);
       const lineHeight = Number(config?.lineHeight) >= 1 && Number(config?.lineHeight) <= 2.5 ? Number(config.lineHeight) : 1.6;
       const paragraphSpacing = Number(config?.paragraphSpacing) >= 0 && Number(config?.paragraphSpacing) <= 30 ? Number(config.paragraphSpacing) : 8;
       const lineWidthChars = Number(config?.lineWidthChars) >= 30 && Number(config?.lineWidthChars) <= 120 ? Number(config.lineWidthChars) : 60;

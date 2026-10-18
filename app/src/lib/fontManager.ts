@@ -235,6 +235,11 @@ class FontManagerClass {
   public async restoreSavedFont(timeoutMs: number = 1500): Promise<boolean> {
     const pref = readSavedFontPreference();
     if (!pref) return false;
+    if (pref.name === 'LXGW WenKai' && (window as any).__inkWenkaiReady) {
+      await (window as any).__inkWenkaiReady;
+      // Startup CSS is already available; normal loading still checks visible glyphs.
+      return false;
+    }
     if (this.isFontLoaded(pref.name)) return true;
     const version = this.applyVersion;
     const deadline = Date.now() + timeoutMs;
@@ -323,6 +328,14 @@ class FontManagerClass {
       } else if (fontConfig.url) {
         // CDN font - inject stylesheet
         await this.injectFontStylesheet(fontConfig.url, fontName);
+        if (fontName === 'LXGW WenKai' && document.fonts) {
+          // A loaded Latin shard does not mean the visible Chinese glyphs are ready.
+          const text = [...new Set(('首页闪念笔记待办标签对话搜索设置今天保存' + (document.body?.innerText || '')).slice(0, 4000))].join('');
+          await withTimeout(Promise.all([
+            document.fonts.load('400 16px "LXGW WenKai"', text),
+            document.fonts.load('700 16px "LXGW WenKai"', text),
+          ]), 5000);
+        }
       }
 
       // Wait for the font to be actually available
@@ -499,7 +512,9 @@ class FontManagerClass {
       // Check if already injected
       const existingLink = document.querySelector(`link[data-font="${fontName}"]`);
       if (existingLink) {
-        resolve();
+        const earlyReady = (window as any).__inkWenkaiReady;
+        if (fontName === 'LXGW WenKai' && earlyReady) earlyReady.then(resolve, reject);
+        else resolve();
         return;
       }
 
@@ -635,6 +650,7 @@ class FontManagerClass {
       name: fontName,
       stack: fontFamily,
       weights: fontConfig.weights ?? [],
+      stylesheet: fontConfig.url ? getBlinkoEndpoint(resolveFontStylesheetUrl(fontConfig.url)) : undefined,
     });
     
     // Apply the family only after its font has loaded.

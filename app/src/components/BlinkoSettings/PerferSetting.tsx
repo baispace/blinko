@@ -1,4 +1,5 @@
 import { SiteBrandingSettings } from './SiteBrandingSettings';
+import { resolveBodyFontWeight } from '@/lib/fontTypography';
 import { observer } from "mobx-react-lite";
 import { Switch, Input, Tooltip, Textarea, Slider, Button } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -184,7 +185,9 @@ export const PerferSetting = observer(({ section = 'appearance' }: { section?: '
   // 行宽 30-120ch / 首行缩进 0-4em / H1 18-40px / H2 16-36px / H3 14-32px /
   // 表格字号 12-20px（与正文同档）
   const [fontSize, setFontSize] = useState<number>(blinko.config.value?.fontSize ?? 16);
-  const [fontWeight, setFontWeight] = useState<number>(blinko.config.value?.fontWeight ?? 400);
+  const [requestedFontWeight, setFontWeight] = useState<number>(blinko.config.value?.fontWeight ?? 400);
+  const isWenkai = blinko.config.value?.fontStyle === 'LXGW WenKai';
+  const fontWeight = resolveBodyFontWeight(blinko.config.value?.fontStyle, requestedFontWeight);
   const [lineHeight, setLineHeight] = useState<number>(blinko.config.value?.lineHeight ?? 1.6);
   const [paragraphSpacing, setParagraphSpacing] = useState<number>(blinko.config.value?.paragraphSpacing ?? 8);
   const [lineWidthChars, setLineWidthChars] = useState<number>(blinko.config.value?.lineWidthChars ?? 60);
@@ -563,6 +566,9 @@ export const PerferSetting = observer(({ section = 'appearance' }: { section?: '
       </div>
       <div className="flex items-center gap-4 py-3">
         <div className="w-24 shrink-0 text-sm font-medium">{t('font-weight')}</div>
+        {isWenkai ? <div className="flex-1 min-w-0 text-sm text-default-500">
+          {t('wenkai-weight-hint', { defaultValue: '文楷正文使用常规 400，加粗使用 700，保持清晰对比。' })}
+        </div> :
         <Slider
           size="sm"
           minValue={300}
@@ -590,7 +596,7 @@ export const PerferSetting = observer(({ section = 'appearance' }: { section?: '
             { value: 700, label: '700' },
           ]}
           classNames={{ track: '!bg-default-300/50', filler: '!bg-primary', thumb: '!bg-primary !shadow-small' }}
-        />
+        />}
         <div className="w-14 text-right text-sm tabular-nums text-default-500">{fontWeight}</div>
       </div>
 
@@ -635,6 +641,11 @@ export const PerferSetting = observer(({ section = 'appearance' }: { section?: '
           <h3 style={{ fontSize: `${h3Size}px`, margin: '0 0 4px' }}>### {t('h3-preview-title')}</h3>
           <p style={{ fontSize:`${fontSize}px`, fontWeight, lineHeight, textIndent:`${firstLineIndentChars}em`, marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text')}</p>
           <p style={{ fontSize:`${fontSize}px`, fontWeight, lineHeight, textIndent:`${firstLineIndentChars}em`, marginBottom: `${paragraphSpacing}px` }}>{t('typography-preview-text-2')}</p>
+          <p style={{ fontWeight, lineHeight }}>
+            {t('font-weight-preview-normal', { defaultValue: '常规正文示例' })}
+            {' · '}
+            <strong style={{ fontWeight: 700 }}>{t('font-weight-preview-bold', { defaultValue: '加粗重点示例' })}</strong>
+          </p>
           <table style={{ fontSize: `${tableSize}px`, width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--desc, #ccc)' }}>

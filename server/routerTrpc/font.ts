@@ -132,6 +132,10 @@ export const fontRouter = router({
       return fonts.map(font => ({
         ...transformFontMetadata(font),
         url: font.url ? resolveFontStylesheetUrl(font.url, base) : font.url,
+        // Existing databases may still advertise the removed bundled light weight.
+        weights: font.name === 'LXGW WenKai' && !font.isLocal && font.url
+          && resolveFontStylesheetUrl(font.url).endsWith('/font-assets/lxgw-wenkai/1.7.0/style-v2.css')
+          ? [400, 700] : font.weights as number[],
       }));
     }),
 

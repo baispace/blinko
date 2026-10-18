@@ -6,17 +6,17 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
-  <meta name="application-name" content="Blinko" />
+  <meta name="application-name" content="Ink" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Blinko" />
+  <meta name="apple-mobile-web-app-title" content="Ink" />
 
   <link rel="apple-touch-icon" sizes="120x120" href="/icons/Square142x142Logo.png" />
   <link rel="apple-touch-icon" sizes="152x152" href="/icons/Square150x150Logo.png" />
   <link rel="apple-touch-icon" sizes="167x167" href="/icons/Square284x284Logo.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/Square284x284Logo.png" />
 
-  <meta name="description" content="Blinko self-hosted personal note" />
+  <meta name="description" content="Ink personal workspace" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="msapplication-config" content="/icons/browserconfig.xml" />
@@ -26,7 +26,7 @@
 
   <link rel="manifest" href="/manifest.json" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <title>Blinko</title>
+  <title>Ink</title>
 
   <!--
     首屏字体补丁：同步执行，位置必须在 React 与业务请求之前。
@@ -48,6 +48,48 @@
         if (stack) {
           document.documentElement.style.setProperty('--font-family', stack);
           document.documentElement.style.fontFamily = stack;
+        }
+        if (localStorage.getItem('ink:font-name') === 'LXGW WenKai') {
+          var localCss = '/font-assets/lxgw-wenkai/1.7.0/startup-v2.css';
+          var savedCss = localStorage.getItem('ink:font-css') || localCss;
+          // Only transform our bundled stylesheet; preserve custom font URLs.
+          var cssUrl = new URL(savedCss.replace(/\/font-assets\/lxgw-wenkai\/1\.7\.0\/(?:style(?:-v2)?|startup-v1)\.css$/, localCss), location.href);
+          if (!/^https?:$/.test(cssUrl.protocol)) return;
+          var bundled = cssUrl.pathname.endsWith(localCss);
+          if (bundled) {
+            [117, 118, 119].forEach(function (part) {
+              var preload = document.createElement('link');
+              preload.rel = 'preload';
+              preload.as = 'font';
+              preload.type = 'font/woff2';
+              preload.crossOrigin = 'anonymous';
+              preload.href = new URL('./files/lxgwwenkai-regular-subset-' + part + '.woff2', cssUrl).href;
+              document.head.appendChild(preload);
+            });
+          }
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = cssUrl.href;
+          link.setAttribute('data-font', 'LXGW WenKai');
+          window.__inkWenkaiReady = new Promise(function (resolve) {
+            var timer = setTimeout(resolve, 5000);
+            link.onload = function () {
+              var glyphs = document.fonts ? document.fonts.load('400 16px "LXGW WenKai"', '首页闪念笔记待办标签对话搜索设置今天保存 ABC123') : Promise.resolve();
+              glyphs.then(function () { clearTimeout(timer); resolve(); }, function () { clearTimeout(timer); resolve(); });
+            };
+            var retried = false;
+            link.onerror = function () {
+              if (bundled && !retried && cssUrl.origin !== location.origin) {
+                retried = true;
+                link.href = localCss;
+              } else {
+                clearTimeout(timer);
+                link.remove();
+                resolve();
+              }
+            };
+          });
+          document.head.appendChild(link);
         }
       } catch (e) {
         /* 隐私模式 / 存储不可用：保持系统字体栈即可 */

@@ -1,6 +1,6 @@
 # 霞鹜文楷 1.7.0：站点本地资源与 CDN 部署
 
-此目录来自 npm 包 `lxgw-wenkai-webfont@1.7.0`，包含 LXGW WenKai 的 300、400、700 三种字重及其全部字符分片，不包含未使用的 LXGW WenKai Mono 等宽字体。字体分片和字重 CSS 保持上游原样；入口 style.css 仅引入这三种字重。
+此目录来自 npm 包 `lxgw-wenkai-webfont@1.7.0`，包含 LXGW WenKai 的 400、700 两种字重及其全部字符分片，不包含未使用的 LXGW WenKai Mono 等宽字体。字体分片和字重 CSS 保持上游原样；入口 style.css 仅引入这两种字重。
 
 ## 本地部署
 
@@ -22,6 +22,13 @@
 CDN 跨域使用时，woff2 响应应允许站点域名跨域访问（公开字体可设 `Access-Control-Allow-Origin: *`）。CSS 使用 `text/css`，woff2 使用 `font/woff2`。版本目录内的文件可设 `Cache-Control: public, max-age=31536000, immutable`，升级时另建版本目录。
 
 ## 注意
+
+- 已移除 300 细体的 97 个分片（约 5.16 MiB），保留 400、700 共 194 个分片。普通入口更新为 `style-v2.css`，旧数据库地址自动映射到新版，无需重置数据。
+- 上传功能不会删除 CDN 上的旧文件。已经上传的细体文件可以暂时保留，以兼容未更新的页面；新版本不再上传或引用它们。
+
+- 首屏使用新增的 `startup-v2.css`，它将两种字重的 CSS 展平，消除 `@import` 串行请求。可运行 `python3 scripts/build-wenkai-startup.py` 重新生成；修改后应更换文件版本名以避免 CDN 长期缓存。
+- 本次部署后，通过现有“上传静态资源到 CDN”上传新增 CSS。页面仅为已选择文楷的用户预加载常规字重 117、118、119 三个常用分片（合计约 125 KiB），其他字形与字重按需请求。
+- 不增加页面启动等待时间。首次访问、缓存未命中或慢网络下仍可能回退字体；此优化减少加载链路与常用字补载，不保证所有网络环境下完全无闪动。
 
 - 不要只上传 `lxgwwenkai-bold-subset-119.woff2`：它仅包含粗体字的一部分字符。
 - 不要把几百份分片逐个导入站点的“本地字体”数据库；浏览器通过 CSS 的 unicode-range 按需请求即可。

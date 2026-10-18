@@ -45,7 +45,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
             )}
 
           </div>
-          {!collapsed && <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-medium text-default-700">{user.nickname || user.name || accountLabel}</span><span className="block text-[11px] text-default-400">{accountLabel}</span></span>}
+          {!collapsed && <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-medium text-foreground">{user.nickname || user.name || accountLabel}</span><span className="block text-[11px] text-default-500">{accountLabel}</span></span>}
         </button>
       </PopoverTrigger>
       <PopoverContent className="block w-[min(320px,calc(100vw-24px))] overflow-hidden rounded-xl border border-default-200 bg-background p-1.5 shadow-xl">

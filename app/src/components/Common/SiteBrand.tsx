@@ -18,7 +18,7 @@ export const SiteBrand = observer(({ compact = false, size = 30, framed = false,
     </span>
     {!compact && <span className="flex min-w-0 flex-1 flex-col gap-1 text-left">
       <span className="line-clamp-2 break-words text-[14px] font-semibold leading-[19px] tracking-[-0.01em] text-foreground">{title}</span>
-      {tagline && <span className="block truncate text-[11px] font-normal leading-[15px] text-default-400">{tagline}</span>}
+      {tagline && <span className="block truncate text-[11px] font-normal leading-[15px] text-default-500">{tagline}</span>}
     </span>}
   </span>;
 });

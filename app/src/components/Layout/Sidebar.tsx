@@ -190,7 +190,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
       {aiMode ? <>
         <div className="flex-1 min-h-0 mt-5 overflow-y-auto px-2">
           {!base.isSidebarCollapsed ? <>
-            <div className="px-2 mb-3 text-xs text-default-400">{t('conversation-history')}</div>
+            <div className="px-2 mb-3 text-xs text-default-600">{t('conversation-history')}</div>
             <AiConversactionList inline onSelect={onItemClick} />
           </> : <Tooltip content={t('conversation-history')} placement="right">
             <button type="button" aria-label={t('conversation-history')} onClick={base.toggleSidebar} className="flex mx-auto p-2 rounded-md hover:bg-hover">
@@ -215,7 +215,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             return (
               <div key={group.key} className="mt-3 first:mt-0">
                 {!base.isSidebarCollapsed && (
-                  <div className="px-3 pb-1.5 text-[11.5px] font-medium tracking-[0.04em] uppercase text-default-400">
+                  <div className="px-3 pb-1.5 text-[11.5px] font-medium tracking-[0.04em] uppercase text-default-600">
                     {t(group.label)}
                   </div>
                 )}
@@ -258,13 +258,13 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
                             ${base.isSidebarCollapsed ? 'justify-center' : ''}
                             ${isActive
                               ? '!bg-primary/10 !text-primary font-medium'
-                              : 'text-default-600 hover:!bg-hover hover:text-foreground'}`}
+                              : 'text-foreground hover:!bg-hover'}`}
                         >
                           <Icon className={`shrink-0 ${base.isSidebarCollapsed ? 'mx-auto' : ''} ${iconColorClass}`} icon={i.icon} width="20" height="20" />
                           {!base.isSidebarCollapsed && <span className="flex-1 truncate">{label}</span>}
                           {/* 行级 count（对齐原型：右侧 muted 计数） */}
                           {!base.isSidebarCollapsed && typeof viewCount === 'number' && (
-                            <span className="text-[11.5px] font-medium text-default-400 tabular-nums shrink-0">
+                            <span className="text-[11.5px] font-medium text-default-600 tabular-nums shrink-0">
                               {viewCount}
                             </span>
                           )}
@@ -293,7 +293,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
             <div className="mt-3">
               {!base.isSidebarCollapsed ? (
                 <>
-                  <div className="px-3 pb-1.5 text-[11.5px] font-medium tracking-[0.04em] text-default-400">{t('total-tags')}</div>
+                  <div className="px-3 pb-1.5 text-[11.5px] font-medium tracking-[0.04em] text-default-600">{t('total-tags')}</div>
                   <TagListPanel hideHeader />
                 </>
               ) : (

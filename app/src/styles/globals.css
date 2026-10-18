@@ -6,6 +6,13 @@
   outline:2px solid color-mix(in srgb,var(--primary,#2f6feb) 65%,transparent);
   outline-offset:2px;
 }
+/* Document titles are an inline writing surface. Keep the caret as their
+   focus indicator; the shared form outline would frame the whole title. */
+[data-testid="document-title-input"]:focus,
+[data-testid="document-title-input"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 /* HeroUI 2.4.x 给 Input/Textarea 的内层 <input>/<textarea> 硬编码了 `!outline-solid`
    （见 @heroui/theme 的 input.ts / textarea.ts）。聚焦时它会画出 3px 描边，而配套的
    `outline-transparent` 并未生效，颜色回落成 currentColor（前景深色），于是每处 HeroUI

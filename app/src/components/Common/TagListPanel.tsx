@@ -116,7 +116,7 @@ export const TagListPanel = observer(({ hideHeader = false }: { hideHeader?: boo
           handleExpand,
         }) => (
           <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) + 6 }} >
-            <div className={`${SideBarItem}relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : ''}`}
+            <div className={`${SideBarItem}relative group ${(isSelected(element.id)) ? '!bg-primary !text-primary-foreground' : '!text-foreground'}`}
               onClick={e => {
                 e.stopPropagation();
                 //@ts-ignore
@@ -144,7 +144,7 @@ export const TagListPanel = observer(({ hideHeader = false }: { hideHeader?: boo
               <div className="truncate overflow-hidden whitespace-nowrap" title={element.name}>
                 {element.name}
                 {isBranch && element.children?.length > 0 && (
-                  <span className="ml-1 text-xs opacity-60">({element.children.length})</span>
+                  <span className="ml-1 text-xs opacity-80">({element.children.length})</span>
                 )}
               </div>
               <Dropdown>

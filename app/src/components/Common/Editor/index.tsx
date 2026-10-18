@@ -47,6 +47,8 @@ type IProps = {
   onChange?: (content: string) => void,
   onHeightChange?: () => void,
   onSend: (args: OnSendContentType) => Promise<any>,
+  /** Optional external submit control; uses the same upload/reference pipeline. */
+  submitRef?: { current: (() => Promise<any>) | null },
   isSendLoading?: boolean,
   bottomSlot?: ReactElement<any, any>,
   /** 正文之前的创建器元信息（如待办截止日期和优先级） */
@@ -97,7 +99,7 @@ type IProps = {
   focusOnMount?: boolean
 }
 
-const Editor = observer(({ composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, topSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onManualSave, hideDoneButton = false, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
+const Editor = observer(({ composerVariant, documentToolbar = false, documentSidebar, documentSidebarInset = 0, content, onChange, onSend, submitRef, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot, topSlot, fixedNoteType, hideNoteTypeButton = false, hideFullscreenButton = false, autosaveStatus, editable = true, onEditorReady, onDone, onManualSave, hideDoneButton = false, onSidePatch, pageScroll = false, focusOnMount = true }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -119,7 +121,6 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   }, [openPopover]);
 
   // High-frequency toolbar: NoteType / #tag / image / attachment | Aa | @reference
-  const [moreOpen, setMoreOpen] = useState(false);
   const renderToolbar = () => {
     const showLabels = Boolean(composerVariant || (documentToolbar && isPc));
     if (!hiddenToolbar) {
@@ -127,15 +128,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
         <>
           {showTopToolbar ? <>
 
-            <Popover placement="bottom-end" isOpen={moreOpen} onOpenChange={setMoreOpen}>
-              <PopoverTrigger><button type="button" className="document-action-button" aria-label="更多编辑操作" title="更多操作"><Icon icon="tabler:dots" width={19} /></button></PopoverTrigger>
-              <PopoverContent className="w-56 items-stretch p-2 gap-1">
-                <div className="text-xs text-default-400 px-2 py-1">内容操作</div>
-                <ReferenceButton store={store} iconButton={<button type="button" className="document-action-button justify-start w-full"><Icon icon="tabler:link" width={16} />关联内容</button>} />
-                <div className="border-t border-default-100 my-1" />
-                <p className="px-2 text-xs leading-6 text-default-500">选中文字设置格式<br />输入 / 插入内容块<br />输入 @ 引用其他内容<br />Ctrl / ⌘ S 手动保存</p>
-              </PopoverContent>
-            </Popover>
+            <ReferenceButton store={store} iconButton={<button type="button" className="document-action-button" aria-label="关联内容" title="关联内容；输入 @ 也可引用"><Icon icon="tabler:link" width={18} />{isPc && <span className="text-xs">关联</span>}</button>} />
             <input {...getInputProps()} />
           </> : <>
           {!hideNoteTypeButton && (
@@ -207,7 +200,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   const renderRightToolbar = (includeStatus = true) => (
     <div className='flex items-center gap-1 ml-auto'>
       {includeStatus && renderStatusText()}
-      {editable && !(hideDoneButton && onDone) && (onDone
+      {editable && !hideDoneButton && (onDone
         ? <DoneButton store={store} isSendLoading={isSendLoading} />
         : <SendButton store={store} isSendLoading={isSendLoading} label={composerVariant ? t(store.noteType === NoteType.NOTE ? 'composer-save-note' : store.noteType === NoteType.TODO ? 'composer-add-todo' : 'composer-record-blinko') : undefined} />)}
     </div>
@@ -247,6 +240,7 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
   composerVariantRef.current = composerVariant;
 
   useEditorInit(store, onChange, onSend, mode, originReference, initalContent, fixedNoteType, editable, focusOnMount, composerVariantRef);
+  useEffect(()=>{if(submitRef)submitRef.current=()=>store.handleSend();return()=>{if(submitRef)submitRef.current=null;};},[store,submitRef]);
 
   // Placeholder decorations are derived from editor state. A ref update alone does not
   // make ProseMirror recompute them, so refresh the empty editor after mixed-type switches.

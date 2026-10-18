@@ -1,3 +1,4 @@
+import type { TodoQuery } from '@shared/lib/todoViews';
 "use client";
 import { useEffect } from 'react';
 import { PromisePageState, PromiseState } from './standard/PromiseState';
@@ -459,6 +460,8 @@ export class BlinkoStore implements Store {
     }
   })
 
+  todoViewQuery: TodoQuery | undefined = undefined;
+  todoViewSearch = '';
   todoBucket: 'today' | 'upcoming' | 'done' = 'today';
   todoCounts = { today: 0, upcoming: 0, done: 0 };
   private todoCursor: string | null = null;
@@ -466,7 +469,7 @@ export class BlinkoStore implements Store {
     function: async ({ page, size }) => {
       const generation = this.todoFeed.generation;
       const result = await api.notes.todoPage.query({
-        ...this.noteListFilterConfig, bucket: this.todoBucket, searchText: this.searchText,
+        ...(this.todoViewQuery ? {} : this.noteListFilterConfig), bucket: this.todoBucket, view: this.todoViewQuery, searchText: this.todoViewQuery ? this.todoViewSearch : this.searchText,
         size: Math.min(100, Number(size)), cursor: page > 1 ? this.todoCursor || undefined : undefined,
         withCounts: page === 1, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Shanghai',
       });

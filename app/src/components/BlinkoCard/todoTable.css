@@ -1,0 +1,337 @@
+/* 待办表格（列表布局）
+ *
+ * 主张：表格的每一格都是活的控件，不需要为改一个字段去开弹窗。
+ * 因此格子的默认形态是「正文」——透明、无边框、安静；
+ * 只有 hover / 聚焦时才浮出可编辑的方框，暗示这里可以就地改。
+ * 行的操作按钮同理，静止时隐身，避免和内容抢注意力。
+ */
+
+.todo-table-row {
+  position: relative;
+  transition: background-color 120ms ease;
+}
+.todo-table-row:hover,
+.todo-table-row:focus-within {
+  background-color: hsl(var(--heroui-default-50));
+}
+.todo-table-row[data-done="true"] {
+  opacity: 0.8;
+}
+
+/* ── 可编辑单元格 ─────────────────────────────────────── */
+.todo-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.todo-cell-btn {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.4;
+  color: hsl(var(--heroui-default-500));
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.todo-cell-btn:hover {
+  border-color: hsl(var(--heroui-default-200));
+  background-color: hsl(var(--heroui-default-100));
+  color: hsl(var(--heroui-foreground));
+}
+.todo-cell-btn:focus-visible {
+  outline: none;
+  border-color: hsl(var(--heroui-primary) / 0.55);
+  box-shadow: 0 0 0 3px hsl(var(--heroui-primary) / 0.14);
+}
+.todo-cell-btn[data-empty="true"] {
+  color: hsl(var(--heroui-default-400));
+}
+.todo-cell-btn[data-overdue="true"] {
+  color: hsl(var(--heroui-danger));
+}
+
+/* 未设置日期时给出「可添加」的提示箭头，而不是一句死板的"未设置" */
+.todo-cell-btn .todo-cell-add {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.todo-cell-btn:hover .todo-cell-add,
+.todo-cell-btn:focus-visible .todo-cell-add {
+  opacity: 1;
+}
+
+/* ── 就地编辑标题 ─────────────────────────────────────── */
+.todo-title-input {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid hsl(var(--heroui-primary) / 0.55);
+  border-radius: 7px;
+  background: hsl(var(--heroui-content1));
+  box-shadow: 0 0 0 3px hsl(var(--heroui-primary) / 0.14);
+  font-size: 14px;
+  line-height: 1.45;
+  color: hsl(var(--heroui-foreground));
+  resize: none;
+  overflow: hidden;
+}
+.todo-title-input:focus {
+  outline: none;
+}
+
+/* ── 行操作：静止隐身 ─────────────────────────────────── */
+.todo-row-actions {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.todo-table-row:hover .todo-row-actions,
+.todo-table-row:focus-within .todo-row-actions {
+  opacity: 1;
+}
+
+/* ── 快捷日期 chip ────────────────────────────────────── */
+.todo-date-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.todo-date-chip {
+  padding: 4px 10px;
+  border: 1px solid hsl(var(--heroui-default-200));
+  border-radius: 999px;
+  background: hsl(var(--heroui-default-50));
+  font-size: 12px;
+  color: hsl(var(--heroui-default-600));
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.todo-date-chip:hover {
+  border-color: hsl(var(--heroui-primary) / 0.5);
+  background: hsl(var(--heroui-primary) / 0.08);
+  color: hsl(var(--heroui-primary));
+}
+.todo-date-chip:focus-visible {
+  outline: 2px solid hsl(var(--heroui-primary));
+  outline-offset: 1px;
+}
+
+/* ── 属性胶囊（优先级）────────────────────────────────── */
+.todo-prop-pill {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  transition:
+    box-shadow 120ms ease,
+    filter 120ms ease;
+}
+.todo-prop-pill:hover,
+.todo-prop-pill[data-open="true"] {
+  filter: saturate(1.15) brightness(0.97);
+  box-shadow: 0 0 0 1px hsl(var(--heroui-foreground) / 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-table-row,
+  .todo-cell-btn,
+  .todo-row-actions,
+  .todo-date-chip,
+  .todo-prop-pill,
+  .todo-cell-btn .todo-cell-add {
+    transition: none;
+  }
+}
+
+/* ── 看板 ─────────────────────────────────────────────── */
+/* 主张：列是「容器」，卡片是「物件」。所以列给一圈极淡的虚线边界作为落点提示，
+   常态不抢戏；指针进入时边界转实、底色转浅，让「松手会放这里」这件事没有歧义。
+   卡片则反过来 —— 明确的纸片感（圆角 + 描边 + 投影 + 左侧优先级色条），
+   否则一屏看过去全是同一种灰白矩形，分不清哪块是可拖的东西。 */
+
+/* 列宽不写死 288px，而是按列数平分可用宽度（--todo-board-cols 由 TodoGroupedView 写入）。
+   写死列宽时 4 列 = 288×4 + 3×12 = 1188px，960px 的容器根本放不下，
+   最后一列必然被挤出屏幕走横向滚动 —— 看板看着「窄」，根因在这里而不是容器。
+   现在容器有多少宽度就分多少：空间富余时列变宽，列多时才退化为最小宽度 200px 后滚动。 */
+.todo-board-track {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+  grid-template-columns: repeat(var(--todo-board-cols, 3), minmax(200px, 1fr));
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+.todo-board-column {
+  min-width: 0;
+}
+.todo-board-column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--heroui-default-600));
+}
+.todo-board-dropzone {
+  display: flex;
+  min-height: 120px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  border: 1px dashed hsl(var(--heroui-default-200));
+  border-radius: 14px;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+.todo-board-dropzone[data-over="true"] {
+  border-color: hsl(var(--heroui-primary) / 0.55);
+  border-style: solid;
+  background-color: hsl(var(--heroui-primary) / 0.06);
+}
+.todo-board-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 0;
+  font-size: 12px;
+  color: hsl(var(--heroui-default-400));
+  pointer-events: none;
+}
+.todo-board-card-wrap {
+  cursor: grab;
+  touch-action: none;
+}
+.todo-board-card-wrap:active {
+  cursor: grabbing;
+}
+
+.todo-board-card {
+  position: relative;
+  overflow: hidden;
+  padding: 11px 12px 11px 15px;
+  border: 1px solid hsl(var(--heroui-default-200));
+  border-radius: 12px;
+  background: hsl(var(--heroui-content1));
+  box-shadow: 0 1px 2px hsl(var(--heroui-default-foreground) / 0.05);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.todo-board-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--todo-accent, transparent);
+  opacity: 0.85;
+}
+.todo-board-card:hover {
+  border-color: hsl(var(--heroui-default-300));
+  box-shadow: 0 4px 14px hsl(var(--heroui-default-foreground) / 0.08);
+}
+.todo-board-card[data-done="true"] {
+  background: hsl(var(--heroui-default-50));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-board-dropzone,
+  .todo-board-card {
+    transition: none;
+  }
+}
+
+/* ── 属性胶囊（状态 / 优先级 / 日期）────────────────────────
+   详情弹窗、列表、看板共用。形态是「点开即改」的属性而不是表单控件，
+   所以默认安静、hover 才显出边框，暗示这里可以就地改。 */
+.todo-attr-chip {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: hsl(var(--heroui-default-100));
+  font-size: 12px;
+  line-height: 1.4;
+  color: hsl(var(--heroui-default-600));
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.todo-attr-chip:hover {
+  border-color: hsl(var(--heroui-default-200));
+  background: hsl(var(--heroui-default-200) / 0.6);
+}
+.todo-attr-chip:focus-visible {
+  outline: none;
+  border-color: hsl(var(--heroui-primary) / 0.55);
+  box-shadow: 0 0 0 3px hsl(var(--heroui-primary) / 0.14);
+}
+.todo-attr-pill {
+  border-radius: 999px;
+  font-weight: 500;
+}
+.todo-attr-pill:hover {
+  background: inherit;
+  filter: saturate(1.15) brightness(0.97);
+}
+
+/* ── 详情弹窗标题 ─────────────────────────────────────
+   标题是「标题」不是输入框，聚焦时不该套一圈 2px 描边。
+   globals.css 里 `:where(button,a,input,textarea,...):focus-visible{outline:2px...}`
+   是无层级声明，会压过 Tailwind 工具类（层叠层里无层级 normal 声明优先级最高），
+   所以只能在这里用 !important 压回去 —— 光标本身就是足够的焦点提示。 */
+.todo-modal-title {
+  outline: none !important;
+  color: hsl(var(--heroui-foreground));
+}
+.todo-modal-title[data-done="true"] {
+  color: hsl(var(--heroui-default-500));
+  text-decoration: line-through;
+}
+
+/* 详情弹窗的属性行：和标题之间留一条气口，属性再多也不会挤成表单墙 */
+.todo-detail-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.todo-detail-attrs .todo-cell-btn,
+.todo-detail-attrs .todo-attr-chip {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+@media (min-width: 768px) {
+ .todo-compact-grid { grid-template-columns: var(--todo-columns); }
+}

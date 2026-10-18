@@ -1,4 +1,3 @@
-import { getTodoPriority, compareTodoPriority } from '@shared/lib/todoPriority';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
@@ -8,7 +7,7 @@ import { ViewportItem } from '@/components/Common/ViewportItem';
 import { ListComposer } from '@/components/Common/ListComposer';
 import { ScrollArea, type ScrollAreaHandles } from '@/components/Common/ScrollArea';
 import { BlinkoCard } from '@/components/BlinkoCard';
-import { TodoCard } from '@/components/BlinkoCard/TodoCard';
+import { TodoWorkspace } from '@/components/BlinkoCard/TodoWorkspace';
 import { BlinkoListRow } from '@/components/BlinkoCard/BlinkoListRow';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
@@ -54,14 +53,6 @@ const Home = observer(() => {
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
   const scrollAreaRef = useRef<ScrollAreaHandles>(null);
-  const activeTab = blinko.todoBucket;
-  const setActiveTab = (value: string) => {
-    if (!['today','upcoming','done'].includes(value) || value === blinko.todoBucket) return;
-    blinko.todoBucket = value as typeof blinko.todoBucket;
-    blinko.todoFeed.setValue([]);
-    void blinko.todoFeed.resetAndCall({});
-  };
-
   // 当前视图真正渲染的列表。映射收敛到 store，筛选面板 / 批量选择共用同一份，
   // 避免「改了筛选却刷了别的列表」。
   const currentListState = blinko.getListByPath(searchParams.get('path'));
@@ -88,13 +79,6 @@ const Home = observer(() => {
   }))
 
   // The server classifies, ranks and counts the entire filtered task set.
-  const todayList = isTodoView && activeTab === 'today' ? currentListState.value ?? [] : [];
-  const upcomingList = isTodoView && activeTab === 'upcoming' ? currentListState.value ?? [] : [];
-  const doneList = isTodoView && activeTab === 'done' ? currentListState.value ?? [] : [];
-  const importantTodayList = todayList.filter((item: any) => !item.isArchived && ['ui','in'].includes(getTodoPriority(item.metadata)));
-  const visibleTodayList = todayList.filter((item: any) => item.isArchived || !['ui','in'].includes(getTodoPriority(item.metadata)));
-
-  // Restore scroll position when returning from editor
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('restore-scroll-position');
     if (savedPosition && scrollAreaRef.current) {
@@ -154,67 +138,7 @@ const Home = observer(() => {
 
   const loadedItemCount = currentListState.value?.length ?? 0;
 
-  const todoTabs = [
-    { key: 'today', label: t('today-list'), count: blinko.todoCounts.today },
-    { key: 'upcoming', label: t('upcoming-list'), count: blinko.todoCounts.upcoming },
-    { key: 'done', label: t('done-list'), count: blinko.todoCounts.done },
-  ];
-
-  const renderTodoSection = ({
-    id,
-    title,
-    subtitle,
-    icon,
-    iconClass,
-    items,
-    tone = 'default',
-    action,
-    hideHeader = false,
-  }: {
-    id: string;
-    title: string;
-    subtitle?: string;
-    icon: string;
-    iconClass: string;
-    items: any[];
-    tone?: 'default' | 'important' | 'done';
-    action?: React.ReactNode;
-    hideHeader?: boolean;
-  }) => (
-    <section
-      aria-labelledby={id}
-      className={`rounded-2xl border p-2.5 md:p-3 ${
-        tone === 'important'
-          ? 'border-red-500/15 bg-red-500/[0.025]'
-          : tone === 'done'
-            ? 'border-emerald-500/10 bg-emerald-500/[0.02]'
-            : 'border-transparent bg-transparent !p-0'
-      }`}
-    >
-      {hideHeader ? <><h2 id={id} className="sr-only">{title}</h2>{subtitle && <p className="mb-3 px-1 text-xs text-default-400">{subtitle}</p>}</> : <header className="mb-2 flex min-h-8 items-center gap-2 px-1">
-        <span className={`grid size-7 shrink-0 place-items-center rounded-lg bg-background ${iconClass}`}>
-          <Icon icon={icon} width={16} height={16} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 id={id} className="text-[14px] font-semibold text-foreground">{title}</h2>
-            <span className="rounded-full bg-default-100 px-1.5 py-0.5 text-[10.5px] tabular-nums text-default-500">
-              {items.length}
-            </span>
-          </div>
-          {subtitle && <p className="hidden truncate text-[11px] text-default-400 sm:block">{subtitle}</p>}
-        </div>
-        {action}
-      </header>}
-      <div className="flex flex-col gap-2">
-        {items.length > 0
-          ? items.map((todo: any, index: number) => <ViewportItem key={todo.id} initial={index < 5} estimate={160}><TodoCard todo={todo} /></ViewportItem>)
-          : <ListEmptyState variant="todo" compact />}
-      </div>
-    </section>
-  );
-
-  const composer = store.showEditor && !effectiveHideEditor && (
+  const composer = (isTodoView || (store.showEditor && !effectiveHideEditor)) && (
         <div className={isPc ? 'mb-3' : 'mx-auto w-full px-2'} style={isPc ? undefined : maxWidthStyle}>
           <ListComposer
             key={searchParams.get('path') || 'blinko'}
@@ -227,8 +151,8 @@ const Home = observer(() => {
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col-reverse pt-1 md:flex-col md:p-0">
-      {!isPc && composer}
-      {effectiveHideEditor && <BlinkoAddButton />}
+      {!isPc && !isTodoView && composer}
+      {effectiveHideEditor && !isTodoView && <BlinkoAddButton />}
 
       <ScrollArea
         ref={scrollAreaRef}
@@ -243,92 +167,19 @@ const Home = observer(() => {
         className="mt-0 h-full min-h-0 w-full flex-1 scroll-area"
       >
         <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
-          {isPc && composer}
-          {!['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters scopeKey={[searchParams.get('path') || 'blinko', searchParams.get('contentType') || 'all'].join(':')} filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
+          {isPc && !isTodoView && composer}
+          {!isTodoView && !['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters scopeKey={[searchParams.get('path') || 'blinko', searchParams.get('contentType') || 'all'].join(':')} filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
             {isTagView && <TagContentTypeTabs />}
             <TagFilterChips />
           </StickyListFilters>}
 
           <div data-list-filter-results>
-          {currentListState.isLoading && !currentListState.value?.length ? (
+          {!isTodoView && currentListState.isLoading && !currentListState.value?.length ? (
             <div className="flex min-h-48 items-center justify-center text-default-400" role="status" aria-label={t('loading')}>
               <Icon icon="eos-icons:three-dots-loading" width={38} height={38} />
             </div>
           ) : isTodoView ? (
-            <div className="flex flex-col gap-4">
-              <div
-                role="tablist"
-                aria-label={t('todo')}
-                className="sticky top-0 z-20 flex items-center gap-2 border-b border-default-200 bg-background px-1"
-              >
-                {todoTabs.map(tab => {
-                  const selected = activeTab === tab.key;
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={selected}
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`flex h-10 min-w-0 items-center justify-center gap-1.5 border-b-2 px-3 text-[12.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                        selected
-                          ? 'border-primary text-foreground'
-                          : 'border-transparent text-default-500 hover:text-foreground'
-                      }`}
-                    >
-                      <span className="truncate">{tab.label}</span>
-                      <span className={`text-[10.5px] tabular-nums ${selected ? 'text-primary' : 'text-default-400'}`}>
-                        {tab.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {activeTab === 'today' && (
-                <>
-                  {importantTodayList.length > 0 && renderTodoSection({
-                    id: 'todo-important',
-                    title: t('important-list'),
-                    subtitle: t('todo-important-today-subtitle'),
-                    icon: 'solar:bookmark-bold',
-                    iconClass: 'text-red-500',
-                    items: importantTodayList,
-                    tone: 'important',
-                  })}
-                  {renderTodoSection({
-                    id: 'todo-today',
-                    title: importantTodayList.length ? t('todo-other-items') : t('today-list'),
-                    hideHeader: !importantTodayList.length,
-                    subtitle: t('today-list-subtitle'),
-                    icon: 'mdi:white-balance-sunny',
-                    iconClass: 'text-amber-500',
-                    items: visibleTodayList,
-                  })}
-
-                </>
-              )}
-
-              {activeTab === 'upcoming' && renderTodoSection({
-                id: 'todo-upcoming',
-                hideHeader: true,
-                title: t('upcoming-list'),
-                subtitle: t('upcoming-list-subtitle'),
-                icon: 'mdi:chevron-double-right',
-                iconClass: 'text-primary',
-                items: upcomingList,
-              })}
-
-              {activeTab === 'done' && renderTodoSection({
-                id: 'todo-done',
-                hideHeader: true,
-                title: t('done-list'),
-                icon: 'mdi:check-circle-outline',
-                iconClass: 'text-emerald-500',
-                items: doneList,
-                tone: 'default',
-              })}
-            </div>
+            <TodoWorkspace composer={composer} />
           ) : localNotes.length === 0 ? (
             <ListEmptyState
               variant={emptyVariant}
@@ -392,8 +243,8 @@ const Home = observer(() => {
             </DndContext>
           )}
 
-          {!currentListState.isLoadAll && loadedItemCount > 0 && <button type="button" disabled={currentListState.isLoading} onClick={() => currentListState.callNextPage({})} className="mx-auto my-4 block rounded-lg px-4 py-2 text-xs text-default-500 hover:bg-default-100 disabled:opacity-50">{currentListState.isLoading ? '正在加载…' : '加载更多'}</button>}
-          {store.showLoadAll && loadedItemCount > 0 && (
+          {!isTodoView && !currentListState.isLoadAll && loadedItemCount > 0 && <button type="button" disabled={currentListState.isLoading} onClick={() => currentListState.callNextPage({})} className="mx-auto my-4 block rounded-lg px-4 py-2 text-xs text-default-500 hover:bg-default-100 disabled:opacity-50">{currentListState.isLoading ? '正在加载…' : '加载更多'}</button>}
+          {!isTodoView && store.showLoadAll && loadedItemCount > 0 && (
             <div className="my-5 flex w-full items-center justify-center gap-2 text-[11px] text-default-400">
               <span className="h-px w-8 bg-default-200" />
               <span>{t('all-notes-have-been-loaded', { items: loadedItemCount })}</span>

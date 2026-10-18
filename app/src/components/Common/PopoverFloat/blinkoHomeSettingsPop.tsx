@@ -190,13 +190,21 @@ export const BlinkoHomeSettingsPop = observer(() => {
             />
           </Section>
 
-          <Section label={t('sort-by')}>
-            <SegmentedButtons
-              value={sortBy}
-              onChange={value => void changeSort(value)}
-              options={SORT_OPTIONS.map(option => ({ key: option.key, label: t(option.label) }))}
-            />
-          </Section>
+          {/* 排序和隐藏编辑器在待办页是无效控件，不摆出来：
+              · 排序写的是 noteListSortBy，而待办列表来自 blinko.todoFeed（TodoWorkspace 里渲染），
+                不走 getListByPath，改了没有任何效果；
+              · 待办的输入框是「新建任务」弹窗里的 composer，页面上本来就没有常驻编辑器，
+                隐藏它等于无处可藏。
+              与其给两个拨了没反应的开关，不如只留页宽这一项真正有意义的。 */}
+          {!isTodo && (
+            <Section label={t('sort-by')}>
+              <SegmentedButtons
+                value={sortBy}
+                onChange={value => void changeSort(value)}
+                options={SORT_OPTIONS.map(option => ({ key: option.key, label: t(option.label) }))}
+              />
+            </Section>
+          )}
 
           {isMasonry && (
             <>
@@ -244,7 +252,7 @@ export const BlinkoHomeSettingsPop = observer(() => {
             </>
           )}
 
-          {canShowComposer && (
+          {canShowComposer && !isTodo && (
             <section className="flex items-center justify-between gap-3 border-t border-default-200/70 py-2.5">
               <div className="min-w-0">
                 <div className="text-[11px] text-default-600">{t('hide-desktop-editor')}</div>

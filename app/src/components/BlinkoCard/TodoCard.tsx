@@ -1,3 +1,5 @@
+import {getTodoStatus,readTodoStatuses,todoStatusPatch} from '@shared/lib/todoStatus';
+import type { TodoView } from '@shared/lib/todoViews';
 import { getFullNote } from '@/lib/fullNote';
 import { getTodoPriority, todoPriorityMetadata, TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
@@ -7,6 +9,9 @@ import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { NoteType, type Note } from '@shared/lib/types';
 import { ShowTodoEditModal } from './TodoEditModal';
+import { TodoDateCell } from './TodoDateCell';
+import { TodoTitleCell } from './TodoTitleCell';
+import { TodoPriorityChip, TodoStatusChip } from './TodoPropertyChips';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from '@/lib/dayjs';
@@ -17,6 +22,7 @@ import { PromiseCall } from '@/store/standard/PromiseState';
 import { useRef, useState } from 'react';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
 import { FilesAttachmentRender } from '@/components/Common/AttachmentRender';
+import { historyText } from '@/lib/historyDiff';
 
 type BlinkoItem = Note & { isBlog?: boolean; title?: string; isExpand?: boolean };
 
@@ -54,14 +60,21 @@ function stripContent(item: BlinkoItem): string {
 
 interface TodoCardProps {
   todo: BlinkoItem;
+  compact?: boolean;
+  board?: boolean;
+  fields?: TodoView['fields'];
 }
 
-export const TodoCard = observer(({ todo }: TodoCardProps) => {
+export const TodoCard = observer(({ todo, compact = false, board = false, fields = ['priority','due','tags'] }: TodoCardProps) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
   const [toggleSaving, setToggleSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const done = Boolean(todo.isArchived);
+  const statuses=readTodoStatuses(blinko.config.value?.todoStatuses);
+  const state=getTodoStatus(todo);
+  const status= statuses.find(s=>s.id===state);
+  const changeStatus=async(id:string)=>{try{await api.notes.upsert.mutate({id:todo.id,...todoStatusPatch(id)});await blinko.todoFeed.resetAndCall({});}catch{RootStore.Get(ToastPlugin).error('状态更新失败');}};
   const quad = getTodoPriority(todo.metadata);
   const [prioritySaving, setPrioritySaving] = useState(false);
   const quadMeta = QUADRANT[quad];
@@ -105,11 +118,43 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     e.stopPropagation();
     if (toggleSaving) return;
     setToggleSaving(true);
+    // 乐观更新：先改本地状态让勾选框立刻响应，再落库。
+    // 之前这里调 refreshData() 会把整张列表重拉一遍，勾一下就闪一次。
+    // completedAt 服务端在 isArchived 变化时会自己写，这里不用带。
+    const next = !done;
+    todo.isArchived = next;
     try {
-      await api.notes.upsert.mutate({ id: todo.id, type: NoteType.TODO, isArchived: !done });
-      await blinko.refreshData();
-    } catch { RootStore.Get(ToastPlugin).error('状态更新失败，请重试'); }
+      await api.notes.upsert.mutate({ id: todo.id, type: NoteType.TODO, isArchived: next,metadata:{taskStatus:next?'done':'todo'} });
+      // 已完成 / 未完成列表分开渲染，两边都要同步，避免整表刷新
+      for (const list of [blinko.todoFeed, blinko.todoList, blinko.doneTodoList, blinko.noteList]) {
+        list.setValue((list.value ?? []).map(item => item.id === todo.id ? { ...item, isArchived: next } : item));
+      }
+      // 分组是按 isArchived 派生的，只改数组元素不会让行跨列表搬家，
+      // 需要定向重拉一次 todoFeed —— 比 refreshData() 轻得多（changePriority 同款）。
+      if (new URLSearchParams(window.location.search).get('path') === 'todo') await blinko.todoFeed.resetAndCall({});
+    } catch {
+      todo.isArchived = done;
+      RootStore.Get(ToastPlugin).error('状态更新失败，请重试');
+    }
     finally { setToggleSaving(false); }
+  };
+
+  const saveTitle = async (next: string) => {
+    if (todo.id == null) return;
+    // Store the title separately: editing a summary must never replace the full body.
+    try {
+      const saved = await api.notes.upsert.mutate({id:todo.id,type:NoteType.TODO,metadata:{title:next}});
+      blinko.todoFeed.setValue((blinko.todoFeed.value||[]).map(item=>item.id===todo.id?{...item,metadata:saved.metadata}:item));
+    } catch { RootStore.Get(ToastPlugin).error('标题保存失败，请重试'); }
+  };
+
+  const saveExpireAt = (iso: string | null) => {
+    if (todo.id == null) return;
+    // 先写本地 metadata，单元格立即反映新日期；服务端是合并语义，
+    // 只传 expireAt 不会影响 priority / snoozeCount 等其他字段。
+    (todo.metadata as any).expireAt = iso;
+    void PromiseCall(blinko.upsertNote.call({ id: todo.id, type: NoteType.TODO, metadata: { expireAt: iso } }), { autoAlert: false })
+      .catch(() => RootStore.Get(ToastPlugin).error('截止时间保存失败，请重试'));
   };
 
   const openEdit = () => {
@@ -125,7 +170,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
       type: NoteType.TODO,
       metadata: {
         expireAt: base.add(1, 'day').toISOString(),
-        snoozeCount: snooze + 1,
+        snoozeCount: snooze + 1,taskStatus:'delayed',
       },
     });
   };
@@ -156,6 +201,42 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
     action();
   };
 
+  if (compact) {
+    const sourceTitle = todo.metadata?.title?.trim() || todo.title || content;
+    const title = historyText(sourceTitle).split('\n').find(line => line.trim())?.replace(/^\s*\[[ xX]\]\s*/, '') || t('no-content');
+    const columns = `minmax(220px,1fr) ${fields.map(field=>({status:'100px',start:'120px',priority:'140px',due:'120px',tags:'110px',created:'120px'})[field]).join(' ')} 32px`;
+    const priorityControl = <TodoPriorityChip priorityKey={quad} onPick={key=>void changePriority(key)} busy={prioritySaving}/>;
+    const statusControl = <TodoStatusChip statusId={state} statuses={statuses} onPick={id=>void changeStatus(id)}/>;
+    const dateControl = <TodoDateCell value={(todo.metadata as any)?.expireAt} isOverdue={isOverdue} overdueDays={overdueDays} onPick={saveExpireAt}/>;
+    const tagControl = <div className="flex min-w-0 flex-wrap gap-1">{tags.slice(0,2).map((tag,i)=><span key={i} title={tag} className="max-w-24 truncate rounded bg-default-100 px-1.5 py-0.5 text-[11px] text-default-500">{tag}</span>)}{tags.length>2&&<span className="text-xs text-default-400" title={tags.slice(2).join('、')}>+{tags.length-2}</span>}{!tags.length&&<span className="text-xs text-default-300">—</span>}</div>;
+    if (board) return <article className="todo-board-card" style={{'--todo-accent': quadMeta.color} as React.CSSProperties} data-done={done?'true':undefined}>
+      <div className="flex items-start gap-2">
+        <button type="button" onClick={toggle} disabled={toggleSaving} aria-label={done?t('restore'):t('complete')} className="grid size-6 shrink-0 place-items-center rounded-full hover:bg-default-100 focus-visible:ring-2 focus-visible:ring-primary"><span className={`grid size-[17px] place-items-center rounded-full border-[1.5px] ${done?'border-success bg-success text-white':'border-default-400'}`}>{done&&<Icon icon="tabler:check" width={11} height={11}/>}</span></button>
+        <div className="min-w-0 flex-1 pt-px"><TodoTitleCell value={title} done={done} multiline onOpen={openEdit} onSave={saveTitle}/></div>
+        <Dropdown placement="bottom-end"><DropdownTrigger><button type="button" aria-label={`任务操作：${title}`} className="todo-row-actions grid size-6 shrink-0 place-items-center rounded-md text-default-400 hover:bg-default-100 focus-visible:opacity-100"><Icon icon="tabler:dots" width={16} height={16}/></button></DropdownTrigger><DropdownMenu aria-label="任务操作" onAction={key=>{if(key==='edit')openEdit();if(key==='snooze')snoozeTodo();if(key==='delete')void deleteTodo();}}><DropdownItem key="edit">打开任务</DropdownItem>{!done?<DropdownItem key="snooze">{t('snooze-1-day')}</DropdownItem>:null}<DropdownItem key="delete" color="danger">{t('delete')}</DropdownItem></DropdownMenu></Dropdown>
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 pl-8 text-xs text-default-500">
+        {fields.includes('due')&&dateControl}
+        {fields.includes('priority')&&priorityControl}
+        {fields.includes('tags')&&!!tags.length&&tagControl}
+        {fields.includes('created')&&<span title="创建时间" className="text-default-400">{dayjs(todo.createdAt).format('YYYY/MM/DD')}</span>}
+        {!!todo.attachments?.length&&<span title={`${todo.attachments.length} 个附件`} className="flex items-center gap-0.5 text-default-400"><Icon icon="tabler:paperclip" width={13} height={13}/>{todo.attachments.length}</span>}
+      </div>
+    </article>;
+    return <article className={`todo-table-row group bg-background border-b border-default-200/60`} data-done={done?'true':undefined}>
+      <div className="todo-compact-grid grid min-h-12 grid-cols-[minmax(0,1fr)_32px] items-center gap-2 px-3 py-1.5" style={{'--todo-columns':columns} as React.CSSProperties}>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <button type="button" onClick={toggle} disabled={toggleSaving} aria-label={done?t('restore'):t('complete')} className="grid size-7 shrink-0 place-items-center rounded-full hover:bg-default-100 focus-visible:ring-2 focus-visible:ring-primary"><span className={`grid size-[18px] place-items-center rounded-full border-[1.5px] ${done?'border-success bg-success text-white':'border-default-400'}`}>{done&&<Icon icon="tabler:check" width={12} height={12}/>}</span></button>
+          <div className="min-w-0 flex-1"><TodoTitleCell value={title} done={done} onOpen={openEdit} onSave={saveTitle}/></div>
+          {!!todo.attachments?.length&&<span title={`${todo.attachments.length} 个附件`} className="flex shrink-0 items-center gap-0.5 text-xs text-default-400"><Icon icon="tabler:paperclip" width={13} height={13}/>{todo.attachments.length}</span>}
+        </div>
+        {fields.map(field=><div key={field} className="hidden min-w-0 md:block">{field==='status'?statusControl:field==='start'?<span className="text-xs text-default-500">{todo.metadata?.startAt?dayjs(todo.metadata.startAt).format('MM/DD'):'—'}</span>:field==='priority'?priorityControl:field==='due'?dateControl:field==='tags'?tagControl:<span className="text-xs text-default-500">{dayjs(todo.createdAt).format('YYYY/MM/DD')}</span>}</div>)}
+        <Dropdown placement="bottom-end"><DropdownTrigger><button type="button" aria-label={`任务操作：${title}`} className="todo-row-actions grid size-7 shrink-0 place-items-center rounded-md text-default-400 hover:bg-default-100 focus-visible:opacity-100"><Icon icon="tabler:dots" width={17} height={17}/></button></DropdownTrigger><DropdownMenu aria-label="任务操作" onAction={key=>{if(key==='edit')openEdit();if(key==='snooze')snoozeTodo();if(key==='delete')void deleteTodo();}}><DropdownItem key="edit">打开任务</DropdownItem>{!done?<DropdownItem key="snooze">{t('snooze-1-day')}</DropdownItem>:null}<DropdownItem key="delete" color="danger">{t('delete')}</DropdownItem></DropdownMenu></Dropdown>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 pb-2 pl-12 text-xs md:hidden">{fields.includes('status')&&statusControl}{fields.includes('priority')&&priorityControl}{fields.includes('due')&&dateControl}{fields.includes('tags')&&tagControl}</div>
+    </article>;
+  }
+
   return (
     <Card
       shadow='none'
@@ -180,7 +261,7 @@ export const TodoCard = observer(({ todo }: TodoCardProps) => {
             backgroundColor: done ? quadMeta.color : 'transparent',
           }}
         >
-          {done && <Icon icon="mdi:check" width={13} height={13} className="text-white" />}
+            {done && <Icon icon="tabler:check" width={13} height={13} className="text-white" />}
         </span>
       </button>
 

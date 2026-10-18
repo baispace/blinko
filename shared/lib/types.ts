@@ -1,3 +1,5 @@
+import { todoStatusSchema } from './todoStatus';
+import { todoWorkspaceOutputSchema } from './todoViews';
 import { siteIconSchema } from './siteBranding';
 import { RouterOutput } from "../../server/routerTrpc/_app";
 import { z } from "zod";
@@ -35,6 +37,8 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('textFoldLength'),
   z.literal('cardFoldLength'),
   z.literal('pageViewSettings'),
+  z.literal('todoWorkspace'),
+  z.literal('todoStatuses'),
   z.literal('smallDeviceCardColumns'),
   z.literal('mediumDeviceCardColumns'),
   z.literal('largeDeviceCardColumns'),
@@ -171,6 +175,13 @@ export const ZConfigSchema = z.object({
   cardFoldLength: z.number().nullable().optional(),
   /** Per-page view settings: Record<'blinko'|'notes'|..., Partial<ViewSettings>> */
   pageViewSettings: z.any().optional(),
+  /**
+   * 用输出专用 schema（比入参 schema 多一个 `broken` 可选字段）。
+   * `broken` 是 readTodoWorkspace 的抢救标记：整份配置里有视图被丢弃时为 true，
+   * 前端必须据此禁用写回。走严格 schema 的话这个标记会被 zod 剥掉，守卫就失效了。
+   */
+  todoWorkspace: todoWorkspaceOutputSchema.optional(),
+  todoStatuses: todoStatusSchema.optional(),
   objectStorage: z.any().optional(),
   s3AccessKeyId: z.any().optional(),
   s3AccessKeySecret: z.any().optional(),

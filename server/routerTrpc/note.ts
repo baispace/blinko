@@ -1,3 +1,4 @@
+import {readTodoStatuses,getTodoStatus} from '@shared/lib/todoStatus';
 
 import { todoPageInput, getTodoPage } from '../lib/todoPages';
 import { summarySelect, summarizeNotes } from '../lib/noteSummaries';
@@ -951,6 +952,7 @@ export const noteRouter = router({
 
       // Check for internal sharing permission if updating an existing note
       let isSharedEditor = false;
+      let existingTaskStatus:string|undefined;
       if (id) {
         const notePermission = await prisma.notes.findFirst({
           where: {
@@ -972,6 +974,7 @@ export const noteRouter = router({
           throw new Error('Note not found or you do not have edit permission');
         }
 
+        if(notePermission.type===NoteType.TODO)existingTaskStatus=getTodoStatus(notePermission);
         // If user is not the owner but has edit permission, restrict certain operations
         if (notePermission.accountId !== Number(ctx.id)) {
           isSharedEditor = true;
@@ -986,6 +989,13 @@ export const noteRouter = router({
       const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '));
       let newTags: Prisma.tagCreateManyInput[] = [];
       const config = await getGlobalConfig({ ctx });
+      if(input.metadata?.taskStatus !== undefined && (type===NoteType.TODO || existingTaskStatus!==undefined)){
+        const status=input.metadata.taskStatus;
+        if(typeof status!=='string' || !readTodoStatuses(config.todoStatuses).some(item=>item.id===status))throw new Error('任务状态无效，请刷新后重试');
+        if(isSharedEditor && status!==existingTaskStatus)throw new Error('仅任务所有者可修改任务状态');
+        if(!isSharedEditor)isArchived=status==='done';
+      }
+
 
       const markdownImages =
         content?.match(/!\[.*?\]\((\/api\/(?:s3)?file\/[^)]+)\)/g)?.map((match) => {

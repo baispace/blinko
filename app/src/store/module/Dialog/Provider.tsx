@@ -136,7 +136,7 @@ const Dialog = observer(() => {
             }
           }
         }}
-        hideCloseButton={(size === 'full' || onlyContent) ? true : false}
+        hideCloseButton={modal.hideCloseButton || size === 'full' || onlyContent}
         className={`${className} ${transparent ? 'bg-transparent' : ''}`}
         /**
          * `style={{ zIndex }}` 只落到 ModalContent 上，而 HeroUI 真正盖住全屏的
@@ -152,7 +152,8 @@ const Dialog = observer(() => {
         }}
         isDismissable={isDismissable && !modal.preventClose}
         isKeyboardDismissDisabled={modal.preventClose}
-        disableAnimation
+        disableAnimation={!modal.animated}
+        motionProps={modal.animated ? {variants:{enter:{opacity:1,y:0,scale:1,transition:{duration:0.16}},exit:{opacity:0,y:4,scale:0.995,transition:{duration:0.1}}}} : undefined}
         scrollBehavior={onlyContent ? 'normal' : 'inside'}
       >
         {

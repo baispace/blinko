@@ -10,6 +10,8 @@ export class DialogStore implements Store {
   provider = () => <Provider />;
   isOpen = false;
   preventClose = false;
+  animated = false;
+  hideCloseButton = false;
   /** Timestamp of the last close(); used to defer the next setData until the
    *  exit animation (dialogMotion: 0.12s + margin) has finished playing. */
   closedAt = 0;
@@ -47,7 +49,7 @@ export class DialogStore implements Store {
     }
     if (!this.isOpen) {
       // Reset before opening, never during the closing animation.
-      Object.assign(this, { preventClose: false, noPadding: false,
+      Object.assign(this, { preventClose: false, animated:false, hideCloseButton:false, noPadding: false,
         transparent: false, className: "", classNames: undefined,
         placement: "auto", theme: "default", title: "", content: "",
         size: "md", isDismissable: true, onlyContent: false });

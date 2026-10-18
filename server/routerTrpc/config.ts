@@ -1,3 +1,5 @@
+import { todoStatusSchema } from '../../shared/lib/todoStatus';
+import { todoWorkspaceSchema, readTodoWorkspace } from '../../shared/lib/todoViews';
 import { siteIconSchema } from '../../shared/lib/siteBranding';
 import { siteInfoSchema } from '../../shared/lib/siteInfo';
 import { readSiteInfo, saveSiteInfo } from '../lib/siteInfo';
@@ -53,6 +55,14 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
     }
     return acc;
   }, {} as Record<string, any>);
+
+  // 待办视图配置在读取侧就做一次抢救：只要有一个视图字段非法，
+  // todoWorkspaceSchema 就会让整条 config.list 抛「Output validation failed」，
+  // 客户端拿不到任何视图 → 回退到 6 个默认视图 → 用户下一次改排序/筛选
+  // 就把默认值写回去，自建的视图全没了。单个坏视图不该连累整份配置。
+  if (globalConfig.todoWorkspace) {
+    globalConfig.todoWorkspace = readTodoWorkspace(globalConfig.todoWorkspace);
+  }
 
   return globalConfig as GlobalConfig;
 };
@@ -113,6 +123,8 @@ export const configRouter = router({
     .mutation(async function ({ input, ctx }) {
       const userId = Number(ctx.id)
       const { key, value } = input
+      if (key === 'todoStatuses') todoStatusSchema.parse(value);
+      if (key === 'todoWorkspace') todoWorkspaceSchema.parse(value);
       if (key === 'customIcon') siteIconSchema.parse(value);
       if (key === 'customTitle') z.string().trim().max(50).parse(value);
       if (key === 'customTagline') z.string().trim().max(50).parse(value);

@@ -192,8 +192,12 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                    该组件内 className；Bulb / Bell 在此 inline 保证视觉一致。 */}
               <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
                 <BarSearchInput isPc={isPc} />
+                {/* 待办页也挂页面设置浮层：待办工作区自己管筛选/排序/分组/视图，
+                    但页宽这类页面级设置对它同样生效（尤其是看板要靠宽度决定列数），
+                    之前连浮层一起排除掉，等于把入口也一起砍了。
+                    浮层内部对 todo 只保留页宽，见 blinkoHomeSettingsPop 的 isTodo 分支。 */}
                 {isHomeSubHeaderScope(location, searchParams) && <BlinkoHomeSettingsPop />}
-                <FilterPop />
+                {searchParams.get('path') !== 'todo' && <FilterPop />}
                 {!blinkoStore.config.value?.isCloseDailyReview && (
                   <Tooltip content={t('daily-review')} delay={400}>
                   <Badge size="sm" className="shrink-0" isInvisible={!blinkoStore.dailyReviewNoteList.value?.length} content={blinkoStore.dailyReviewNoteList.value?.length} color="primary">

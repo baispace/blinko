@@ -17,6 +17,12 @@ const aiScheduledTaskSchema = z.object({
 });
 
 export const aiScheduledTaskRouter = router({
+  update: authProcedure
+    .input(z.object({ id: z.number(), name: z.string().trim().min(1).max(255), prompt: z.string().trim().min(1).max(30000), schedule: z.string().min(1) }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...changes } = input;
+      return AIScheduledTaskJob.updateTask(id, Number(ctx.id), changes);
+    }),
   // List all AI scheduled tasks for current user
   list: authProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/ai-tasks/list', summary: 'List AI scheduled tasks', protect: true, tags: ['AI Task'] } })

@@ -1,6 +1,8 @@
 import { Button } from '@heroui/react';
 import { useRef, useState, useEffect } from 'react';
 import { AiSkills } from '@/components/BlinkoAi/AiSkills';
+import { AiTaskPanel } from '@/components/BlinkoAi/AiTaskPanel';
+import { BlinkoStore } from '@/store/blinkoStore';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useMediaQuery } from 'usehooks-ts';
@@ -19,6 +21,8 @@ import i18n from '@/lib/i18n';
 import { useSwiper } from '@/lib/hooks';
 const AIPage = observer(() => {
   const [prompt, setPrompt] = useState('');
+  const [tasksOpen, setTasksOpen] = useState(false);
+  const blinko = RootStore.Get(BlinkoStore);
   const isPc = useMediaQuery('(min-width: 768px)');
   const userStore = RootStore.Get(UserStore)
   const { t } = useTranslation()
@@ -92,6 +96,8 @@ const AIPage = observer(() => {
         aiStore.isChatting ? 'pt-14 md:pt-0' : 'pt-14 md:pt-[6vh]',
         'md:h-[calc(100vh_-_80px)]'
       )}>
+      <div className="absolute right-3 top-2 z-10 md:right-6"><Button size="sm" variant="light" onPress={() => setTasksOpen(true)} startContent={<Icon icon="lucide:clock" width={16} />}>定时任务</Button></div>
+      <AiTaskPanel open={tasksOpen} onClose={() => setTasksOpen(false)} modelReady={!!blinko.config.value?.mainModelId} />
       {!aiStore.isChatting ? (
         <div className="flex justify-center w-full px-4">
           <motion.div

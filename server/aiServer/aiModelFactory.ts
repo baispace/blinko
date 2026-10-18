@@ -357,23 +357,18 @@ export class AiModelFactory {
       }
     };
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions, modelId }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string; modelId?: number }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, readOnlyTools = false, extraInstructions, modelId }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; readOnlyTools?: boolean; extraInstructions?: string; modelId?: number }) {
     const provider = await AiModelFactory.GetProvider(modelId);
     const chatConfig = await AiModelFactory.globalConfig();
     let tools: Record<string, any> = {};
     if (withTools) {
       tools = {
         tools: {
-          upsertBlinkoTool,
           searchBlinkoTool,
-          updateBlinkoTool,
-          deleteBlinkoTool,
           webExtra,
           ...(chatConfig.tavilyApiKey ? { webSearchTool } : {}),
-          createCommentTool,
-          createScheduledTaskTool,
-          deleteScheduledTaskTool,
           listScheduledTasksTool,
+          ...(!readOnlyTools ? { upsertBlinkoTool, updateBlinkoTool, deleteBlinkoTool, createCommentTool, createScheduledTaskTool, deleteScheduledTaskTool } : {}),
         },
       };
     }
@@ -384,7 +379,7 @@ export class AiModelFactory {
     }
 
     // Load MCP tools if enabled
-    if (withMcpTools && withTools) {
+    if (withMcpTools && withTools && !readOnlyTools) {
       try {
         const hasMcp = await hasMcpServers();
         if (hasMcp) {

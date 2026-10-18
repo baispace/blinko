@@ -18,7 +18,7 @@ export const HistoryButton = observer(({ noteId, className = '' }: HistoryButton
     e.stopPropagation();
     RootStore.Get(DialogStore).setData({
       isOpen: true,
-      size: '2xl',
+      size: '4xl',
       title: t('Note History'),
       content: <NoteHistoryModal noteId={noteId} />,
     });

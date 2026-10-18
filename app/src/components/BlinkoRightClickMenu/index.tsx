@@ -1,4 +1,7 @@
 import { getFullNote } from '@/lib/fullNote';
+import { downloadExportFile } from '@/lib/downloadExport';
+import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { UserStore } from '@/store/user';
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, DatePicker } from '@heroui/react';
@@ -320,6 +323,7 @@ export const handleExport = async () => {
     title: tFn('export'),
     content: () => {
       const [format, setFormat] = useState<'markdown' | 'html' | 'docx'>('markdown')
+      const [exporting, setExporting] = useState(false)
       return (
         <div className="flex flex-col gap-3 p-2">
           <div className="flex gap-2 flex-wrap">
@@ -329,6 +333,7 @@ export const handleExport = async () => {
                 size="sm"
                 variant={format === f ? 'solid' : 'flat'}
                 color={format === f ? 'primary' : 'default'}
+                isDisabled={exporting}
                 onPress={() => setFormat(f)}
               >
                 {f === 'markdown' ? 'Markdown' : f === 'html' ? 'HTML' : 'Word (.docx)'}
@@ -337,24 +342,22 @@ export const handleExport = async () => {
           </div>
           <Button
             color="primary"
+            isLoading={exporting}
             onPress={async () => {
+              if (exporting) return
+              setExporting(true)
               try {
                 RootStore.Get(ToastPlugin).loading(tFn('exporting'), { id: 'export-single' })
-                const res = await PromiseCall(api.task.exportSingleNote.mutate({
+                const res = await api.task.exportSingleNote.mutate({
                   id: note.id!,
                   format,
                   baseURL: window.location.origin,
-                }))
+                })
                 if (res?.success && res.downloadUrl) {
-                  const link = document.createElement('a')
-                  link.href = res.downloadUrl.startsWith('http')
-                    ? res.downloadUrl
-                    : window.location.origin + res.downloadUrl
-                  link.download = res.fileName || `note-${note.id}.${format}`
-                  document.body.appendChild(link)
-                  link.click()
-                  document.body.removeChild(link)
-                  RootStore.Get(ToastPlugin).success(tFn('export-success'))
+                  await downloadExportFile(res.downloadUrl, res.fileName || `note-${note.id}.${format === 'markdown' ? 'md' : format}`,
+                    getBlinkoEndpoint('/'), RootStore.Get(UserStore).token)
+                  RootStore.Get(ToastPlugin).success(tFn('export-success', { defaultValue: '导出成功' }))
+                  RootStore.Get(DialogStandaloneStore).close()
                 } else {
                   RootStore.Get(ToastPlugin).error(res?.error || tFn('export-failed'))
                 }
@@ -362,7 +365,7 @@ export const handleExport = async () => {
                 RootStore.Get(ToastPlugin).error(e?.message || tFn('export-failed'))
               } finally {
                 RootStore.Get(ToastPlugin).dismiss('export-single')
-                RootStore.Get(DialogStandaloneStore).close()
+                setExporting(false)
               }
             }}
           >
@@ -399,7 +402,7 @@ export const handleShowHistory = () => {
   if (!noteId) return
   RootStore.Get(DialogStore).setData({
     isOpen: true,
-    size: '2xl',
+    size: '4xl',
     title: i18n.t('Note History'),
     content: <NoteHistoryModal noteId={noteId} />
   })

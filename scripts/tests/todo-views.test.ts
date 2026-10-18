@@ -50,6 +50,13 @@ describe('坏配置不能被静默写回覆盖用户数据',()=>{
   expect(again.broken).toBe(true);
   expect(again.views.length).toBe(2);
  });
+ it('客户端二次解析仍保留 dropped（否则界面说不清到底少了什么）',()=>{
+  const damaged={version:4,activeId:'all',views:[...defaultTodoViews.slice(0,1),{id:'bad',name:'坏视图',sort:'nonsense'}]};
+  const onWire=todoWorkspaceOutputSchema.parse(readTodoWorkspace(damaged));
+  const again=readTodoWorkspace(onWire);   // 走「已合法」分支，严格 schema 会剥掉 dropped
+  expect(again.broken).toBe(true);
+  expect(again.dropped).toEqual(['坏视图']);
+ });
  it('正常配置不被误判为 broken',()=>{
   const good={version:4,views:defaultTodoViews.map(v=>({...v})),activeId:'all'};
   const rescued=readTodoWorkspace(good);
@@ -61,5 +68,45 @@ describe('坏配置不能被静默写回覆盖用户数据',()=>{
   const dead=readTodoWorkspace({version:4,views:[{id:'a',sort:'nonsense'},{id:'b',sort:'yikes'}],activeId:'a'});
   expect(dead.views.length).toBe(6);
   expect(dead.broken).toBe(true);
+ });
+});
+
+describe('从没配置过 ≠ 配置损坏',()=>{
+ // 曾把这个分支也标成 broken，结果任何全新部署第一次打开待办页
+ // 就弹出「配置读不出来」并锁死全部写入口，而库里其实一行配置都没有。
+ for(const [label,input] of [
+  ['undefined',undefined],
+  ['null',null],
+  ['空对象',{}],
+  ['空视图数组',{version:4,views:[],activeId:'all'}],
+ ] as const){
+  it(`${label} → 给默认视图且不锁写`,()=>{
+   const r=readTodoWorkspace(input);
+   expect(r.views.length).toBe(6);
+   expect(r.broken).toBeUndefined();
+   expect(r.activeId).toBe('all');
+  });
+ }
+ it('默认视图可写回，不会被守卫拦住',()=>{
+  // 模拟 persist 的前置判断：broken 为假才允许写
+  const r=readTodoWorkspace(undefined);
+  expect(r.broken===true).toBe(false);
+  expect(todoWorkspaceSchema.safeParse({version:4,activeId:r.activeId,views:r.views}).success).toBe(true);
+ });
+ it('报出被丢弃的视图名，界面才能说清少了什么',()=>{
+  const r=readTodoWorkspace({version:4,activeId:'all',views:[
+   {...defaultTodoViews[0]!,id:'all',name:'全部任务'},
+   {id:'bad',name:'坏视图',sort:'nonsense'},
+  ]});
+  expect(r.broken).toBe(true);
+  expect(r.dropped).toEqual(['坏视图']);
+  expect(r.views.length).toBe(1);
+ });
+ it('dropped 能穿过输出校验不被剥掉',()=>{
+  const r=readTodoWorkspace({version:4,activeId:'all',views:[{id:'bad',name:'坏视图',sort:'nonsense'},{...defaultTodoViews[0]!,id:'all'}]});
+  const parsed=todoWorkspaceOutputSchema.safeParse(r);
+  expect(parsed.success).toBe(true);
+  expect(parsed.success&&parsed.data.dropped).toEqual(['坏视图']);
+  expect(parsed.success&&parsed.data.broken).toBe(true);
  });
 });

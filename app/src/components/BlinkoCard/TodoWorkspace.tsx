@@ -2,7 +2,7 @@ import {TodoStatusSettings} from './TodoStatusSettings';
 import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Button, Checkbox, CheckboxGroup, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem } from '@heroui/react';
-import { readTodoWorkspace, todoViewSchema, todoQuerySchema, type TodoView } from '@shared/lib/todoViews';
+import { readTodoWorkspace, todoViewSchema, todoQuerySchema, defaultTodoViews, type TodoView } from '@shared/lib/todoViews';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
@@ -36,6 +36,7 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
  const committedRef=useRef(blinko.config.value?.todoWorkspace);
  const queuedRef=useRef<typeof workspace|null>(null);
  const [error,setError]=useState(false);
+ const [resetting,setResetting]=useState(false);
  const [formError,setFormError]=useState('');
  const [confirmDelete,setConfirmDelete]=useState(false);
  const last=useRef('');
@@ -81,6 +82,19 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
   return persist({...latest,views:latest.views.map(v=>v.id===active.id?{...v,...patch}:v)});
  };
  const open=(next:typeof panel)=>{setDraft({...view,id:next==='create'?crypto.randomUUID():view.id,name:next==='create'?'':view.name,statusIds:[...view.statusIds],tagIds:[...view.tagIds],priorities:[...view.priorities],fields:[...view.fields]});setConfirmDelete(false);setFormError('');setPanel(next);setPanelOpen(true);};
+ // 显式覆盖：只在用户主动点「改用默认视图」时才绕过 broken 守卫写库。
+ // 这是唯一一条能主动丢弃原配置的路径，所以做成显式动作而不是让它悄悄发生。
+ const resetWorkspace=async()=>{
+  if(resetting)return;
+  if(!confirm(`这会用 ${defaultTodoViews.length} 个默认视图覆盖当前读不出来的待办视图配置，且不可撤销。确定继续吗？`))return;
+  setResetting(true);
+  try{
+   const next={version:4 as const,views:defaultTodoViews.map(v=>({...v})),activeId:'all'};
+   await api.config.update.mutate({key:'todoWorkspace',value:next});
+   blinko.config.value={...blinko.config.value,todoWorkspace:next};
+  }catch{RootStore.Get(ToastPlugin).error('重置失败，请重试');}
+  finally{setResetting(false);}
+ };
  const apply=async()=>{const parsed=todoViewSchema.safeParse(draft);if(!parsed.success){setFormError(parsed.error.issues[0]?.message||'请检查条件');return;}const next=panel==='create'?{...workspace,activeId:draft.id,views:[...workspace.views,parsed.data]}:{...workspace,views:workspace.views.map(v=>v.id===view.id?parsed.data:v)};if(await persist(next))setPanelOpen(false);};
  const menu=(label:string,icon:string,value:string,options:Record<string,string>,onSelect:(key:string)=>void,disabled=saving)=><Dropdown><DropdownTrigger><Button size="sm" variant="light" isDisabled={disabled||broken} className="gap-1.5 px-2 text-default-500" startContent={<Icon icon={icon} width={16} height={16}/>}>{label}：{options[value]}</Button></DropdownTrigger><DropdownMenu aria-label={label} selectionMode="single" selectedKeys={[value]} onAction={key=>onSelect(String(key))}>{Object.entries(options).map(([key,title])=><DropdownItem key={key}>{title}</DropdownItem>)}</DropdownMenu></Dropdown>;
  const feed=blinko.todoFeed;
@@ -105,7 +119,13 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
    <Button size="sm" variant="light" isDisabled={broken} onPress={()=>open('settings')} className="text-default-500" startContent={<Icon icon="tabler:adjustments-horizontal" width={16} height={16}/>}>视图设置</Button>
    <Input aria-label="搜索任务" placeholder="搜索任务" value={search} onValueChange={setSearch} isClearable onClear={()=>setSearch('')} size="sm" variant="flat" startContent={<Icon icon="tabler:search" width={15} height={15}/>} className="ml-auto w-40" classNames={{inputWrapper:'h-8 min-h-8 bg-default-50 shadow-none'}}/>
   </div>
-  {broken&&<div role="alert" className="mb-3 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs leading-5 text-danger"><Icon icon="tabler:alert-triangle" width={15} height={15} className="mt-0.5 shrink-0"/><span>待办视图配置读不出来（可能是旧版本残留的字段），已暂停保存以免覆盖你原有的视图。刷新页面仍无效的话，可在设置里清理一次待办视图配置。</span></div>}
+  {broken&&<div role="alert" className="mb-3 flex flex-wrap items-start gap-2 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs leading-5 text-danger"><Icon icon="tabler:alert-triangle" width={15} height={15} className="mt-0.5 shrink-0"/><span className="min-w-0 flex-1">{workspace.dropped?.length
+   // 告诉用户到底少了什么。笼统的「配置读不出来」让人无从下手，
+   // 也没法判断是哪个视图需要修 —— 上一版提示里写的「在设置里清理」更是
+   // 指向一个根本不存在的入口，已一并删掉。
+   ? <>有 {workspace.dropped.length} 个视图因为字段不合法没能读出来（{workspace.dropped.join('、')}），当前显示的是其余 {workspace.views.length} 个。已暂停保存，避免把这份残缺配置写回去覆盖原数据。修好对应视图后刷新即可恢复。</>
+   : <>待办视图配置读不出来，当前显示的是默认视图。已暂停保存，避免覆盖原数据。</>}
+  <button type="button" disabled={resetting} onClick={()=>void resetWorkspace()} className="ml-1 font-medium underline underline-offset-2 disabled:opacity-50">{resetting?'重置中…':'改用默认视图（覆盖原配置）'}</button></span></div>}
   {count>0&&<div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-default-500"><span>已设 {count} 项条件</span>{view.scope!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{SCOPE_LABELS[view.scope]}</span>}{view.status!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{view.status==='pending'?'未完成':'已完成'}</span>}<button type="button" onClick={()=>open('filter')} className="text-primary">查看条件</button></div>}
   {error?<Button variant="light" onPress={()=>{setError(false);void feed.resetAndCall({}).catch(()=>setError(true));}}>加载失败，点击重试</Button>:feed.isLoading&&!feed.value?.length?<div role="status" className="py-16 text-center text-sm text-default-400">正在加载任务…</div>:<TodoGroupedView key={`${view.id}-${view.grouping}-${view.layout}`} tasks={feed.value||[]} mode={view.grouping} board={view.layout==='board'} fields={view.fields} preserveOrder/>}
   {!feed.isLoadAll&&!!feed.value?.length&&<div className="mt-3 text-center text-xs text-default-400">已加载 {feed.value.length} 项，分组数量随加载更新。<Button size="sm" variant="light" isLoading={feed.isLoading} onPress={()=>void blinko.onBottom()}>加载更多</Button></div>}

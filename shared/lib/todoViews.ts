@@ -36,13 +36,13 @@ export const todoWorkspaceSchema = z.object(workspaceShape).superRefine(refineWo
 /**
  * 仅供 **输出**（config.list）使用。
  *
- * 与 todoWorkspaceSchema 的区别只在于显式声明了 `broken`：
+ * 与 todoWorkspaceSchema 的区别只在于显式声明了 `broken` / `dropped`：
  * zod 的 object 默认会剥掉未声明的字段，若输出侧用严格 schema，
- * readTodoWorkspace 抢救后带上的 `broken: true` 会被静默丢弃，
- * 前端因此不知道「这份配置有视图被丢弃过」，仍会照常写回并覆盖数据。
- * 这个守卫失效过一次，代价是用户自建的视图被永久覆盖。
+ * readTodoWorkspace 抢救后带上的标记会被静默丢弃，前端因此不知道
+ * 「这份配置有视图被丢弃过」，仍会照常写回并覆盖数据。这个守卫失效过一次，
+ * 代价是用户自建的视图被永久覆盖。
  */
-export const todoWorkspaceOutputSchema = z.object({ ...workspaceShape, broken: z.boolean().optional() }).superRefine(refineWorkspace);
+export const todoWorkspaceOutputSchema = z.object({ ...workspaceShape, broken: z.boolean().optional(), dropped: z.array(z.string()).optional() }).superRefine(refineWorkspace);
 export const defaultTodoViews: TodoView[] = [
  {id:'all',name:'全部任务',scope:'all',layout:'list',grouping:'none',sort:'due',status:'all'},
  {id:'today',name:'今天',scope:'today',layout:'list',grouping:'none',sort:'priority',status:'pending'},
@@ -54,13 +54,16 @@ export const defaultTodoViews: TodoView[] = [
 /**
  * 读取待办视图配置。
  *
- * ⚠️ 解析失败时的兜底带 `broken: true` 标记，调用方**必须**据此禁用写回。
- * 原因：默认值看起来完全正常，用户不会察觉异常；而任何一次「改排序 / 改筛选」
+ * `broken` 只表示「**存过**一份配置、但里面读不出东西」，调用方**必须**据此禁用写回。
+ * 原因：兜底默认值看起来完全正常，用户不会察觉异常；而任何一次「改排序 / 改筛选」
  * 都会把这份默认值 PUT 回服务端，把用户自建的视图永久覆盖掉
  * （曾真实发生过：自建的看板视图被 6 个默认视图替换）。
- * 宁可让用户看到「配置读不出来」并去修，也不要静默吃掉他的数据。
+ *
+ * ⚠️ 「从没存过配置」**不是** broken —— 那是全新用户的正常状态，
+ * 给一份可编辑的默认视图即可。曾把这个分支也标成 broken，
+ * 结果任何全新部署第一次打开待办页就弹出「配置读不出来」并锁死全部写入口。
  */
-export type TodoWorkspace = {version:4;views:TodoView[];activeId:string;broken?:boolean};
+export type TodoWorkspace = {version:4;views:TodoView[];activeId:string;broken?:boolean;dropped?:string[]};
 export function readTodoWorkspace(value: unknown):TodoWorkspace {
  const raw = value as any;
  const migrated = Array.isArray(raw?.views) && raw.version !== 4 ? {...raw,version:4,views:raw.views.map((v:any)=>{
@@ -71,21 +74,37 @@ export function readTodoWorkspace(value: unknown):TodoWorkspace {
   return next;
  })} : value;
  const result = todoWorkspaceSchema.safeParse(migrated);
- // 已合法时把上游的 broken 标记透传下去。
- // 服务端 getGlobalConfig 已经先抢救过一次并打好 broken，前端再跑一遍 readTodoWorkspace
- // 会命中这个「成功」分支；若不把标记带过去，守卫就被第二次解析洗掉了：
+ // 已合法时把上游的标记透传下去。
+ // 服务端 getGlobalConfig 已经先抢救过一次并打好 broken/dropped，前端再跑一遍
+ // readTodoWorkspace 会命中这个「成功」分支；而 todoWorkspaceSchema 是严格版，
+ // zod 会把未声明的 broken/dropped 剥掉 —— 不显式带过去，守卫就被第二次解析洗掉了：
  // 界面解锁 → 用户改一次排序 → 兜底默认值写回 → 被丢弃的视图彻底没了。
- if(result.success) return { ...result.data, ...(raw?.broken===true?{broken:true}:{}) };
+ if(result.success) return {
+  ...result.data,
+  ...(raw?.broken===true?{broken:true}:{}),
+  ...(Array.isArray(raw?.dropped)&&raw.dropped.length?{dropped:raw.dropped as string[]}:{}),
+ };
  // 逐个视图抢救：多半只是某一个视图的字段不合法，不该连累其他视图整体退回默认。
  // 只要有视图能救就用救回来的这份；只有「一个都救不回来」才退回默认。
  if(migrated && typeof migrated==='object' && Array.isArray((migrated as any).views)){
   const all=(migrated as any).views;
-  const views=all.map((v:any)=>{const one=todoViewSchema.safeParse(v);return one.success?one.data:null}).filter(Boolean) as TodoView[];
+  // 一次解析同时拿到「救回来的」和「被丢弃的」，避免为算 dropped 再跑一遍 safeParse
+  const checked=all.map((v:any)=>{const one=todoViewSchema.safeParse(v);return one.success?one.data:null});
+  const views=checked.filter(Boolean) as TodoView[];
   if(views.length){
    const activeId=views.some(v=>v.id===(migrated as any).activeId)?(migrated as any).activeId:views[0]!.id;
-   // 真的丢掉过视图才标 broken —— 这种情况下写回会把丢掉的视图彻底抹掉
-   return {version:4,views,activeId,broken:views.length!==all.length};
+   // 真的丢掉过视图才标 broken —— 这种情况下写回会把丢掉的视图彻底抹掉。
+   // dropped 带上被丢弃的视图名，界面才能告诉用户「到底少了什么」，
+   // 而不是笼统地说「配置读不出来」，让人无从下手。
+   const dropped=all.filter((_:any,i:number)=>!checked[i]).map((v:any)=>typeof v?.name==='string'&&v.name?v.name:'未命名视图');
+   return {version:4,views,activeId,broken:dropped.length>0,...(dropped.length?{dropped}:{})};
   }
  }
- return {version:4 as const,views: defaultTodoViews.map(v=>({...v})), activeId:'all',broken:true};
+ // 走到这里说明没能救回任何视图。此时要分清两种情况：
+ //  · 库里压根没有这份配置（undefined / null / {} / 空数组）
+ //    —— 全新用户的正常状态，给默认视图并且**不标 broken**，否则第一次打开待办页就被锁死；
+ //  · 库里有配置但一个视图都救不回来
+ //    —— 真正的损坏，必须标 broken 拦住写回。
+ const stored = migrated!=null && typeof migrated==='object' && Array.isArray((migrated as any).views) && (migrated as any).views.length>0;
+ return {version:4 as const,views: defaultTodoViews.map(v=>({...v})), activeId:'all', ...(stored?{broken:true}:{})};
 }

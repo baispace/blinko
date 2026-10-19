@@ -120,6 +120,10 @@ router.get(/.*/, async (req, res) => {
     return res.status(400).json({ error: 'Invalid path' });
   }
 
+  // 供响应阶段决定缓存策略：匿名取到的公开封面撤回后必须立即失效，
+  // 不能让浏览器/CDN 拿着一年的缩略图缓存继续供图。
+  let isPublicCover = false;
+
   if (!fullPath.includes('temp/') && !fullPath.endsWith('.bko')) {
     try {
       const myFile = await prisma.attachments.findFirst({
@@ -130,16 +134,22 @@ router.get(/.*/, async (req, res) => {
           note: {
             select: {
               isShare: true,
-              accountId: true
+              accountId: true,
+              isPublished: true,
+              publication: { select: { coverAttachmentId: true } }
             }
           }
         }
       });
       // console.log('myFile', myFile);
 
+      // 公开封面：仅这一条附件免鉴权，且随发布状态开关。
+      // 不按「这篇笔记已发布」整篇放开 —— 那等于把正文外的附件一并公开。
+      const coverId = myFile?.note?.publication?.coverAttachmentId;
+      isPublicCover = !!myFile && !!coverId && coverId === myFile.id && !!myFile.note?.isPublished;
 
       if (!token) {
-        if (myFile?.note?.isShare) {
+        if (myFile?.note?.isShare || isPublicCover) {
         } else {
           return res.status(401).json({ error: "Unauthorized" });
         }
@@ -191,7 +201,7 @@ router.get(/.*/, async (req, res) => {
         clearTimeout(processingTimeout);
         res.set({
           "Content-Type": mime.lookup(filePath) || "image/jpeg",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": isPublicCover ? "no-store" : "public, max-age=31536000",
           "Content-Disposition": `inline; filename="${safeFilename}"`
         });
         return res.send(thumbnail);
@@ -222,7 +232,7 @@ router.get(/.*/, async (req, res) => {
     res.set({
       "Content-Type": contentType,
       "ETag": etag,
-      "Cache-Control": "public, max-age=3600"
+      "Cache-Control": isPublicCover ? "no-store" : "public, max-age=3600"
     });
 
     if (isDownload) {

@@ -36,6 +36,8 @@ model accounts {
   conversations conversation[]
   sharedNotes   noteInternalShare[]
   aiScheduledTasks aiScheduledTask[]
+  blogProfile   blogProfile?
+  blogTopics    blogTopic[]
 }
 
 model attachments {
@@ -57,6 +59,7 @@ model attachments {
 
   note    notes?    @relation(fields: [noteId], references: [id])
   account accounts? @relation(fields: [accountId], references: [id])
+  publicationCovers notePublication[] @relation("PublicationCover")
   @@index([accountId, sortOrder, updatedAt(sort: Desc), id(sort: Desc)], map: "attachments_account_sort_idx")
   @@index([noteId], map: "attachments_noteId_idx")
 }
@@ -102,6 +105,7 @@ model notes {
   histories         noteHistory[]
   internalShares    noteInternalShare[]
   publication       notePublication?
+  blogTopics        blogTopicNote[]
 
   @@index([isPublished])
   @@index([accountId, createdAt])
@@ -378,9 +382,65 @@ model notePublication {
   noteId          Int      @id
   content         String   @db.Text
   type            Int
+  // 仅这一条附件可被免鉴权读取（见 routerExpress/file/file.ts）。同篇笔记的
+  // 其它附件仍需登录，避免「发布一篇」等于「公开整篇的所有附件」。
+  coverAttachmentId Int?
   revision        Int      @default(1)
   sourceUpdatedAt DateTime @db.Timestamptz(6)
   createdAt       DateTime @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime @default(now()) @db.Timestamptz(6)
   note            notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  coverAttachment attachments? @relation("PublicationCover", fields: [coverAttachmentId], references: [id], onDelete: SetNull)
+
+  @@index([coverAttachmentId])
+}
+
+// 公开资料：与 accounts 的私有身份字段刻意分开，只放作者自己选择公开的内容。
+model blogProfile {
+  accountId   Int      @id
+  displayName String   @default("") @db.VarChar
+  tagline     String   @default("") @db.VarChar
+  bio         String   @default("") @db.Text
+  avatarUrl   String   @default("") @db.VarChar
+  homepage    String   @default("") @db.VarChar
+  // [{ label, url }]，由 zod 在接口层校验形状
+  links       Json?    @db.Json
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+// 专题：博客的公开分组，与私有 tag 树互不相干 —— 发布隔离的同一条原则。
+model blogTopic {
+  id          Int      @id @default(autoincrement())
+  accountId   Int
+  name        String   @db.VarChar
+  slug        String   @db.VarChar
+  desc        String   @default("") @db.Text
+  color       String   @default("") @db.VarChar
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  notes   blogTopicNote[]
+
+  @@unique([accountId, slug])
+  @@index([accountId, sortOrder, id])
+}
+
+model blogTopicNote {
+  topicId   Int
+  noteId    Int
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  topic blogTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  note  notes     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, noteId])
+  @@index([noteId])
 }

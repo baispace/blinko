@@ -69,6 +69,9 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
           {supportsDesktopBookmarks() && <button type="button" className={rowClass} onClick={() => {
             close(); RootStore.Get(DialogStore).setData({isOpen:true,size:'md',title:'桌面书签',content:<DesktopBookmarks/>});
           }}><Icon icon="solar:pin-linear" width={18}/><span>桌面书签</span></button>}
+          <button type="button" className={rowClass} onClick={() => {
+            close(); navigate('/blog-manage');
+          }}><Icon icon="tabler:file-text" width={18}/><span>{zh ? '博客管理' : 'Blog'}</span></button>
           <div className="my-1 border-t border-default-100" />
           <button type="button" className={`${rowClass} !text-danger`} onClick={async () => {
             close(); await signOut({ callbackUrl:'/signin', redirect:false }); navigate('/signin');

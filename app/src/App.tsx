@@ -36,6 +36,7 @@ const HubPage = lazy(() => import('./pages/hub'));
 const AiTasksPage = lazy(() => import('./pages/ai-tasks'));
 const AIPage = lazy(() => import('./pages/ai'));
 const ResourcesPage = lazy(() => import('./pages/resources'));
+const BlogManagePage = lazy(() => import('./pages/blog-manage'));
 const ReviewPage = lazy(() => import('./pages/review'));
 const SettingsPage = lazy(() => import('./pages/settings'));
 const PluginPage = lazy(() => import('./pages/plugin'));
@@ -266,6 +267,7 @@ function AppRoutes() {
             <Route path="/ai/tasks/:taskId?" element={<ProtectedRoute><AiTasksPage /></ProtectedRoute>} />
             <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />
             <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
+            <Route path="/blog-manage" element={<ProtectedRoute><BlogManagePage /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/plugin" element={<ProtectedRoute><PluginPage /></ProtectedRoute>} />

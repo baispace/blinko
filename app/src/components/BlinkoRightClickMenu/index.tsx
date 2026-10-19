@@ -263,7 +263,7 @@ export const handlePublish = () => {
   RootStore.Get(DialogStore).setData({
     size: 'md' as any,
     isOpen: true,
-    title: i18n.t('publish-to-home'),
+    title: '发布到博客',
     isDismissable: false,
     content: <BlinkoPublishDialog note={blinko.curSelectedNote} />
   })
@@ -524,7 +524,7 @@ export const PublishItem = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   return <div className="flex items-start gap-2">
     <Icon icon="tabler:world" width="20" height="20" />
-    <div>{blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+    <div>{blinko.curSelectedNote?.isPublished ? '管理发布' : '发布到博客'}</div>
   </div>
 })
 

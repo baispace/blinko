@@ -302,12 +302,12 @@ export const CardActionMenu = observer(({
         {!isRecycle ? (
           <DropdownItem
             key="publish"
-            textValue={blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}
+            textValue={blinkoItem.isPublished ? '管理发布' : '发布到博客'}
             onClick={withNote(handlePublish)}
           >
             <div className="flex items-start gap-2">
               <Icon icon="tabler:world" width="20" height="20" />
-              <div>{blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+              <div>{blinkoItem.isPublished ? '管理发布' : '发布到博客'}</div>
             </div>
           </DropdownItem>
         ) : null}

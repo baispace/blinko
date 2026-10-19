@@ -141,6 +141,12 @@ const errorHandler = (err: any, req: express.Request, res: express.Response, nex
  * Setup all API routes for the application
  */
 async function setupApiRoutes(app: express.Application) {
+  app.use('/api', (req, res, next) => {
+    if (req.path.includes('notes.publicPublished') || /^\/v1\/note\/published-(?:list|detail)$/.test(req.path)) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+    next();
+  });
   // Authentication routes
   app.use('/api/auth', authRoutes);
 

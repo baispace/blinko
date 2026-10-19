@@ -45,6 +45,7 @@ const OAuthCallbackPage = lazy(() => import('./pages/oauth-callback'));
 const DesktopNotePage = lazy(() => import('./pages/desktop-note'));
 const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
+const PublishedNotePage = lazy(() => import('./pages/blog/[id]'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
 const AiSharePage = lazy(() => import('./pages/ai-share'));
 const MindmapPocPage = lazy(() => import('./pages/mindmapPoc'));
@@ -274,6 +275,7 @@ function AppRoutes() {
             <Route path="/detail/*" element={<ProtectedRoute><DetailPage /></ProtectedRoute>} />
             <Route path="/share" element={<ShareIndexPage />} />
             <Route path="/share/:id" element={<ShareDetailPage />} />
+            <Route path="/blog/:id" element={<PublishedNotePage />} />
             <Route path="/ai-share/:id" element={<AiSharePage />} />
             <Route path="/quicknote" element={<QuickNotePage />} />
             <Route path="/quickai" element={<QuickAIPage />} />

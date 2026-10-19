@@ -101,6 +101,7 @@ model notes {
   comments          comments[]      @relation("NoteComments")
   histories         noteHistory[]
   internalShares    noteInternalShare[]
+  publication       notePublication?
 
   @@index([isPublished])
   @@index([accountId, createdAt])
@@ -371,4 +372,15 @@ model fonts {
   updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 
   @@unique([name])
+}
+// Public content is a deliberate snapshot, never a join to the live draft.
+model notePublication {
+  noteId          Int      @id
+  content         String   @db.Text
+  type            Int
+  revision        Int      @default(1)
+  sourceUpdatedAt DateTime @db.Timestamptz(6)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @db.Timestamptz(6)
+  note            notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
 }

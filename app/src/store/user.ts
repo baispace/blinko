@@ -1,4 +1,5 @@
 import { mergeProfileIdentity } from '@/lib/profileIdentity';
+import { isPublicRoute } from '@/lib/publicRoutes';
 import { syncHeroAccent } from '@/lib/themeAccent';
 // import { User } from 'next-auth';
 // import { useSession } from 'next-auth/react';
@@ -442,12 +443,7 @@ export class UserStore implements Store {
       const pathname = location.pathname;
       const isInitialLoad = !this.isSetup;
 
-      if (pathname !== '/signin' &&
-        pathname !== '/signup' &&
-        !pathname.includes('/share') &&
-        !pathname.includes('/ai-share') &&
-        !pathname.includes('/oauth-callback') &&
-        !isInitialLoad) {
+      if (!isPublicRoute(pathname) && !isInitialLoad) {
         navigate('/signin');
       }
     }
@@ -551,7 +547,7 @@ export class UserStore implements Store {
     useEffect(() => {
       const handleSignout = () => {
         const pathname = location.pathname;
-        if (pathname === '/signup' || pathname.includes('/share') || pathname.includes('/ai-share') || pathname.includes('/oauth-callback')) {
+        if (isPublicRoute(pathname)) {
           return
         }
         this.clear()

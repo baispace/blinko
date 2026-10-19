@@ -22,6 +22,7 @@ import { useAndroidShortcuts } from '@/lib/hooks';
 import { useQuickaiHotkey } from '@/hooks/useQuickaiHotkey';
 import { useInitialHotkeySetup } from '@/hooks/useInitialHotkeySetup';
 import { isInTauri, isDesktop } from "@/lib/tauriHelper";
+import { isPublicRoute } from '@/lib/publicRoutes';
 import { listen } from "@tauri-apps/api/event";
 import QuickNotePage from "./pages/quicknote";
 import QuickAIPage from "./pages/quickai";
@@ -100,11 +101,7 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const publicRoutes = ['/signin', '/signup', '/share', '/_offline', '/oauth-callback', '/ai-share', '/oauth-callback'];
-      const isPublicRoute = publicRoutes.some(route =>
-        location.pathname === route || location.pathname.startsWith('/share/') || location.pathname.startsWith('/ai-share/')
-      );
-      if (!userStore.isLogin && !isPublicRoute) {
+      if (!userStore.isLogin && !isPublicRoute(location.pathname)) {
         const tokenData = await getTokenData();
         console.log('tokenData', tokenData);
 

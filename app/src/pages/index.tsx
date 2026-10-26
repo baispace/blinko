@@ -11,6 +11,7 @@ import { TodoWorkspace } from '@/components/BlinkoCard/TodoWorkspace';
 import { BlinkoListRow } from '@/components/BlinkoCard/BlinkoListRow';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
+import { MobileCreateFab } from '@/components/Common/MobileCreateFab';
 import { ListEmptyState } from '@/components/Common/ListEmptyState';
 import { TagContentTypeTabs } from '@/components/Common/TagContentTypeTabs';
 import { TagFilterChips } from '@/components/Common/TagFilterChips';
@@ -152,7 +153,16 @@ const Home = observer(() => {
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col-reverse pt-1 md:flex-col md:p-0">
-      {!isPc && !isTodoView && composer}
+      {/*
+        移动端不再常驻底部输入框 —— 它加一整行工具栏要吃掉小半屏，
+        列表能看到的闪念只剩几条。改成右下角一个新建按钮，
+        点开是底部弹出的创建面板；类型跟着当前列表走（闪念页写闪念、笔记页写笔记）。
+      */}
+      {!isPc && !isTodoView && store.showEditor && (
+        <MobileCreateFab
+          noteType={pageScope === 'notes' ? NoteType.NOTE : NoteType.BLINKO}
+        />
+      )}
       {effectiveHideEditor && !isTodoView && <BlinkoAddButton />}
 
       <ScrollArea
@@ -167,7 +177,7 @@ const Home = observer(() => {
         }}
         className="mt-0 h-full min-h-0 w-full flex-1 scroll-area"
       >
-        <div className="mx-auto w-full px-2 pb-24 md:px-6 md:pb-8" style={maxWidthStyle}>
+        <div className="mx-auto w-full px-2 pb-32 md:px-6 md:pb-8" style={maxWidthStyle}>
           {isPc && !isTodoView && composer}
           {!isTodoView && !['archived', 'trash'].includes(searchParams.get('path') || '') && <StickyListFilters scopeKey={[searchParams.get('path') || 'blinko', searchParams.get('contentType') || 'all'].join(':')} filterKey={[searchParams.get('path'), searchParams.get('tagId'), searchParams.get('contentType')].join('|')}>
             <div className="flex min-w-0 items-center gap-2">

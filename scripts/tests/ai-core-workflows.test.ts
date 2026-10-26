@@ -1,3 +1,4 @@
+import { splitDailyInput, joinDailyInput } from '../../shared/lib/dailyInput';
 import { test, expect } from 'bun:test';
 import { dailyDraftSchema, parseDailyDraft, workflows, hasSavedWorkflowResult } from '../../shared/lib/aiWorkflows';
 import { buildDailyTaskPatch } from '../../shared/lib/dailyTaskPatch';
@@ -70,4 +71,31 @@ test('digit-leading hashtag names are recognized so AI notes never persist them 
   expect(isNumericLeadingTagName('工作')).toBe(false);
   expect(isNumericLeadingTagName('3D模型')).toBe(true);
   expect(isNumericLeadingTagName('Welcome')).toBe(false);
+});
+
+test('daily progress appends without replacing goal or postponing deadlines', () => {
+  const now = new Date('2026-10-22T03:00:00Z');
+  const value = dailyDraftSchema.parse({ kind: 'daily', title: '日报', content: '', actions: [{ ...base, progress: '完成方案初稿', nextStep: '验证边界情况', planDate: '2026-10-22', status: 'open' }] }).actions[0]!;
+  const result = buildDailyTaskPatch(task, value, now);
+  expect(result.content).toBe(task.content);
+  expect(result.metadata.expireAt).toBe(task.metadata.expireAt);
+  expect(result.metadata.snoozeCount).toBe(2);
+  expect(result.metadata.planDate).toBe('2026-10-22');
+  expect(result.metadata.taskStatus).toBe('doing');
+  expect(result.metadata.nextStep).toBe('验证边界情况');
+  expect(result.metadata.progressHistory).toHaveLength(1);
+  expect(buildDailyTaskPatch(result, value, now).metadata.progressHistory).toHaveLength(1);
+});
+test('daily uncertainty and plan dates are parsed independently of deadlines', () => {
+  const parse = (action: any) => dailyDraftSchema.safeParse({ kind: 'daily', title: '日报', content: '', actions: [action] });
+  expect(parse({ ...base, planDate: '2026-02-30' }).success).toBe(false);
+  const result = parse({ ...base, needsConfirmation: true, planDate: '2026-10-22' });
+  expect(result.success).toBe(true);
+  if (result.success) expect(result.data.actions[0]?.due).toBeNull();
+});
+
+test('daily two-part composer preserves multiline input and plain-text drafts', () => {
+  expect(splitDailyInput(joinDailyInput('完成初稿\n等待确认', '验证方案\n整理资料'))).toEqual({ yesterday: '完成初稿\n等待确认', today: '验证方案\n整理资料' });
+  expect(splitDailyInput('原有补充输入')).toEqual({ yesterday: '原有补充输入', today: '' });
+  expect(joinDailyInput('', '')).toBe('');
 });

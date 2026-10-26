@@ -12,6 +12,7 @@ import { UpdateProgressDialog } from '@/components/Common/UpdateProgressDialog';
 import { isDesktop, isInTauri } from '@/lib/tauriHelper';
 import { api } from '@/lib/trpc';
 import { siteInfoSchema, type SiteInfo, type SiteRelease } from '@shared/lib/siteInfo';
+import { BRAND_NAME } from '@/components/Common/Brand/brandGeometry';
 
 export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: boolean }) => {
   const { t, i18n } = useTranslation();
@@ -57,8 +58,8 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
   return <div className="space-y-7">
     {!updatesOnly && <section className="rounded-xl border border-default-200/70 p-5">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><SiteBrand compact size={30} /></div>
-        <div className="min-w-0 flex-1"><h3 className="text-lg font-semibold break-words">{title}</h3><p className="mt-1 text-xs text-default-400">{text('闪念 · 笔记 · 待办 · AI 工作流', 'Ideas · Notes · Tasks · AI workflows')}</p></div>
+        <div className="shrink-0"><SiteBrand compact size={34} /></div>
+        <div className="min-w-0 flex-1"><h3 className="text-lg font-semibold break-words">{title}</h3><p className="mt-1 text-xs text-default-400">{text('闪念 · 笔记 · 待办 · AI 工作流', 'Ideas · Notes · Tasks · AI workflows')}</p><p className="mt-2 text-xs text-default-500">{BRAND_NAME.tagline}</p></div>
         {user.isSuperAdmin && snapshot && !editingDescription && <Button size="sm" variant="light" onPress={() => { setDescription(snapshot.data.description); setEditingDescription(true); }}>{text('编辑介绍', 'Edit intro')}</Button>}
       </div>
       {editingDescription ? <div className="mt-4 space-y-3">

@@ -19,11 +19,19 @@ import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 import { getChatContext } from '../lib/conversationPages';
 import { workflowKeys } from '../../shared/lib/aiWorkflows';
 import { dailySyncInput, syncDailyWorkflow } from '../lib/dailyWorkflow';
-import { getChatCapabilities } from '../lib/chatCapabilities';
+import { getChatCapabilities, getServiceCapabilities } from '../lib/chatCapabilities';
 
 export const aiRouter = router({
   quickModelSetup: authProcedure.input(quickModelSetupSchema).mutation(({ input, ctx }) => quickModelSetup(input, ctx.role)),
   chatCapabilities: authProcedure.input(z.object({ modelId: z.number().int().positive().optional() })).query(({ input }) => getChatCapabilities(input.modelId)),
+  /**
+   * 服务就绪状态。
+   *
+   * 前端据此决定「依赖某个服务的入口」要不要出现 ——
+   * 比如右键菜单里的「AI 标签」「关联笔记」：服务没配好就不该出现在菜单里，
+   * 点进去再报错是最差的体验。
+   */
+  serviceCapabilities: authProcedure.input(z.void()).query(() => getServiceCapabilities()),
   skillSources: authProcedure.input(z.object({ skill: z.enum(workflowKeys), from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), includeNotes: z.boolean().default(false), days: z.number().int().min(1).max(90).default(7) })).query(async ({ input, ctx }) => {
     const now = new Date();
     const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now);
@@ -36,7 +44,9 @@ export const aiRouter = router({
       const inRange = { gte: from, lte: to };
       const tasks = await prisma.notes.findMany({ where: { ...owned, type: 2, ...(input.skill === 'daily' ? { OR: [{ isArchived: false }, { updatedAt: inRange }] } : { OR: [{ updatedAt: inRange }, { createdAt: inRange }] }) }, orderBy: { updatedAt: 'desc' }, take: 81, select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true } });
       const extras = input.includeNotes ? await prisma.notes.findMany({ where: { ...owned, type: { in: [0,1] }, updatedAt: inRange }, orderBy: { updatedAt: 'desc' }, take: 21, select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true } }) : [];
-      return { items: [...tasks.slice(0,80), ...extras.slice(0,20)], total: tasks.length + extras.length, limited: tasks.length > 80 || extras.length > 20 };
+      const previousReports = input.skill === 'daily' ? await prisma.notes.findMany({ where: { ...owned, type: 1, metadata: { path: ['workflow'], equals: 'daily' } }, orderBy: { updatedAt: 'desc' }, take: 1, select: { id: true, content: true, type: true, metadata: true, isArchived: true, createdAt: true, updatedAt: true } }) : [];
+      const items = [...new Map([...tasks.slice(0,80), ...extras.slice(0,20), ...previousReports].map(note => [note.id, note])).values()];
+      return { items, total: tasks.length + extras.length, limited: tasks.length > 80 || extras.length > 20 };
     }
     const base = { accountId: Number(ctx.id), isRecycle: false, isArchived: false };
     const candidates = await prisma.notes.findMany({

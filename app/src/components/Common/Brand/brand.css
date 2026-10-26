@@ -1,0 +1,119 @@
+/*
+ * Jomio brand loading animation.
+ *
+ * The mark assembles the way the reference sheet describes it:
+ *   收集  a small fragment shows up first
+ *   整理  the J body is revealed from the bottom up
+ *   成形  the fragment settles into place and the complete mark holds
+ *
+ * One 1.6s cycle, transform/opacity only, so nothing reflows while it plays.
+ */
+
+.brand-loading {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.brand-loading__mark {
+  overflow: visible;
+}
+
+.brand-loading__fragment,
+.brand-loading__body {
+  fill: currentColor;
+}
+
+.brand-loading__fragment {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: brand-loading-fragment 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.brand-loading__body {
+  animation: brand-loading-body 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.brand-loading__clip {
+  animation: brand-loading-body-clip 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+@keyframes brand-loading-fragment {
+  0% {
+    opacity: 0;
+    transform: translate(7px, -9px) scale(0.62);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(3px, -4px) scale(0.86);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(1px, -1px) scale(0.97);
+  }
+  44% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.95);
+  }
+}
+
+@keyframes brand-loading-body {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes brand-loading-body-clip {
+  0% {
+    transform: translateY(100%);
+  }
+  20% {
+    transform: translateY(100%);
+  }
+  54% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+/* Reduced motion: keep the finished mark, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .brand-loading__fragment,
+  .brand-loading__body,
+  .brand-loading__clip {
+    animation: none !important;
+  }
+
+  .brand-loading__fragment,
+  .brand-loading__body {
+    opacity: 1;
+  }
+
+  .brand-loading__clip {
+    transform: none;
+  }
+}

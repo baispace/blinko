@@ -1,0 +1,4000 @@
+/*
+ * Ink 公开博客站的样式层。
+ *
+ * 刻意与主应用的设计体系隔离：公开站有自己的 token、暗色策略和排版，
+ * 不吃 HeroUI 的 后台默认背景与文字颜色。这和「发布与内容隔离」是同一条
+ * 原则 —— 公开面不该被后台界面的改动带着走。
+ *
+ * 所有选择器都挂在 .ink-blog 下，避免泄漏到后台页面。
+ */
+
+/*
+ * 变量层：公开站与管理弹窗共用一份。
+ *
+ * 管理弹窗渲染在应用外壳里（不在 .ink-blog 之下），拿不到公开站的变量，
+ * 所以 .ink-promo 自己开一份同款作用域 —— 颜色只有这一处定义，
+ * 弹窗与管理页的明暗才不会各说各话。
+ */
+.ink-blog,
+.ink-promo {
+  --ink-bg: #f7f8fc;
+  --ink-surface: #ffffff;
+  --ink-text: #171927;
+  --ink-muted: #7e8499;
+  --ink-line: #e5e8f3;
+  --ink-accent: #7051ff;
+  --ink-tint: #f1eeff;
+  --ink-shadow: 0 14px 30px rgb(18 21 42 / 6%);
+  /* 告警色：只用在「已经不是公开状态」「提交失败」这类提示上。
+     和视图药丸无关 —— 药丸现在是单色的。 */
+  --ink-warn: #d9482f;
+  /* 视图药丸的文字色。
+     常态是中性灰（比 --ink-muted 压深一档，14px 粗体在浅底上才够读），
+     选中/悬停时切到紫色。同一份药丸明暗两种底色要用不同的紫：
+     亮色底把主色压深，暗色底反而要提亮，否则紫字糊在深色里读不出来。 */
+  --ink-chip-text: color-mix(in srgb, var(--ink-text) 30%, var(--ink-muted));
+  --ink-chip-accent: color-mix(in srgb, var(--ink-accent) 86%, #000);
+  /* 导航栏高度：顶部主题色带按它裁，跟着断点变 */
+  --ink-header-h: 78px;
+}
+
+.ink-blog {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  color: var(--ink-text);
+  background: var(--ink-bg);
+  font-synthesis: none;
+  min-height: 100dvh;
+  color-scheme: light;
+}
+
+/*
+ * 暗色作用域。
+ *
+ * 弹窗这一支用 data-blog-theme 而不是 data-theme：
+ * HeroUI 的全局规则是 `:root, [data-theme]`，会给任何带 data-theme 的元素
+ * 刷一层应用主题底色 —— 弹窗内容是博客配色，用 data-theme 会被刷成白底。
+ * 公开站的 .ink-blog 自己写死了 background，不受影响，保持原样。
+ */
+.ink-blog[data-theme="dark"],
+.ink-promo[data-blog-theme="dark"] {
+  --ink-bg: #12131a;
+  --ink-surface: #1c1e28;
+  --ink-text: #e7e9f5;
+  --ink-muted: #a3a9c0;
+  --ink-line: #323646;
+  --ink-tint: #2f294a;
+  --ink-shadow: 0 14px 30px rgb(0 0 0 / 40%);
+  /* 暗色下色相要提亮一档，否则在深底上发闷 */
+  --ink-warn: #f2705a;
+  --ink-chip-accent: color-mix(in srgb, var(--ink-accent) 62%, #fff);
+  color-scheme: dark;
+}
+
+.ink-blog *,
+.ink-blog *::before,
+.ink-blog *::after,
+.ink-promo *,
+.ink-promo *::before,
+.ink-promo *::after {
+  box-sizing: border-box;
+}
+
+.ink-blog h1,
+.ink-blog h2,
+.ink-blog h3,
+.ink-blog h4,
+.ink-blog p,
+.ink-promo h2,
+.ink-promo h3,
+.ink-promo p {
+  margin-top: 0;
+}
+
+.ink-blog h1 {
+  font-size: 36px;
+  line-height: 1.4;
+  letter-spacing: -0.6px;
+}
+.ink-blog h2 {
+  font-size: 23px;
+  line-height: 1.45;
+}
+.ink-blog h3 {
+  font-size: 17px;
+}
+.ink-blog p {
+  line-height: 1.75;
+}
+
+.ink-blog a {
+  color: inherit;
+  text-decoration: none;
+}
+.ink-blog :where(button),
+.ink-promo :where(button) {
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background: none;
+}
+.ink-blog img,
+.ink-promo img {
+  display: block;
+  max-width: 100%;
+  object-fit: cover;
+}
+.ink-blog svg,
+.ink-promo svg {
+  flex-shrink: 0;
+}
+.ink-blog :focus-visible,
+.ink-promo :focus-visible {
+  outline: 2px solid #8573ff;
+  outline-offset: 4px;
+}
+
+/* ---------- 骨架 ---------- */
+
+.ink-wrap {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+}
+
+.ink-header {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  position: relative;
+  z-index: 10;
+}
+
+/*
+ * 页脚的站点名。
+ * 顶栏那张品牌卡是 .ink-brand-card，和页脚这个不是一回事。
+ */
+.ink-brand {
+  display: inline-flex;
+  align-items: center;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+/* Brand and utility actions share the header surface; avoid nested pills. */
+.ink-header-left {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* 收束菜单：胶囊左半，只有一个小图标，不带圆形底。 */
+.ink-sites-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--ink-muted);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.ink-sites-btn:hover {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+.ink-sites-btn[aria-expanded="true"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+/* 品牌卡：胶囊右半。去掉自己的底、边、投影，只保留 logo 圆。 */
+.ink-brand-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  transition: none;
+}
+.ink-brand-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+.ink-brand-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--ink-accent);
+  color: #fff;
+  transition: opacity 0.15s ease;
+}
+.ink-brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ink-brand-letter {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  /* 圆底是主色紫，字必须是白的 —— 用主色会糊在底色里 */
+  color: #fff;
+}
+
+/* The home affordance stays white on the accent logo background. */
+.ink-brand-home {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+  color: #fff;
+  transition: opacity 0.15s ease;
+}
+.ink-blog .ink-brand-logo:hover .ink-brand-home,
+.ink-blog .ink-brand-logo:focus-visible .ink-brand-home {
+  opacity: 1;
+}
+.ink-blog .ink-brand-logo:hover img,
+.ink-blog .ink-brand-logo:hover .ink-brand-letter,
+.ink-blog .ink-brand-logo:focus-visible img,
+.ink-blog .ink-brand-logo:focus-visible .ink-brand-letter {
+  opacity: 0;
+}
+.ink-blog .ink-brand-logo:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 4px;
+}
+
+/*
+ * 「站点与应用」面板：一张浮起的卡片，里面按区块分组、每行两格。
+ * 出场动效跟顶栏的二级菜单一致（淡入 + 轻微上浮）。
+ */
+.ink-sites-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 12px);
+  z-index: 60;
+  width: 344px;
+  padding: 16px 14px 14px;
+  border: 1px solid var(--ink-line);
+  border-radius: 18px;
+  background: var(--ink-surface);
+  box-shadow: 0 18px 44px rgb(18 21 42 / 14%);
+  animation: ink-panel-in 0.16s ease both;
+}
+@keyframes ink-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ink-sites-panel section + section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ink-line);
+}
+.ink-sites-panel h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.ink-sites-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.ink-sites-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 12px;
+  color: var(--ink-text);
+  transition: background 0.15s ease;
+}
+.ink-sites-entry:hover {
+  background: var(--ink-tint);
+}
+.ink-sites-entry-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  overflow: hidden;
+}
+.ink-sites-entry-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ink-sites-entry-letter {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink-accent);
+}
+.ink-sites-entry-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ink-sites-entry-label {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-sites-entry-text small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ink-pill {
+  background: var(--ink-surface);
+  border-radius: 30px;
+  padding: 8px 17px;
+}
+
+.ink-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+}
+
+/*
+ * 多级导航：一级项下面挂子菜单。
+ * 靠 hover / focus-within 展开 —— 键盘 Tab 进去也会开，不需要额外的脚本。
+ */
+.ink-nav-item {
+  position: relative;
+}
+.ink-nav-item > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ink-nav-drop {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 8px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+  box-shadow: var(--ink-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+}
+.ink-nav-item:hover .ink-nav-drop,
+.ink-nav-item:focus-within .ink-nav-drop {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.ink-nav-drop a {
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.ink-nav-drop a:hover {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-desktop-nav a {
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 15px;
+  color: color-mix(in srgb, var(--ink-text) 78%, var(--ink-muted));
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.ink-desktop-nav a:hover {
+  color: var(--ink-text);
+}
+.ink-desktop-nav a[aria-current="page"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  background: transparent;
+}
+
+.ink-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  color: var(--ink-muted);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.ink-icon-btn:hover {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+/*
+ * 「随便看看」的骰子：常态是线框，鼠标移上去换成实心。
+ * 两个图标叠在同一个位置（absolute），切换时按钮尺寸不变。
+ */
+.ink-dice-btn {
+  position: relative;
+}
+.ink-dice-btn .ink-dice-line,
+.ink-dice-btn .ink-dice-solid {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  transition: opacity 0.15s ease;
+}
+.ink-dice-btn .ink-dice-solid {
+  opacity: 0;
+}
+.ink-blog .ink-dice-btn:hover .ink-dice-line,
+.ink-blog .ink-dice-btn:focus-visible .ink-dice-line {
+  opacity: 0;
+}
+.ink-blog .ink-dice-btn:hover .ink-dice-solid,
+.ink-blog .ink-dice-btn:focus-visible .ink-dice-solid {
+  opacity: 1;
+}
+
+/*
+ * 右上角的滚动数值。
+ *
+ * 顶栏常驻吸顶，操作药丸的末尾空着一个位置 —— 放个数字，
+ * 告诉读者读到哪儿了（整篇的百分比）。
+ *
+ * 结构上分两层：
+ *   .ink-scroll-meter        药丸里的「座位」，未滚动时宽度为 0；
+ *   .ink-scroll-meter-badge  真正的圆点，绝对定位，宽度变化不会压扁它。
+ *
+ * 座位宽度变化时，中间的导航不会被挤动 —— 导航是绝对居中的，
+ * 两边胖瘦都影响不到它。
+ */
+.ink-scroll-meter {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 44px;
+  overflow: visible;
+  transition: width 0.22s ease;
+}
+.ink-scroll-meter[data-show="true"] {
+  width: 42px;
+}
+.ink-scroll-meter-badge {
+  position: absolute;
+  /* 往胶囊的帽心里收：贴着最右边时圆点会顶出圆头，
+     右边只剩两像素白边，看着像要掉出屏幕。 */
+  right: 7px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  /* 底色统一走纯黑：日间是黑圆白字，暗黑模式也是黑圆白字，
+     两套主题用的是同一个符号，不跟着主题反色。 */
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.6);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  user-select: none;
+}
+.ink-scroll-meter[data-show="true"] .ink-scroll-meter-badge {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/*
+ * 暗黑模式：药丸本身是深色，纯黑圆点会和它糊在一起，
+ * 加一道极淡的内描边把圆圈边缘勾出来，数字依旧是最亮的那一层。
+ */
+.ink-blog[data-theme="dark"] .ink-scroll-meter-badge {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%);
+}
+
+/*
+ * 窄屏放不下：桌面导航是绝对居中的，右边的药丸一胖就可能压到它。
+ * 900px 以下干脆不显示这个数字（移动端本来就走汉堡菜单）。
+ */
+@media (max-width: 900px) {
+  .ink-scroll-meter {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-scroll-meter,
+  .ink-scroll-meter-badge {
+    transition: none;
+  }
+}
+
+.ink-menu-btn {
+  display: none;
+}
+
+.ink-menu-pop {
+  position: absolute;
+  top: 69px;
+  left: 0;
+  right: 0;
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+  padding: 10px;
+  border-radius: 15px;
+  box-shadow: var(--ink-shadow);
+}
+.ink-menu-pop a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  font-size: 14px;
+}
+
+/*
+ * 移动端菜单里的二级分组（「我的」）。
+ *
+ * 组名不带箭头 —— 它本身不是一页，只是给下面三项起个名；
+ * 子项缩进一级，层级一眼看得出来，跟顶栏的二级下拉是同一套结构。
+ */
+.ink-menu-pop .ink-menu-group-title {
+  display: block;
+  padding: 12px 14px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+.ink-menu-pop .ink-menu-group a {
+  padding-left: 26px;
+}
+
+/* ---------- 通用块 ---------- */
+
+.ink-panel {
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+}
+
+.ink-muted {
+  color: var(--ink-muted);
+}
+
+.ink-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/*
+ * 「置顶」角标：作者手动把它顶到推荐流最前。
+ * 用强调色而不是专题色 —— 专题标签一排都是彩色小胶囊，
+ * 置顶混进去会被当成又一个专题。
+ */
+.ink-badge-featured {
+  gap: 3px;
+  color: var(--ink-accent);
+  background: color-mix(in srgb, var(--ink-accent) 14%, transparent);
+}
+
+/* ---------- 首页 ---------- */
+
+.ink-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 6px 0 14px;
+  margin: 0 -2px;
+}
+.ink-chips::-webkit-scrollbar {
+  display: none;
+}
+.ink-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgb(229 232 243 / 70%);
+  background: rgb(255 255 255 / 70%);
+  color: var(--ink-chip-text, var(--ink-muted));
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+/*
+ * 视图药丸里的图标。
+ *
+ * 原来是「淡彩圆底 + 本色图标」：精选琥珀、热门橙红、全部文章蓝，三种色相。
+ * 一排药丸里同时摆三个彩色圆点，选中时再翻成实心圆底白图标 —— 颜色层级
+ * 比信息层级还高，三个系统视图被读成三组不同的东西，专题 chip 反而像外来的。
+ *
+ * 现在整排药丸只有一个颜色维度：常态中性灰，选中浅紫底紫字。
+ * tabler 本身就是描边图标，去掉圆底后自然变成跟文字同色的线性符号，
+ * 不需要再单独描一次边。
+ */
+.ink-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition: color 0.15s ease;
+}
+.ink-chip:hover:not([aria-pressed="true"]) {
+  border-color: color-mix(in srgb, var(--ink-accent) 25%, transparent);
+  background: var(--ink-tint);
+  color: var(--ink-chip-accent, var(--ink-accent));
+}
+/* 选中态：浅紫底 + 紫字，和悬停同一套色，不再叠一层实心紫。 */
+.ink-chip[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--ink-accent) 30%, transparent);
+  background: var(--ink-tint);
+  color: var(--ink-chip-accent, var(--ink-accent));
+}
+/* 暗色下的药丸：底色压到半透明白。
+   选中态跟亮色是同一套「浅紫底 + 紫字」，只是紫由 --ink-chip-accent 提亮，
+   深底上才读得出来 —— 这里不要改回实心紫 + 白字。 */
+.ink-blog[data-theme="dark"] .ink-chip:not([aria-pressed="true"]) {
+  background: rgb(255 255 255 / 4%);
+  border-color: var(--ink-line);
+}
+.ink-blog[data-theme="dark"] .ink-chip[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--ink-accent) 45%, transparent);
+  background: var(--ink-tint);
+  color: var(--ink-chip-accent, var(--ink-accent));
+}
+
+.ink-hero {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  aspect-ratio: 24 / 7;
+  background: var(--ink-tint);
+}
+.ink-hero img {
+  width: 100%;
+  height: 100%;
+}
+.ink-hero-caption {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  max-width: min(62%, 520px);
+  color: #fff;
+  text-shadow: 0 2px 10px rgb(20 10 60 / 45%);
+}
+.ink-hero-caption strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+.ink-hero-caption span {
+  font-size: 14px;
+  opacity: 0.92;
+}
+.ink-blog[data-theme="dark"] .ink-hero-caption strong {
+  text-shadow: 0 2px 12px rgb(0 0 0 / 60%);
+}
+
+.ink-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 26px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+.ink-aside {
+  display: grid;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
+.ink-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.ink-section-head h2 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.ink-view-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+}
+.ink-view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.ink-view-switch button[aria-pressed="true"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.ink-post-card {
+  display: block;
+  overflow: hidden;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
+}
+.ink-post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ink-shadow);
+}
+.ink-post-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.ink-post-card-body {
+  padding: 18px;
+}
+.ink-post-card h3 {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.ink-post-card p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ink-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-meta time {
+  font-variant-numeric: tabular-nums;
+}
+.ink-read-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ink-post-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  transition: background 0.15s;
+}
+.ink-post-row:hover {
+  background: var(--ink-surface);
+}
+.ink-post-row img {
+  width: 150px;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+}
+.ink-post-row .ink-post-copy {
+  min-width: 0;
+  flex: 1;
+}
+.ink-post-row h3 {
+  margin-bottom: 6px;
+}
+.ink-post-row p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ink-topic-links {
+  padding: 18px;
+}
+.ink-topic-links h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ink-topic-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--ink-line);
+}
+.ink-topic-link b {
+  display: block;
+  font-size: 14px;
+}
+.ink-topic-link small {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.ink-topic-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ink-author {
+  padding: 22px;
+  background: linear-gradient(150deg, #6d4bf6, #8b5cf6 60%, #a855f7);
+  color: #fff;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.ink-author-tag {
+  display: inline-block;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+}
+.ink-author-avatar {
+  display: grid;
+  place-items: center;
+  margin: 22px 0 14px;
+}
+.ink-author-avatar img,
+.ink-author-avatar span {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 55%);
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  font-weight: 700;
+  background: rgb(255 255 255 / 16%);
+}
+.ink-author h3 {
+  margin-bottom: 4px;
+}
+.ink-author p {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+.ink-author-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ink-author-links a {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 16%);
+  transition: background 0.15s;
+}
+.ink-author-links a:hover {
+  background: rgb(255 255 255 / 28%);
+}
+
+.ink-rss {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  font-size: 14px;
+}
+
+.ink-empty {
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--ink-muted);
+  border: 1px dashed var(--ink-line);
+  border-radius: 16px;
+}
+
+/* ---------- 文章页 ---------- */
+
+.ink-article-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: center;
+  padding: 34px 0 28px;
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-article-hero img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+}
+.ink-article-hero .ink-crumb {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.ink-article-hero p {
+  color: var(--ink-muted);
+  margin-bottom: 14px;
+}
+
+.ink-reading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 34px;
+  align-items: start;
+  margin-top: 30px;
+}
+.ink-reading article {
+  padding: 30px;
+}
+.ink-summary {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--ink-tint);
+  margin-bottom: 26px;
+}
+.ink-summary strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--ink-accent);
+}
+.ink-summary p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ink-toc {
+  padding: 18px;
+  position: sticky;
+  top: 24px;
+}
+.ink-toc h3 {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.ink-toc a {
+  display: block;
+  padding: 7px 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+.ink-toc a:hover {
+  color: var(--ink-accent);
+}
+.ink-toc a[aria-current="true"] {
+  color: var(--ink-accent);
+  font-weight: 600;
+}
+
+.ink-end {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ink-line);
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.ink-prev-next {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+.ink-prev-next a {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ink-line);
+  transition: border-color 0.15s;
+}
+.ink-prev-next a:hover {
+  border-color: var(--ink-accent);
+}
+.ink-prev-next a:last-child {
+  text-align: right;
+}
+.ink-prev-next small {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+/* ---------- 正文排版 ---------- */
+
+.ink-prose {
+  font-size: 16px;
+  color: var(--ink-text);
+  overflow-wrap: break-word;
+}
+.ink-prose h2 {
+  margin: 34px 0 12px;
+  scroll-margin-top: 20px;
+}
+.ink-prose h3 {
+  margin: 26px 0 10px;
+  scroll-margin-top: 20px;
+}
+.ink-prose p {
+  margin-bottom: 16px;
+}
+.ink-prose ul,
+.ink-prose ol {
+  padding-left: 22px;
+  margin-bottom: 16px;
+}
+.ink-prose li {
+  margin-bottom: 6px;
+  line-height: 1.75;
+}
+.ink-prose img {
+  border-radius: 12px;
+  margin: 8px 0 18px;
+}
+.ink-prose blockquote {
+  margin: 18px 0;
+  padding: 4px 0 4px 18px;
+  border-left: 3px solid var(--ink-accent);
+  color: var(--ink-muted);
+}
+.ink-prose pre {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--ink-tint);
+  overflow-x: auto;
+  font-size: 13px;
+}
+.ink-prose code {
+  font-size: 0.92em;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--ink-tint);
+}
+.ink-prose pre code {
+  padding: 0;
+  background: none;
+}
+.ink-prose a {
+  color: var(--ink-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ink-table-scroll {
+  overflow-x: auto;
+  margin: 18px 0;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+}
+.ink-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 460px;
+}
+.ink-prose th,
+.ink-prose td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-prose th {
+  background: var(--ink-tint);
+  font-weight: 600;
+}
+.ink-prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------- 专题页 ---------- */
+
+/* 头部：左边面包屑 + 大标题，右边紧凑搜索框 + 专题数 */
+.ink-topics-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 34px 0 24px;
+}
+.ink-topics-crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+.ink-topics-crumb a {
+  color: var(--ink-accent);
+  font-weight: 600;
+}
+.ink-topics-head h1 {
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.22;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.ink-topics-head-copy > p {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+.ink-topics-head-side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+.ink-topics-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 300px;
+  padding: 11px 14px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  color: var(--ink-muted);
+  transition: border-color 0.15s;
+}
+.ink-topics-search:focus-within {
+  border-color: var(--ink-accent);
+}
+.ink-topics-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink-text);
+  font-family: inherit;
+  font-size: 15px;
+}
+.ink-topics-head-side > p {
+  font-size: 14px;
+}
+
+/* 卡片：封面 + 编号圆牌 + 名称/描述缩进对齐 + 底行「进入专题 →」 */
+.ink-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.ink-topic-card {
+  display: block;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
+}
+.ink-topic-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ink-shadow);
+}
+.ink-topic-card-media {
+  aspect-ratio: 2.6 / 1;
+  overflow: hidden;
+  background: var(--ink-tint);
+}
+.ink-topic-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ink-topic-card-blank {
+  width: 100%;
+  height: 100%;
+}
+.ink-topic-card-body {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 0 14px;
+  padding: 20px 22px 18px;
+}
+/* 侧栏「专题导览」也用 .ink-topic-num，这里只放大卡片里的那颗 */
+.ink-topic-card .ink-topic-num {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+.ink-topic-name {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.ink-topic-desc {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink-muted);
+}
+.ink-topic-foot {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  font-size: 14px;
+}
+.ink-topic-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-accent);
+}
+
+.ink-post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- 搜索 ---------- */
+
+.ink-search-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(18 21 42 / 38%);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: start center;
+  padding: 12vh 16px 16px;
+}
+.ink-search {
+  width: min(620px, 100%);
+  background: var(--ink-surface);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgb(18 21 42 / 28%);
+  overflow: hidden;
+}
+.ink-search-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--ink-line);
+  color: var(--ink-muted);
+}
+.ink-search-input input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: none;
+  font-size: 16px;
+  color: var(--ink-text);
+}
+.ink-search-scope {
+  display: flex;
+  gap: 6px;
+  padding: 12px 18px 0;
+}
+.ink-search-scope button {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  border: 1px solid var(--ink-line);
+}
+.ink-search-scope button[aria-pressed="true"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  border-color: transparent;
+}
+.ink-search-results {
+  max-height: 52vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+.ink-search-label {
+  padding: 8px 10px 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+}
+.ink-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: left;
+}
+.ink-search-item[data-active="true"] {
+  background: var(--ink-tint);
+}
+.ink-search-item b {
+  display: block;
+  font-size: 14px;
+}
+.ink-search-item small {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.ink-search-foot {
+  display: flex;
+  gap: 14px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--ink-line);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* ---------- 页脚 ---------- */
+
+.ink-footer {
+  margin-top: 60px;
+  padding: 36px 0 24px;
+  border-top: 1px solid var(--ink-line);
+  background: var(--ink-surface);
+}
+.ink-footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+  gap: 30px;
+}
+.ink-footer-grid p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 10px 0 0;
+}
+.ink-footer-grid h4 {
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.ink-footer-grid a:not(.ink-brand) {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-muted);
+  padding: 4px 0;
+  min-height: 28px;
+}
+.ink-footer-grid a:not(.ink-brand):hover {
+  color: var(--ink-accent);
+}
+.ink-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ink-line);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-footer-bottom a {
+  color: var(--ink-muted);
+}
+.ink-footer-bottom a:hover {
+  color: var(--ink-accent);
+}
+/* 左：备案号与推广位。备案号点开是官方查询页，推广位到期自动消失。 */
+.ink-footer-legal {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ink-footer-promo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  background: var(--ink-tint);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.ink-footer-promo b {
+  color: var(--ink-text);
+  font-weight: 700;
+}
+/* 右：版权署名、站点地图、返回顶部 */
+.ink-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ink-footer-bottom button {
+  margin-left: 0;
+}
+.ink-footer-bottom button:hover {
+  color: var(--ink-accent);
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 1100px) {
+  .ink-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-aside {
+    position: static;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .ink-reading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-toc {
+    display: none;
+  }
+  .ink-article-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-article-hero img {
+    width: 220px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ink-wrap {
+    width: calc(100% - 32px);
+  }
+  .ink-blog {
+    --ink-header-h: 67px;
+  }
+  .ink-blog h1 {
+    font-size: 28px;
+  }
+  .ink-header {
+    height: 67px;
+    gap: 8px;
+  }
+  .ink-brand {
+    padding: 6px 13px;
+    font-size: 22px;
+  }
+  .ink-desktop-nav {
+    display: none;
+  }
+  .ink-menu-btn {
+    display: inline-flex;
+  }
+  .ink-icon-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 42px;
+  }
+  /*
+   * 窄屏：胶囊整体缩小，左右两半仍然各自可点。
+   */
+  .ink-header-left {
+    padding: 0;
+    gap: 10px;
+  }
+  .ink-sites-btn {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+  }
+  .ink-brand-logo {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+  .ink-brand-letter {
+    font-size: 16px;
+  }
+  .ink-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-hero {
+    aspect-ratio: 16 / 9;
+  }
+  .ink-hero-caption {
+    left: 12px;
+    bottom: 10px;
+    max-width: 80%;
+  }
+  .ink-hero-caption strong {
+    font-size: 18px;
+  }
+  .ink-hero-caption span {
+    font-size: 12px;
+  }
+  .ink-post-row {
+    gap: 12px;
+    padding: 14px 12px;
+    align-items: flex-start;
+  }
+  .ink-post-row img {
+    width: 92px;
+  }
+  .ink-post-row h3 {
+    font-size: 15px;
+  }
+  .ink-post-row p {
+    display: none;
+  }
+  .ink-reading article {
+    padding: 20px 16px;
+  }
+  .ink-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 16px;
+  }
+  .ink-prev-next {
+    grid-template-columns: 1fr;
+  }
+  .ink-prev-next a:last-child {
+    text-align: left;
+  }
+}
+
+/* 用户在系统里关掉动效时，博客站也要跟上，不能自己另开一套。 */
+@media (prefers-reduced-motion: reduce) {
+  .ink-blog *,
+  .ink-blog *::before,
+  .ink-blog *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  .ink-post-card:hover,
+  .ink-topic-card:hover {
+    transform: none;
+  }
+}
+
+/* Production page states and responsive behavior from the approved prototype. */
+.ink-blog {
+  height: 100dvh;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+.ink-blog .ink-page {
+  flex: 1 0 auto;
+  padding-bottom: 32px;
+}
+.ink-blog .ink-header {
+  flex-shrink: 0;
+}
+.ink-blog .ink-footer {
+  flex-shrink: 0;
+}
+.ink-blog input,
+.ink-blog button,
+.ink-blog textarea {
+  font: inherit;
+}
+.ink-blog a {
+  color: inherit;
+  text-decoration: none;
+}
+.ink-blog :where(button) {
+  cursor: pointer;
+}
+.ink-blog button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ink-error {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  color: #b93a3a;
+  font-size: 14px;
+}
+.ink-error button {
+  padding: 6px 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+.ink-home-grid {
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 18px;
+  margin-top: 14px;
+}
+.ink-hero {
+  aspect-ratio: auto;
+  min-height: 300px;
+  border-radius: 16px;
+  background: var(--ink-accent);
+}
+.ink-hero > img {
+  height: 300px;
+  width: 100%;
+  object-fit: cover;
+}
+.ink-hero-caption {
+  max-width: calc(100% - 80px);
+  bottom: 24px;
+  left: 24px;
+}
+.ink-hero-caption strong {
+  font-size: 27px;
+  line-height: 1.5;
+  margin: 8px 0;
+}
+.ink-hero-caption > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ink-hero-caption small {
+  font-size: 12px;
+  background: #ffffff25;
+  border-radius: 20px;
+  padding: 5px 10px;
+}
+.ink-hero-arrow {
+  position: absolute;
+  right: 22px;
+  bottom: 25px;
+  color: white;
+}
+.ink-hero-text .ink-hero-caption {
+  text-shadow: none;
+  top: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.ink-hero-text .ink-hero-caption small {
+  align-self: flex-start;
+}
+.ink-post-cover {
+  display: block;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ink-post-cover img {
+  display: block;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+.ink-post-row .ink-post-cover {
+  width: 180px;
+  height: 96px;
+  border-radius: 10px;
+}
+.ink-post-row .ink-post-cover img {
+  width: 100%;
+  height: 100%;
+}
+.ink-post-card .ink-post-cover {
+  width: 100%;
+  aspect-ratio: 2.8 / 1;
+}
+.ink-post-card .ink-post-cover img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+/*
+ * 封面容器：给「置顶」角标一个定位基准。
+ * 列表视图里封面是 flex 里垂直居中的一项，
+ * 角标必须相对封面而不是相对卡片定位，否则会飘到卡片角上。
+ */
+.ink-post-cover-box {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+}
+/*
+ * 「置顶」角标：深色玻璃 + 白字。
+ * 封面是 AI 生成的紫系图，用主题紫做底会糊进画面；
+ * 深底玻璃在任何封面上都读得出来，也和彩色专题标签区分得开。
+ *
+ * 贴右上角：封面的标题一律排在左边（系统文字层与 AI 出图里的标题都在左），
+ * 角标压左上角会盖住标题的头几个字 —— 挪到右上角，两边都不碰。
+ */
+.ink-cover-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  color: #fff;
+  background: rgb(13 15 28 / 66%);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 18%),
+    0 2px 10px rgb(0 0 0 / 26%);
+  /* 让点击穿透到封面本身，不然角标会挡住封面的链接 */
+  pointer-events: none;
+}
+/*
+ * 列表视图的封面只有 140×85，角标按比例收小，
+ * 不然会盖掉封面自带的标题文字。
+ */
+.ink-post-row .ink-cover-badge {
+  top: 7px;
+  right: 7px;
+  gap: 3px;
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 15px;
+}
+.ink-post-row .ink-cover-badge svg {
+  width: 12px;
+  height: 12px;
+}
+.ink-post-card .ink-meta {
+  margin-top: 12px;
+}
+.ink-post-copy h3 a:hover,
+.ink-post-card h3 a:hover {
+  color: var(--ink-accent);
+}
+.ink-post-copy p,
+.ink-post-card p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ink-row-arrow {
+  flex-shrink: 0;
+  color: var(--ink-muted) !important;
+}
+.ink-topic-label {
+  flex: 1;
+  min-width: 0;
+}
+.ink-load-more {
+  display: block;
+  margin: 24px auto 0;
+  padding: 11px 24px;
+  border: 1px solid var(--ink-line);
+  background: var(--ink-surface);
+  border-radius: 10px;
+  font-size: 14px;
+}
+/* ---------- 列表分页 ---------- */
+/*
+ * 独立 URL 的分页（?page=N）：上一页 / 页码 / 下一页。
+ * 页码是 button 而不是 a —— URL 由 React Router 写，搜索引擎看到的是
+ * 服务端渲染时带上的 rel=prev / rel=next 链。
+ */
+.ink-blog .ink-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 28px 0 8px;
+}
+.ink-blog .ink-page-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ink-line);
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.ink-blog .ink-page-step:hover:not(:disabled) {
+  border-color: var(--ink-accent);
+  color: var(--ink-accent);
+}
+.ink-blog .ink-page-step:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.ink-blog .ink-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ink-blog .ink-page-number {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.ink-blog .ink-page-number:hover {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+.ink-blog .ink-page-number[aria-current="page"] {
+  background: var(--ink-accent);
+  border-color: var(--ink-accent);
+  color: #fff;
+}
+.ink-blog .ink-page-gap {
+  min-width: 22px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+.ink-author {
+  height: 315px;
+  padding: 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #7055f8;
+  color: white;
+}
+.ink-author-tag {
+  align-self: center;
+  font-size: 11px;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ink-author-middle {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 16px 0 8px;
+}
+.ink-author-middle .ink-author-avatar {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  margin: 0;
+  transition:
+    opacity 0.18s,
+    transform 0.18s;
+}
+.ink-author-avatar img {
+  width: 112px;
+  height: 112px;
+  border: 4px solid white;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.ink-author-bio {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: auto;
+  transition: opacity 0.18s;
+  scrollbar-width: thin;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.ink-author-bio p {
+  color: white !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  margin: 0 0 12px !important;
+}
+.ink-author-bio a {
+  font-size: 12px;
+}
+.ink-author-base {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ink-author-base > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+.ink-author-base h3 {
+  font-size: 23px;
+  line-height: 1.3;
+  margin: 0 0 5px;
+  overflow-wrap: anywhere;
+}
+.ink-author-base small {
+  font-size: 11px;
+  opacity: 0.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ink-author-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  max-width: 110px;
+  margin: 0;
+}
+.ink-author-links a {
+  width: 33px;
+  height: 33px;
+  display: grid;
+  place-items: center;
+  background: #ffffff22;
+}
+/* 头像同时是展开自述的触发器：先把按钮的浏览器默认样式清掉。 */
+.ink-author-avatar {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ink-author-avatar img {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.ink-author-avatar:hover img,
+.ink-author-avatar:focus-visible img {
+  transform: scale(1.04);
+}
+.ink-author-avatar:focus-visible img {
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 55%);
+}
+.ink-author.is-expanded .ink-author-bio {
+  opacity: 1;
+  visibility: visible;
+}
+.ink-author.is-expanded .ink-author-avatar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+}
+.ink-rss > span {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.ink-topic-directory {
+  margin-top: 28px;
+}
+.ink-topic-directory > h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+.ink-article-hero {
+  background: var(--ink-accent);
+  color: white;
+  border: 0;
+  border-radius: 17px;
+  padding: 30px;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  min-height: 240px;
+}
+.ink-article-hero:not(:has(> img)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ink-article-hero h1 {
+  font-size: 34px;
+  line-height: 1.5;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.ink-article-hero > img {
+  aspect-ratio: 16/10;
+  object-fit: cover;
+}
+.ink-article-hero p,
+.ink-article-hero .ink-meta {
+  color: #ffffffce;
+  line-height: 1.8;
+}
+.ink-article-hero p {
+  font-size: 14px;
+  max-width: 800px;
+}
+.ink-article-hero .ink-badge {
+  background: #ffffff20;
+  color: white;
+}
+.ink-crumb {
+  color: #fff !important;
+}
+.ink-white-button {
+  display: inline-flex;
+  padding: 9px 17px;
+  border-radius: 10px;
+  background: white;
+  color: var(--ink-accent) !important;
+  font-size: 14px;
+}
+.ink-primary-button {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--ink-accent);
+  color: white !important;
+  font-size: 14px;
+}
+.ink-reading {
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 18px;
+  margin-top: 18px;
+}
+.ink-reading-wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ink-reading-aside {
+  position: sticky;
+  top: 20px;
+  display: grid;
+  gap: 14px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.ink-reading-aside .ink-author {
+  height: 290px;
+}
+.ink-toc {
+  position: static;
+}
+.ink-toc h2 {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+.ink-toc nav a {
+  display: flex;
+  gap: 10px;
+  padding: 8px 5px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.ink-toc nav a[aria-current="true"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+.ink-toc nav a > span {
+  color: var(--ink-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.ink-mobile-toc {
+  display: none;
+}
+.ink-prose {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.ink-blog .ink-prose .markdown-body {
+  color: var(--ink-text) !important;
+  background: transparent !important;
+  font-family: inherit !important;
+  font-size: 16px;
+  line-height: 1.85;
+}
+.ink-blog .ink-prose .markdown-body > *:first-child {
+  margin-top: 0;
+}
+.ink-blog .ink-prose h2 {
+  font-size: 24px;
+  margin: 28px 0 14px;
+  scroll-margin-top: 24px;
+}
+.ink-blog .ink-prose h3 {
+  font-size: 20px;
+  scroll-margin-top: 24px;
+}
+.ink-blog .ink-prose table {
+  display: block;
+  max-width: 100%;
+  overflow: auto;
+  white-space: normal;
+}
+.ink-blog .ink-prose th,
+.ink-blog .ink-prose td {
+  min-width: 100px;
+  padding: 10px 14px;
+  border-color: var(--ink-line) !important;
+}
+.ink-blog .ink-prose th {
+  background: var(--ink-tint) !important;
+  color: var(--ink-text) !important;
+}
+.ink-blog .ink-prose tr {
+  background: transparent !important;
+  border-color: var(--ink-line) !important;
+}
+.ink-blog .ink-prose strong {
+  font-weight: 750;
+  color: inherit;
+}
+.ink-blog .ink-prose blockquote {
+  color: var(--ink-accent) !important;
+  background: var(--ink-tint);
+  border-left: 3px solid var(--ink-accent);
+  padding: 12px 16px;
+  margin: 18px 0;
+}
+.ink-blog .ink-prose pre {
+  background: var(--ink-tint) !important;
+  color: var(--ink-text) !important;
+  max-width: 100%;
+  overflow: auto;
+}
+
+/* ---------- 公开正文：token 隔离 + 关掉编辑器的 hover 高亮 ----------
+   .markdown-body 是和后台共用的阅读样式，里面有一批规则读的是**应用外壳**的全局
+   token（--accent / --divider / --border / --muted-foreground / --desc /
+   --background / --secondbackground）。这些 token 跟着 <html class="dark"> 走，
+   而公开博客有自己独立的主题（.ink-blog[data-theme]），两套主题互不相干。
+   外壳暗色 + 博客亮色时，正文会拿到外壳暗色主题的值：
+     · 列表项 hover → --accent = hsl(214 9% 15%)，刷出一块深灰，配深色正文几乎看不清
+     · <hr> 分割线 → --divider = 白 13% 透明，浅底上等于隐形
+     · 任务列表方框 → --background = #0B0B0C，浅底上一个黑方块
+   这里把正文真正消费到的那几个 token 映射到博客自己的色板，让它们随博客主题切换。 */
+.ink-blog .markdown-body {
+  --accent: var(--ink-tint);
+  --background: var(--ink-surface);
+  --secondbackground: var(--ink-tint);
+  --foreground: var(--ink-text);
+  --border: var(--ink-line);
+  --divider: var(--ink-line);
+  --muted-foreground: var(--ink-muted);
+  --desc: var(--ink-muted);
+}
+
+/* ---------- 公开正文的列表符号与分割线 ----------
+   公开站是独立入口（PublicBlogApp），刻意不加载后台的 github-markdown.css ——
+   公开站的排版必须自带，不能被后台样式的改动带着走。但 Tailwind 的 reset 会把
+   list-style 清成 none、hr 的边框留成 currentColor，结果是正文列表一个符号都不剩，
+   <hr> 还成了一条高对比的正文色硬线。两样都在这里按博客自己的设计体系补回来：
+   无序列表小圆点、有序列表计数器、分割线用 --ink-line。 */
+.ink-blog .ink-prose ul,
+.ink-blog .ink-prose ol {
+  list-style: none;
+  position: relative;
+}
+.ink-blog .ink-prose ul > li,
+.ink-blog .ink-prose ol > li {
+  position: relative;
+}
+/* 任务列表自带 checkbox，不再叠圆点 */
+.ink-blog .ink-prose ul:not(.contains-task-list) > li::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 0.75em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+  opacity: 0.7;
+}
+.ink-blog .ink-prose ol {
+  counter-reset: ink-ol;
+}
+.ink-blog .ink-prose ol > li {
+  counter-increment: ink-ol;
+}
+.ink-blog .ink-prose ol > li::before {
+  content: counter(ink-ol) ".";
+  position: absolute;
+  left: -22px;
+  top: 0.05em;
+  width: 18px;
+  text-align: right;
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+.ink-blog .ink-prose hr {
+  height: 0;
+  border: 0;
+  border-top: 1px solid var(--ink-line);
+  margin: 22px 0;
+}
+
+/* 编辑器那套「hover 整行高亮」是给后台阅读态的：鼠标扫过列表时提示当前行。
+   公开正文是纯阅读面，列表项没有任何交互，悬停只会在读者扫过时刷出一块色块 ——
+   连同 bullet 变色、序号底色、引导线加粗一起按常态还原。 */
+.ink-blog .markdown-body ul:not(.contains-task-list) > li:hover,
+.ink-blog .markdown-body ol > li:hover {
+  background-color: transparent;
+}
+.ink-blog .markdown-body ul:not(.contains-task-list) > li:hover::before {
+  background-color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+}
+/* 有序列表的序号 ::before 常态没有底色，hover 时会被加上一块 solid 底 */
+.ink-blog .markdown-body ol > li:hover::before {
+  background-color: transparent;
+}
+/* 悬停时所在嵌套列的引导线加粗 + 加深（:has() 向上传递状态）—— 公开正文不需要 */
+.ink-blog .markdown-body:has(li:hover) ul:not(.contains-task-list) ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.ink-blog .markdown-body:has(li:hover) ul:not(.contains-task-list) ul:not(.contains-task-list) ol::before,
+.ink-blog .markdown-body:has(li:hover) ul:not(.contains-task-list) ol ul:not(.contains-task-list)::before,
+.ink-blog .markdown-body:has(li:hover) ul:not(.contains-task-list) ol ol::before,
+.ink-blog .markdown-body:has(li:hover) ol ul:not(.contains-task-list) ul:not(.contains-task-list)::before,
+.ink-blog .markdown-body:has(li:hover) ol ul:not(.contains-task-list) ol::before,
+.ink-blog .markdown-body:has(li:hover) ol ol ul:not(.contains-task-list)::before,
+.ink-blog .markdown-body:has(li:hover) ol ol ol::before {
+  width: 1px;
+  background-color: var(--border);
+}
+.ink-prev-next {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.ink-prev-next a {
+  font-size: 13px;
+}
+.ink-prev-next a small {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+.ink-primary-topic {
+  text-align: center !important;
+  color: var(--ink-accent) !important;
+}
+.ink-prev-next > a:last-child {
+  text-align: right;
+}
+.ink-related {
+  padding: 24px;
+  margin-top: 24px;
+}
+.ink-related .ink-section-head {
+  margin-top: 0;
+}
+.ink-related .ink-post-row {
+  border: 0;
+  border-bottom: 1px solid var(--ink-line);
+  border-radius: 0;
+}
+.ink-related .ink-post-row:last-child {
+  border-bottom: 0;
+}
+.ink-search {
+  border: 0;
+  padding: 0;
+  margin: 9vh auto 0;
+  width: min(740px, calc(100% - 36px));
+  max-height: 80dvh;
+  color: var(--ink-text);
+  background: var(--ink-surface);
+  border-radius: 16px;
+  box-shadow: var(--ink-shadow);
+  overflow: hidden;
+}
+.ink-search[open] {
+  display: flex;
+  flex-direction: column;
+}
+.ink-search::backdrop {
+  background: #15162960;
+  backdrop-filter: blur(3px);
+}
+.ink-search-input,
+.ink-search-scope,
+.ink-search-foot {
+  flex-shrink: 0;
+}
+.ink-search-input input {
+  min-width: 0;
+}
+.ink-search-input button {
+  font-size: 13px;
+  flex-shrink: 0;
+  min-width: 30px;
+  min-height: 36px;
+}
+.ink-search-results {
+  max-height: none;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.ink-search-item > img {
+  width: 76px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.ink-search-item > span {
+  min-width: 0;
+}
+.ink-search-item small {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ink-search-foot {
+  justify-content: space-between;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ink-author:has(.ink-author-bio):hover .ink-author-bio {
+    opacity: 1;
+    visibility: visible;
+  }
+  .ink-author:has(.ink-author-bio):hover .ink-author-avatar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+  }
+}
+@media (max-width: 1100px) {
+  .ink-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-reading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-reading-aside {
+    display: none;
+  }
+  .ink-mobile-toc {
+    display: block;
+    padding: 12px 15px;
+    border: 1px solid var(--ink-line);
+    border-radius: 10px;
+    margin-bottom: 22px;
+  }
+  .ink-mobile-toc summary {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--ink-accent);
+  }
+  .ink-mobile-toc nav {
+    margin-top: 10px;
+  }
+  .ink-mobile-toc a {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+    font-size: 14px;
+  }
+  .ink-aside {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ink-aside > .ink-author {
+    grid-row: span 2;
+  }
+  .ink-aside > .ink-topic-links {
+    grid-column: 2;
+    grid-row: 1/3;
+  }
+  .ink-article-hero {
+    grid-template-columns: minmax(0, 1fr) 190px;
+  }
+}
+@media (max-width: 760px) {
+  .ink-hero {
+    min-height: 0;
+    aspect-ratio: 16/9;
+  }
+  .ink-hero > img {
+    height: 100%;
+  }
+  .ink-hero-caption {
+    left: 18px;
+    bottom: 18px;
+  }
+  .ink-hero-caption strong {
+    font-size: 21px;
+  }
+  .ink-hero-text .ink-hero-caption {
+    top: 16px;
+  }
+  .ink-hero-caption > span {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+  }
+  .ink-hero-arrow {
+    right: 14px;
+    bottom: 19px;
+    width: 20px;
+  }
+  .ink-aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-aside > .ink-author,
+  .ink-aside > .ink-topic-links {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .ink-section-head h2 {
+    font-size: 20px;
+  }
+  .ink-section-head .ink-view-switch span {
+    display: none;
+  }
+  .ink-post-row .ink-post-cover {
+    width: 86px;
+    height: 66px;
+  }
+  .ink-post-row .ink-row-arrow {
+    display: none;
+  }
+  .ink-post-row p {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+  }
+  .ink-post-card h3 {
+    font-size: 18px;
+  }
+  .ink-article-hero {
+    padding: 23px 18px;
+    display: block;
+    min-height: 0;
+  }
+  .ink-article-hero > img {
+    display: none;
+  }
+  .ink-article-hero h1 {
+    font-size: 27px;
+    line-height: 1.5;
+  }
+  .ink-article-hero p {
+    font-size: 13px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .ink-blog .ink-prose .markdown-body {
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .ink-blog .ink-prose h2 {
+    font-size: 22px;
+  }
+  .ink-prev-next {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ink-prev-next .ink-primary-topic {
+    grid-column: 1/-1;
+    grid-row: 1;
+  }
+  .ink-prev-next > a:last-child {
+    grid-column: 2;
+    text-align: right;
+  }
+  .ink-related {
+    padding: 18px 12px;
+  }
+  .ink-search {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    max-width: none;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .ink-search-input {
+    padding: 13px 14px;
+    gap: 7px;
+  }
+  .ink-search-input input {
+    font-size: 16px;
+  }
+  .ink-search-foot > span {
+    display: none;
+  }
+  .ink-search-foot {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+  .ink-search-foot small {
+    margin-left: auto;
+  }
+  .ink-footer-grid > div:first-child,
+  .ink-footer-grid > div:last-child {
+    grid-column: 1/-1;
+  }
+  .ink-footer {
+    margin-top: 36px;
+  }
+  .ink-topics-search input {
+    font-size: 16px;
+  }
+  .ink-topic-name {
+    font-size: 18px;
+  }
+}
+
+.ink-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ink-home-grid>div,.ink-post-card,.ink-post-copy{min-width:0}
+.ink-post-card h3{font-size:18px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ink-section-head{margin-top:24px}
+@media(max-width:760px){.ink-card-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* 首页头条：宽幅 banner（封面铺满）+ 左下角「★ 手动精选」徽章 + 右下角圆形箭头，
+   右侧独立紫色作者卡（高度与 banner 对齐）。
+   封面本身就把标题烤进了画面，所以 banner 上不再叠文章标题 —— 「封面铺满 + 标题
+   压图」那两层文字重叠的老问题由此根治。 */
+.ink-blog .ink-home-grid {
+  /*
+   * 右侧栏收窄到 292px（原来 320px）。
+   * 栏里只有作者卡、RSS、专题导览、最近更新四块 —— 320px 让它们看着比
+   * 正文还抢眼，正文列被挤得发紧。收窄后正文列多出 28px，
+   * 卡片宽一点、栏内的说明文字少绕一行，两边的视觉重心才拉得平。
+   */
+  grid-template-columns: minmax(0, 1fr) 292px;
+  grid-template-areas:
+    "hero author"
+    "list side";
+  align-items: start;
+}
+.ink-blog .ink-home-hero {
+  grid-area: hero;
+  min-width: 0;
+}
+.ink-blog .ink-home-author {
+  grid-area: author;
+  align-self: stretch;
+  min-width: 0;
+}
+.ink-blog .ink-home-list {
+  grid-area: list;
+  min-width: 0;
+}
+.ink-blog .ink-aside {
+  grid-area: side;
+  min-width: 0;
+}
+.ink-blog .ink-lead-hero {
+  aspect-ratio: 2.9 / 1;
+  position: relative;
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--ink-tint);
+  animation: ink-lead-fade 0.26s ease;
+}
+.ink-blog .ink-lead-hero img {
+  display: block;
+  width: 100%;
+  /* 压到接近原型的 3:1。封面是 16:9，切成 2.8:1 后上下各留 34px 安全区，
+     烤进画面的标题和副标题都不会被切到。 */
+  aspect-ratio: 2.8 / 1;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+}
+/* 没有封面时的兜底面板 */
+.ink-blog .ink-lead-hero-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  padding: 34px;
+  color: #fff;
+  background: linear-gradient(150deg, #6d4bf6, #8b5cf6 60%, #a855f7);
+}
+.ink-blog .ink-lead-hero-fallback .ink-badge {
+  align-self: flex-start;
+  background: #ffffff20;
+  color: #fff;
+}
+.ink-blog .ink-lead-hero-fallback h2 {
+  font-size: 28px;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ink-blog .ink-lead-hero-fallback p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #ffffffce;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* 整块 banner 可点：链接铺满，徽章与箭头浮在它上面 —— 避免在 <a> 里塞 <button> */
+.ink-blog .ink-lead-hero-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+/*
+ * Banner 左下角状态行：★ 全站推荐 + 轮播圆点。
+ *
+ * 位置跟着封面的内边距走（5%，与文字层同一套 padding），
+ * 所以标题和这一行是左对齐的一条竖线，不各说各话。
+ * 圆点直接可点 —— 位置能看见，也能直接跳过去。
+ */
+.ink-blog .ink-lead-hero-meta {
+  position: absolute;
+  left: 5%;
+  bottom: 18px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffffe0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  /* 整行不挡点击，只有圆点自己可点 —— 下面的 banner 链接还要能点。 */
+  pointer-events: none;
+}
+.ink-blog .ink-lead-hero-meta svg {
+  color: #fff;
+  stroke-width: 1.8;
+}
+.ink-blog .ink-lead-hero-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+.ink-blog .ink-lead-hero-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 42%);
+  cursor: pointer;
+  transition:
+    width 0.2s ease,
+    background-color 0.2s ease;
+}
+.ink-blog .ink-lead-hero-dot:hover {
+  background: rgb(255 255 255 / 70%);
+}
+/* 当前这条：拉长成一个胶囊，一眼看出停在哪一条。 */
+.ink-blog .ink-lead-hero-dot[data-active="true"] {
+  width: 20px;
+  background: #fff;
+}
+@keyframes ink-lead-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ink-blog .ink-lead-hero-switch {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffffd0;
+}
+.ink-blog .ink-lead-hero-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgb(22 16 52 / 45%);
+  border: 1px solid rgb(255 255 255 / 22%);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease;
+}
+.ink-blog .ink-lead-hero-switch button:hover {
+  background: rgb(22 16 52 / 68%);
+}
+@media (max-width: 1100px) {
+  .ink-blog .ink-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+    /*
+     * 单列时作者卡排到列表后面。
+     *
+     * 双栏下作者卡在右上角，跟 banner 并排，是版面的一部分；
+     * 拉成一列以后它就变成一整块 300px 高的紫卡横在内容最前面 ——
+     * 手机上一屏还没看到文章就先看完了作者名片。
+     * 精选视图的读者是来看文章的，卡片挪到列表下面，文章先出。
+     */
+    grid-template-areas:
+      "hero"
+      "list"
+      "author"
+      "side";
+  }
+  .ink-blog .ink-home-author {
+    align-self: start;
+  }
+  .ink-blog .ink-aside > .ink-topic-links {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+@media (max-width: 760px) {
+  /*
+   * 窄屏的头条大图沿用 Banner 比例（2.9:1），
+   * 不改成 2:1 —— 源图的核心内容区在居中 1280×450，
+   * 换成更方的比例只会多露背景、把短标题挤小。
+   */
+  .ink-blog .ink-lead-hero img {
+    aspect-ratio: 2.9 / 1;
+  }
+  .ink-blog .ink-lead-hero-meta {
+    /* 窄屏的 banner 只有几百宽高，状态行整体收小一档。 */
+    bottom: 10px;
+    gap: 7px;
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .ink-blog .ink-lead-hero-meta svg {
+    width: 12px;
+    height: 12px;
+  }
+  .ink-blog .ink-lead-hero-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .ink-blog .ink-lead-hero-dot[data-active="true"] {
+    width: 14px;
+  }
+  .ink-blog .ink-lead-hero-switch {
+    right: 12px;
+    bottom: 10px;
+    gap: 6px;
+  }
+  .ink-blog .ink-lead-hero-switch button {
+    width: 36px;
+    height: 36px;
+  }
+  .ink-blog .ink-lead-hero-fallback {
+    min-height: 220px;
+    padding: 24px;
+  }
+  .ink-blog .ink-lead-hero-fallback h2 {
+    font-size: 22px;
+  }
+}
+
+/* ============================================================
+   首页侧栏与作者卡对齐原型：
+   - banner 压到 2.8:1（原型约 2.93:1）
+   - 右侧作者卡改成「头像 / 名字 / 一句话 / 关于作者」四件套
+   - 侧边栏补上「最近更新」，RSS 卡片补副标题
+   ============================================================ */
+.ink-blog .ink-chip {
+  gap: 6px;
+}
+/* RSS 卡片：图标块 + 标题 + 副标题 */
+.ink-blog .ink-rss {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.ink-blog .ink-rss-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  background: #f97316;
+  color: #fff;
+}
+.ink-blog .ink-rss-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.ink-blog .ink-rss-copy b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.ink-blog .ink-rss-copy small {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+/* 最近更新 */
+.ink-blog .ink-recent {
+  padding: 18px;
+}
+.ink-blog .ink-recent h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+.ink-blog .ink-recent-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ink-blog .ink-recent-all:hover {
+  color: var(--ink-accent);
+}
+.ink-blog .ink-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ink-blog .ink-recent-list li {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--ink-line);
+}
+.ink-blog .ink-recent-cover {
+  display: block;
+  width: 76px;
+  aspect-ratio: 16 / 9;
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--ink-tint);
+}
+.ink-blog .ink-recent-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ink-blog .ink-recent-body {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.ink-blog .ink-recent-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ink-blog .ink-recent-topic {
+  display: inline-flex;
+  align-items: center;
+  max-width: 60%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ink-blog .ink-recent-title {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: inherit;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ink-blog .ink-recent-title:hover {
+  color: var(--ink-accent);
+}
+.ink-blog .ink-recent-list time {
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* 页脚承接社交链接（作者卡按原型不放图标，入口挪到这里） */
+.ink-footer-grid .ink-footer-social {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ink-footer-grid .ink-footer-social a {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--ink-tint);
+  color: var(--ink-muted);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.ink-footer-grid .ink-footer-social a:hover {
+  background: var(--ink-accent);
+  color: #fff;
+}
+
+/* ============================================================
+   作者卡对齐原型 Author 组件：
+   紫→品红渐变、顶部胶囊口号、大头像、底部名称 + 一句话、两个圆形社交按钮。
+   ============================================================ */
+.ink-blog .ink-author {
+  background: linear-gradient(150deg, #6d4bf6, #8b5cf6 62%, #a855f7);
+}
+.ink-blog .ink-author-tag {
+  font-size: 11.5px;
+  padding: 5px 12px;
+  max-width: 96%;
+  /* 动态文案长短不一：固定最小宽度 + 新旧两层叠在同一个网格单元里，
+     换句时胶囊宽度不变，读者不会看到它在跳。 */
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  min-width: 196px;
+  white-space: nowrap;
+  /* 现在是个按钮：把浏览器默认样式清掉，只留胶囊自己的底色。 */
+  appearance: none;
+  border: 0;
+  background: rgb(255 255 255 / 18%);
+  color: inherit;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+/* 悬停只做质感：底色更透一点，胶囊轻轻放大 —— 不加任何提示图标。 */
+.ink-blog .ink-author-tag:hover {
+  background: rgb(255 255 255 / 26%);
+  transform: scale(1.03);
+}
+/* 按下去：先缩一点再回弹，手感上是真的按到了。 */
+.ink-blog .ink-author-tag:active {
+  transform: scale(0.96);
+  transition-duration: 0.07s;
+}
+.ink-blog .ink-author-tag:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 70%);
+  outline-offset: 2px;
+}
+/* 点击瞬间：文字让位，箭头在正中转一圈，然后新句淡回来。 */
+.ink-blog .ink-author-tag-flash {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.ink-blog .ink-author-tag.is-swapping .ink-author-tag-text {
+  animation: none;
+  opacity: 0;
+}
+.ink-blog .ink-author-tag.is-swapping .ink-author-tag-flash {
+  animation: ink-author-tag-flash 0.45s ease both;
+}
+@keyframes ink-author-tag-flash {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.8);
+  }
+  20% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(360deg) scale(1);
+  }
+}
+/* 两层文字：新的淡入，旧的淡出 —— 中间那一瞬两层都在，像一句换一句。 */
+.ink-blog .ink-author-tag-text {
+  grid-area: 1 / 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-blog .ink-author-tag-text.is-in {
+  animation: ink-author-tag-in 0.45s ease both;
+}
+.ink-blog .ink-author-tag-text.is-out {
+  animation: ink-author-tag-out 0.45s ease both;
+}
+@keyframes ink-author-tag-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes ink-author-tag-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-blog .ink-author-tag-text.is-in,
+  .ink-blog .ink-author-tag-text.is-out {
+    animation: none;
+  }
+  /* 减少动效：箭头不转，只在换句的瞬间亮一下。 */
+  .ink-blog .ink-author-tag.is-swapping .ink-author-tag-flash {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+/* 首页的作者卡与 banner 等高 */
+.ink-blog .ink-home-author .ink-author {
+  height: 100%;
+}
+
+/* 悬浮展开的作者介绍：正文可长，但「了解作者」必须留在可见位置，
+   超长时正文底部渐隐提示还有内容（参考图里链接始终可见）。 */
+.ink-blog .ink-author-bio {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ink-blog .ink-author-bio p {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+}
+.ink-blog .ink-author-bio a {
+  flex: none;
+  margin-top: 10px;
+}
+/* 「了解作者」和「收起」并排一行：展开后头像淡出，收起的入口不能跟着没。 */
+.ink-blog .ink-author-bio-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.ink-blog .ink-author-bio-foot a {
+  margin-top: 0;
+}
+.ink-blog .ink-author-bio-close {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.72;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.ink-blog .ink-author-bio-close:hover {
+  opacity: 1;
+}
+
+/* 单列布局（≤1100px）下作者卡不再与 banner 等高，改回固定高度。
+   height:100% 在这里没有参照 —— 父级是 auto 高的 grid item，头像会溢出来压住文字。 */
+@media (max-width: 1100px) {
+  .ink-blog .ink-home-author .ink-author {
+    height: 300px;
+  }
+  .ink-blog .ink-home-author .ink-author-avatar img {
+    width: 84px;
+    height: 84px;
+    border-width: 3px;
+  }
+}
+
+/* ============================================================
+   专题页响应式：两列 → 单列，头部左右两侧改为上下堆叠。
+   ============================================================ */
+@media (max-width: 860px) {
+  .ink-topics-head {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .ink-topics-head-side {
+    align-items: flex-start;
+    width: 100%;
+  }
+  .ink-topics-search {
+    width: 100%;
+    max-width: 340px;
+  }
+  .ink-topic-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .ink-topics-head {
+    padding: 26px 0 20px;
+  }
+  .ink-topics-head h1 {
+    font-size: 28px;
+  }
+  .ink-topics-head-copy > p {
+    font-size: 15px;
+  }
+  .ink-topic-card-body {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 0 12px;
+    padding: 16px 16px 14px;
+  }
+  .ink-topic-card .ink-topic-num {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  .ink-topic-desc {
+    font-size: 14px;
+  }
+  .ink-topic-foot {
+    font-size: 13px;
+  }
+  .ink-topic-go {
+    font-size: 14px;
+  }
+}
+
+/* ---------- 文章页通栏顶部 ---------- */
+/*
+ * 顶部主题色：封面主色从导航栏一路铺到通栏顶部，中间没有接缝 ——
+ * 导航栏和通栏共用同一片颜色变量（挂在 .ink-blog 根节点上，由文章页注入）。
+ * 光晕只出现在通栏下半部，接缝处两边都是纯色，所以看不出拼合的痕迹。
+ */
+.ink-blog .ink-article-hero-full {
+  position: relative;
+  width: 100%;
+  /* 和导航栏那条色带用同一条横向渐变 */
+  background-color: var(--ink-hero-bg, var(--ink-accent));
+  background-image: var(--ink-hero-band);
+  color: #fff;
+  overflow: hidden;
+}
+.ink-blog[data-theme="dark"] .ink-article-hero-full {
+  background-color: var(--ink-hero-bg-dark, var(--ink-accent));
+}
+/*
+ * 顶部主题色：封面主色从导航栏一路铺到通栏顶部，中间没有接缝 ——
+ * 导航栏和通栏共用同一片颜色变量（挂在 .ink-blog 根节点上，由文章页注入）。
+ *
+ * 关键在渐变方向：取 90deg（纯横向），色带和通栏两个盒子的宽度又完全一样
+ * （都是 .ink-blog 的内容宽），所以同一条渐变画在两边是逐像素相同的 ——
+ * 接缝处看不出拼合的痕迹。之前用 radial 就不行：径向渐变随高度变化，
+ * 导航栏那条没有光晕、通栏下半段有，一眼就能看出是两段东西。
+ *
+ * 色带画在根节点的背景上（不是给导航栏上背景）：导航栏本身是 .ink-wrap
+ * 限宽 1280，直接上背景会在左右两侧留白；画在根上才能横贯整个视口。
+ * background-attachment: local 让它随内容一起滚走，不在滚动后残留。
+ */
+.ink-blog {
+  /* 没有采样结果时的兜底：不画光照，纯底色 */
+  --ink-hero-band: none;
+}
+.ink-blog.has-cover-tint {
+  --ink-hero-band: linear-gradient(
+    90deg,
+    var(--ink-hero-bg) 0%,
+    var(--ink-hero-deep) 52%
+  );
+  background-color: var(--ink-bg);
+  background-image: var(--ink-hero-band);
+  background-repeat: no-repeat;
+  background-attachment: local;
+  background-size: 100% var(--ink-header-h);
+}
+.ink-blog[data-theme="dark"].has-cover-tint {
+  --ink-hero-band: linear-gradient(
+    90deg,
+    var(--ink-hero-bg-dark) 0%,
+    var(--ink-hero-deep-dark) 52%
+  );
+  background-color: var(--ink-bg);
+  background-image: var(--ink-hero-band);
+}
+/* Keep tinted headers light: only the current item gets a small surface. */
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav,
+.ink-blog.has-cover-tint .ink-header .ink-header-left,
+.ink-blog.has-cover-tint .ink-header .ink-actions {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav a,
+.ink-blog.has-cover-tint .ink-header .ink-icon-btn {
+  color: #fff;
+}
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav a:hover {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+}
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav a[aria-current="page"] {
+  background: rgb(255 255 255 / 96%);
+  color: var(--ink-hero-deep);
+}
+.ink-blog[data-theme="dark"].has-cover-tint
+  .ink-header
+  .ink-desktop-nav
+  a[aria-current="page"] {
+  color: var(--ink-hero-deep-dark);
+}
+.ink-blog.has-cover-tint .ink-header .ink-icon-btn:hover {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+}
+.ink-blog .ink-article-hero-full .ink-article-hero {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+  padding: 46px 0 54px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+/*
+ * 正文卡片不往上压色带：压上去会让正文"跳"到色块里，读起来发飘。
+ * 色带底部的 40px 渐隐负责收边，卡片老老实实待在色带下面。
+ */
+.ink-blog .ink-article-hero-full .ink-article-hero:not(:has(> img)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ink-blog .ink-article-hero-full .ink-article-hero h1 {
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 800;
+  line-height: 1.32;
+  letter-spacing: -0.5px;
+  margin: 10px 0 18px;
+}
+.ink-blog .ink-article-hero-full .ink-article-hero > img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
+}
+.ink-blog .ink-article-hero-full .ink-crumb {
+  color: #ffffffcc !important;
+}
+.ink-blog .ink-article-hero-full .ink-meta {
+  color: #ffffffcc;
+}
+.ink-blog .ink-article-hero-full .ink-badge {
+  background: #ffffff24;
+  color: #fff;
+}
+
+/* ---------- 搜索弹窗（按原型重做） ---------- */
+.ink-blog .ink-search {
+  width: min(840px, calc(100% - 36px));
+  border-radius: 18px;
+}
+.ink-blog .ink-search-input {
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 0;
+}
+.ink-blog .ink-search-input > svg {
+  color: var(--ink-accent);
+  flex: none;
+}
+.ink-blog .ink-search-input input {
+  height: 46px;
+  border-radius: 12px;
+  background: var(--ink-tint);
+  border: 1px solid transparent;
+  padding: 0 14px;
+  font-size: 16px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.ink-blog .ink-search-input input:focus {
+  background: var(--ink-surface);
+  border-color: var(--ink-accent);
+}
+.ink-blog .ink-search-input button:not(.ink-search-close) {
+  border-radius: 10px;
+}
+.ink-blog .ink-search-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px 0 16px;
+  border-radius: 12px;
+  background: var(--ink-tint);
+  color: var(--ink-text);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ink-blog .ink-search-close kbd {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--ink-surface);
+  color: var(--ink-muted);
+  border: 1px solid var(--ink-line);
+}
+/* 空态：最近搜索 / 推荐阅读 / 从专题开始 */
+.ink-blog .ink-search-idle {
+  padding: 0 24px 20px;
+  overflow: auto;
+  min-height: 0;
+}
+.ink-blog .ink-search-hint {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+.ink-blog .ink-search-block {
+  border-top: 1px solid var(--ink-line);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.ink-blog .ink-search-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ink-blog .ink-search-block-head h4 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.ink-blog .ink-search-block-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.ink-blog .ink-search-block-head button:hover {
+  color: var(--ink-accent);
+  background: var(--ink-tint);
+}
+.ink-blog .ink-search-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ink-blog .ink-search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ink-blog .ink-search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-text);
+  font-size: 15px;
+  transition: background 0.15s;
+}
+.ink-blog .ink-search-chip:hover {
+  background: var(--ink-line);
+}
+.ink-blog .ink-search-chip svg {
+  color: var(--ink-muted);
+}
+.ink-blog .ink-search-picks {
+  display: grid;
+  gap: 4px;
+}
+.ink-blog .ink-search-pick {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.ink-blog .ink-search-pick:hover {
+  background: var(--ink-tint);
+}
+.ink-blog .ink-search-pick > img,
+.ink-blog .ink-search-pick-blank {
+  width: 132px;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--ink-tint);
+  display: block;
+}
+.ink-blog .ink-search-pick-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.ink-blog .ink-search-pick-body b {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-blog .ink-search-pick-body > small {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-blog .ink-search-pick-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.ink-blog .ink-search-pick-topic {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ink-blog .ink-search-pick-meta time {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ink-blog .ink-search-pick-arrow {
+  color: var(--ink-muted);
+  justify-self: end;
+}
+.ink-blog .ink-search-empty {
+  font-size: 13px;
+  color: var(--ink-muted);
+  padding: 6px 0;
+}
+.ink-blog .ink-search-topics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ink-blog .ink-search-topic {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  text-decoration: none;
+  color: inherit;
+  border-left: 1px solid var(--ink-line);
+  transition: background 0.15s;
+}
+.ink-blog .ink-search-topic:first-child {
+  border-left: 0;
+  padding-left: 4px;
+}
+.ink-blog .ink-search-topic:hover {
+  background: var(--ink-tint);
+}
+.ink-blog .ink-search-topic-num {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 700;
+}
+.ink-blog .ink-search-topic-body {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.ink-blog .ink-search-topic-body b {
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-blog .ink-search-topic-body small {
+  font-size: 12px;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-blog .ink-search-topic > svg {
+  color: var(--ink-muted);
+  justify-self: end;
+}
+.ink-blog .ink-search-foot {
+  padding: 14px 24px;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  /* 手机上搜索仍然是全屏浮层，别被上面的桌面宽度挤成一条。 */
+  .ink-blog .ink-search {
+    width: 100%;
+  }
+  .ink-blog .ink-article-hero-full .ink-article-hero {
+    width: min(1280px, calc(100% - 32px));
+    padding: 30px 0 34px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-blog .ink-article-hero-full .ink-article-hero > img {
+    display: none;
+  }
+  /* 窄屏别再硬撑 460px 的表格，否则正文会多出一条横向滚动 */
+  .ink-blog .ink-prose table {
+    min-width: 0;
+    font-size: 13px;
+  }
+  .ink-blog .ink-prose th,
+  .ink-blog .ink-prose td {
+    padding: 8px 10px;
+  }
+  .ink-blog .ink-search-idle {
+    padding: 0 16px 16px;
+  }
+  .ink-blog .ink-search-input {
+    padding: 14px 16px 12px;
+  }
+  .ink-blog .ink-search-pick {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+  .ink-blog .ink-search-pick > img,
+  .ink-blog .ink-search-pick-blank {
+    width: 92px;
+  }
+  .ink-blog .ink-search-pick-arrow {
+    display: none;
+  }
+  .ink-blog .ink-search-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-blog .ink-search-topic {
+    border-left: 0;
+    border-top: 1px solid var(--ink-line);
+    padding: 10px 4px;
+  }
+  .ink-blog .ink-search-topic:first-child {
+    border-top: 0;
+  }
+}
+
+/* Stable, quiet public navigation: no height animation or layout jump. */
+.ink-blog .ink-header{position:sticky;top:0;z-index:40;width:100%;max-width:none;margin:0;box-sizing:border-box;padding-inline:max(32px,calc((100% - 1280px)/2));border-bottom:1px solid transparent;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease;}
+/* 导航绝对居中：右边操作药丸会随滚动数值变胖变瘦，
+   跟着 space-between 走的话导航会被挤得左右晃。居中后两边胖瘦都影响不到它。 */
+.ink-blog .ink-desktop-nav{position:absolute;left:50%;transform:translateX(-50%);}
+.ink-blog .ink-header[data-scrolled="true"]{background:color-mix(in srgb,var(--ink-bg,#f7f7fc) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom-color:var(--ink-line);box-shadow:0 3px 14px #19133b06;}
+.ink-blog.has-cover-tint .ink-header[data-scrolled="true"] .ink-desktop-nav a,
+.ink-blog.has-cover-tint .ink-header[data-scrolled="true"] .ink-icon-btn {color:var(--ink-text)}
+.ink-blog.has-cover-tint .ink-header[data-scrolled="true"] .ink-desktop-nav a:hover,
+.ink-blog.has-cover-tint .ink-header[data-scrolled="true"] .ink-icon-btn:hover {background:var(--ink-tint);color:var(--ink-accent)}
+.ink-blog.has-cover-tint .ink-header[data-scrolled="true"] .ink-desktop-nav a[aria-current="page"] {background:var(--ink-tint);color:var(--ink-accent)}
+
+.ink-blog .ink-home-list,.ink-blog .ink-prose h2,.ink-blog .ink-prose h3{scroll-margin-top:96px;}
+.ink-blog .ink-sub-tabs{display:flex;gap:20px;align-items:center;}
+.ink-blog .ink-sub-tabs button{padding:10px 0;color:var(--ink-muted);font-weight:600;border-bottom:2px solid transparent;}
+.ink-blog .ink-sub-tabs button[aria-pressed="true"]{color:var(--ink-accent);border-bottom-color:var(--ink-accent);}
+/* 热门榜自带排序，排序控件那一行换成一句说明，别让人以为还能再排序。 */
+.ink-blog .ink-feed-note{font-size:12px;line-height:1.6;color:var(--ink-muted);}
+/* 版式切换按钮：底色走 --ink-surface（暗色下是深灰，不是白块），
+   边框走 --ink-line —— 早期这里写的是 --ink-panel / --ink-border，
+   这两个 token 根本不存在，暗色模式直接掉回 #fff 白底，页面上亮得刺眼。 */
+.ink-blog .ink-view-toggle{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--ink-line);border-radius:10px;background:var(--ink-surface);color:var(--ink-muted);}
+.ink-blog .ink-recommendation-note{font-size:12px;line-height:1.6;color:var(--ink-muted);margin:0 0 12px;display:flex;justify-content:space-between;gap:10px;}
+.ink-blog .ink-recommendation-note button{color:var(--ink-accent);white-space:nowrap;}
+@media(max-width:640px){.ink-blog .ink-header{padding-inline:16px}.ink-blog .ink-sub-tabs{gap:18px}}
+@media(prefers-reduced-motion:reduce){.ink-blog .ink-header{transition:none}}
+/* Missing covers must not create stretched empty cards. */
+.ink-card-grid{align-items:start}
+.ink-view-toggle:hover{background:var(--ink-tint);color:var(--ink-accent)}
+.ink-recommendation-note button{margin-left:10px;color:var(--ink-accent);font:inherit;background:none;border:0;cursor:pointer}
+.ink-section-head button:focus-visible{outline:2px solid var(--ink-accent);outline-offset:3px}
+
+/* ============================================================
+   公开专题页章节目录 + 首页 banner 布局（新增类，不改既有选择器）
+   ============================================================ */
+
+/* 没有 banner 时（最新 tab / 专题筛选）顶部不留空位：
+   作者卡挪进右侧栏，列表直接顶上来。
+   只在双栏布局下生效 —— 窄屏本来就是一列，不需要改。 */
+@media (min-width: 1101px) {
+  .ink-blog .ink-home-grid.is-no-hero {
+    grid-template-areas: "list side";
+  }
+  /* 侧栏不再吸顶：作者卡挪进来后它比一屏高，吸顶会把底部内容截掉 */
+  .ink-blog .ink-home-grid.is-no-hero .ink-aside {
+    position: static;
+  }
+}
+@media (max-width: 1100px) {
+  .ink-blog .ink-home-grid.is-no-hero {
+    grid-template-areas:
+      "list"
+      "side";
+  }
+}
+
+/* ---------- 章节目录 ---------- */
+.ink-blog .ink-topic-section {
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+  background: var(--ink-surface);
+  padding: 4px 18px 16px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+.ink-blog .ink-topic-section.is-plain {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.ink-blog .ink-topic-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+  min-width: 0;
+}
+.ink-blog .ink-topic-section > summary::-webkit-details-marker {
+  display: none;
+}
+.ink-blog .ink-topic-section > summary::marker {
+  content: "";
+}
+.ink-blog .ink-topic-section-num {
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ink-accent);
+}
+.ink-blog .ink-topic-section-name {
+  font-size: 17px;
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ink-blog .ink-topic-section-count {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-blog .ink-topic-section-desc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.ink-blog .ink-topic-unassigned {
+  margin-top: 20px;
+}
+.ink-blog .ink-topic-unassigned > h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+/* ---------- 公开标签 ---------- */
+.ink-blog .ink-public-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.ink-blog .ink-public-tag {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  /* 窄屏：章节标题不折行也不撑破容器，序号与标题各自占一行也不溢出 */
+  .ink-blog .ink-topic-section {
+    padding: 2px 12px 12px;
+  }
+  .ink-blog .ink-topic-section > summary {
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .ink-blog .ink-topic-section-name {
+    font-size: 15px;
+  }
+  .ink-blog .ink-topic-section-count {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  /*
+   * 窄屏列表的封面只有 88×66，写着「置顶」的角标会盖掉封面自带的标题，
+   * 所以只留一个向上箭头的小圆标，靠位置和形状认。
+   * 角标在右上角，标题在左边 —— 两边不碰。
+   * 窄屏卡片视图封面是整幅大图，仍保留文字。
+   */
+  .ink-blog .ink-post-row .ink-cover-badge {
+    top: 5px;
+    right: 5px;
+    gap: 0;
+    padding: 0;
+    width: 19px;
+    height: 19px;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .ink-blog .ink-post-row .ink-cover-badge-text {
+    display: none;
+  }
+  .ink-blog .ink-post-row .ink-cover-badge svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* ---------- 封面裁切位置 ---------- */
+/*
+ * 一张 1600×900 的源图同时给双栏（2.8:1）、单栏（16:9）、Banner（2.9:1）用，
+ * 每个展示位各存一份裁切位置（后台「调整显示位置」里拖出来的）。
+ *
+ * 三个展示位各写一对 CSS 变量，具体用哪一对由这里的规则决定：
+ * 头条大图桌面用双栏那份、窄屏用 Banner 那份，缩略图统一用单栏那份。
+ * 后台预览用的也是同一套变量，所见即所得。
+ */
+.ink-blog .ink-post-cover img,
+.ink-blog .ink-recent-cover img,
+.ink-blog .ink-search-pick img {
+  object-position: var(--ink-cover-single-x, 50%)
+    var(--ink-cover-single-y, 50%);
+}
+.ink-blog .ink-lead-hero img {
+  object-position: var(--ink-cover-double-x, 50%) var(--ink-cover-double-y, 50%);
+}
+@media (max-width: 760px) {
+  .ink-blog .ink-lead-hero img {
+    object-position: var(--ink-cover-banner-x, 50%) var(--ink-cover-banner-y, 50%);
+  }
+}
+
+/* The cover layers are absolutely positioned; the hero owns the layout height. */
+.ink-blog .ink-lead-hero > .ink-cover{height:100%;width:100%;position:absolute;inset:0}
+.ink-blog .ink-lead-hero .ink-cover-base{aspect-ratio:auto;object-position:var(--ink-cover-banner-x,50%) var(--ink-cover-banner-y,50%)}
+/* Quiet editorial marker, consistently anchored to the cover's top-right. */
+.ink-blog .ink-cover-badge{top:10px;right:10px;gap:4px;padding:4px 8px;border-radius:6px;color:#5945ca;background:rgb(255 255 255 / 94%);box-shadow:0 1px 5px rgb(24 24 44 / 12%);backdrop-filter:blur(6px);font-weight:500;font-size:11px;line-height:15px}
+.ink-blog .ink-cover-badge svg,.ink-blog .ink-badge-featured svg{stroke-width:1.8}
+.ink-blog .ink-post-row .ink-cover-badge{top:6px;right:6px;padding:3px 6px;border-radius:5px;font-size:10px;line-height:13px}
+@media(max-width:760px){.ink-blog .ink-lead-hero{aspect-ratio:2.9 / 1}.ink-blog .ink-post-row .ink-cover-badge{width:20px;height:22px;padding:3px;border-radius:4px}.ink-blog .ink-post-row .ink-cover-badge-text{display:none}}
+
+.ink-blog .ink-post-card .ink-cover-base{object-position:var(--ink-cover-double-x,50%) var(--ink-cover-double-y,50%)}

@@ -1066,6 +1066,12 @@ export const noteRouter = router({
           ...(existingNote?.metadata || {}),
           ...input.metadata
         };
+        // The editor cannot replace SEO drafts or the last published SEO snapshot.
+        for (const key of ['blogSeo', 'blogSeoPublished']) {
+          const prior = existingNote?.metadata as Record<string, unknown> | null;
+          if (prior && key in prior) (update.metadata as any)[key] = prior[key];
+          else delete (update.metadata as any)[key];
+        }
       } else if (input.metadata) {
         update.metadata = input.metadata;
       }
@@ -1430,7 +1436,18 @@ export const noteRouter = router({
 
   publishNote: authProcedure.use(demoAuthMiddleware)
     .meta({ openapi: { method: 'POST', path: '/v1/note/publish', summary: 'Publish saved note snapshot or withdraw', protect: true, tags: ['Note'] } })
-    .input(z.object({ id: z.number().int().positive(), isCancel: z.boolean().default(false), expectedUpdatedAt: z.coerce.date().optional() }))
+    .input(z.object({
+      id: z.number().int().positive(),
+      isCancel: z.boolean().default(false),
+      expectedUpdatedAt: z.coerce.date().optional(),
+      expectedPublicationToken: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+      // 版本三元组：「检查更新」进入对比时记下的来源 / 草稿 / 公开版本。
+      // 发布时服务端重新算一遍，对不上就挡住，不让旧页面覆盖新版本。
+      expectedSourceVersion: z.string().regex(/^[0-9a-f]{32}$/).optional(),
+      expectedDraftVersion: z.string().regex(/^[0-9a-f]{32}$/).optional(),
+      expectedPublicVersion: z.string().regex(/^[0-9a-f]{32}$/).optional(),
+      coverAttachmentId: z.number().int().positive().nullable().optional(),
+    }))
     .output(notesSchema)
     .mutation(({ input, ctx }) => publishSnapshot(prisma, Number(ctx.id), input)),
 
@@ -1442,7 +1459,7 @@ export const noteRouter = router({
       const notes = await prisma.notes.findMany({ where: { ...publicPublicationWhere,
         ...(input.searchText && { publication: { is: { content: { contains: input.searchText, mode: 'insensitive' } } } }) },
         orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }], skip: (input.page - 1) * input.size, take: input.size,
-        select: { id: true, publishId: true, publication: true } });
+        select: { id: true, publishId: true, publication: { include: { coverAttachment: { select: { path: true } } } } } });
       return notes.map(note => publicPublicationDTO(note)!);
     }),
 

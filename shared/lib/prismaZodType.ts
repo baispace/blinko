@@ -80,6 +80,10 @@ export const notesSchema = z.object({
   isPublished: z.boolean(),
   publishId: z.string().nullable().optional(),
   publishedAt: z.coerce.date().nullable().optional(),
+  // 动态 = 被公开的闪念：这两个状态位决定它有没有出现在公开动态流里。
+  // 选填：个别只回传部分字段的接口（如随机取一条）不带它们。
+  isMoment: z.boolean().optional(),
+  momentPublishedAt: z.coerce.date().nullable().optional(),
   metadata: z.any(),
   sortOrder: z.number().nullable().optional(),
   accountId: z.union([z.number().int(), z.null()]),

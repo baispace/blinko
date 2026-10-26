@@ -1,3 +1,4 @@
+import { isPublicBlogAsset } from '../../lib/blog';
 import express from 'express';
 import path from 'path';
 import { createReadStream, statSync } from 'fs';
@@ -145,8 +146,7 @@ router.get(/.*/, async (req, res) => {
 
       // 公开封面：仅这一条附件免鉴权，且随发布状态开关。
       // 不按「这篇笔记已发布」整篇放开 —— 那等于把正文外的附件一并公开。
-      const coverId = myFile?.note?.publication?.coverAttachmentId;
-      isPublicCover = !!myFile && !!coverId && coverId === myFile.id && !!myFile.note?.isPublished;
+      isPublicCover = await isPublicBlogAsset(prisma, '/api/file/' + fullPath);
 
       if (!token) {
         if (myFile?.note?.isShare || isPublicCover) {
@@ -155,7 +155,8 @@ router.get(/.*/, async (req, res) => {
         }
       }
 
-      if (myFile && (!myFile?.note?.isShare && Number(token?.id) != myFile?.note?.accountId && !myFile?.accountId)) {
+      const isOwner = !!token && (myFile?.accountId === Number(token.id) || myFile?.note?.accountId === Number(token.id) || token.role === 'superadmin');
+      if (myFile && !myFile.note?.isShare && !isPublicCover && !isOwner) {
         return res.status(401).json({ error: "Unauthorized" });
       }
     } catch (error) {

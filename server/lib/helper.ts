@@ -98,13 +98,13 @@ export async function generateFeed(userId: number, origin: string, rows: number 
   });
 
   const feed = new Feed({
-    title: "Blinko Public Notes",
+    title: "Jomio Public Notes",
     description: "Latest public notes",
     id: origin,
     link: origin,
     copyright: "All rights reserved",
     updated: new Date(),
-    image: `${origin}/logo-dark-title.png`,
+    image: `${origin}/brand/logo.png`,
     feedLinks: {
       atom: `${origin}/api/rss/${userId}/atom`,
       rss: `${origin}/api/rss/${userId}/rss`

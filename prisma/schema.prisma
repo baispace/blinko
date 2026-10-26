@@ -38,6 +38,17 @@ model accounts {
   aiScheduledTasks aiScheduledTask[]
   blogProfile   blogProfile?
   blogTopics    blogTopic[]
+  blogDevices   blogDevice[]
+  blogDistribution blogDistribution?
+  blogPublicTags blogPublicTag[]
+  blogFriendLinks blogFriendLink[]
+  blogFriendFeedbacks blogFriendFeedback[]
+  blogArticleReactions blogArticleReaction[]
+  blogArticleFeedbacks blogArticleFeedback[]
+  blogArticleFeedbackReplies blogArticleFeedbackReply[]
+  blogMomentResonances blogMomentResonance[]
+  blogMomentFeedbacks blogMomentFeedback[]
+  blogMomentFeedbackReplies blogMomentFeedbackReply[]
 }
 
 model attachments {
@@ -60,6 +71,9 @@ model attachments {
   note    notes?    @relation(fields: [noteId], references: [id])
   account accounts? @relation(fields: [accountId], references: [id])
   publicationCovers notePublication[] @relation("PublicationCover")
+  publicationDraftCovers notePublication[] @relation("PublicationDraftCover")
+  publicationShareCovers notePublication[] @relation("PublicationShareCover")
+  topicCovers blogTopic[] @relation("TopicCover")
   @@index([accountId, sortOrder, updatedAt(sort: Desc), id(sort: Desc)], map: "attachments_account_sort_idx")
   @@index([noteId], map: "attachments_noteId_idx")
 }
@@ -94,6 +108,11 @@ model notes {
   isPublished       Boolean         @default(false)
   publishId         String?         @unique @db.VarChar
   publishedAt       DateTime?       @db.Timestamptz(6)
+  // 作为动态公开：动态不是独立实体，就是「被公开的闪念」。
+  // 这两个字段是闪念在动态流里的状态，与上面的文章发布互不干扰。
+  isMoment          Boolean         @default(false)
+  // 首次公开到动态流的时间：改内容不重置它，排序与月份都按它算。
+  momentPublishedAt DateTime?       @db.Timestamptz(6)
   createdAt         DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(6)
   attachments       attachments[]
@@ -105,12 +124,23 @@ model notes {
   histories         noteHistory[]
   internalShares    noteInternalShare[]
   publication       notePublication?
+  publicationHistory blogPublicationHistory[]
   blogTopics        blogTopicNote[]
+  // 专题把它设为「文档模式默认打开的文章」时的反向关系。
+  defaultForTopics  blogTopic[]   @relation("TopicDefaultNote")
+  blogPageViews     blogPageView[]
+  blogStat          blogPostStat?
+  blogReactions     blogArticleReaction[]
+  blogFeedbacks     blogArticleFeedback[]
+  // 动态的互动挂在闪念上：动态就是闪念，互动也挂在闪念上。
+  momentResonances  blogMomentResonance[]
+  momentFeedbacks   blogMomentFeedback[]
 
   @@index([isPublished])
   @@index([accountId, createdAt])
   @@index([accountId, type, isRecycle, isArchived, isTop(sort: Desc), createdAt(sort: Desc), id(sort: Desc)], map: "notes_list_created_idx")
   @@index([accountId, type, isRecycle, isArchived, isTop(sort: Desc), updatedAt(sort: Desc), id(sort: Desc)], map: "notes_list_updated_idx")
+  @@index([accountId, isMoment, momentPublishedAt(sort: Desc), id(sort: Desc)], map: "notes_moment_feed_idx")
 }
 
 model comments {
@@ -379,12 +409,53 @@ model fonts {
 }
 // Public content is a deliberate snapshot, never a join to the live draft.
 model notePublication {
+  title           String   @default("") @db.VarChar
+  // AI 生成的摘要快照：为空时公开页退回正文截断。和 title 一样属于公开快照，
+  // 改草稿不影响线上，要点「更新发布」才生效。
+  summary         String?  @db.Text
   noteId          Int      @id
   content         String   @db.Text
   type            Int
   // 仅这一条附件可被免鉴权读取（见 routerExpress/file/file.ts）。同篇笔记的
   // 其它附件仍需登录，避免「发布一篇」等于「公开整篇的所有附件」。
   coverAttachmentId Int?
+  draftCoverAttachmentId Int?
+  // 封面排版参数：与封面像素一起存在，但独立留档 ——
+  // 改了短标题或主题色可以只重排版、不重新生图。
+  coverTitle    String   @default("") @db.VarChar
+  coverSubtitle String   @default("") @db.VarChar
+  coverPalette  String   @default("violet") @db.VarChar
+  coverLayout   String   @default("prototype") @db.VarChar
+  // 首页精选：作者手动指定的头条位，不受发布时间影响。
+  // 「推荐置顶」只影响首页「推荐」流的排序，不影响「全部文章」与专题内顺序。
+  isFeatured   Boolean  @default(false)
+  featuredOrder Int     @default(0)
+  // 加入推荐页 banner：与「推荐置顶」互不替代的第二个开关。
+  // banner 是推荐页顶部的那一块大图位，只有勾了这一项的文章才进 banner。
+  isBanner     Boolean  @default(false)
+  // banner 在推荐页里的位置，与置顶位置各自独立 ——
+  // 一篇文章可以置顶在第 1 位，同时排在 banner 的第 3 位。
+  bannerOrder  Int      @default(0)
+  // 公开标签：与私有笔记标签刻意分开。私有标签不公开，公开标签单独维护。
+  // 发布时冻结进公开快照，改草稿不影响线上，要「更新发布」才生效。
+  publicTags   String[] @default([])
+  // 封面在各展示位的裁切位置：同一张源图，双栏 / 单栏 / Banner 各存一份。
+  // 里面记着这份裁切是针对哪张源图调的 —— 换源图后对不上就当没调过，回到居中。
+  coverFocus   Json?
+  // 封面文字层配置（公开快照）：短标题、副标题、对齐、字号微调、封面模式。
+  // 底图还是 coverAttachmentId —— 一张底图配一份文字配置，不按场景各存一张图。
+  coverConfig  Json?
+  // AI 整理出来的发布信息候选（标题/概要/封面文案/标签/归属建议）。
+  // 生成过一次就一直留着，再次打开直接展示；正文改过只标记过期，不自动丢弃。
+  // 存草稿侧：候选还没决定用不用，被应用的字段由 saveCopy 写进草稿正文侧。
+  aiCopy       Json?
+  // 由底图 + 文字配置派生出来的社交分享图（1200×630）。
+  // 它是公开版本的一部分：只能由已发布的封面配置生成，不泄露未发布的文案。
+  shareCoverAttachmentId Int?
+  // 来源基线：上次发布时原笔记正文的指纹。
+  // 「检查更新」拿它和当前原笔记比对，判断来源有没有变过 ——
+  // 变了也不直接覆盖发布草稿，只提示并让作者决定。
+  sourceContentVersion String? @db.VarChar(64)
   revision        Int      @default(1)
   sourceUpdatedAt DateTime @db.Timestamptz(6)
   createdAt       DateTime @default(now()) @db.Timestamptz(6)
@@ -392,7 +463,42 @@ model notePublication {
   note            notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
   coverAttachment attachments? @relation("PublicationCover", fields: [coverAttachmentId], references: [id], onDelete: SetNull)
 
+  draftCoverAttachment attachments? @relation("PublicationDraftCover", fields: [draftCoverAttachmentId], references: [id], onDelete: SetNull)
+
+  shareCoverAttachment attachments? @relation("PublicationShareCover", fields: [shareCoverAttachmentId], references: [id], onDelete: SetNull)
+
+  @@index([draftCoverAttachmentId])
   @@index([coverAttachmentId])
+  @@index([shareCoverAttachmentId])
+}
+
+/// 每次「确认发布」留下的公开版本快照。
+///
+/// 当前公开版本只有一份（notePublication），这里存的是历史：
+/// 撤回之后还能拿它对比，重复提交也不会写出两条同版本记录 ——
+/// (noteId, revision) 唯一，事务里写重了就撞唯一键。
+model blogPublicationHistory {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  revision  Int
+  title     String   @default("") @db.VarChar
+  summary   String?  @db.Text
+  content   String   @db.Text
+  type      Int
+  coverAttachmentId Int?
+  publicTags String[] @default([])
+  seo       Json?
+  /// 这一版发布时的封面文字层配置（短标题 / 副标题 / 排版）。
+  /// 撤回之后还能拿它对比，也能把这一版的分享图还原出来。
+  coverConfig Json?
+  /// 这一版发布时的原笔记正文指纹，作为下一次来源比对的基线。
+  sourceContentVersion String @default("") @db.VarChar(64)
+  publishedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, revision])
+  @@index([noteId])
 }
 
 // 公开资料：与 accounts 的私有身份字段刻意分开，只放作者自己选择公开的内容。
@@ -405,6 +511,15 @@ model blogProfile {
   homepage    String   @default("") @db.VarChar
   // [{ label, url }]，由 zod 在接口层校验形状
   links       Json?    @db.Json
+  // 「关于这个空间」的站点说明：讲这个站点用来做什么。
+  // 与个人介绍（bio）分开 —— bio 说「我是谁」，这里说「这里用来做什么」。
+  spaceIntro  String   @default("") @db.Text
+  // 头像旁的简短签名：一句话。留空就不显示，不占用位置。
+  signature   String   @default("") @db.VarChar
+  // 作者精选的阅读入口：[{ noteId, reason }]，最多 3 篇公开文章 + 每篇一句推荐理由。
+  featuredPosts Json?  @db.Json
+  // 关于页「我在记录什么」展示的专题与顺序；为空时按专题默认排序取前 4 项。
+  aboutTopicIds Int[]  @default([])
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @db.Timestamptz(6)
@@ -422,25 +537,401 @@ model blogTopic {
   color       String   @default("") @db.VarChar
   sortOrder   Int      @default(0)
   isPublished Boolean  @default(false)
+  // 多级专题：父专题。为空即顶级专题。子专题的文章同样计入父专题的公开列表。
+  parentId    Int?
+  // 导航展示：是否出现在公开站导航/侧栏的专题区。关掉只影响导航，不影响专题页本身。
+  showInNav   Boolean  @default(true)
+  // 首页推荐：是否在首页专题区强推。
+  isFeatured  Boolean  @default(false)
+  // 专题自己的封面（不填则仍从成员文章推导）。
+  coverAttachmentId Int?
+  // 专题封面上的短标题。
+  coverTitle  String   @default("") @db.VarChar
+  // 展示方式：topic（专题模式，介绍 + 文章列表）/ doc（文档模式，目录 + 连续阅读）。
+  // 默认 topic —— 已有专题迁移后保持原有行为，只有作者主动切换才会变。
+  displayMode String   @default("topic") @db.VarChar
+  // 文档模式的「默认打开文章」：留空即自动选编排中的第一篇公开文章。
+  // 指向私有笔记 id 而不是 publishId —— 文章重新发布后地址会变，笔记 id 不会。
+  defaultNoteId Int?
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 
   account accounts       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   notes   blogTopicNote[]
+  sections blogTopicSection[]
+  parent  blogTopic?     @relation("TopicTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children blogTopic[]   @relation("TopicTree")
+  cover   attachments?   @relation("TopicCover", fields: [coverAttachmentId], references: [id], onDelete: SetNull)
+  defaultNote notes?     @relation("TopicDefaultNote", fields: [defaultNoteId], references: [id], onDelete: SetNull)
 
   @@unique([accountId, slug])
   @@index([accountId, sortOrder, id])
+  @@index([accountId, parentId, sortOrder, id])
+  @@index([defaultNoteId])
+}
+
+// 流量分发策略：公开列表的排序口径与权重，按站点配置一行。
+// 口径：recency（发布时间）/ clicks（点击数）/ ctr（曝光点击率）/ blended（综合）。
+model blogDistribution {
+  accountId     Int      @id
+  mode          String   @default("blended") @db.VarChar
+  // 综合排序里各因子的权重
+  freshWeight   Float    @default(2)
+  hotWeight     Float    @default(1)
+  qualityWeight Float    @default(0)
+  affinityWeight Float   @default(2)
+  searchWeight  Float    @default(3)
+  // 时间衰减半衰期（天）：分越老，热度分掉得越快
+  freshHalfLife Float    @default(14)
+  hotHalfLife   Float    @default(60)
+  // 手动精选优先：被标为首页精选的文章强制排在最前
+  featuredFirst Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
 }
 
 model blogTopicNote {
   topicId   Int
   noteId    Int
   sortOrder Int      @default(0)
+  // 所属章节：为空即「未分章节」。同一专题内一篇文章只能落在一个章节里
+  // —— 主键是 (topicId, noteId)，结构上就排除了同专题重复归属。
+  sectionId Int?
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
-  topic blogTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  note  notes     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  topic   blogTopic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  note    notes            @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  section blogTopicSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   @@id([topicId, noteId])
   @@index([noteId])
+  @@index([sectionId])
+}
+
+// 专题下的章节：专题 → 章节 → 文章 三层。
+// 章节只属于一个专题，删章节不删文章 —— 文章回落到「未分章节」。
+model blogTopicSection {
+  id        Int      @id @default(autoincrement())
+  topicId   Int
+  name      String   @db.VarChar
+  desc      String   @default("") @db.Text
+  // 是否在公开专题页目录里展示这一章的标题与章内文章列表
+  showTitle Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  topic blogTopic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  notes blogTopicNote[]
+
+  @@index([topicId, sortOrder, id])
+}
+
+// 公开标签池：与私有笔记标签（tag / tagsToNote）刻意分开。
+// 公开标签只出现在博客上；私有标签永远不外泄，也不能被公开标签改写。
+model blogPublicTag {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  name      String   @db.VarChar
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, name])
+  @@index([accountId])
+}
+
+// 阅读埋点：去重靠浏览器生成的匿名设备 ID，服务端拿不到 IP、UA 或任何指纹。
+// 一行 = 一次「有效点击」：同一设备在滑动窗口内重复打开（多半是刷新）只记一行。
+// 这张表是「原始事实」：计数器（blogPostStat）由它推导，随时可以按它重算口径。
+model blogPageView {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  noteId    Int
+  deviceId  String   @db.VarChar(64)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  // 来源归因：source 是归类结果，referrerHost 是规范化域名（不含完整 URL 与查询串），
+  // entry 是站内入口标识。历史行没有这些信息，一律按 unknown 处理，不反推。
+  source      String   @default("unknown") @db.VarChar(16)
+  referrerHost String   @default("") @db.VarChar(120)
+  entry       String   @default("") @db.VarChar(24)
+
+  note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  // 滑动窗口判重：查这个设备在这篇文章上的最后一次阅读
+  @@index([noteId, deviceId, createdAt(sort: Desc)])
+  @@index([accountId, deviceId])
+  @@index([accountId, createdAt])
+  // 来源分布按 (accountId, source, createdAt) 聚合，避免全表扫描
+  @@index([accountId, source, createdAt])
+}
+
+// 文章级计数器：公开页直接读这里，不再实时 COUNT 明细表。
+// views = 有效点击数，readers = 去重设备数（同一设备对同一篇只算一个读者）。
+model blogPostStat {
+  noteId    Int      @id
+  accountId Int
+  views     Int      @default(0)
+  readers   Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+// 站点级设备档案：一个浏览器在站点的唯一身份。
+// 站点总用户数 = 这里按 accountId 数出来的行数（跨文章去重）。
+model blogDevice {
+  id          Int      @id @default(autoincrement())
+  accountId   Int
+  deviceId    String   @db.VarChar(64)
+  firstSeenAt DateTime @default(now()) @db.Timestamptz(6)
+  lastSeenAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, deviceId])
+  @@index([accountId, firstSeenAt])
+}
+
+// Anonymous, bounded recommendation events; never contains private note content.
+model blogRecommendationEvent {
+  id Int @id @default(autoincrement())
+  accountId Int
+  deviceId String @db.VarChar(64)
+  kind String @db.VarChar(16)
+  publishId String @db.VarChar(128)
+  term String @db.VarChar(80)
+  bucket DateTime
+  // 来源归因，与 blogPageView 同一套口径。历史行按 unknown 处理。
+  source String @default("unknown") @db.VarChar(16)
+  referrerHost String @default("") @db.VarChar(120)
+  entry String @default("") @db.VarChar(24)
+  @@unique([accountId, deviceId, kind, publishId, term, bucket], map: "blogRecommendationEvent_dedupe")
+  @@index([accountId, bucket])
+  @@index([accountId, deviceId, bucket])
+  // 范围统计按 (accountId, kind, bucket) 过滤并按 publishId 分组
+  @@index([accountId, kind, bucket])
+  @@index([accountId, source, bucket])
+}
+
+// 第三方统计脚本的加载与事件上报状态。
+// 由公开博客页在真实加载脚本 / 发送事件后上报，管理页只读这份事实，
+// 用来区分「配置有效」「脚本已加载」「页面事件已发送」三件事 ——
+// 三者都不等于「服务商报表已收数」。
+model blogTrackingState {
+  id Int @id @default(autoincrement())
+  accountId Int
+  vendor String @db.VarChar(16)
+  scriptLoadedAt DateTime? @db.Timestamptz(6)
+  eventSentAt DateTime? @db.Timestamptz(6)
+  lastPath String @default("") @db.VarChar(200)
+  lastHost String @default("") @db.VarChar(120)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([accountId, vendor], map: "blogTrackingState_accountId_vendor_key")
+  @@index([accountId])
+}
+
+// 友情链接：申请即入库（status=pending），审核通过后才进入公开列表。
+// 邮箱与审核说明只在这里存 —— 公开接口永远不读它们。
+model blogFriendLink {
+  id        Int    @id @default(autoincrement())
+  accountId Int
+  // 公开站点名称 / 地址 / 介绍 / 图标
+  name        String @db.VarChar(80)
+  // 规范化后的地址（见 shared/lib/blogFriends.ts 的 normalizeFriendUrl），去重靠它
+  url         String @db.VarChar(300)
+  description String @default("") @db.Text
+  iconUrl     String @default("") @db.VarChar(500)
+  // 申请邮箱：只经受权限保护的后台接口读取，不进任何公开 DTO
+  email       String @default("") @db.VarChar(120)
+  // 审核状态：pending / approved / rejected
+  status      String @default("pending") @db.VarChar(16)
+  // 审核说明（内部可见）
+  reviewNote  String @default("") @db.Text
+  // 公开列表排序（小的在前）
+  sortOrder   Int    @default(0)
+  // 隐藏公开展示：与审核状态分开管，隐藏一条已通过的友链不会丢掉它的审核记录
+  isHidden    Boolean @default(false)
+  // 邮件通知状态：none / sent / failed / not_configured
+  emailStatus String @default("none") @db.VarChar(16)
+  emailSentAt DateTime? @db.Timestamptz(6)
+  emailError  String @default("") @db.Text
+  emailAttempts Int   @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  account  accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  feedback blogFriendFeedback[]
+
+  // 同一站点地址只能有一条记录 —— 并发重复申请由这个约束挡住
+  @@unique([accountId, url], map: "blogFriendLink_accountId_url_key")
+  @@index([accountId, status, isHidden, sortOrder])
+}
+
+// 异常链接反馈：读者报告友链失效 / 内容异常，不因为一次反馈就隐藏站点。
+model blogFriendFeedback {
+  id        Int    @id @default(autoincrement())
+  accountId Int
+  // 关联的友链；站点被删除时置空，快照字段仍保留当时的信息
+  linkId    Int?
+  linkName  String @default("") @db.VarChar(120)
+  linkUrl   String @default("") @db.VarChar(300)
+  // unreachable / changed / content / other
+  type      String @default("other") @db.VarChar(24)
+  message   String @default("") @db.Text
+  // pending / resolved / dismissed
+  status    String @default("pending") @db.VarChar(16)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  link    blogFriendLink? @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  @@index([accountId, status, createdAt(sort: Desc)])
+  @@index([linkId])
+}
+
+// 文章表态：每个匿名访客在同一篇文章上最多保留一种表态。
+// 唯一约束是并发下的兜底 —— 连点两次也只能存一行。
+model blogArticleReaction {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  noteId    Int
+  // 匿名设备标识：与博客统计同一套（浏览器生成，服务端只当不透明字符串用）
+  deviceId  String   @db.VarChar(64)
+  // inspired / useful / resonant
+  kind      String   @db.VarChar(16)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  note    notes     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, noteId, deviceId], map: "blogArticleReaction_dedupe")
+  @@index([accountId, noteId, kind])
+}
+
+// 读者给作者的私密反馈：默认只有作者可见。
+// 邮箱与内部回复永远不进公开接口。
+model blogArticleFeedback {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  noteId    Int
+  // 文章快照：标题与公开地址在提交时记下来，文章改了也不影响这条反馈的上下文
+  title     String   @db.VarChar(200)
+  publishId String   @db.VarChar(128)
+  // question / supplement / error
+  type      String   @default("question") @db.VarChar(24)
+  content   String   @db.Text
+  // 称呼（选填）：留空按匿名读者处理
+  nickname  String   @default("") @db.VarChar(60)
+  // 是否希望收到回复通知
+  wantReply Boolean  @default(false)
+  // 通知邮箱：仅后台受保护接口可见
+  email     String   @default("") @db.VarChar(200)
+  // 是否允许未来匿名公开（本次不做公开展示，只记录授权）
+  allowPublic Boolean @default(false)
+  // pending / replied / archived
+  status    String   @default("pending") @db.VarChar(16)
+  // 幂等键：同一次提交重试不会新增多条
+  idempotencyKey String @db.VarChar(80)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  note    notes     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  replies blogArticleFeedbackReply[]
+
+  @@unique([accountId, idempotencyKey], map: "blogArticleFeedback_idempotency_key")
+  @@index([accountId, status, createdAt(sort: Desc)])
+  @@index([noteId])
+}
+
+// 作者回复：一条反馈可以有多条回复，历史不会被覆盖。
+model blogArticleFeedbackReply {
+  id         Int      @id @default(autoincrement())
+  accountId  Int
+  feedbackId Int
+  content    String   @db.Text
+  // none / sending / sent / failed / skipped
+  mailStatus String   @default("none") @db.VarChar(16)
+  mailError  String   @default("") @db.Text
+  mailSentAt DateTime? @db.Timestamptz(6)
+  mailAttempts Int    @default(0)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  account  accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  feedback blogArticleFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackId, createdAt])
+}
+
+// 动态：短内容的公开发布。独立于文章，不进文章列表、不进专题。
+// 动态的共鸣：同一访客对同一条动态最多一条。
+// 动态就是闪念，所以挂的是 noteId —— 没有独立的动态实体。
+model blogMomentResonance {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  noteId    Int
+  // 匿名设备标识：与博客统计同一套（浏览器生成，服务端只当不透明字符串用）。
+  deviceId  String   @db.VarChar(64)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  note    notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, noteId, deviceId], map: "blogMomentResonance_dedupe")
+  @@index([noteId])
+}
+
+// 读者给动态作者的私密反馈：默认只有作者可见。
+model blogMomentFeedback {
+  id            Int      @id @default(autoincrement())
+  accountId     Int
+  noteId        Int
+  type          String   @db.VarChar(16)
+  content       String   @db.Text
+  nickname      String   @default("") @db.VarChar(30)
+  wantReply     Boolean  @default(false)
+  email         String   @default("") @db.VarChar(120)
+  allowPublic   Boolean  @default(false)
+  // pending / replied / archived
+  status        String   @default("pending") @db.VarChar(16)
+  idempotencyKey String  @db.VarChar(80)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  note    notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  replies blogMomentFeedbackReply[]
+
+  @@unique([accountId, idempotencyKey], map: "blogMomentFeedback_idempotency_key")
+  @@index([accountId, status, createdAt(sort: Desc)])
+  @@index([noteId])
+}
+
+// 作者对动态反馈的回复：一条反馈可以有多条回复，历史不覆盖。
+model blogMomentFeedbackReply {
+  id         Int      @id @default(autoincrement())
+  accountId  Int
+  feedbackId Int
+  content    String   @db.Text
+  // none / sending / sent / failed / skipped
+  mailStatus String   @default("none") @db.VarChar(16)
+  mailError  String   @default("") @db.Text
+  mailSentAt DateTime? @db.Timestamptz(6)
+  mailAttempts Int    @default(0)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  account  accounts           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  feedback blogMomentFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackId, createdAt])
 }

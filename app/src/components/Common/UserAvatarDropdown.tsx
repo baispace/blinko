@@ -72,6 +72,10 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
           <button type="button" className={rowClass} onClick={() => {
             close(); navigate('/blog-manage');
           }}><Icon icon="tabler:file-text" width={18}/><span>{zh ? '博客管理' : 'Blog'}</span></button>
+          {/* 博客的数据分析在后台侧边栏的第三屏，单独给一个直达入口。 */}
+          <button type="button" className={rowClass} onClick={() => {
+            close(); navigate('/blog-manage?section=stats');
+          }}><Icon icon="tabler:analyze" width={18}/><span>{zh ? '数据分析' : 'Analytics'}</span></button>
           <div className="my-1 border-t border-default-100" />
           <button type="button" className={`${rowClass} !text-danger`} onClick={async () => {
             close(); await signOut({ callbackUrl:'/signin', redirect:false }); navigate('/signin');

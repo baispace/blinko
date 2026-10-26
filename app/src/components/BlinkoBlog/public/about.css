@@ -1,0 +1,571 @@
+/*
+ * 关于页（「关于我」）的样式层。
+ *
+ * 这一页是访客认识作者的第一站，结构顺序固定：
+ *   个人介绍 → 站点数据 → 我在记录什么 → 用几篇文章认识我
+ *   → 最近动态 → 订阅引导 → 关于这个空间
+ *
+ * 三条视觉约定：
+ *   1. 所有区块标题同一套字号、字重与左边缘，标题一律在容器外；
+ *   2. 桌面端单列，区块之间靠留白和细分隔线分开，不堆卡片；
+ *   3. 暗色只换语义色，不换结构 —— 暗色下不残留亮色底和高饱和装饰。
+ */
+
+.ink-blog .ink-about {
+  padding: 40px 0 64px;
+}
+
+/* 容器跟全站同宽（.ink-wrap 那一档）。
+   原来这里收在 960px：正文读起来舒服，但整页比其它页面窄一截，
+   从首页点进来像换了个站点 —— 原型的关于页跟其它页一样宽。 */
+.ink-blog .ink-about-inner {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+/* ---------- 统一区块标题 ---------- */
+.ink-blog .ink-about-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ink-blog .ink-about-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-about-sub {
+  margin: -6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* 标题行右侧的入口（「浏览全部文章」「查看全部动态」）。 */
+.ink-blog .ink-about-titlebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.ink-blog .ink-about-titlebar .ink-about-title {
+  margin: 0;
+}
+
+.ink-blog .ink-about-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13.5px;
+  color: var(--ink-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ink-blog .ink-about-more:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 1. 个人介绍 ---------- */
+/*
+ * 首屏跟原型同构：左边一张作者卡，右边是关于我的文字，
+ * 两栏在同一个面板里、上下齐着中线。
+ *
+ * 原来是「左文字 + 右大头像照片」：照片跟作者卡重复了同一个身份，
+ * 作者卡本身才是这个站点的标识（跟首页侧栏用的是同一个组件）。
+ */
+.ink-blog .ink-about-hero {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 30px;
+  border: 1px solid var(--ink-line);
+  border-radius: 18px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-about-hero-card {
+  min-width: 0;
+}
+
+.ink-blog .ink-about-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ink-blog .ink-about-hero-name {
+  margin: 14px 0 0;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+
+/* 一句话介绍当二级标题：原型里它就是 h2，介绍与名字分两级。 */
+.ink-blog .ink-about-hero-tagline {
+  margin: 10px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-about-hero-bio {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-about-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ink-blog .ink-about-hero-actions .ink-primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ---------- 3. 我在记录什么 ---------- */
+.ink-blog .ink-about-topics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ink-blog .ink-about-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.ink-blog .ink-about-topic:hover {
+  border-color: var(--ink-accent);
+  transform: translateY(-1px);
+}
+
+.ink-blog .ink-about-topic:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+.ink-blog .ink-about-topic-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ink-blog .ink-about-topic-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+}
+
+.ink-blog .ink-about-topic-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ink-blog .ink-about-topic-arrow {
+  flex: none;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-about-topic-desc {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- 4. 用几篇文章，认识我 ---------- */
+.ink-blog .ink-about-featured-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ink-blog .ink-about-featured-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--ink-line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.ink-blog .ink-about-featured-row:last-child {
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-blog .ink-about-featured-row:hover .ink-about-featured-title {
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-about-featured-row:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.ink-blog .ink-about-featured-cover {
+  width: 88px;
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-about-featured-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ink-blog .ink-about-featured-body {
+  min-width: 0;
+}
+
+.ink-blog .ink-about-featured-topic {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ink-blog .ink-about-featured-title {
+  margin: 4px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ink-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ink-blog .ink-about-featured-reason {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ink-blog .ink-about-featured-arrow {
+  color: var(--ink-muted);
+}
+
+/* ---------- 5. 最近动态 ---------- */
+.ink-blog .ink-about-moments {
+  display: flex;
+  flex-direction: column;
+}
+
+.ink-blog .ink-about-moment {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--ink-line);
+}
+
+.ink-blog .ink-about-moment:last-child {
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-blog .ink-about-moment-date {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ink-blog .ink-about-moment-date b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-about-moment-body {
+  min-width: 0;
+}
+
+.ink-blog .ink-about-moment-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-about-moment-text.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ink-blog .ink-about-moment-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ink-blog .ink-about-moment-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 加载占位：行数与真实内容一致，内容到位时下方区块不会被顶走。 */
+.ink-blog .ink-about-skeleton-line {
+  display: block;
+  width: 100%;
+  height: 17px;
+  border-radius: 6px;
+  background: var(--ink-line);
+  opacity: 0.7;
+}
+
+.ink-blog .ink-about-moments-foot {
+  margin-top: 14px;
+}
+
+/* ---------- 6. 订阅引导 ---------- */
+.ink-blog .ink-about-subscribe {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-about-subscribe-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-about-subscribe-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-about-subscribe .ink-primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  flex: none;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---------- 7. 关于这个空间 ---------- */
+.ink-blog .ink-about-space {
+  padding: 20px 22px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-about-space-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-about-space-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ink-line);
+}
+
+.ink-blog .ink-about-space-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  color: var(--ink-accent);
+  text-decoration: none;
+}
+
+.ink-blog .ink-about-space-links a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 900px) {
+  .ink-blog .ink-about-topics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ink-blog .ink-about {
+    padding: 26px 0 48px;
+  }
+  .ink-blog .ink-about-inner {
+    width: calc(100% - 32px);
+    gap: 34px;
+  }
+  /* 窄屏跟原型一样收成一列：作者卡在上，文字在下。 */
+  .ink-blog .ink-about-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 18px;
+  }
+  .ink-blog .ink-about-hero-name {
+    font-size: 30px;
+  }
+  .ink-blog .ink-about-hero-tagline {
+    font-size: 19px;
+  }
+  .ink-blog .ink-about-title {
+    font-size: 17px;
+  }
+  .ink-blog .ink-about-featured-row {
+    grid-template-columns: 68px minmax(0, 1fr) 18px;
+    gap: 12px;
+  }
+  .ink-blog .ink-about-featured-cover {
+    width: 68px;
+  }
+  .ink-blog .ink-about-moment {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .ink-blog .ink-about-moment-date {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .ink-blog .ink-about-moment-date b {
+    display: inline;
+  }
+  .ink-blog .ink-about-subscribe {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+  .ink-blog .ink-about-subscribe .ink-primary-button {
+    margin-left: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ink-blog .ink-about-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-blog .ink-about-subscribe .ink-primary-button {
+    margin-left: 0;
+  }
+}
+
+/* 尊重系统的「减少动画」偏好。 */
+@media (prefers-reduced-motion: reduce) {
+  .ink-blog .ink-about-topic {
+    transition: none;
+  }
+  .ink-blog .ink-about-topic:hover {
+    transform: none;
+  }
+}

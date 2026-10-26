@@ -19,6 +19,18 @@ export function buildDailyTaskPatch(task: { content: string; metadata?: any; isA
     }
     metadata.expireAt = next;
   }
+  // A daily plan is separate from the deadline and the original start date.
+  if (action.planDate != null) metadata.planDate = action.planDate || null;
+  if (action.nextStep?.trim()) metadata.nextStep = action.nextStep.trim();
+  if (action.progress?.trim()) {
+    const entry = { at: now.toISOString(), date: new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now), content: action.progress.trim(), nextStep: action.nextStep?.trim() || '' };
+    const previous = Array.isArray(metadata.progressHistory) ? metadata.progressHistory : [];
+    metadata.progressHistory = previous.some((item: any) => item.date === entry.date && item.content === entry.content && item.nextStep === entry.nextStep) ? previous : [...previous, entry];
+    metadata.latestProgress = entry.content;
+  }
+  if (action.status === 'done') { metadata.taskStatus = 'done'; if (!action.nextStep?.trim()) metadata.nextStep = ''; }
+  else if (action.status === 'open') metadata.taskStatus = !task.isArchived && metadata.taskStatus && !['todo', 'delayed', 'done'].includes(metadata.taskStatus) ? metadata.taskStatus : action.progress?.trim() || action.nextStep?.trim() ? 'doing' : 'todo';
+  else if (!task.isArchived && action.progress?.trim() && (!metadata.taskStatus || ['todo', 'delayed'].includes(metadata.taskStatus))) metadata.taskStatus = 'doing';
   if (action.status !== null) metadata.completedAt = action.status === 'done' ? metadata.completedAt || now.toISOString() : null;
   return { content, metadata, ...(action.status !== null ? { isArchived: action.status === 'done' } : {}) };
 }

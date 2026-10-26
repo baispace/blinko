@@ -493,7 +493,7 @@ export class FileService {
         
         const s3Url = `/api/s3file/${s3Key}`;
 
-        await FileService.createAttachment({
+        const attachment = await FileService.createAttachment({
           path: s3Url,
           name: originalName,
           size: fileSize,
@@ -501,7 +501,7 @@ export class FileService {
           accountId,
           metadata
         });
-        return { filePath: s3Url, fileName: originalName };
+        return { filePath: s3Url, fileName: originalName, id: attachment.id };
 
       } else {
         let customPath = config.localCustomPath || '';
@@ -541,7 +541,7 @@ export class FileService {
               reject(err);
             });
         });
-        await FileService.createAttachment({
+        const attachment = await FileService.createAttachment({
           path: `/api/file/${relativePath}`,
           name: timestampedFileName,
           size: fileSize,
@@ -552,7 +552,8 @@ export class FileService {
         });
         return {
           filePath: `/api/file/${relativePath}`,
-          fileName: timestampedFileName
+          fileName: timestampedFileName,
+          id: attachment.id
         };
       }
     } catch (error) {
@@ -574,7 +575,8 @@ export class FileService {
 
     const prefixPath = pathParts.slice(0, -1).join(',');
 
-    await prisma.attachments.create({
+    // 返回新建的附件行：调用方（例如动态图片）需要 attachmentId 去关联资源。
+    return prisma.attachments.create({
       data: {
         path,
         name,
@@ -588,7 +590,6 @@ export class FileService {
       }
     })
   }
-
   static async renameFile(oldPath: string, newName: string) {
     const config = await getGlobalConfig({ useAdmin: true });
 

@@ -1,0 +1,390 @@
+/*
+ * 博客「数据分析」页的样式层。
+ *
+ * 变量与配色全部复用博客站的 --ink-* token（blog.css），面板、按钮、字段
+ * 也复用管理后台的 .ink-mg-* 组件类（manage.css）。这里只补这一页独有的
+ * 结构：指标卡、来源条、文章表与下钻抽屉。
+ *
+ * 响应式：≤1080px 指标卡改两列、趋势与来源改上下堆叠；
+ *         ≤760px 指标卡改单列，文章表允许横向滚动而不撑破页面。
+ */
+
+.ink-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- 工具条 ---------- */
+.ink-stats-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ink-stats-custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-surface);
+}
+.ink-stats-custom .ink-mg-field {
+  width: 150px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.ink-stats-toolbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- 指标卡 ---------- */
+.ink-stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.ink-stats-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+.ink-stats-metric-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-stats-metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+}
+.ink-stats-metric-hint {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* ---------- 趋势 / 来源 ---------- */
+.ink-stats-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.ink-stats-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ink-stats-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ink-stats-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-text);
+}
+.ink-stats-source-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+.ink-stats-source-bar {
+  height: 8px;
+  margin: 4px 0 2px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  overflow: hidden;
+}
+.ink-stats-source-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink-accent);
+}
+
+/* ---------- 文章表 ---------- */
+.ink-stats-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-surface);
+  color: var(--ink-muted);
+}
+.ink-stats-search .ink-mg-field {
+  width: 190px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+}
+.ink-stats-tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+}
+.ink-stats-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ink-stats-table th,
+.ink-stats-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--ink-line);
+  vertical-align: middle;
+}
+.ink-stats-table thead th {
+  background: var(--ink-tint);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.ink-stats-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.ink-stats-table tbody tr:hover {
+  background: var(--ink-tint);
+}
+.ink-stats-title-col {
+  max-width: 320px;
+}
+.ink-stats-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ink-stats-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-accent);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-stats-link:hover {
+  text-decoration: underline;
+}
+.ink-stats-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ink-stats-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ink-stats-sort[aria-pressed="true"] {
+  color: var(--ink-accent);
+}
+.ink-stats-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- 下钻抽屉 ---------- */
+.ink-stats-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+.ink-stats-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ink-stats-drawer-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-stats-drawer-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 第三方与说明 ---------- */
+.ink-stats-thirdparty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ink-stats-notes {
+  padding: 12px 14px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+.ink-stats-notes summary {
+  cursor: pointer;
+  color: var(--ink-text);
+  font-weight: 600;
+}
+.ink-stats-notes ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.7;
+}
+.ink-stats-notes code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--ink-tint);
+  font-size: 11.5px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1080px) {
+  .ink-stats-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ink-stats-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .ink-stats-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-stats-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ink-stats-custom {
+    width: 100%;
+  }
+  .ink-stats-custom .ink-mg-field {
+    flex: 1 1 120px;
+    width: auto;
+    min-width: 0;
+  }
+  .ink-stats-search {
+    width: 100%;
+  }
+  .ink-stats-search .ink-mg-field {
+    width: 100%;
+  }
+  .ink-stats-pager {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+#stats-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ink-stats-audience-depth {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+.ink-stats-audience-depth p {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ink-stats-audience-depth strong {
+  font-size: 26px;
+}
+.ink-stats-audience-depth span {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.ink-stats-metric > strong,
+.ink-stats-metric > span {
+  display: block;
+}
+@media (max-width: 600px) {
+  .ink-stats-audience-depth {
+    gap: 10px;
+  }
+}
+.ink-stats-toolbar-meta > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: 76px;
+}
+@media (max-width: 600px) {
+  .ink-stats .ink-stats-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ink-stats .ink-stats-metric {
+    min-width: 0;
+  }
+  .ink-stats .ink-stats-metric-value {
+    font-size: 26px;
+  }
+}

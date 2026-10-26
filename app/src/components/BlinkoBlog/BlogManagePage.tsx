@@ -1,446 +1,1132 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { observer } from 'mobx-react-lite';
-import { api } from '@/lib/trpc';
-import { RootStore } from '@/store';
-import { BlinkoStore } from '@/store/blinkoStore';
-import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { Icon } from '@/components/Common/Iconify/icons';
-import { getAvatarUrl } from '@/lib/profileIdentity';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
+import { Slider } from "@heroui/react";
+import { confirmBlogAction } from "./confirmBlogAction";
+import { markBlogManager } from "@/lib/blogDevice";
+import { BlogSiteSettingsPanel } from "./BlogSiteSettingsPanel";
+import { ContentSeoPanel } from "./ContentSeoPanel";
+import "./blog.css";
+import "./manage.css";
+import "./studio.css";
+import { BlogStudioNav } from "./BlogStudioNav";
+import { BlogContentList } from "./BlogContentList";
+import { RowMenu } from "./RowMenu";
+import {
+  STUDIO_SECTION_KEYS,
+  STUDIO_SECTION_META,
+  type StudioSection,
+} from "./studioNav";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "@/lib/trpc";
+import axios from "@/lib/axios";
+import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
+import { getAvatarUrl } from "@/lib/profileIdentity";
+import { UserStore } from "@/store/user";
+import { RootStore } from "@/store";
+import { BlinkoStore } from "@/store/blinkoStore";
+import { ToastPlugin } from "@/store/module/Toast/Toast";
+import { DialogStore } from "@/store/module/Dialog";
+import NoteHistoryModal from "../BlinkoNoteHistory/NoteHistoryModal";
+import { Icon } from "@/components/Common/Iconify/icons";
+import { BlogStatsPanel } from "./BlogStatsPanel";
+import { BlogFriendsPanel } from "./BlogFriendsPanel";
+import { BlogMailSettingsPanel } from "./BlogMailSettingsPanel";
+import { BlogAboutConfig } from "./BlogAboutConfig";
+import { BlogFeedbackPanel } from "./BlogFeedbackPanel";
 
-type Published = Awaited<ReturnType<typeof api.blog.published.query>>[number];
+type Post = Awaited<ReturnType<typeof api.blog.published.query>>[number];
 type Topic = Awaited<ReturnType<typeof api.blog.topics.query>>[number];
 type Profile = Awaited<ReturnType<typeof api.blog.profile.query>>;
-type Section = 'posts' | 'profile' | 'topics';
+type Distribution = Awaited<ReturnType<typeof api.blog.distribution.query>>;
+type Section = StudioSection;
 
-const SECTIONS: { key: Section; label: string; hint: string }[] = [
-  { key: 'posts', label: '已发布文章', hint: '公开版本、封面与所属专题' },
-  { key: 'profile', label: '公开资料', hint: '对外展示的作者信息' },
-  { key: 'topics', label: '专题', hint: '博客的公开栏目' },
-];
+/** 公开站的主题也存这个键，管理页跟公开站保持同一套明暗。 */
+const THEME_KEY = "ink-blog-theme";
+function readTheme(): "light" | "dark" {
+  try {
+    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
 
-const card = 'rounded-xl border border-default-200 bg-background p-4';
-const btnBase = 'rounded-lg px-3 py-1.5 text-sm transition-colors disabled:opacity-50 focus-visible:outline-primary';
-const btnGhost = `${btnBase} text-default-600 hover:bg-default-100`;
-const btnPrimary = `${btnBase} bg-primary text-primary-foreground hover:opacity-90`;
-const btnDanger = `${btnBase} text-danger hover:bg-danger/10`;
-const field =
-  'w-full rounded-lg border border-default-200 bg-content1 px-3 py-2 text-sm outline-none focus-visible:border-primary';
-const label = 'mb-1.5 block text-xs font-medium text-default-600';
+function notify(error: unknown) {
+  RootStore.Get(ToastPlugin).error(
+    error instanceof Error ? error.message : "操作失败，请重试",
+  );
+}
+function imageUrl(path: string) {
+  const endpoint = getBlinkoEndpoint("/"),
+    token = RootStore.Get(UserStore).token || "";
+  const result = getAvatarUrl(path, token, endpoint);
+  try {
+    const url = new URL(result),
+      base = new URL(endpoint);
+    if (
+      url.origin === base.origin &&
+      url.pathname.startsWith("/api/s3file/") &&
+      token
+    )
+      url.searchParams.set("token", token);
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+function useLeaveGuard(dirty: boolean) {
+  useEffect(() => {
+    const guard = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    if (dirty) addEventListener("beforeunload", guard);
+    return () => removeEventListener("beforeunload", guard);
+  }, [dirty]);
+}
 
-// 正文是编辑器 HTML，首行常是「## 小标题」这类残留，读起来不是标题。
-// 优先用笔记自己的标题字段，实在没有再从正文里扒一行。
-const publishedTitle = (item: { content: string; metadata?: unknown }) => {
-  const meta = item.metadata as { title?: string } | null | undefined;
-  const title = String(meta?.title ?? '').replace(/<[^>]*>/g, '').trim();
-  if (title) return title.slice(0, 40);
-  const text = item.content.replace(/<[^>]*>/g, '').replace(/^#{1,6}\s*/, '').trim();
-  return (text.split('\n').find(l => l.trim()) || '无标题').slice(0, 40);
+/** 专题树：按 parentId 分组，父在前、子按原顺序。 */
+function topicChildren(topics: Topic[], parentId: number | null) {
+  return topics.filter((t) => (t.parentId ?? null) === parentId);
+}
+
+const DISTRIBUTION_LABELS: Record<
+  Distribution["mode"],
+  { title: string; desc: string }
+> = {  recency: {
+    title: "按发布时间",
+    desc: "越新越靠前，适合刚起步、还没有阅读数据的站点。",
+  },
+  clicks: {
+    title: "按点击数",
+    desc: "被点得多的排前面，冷启动阶段容易被少数几篇锁死。",
+  },
+  ctr: {
+    title: "按曝光点击率",
+    desc: "曝光多但点得少的不占位，更能筛出真正合口味的内容。",
+  },
+  blended: {
+    title: "综合排序",
+    desc: "新品分、热度分、质量分、主题亲和与搜索命中的加权和。",
+  },
 };
 
-function CoverPicker({ item, onDone }: { item: Published; onDone: () => void }) {
+function ProfileEditor({
+  profile,
+  posts,
+  topics,
+  reload,
+  onDirty,
+}: {
+  profile: Profile;
+  posts: Post[];
+  topics: Topic[];
+  reload: () => Promise<void>;
+  onDirty: (dirty: boolean) => void;
+}) {
+  const base = useMemo(
+    () => ({
+      displayName: profile.displayName,
+      tagline: profile.tagline,
+      bio: profile.bio,
+      avatarUrl: profile.avatarUrl,
+      homepage: profile.homepage,
+      links: profile.links ?? [],
+      isPublished: profile.isPublished,
+      // 关于页的三项配置：站点说明、签名、精选与展示专题。
+      spaceIntro: profile.spaceIntro ?? "",
+      signature: profile.signature ?? "",
+      featuredPosts: (profile.featuredPosts ?? []).map((f) => ({
+        noteId: f.noteId,
+        reason: f.reason ?? "",
+      })),
+      aboutTopicIds: profile.aboutTopicIds ?? [],
+    }),
+    [profile],
+  );
+  const [draft, setDraft] = useState(base);
   const [busy, setBusy] = useState(false);
-  const images = item.attachments.filter(a => /^image\//.test(a.type));
-  const current = images.find(a => a.id === item.publication?.coverAttachmentId);
-
-  const pick = async (attachmentId: number | null) => {
+  const [error, setError] = useState("");
+  const [bio, setBio] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const file = useRef<HTMLInputElement>(null);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(base);
+  useLeaveGuard(dirty);
+  useEffect(() => onDirty(dirty), [dirty, onDirty]);
+  useEffect(() => setDraft(base), [base]);
+  const patch = (p: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...p }));
+  const upload = async (files: FileList | null) => {
+    const f = files?.[0];
+    if (!f) return;
+    if (
+      !/^image\/(png|jpeg|webp|gif|avif)$/.test(f.type) ||
+      f.size > 10 * 1024 * 1024
+    ) {
+      setError("头像请选择 10MB 以内的常见图片格式");
+      return;
+    }
     setBusy(true);
     try {
-      await api.blog.setCover.mutate({ noteId: item.id, attachmentId });
-      RootStore.Get(ToastPlugin).success(attachmentId ? '已更新公开封面' : '已移除公开封面');
-      onDone();
+      const form = new FormData();
+      form.append("file", f);
+      const res = await axios.post(getBlinkoEndpoint("/api/file/upload"), form);
+      if (!res.data.filePath) throw new Error("上传失败");
+      patch({ avatarUrl: res.data.filePath });
     } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '设置封面失败');
+      setError(e.message);
     } finally {
       setBusy(false);
+      if (file.current) file.current.value = "";
     }
   };
-
-  if (!images.length) {
-    return <p className="mt-2 text-xs text-default-500">这篇笔记还没有图片附件，先在笔记里添加图片才能设封面。</p>;
-  }
-  return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      {images.map(a => (
-        <button
-          key={a.id}
-          type="button"
-          disabled={busy}
-          onClick={() => pick(a.id === current?.id ? null : a.id)}
-          title={a.name}
-          className={`relative size-14 overflow-hidden rounded-lg border-2 transition-colors disabled:opacity-50 ${
-            a.id === current?.id ? 'border-primary' : 'border-default-200 hover:border-default-300'
-          }`}
-        >
-          <img src={a.path} alt={a.name} className="size-full object-cover" loading="lazy" />
-          {a.id === current?.id && (
-            <span className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
-              <Icon icon="lucide:check" width={11} height={11} />
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function TopicPicker({ item, topics, onDone }: { item: Published; topics: Topic[]; onDone: () => void }) {
-  const [busy, setBusy] = useState(false);
-  // 注意：assignTopics 收的是「这个专题应该包含哪些笔记」，不是「这篇笔记属于哪些专题」。
-  // 两个数组的元素含义不同，混用会把专题 id 当笔记 id 发出去。
-  const inTopic = (topicId: number) => topics.find(t => t.id === topicId)?.noteIds.includes(item.id) ?? false;
-
-  const toggle = async (topic: Topic) => {
-    setBusy(true);
-    try {
-      const current = topics.find(t => t.id === topic.id)?.noteIds ?? [];
-      const next = inTopic(topic.id) ? current.filter(id => id !== item.id) : [...current, item.id];
-      await api.blog.assignTopics.mutate({ topicId: topic.id, noteIds: next });
-      onDone();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '专题调整失败');
-    } finally {
-      setBusy(false);
-    }
-  };
-  if (!topics.length) return <p className="mt-2 text-xs text-default-500">还没有专题，先到「专题」里建一个。</p>;
-  return (
-    <div className="mt-2">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {topics.map(t => {
-          const on = inTopic(t.id);
-          return (
-            <button
-              key={t.id}
-              type="button"
-              disabled={busy}
-              onClick={() => toggle(t)}
-              className={`rounded-full border px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
-                on ? 'border-transparent text-white' : 'border-default-200 text-default-600 hover:bg-default-100'
-              }`}
-              style={on ? { background: t.color || '#7055f8' } : undefined}
-            >
-              {t.name}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const PublishedRow = observer(({ item, topics, onReload }: { item: Published; topics: Topic[]; onReload: () => void }) => {
-  const [panel, setPanel] = useState<'none' | 'cover' | 'topics'>('none');
-  const [busy, setBusy] = useState(false);
-  const live = item.isPublished;
-  const cover = item.attachments.find(a => a.id === item.publication?.coverAttachmentId);
-
-  const withdraw = async () => {
-    if (!confirm(`撤回《${publishedTitle(item)}》的发布？公开链接会立即失效。`)) return;
-    setBusy(true);
-    try {
-      await api.notes.publishNote.mutate({ id: item.id, isCancel: true });
-      RootStore.Get(ToastPlugin).success('已撤回，公开链接已停止访问');
-      RootStore.Get(BlinkoStore).updateTicker++;
-      onReload();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '撤回失败');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <article className={card}>
-      <div className="flex gap-3">
-        <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-default-100 text-default-400">
-          {cover ? <img src={cover.path} alt="封面" className="size-full object-cover" loading="lazy" />
-            : <Icon icon="tabler:photo" width={20} height={20} />}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-medium">{publishedTitle(item)}</h3>
-            <span className={`rounded-full px-2 py-0.5 text-[11px] ${live ? 'bg-primary/10 text-primary' : 'bg-default-100 text-default-500'}`}>
-              {live ? '已发布' : '已撤回'}
-            </span>
-            {live && item.hasDraftChanges && (
-              <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] text-warning">草稿有更新</span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-default-500">
-            公开版本 {item.publication?.revision ?? 1} · 更新于 {new Date(item.publication?.updatedAt ?? item.updatedAt).toLocaleString()}
-          </p>
-          {item.topics.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
-              {item.topics.map(t => (
-                <span key={t.id} className="rounded-full px-2 py-0.5 text-[11px] text-white" style={{ background: t.color || '#7055f8' }}>{t.name}</span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-default-100 pt-3">
-        {live && item.publishId && (
-          <a className={btnGhost} href={`/blog/${item.publishId}`} target="_blank" rel="noopener noreferrer">
-            <Icon icon="tabler:external-link" width={14} height={14} /> 打开公开页
-          </a>
-        )}
-        <button type="button" className={btnGhost} onClick={() => setPanel(panel === 'cover' ? 'none' : 'cover')}>封面</button>
-        <button type="button" className={btnGhost} onClick={() => setPanel(panel === 'topics' ? 'none' : 'topics')}>所属专题</button>
-        {live && <button type="button" className={btnDanger} disabled={busy} onClick={withdraw}>撤回发布</button>}
-      </div>
-
-      {panel === 'cover' && <CoverPicker item={item} onDone={onReload} />}
-      {panel === 'topics' && <TopicPicker item={item} topics={topics} onDone={onReload} />}
-    </article>
-  );
-});
-
-const TopicsSection = observer(({ topics, onReload }: { topics: Topic[]; onReload: () => void }) => {
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [desc, setDesc] = useState('');
-  const [color, setColor] = useState('#7055f8');
-  const [busy, setBusy] = useState(false);
-
-  const create = async () => {
-    if (!name.trim()) return;
-    setBusy(true);
-    try {
-      await api.blog.createTopic.mutate({ name: name.trim(), slug: slug.trim() || undefined, desc, color, isPublished: true });
-      setName(''); setSlug(''); setDesc('');
-      RootStore.Get(ToastPlugin).success('专题已创建');
-      onReload();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '创建失败');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const togglePublish = async (t: Topic) => {
-    try {
-      await api.blog.updateTopic.mutate({ id: t.id, isPublished: !t.isPublished });
-      onReload();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '操作失败');
-    }
-  };
-
-  const move = async (index: number, delta: number) => {
-    const next = [...topics];
-    const target = index + delta;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
-    try {
-      await api.blog.reorderTopics.mutate({ orderedIds: next.map(t => t.id) });
-      onReload();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '排序失败');
-    }
-  };
-
-  const remove = async (t: Topic) => {
-    if (!confirm(`删除专题「${t.name}」？已归入的文章不会被删除。`)) return;
-    try {
-      await api.blog.deleteTopic.mutate({ id: t.id });
-      RootStore.Get(ToastPlugin).success('专题已删除');
-      onReload();
-    } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '删除失败');
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className={card}>
-        <h3 className="text-sm font-medium">新建专题</h3>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div><label className={label}>名称</label><input className={field} value={name} onChange={e => setName(e.target.value)} placeholder="如：产品思考" /></div>
-          <div><label className={label}>标识（URL 片段）</label><input className={field} value={slug} onChange={e => setSlug(e.target.value)} placeholder="留空自动生成" /></div>
-        </div>
-        <div className="mt-3"><label className={label}>简介</label><input className={field} value={desc} onChange={e => setDesc(e.target.value)} placeholder="一句话说明这个专题写什么" /></div>
-        <div className="mt-3 flex items-center gap-3">
-          <div><label className={label}>颜色</label><input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-9 w-16 cursor-pointer rounded-lg border border-default-200 bg-content1" /></div>
-          <button type="button" className={`${btnPrimary} mt-4`} disabled={busy || !name.trim()} onClick={create}>创建并启用</button>
-        </div>
-      </div>
-
-      {topics.length === 0 && <p className="rounded-xl border border-dashed border-default-200 p-8 text-center text-sm text-default-500">还没有专题</p>}
-
-      {topics.map((t, i) => (
-        <div key={t.id} className={`${card} flex flex-wrap items-center gap-3`}>
-          <span className="size-3 shrink-0 rounded-full" style={{ background: t.color || '#7055f8' }} />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium">{t.name}</span>
-              <code className="rounded bg-default-100 px-1.5 py-0.5 text-[11px] text-default-500">/{t.slug}</code>
-              {!t.isPublished && <span className="rounded-full bg-default-100 px-2 py-0.5 text-[11px] text-default-500">未公开</span>}
-            </div>
-            <p className="mt-0.5 text-xs text-default-500">{t.desc || '暂无简介'} · {t.noteIds.length} 篇</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button type="button" className={btnGhost} disabled={i === 0} onClick={() => move(i, -1)} aria-label={`${t.name} 上移`}>上移</button>
-            <button type="button" className={btnGhost} disabled={i === topics.length - 1} onClick={() => move(i, 1)} aria-label={`${t.name} 下移`}>下移</button>
-            <button type="button" className={btnGhost} onClick={() => togglePublish(t)}>{t.isPublished ? '停用' : '启用'}</button>
-            <button type="button" className={btnDanger} onClick={() => remove(t)}>删除</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-});
-
-const ProfileSection = observer(({ profile, onReload }: { profile: Profile; onReload: () => void }) => {
-  const [draft, setDraft] = useState({ displayName: '', tagline: '', bio: '', avatarUrl: '', homepage: '', isPublished: false });
-  const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    setDraft({ displayName: profile.displayName, tagline: profile.tagline, bio: profile.bio, avatarUrl: profile.avatarUrl, homepage: profile.homepage, isPublished: profile.isPublished });
-    setLinks(profile.links ?? []);
-  }, [profile]);
-
   const save = async () => {
     setBusy(true);
+    setError("");
     try {
-      await api.blog.saveProfile.mutate({ ...draft, links });
-      RootStore.Get(ToastPlugin).success('公开资料已保存');
-      onReload();
+      await api.blog.saveProfile.mutate({
+        ...draft,
+        // 没挑完的槽位不下发 —— 空槽留着只会让公开页多出一行空白。
+        featuredPosts: draft.featuredPosts
+          .filter((f) => Number.isInteger(f.noteId) && f.noteId > 0)
+          .map((f) => ({ noteId: f.noteId as number, reason: f.reason })),
+      });
+      await reload();
+      RootStore.Get(ToastPlugin).success("公开资料已保存");
     } catch (e: any) {
-      RootStore.Get(ToastPlugin).error(e.message || '保存失败');
+      setError(e.message);
     } finally {
       setBusy(false);
     }
   };
-
-  const set = (patch: Partial<typeof draft>) => setDraft(d => ({ ...d, ...patch }));
-
   return (
-    <div className="space-y-3">
-      <div className={card}>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-medium">对外展示的资料</h3>
-            <p className="mt-1 text-xs text-default-500">这些字段与账号资料互相独立，只有这里填写的内容才会公开。</p>
+    <div className="ink-mg-grid-2" style={{ alignItems: "start" }}>
+      <div className="ink-mg-section">
+        {error && <div className="ink-mg-alert">{error}</div>}
+        <div className="ink-mg-panel">
+          <div className="ink-mg-section-head">
+            <h2 className="ink-mg-section-title">作者与公开资料</h2>
+            {dirty && <BlogChip color="warning" variant="flat">有未保存修改</BlogChip>}
           </div>
-          <button type="button" role="switch" aria-checked={draft.isPublished} onClick={() => set({ isPublished: !draft.isPublished })}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${draft.isPublished ? 'bg-primary' : 'bg-default-200'}`}>
-            <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${draft.isPublished ? 'left-[22px]' : 'left-0.5'}`} />
-          </button>
+          <p className="ink-mg-sub" style={{ marginTop: 8 }}>
+            与登录账号资料独立。只有明确开启公开并保存的内容才对外展示。
+          </p>
+          <label className="ink-mg-switch" style={{ marginTop: 12 }}>
+            <BlogCheckbox aria-label="公开作者资料（保存后生效）"
+              type="checkbox"
+              checked={draft.isPublished}
+              onChange={(e) => patch({ isPublished: e.target.checked })}
+            />
+            公开作者资料（保存后生效）
+          </label>
         </div>
-        <p className="mt-2 text-xs text-default-500">{draft.isPublished ? '已公开：博客页会展示这份资料。' : '未公开：博客页不展示任何资料。'}</p>
+        <div className="ink-mg-panel ink-mg-section" style={{ gap: 14 }}>
+          <div className="ink-mg-grid-2">
+            <label className="ink-mg-section" style={{ gap: 6 }}>
+              <span className="ink-mg-sub">公开名称</span>
+              <BlogInput
+                className="ink-mg-field"
+                maxLength={80}
+                placeholder="你的公开名称"
+                value={draft.displayName}
+                onChange={(e) => patch({ displayName: e.target.value })}
+              />
+            </label>
+            <label className="ink-mg-section" style={{ gap: 6 }}>
+              <span className="ink-mg-sub">一句话介绍</span>
+              <BlogInput
+                className="ink-mg-field"
+                maxLength={160}
+                value={draft.tagline}
+                onChange={(e) => patch({ tagline: e.target.value })}
+              />
+            </label>
+          </div>
+          <label className="ink-mg-section" style={{ gap: 6 }}>
+            <span className="ink-mg-sub">个人介绍</span>
+            <BlogTextarea
+              className="ink-mg-field"
+              rows={6}
+              maxLength={5000}
+              value={draft.bio}
+              onChange={(e) => patch({ bio: e.target.value })}
+            />
+          </label>
+          <label className="ink-mg-section" style={{ gap: 6 }}>
+            <span className="ink-mg-sub">头像地址</span>
+            <BlogInput
+              className="ink-mg-field"
+              value={draft.avatarUrl}
+              onChange={(e) => patch({ avatarUrl: e.target.value })}
+              placeholder="公开图片网址，或上传图片"
+            />
+          </label>
+          <input
+            ref={file}
+            type="file"
+            className="hidden"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+            aria-label="上传公开头像"
+            onChange={(e) => void upload(e.target.files)}
+          />
+          <BlogButton
+            className="ink-mg-button"
+            disabled={busy}
+            onClick={() => file.current?.click()}
+            style={{ alignSelf: "flex-start" }}
+          >
+            上传头像
+          </BlogButton>
+          <label className="ink-mg-section" style={{ gap: 6 }}>
+            <span className="ink-mg-sub">个人主页</span>
+            <BlogInput
+              className="ink-mg-field"
+              value={draft.homepage}
+              onChange={(e) => patch({ homepage: e.target.value })}
+              placeholder="https://example.com"
+            />
+          </label>
+        </div>
+        <div className="ink-mg-panel">
+          <div className="ink-mg-section-head">
+            <h3 className="ink-mg-section-title">其他站点与相关链接</h3>
+            <BlogButton
+              className="ink-mg-button"
+              disabled={draft.links.length >= 12}
+              onClick={() =>
+                patch({ links: [...draft.links, { label: "", url: "" }] })
+              }
+            >
+              ＋ 添加
+            </BlogButton>
+          </div>
+          <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+            {draft.links.map((link, i) => (
+              <div key={i} style={{ display: "flex", gap: 8 }}>
+                <BlogInput
+                  className="ink-mg-field"
+                  style={{ width: 120, flex: "none" }}
+                  aria-label={`链接${i + 1}名称`}
+                  placeholder="名称"
+                  value={link.label}
+                  onChange={(e) =>
+                    patch({
+                      links: draft.links.map((l, j) =>
+                        j === i ? { ...l, label: e.target.value } : l,
+                      ),
+                    })
+                  }
+                />
+                <BlogInput
+                  className="ink-mg-field"
+                  style={{ minWidth: 0 }}
+                  aria-label={`链接${i + 1}地址`}
+                  placeholder="https://"
+                  value={link.url}
+                  onChange={(e) =>
+                    patch({
+                      links: draft.links.map((l, j) =>
+                        j === i ? { ...l, url: e.target.value } : l,
+                      ),
+                    })
+                  }
+                />
+                <BlogButton
+                  className="ink-mg-mini"
+                  aria-label={`移除链接${i + 1}`}
+                  onClick={() =>
+                    patch({ links: draft.links.filter((_, j) => j !== i) })
+                  }
+                >
+                  ×
+                </BlogButton>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* 关于页的可配置项：紧跟在公开资料后面，不另开管理分区。 */}
+        <BlogAboutConfig
+          draft={draft}
+          patch={patch}
+          posts={posts}
+          topics={topics}
+        />
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <BlogButton
+            className="ink-mg-button-primary ink-mg-button"
+            disabled={busy || !dirty}
+            onClick={() => void save()}
+          >
+            {busy ? "保存中…" : "保存公开资料"}
+          </BlogButton>
+        </div>
       </div>
+      <aside>
+        <p className="ink-mg-sub" style={{ marginBottom: 8 }}>
+          待保存效果预览 · 悬浮或点击查看介绍
+        </p>
+        <div
+          className="flex min-h-80 flex-col rounded-2xl p-6 text-white"
+          style={{ background: "var(--ink-accent)" }}
+          onMouseEnter={() => {
+            if (matchMedia("(hover: hover)").matches) setHovered(true);
+          }}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <span className="self-center rounded-full bg-white/15 px-3 py-1 text-xs">
+            保持好奇，持续记录
+          </span>
+          <BlogButton
+            className="my-6 flex min-h-36 flex-1 items-center justify-center text-left"
+            aria-label="切换作者介绍预览"
+            onClick={() => setBio((v) => !v)}
+          >
+            {bio || hovered ? (
+              <p className="max-h-44 overflow-auto whitespace-pre-wrap text-sm leading-6">
+                {draft.bio || "填写个人介绍后，将在这里展示。"}
+              </p>
+            ) : draft.avatarUrl ? (
+              <img
+                src={imageUrl(draft.avatarUrl)}
+                alt="待保存头像"
+                className="size-28 rounded-full border-4 border-white object-cover"
+              />
+            ) : (
+              <Icon icon="tabler:user-circle" width={112} />
+            )}
+          </BlogButton>
+          <strong className="text-xl">{draft.displayName || "作者名称"}</strong>
+          <p className="mt-1 text-xs text-white/70">
+            {draft.tagline || "一句话介绍"}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {draft.links.map((l, i) => (
+              <span
+                key={i}
+                className="rounded-full bg-white/15 px-2 py-1 text-xs"
+              >
+                {l.label || "站点链接"}
+              </span>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
 
-      <div className={card}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div><label className={label}>展示名称</label><input className={field} value={draft.displayName} onChange={e => set({ displayName: e.target.value })} placeholder="如：Brian" /></div>
-          <div><label className={label}>一句话介绍</label><input className={field} value={draft.tagline} onChange={e => set({ tagline: e.target.value })} placeholder="保持好奇，持续记录" /></div>
+function DistributionEditor({
+  value,
+  reload,
+}: {
+  value: Distribution;
+  reload: () => Promise<void>;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => setDraft(value), [value]);
+  const patch = (p: Partial<Distribution>) => setDraft((d) => ({ ...d, ...p }));
+  const save = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await api.blog.saveDistribution.mutate({
+        mode: draft.mode,
+        freshWeight: draft.freshWeight,
+        hotWeight: draft.hotWeight,
+        qualityWeight: draft.qualityWeight,
+        affinityWeight: draft.affinityWeight,
+        searchWeight: draft.searchWeight,
+        freshHalfLife: draft.freshHalfLife,
+        hotHalfLife: draft.hotHalfLife,
+        featuredFirst: draft.featuredFirst,
+      });
+      await reload();
+      RootStore.Get(ToastPlugin).success("分发策略已保存");
+    } catch (e: any) {
+      setError(e.message || "保存失败，请重试");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const weights: [keyof Distribution, string, string][] = [
+    ["freshWeight", "新品分", "越新的文章分越高"],
+    ["hotWeight", "热度分", "近期点击与阅读的累积热度"],
+    ["qualityWeight", "质量分", "封面、标题、摘要、正文长度与专题归属"],
+    ["affinityWeight", "主题亲和", "与读者刚看过的主题的相关度"],
+    ["searchWeight", "搜索命中", "与站内搜索词的相关度"],
+  ];
+  return (
+    <div className="ink-mg-section">
+      <div className="ink-mg-section-head">
+        <div>
+          <h2 className="ink-mg-section-title">流量分发口径</h2>
+          <p className="ink-mg-sub" style={{ marginTop: 6 }}>
+            决定公开站「推荐」列表怎么排。「最新」始终按发布时间，不受这里影响。
+          </p>
         </div>
-        <div className="mt-3"><label className={label}>简介</label><textarea className={`${field} min-h-24 resize-y`} value={draft.bio} onChange={e => set({ bio: e.target.value })} placeholder="两三句介绍你自己" /></div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div><label className={label}>头像地址</label><input className={field} value={draft.avatarUrl} onChange={e => set({ avatarUrl: e.target.value })} placeholder="https:// 或 /api/file/…" /></div>
-          <div><label className={label}>个人主页</label><input className={field} value={draft.homepage} onChange={e => set({ homepage: e.target.value })} placeholder="https://example.com" /></div>
-        </div>
-        {draft.avatarUrl && (
-          <img className="mt-3 size-16 rounded-lg object-cover" alt="头像预览"
-            src={getAvatarUrl(draft.avatarUrl, '', getBlinkoEndpoint('/'))} />
+      </div>
+      {error && <div className="ink-mg-alert">{error}</div>}
+      <div className="ink-mg-modes" role="group" aria-label="分发口径">
+        {(Object.keys(DISTRIBUTION_LABELS) as Distribution["mode"][]).map(
+          (mode) => (
+            <BlogButton
+              key={mode}
+              type="button"
+              className="ink-mg-mode"
+              aria-pressed={draft.mode === mode}
+              onClick={() => patch({ mode })}
+            >
+              <b>{DISTRIBUTION_LABELS[mode].title}</b>
+              <small>{DISTRIBUTION_LABELS[mode].desc}</small>
+            </BlogButton>
+          ),
         )}
       </div>
 
-      <div className={card}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">相关链接</h3>
-          <button type="button" className={btnGhost} onClick={() => setLinks(l => [...l, { label: '', url: '' }])}>添加</button>
+      {draft.mode === "blended" ? (
+        <div className="ink-mg-panel">
+          <h3 className="ink-mg-section-title">综合排序权重</h3>
+          <div className="ink-mg-weights">
+            {weights.map(([key, label, desc]) => (
+              <div key={key} className="ink-mg-weight">
+                <span>
+                  {label}
+                  <small
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      color: "var(--ink-muted)",
+                    }}
+                  >
+                    {desc}
+                  </small>
+                </span>
+                <Slider
+                  aria-label={`${label}权重`}
+                  size="sm"
+                  minValue={0}
+                  maxValue={20}
+                  step={1}
+                  value={draft[key] as number}
+                  onChange={(value) =>
+                    patch({
+                      [key]: Number(Array.isArray(value) ? value[0] : value),
+                    } as Partial<Distribution>)
+                  }
+                  className="ink-mg-slider"
+                />
+                <output>{draft[key] as number}</output>
+              </div>
+            ))}
+          </div>
         </div>
-        {links.length === 0 && <p className="mt-2 text-xs text-default-500">还没有链接。</p>}
-        <div className="mt-3 space-y-2">
-          {links.map((l, i) => (
-            <div key={i} className="flex gap-2">
-              <input className={field} style={{ maxWidth: 160 }} value={l.label} placeholder="名称"
-                onChange={e => setLinks(prev => prev.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
-              <input className={field} value={l.url} placeholder="https://" 
-                onChange={e => setLinks(prev => prev.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))} />
-              <button type="button" className={btnDanger} aria-label="删除该链接" onClick={() => setLinks(prev => prev.filter((_, j) => j !== i))}>
-                <Icon icon="tabler:x" width={14} height={14} />
-              </button>
-            </div>
-          ))}
+      ) : (
+        <p className="ink-mg-note">
+          当前口径是单一因子，权重不参与计算。切到「综合排序」可以逐项调权重。
+        </p>
+      )}
+
+      <div className="ink-mg-panel ink-mg-section" style={{ gap: 12 }}>
+        <h3 className="ink-mg-section-title">时间衰减</h3>
+        <div className="ink-mg-grid-2">
+          <label className="ink-mg-section" style={{ gap: 6 }}>
+            <span className="ink-mg-sub">新品分半衰期（天）</span>
+            <BlogInput
+              className="ink-mg-field"
+              type="number"
+              min={0.5}
+              max={365}
+              step={0.5}
+              value={draft.freshHalfLife}
+              onChange={(e) =>
+                patch({ freshHalfLife: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label className="ink-mg-section" style={{ gap: 6 }}>
+            <span className="ink-mg-sub">热度分半衰期（天）</span>
+            <BlogInput
+              className="ink-mg-field"
+              type="number"
+              min={0.5}
+              max={365}
+              step={0.5}
+              value={draft.hotHalfLife}
+              onChange={(e) =>
+                patch({ hotHalfLife: Number(e.target.value) })
+              }
+            />
+          </label>
         </div>
+        <p className="ink-mg-sub">
+          半衰期越短，旧文章掉得越快。默认新品 14 天、热度 60 天。
+        </p>
+        <label className="ink-mg-switch">
+          <BlogCheckbox aria-label="手动精选的文章强制排在推荐列表最前"
+            type="checkbox"
+            checked={draft.featuredFirst}
+            onChange={(e) => patch({ featuredFirst: e.target.checked })}
+          />
+          手动精选的文章强制排在推荐列表最前
+        </label>
       </div>
 
-      <div className="flex justify-end">
-        <button type="button" className={btnPrimary} disabled={busy} onClick={save}>{busy ? '保存中…' : '保存公开资料'}</button>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <BlogButton
+          className="ink-mg-button-primary ink-mg-button"
+          disabled={busy}
+          onClick={() => void save()}
+        >
+          {busy ? "保存中…" : "保存分发策略"}
+        </BlogButton>
       </div>
     </div>
   );
-});
+}
 
-export const BlogManagePage = observer(() => {
-  const [section, setSection] = useState<Section>('posts');
-  const [published, setPublished] = useState<Published[] | null>(null);
+export function BlogManagePage() {
+  useEffect(() => { markBlogManager(); }, []);
+  const [seoTab,setSeoTab]=useState("content");
+  const [section, setSection] = useState<Section>("posts");
+  const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
+  const [distribution, setDistribution] = useState<Distribution | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  /** 封面资源分区自己的搜索：跟内容列表的筛选各走各的，不互相干扰。 */
+  const [coverKeyword, setCoverKeyword] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [theme, setTheme] = useState(readTheme);
+  /**
+   * 侧边栏折叠状态记在本地：桌面端折叠过一次，
+   * 下次进后台应该还是同一条图标轨，而不是每次重新折叠。
+   */
+  const [sideCollapsed, setSideCollapsed] = useState(() => {
     try {
-      const [p, t, pr] = await Promise.all([
+      return localStorage.getItem("ink-blog-studio-collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  /** 窄屏下侧边栏变抽屉，这个状态控制抽屉开合。 */
+  const [sideOpen, setSideOpen] = useState(false);
+  /** 960px 以下算窄屏：同一套骨架在窄屏走抽屉，宽屏走折叠。 */
+  const [narrow, setNarrow] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 960px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 960px)");
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  const requestId = useRef(0);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // 深链：/blog-manage?section=topics 直接落到专题分区。
+  const deepSection = params.get("section");
+  useEffect(() => {
+    if (!deepSection) return;
+    if (!STUDIO_SECTION_KEYS.includes(deepSection as Section)) return;
+    setSection(deepSection as Section);
+  }, [deepSection]);
+  const load = useCallback(async () => {
+    const seq = ++requestId.current;
+    try {
+      const [p, t, pr, d] = await Promise.all([
         api.blog.published.query(),
         api.blog.topics.query(),
         api.blog.profile.query(),
+        api.blog.distribution.query(),
       ]);
-      setPublished(p); setTopics(t); setProfile(pr); setError('');
+      if (seq !== requestId.current) return;
+      setPosts(p);
+      setTopics(t);
+      setProfile(pr);
+      setDistribution(d);
+      setError("");
     } catch (e: any) {
-      setError(e.message || '加载失败');
+      if (seq === requestId.current) setError(e.message || "加载失败");
+      throw e;
+    } finally {
+      if (seq === requestId.current) setLoading(false);
     }
   }, []);
+  useEffect(() => {
+    void load().catch(() => {});
+    return () => {
+      requestId.current++;
+    };
+  }, [load]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      /* 隐私模式下写不进去也不影响使用 */
+    }
+  }, [theme]);
+  const reload = async () => {
+    try {
+      await load();
+    } catch {
+      throw new Error("操作可能已保存，但刷新失败，请重试刷新。");
+    }
+  };
+  /**
+   * 封面资源分区里点某张封面：跳到那篇文章的工作台，
+   * 快捷操作面板在右侧，换封面、预览都在那里。
+   */
+  const openArticle = (post: Post) => navigate(`/blog-manage/content/${post.id}`);
 
-  useEffect(() => { void load(); }, [load]);
+  /**
+   * 封面资源分区要显示的是"公开封面" ——
+   * 草稿箱里的笔记还没有公开版本，没有封面可看，这里直接跳过。
+   */
+  const coverRows = useMemo(() => {
+    const keyword = coverKeyword.trim().toLowerCase();
+    return posts.filter(
+      (post) =>
+        post.publication &&
+        (!keyword || post.title.toLowerCase().includes(keyword)),
+    );
+  }, [posts, coverKeyword]);
+  const change = async (key: Section) => {
+    if (dirty && !await confirmBlogAction("公开资料有未保存修改，确定切换？")) return;
+    setDirty(false);
+    setSection(key);
+  };
+  /** 汉堡按钮：宽屏折叠侧边栏，窄屏拉出抽屉。 */
+  const toggleSide = () => {
+    if (narrow) {
+      setSideOpen((v) => !v);
+      return;
+    }
+    setSideCollapsed((v) => {
+      try {
+        localStorage.setItem("ink-blog-studio-collapsed", v ? "0" : "1");
+      } catch {
+        /* 隐私模式下写不进去也不影响使用 */
+      }
+      return !v;
+    });
+  };
+  /** 侧边栏选分区：抽屉模式下选完顺手关掉抽屉。 */
+  const selectSection = (key: Section) => {
+    change(key);
+    if (narrow) setSideOpen(false);
+  };
+  const backToNotes = async () => {
+    if (!dirty || await confirmBlogAction("有未保存修改，确定返回？"))
+      navigate("/?path=notes");
+  };
+  /** 同一父级下的相邻专题互换顺序。 */
+  const moveTopic = async (id: number, delta: number) => {
+    const current = topics.find((t) => t.id === id);
+    if (!current) return;
+    const siblings = topics.filter(
+      (t) => (t.parentId ?? null) === (current.parentId ?? null),
+    );
+    const pos = siblings.findIndex((t) => t.id === id);
+    const target = siblings[pos + delta];
+    if (!target) return;
+    const next = [...topics];
+    const a = next.findIndex((t) => t.id === id);
+    const b = next.findIndex((t) => t.id === target.id);
+    [next[a], next[b]] = [next[b], next[a]];
+    try {
+      await api.blog.reorderTopics.mutate({
+        orderedIds: next.map((t) => t.id),
+      });
+      await reload();
+    } catch (e) {
+      notify(e);
+    }
+  };
+  /** 专题树里的一行：拖拽手柄、封面、名称简介、文章数、公开状态、操作。 */
+  const renderTopicNode = (topic: Topic, depth: number): JSX.Element => {
+    const children = topicChildren(topics, topic.id);
+    const siblings = topics.filter(
+      (t) => (t.parentId ?? null) === (topic.parentId ?? null),
+    );
+    const pos = siblings.findIndex((t) => t.id === topic.id);
+    const cover = topic.cover;
+    return (
+      <div key={topic.id}>
 
-  const counts = useMemo(() => ({
-    posts: published?.length ?? 0,
-    topics: topics.length,
-    profile: profile?.isPublished ? 1 : 0,
-  }), [published, topics, profile]);
+        <div
+          className="ink-mg-topic-row"
+          style={{ paddingLeft: 16 + depth * 20 }}
+          draggable
+          onDragStart={(e) =>
+            e.dataTransfer.setData("text/plain", String(topic.id))
+          }
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const fromId = Number(e.dataTransfer.getData("text/plain"));
+            if (!Number.isInteger(fromId) || fromId === topic.id) return;
+            const next = [...topics];
+            const from = next.findIndex((t) => t.id === fromId);
+            const to = next.findIndex((t) => t.id === topic.id);
+            if (from < 0 || to < 0) return;
+            const [moved] = next.splice(from, 1);
+            next.splice(to, 0, moved);
+            void api.blog.reorderTopics
+              .mutate({ orderedIds: next.map((t) => t.id) })
+              .then(() => reload())
+              .catch(notify);
+          }}
+          onClick={() => navigate(`/blog-manage/topic/${topic.id}`)}
+        >
+          <Icon
+            icon="tabler:grip-vertical"
+            width={15}
+            style={{ color: "var(--ink-muted)", flex: "none" }}
+          />
+          <span
+            className="ink-mg-topic-thumb"
+            style={cover ? undefined : { background: topic.color || "#7051ff" }}
+          >
+            {cover ? (
+              <img src={imageUrl(cover.path)} alt="" />
+            ) : (
+              topic.name.slice(0, 1)
+            )}
+          </span>
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span className="ink-mg-topic-name" style={{ display: "block" }}>
+              <BlogButton
+                type="button"
+                className="ink-mg-topic-link"
+                title={`编辑「${topic.name}」的设置`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/blog-manage/topic/${topic.id}`);
+                }}
+              >
+                {topic.name}
+              </BlogButton>
+            </span>
+            <span className="ink-mg-topic-desc">
+              {topic.desc || "暂无简介"}
+            </span>
+          </span>
+          <span className="ink-mg-topic-count">{topic.noteIds.length} 篇</span>
+          <BlogChip color={topic.isPublished ? "success" : "default"} variant="flat">
+            {topic.isPublished ? "公开" : "未公开"}
+          </BlogChip>
+          <span onClick={(e) => e.stopPropagation()}>
+            <RowMenu label={`${topic.name} 更多操作`}>
+              <BlogButton
+                className="ink-mg-menu-item"
+                onClick={() => navigate(`/blog-manage/topic/${topic.id}`)}
+              >
+                <Icon icon="tabler:edit" width={15} />
+                编辑专题
+              </BlogButton>
+              <BlogButton
+                className="ink-mg-menu-item"
+                onClick={() =>
+                  navigate(`/blog-manage/topic/${topic.id}#chapters`)
+                }
+              >
+                <Icon icon="tabler:layout-list" width={15} />
+                编排章节
+              </BlogButton>
+              <BlogButton
+                className="ink-mg-menu-item"
+                disabled={pos === 0}
+                onClick={() => void moveTopic(topic.id, -1)}
+              >
+                <Icon icon="tabler:arrow-up" width={15} />
+                上移
+              </BlogButton>
+              <BlogButton
+                className="ink-mg-menu-item"
+                disabled={pos === siblings.length - 1}
+                onClick={() => void moveTopic(topic.id, 1)}
+              >
+                <Icon icon="tabler:arrow-down" width={15} />
+                下移
+              </BlogButton>
+              <BlogButton
+                className="ink-mg-menu-item"
+                data-danger="true"
+                onClick={async () => {
+                  if (
+                    !await confirmBlogAction("删除专题只解除关联，不会删除文章。确定删除？")
+                  )
+                    return;
+                  try {
+                    await api.blog.deleteTopic.mutate({ id: topic.id });
+                    await reload();
+                  } catch (e) {
+                    notify(e);
+                  }
+                }}
+              >
+                <Icon icon="tabler:trash" width={15} />
+                删除专题
+              </BlogButton>
+            </RowMenu>
+          </span>
+        </div>
+        {children.map((child) => renderTopicNode(child, depth + 1))}
+      </div>
+    );
+  };
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-6">
-      <header className="mb-5">
-        <h1 className="text-xl font-semibold">博客管理</h1>
-        <p className="mt-1 text-sm text-default-500">发布后的内容是独立快照，草稿改动不会影响线上；需要改内容时点「更新发布」。</p>
-      </header>
+    <div className="ink-blog ink-manage" data-theme={theme} ref={pageRef}>
+      <div
+        className="ink-studio"
+        data-collapsed={sideCollapsed ? "1" : undefined}
+        data-drawer={sideOpen ? "open" : "closed"}
+      >
+        <header className="ink-studio-top">
+          <BlogButton
+            className="ink-studio-icon-btn"
+            onClick={toggleSide}
+            aria-label={narrow ? "打开导航菜单" : sideCollapsed ? "展开侧边栏" : "收起侧边栏"}
+            aria-expanded={narrow ? sideOpen : !sideCollapsed}
+          >
+            <Icon icon="tabler:menu-2" width={18} />
+          </BlogButton>
+          <span className="ink-mg-brand">
+            Ink
+            <small>博客管理</small>
+          </span>
+          {/*
+            这里刻意不放搜索框。
+            内容管理页里已经有搜索框，和状态、专题、排序排在一起。
+            顶栏再来一个就变成两处搜索：用户在顶栏打字，列表上的筛选却
+            纹丝不动，反而更迷糊。搜索就放在内容列表里。
+          */}
+          <span style={{ flex: 1 }} />
+          <a
+            className="ink-studio-icon-btn"
+            href="/blog"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="查看公开站"
+            title="查看公开站"
+          >
+            <Icon icon="tabler:external-link" width={18} />
+          </a>
+          <BlogButton
+            className="ink-studio-icon-btn"
+            onClick={() =>
+              setTheme((v) => (v === "light" ? "dark" : "light"))
+            }
+            aria-label="切换明暗主题"
+            title="切换明暗主题"
+          >
+            <Icon icon={theme === "light" ? "tabler:moon" : "tabler:sun"} width={18} />
+          </BlogButton>
+        </header>
 
-      <nav aria-label="博客管理分区" className="mb-4 flex flex-wrap gap-1 border-b border-default-200">
-        {SECTIONS.map(s => (
-          <button key={s.key} type="button" aria-current={section === s.key}
-            onClick={() => setSection(s.key)}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
-              section === s.key ? 'border-primary text-primary' : 'border-transparent text-default-500 hover:text-foreground'
-            }`}>
-            {s.label}
-            {counts[s.key] > 0 && <span className="ml-1.5 text-xs text-default-400">{counts[s.key]}</span>}
-          </button>
-        ))}
-      </nav>
+        <BlogStudioNav
+          section={section}
+          onSelect={selectSection}
+          collapsed={sideCollapsed}
+          siteName={profile?.displayName || "Ink 博客"}
+          avatarSrc={profile?.avatarUrl ? imageUrl(profile.avatarUrl) : ""}
+          postCount={posts.length}
+          topicCount={topics.length}
+          onBack={backToNotes}
+        />
 
-      {error && <p role="alert" className="mb-3 rounded-lg bg-danger/10 p-3 text-sm text-danger">{error}</p>}
+        {sideOpen && (
+          <div className="ink-studio-scrim" onClick={() => setSideOpen(false)} />
+        )}
 
-      {section === 'posts' && (
-        <div className="space-y-3">
-          {!published && <p className="text-sm text-default-500">正在加载…</p>}
-          {published?.length === 0 && (
-            <p className="rounded-xl border border-dashed border-default-200 p-8 text-center text-sm text-default-500">
-              还没有已发布的笔记。在笔记的「更多信息」里点「发布到博客」。
-            </p>
+        <main className="ink-studio-main">
+          <div className="ink-studio-page">
+            <header className="ink-studio-head">
+              <h1 className="ink-studio-title">
+                {STUDIO_SECTION_META[section].title}
+              </h1>
+              <p className="ink-studio-desc">
+                {STUDIO_SECTION_META[section].desc}
+              </p>
+            </header>
+          {error && (
+            <div className="ink-mg-alert" style={{ marginBottom: 16 }}>
+              <span>{error}</span>
+              <BlogButton
+                className="ink-mg-button"
+                onClick={() => void load().catch(() => {})}
+              >
+                重试加载
+              </BlogButton>
+            </div>
           )}
-          {published?.map(item => <PublishedRow key={item.id} item={item} topics={topics} onReload={load} />)}
-        </div>
-      )}
+          {loading ? (
+            <p className="ink-mg-empty" role="status">
+              正在加载博客管理…
+            </p>
+          ) : (
+            <>
+              {section === "posts" && (
+                <BlogContentList
+                  posts={posts}
+                  topics={topics}
+                  onReload={reload}
+                />
+              )}
 
-      {section === 'profile' && (profile ? <ProfileSection profile={profile} onReload={load} /> : <p className="text-sm text-default-500">正在加载…</p>)}
-      {section === 'topics' && <TopicsSection topics={topics} onReload={load} />}
+              {section === "covers" && (
+                <div className="ink-mg-section">
+                  <div className="ink-mg-toolbar">
+                    <BlogInput
+                      className="ink-mg-field"
+                      aria-label="搜索封面所属文章"
+                      placeholder="搜索封面所属文章…"
+                      value={coverKeyword}
+                      onChange={(e) => setCoverKeyword(e.target.value)}
+                    
+              startContent={<Icon icon="tabler:search" width={15} />}
+            />
+                    <span className="ink-mg-sub">
+                      共 {coverRows.length} 张公开封面
+                    </span>
+                  </div>
+                  {coverRows.length ? (
+                    <div className="ink-mg-scene-grid">
+                      {coverRows.map((p) => {
+                        const image = p.attachments.find(
+                          (a) => a.id === p.publication?.coverAttachmentId,
+                        );
+                        return (
+                          <BlogButton
+                            key={p.id}
+                            type="button"
+                            className="ink-mg-scene"
+                            onClick={() => openArticle(p)}
+                          >
+                            <span className="ink-mg-scene-shot" data-ratio="banner">
+                              {image ? (
+                                <img
+                                  src={imageUrl(image.path)}
+                                  alt="公开封面"
+                                />
+                              ) : (
+                                <Icon icon="tabler:photo" width={26} />
+                              )}
+                            </span>
+                            <span className="ink-mg-scene-name">{p.title}</span>
+                            <span className="ink-mg-scene-size">
+                              {image ? "已有公开封面" : "尚未设置封面"}
+                            </span>
+                          </BlogButton>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="ink-mg-empty">
+                      <Icon icon="tabler:photo" width={28} />
+                      <h2>没有匹配的封面</h2>
+                      <p>换个关键词，或先在内容管理里给文章设置封面。</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {section === "topics" && (
+                <div className="ink-mg-section">
+                  <div className="ink-mg-section-head">
+                      <div>
+                        <h2 className="ink-mg-section-title">全部专题</h2>
+                        <p className="ink-mg-sub">
+                          {topics.length} 个专题 · 共{" "}
+                          {topics.reduce((sum, t) => sum + t.noteIds.length, 0)} 篇文章
+                        </p>
+                      </div>
+                      <div className="ink-mg-row-actions" style={{ marginLeft: 0 }}>
+                        <BlogButton
+                          className="ink-mg-button-primary ink-mg-button"
+                          onClick={() => navigate("/blog-manage/topic/new")}
+                        >
+                          ＋ 新建专题
+                        </BlogButton>
+                      </div>
+                    </div>
+                  {topics.length ? (
+                    <div className="ink-mg-topic-list">
+                      {topicChildren(topics, null).map((t) =>
+                        renderTopicNode(t, 0),
+                      )}
+                    </div>
+                  ) : (
+                    <div className="ink-mg-empty">
+                      <h2>还没有专题</h2>
+                      <p>先创建一个并添加已发布文章。</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {section === "distribution" && distribution && (
+                <DistributionEditor value={distribution} reload={reload} />
+              )}
+
+              {section === "friends" && <BlogFriendsPanel />}
+              {section === "feedback" && <BlogFeedbackPanel />}
+              {section === "mail" && <BlogMailSettingsPanel onDirty={setDirty} />}
+
+              {section === "settings" && <BlogSiteSettingsPanel onDirty={setDirty} />}
+              {section === "seo" && (
+                <>
+                  <BlogTabs
+                    label="SEO 分区"
+                    value={seoTab}
+                    onChange={async (id) => {
+                      if (
+                        !dirty ||
+                        (await confirmBlogAction("有未保存修改，确定切换？"))
+                      ) {
+                        setDirty(false);
+                        setSeoTab(id);
+                      }
+                    }}
+                    items={[
+                      { key: "content", label: "内容 SEO" },
+                      { key: "defaults", label: "站点默认规则" },
+                    ]}
+                  />
+                  {seoTab === "defaults" ? (
+                    <BlogSiteSettingsPanel seo onDirty={setDirty} />
+                  ) : (
+                    <ContentSeoPanel
+                      onDirty={setDirty}
+                      onReview={async (id) =>
+                        navigate(`/blog-manage/content/${id}`)
+                      }
+                    />
+                  )}
+                </>
+              )}
+              {section === "profile" && profile && (
+                <ProfileEditor
+                  profile={profile}
+                  posts={posts}
+                  topics={topics}
+                  reload={reload}
+                  onDirty={setDirty}
+                />
+              )}
+
+              {section === "stats" && <BlogStatsPanel />}
+            </>
+          )}
+          </div>
+        </main>
+      </div>
     </div>
   );
-});
+}

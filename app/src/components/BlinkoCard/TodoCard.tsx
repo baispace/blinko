@@ -215,6 +215,7 @@ export const TodoCard = observer(({ todo, compact = false, board = false, fields
         <div className="min-w-0 flex-1 pt-px"><TodoTitleCell value={title} done={done} multiline onOpen={openEdit} onSave={saveTitle}/></div>
         <Dropdown placement="bottom-end"><DropdownTrigger><button type="button" aria-label={`任务操作：${title}`} className="todo-row-actions grid size-6 shrink-0 place-items-center rounded-md text-default-400 hover:bg-default-100 focus-visible:opacity-100"><Icon icon="tabler:dots" width={16} height={16}/></button></DropdownTrigger><DropdownMenu aria-label="任务操作" onAction={key=>{if(key==='edit')openEdit();if(key==='snooze')snoozeTodo();if(key==='delete')void deleteTodo();}}><DropdownItem key="edit">打开任务</DropdownItem>{!done?<DropdownItem key="snooze">{t('snooze-1-day')}</DropdownItem>:null}<DropdownItem key="delete" color="danger">{t('delete')}</DropdownItem></DropdownMenu></Dropdown>
       </div>
+      {(todo.metadata?.latestProgress || todo.metadata?.planDate) && <p className="mt-1 truncate pl-8 text-xs text-default-500" title={todo.metadata?.latestProgress || ''}>{todo.metadata?.planDate ? `计划 ${todo.metadata.planDate} · ` : ''}{todo.metadata?.latestProgress || todo.metadata?.nextStep}</p>}
       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 pl-8 text-xs text-default-500">
         {fields.includes('due')&&dateControl}
         {fields.includes('priority')&&priorityControl}
@@ -298,7 +299,8 @@ export const TodoCard = observer(({ todo, compact = false, board = false, fields
           )}
 
           {/* 时间信息（左侧）+ 标签 */}
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {(todo.metadata?.latestProgress || todo.metadata?.planDate) && <p className="mt-1 truncate pl-8 text-xs text-default-500" title={todo.metadata?.latestProgress || ''}>{todo.metadata?.planDate ? `计划 ${todo.metadata.planDate} · ` : ''}{todo.metadata?.latestProgress || todo.metadata?.nextStep}</p>}
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <Dropdown isDisabled={done || prioritySaving}>
               <DropdownTrigger><button type="button" disabled={done || prioritySaving}
                 aria-label={`${t('priority')}：${t(quadMeta.label)}`} title={t('priority')}

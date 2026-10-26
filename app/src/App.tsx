@@ -1,6 +1,6 @@
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useState, useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from 'next-themes';
 import { Inspector, InspectParams } from 'react-dev-inspector';
 import { HeroUIProvider } from '@heroui/react';
@@ -37,6 +37,9 @@ const AiTasksPage = lazy(() => import('./pages/ai-tasks'));
 const AIPage = lazy(() => import('./pages/ai'));
 const ResourcesPage = lazy(() => import('./pages/resources'));
 const BlogManagePage = lazy(() => import('./pages/blog-manage'));
+const BlogArticleDetail = lazy(() => import('./pages/blog-article'));
+const BlogTopicArrange = lazy(() => import('./pages/blog-topic'));
+const BlogTopicDetail = lazy(() => import('./pages/blog-topic-detail'));
 const ReviewPage = lazy(() => import('./pages/review'));
 const SettingsPage = lazy(() => import('./pages/settings'));
 const PluginPage = lazy(() => import('./pages/plugin'));
@@ -46,6 +49,14 @@ const OAuthCallbackPage = lazy(() => import('./pages/oauth-callback'));
 const DesktopNotePage = lazy(() => import('./pages/desktop-note'));
 const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
+const BlogShell = lazy(() => import('./components/BlinkoBlog/public/BlogShell').then(m => ({ default: m.BlogShell })));
+const BlogHomePage = lazy(() => import('./pages/blog/index'));
+const BlogTopicsPage = lazy(() => import('./pages/blog/topics'));
+const BlogTopicPage = lazy(() => import('./pages/blog/t/[slug]'));
+const BlogAboutPage = lazy(() => import('./pages/blog/about'));
+const BlogMomentsPage = lazy(() => import('./pages/blog/moments'));
+const BlogSubscribePage = lazy(() => import('./pages/blog/subscribe'));
+const BlogStatsPage = lazy(() => import('./pages/blog/stats'));
 const PublishedNotePage = lazy(() => import('./pages/blog/[id]'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
 const AiSharePage = lazy(() => import('./pages/ai-share'));
@@ -57,17 +68,35 @@ const HomeRedirect = () => {
   const blinko = RootStore.Get(BlinkoStore);
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(() => location.key === 'default' && !searchParams.get('path'));
-  
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
     const redirectToDefaultPage = async () => {
+      setBootError(null);
       // In-app mode switches already know their destination. Do not flash a
       // loading screen or refetch configuration before returning to content.
       if (location.key !== 'default' || searchParams.get('path')) {
         setLoading(false);
         return;
       }
-      if (!blinko.config.value) await blinko.config.call();
+      if (!blinko.config.value) {
+        try {
+          // A hung request must not leave the brand animation running
+          // forever — after the timeout the page switches to error + retry.
+          let timer: number | undefined;
+          await Promise.race([
+            blinko.config.call(),
+            new Promise((_, reject) => {
+              timer = window.setTimeout(() => reject(new Error('config-timeout')), 15000);
+            }),
+          ]).finally(() => window.clearTimeout(timer));
+        } catch (error) {
+          if (!cancelled) setBootError('配置加载失败，请检查服务连接后重试');
+          return;
+        }
+      }
       if (cancelled) return;
       const defaultHomePage = blinko.config.value?.defaultHomePage;
       const currentPath = searchParams.get('path');
@@ -76,18 +105,24 @@ const HomeRedirect = () => {
         setLoading(false);
         return;
       }
-      
+
       navigate(`/?path=${defaultHomePage}`, { replace: true });
     };
-    
+
     void redirectToDefaultPage();
     return () => { cancelled = true; };
-  }, [navigate, searchParams, location]);
-  
+  }, [navigate, searchParams, location, retryKey]);
+
   if (loading) {
-    return <LoadingPage />;
+    return (
+      <LoadingPage
+        state={bootError ? 'error' : 'loading'}
+        errorMessage={bootError ?? undefined}
+        onRetry={bootError ? () => { setBootError(null); setLoading(true); setRetryKey((key) => key + 1); } : undefined}
+      />
+    );
   }
-  
+
   return <HomePage />;
 };
 
@@ -268,6 +303,12 @@ function AppRoutes() {
             <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />
             <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
             <Route path="/blog-manage" element={<ProtectedRoute><BlogManagePage /></ProtectedRoute>} />
+            {/* 旧发布入口：现在统一走文章工作台。保留跳转，老链接不会失效。 */}
+            <Route path="/blog-manage/publish/:noteId" element={<ProtectedRoute><BlogPublishRedirect /></ProtectedRoute>} />
+            <Route path="/blog-manage/content/:noteId" element={<ProtectedRoute><BlogArticleDetail /></ProtectedRoute>} />
+            <Route path="/blog-manage/content/:noteId/check" element={<ProtectedRoute><BlogPublishRedirect /></ProtectedRoute>} />
+            <Route path="/blog-manage/topic/:topicId" element={<ProtectedRoute><BlogTopicDetail /></ProtectedRoute>} />
+            <Route path="/blog-manage/topic/:topicId/arrange" element={<ProtectedRoute><BlogTopicArrange /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/plugin" element={<ProtectedRoute><PluginPage /></ProtectedRoute>} />
@@ -277,7 +318,17 @@ function AppRoutes() {
             <Route path="/detail/*" element={<ProtectedRoute><DetailPage /></ProtectedRoute>} />
             <Route path="/share" element={<ShareIndexPage />} />
             <Route path="/share/:id" element={<ShareDetailPage />} />
-            <Route path="/blog/:id" element={<PublishedNotePage />} />
+            <Route path="/blog" element={<BlogShell />}>
+              <Route index element={<BlogHomePage />} />
+              <Route path="topics" element={<BlogTopicsPage />} />
+              <Route path="t/:slug" element={<BlogTopicPage />} />
+              <Route path="about" element={<BlogAboutPage />} />
+              <Route path="moments" element={<BlogMomentsPage />} />
+              <Route path="subscribe" element={<BlogSubscribePage />} />
+              <Route path="stats" element={<BlogStatsPage />} />
+              <Route path=":id" element={<PublishedNotePage />} />
+              <Route path="*" element={<div className="ink-wrap ink-empty">页面不存在</div>} />
+            </Route>
             <Route path="/ai-share/:id" element={<AiSharePage />} />
             <Route path="/quicknote" element={<QuickNotePage />} />
             <Route path="/quickai" element={<QuickAIPage />} />
@@ -290,9 +341,39 @@ function AppRoutes() {
   }
 }
 
+// Public readers do not mount workspace menus, editors, selection overlays or
+// account-setting providers. Guest access stays independent of login state.
+function AppExperience() {
+  const { pathname } = useLocation();
+  const publicBlog = pathname === '/blog' || pathname.startsWith('/blog/');
+  // 博客管理是「内容管理的单独页面」：左下角入口点进来后不再套应用外壳，
+  // 侧边栏与顶栏都退场，只留管理页本身 —— 免得像后台功能寄居在笔记应用里。
+  // AppProvider 仍然要留：tRPC、登录态、Toast、发布对话框都挂在它上面。
+  // 「发布文章」向导是管理页的子流程，同样走独立页，不套应用外壳。
+  const standaloneManage = pathname.startsWith('/blog-manage');
+  useEffect(() => { if (!publicBlog) RootStore.Get(PluginManagerStore).initInstalledPlugins(); }, [publicBlog]);
+  if (publicBlog) return <AppRoutes />;
+  if (standaloneManage) return <><AppProvider /><div className="app-content"><AppRoutes /></div></>;
+  return <><AppProvider /><CommonLayout><div className="app-content"><AppRoutes /><BlinkoMultiSelectPop /></div></CommonLayout><BlinkoMusicPlayer /></>;
+}
+
+
+/**
+ * 旧发布入口的跳转。
+ *
+ * 以前这里挂的是"发布向导"—— 一套三步的独立页面，跟文章工作台、
+ * 发布弹窗在做的事高度重合，同一篇文章有三个发布界面。
+ * 内容管理收口成「列表 → 工作台 → 发布」之后，这个入口只保留跳转，
+ * 老链接（收藏、文档、SEO 审核）点进来还是落到同一篇文章。
+ */
+function BlogPublishRedirect() {
+  const { noteId } = useParams();
+  return <Navigate to={`/blog-manage/content/${noteId}?publish=1`} replace />;
+}
+
 function App() {
   initStore();
-  
+
   // Initialize Android shortcuts handler
   useAndroidShortcuts();
 
@@ -301,8 +382,14 @@ function App() {
     useInitialHotkeySetup();
   }
 
+  /**
+   * 首屏占位退场。
+   *
+   * index.html 里内联的品牌占位在 React 挂载前一直盖在页面上；等应用真正
+   * 接管 DOM 后再撤掉，中间不会有白屏，也不会有"文字先出现、样式后到"的跳变。
+   */
   useEffect(() => {
-    RootStore.Get(PluginManagerStore).initInstalledPlugins();
+    document.documentElement.classList.add('app-ready');
   }, []);
 
   return (
@@ -318,16 +405,9 @@ function App() {
       <BrowserRouter>
         <HeroUIProvider>
           <ThemeProvider attribute="class" enableSystem>
-            <AppProvider />
-            <CommonLayout>
-              <div className="app-content">
-                <AppRoutes />
-                <BlinkoMultiSelectPop />
-              </div>
-            </CommonLayout>
+            <AppExperience />
           </ThemeProvider>
         </HeroUIProvider>
-        <BlinkoMusicPlayer />
       </BrowserRouter>
     </>
   );

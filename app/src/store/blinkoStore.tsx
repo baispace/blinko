@@ -15,6 +15,7 @@ import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@shared/lib/sharedCon
 import { makeAutoObservable, runInAction } from 'mobx';
 import { UserStore } from './user';
 import { BaseStore } from './baseStore';
+import { ServiceCapabilityStore } from './serviceCapabilityStore';
 import { StorageState } from './standard/StorageState';
 import { useSearchParams, useLocation } from 'react-router-dom';
 
@@ -731,6 +732,9 @@ export class BlinkoStore implements Store {
     this.config.call()
     this.dailyReviewNoteList.call()
     this.task.call()
+    // 依赖服务的入口（右键菜单里的 AI 标签 / 关联笔记）按服务就绪状态显示，
+    // 所以登录后先读一次 —— 读不到就当作没配置，入口不出现。
+    RootStore.Get(ServiceCapabilityStore).load()
   }
 
 

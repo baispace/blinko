@@ -1,0 +1,1029 @@
+/*
+ * 公开博客「站点数据」页的样式层。
+ *
+ * 这一页是给访客看的一份公开汇总，视觉上要克制：
+ *   浅色背景、深色正文、紫蓝两色做重点，边界用细线和克制的圆角。
+ *
+ * 结构顺序固定（与页面一致）：
+ *   页面介绍 → 内容积累 → 阅读与回应（周期 + 指标 + 趋势）
+ *   → 热门文章与读者回应分布 → 统计说明 → 最近更新
+ *
+ * 桌面端主体是居中的宽内容区；「热门文章」与「读者回应分布」左右并列，
+ * 其余区块各自通栏。窄屏全部纵向排列，指标与图表不横向溢出。
+ */
+
+/* ---------- 页面骨架 ---------- */
+
+.ink-blog .ink-stats {
+  padding: 40px 0 64px;
+}
+
+/* 宽内容区：跟全站同宽（.ink-wrap / 关于页那一档）。
+   原来这里收在 1120px：比其它页面窄一截，从导航点进来像换了个页面 ——
+   宽到能并排，窄到能读这件事交给区块内部的排版，不靠缩窄整页。 */
+.ink-blog .ink-stats-inner {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.ink-blog .ink-stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ink-blog .ink-stats-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-titlebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.ink-blog .ink-stats-sub {
+  margin: -6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* 口径提示：页面上最轻的一层字，但一直看得见。 */
+.ink-blog .ink-stats-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* ---------- 页面介绍 ---------- */
+
+.ink-blog .ink-stats-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/*
+ * 标题与元信息同一行：左边是大标题，右边是聚合时刻与时区。
+ * 元信息不占正文宽度 —— 它是页面的注脚，不是内容。
+ */
+.ink-blog .ink-stats-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 28px;
+}
+
+.ink-blog .ink-stats-hero-title {
+  margin: 0;
+  font-size: clamp(26px, 4.4vw, 38px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-hero-desc {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 14.5px;
+  line-height: 1.85;
+  color: var(--ink-muted);
+  white-space: pre-line;
+}
+
+/* 更新时间行：真实聚合时刻 + 站点时区，不拿浏览器当前时间冒充。 */
+.ink-blog .ink-stats-hero-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+.ink-blog .ink-stats-hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ink-blog .ink-stats-hero-meta b {
+  font-weight: 600;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 过期数据提示：明确告诉读者这份数字是什么时候算的。 */
+.ink-blog .ink-stats-stale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- 卡片通用 ---------- */
+
+.ink-blog .ink-stats-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+/* 卡片图标：淡紫圆角底 + 主色线性图标，和专题卡的图标块同一套语言。 */
+.ink-blog .ink-stats-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 3px;
+  border-radius: 9px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+/* 口径问号：贴在指标名后面，一点就展开。 */
+.ink-blog .ink-stats-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  vertical-align: -3px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.ink-blog .ink-stats-help-btn:hover {
+  color: var(--ink-accent);
+  background: var(--ink-tint);
+}
+
+.ink-blog .ink-stats-help-btn:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* 展开的口径说明：贴在指标下面，一眼能读完，不跳到页面底部找。 */
+.ink-blog .ink-stats-help-text {
+  margin: 5px 0 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--ink-bg);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* 数字行高度固定：骨架切到真实数值时不会顶动下面的标签。 */
+.ink-blog .ink-stats-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  min-height: 34px;
+}
+
+.ink-blog .ink-stats-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.ink-blog .ink-stats-unit {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stats-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-desc {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* 骨架：尺寸与真实内容对齐，避免加载完成时把整块顶下去。 */
+.ink-blog .ink-stats-skeleton {
+  display: block;
+  border-radius: 6px;
+  background: var(--ink-line);
+  opacity: 0.7;
+}
+
+.ink-blog .ink-stats-skeleton-value {
+  width: 78px;
+  height: 26px;
+  margin-top: 4px;
+}
+
+.ink-blog .ink-stats-skeleton-label {
+  width: 62px;
+  height: 19px;
+}
+
+/* ---------- 内容积累 ---------- */
+
+.ink-blog .ink-stats-content-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* 持续记录是四项里最「软」的一项，数字小一档，不与前三项抢视线。 */
+.ink-blog .ink-stats-content-grid .ink-stats-card:last-child .ink-stats-value {
+  font-size: 21px;
+  font-weight: 650;
+  color: var(--ink-muted);
+}
+
+/* ---------- 周期选择 ---------- */
+
+.ink-blog .ink-stats-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.ink-blog .ink-stats-ranges {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-stats-range {
+  padding: 7px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.ink-blog .ink-stats-range:hover {
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-range[aria-pressed="true"] {
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-range:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* 区间起止日期 + 粒度说明。 */
+.ink-blog .ink-stats-period {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stats-period b {
+  font-weight: 600;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 加载指示：只是一个小点，不遮挡也不清空已有数字。 */
+.ink-blog .ink-stats-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stats-pending::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-accent);
+  animation: ink-stats-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes ink-stats-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 核心指标 ---------- */
+
+/*
+ * 指标与趋势图合在一张卡里：数字和它的走势本来就是一件事，
+ * 拆成两张卡会让同一屏出现两套边框。
+ */
+.ink-blog .ink-stats-reading-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+/* 卡内的指标变成浅底块，不再各自画一层边框。 */
+.ink-blog .ink-stats-reading-card .ink-stats-metric {
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ink-bg);
+}
+
+.ink-blog .ink-stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ink-blog .ink-stats-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 15px 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-stats-metric .ink-stats-value {
+  font-size: 28px;
+}
+
+/* ---------- 趋势图 ---------- */
+
+/* 卡内的趋势图：不再单独画框，只用一条细线与指标区分开。 */
+.ink-blog .ink-stats-reading-card .ink-stats-chart {
+  padding: 16px 2px 0;
+  border: 0;
+  border-top: 1px solid var(--ink-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.ink-blog .ink-stats-chart {
+  padding: 16px 18px 14px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-stat-trend {
+  width: 100%;
+  min-width: 0;
+}
+
+.ink-blog .ink-stat-trend-canvas {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  /* 触摸时不要触发浏览器的横向滚动 */
+  touch-action: pan-y;
+}
+
+.ink-blog .ink-stat-trend-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ink-blog .ink-stat-trend-grid {
+  stroke: var(--ink-line);
+  stroke-width: 1;
+}
+
+.ink-blog .ink-stat-trend-axis {
+  fill: var(--ink-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 可统计窗口之外：一条极淡的竖带，说明「这里当时没有数据」。 */
+.ink-blog .ink-stat-trend-nodata {
+  fill: var(--ink-muted);
+  opacity: 0.05;
+}
+
+.ink-blog .ink-stat-trend-area {
+  fill: var(--ink-stat-views);
+  opacity: 0.1;
+}
+
+.ink-blog .ink-stat-trend-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ink-blog .ink-stat-trend-line-views {
+  stroke: var(--ink-stat-views);
+}
+
+.ink-blog .ink-stat-trend-line-visitors {
+  stroke: var(--ink-stat-visitors);
+}
+
+.ink-blog .ink-stat-trend-cursor line {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+.ink-blog .ink-stat-trend-dot {
+  stroke: var(--ink-surface);
+  stroke-width: 2;
+}
+
+.ink-blog .ink-stat-trend-dot-views {
+  fill: var(--ink-stat-views);
+  background: var(--ink-stat-views);
+}
+
+.ink-blog .ink-stat-trend-dot-visitors {
+  fill: var(--ink-stat-visitors);
+  background: var(--ink-stat-visitors);
+}
+
+/* 悬停/触摸浮层。 */
+.ink-blog .ink-stat-trend-tip {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 11px;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-surface);
+  box-shadow: var(--ink-shadow);
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ink-blog .ink-stat-trend-tip b {
+  font-size: 12px;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ink-blog .ink-stat-trend-tip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ink-blog .ink-stat-trend-tip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* 图例：带文字，不靠颜色区分。 */
+.ink-blog .ink-stat-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stat-trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ink-blog .ink-stat-trend-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* 无数据区间的说明：不是图例项，只是提醒。 */
+.ink-blog .ink-stat-trend-legend-note {
+  color: var(--ink-muted);
+  opacity: 0.85;
+}
+
+.ink-blog .ink-stat-trend-caption {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stat-trend-empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  border: 1px dashed var(--ink-line);
+  border-radius: 12px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+/* ---------- 热门文章 / 读者回应分布 ---------- */
+
+/* 桌面端左右并列；窄屏自动纵向。两张卡等高，视觉上是一组。 */
+.ink-blog .ink-stats-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.ink-blog .ink-stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-stats-panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-panel-sub {
+  margin: -8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* 热门文章列表 */
+.ink-blog .ink-stats-hot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ink-blog .ink-stats-hot-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ink-line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.ink-blog .ink-stats-hot-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ink-blog .ink-stats-hot-item:first-child {
+  padding-top: 0;
+}
+
+.ink-blog .ink-stats-hot-item:hover .ink-stats-hot-title {
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-hot-cover {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 42px;
+  flex: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-hot-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ink-blog .ink-stats-hot-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ink-blog .ink-stats-hot-topic {
+  font-size: 11.5px;
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-hot-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink-text);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  transition: color 0.15s;
+}
+
+.ink-blog .ink-stats-hot-meta {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-stats-hot-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 面板底部的入口（「浏览全部文章」）。 */
+.ink-blog .ink-stats-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 4px 2px;
+  color: var(--ink-accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ink-blog .ink-stats-more:hover {
+  text-decoration: underline;
+}
+
+/* 读者回应分布：横向条形图 */.ink-blog .ink-stats-reactions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ink-blog .ink-stats-reaction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ink-blog .ink-stats-reaction-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.ink-blog .ink-stats-reaction-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-reaction-name svg {
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-reaction-count {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ink-blog .ink-stats-reaction-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  overflow: hidden;
+}
+
+.ink-blog .ink-stats-reaction-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink-accent);
+  transition: width 0.25s ease;
+}
+
+.ink-blog .ink-stats-reaction:nth-child(2) .ink-stats-reaction-fill {
+  background: var(--ink-stat-visitors);
+}
+
+.ink-blog .ink-stats-reaction:nth-child(3) .ink-stats-reaction-fill {
+  background: var(--ink-stat-views);
+}
+
+/* 加载中：旧数字留在原地但压暗一层。
+ *
+ * 不能把数字清成 0（那是假的），也不能原样不动（那是上一个周期的数字，
+ * 容易被当成当前周期的）。压暗 + 「正在更新…」是第三种诚实做法。 */
+.ink-blog .ink-stats-range-block.is-pending {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+/* ---------- 最近更新 ---------- */
+
+.ink-blog .ink-stats-recent {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+  overflow: hidden;
+}
+
+.ink-blog .ink-stats-recent-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ink-line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.ink-blog .ink-stats-recent-item:last-child {
+  border-bottom: 0;
+}
+
+.ink-blog .ink-stats-recent-item:hover {
+  background: var(--ink-tint);
+}
+
+.ink-blog .ink-stats-recent-date {
+  flex: none;
+  width: 82px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+.ink-blog .ink-stats-recent-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ink-blog .ink-stats-recent-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-stats-recent-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-recent-summary {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ---------- 空状态与错误 ---------- */
+
+.ink-blog .ink-stats-empty {
+  padding: 26px 18px;
+  border: 1px dashed var(--ink-line);
+  border-radius: 12px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.ink-blog .ink-stats-error {
+  padding: 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.ink-blog .ink-stats-error button {
+  margin-left: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 整页不可用（站长关掉了公开展示）。 */
+.ink-blog .ink-stats-off {
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.ink-blog .ink-stats-off p {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-stats-off small {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* ---------- 图表配色 ---------- */
+
+/* 两条线：紫色=有效阅读，蓝色=独立访客。暗色下提亮一档。 */
+.ink-blog {
+  --ink-stat-views: #7055f8;
+  --ink-stat-visitors: #3b82f6;
+}
+
+.ink-blog[data-theme="dark"] {
+  --ink-stat-views: #8f7bff;
+  --ink-stat-visitors: #5aa6fb;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 900px) {
+  .ink-blog .ink-stats-duo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .ink-blog .ink-stats {
+    padding: 28px 0 48px;
+  }
+  .ink-blog .ink-stats-inner {
+    width: calc(100% - 32px);
+    gap: 30px;
+  }
+  /* 窄屏放不下「标题 + 右侧注脚」同一行，注脚落到标题下面。 */
+  .ink-blog .ink-stats-hero-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .ink-blog .ink-stats-hero-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    text-align: left;
+  }
+  .ink-blog .ink-stats-content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .ink-blog .ink-stats-card {
+    padding: 14px;
+  }
+  .ink-blog .ink-stats-value {
+    font-size: 23px;
+  }
+  .ink-blog .ink-stats-content-grid .ink-stats-card:last-child .ink-stats-value {
+    font-size: 19px;
+  }
+  .ink-blog .ink-stats-metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .ink-blog .ink-stats-metric .ink-stats-value {
+    font-size: 25px;
+  }
+  .ink-blog .ink-stats-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  /* 三个周期在窄屏也要能一口点中 —— 铺满一行。 */
+  .ink-blog .ink-stats-ranges {
+    width: 100%;
+  }
+  .ink-blog .ink-stats-range {
+    flex: 1;
+    padding: 9px 8px;
+  }
+  .ink-blog .ink-stats-panel {
+    padding: 15px;
+  }
+  .ink-blog .ink-stats-hot-cover {
+    width: 48px;
+    height: 36px;
+  }
+  .ink-blog .ink-stats-recent-item {
+    flex-direction: column;
+    gap: 6px;
+    padding: 13px 15px;
+  }
+  .ink-blog .ink-stats-recent-date {
+    width: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .ink-blog .ink-stats-value {
+    font-size: 21px;
+  }
+  .ink-blog .ink-stats-content-grid .ink-stats-card:last-child .ink-stats-value {
+    font-size: 17px;
+  }
+}

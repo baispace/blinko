@@ -1,0 +1,11 @@
+-- 公开快照补上摘要字段。
+--
+-- 正文标题已经有独立的快照字段（notePublication.title），摘要同理：AI 生成的
+-- 摘要要跟着「发布 / 更新发布」一起冻结，否则公开页只能拿正文前 180 字硬截，
+-- 既不是作者写的，也不是模型写的。
+--
+-- 这个迁移是手写的，不是 prisma migrate dev 生成的：Prisma 表达不了
+-- notes_content_trgm_idx 等 GIN trigram 索引，migrate dev 每次 diff 都会想删
+-- 它们，并顺手把迁移写成破坏性的。所以这里只做一件事 —— 加一列。
+-- 重建 trigram 索引的命令见 20261015160000_list_performance/migration.sql。
+ALTER TABLE "notePublication" ADD COLUMN IF NOT EXISTS "summary" TEXT;

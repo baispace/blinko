@@ -91,6 +91,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
     location.pathname == '/signup' ||
     location.pathname == '/api-doc' ||
     location.pathname.includes('/share') ||
+    location.pathname === '/blog' ||
     location.pathname.startsWith('/blog/') ||
     location.pathname == '/editor' ||
     location.pathname == '/oauth-callback' ||
@@ -203,7 +204,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                     之前连浮层一起排除掉，等于把入口也一起砍了。
                     浮层内部对 todo 只保留页宽，见 blinkoHomeSettingsPop 的 isTodo 分支。 */}
                 {isHomeSubHeaderScope(location, searchParams) && <BlinkoHomeSettingsPop />}
-                {!isAiPage(location) && !isHomeSubHeaderScope(location, searchParams) && <FilterPop />}
+                {!isAiPage(location) && location.pathname !== '/blog-manage' && !isHomeSubHeaderScope(location, searchParams) && <FilterPop />}
                 {!isAiPage(location) && !blinkoStore.config.value?.isCloseDailyReview && (
                   <Tooltip content={t('daily-review')} delay={400}>
                   <Badge size="sm" className="shrink-0" isInvisible={!blinkoStore.dailyReviewNoteList.value?.length} content={blinkoStore.dailyReviewNoteList.value?.length} color="primary">

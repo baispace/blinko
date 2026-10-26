@@ -203,6 +203,13 @@ const TodoEditModal = observer(({ note }: { note: Note }) => {
           <TodoPriorityChip priorityKey={priorityKey} onPick={setPriorityKey} busy={saving} />
         </div>
 
+        {(note.metadata?.planDate || note.metadata?.latestProgress || note.metadata?.nextStep) && <section className="mt-4 space-y-2 rounded-lg bg-default-50 p-3 text-sm">
+          {note.metadata?.planDate && <p className="text-xs text-default-500">计划执行：{note.metadata.planDate}（不改变截止时间）</p>}
+          {note.metadata?.latestProgress && <p className="whitespace-pre-wrap"><span className="text-default-500">最新进展：</span>{note.metadata.latestProgress}</p>}
+          {note.metadata?.nextStep && <p className="whitespace-pre-wrap"><span className="text-default-500">下一步：</span>{note.metadata.nextStep}</p>}
+          {Array.isArray(note.metadata?.progressHistory) && <details><summary className="cursor-pointer text-xs text-primary">查看进度记录</summary><ul className="mt-2 space-y-2 text-xs">{note.metadata.progressHistory.map((entry: any, index: number) => <li key={index} className="whitespace-pre-wrap leading-6"><span className="text-default-500">{entry.date || entry.at} · </span>{entry.content}</li>)}</ul></details>}
+        </section>}
+
         {/* 描述 */}
         <div className="mt-5">
           <h3 className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-default-500">

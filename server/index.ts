@@ -1,3 +1,61 @@
+import { prisma } from './prisma';
+import { resolveBlogSEO, injectBlogSEO, publicOrigin, sitemapIndex, sitemapPage, blogRobots, publicRSS, type BlogSEO } from './lib/publicBlogSEO';
+import { momentsRSS } from './lib/blogMoments';
+import { publicBlogOwner } from './lib/blog';
+import { readBlogSiteSettings } from './lib/blogSiteSettings';
+import { legacyRedirectTarget } from './lib/blogRedirects';
+import { setSiteCheckSelfOrigin } from './lib/blogSiteCheck';
+import { normalizeBasePath } from '../shared/lib/blogSeo';
+const blogSEOByRequest = new WeakMap<object, BlogSEO>();
+
+/**
+ * 公开站的运行时配置（基础路径、旧地址跳转规则）。
+ *
+ * 这些值存在数据库里，但每个请求都查一次太贵 —— 缓存 30 秒足够，
+ * 改完配置最多半分钟生效。
+ */
+type PublicRuntime = {
+  loadedAt: number;
+  basePath: string;
+  legacyEnabled: boolean;
+  legacyBasePath: string;
+  publicBasePath: string;
+  targetOrigin: string;
+};
+let publicRuntimeCache: PublicRuntime | null = null;
+async function publicRuntime(): Promise<PublicRuntime> {
+  if (publicRuntimeCache && Date.now() - publicRuntimeCache.loadedAt < 30000)
+    return publicRuntimeCache;
+  let value: PublicRuntime = {
+    loadedAt: Date.now(),
+    basePath: '/blog',
+    legacyEnabled: false,
+    legacyBasePath: '',
+    publicBasePath: '/blog',
+    targetOrigin: '',
+  };
+  try {
+    const owner = await publicBlogOwner(prisma, undefined);
+    if (owner) {
+      const stored = await readBlogSiteSettings(prisma, owner);
+      if (stored.configured) {
+        const data = stored.data;
+        value = {
+          loadedAt: Date.now(),
+          basePath: normalizeBasePath(data.publicBasePath) || '/blog',
+          legacyEnabled: !!data.legacyRedirectEnabled,
+          legacyBasePath: normalizeBasePath(data.legacyBasePath) || '',
+          publicBasePath: normalizeBasePath(data.publicBasePath) || '/blog',
+          targetOrigin: data.targetOrigin || '',
+        };
+      }
+    }
+  } catch (error) {
+    console.error('[public runtime]', error);
+  }
+  publicRuntimeCache = value;
+  return value;
+}
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -105,10 +163,16 @@ const appRootDev = path.resolve(__dirname, '../app');
 const appRootProd = path.resolve(__dirname, '../server');
 let server: any = null;
 
+const transformBlogHTML = (html: string, req: express.Request) => {
+  const seo = blogSEOByRequest.get(req);
+  return seo ? injectBlogSEO(html, seo) : html;
+};
+
 if (process.env.NODE_ENV === 'production') {
   // Vite configuration
   ViteExpress.config({
     mode: 'production',
+    transformer: transformBlogHTML,
     inlineViteConfig: {
       //docker production dir /dist not development dir
       root: appRootProd,
@@ -119,6 +183,7 @@ if (process.env.NODE_ENV === 'production') {
   process.env.NODE_ENV = 'development';
   ViteExpress.config({
     mode: 'development',
+    transformer: transformBlogHTML,
     viteConfigFile: path.resolve(appRootDev, 'vite.config.ts'),
     inlineViteConfig: {
       root: appRootDev,
@@ -142,7 +207,7 @@ const errorHandler = (err: any, req: express.Request, res: express.Response, nex
  */
 async function setupApiRoutes(app: express.Application) {
   app.use('/api', (req, res, next) => {
-    if (req.path.includes('notes.publicPublished') || /^\/v1\/note\/published-(?:list|detail)$/.test(req.path)) {
+    if ((req.path.includes('notes.publicPublished') || req.path.includes('blog.public')) || /^\/v1\/note\/published-(?:list|detail)$/.test(req.path)) {
       res.setHeader('Cache-Control', 'no-store');
     }
     next();
@@ -432,8 +497,13 @@ const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
       if (urlPath === '/' || urlPath === '/index.html') return next(); // already handled above
 
       // Only fall back for browser HTML navigation requests.
+      // 公开博客页是例外：链接检查器、抓取器和很多 HTTP 客户端默认发 Accept: */*。
+      // 博客页是真实存在的文章地址，应该和浏览器拿到完全一样的 HTML
+      // （静态 CDN 开启时尤其重要，否则这些客户端会绕过 CDN 重写拿到
+      //  指向源站的资源地址）。
       const accept = String(req.headers.accept || '');
-      if (!accept.includes('text/html')) return next();
+      const isPublicBlogPage = urlPath === '/blog' || urlPath.startsWith('/blog/');
+      if (!accept.includes('text/html') && !isPublicBlogPage) return next();
 
       const result = await readIndexHtmlWithCdnRewrite(fallbackPublicPath);
       if (!result) return next();
@@ -442,9 +512,10 @@ const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
       console.log(`[staticCdn] SPA fallback rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
       res.set({
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache, must-revalidate',
+        'Cache-Control': blogSEOByRequest.has(req) ? 'no-store' : 'no-cache, must-revalidate',
       });
-      res.send(result.html);
+      const seo = blogSEOByRequest.get(req);
+      res.send(seo ? injectBlogSEO(result.html, seo) : result.html);
     } catch (err) {
       return next();
     }
@@ -538,6 +609,64 @@ async function bootstrap() {
       }
     };
 
+    // 旧公开地址的永久跳转：只在目标域名和当前域名不同的时候生效。
+    // 同域改路径会和服务端自己的路由互相兜底成死循环，这类迁移交给网关处理。
+    app.use(async (req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      const runtime = await publicRuntime();
+      if (!runtime.legacyEnabled || !runtime.legacyBasePath) return next();
+      const target = legacyRedirectTarget(req.path, req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '', {
+        enabled: true,
+        legacyBasePath: runtime.legacyBasePath,
+        publicBasePath: runtime.publicBasePath,
+        targetOrigin: runtime.targetOrigin,
+        currentHost: req.get('host') || '',
+      });
+      if (target) return res.redirect(301, target);
+      next();
+    });
+
+    // These routes precede static/CDN SPA fallbacks so XML and per-page metadata
+    // cannot be shadowed by an old static file or a generic cached index.html.
+    app.use(async (req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      const pathname = req.path;
+      const isBlog = pathname === '/blog' || pathname.startsWith('/blog/');
+      const xmlRoute = pathname === '/sitemap.xml' || pathname === '/robots.txt' || pathname === '/blog/feed.xml' || pathname === '/blog/moments/feed.xml' || /^\/blog\/sitemap-(?:pages|articles-\d+)\.xml$/.test(pathname);
+      if (!isBlog && !xmlRoute) {
+        if ((req.headers.accept || '').includes('text/html') && !pathname.startsWith('/api/')) res.setHeader('X-Robots-Tag','noindex, nofollow');
+        return next();
+      }
+      try {
+        const origin = publicOrigin(`${req.protocol}://${req.get('host')}`);
+        const runtime = await publicRuntime();
+        // 公开域名和工作区同源时，robots 只放行公开博客路径；
+        // 公开域名独立时，整站都是公开内容，才按公开基础路径放行。
+        const isPublicOrigin = new URL(origin).host === req.get('host');
+        const robotsBasePath = isPublicOrigin ? runtime.basePath : '/blog';
+        res.setHeader('Cache-Control','no-store');
+        if (xmlRoute) {
+          if (pathname === '/robots.txt') return res.type('text/plain').send(blogRobots(origin, robotsBasePath));
+          const payload = pathname === '/blog/feed.xml' ? await publicRSS(prisma,origin,undefined,runtime.basePath)
+            : pathname === '/blog/moments/feed.xml' ? await momentsRSS(prisma,origin,undefined,runtime.basePath)
+            : pathname === '/sitemap.xml' ? await sitemapIndex(prisma,origin,undefined,runtime.basePath)
+            : await sitemapPage(prisma,origin,pathname === '/blog/sitemap-pages.xml' ? 'pages' : Number(pathname.match(/articles-(\d+)\.xml$/)?.[1]),undefined,runtime.basePath);
+          if (!payload) return res.status(404).set('X-Robots-Tag','noindex').type('text/plain').send('Not found');
+          return res.type(pathname === '/blog/feed.xml' || pathname === '/blog/moments/feed.xml' ? 'application/rss+xml' : 'application/xml').send(payload);
+        }
+        if (pathname.endsWith('/')) return res.redirect(301,pathname.replace(/\/+$/,'') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
+        // 列表页的分页页码走 ?page=N，canonical / rel=prev,next 靠它
+        const page = Number(req.query.page) || 1;
+        const seo = await resolveBlogSEO(prisma,pathname,origin,undefined,page);
+        if (req.query.feed === 'recommended' || req.query.topic) seo.robots='noindex, follow';
+        blogSEOByRequest.set(req,seo);
+        res.status(seo.status).set('X-Robots-Tag',seo.robots);
+        next();
+      } catch (error) {
+        console.error('[blog SEO]',error);
+        res.status(503).set({'X-Robots-Tag':'noindex','Retry-After':'60'}).type('text/plain').send('公开页面暂时无法加载，请稍后重试。');
+      }
+    });
     const publicPath = path.resolve(appRootProd, 'public');
     app.use(cdnStaticRewrite(publicPath));
     app.use(cdnManifestRewrite(publicPath));
@@ -564,6 +693,8 @@ async function bootstrap() {
     // Start or update server
     if (!server) {
       server = app.listen(PORT, "::");
+      // 站点检查需要能检查本服务自己（含本机环境）。
+      setSiteCheckSelfOrigin(`http://127.0.0.1:${PORT}`);
       
       // Increase timeout for large file uploads (5 minutes)
       server.timeout = 5 * 60 * 1000;

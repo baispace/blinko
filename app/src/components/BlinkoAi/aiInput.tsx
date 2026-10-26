@@ -1,3 +1,4 @@
+import { splitDailyInput, joinDailyInput } from '@shared/lib/dailyInput';
 import { observer } from 'mobx-react-lite';
 import { Button, Textarea, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -104,6 +105,13 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
       />
 
       <div className="flex flex-col gap-2">
+        {aiStore.selectedSkill?.key === 'daily' ? <div className="space-y-3" onKeyDown={event => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); handleSubmit(); } }}>
+          <Textarea label="昨日事项与进展" labelPlacement="outside" placeholder="做了什么、哪些已完成、哪些仍在推进或遇到阻碍…" minRows={2} maxRows={5} isDisabled={busy}
+            value={splitDailyInput(aiStore.input).yesterday} onValueChange={value => { aiStore.input = joinDailyInput(value, splitDailyInput(aiStore.input).today); }} />
+          <Textarea label="今日安排" labelPlacement="outside" placeholder="继续推进的事项、新增任务，以及明确的时间要求…" minRows={2} maxRows={5} isDisabled={busy}
+            value={splitDailyInput(aiStore.input).today} onValueChange={value => { aiStore.input = joinDailyInput(splitDailyInput(aiStore.input).yesterday, value); }} />
+          <p className="text-xs leading-5 text-default-500">发送时自动读取历史待办与最近日报，生成变更后由你确认。截止时间不会因计划顺延而改变。</p>
+        </div> : <>
         <Textarea
           className="w-full"
           data-focus-visible="false"
@@ -137,6 +145,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           maxRows={8}
           placeholder={workflows.find(workflow => workflow.key === aiStore.selectedSkill?.key)?.placeholder || '输入你的问题，或引用历史内容继续讨论…'}
         />
+        </>}
         {/* 底部一行收束全部操作：+ 附件 → 技能 / 能力开关在左，模型 / 设置 / 发送在右 */}
         <div className="w-full gap-1 flex flex-wrap items-center">
           <AiAttachmentMenu staged={staged} onChange={setStaged} disabled={busy} />
@@ -187,7 +196,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
             <Icon icon={aiStore.isAnswering ? 'tabler:player-stop-filled' : 'uil:arrow-up'} width="20" height="20" />
           </Button>
         </div>
-        <p className="mt-1 text-right text-[11px] text-default-400">{busy ? '生成中可停止，已生成内容会保留' : 'Enter 发送 · Shift + Enter 换行'}</p>
+        <p className="mt-1 text-right text-[11px] text-default-400">{busy ? '生成中可停止，已生成内容会保留' : aiStore.selectedSkill?.key === 'daily' ? '⌘ / Ctrl + Enter 整理 · Enter 换行' : 'Enter 发送 · Shift + Enter 换行'}</p>
       </div>
       {aiStore.currentConversation.value?.nextMessageCursor && <p className="mt-2 text-[11px] text-default-400">长对话使用最近40条消息及最近工作流背景；更早的关键资料可重新引用。</p>}
       {checking ? <p role="status" className="mt-2 text-xs text-default-400">正在检查可用功能…</p> : configError ? <p role="alert" className="mt-2 text-xs text-default-500">配置读取失败 <button className="text-primary" onClick={() => setConfigVersion(value => value + 1)}>重试</button></p> : !available?.canChat && <p className="mt-2 text-xs text-default-500">请先在 AI 设置中配置对话模型，或选择一个已配置的模型。</p>}

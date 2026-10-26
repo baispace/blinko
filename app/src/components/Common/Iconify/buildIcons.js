@@ -36,7 +36,16 @@ const ALWAYS_INCLUDE_ICONS = [
   'cib:line',
   'simple-icons:coinbase',
   'hugeicons:mcp-server',
-  'mdi:tune'
+  'mdi:tune',
+  // 公开博客顶栏的「随便看看」：等轴测骰子，线框 / 实心两态（悬停切换）
+  'sidekickicons:dice',
+  'sidekickicons:dice-solid',
+  // 首页视图药丸的三个徽标：星 / 火焰 / 文件
+  'tabler:star',
+  'tabler:flame',
+  'tabler:files',
+  // 订阅页的微信公众号图标：品牌字形只有这一版，本地必须备着
+  'tabler:brand-wechat'
 ];
 
 // Recursively scan directories for files

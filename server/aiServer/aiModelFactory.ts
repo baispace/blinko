@@ -25,6 +25,7 @@ import { PinoLogger } from '@mastra/loggers';
 import { ModelCapabilities } from './types';
 import { aiModels } from '@shared/index';
 import { MastraVoice } from '@mastra/core/voice';
+import { stripThinkText as stripThinkTextImpl } from '@server/lib/aiText';
 
 /**
  * 从模型输出中提取合法标签。
@@ -36,10 +37,7 @@ import { MastraVoice } from '@mastra/core/voice';
  * 用于所有把模型原文写入用户可见内容（评论/笔记）的场景。
  */
 export function stripThinkText(text: string): string {
-  return String(text ?? '')
-    .replace(/<think>[\s\S]*?<\/think>/gi, '')
-    .replace(/<think>[\s\S]*$/i, '')
-    .trim();
+  return stripThinkTextImpl(text);
 }
 
 export function extractValidTags(text: string, max = 3): string[] {

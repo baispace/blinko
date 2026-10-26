@@ -56,7 +56,7 @@ export async function getTodoPage(input: z.infer<typeof todoPageInput>, accountI
       SELECT (date_trunc('day', now() AT TIME ZONE ${input.timezone}) AT TIME ZONE ${input.timezone}) AS start,
       ((date_trunc('day', now() AT TIME ZONE ${input.timezone}) + interval '1 day') AT TIME ZONE ${input.timezone}) AS finish
     ), normalized AS (
-      SELECT n.id,n."isArchived",n."createdAt",n."updatedAt",blinko_iso_timestamp(n.metadata->>'startAt') AS started,
+      SELECT n.id,n."isArchived",n."createdAt",n."updatedAt",blinko_iso_timestamp(n.metadata->>'startAt') AS started,n.metadata->>'planDate' AS planned,
         CASE WHEN n."isArchived" THEN 'done' WHEN COALESCE(n.metadata->>'taskStatus','done') != 'done' THEN n.metadata->>'taskStatus' WHEN COALESCE(n.metadata->>'snoozeCount','0') ~ '^[1-9][0-9]*$' THEN 'delayed' ELSE 'todo' END AS state,blinko_iso_timestamp(n.metadata->>'expireAt') AS due,
         COALESCE(blinko_iso_timestamp(n.metadata->>'completedAt'),n."updatedAt") AS completed, ${priorityRankSql} AS rank
       FROM notes n WHERE ${Prisma.join(filters, ' AND ')}
@@ -81,7 +81,7 @@ export async function getTodoPage(input: z.infer<typeof todoPageInput>, accountI
       view.dueTo ? Prisma.sql`due < ((${view.dueTo}::date + interval '1 day') AT TIME ZONE ${input.timezone})` : Prisma.sql`TRUE`
     ], ' AND ') : Prisma.sql`TRUE`),
     view.status === 'pending'  ? Prisma.sql`NOT "isArchived"` : view.status === 'done' ? Prisma.sql`"isArchived"` : Prisma.sql`TRUE`,
-    view.scope === 'today' ? Prisma.sql`(due < (SELECT finish FROM bounds) OR due IS NULL)`
+    view.scope === 'today' ? Prisma.sql`(planned = to_char(now() AT TIME ZONE ${input.timezone},'YYYY-MM-DD') OR due < (SELECT finish FROM bounds) OR due IS NULL)`
     : view.scope === 'week' ? Prisma.sql`due >= (date_trunc('week', now() AT TIME ZONE ${input.timezone}) AT TIME ZONE ${input.timezone}) AND due < ((date_trunc('week', now() AT TIME ZONE ${input.timezone}) + interval '7 days') AT TIME ZONE ${input.timezone})`
     : view.scope === 'important' ? Prisma.sql`rank <= 1`
     : view.scope === 'done' ? Prisma.sql`"isArchived"` : Prisma.sql`TRUE`

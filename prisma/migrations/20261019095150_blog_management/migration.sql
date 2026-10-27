@@ -11,7 +11,9 @@
 ALTER TABLE "conversation" ALTER COLUMN "metadata" SET DATA TYPE JSON;
 
 -- AlterTable
-ALTER TABLE "notePublication" ADD COLUMN     "coverAttachmentId" INTEGER;
+-- notePublication 的列与外键挪到 20261019160000_publication_snapshots：
+-- 那份迁移才创建这张表，在这里 ALTER 会直接报「relation does not exist」，
+-- 迁移链一断，后面所有迁移都落不下去（新环境部署必踩）。
 
 -- CreateTable
 CREATE TABLE "blogProfile" (
@@ -64,11 +66,7 @@ CREATE UNIQUE INDEX "blogTopic_accountId_slug_key" ON "blogTopic"("accountId", "
 -- CreateIndex
 CREATE INDEX "blogTopicNote_noteId_idx" ON "blogTopicNote"("noteId");
 
--- CreateIndex
-CREATE INDEX "notePublication_coverAttachmentId_idx" ON "notePublication"("coverAttachmentId");
 
--- AddForeignKey
-ALTER TABLE "notePublication" ADD CONSTRAINT "notePublication_coverAttachmentId_fkey" FOREIGN KEY ("coverAttachmentId") REFERENCES "attachments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "blogProfile" ADD CONSTRAINT "blogProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;

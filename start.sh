@@ -7,9 +7,25 @@ PUBLIC_DIR="$SERVER_DIR/public"
 # 镜像里不再全局安装 prisma（省 ~60MB），直接用本地 bin；找不到再回退 npx
 PRISMA_BIN=/app/node_modules/.bin/prisma
 if [ -x "$PRISMA_BIN" ]; then
-  "$PRISMA_BIN" migrate deploy
+  MIGRATE_CMD="\"$PRISMA_BIN\" migrate deploy"
 else
-  npx prisma migrate deploy
+  MIGRATE_CMD="npx prisma migrate deploy"
+fi
+
+# 迁移失败必须让容器停下来。
+#
+# 以前这里是裸执行：迁移报错被吞掉，容器照样起服务 —— 于是新代码对着旧
+# schema 跑，页面上全是 "table does not exist" / "column does not exist"，
+# 而日志里那条真正的错误早就被下一段输出冲掉了，看起来像「代码有 bug」。
+#
+# 现在失败即退出（restart: always 会重试），报错原样留在 docker logs 里。
+if ! eval "$MIGRATE_CMD"; then
+  echo ""
+  echo "FATAL: 数据库迁移失败，容器不启动。"
+  echo "       代码与数据库 schema 不一致时继续服务只会满屏报错。"
+  echo "       常见原因：迁移链中断（某条迁移失败后后续全部落不下去）。"
+  echo "       修复：prisma migrate resolve --rolled-back <失败的迁移名>，再重启容器。"
+  exit 1
 fi
 node server/seed.js
 

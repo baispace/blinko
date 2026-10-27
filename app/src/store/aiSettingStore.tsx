@@ -5,6 +5,7 @@ import { api } from '@/lib/trpc';
 import { aiProviders, aiModels, mcpServers } from '@shared/lib/prismaZodType';
 import { DEFAULT_MODEL_TEMPLATES } from '@/components/BlinkoSettings/AiSetting/constants';
 import { RootStore } from './root';
+import { ServiceCapabilityStore } from './serviceCapabilityStore';
 import { ToastPlugin } from './module/Toast/Toast';
 import i18n from '@/lib/i18n';
 import { defaultUrlTransform } from 'react-markdown';
@@ -46,6 +47,17 @@ export class AiSettingStore implements Store {
         },
     });
 
+    /**
+     * 重新读一遍服务商列表，顺带刷新服务就绪状态。
+     *
+     * 服务商的密钥改了、模型被删了 —— 依赖这些服务的入口（右键菜单里的
+     * AI 标签 / 关联笔记）必须跟着变，不能停在旧结论上。
+     */
+    reloadProviders = async () => {
+        await this.aiProviders.call();
+        void RootStore.Get(ServiceCapabilityStore).load(true);
+    };
+
     // Model management
     allModels = new PromiseState({
         function: async () => {
@@ -61,21 +73,21 @@ export class AiSettingStore implements Store {
     createProvider = new PromiseState({
         function: async (data: { title: string; provider: string; baseURL?: string; apiKey?: string; config?: any; sortOrder: number }) => {
             await PromiseCall(api.ai.createProvider.mutate(data));
-            await this.aiProviders.call();
+            await this.reloadProviders();
         },
     });
 
     updateProvider = new PromiseState({
         function: async (data: { id: number; title?: string; provider?: string; baseURL?: string; apiKey?: string; config?: any; sortOrder?: number }) => {
             await PromiseCall(api.ai.updateProvider.mutate(data));
-            await this.aiProviders.call();
+            await this.reloadProviders();
         },
     });
 
     deleteProvider = new PromiseState({
         function: async (id: number) => {
             await PromiseCall(api.ai.deleteProvider.mutate({ id }));
-            await this.aiProviders.call();
+            await this.reloadProviders();
         },
     });
 
@@ -83,7 +95,7 @@ export class AiSettingStore implements Store {
     createModel = new PromiseState({
         function: async (data: { title: string; modelKey: string; providerId: number; capabilities: ModelCapabilities; config?: any; sortOrder: number }) => {
             await PromiseCall(api.ai.createModel.mutate(data));
-            await this.aiProviders.call();
+            await this.reloadProviders();
             await this.allModels.call();
         },
     });
@@ -91,7 +103,7 @@ export class AiSettingStore implements Store {
     updateModel = new PromiseState({
         function: async (data: { id: number; title?: string; modelKey?: string; capabilities?: ModelCapabilities; config?: any; sortOrder?: number }) => {
             await PromiseCall(api.ai.updateModel.mutate(data));
-            await this.aiProviders.call();
+            await this.reloadProviders();
             await this.allModels.call();
         },
     });
@@ -99,7 +111,7 @@ export class AiSettingStore implements Store {
     deleteModel = new PromiseState({
         function: async (data: { id: number }) => {
             await PromiseCall(api.ai.deleteModel.mutate({ id: data.id }));
-            await this.aiProviders.call();
+            await this.reloadProviders();
             await this.allModels.call();
         },
     });
@@ -107,7 +119,7 @@ export class AiSettingStore implements Store {
     createModelsFromProvider = new PromiseState({
         function: async (data: { providerId: number; models: { modelKey: string; title: string; capabilities: ModelCapabilities; config?: any }[] }) => {
             await PromiseCall(api.ai.createModelsFromProvider.mutate(data as any));
-            await this.aiProviders.call();
+            await this.reloadProviders();
             await this.allModels.call();
         },
     });
@@ -123,7 +135,7 @@ export class AiSettingStore implements Store {
                 });
 
                 // Reload providers to get updated config
-                await this.aiProviders.call();
+                await this.reloadProviders();
 
                 return modelList;
             } catch (error) {

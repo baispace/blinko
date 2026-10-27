@@ -24,6 +24,7 @@ import { taskRouter } from './task';
 import { aiScheduledTaskRouter } from './aiScheduledTask';
 import { mcpServersRouter } from './mcpServers';
 import { fontRouter } from './font';
+import { blogRouter } from './blog';
 export const appRouter = router({
   ai: aiRouter,
   aiImport: aiImportRouter,
@@ -44,6 +45,7 @@ export const appRouter = router({
   message: messageRouter,
   mcpServers: mcpServersRouter,
   fonts: fontRouter,
+  blog: blogRouter,
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

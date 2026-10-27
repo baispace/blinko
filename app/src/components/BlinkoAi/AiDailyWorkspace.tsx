@@ -20,7 +20,7 @@ const readWidth = () => {
 };
 
 /**
- * 日报工作区（结果区）。
+ * 每日回顾工作区（结果区）。
  *
  * 对话区只负责「任务从哪来、过程怎么走」，日报正文与待办变更的确认落到这里，
  * 对话流因此不会被几十行表单撑开。宽度可拖拽并记忆，可一键放大成全屏，
@@ -105,7 +105,7 @@ export const AiDailyWorkspace = observer(({ messageId, onClose }: { messageId: n
   if (!draft) return mount(<div className={overlay ? 'fixed inset-0 z-[10070] bg-background' : 'shrink-0'} style={overlay ? undefined : { width }}>
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-2 border-b border-default-200 px-4 py-3">
-        <span className="text-sm font-medium">日报工作区</span>
+        <span className="text-sm font-medium">每日回顾工作区</span>
         <div className="ml-auto flex items-center gap-1">{headerActions}</div>
       </header>
       <div className="px-4 py-3 text-sm text-default-500">找不到这条日报草稿，可能已不在当前会话中。</div>
@@ -115,7 +115,7 @@ export const AiDailyWorkspace = observer(({ messageId, onClose }: { messageId: n
   return mount(<div
     ref={panelRef}
     role="complementary"
-    aria-label="日报工作区"
+    aria-label="每日回顾工作区"
     className={shell}
     style={overlay ? undefined : { width }}
   >
@@ -129,7 +129,7 @@ export const AiDailyWorkspace = observer(({ messageId, onClose }: { messageId: n
 
     <header className="flex shrink-0 items-center gap-2 border-b border-default-200 px-4 py-3">
       <Icon icon="tabler:layout-columns" width="16" height="16" className="shrink-0 text-default-400" />
-      <span className="text-sm font-medium">日报工作区</span>
+      <span className="text-sm font-medium">每日回顾工作区</span>
       {draft.actions.length > 0 && <span className="text-xs text-default-400">{draft.actions.length} 项变更</span>}
       <div className="ml-auto flex items-center gap-1">{headerActions}</div>
     </header>

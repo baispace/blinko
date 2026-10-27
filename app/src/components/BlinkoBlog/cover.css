@@ -1,0 +1,100 @@
+/*
+ * 封面三层：底图层（图片）、文字层（真文字）、状态层（页面自己的角标/控件）。
+ *
+ * 底图统一 1600×900，各展示位用 object-fit: cover 裁，
+ * 裁切位置由 shared/lib/blogCover.ts 的焦点变量给出 ——
+ * 每个展示位各存一份，换底图后自动回到居中。
+ */
+
+.ink-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ink-cover-base {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 各展示位用自己那份裁切位置。 */
+.ink-cover[data-placement="double"] .ink-cover-base {
+  object-position: var(--ink-cover-double-x) var(--ink-cover-double-y);
+}
+.ink-cover[data-placement="single"] .ink-cover-base {
+  object-position: var(--ink-cover-single-x) var(--ink-cover-single-y);
+}
+.ink-cover[data-placement="banner"] .ink-cover-base {
+  object-position: var(--ink-cover-banner-x) var(--ink-cover-banner-y);
+}
+
+/*
+ * 图片挂了也别让版面塌掉：
+ * 底图位置留一块同色系渐变，文字照样可读。
+ */
+.ink-cover[data-broken="1"] {
+  background: linear-gradient(120deg, #3b2ea8, #6d4bff 55%, #8b5cf6);
+}
+
+/* 文字遮罩：与分享图的 SVG 渐变同一组参数。 */
+.ink-cover-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/*
+ * 文字层：真文字，不是画进图片里的。
+ * 位置与字号由 shared/lib/blogCoverText.ts 按容器实际尺寸算出，
+ * 这里只负责把它摆到算好的位置。
+ */
+.ink-cover-text {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  font-family:
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Noto Sans SC",
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px rgb(18 10 60 / 32%);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ink-cover-line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ink-cover-subtitle {
+  font-weight: 500;
+  color: #ecebff;
+  text-shadow: 0 1px 8px rgb(18 10 60 / 28%);
+}
+
+/*
+ * 标题长到可读下限也放不下时：提示作者缩短短标题。
+ * 这里用渐隐代替硬截断 —— 宁可少显示一点，也别让标题读不通。
+ */
+.ink-cover-text[data-overflow="1"] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+}

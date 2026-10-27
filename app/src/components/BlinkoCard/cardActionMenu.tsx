@@ -2,6 +2,7 @@ import { supportsDesktopBookmarks, openDesktopBookmark, bookmarkTitle } from '@/
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { getFullNote } from '@/lib/fullNote';
 import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { _ } from '@/lib/lodash';
@@ -9,6 +10,7 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { PluginApiStore } from '@/store/plugin/pluginApiStore';
+import { ServiceCapabilityStore } from '@/store/serviceCapabilityStore';
 import { PageWidthStore, PAGE_WIDTH_ORDER, type PageWidthMode } from '@/store/pageWidthStore';
 import { Note, NoteType } from '@shared/lib/types';
 import {
@@ -18,6 +20,7 @@ import {
   handleTop,
   handlePublic,
   handlePublish,
+  handleMomentPublish,
   handleArchived,
   handleAITag,
   handleTrash,
@@ -105,10 +108,19 @@ export const CardActionMenu = observer(({
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
   const pageWidth = RootStore.Get(PageWidthStore);
+  const capability = RootStore.Get(ServiceCapabilityStore);
   const isRecycle = !!blinkoItem.isRecycle;
-  const hasAi = !!blinko.config.value?.mainModelId;
+  /** 依赖 AI 服务的入口：服务没真的配好就不出现在菜单里。 */
+  const hasChat = capability.chat;
+  /** 「关联笔记」还要向量模型 —— 它要检索语义相近的笔记。 */
+  const hasChatAndEmbedding = capability.chat && capability.embedding;
   /** 全屏编辑器才会额外挂「视图」组；列表卡片保持原样，避免和分组里的分享重复 */
   const showViewItems = showPageWidth || !!onToggleEditorMode;
+
+  // 服务就绪状态读一次就够 —— 之后由 AI 设置的改动来刷新。
+  useEffect(() => {
+    void capability.load();
+  }, [capability]);
 
   /**
    * Every handler reads `blinko.curSelectedNote`, so refresh it right before.
@@ -302,12 +314,25 @@ export const CardActionMenu = observer(({
         {!isRecycle ? (
           <DropdownItem
             key="publish"
-            textValue={blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}
+            textValue={blinkoItem.isPublished ? '管理发布' : '发布到博客'}
             onClick={withNote(handlePublish)}
           >
             <div className="flex items-start gap-2">
               <Icon icon="tabler:world" width="20" height="20" />
-              <div>{blinkoItem.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+              <div>{blinkoItem.isPublished ? '管理发布' : '发布到博客'}</div>
+            </div>
+          </DropdownItem>
+        ) : null}
+        {/* 动态就是闪念：入口挂在闪念上，后台不再单独维护一份动态内容。 */}
+        {!isRecycle && blinkoItem.type === NoteType.BLINKO ? (
+          <DropdownItem
+            key="moment"
+            textValue={blinkoItem.isMoment ? '撤回动态' : '发布为动态'}
+            onClick={withNote(handleMomentPublish)}
+          >
+            <div className="flex items-start gap-2">
+              <Icon icon={blinkoItem.isMoment ? 'tabler:eye-off' : 'tabler:bolt'} width="20" height="20" />
+              <div>{blinkoItem.isMoment ? '撤回动态' : '发布为动态'}</div>
             </div>
           </DropdownItem>
         ) : null}
@@ -321,15 +346,15 @@ export const CardActionMenu = observer(({
           </DropdownItem>
         ) : null}
 
-        {hasAi ? <DropdownItem key="sep-ai" textValue=" " isReadOnly classNames={sepClassNames} /> : null}
+        {hasChat ? <DropdownItem key="sep-ai" textValue=" " isReadOnly classNames={sepClassNames} /> : null}
 
         {/* 智能 */}
-        {hasAi ? (
+        {hasChat ? (
           <DropdownItem key="aitag" textValue={t('ai-tag')} onClick={withNote(handleAITag)}>
             <AITagItem />
           </DropdownItem>
         ) : null}
-        {hasAi ? (
+        {hasChatAndEmbedding ? (
           <DropdownItem
             key="related"
             textValue={t('related-notes')}

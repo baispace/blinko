@@ -1,0 +1,442 @@
+/*
+ * 文章文末的互动区与反馈弹窗。
+ *
+ * 只作用于本模块：类名全部带 ink-ai- 前缀（article interaction），
+ * 不碰文章排版、封面、目录与上一篇／下一篇的任何样式。
+ */
+
+/* ---------- 弹窗作用域 ---------- */
+
+/*
+ * 弹窗被 HeroUI 挂到 body 上，脱离了 .ink-blog 的变量作用域。
+ * 这里自己开一份同款作用域，明暗两套值都写死 —— 弹窗和公开站必须同色。
+ */
+.ink-ai-surface.ink-ai-surface {
+  --ink-bg: #f7f8fc;
+  --ink-surface: #ffffff;
+  --ink-text: #171927;
+  --ink-muted: #7e8499;
+  --ink-line: #e5e8f3;
+  --ink-accent: #7051ff;
+  --ink-tint: #f1eeff;
+  --heroui-primary: 251 100% 66%;
+  --background: #ffffff;
+  --foreground: #171927;
+  color-scheme: light;
+}
+
+.ink-ai-surface.ink-ai-surface.ink-ai-dark {
+  --ink-bg: #12131a;
+  --ink-surface: #1c1e28;
+  --ink-text: #e7e9f5;
+  --ink-muted: #a3a9c0;
+  --ink-line: #323646;
+  --ink-accent: #7051ff;
+  --ink-tint: #2f294a;
+  --heroui-background: 240 5.88% 10%;
+  --heroui-foreground: 210 5.56% 92.94%;
+  --heroui-content1: 240 5.26% 14.9%;
+  --heroui-content2: 240 3.7% 21.18%;
+  --heroui-default-50: 240 5.88% 10%;
+  --heroui-default-100: 240 5.26% 18%;
+  --heroui-default-200: 240 3.7% 26%;
+  --heroui-default-300: 240 5.26% 36%;
+  --heroui-default-400: 240 5% 55%;
+  --heroui-default-500: 240 5% 65%;
+  --heroui-default-600: 240 5% 75%;
+  --heroui-default-700: 240 5% 85%;
+  --heroui-default-800: 240 5% 92%;
+  --heroui-default-900: 240 5% 96%;
+  --heroui-divider: 0 0% 100%;
+  --background: #1c1e28;
+  --foreground: #e7e9f5;
+  color-scheme: dark;
+}
+
+/* ---------- 互动区 ---------- */
+
+.ink-ai-box {
+  margin: 34px 0 8px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--ink-accent) 20%, var(--ink-line));
+  background: color-mix(in srgb, var(--ink-accent) 5%, var(--ink-surface));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 22px 32px;
+  align-items: center;
+}
+
+.ink-ai-main {
+  min-width: 0;
+}
+
+.ink-ai-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  margin: 0;
+}
+
+.ink-ai-title svg {
+  color: var(--ink-accent);
+  flex-shrink: 0;
+}
+
+.ink-ai-desc {
+  margin: 6px 0 16px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-ai-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ink-ai-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--ink-line);
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.ink-ai-reaction:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ink-accent) 45%, var(--ink-line));
+  color: var(--ink-accent);
+}
+
+.ink-ai-reaction:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+.ink-ai-reaction[aria-pressed="true"] {
+  background: var(--ink-accent);
+  border-color: var(--ink-accent);
+  color: #fff;
+}
+
+.ink-ai-reaction:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ink-ai-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+/* 右侧：反馈作者入口 */
+.ink-ai-side {
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+  min-width: 200px;
+}
+
+.ink-ai-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--ink-accent) 55%, transparent);
+  background: var(--ink-surface);
+  color: var(--ink-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.ink-ai-feedback-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink-accent) 8%, var(--ink-surface));
+}
+
+.ink-ai-feedback-btn:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+.ink-ai-feedback-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ink-ai-feedback-hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.ink-ai-notice {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ink-ai-notice svg {
+  flex-shrink: 0;
+}
+
+.ink-ai-notice.is-error {
+  color: #dc2626;
+}
+
+.ink-ai-notice button {
+  border: 0;
+  background: none;
+  color: var(--ink-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* ---------- 反馈弹窗 ---------- */
+
+.ink-ai-modal {
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  border-radius: 16px;
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--ink-shadow);
+}
+
+.ink-ai-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 4px;
+}
+
+.ink-ai-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+  margin: 0;
+}
+
+.ink-ai-modal-lead {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-ai-modal-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px 24px 4px;
+}
+
+.ink-ai-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ink-ai-label {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+
+.ink-ai-label .is-required {
+  color: #dc2626;
+}
+
+.ink-ai-label .is-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.ink-ai-help {
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+}
+
+.ink-ai-help.is-warn {
+  color: #b45309;
+}
+
+.ink-ai-error {
+  font-size: 12px;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ink-ai-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-text);
+  cursor: pointer;
+}
+
+.ink-ai-checkbox input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ink-accent);
+  flex-shrink: 0;
+}
+
+.ink-ai-checkbox small {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.ink-ai-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 24px 20px;
+}
+
+.ink-ai-modal .blog-ui-button {
+  min-height: 40px;
+  height: auto;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+  box-shadow: none;
+}
+
+.ink-ai-modal .blog-ui-button.ink-ai-submit {
+  background: var(--ink-accent);
+  color: #fff;
+}
+
+.ink-ai-modal .blog-ui-button.ink-ai-submit:hover:not([disabled]) {
+  background: color-mix(in srgb, var(--ink-accent) 88%, #000);
+}
+
+.ink-ai-modal .blog-ui-button.ink-ai-quiet {
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.ink-ai-modal .blog-ui-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 成功态 */
+.ink-ai-success {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 20px 24px 24px;
+}
+
+.ink-ai-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+  color: #16a34a;
+}
+
+.ink-ai-success-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-text);
+  margin: 0;
+}
+
+.ink-ai-success-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+  max-width: 380px;
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 820px) {
+  .ink-ai-box {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 20px 18px;
+    margin-top: 28px;
+  }
+  .ink-ai-side {
+    min-width: 0;
+    justify-items: stretch;
+  }
+  .ink-ai-feedback-hint {
+    text-align: left;
+  }
+  /* 三种表态尽量同排：等分宽度，文字换行也不至于挤爆 */
+  .ink-ai-reactions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ink-ai-reaction {
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 6px;
+    min-height: 66px;
+    justify-content: center;
+    text-align: center;
+    font-size: 13px;
+  }
+  .ink-ai-reaction .is-icon {
+    line-height: 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .ink-ai-reactions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -39,7 +39,7 @@ export async function createContext(req: Request, res: Response) {
     console.error('get token error:', error);
   }
   
-  return { userAgent } as User;
+  return { userAgent, ip: req?.ip || '0.0.0.0' } as User;
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

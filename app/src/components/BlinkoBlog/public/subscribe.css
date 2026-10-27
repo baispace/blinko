@@ -1,0 +1,678 @@
+/*
+ * 订阅更新页的样式层。
+ *
+ * 结构顺序固定：
+ *   标题区 → 两张订阅卡片 → 关于这里 → 订阅说明 → 联系入口
+ *
+ * 视觉约定：
+ *   1. 顶部留白要够 —— 标题、介绍和卡片之间不能挤在一起；
+ *   2. 两张卡片桌面并排、等高，移动端上下排列且不横向溢出；
+ *   3. 二维码始终白底、不裁剪、不加装饰 —— 扫不出来就等于没有；
+ *   4. 深浅主题结构一致，只换语义色。
+ */
+
+.ink-blog .ink-sub {
+  padding: 56px 0 72px;
+}
+
+/*
+ * 内容宽度与首页一致（.ink-wrap：1280px / 左右各 64px，窄屏 32px）。
+ * 订阅页比首页窄一截时，顶栏导航、页脚和正文的内容边缘对不齐，
+ * 视觉上像是换了一个站 —— 所以这里直接跟首页共用同一套宽度口径。
+ */
+.ink-blog .ink-sub-inner {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ---------- 标题区 ---------- */
+.ink-blog .ink-sub-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.ink-blog .ink-sub-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ink-blog .ink-sub-title {
+  margin: 6px 0 0;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-sub-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* ---------- 订阅卡片 ---------- */
+.ink-blog .ink-sub-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* 有一个渠道未开放时不再拉伸：「暂未开放」那张卡保持紧凑。 */
+.ink-blog .ink-sub-cards.has-closed {
+  align-items: start;
+}
+
+.ink-blog .ink-sub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 22px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+  background: var(--ink-surface);
+}
+
+/* 未开放的渠道：只有标题和一句说明，没有可点的操作。 */
+.ink-blog .ink-sub-card.is-closed {
+  gap: 0;
+  background: transparent;
+  border-style: dashed;
+}
+
+.ink-blog .ink-sub-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.ink-blog .ink-sub-card-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  color: #fff;
+}
+
+.ink-blog .ink-sub-card-icon.is-wechat {
+  background: #2aa845;
+}
+
+.ink-blog .ink-sub-card-icon.is-rss {
+  background: #f26522;
+}
+
+.ink-blog .ink-sub-card-heading {
+  min-width: 0;
+}
+
+.ink-blog .ink-sub-card-title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-card-desc {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* ---------- 二维码 ---------- */
+.ink-blog .ink-sub-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 0;
+}
+
+/* 二维码底板恒为浅色：深色主题下也保持白底，否则扫不出来。 */
+.ink-blog .ink-sub-qr img {
+  display: block;
+  width: 176px;
+  height: 176px;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--ink-line);
+}
+
+.ink-blog .ink-sub-qr-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-text);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-sub-qr-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 12px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.ink-blog .ink-sub-qr-fallback p {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.ink-blog .ink-sub-qr-fallback small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* ---------- RSS 地址框 ---------- */
+.ink-blog .ink-sub-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ink-blog .ink-sub-feed-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-feed-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-tint);
+}
+
+.ink-blog .ink-sub-feed-box code {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-text);
+  /* 长地址在窄屏里换行，不横向溢出。 */
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* ---------- 按钮 ---------- */
+.ink-blog .ink-sub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.ink-blog .ink-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ink-blog .ink-sub-btn.is-primary {
+  border: 1px solid transparent;
+  background: var(--ink-accent);
+  color: #fff;
+}
+
+.ink-blog .ink-sub-btn.is-primary:hover {
+  filter: brightness(1.06);
+}
+
+.ink-blog .ink-sub-btn.is-ghost {
+  border: 1px solid var(--ink-line);
+  background: transparent;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-btn.is-ghost:hover {
+  border-color: var(--ink-accent);
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-sub-btn:focus-visible,
+.ink-blog .ink-sub-help-link:focus-visible,
+.ink-blog .ink-sub-about-link:focus-visible,
+.ink-blog .ink-sub-tag:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* 「如何使用 RSS？」：低调的文字入口，不做成按钮。 */
+.ink-blog .ink-sub-help-link {
+  align-self: flex-start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- 提示与反馈 ---------- */
+.ink-blog .ink-sub-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-sub-hint.is-dim {
+  opacity: 0.85;
+}
+
+.ink-blog .ink-sub-hint a {
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-sub-feedback {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ink-blog .ink-sub-feedback.is-ok {
+  color: var(--ink-ok, #2aa845);
+}
+
+.ink-blog .ink-sub-feedback.is-fail {
+  color: var(--ink-warn, #d9482f);
+}
+
+.ink-blog .ink-sub-notice {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-notice a {
+  color: var(--ink-accent);
+  text-decoration: none;
+}
+
+.ink-blog .ink-sub-notice a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 关于这里 ---------- */
+.ink-blog .ink-sub-about {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 24px 26px;
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-sub-about .ink-sub-eyebrow {
+  background: transparent;
+  padding: 0;
+  height: auto;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.ink-blog .ink-sub-about-title {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-sub-about-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ink-blog .ink-sub-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.ink-blog .ink-sub-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ink-blog .ink-sub-tag.is-plain {
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-tag:not(.is-plain):hover {
+  filter: brightness(1.04);
+}
+
+.ink-blog .ink-sub-about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: var(--ink-accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ink-blog .ink-sub-about-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 订阅说明 ---------- */
+.ink-blog .ink-sub-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ink-blog .ink-sub-notes-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-notes-list {
+  margin: 0;
+  padding: 4px 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+}
+
+.ink-blog .ink-sub-note {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-blog .ink-sub-note:last-child {
+  border-bottom: 0;
+}
+
+.ink-blog .ink-sub-note dt {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-note dd {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+}
+
+/* ---------- 联系入口 ---------- */
+.ink-blog .ink-sub-contact {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--ink-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ink-blog .ink-sub-contact a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- RSS 帮助弹窗 ---------- */
+.ink-blog .ink-sub-modal {
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+}
+
+.ink-blog .ink-sub-modal-surface {
+  background: var(--ink-surface);
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-modal-dark {
+  background: var(--ink-surface);
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ink-blog .ink-sub-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.ink-blog .ink-sub-modal-close:hover {
+  background: var(--ink-tint);
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-sub-modal-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ink-blog .ink-sub-modal-steps li {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-modal-steps b {
+  display: block;
+  color: var(--ink-text);
+  font-weight: 700;
+}
+
+.ink-blog .ink-sub-modal-note {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+}
+
+.ink-blog .ink-sub-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ink-blog .ink-sub-modal-done {
+  height: 34px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--ink-accent);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 860px) {
+  .ink-blog .ink-sub {
+    padding: 40px 0 56px;
+  }
+  .ink-blog .ink-sub-inner {
+    width: min(1280px, calc(100% - 32px));
+    gap: 26px;
+  }
+  .ink-blog .ink-sub-title {
+    font-size: 27px;
+  }
+  .ink-blog .ink-sub-lead {
+    font-size: 14px;
+  }
+  /* 卡片上下排列，地址与按钮都不横向溢出。 */
+  .ink-blog .ink-sub-cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .ink-blog .ink-sub-card {
+    padding: 18px 16px 16px;
+  }
+  .ink-blog .ink-sub-actions .ink-sub-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .ink-blog .ink-sub-about {
+    padding: 20px 18px;
+  }
+  .ink-blog .ink-sub-about-title {
+    font-size: 19px;
+  }
+  .ink-blog .ink-sub-notes-list {
+    padding: 2px 14px;
+  }
+  /* 说明面板在窄屏改为上下排列：标签在上，说明在下。 */
+  .ink-blog .ink-sub-note {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 宽度口径跟首页一致（窄屏统一 32px），这里不再另收一档。 */
+  .ink-blog .ink-sub-title {
+    font-size: 24px;
+  }
+  .ink-blog .ink-sub-qr img {
+    width: 152px;
+    height: 152px;
+  }
+}
+
+/*
+ * 二维码提示的两套文案：桌面说「扫一扫」，窄屏与触摸设备说「保存后长按识别」。
+ * 默认只显示桌面那套，两套同时出现会变成一段重复的废话。
+ */
+.ink-blog .ink-sub-hint .is-mobile {
+  display: none;
+}
+
+/* 窄屏：换成保存后在微信内识别。 */
+@media (max-width: 480px) {
+  .ink-blog .ink-sub-hint .is-desktop {
+    display: none;
+  }
+  .ink-blog .ink-sub-hint .is-mobile {
+    display: inline;
+  }
+}
+
+/* 触摸设备（不论屏幕多宽）：提示也要说保存后长按识别。 */
+@media (hover: none) and (pointer: coarse) {
+  .ink-blog .ink-sub-hint .is-desktop {
+    display: none;
+  }
+  .ink-blog .ink-sub-hint .is-mobile {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-blog .ink-sub-btn {
+    transition: none;
+  }
+}

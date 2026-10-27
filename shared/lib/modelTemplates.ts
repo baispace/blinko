@@ -16,6 +16,7 @@ export interface ModelTemplate {
   capabilities: Partial<ModelCapabilities>;
   config?: {
     embeddingDimensions?: number;
+    imageGenerationProtocol?: 'openai' | 'minimax';
   };
 }
 
@@ -32,6 +33,9 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
   { modelKey: 'text-embedding-3-large', title: 'Text Embedding 3 Large', capabilities: { embedding: true }, config: { embeddingDimensions: 3072 } },
   { modelKey: 'text-embedding-3-small', title: 'Text Embedding 3 Small', capabilities: { embedding: true }, config: { embeddingDimensions: 1536 } },
   { modelKey: 'text-embedding-ada-002', title: 'Text Embedding Ada 002', capabilities: { embedding: true }, config: { embeddingDimensions: 1536 } },
+  { modelKey: 'gpt-image-1', title: 'GPT Image 1', capabilities: { imageGeneration: true } },
+  { modelKey: 'image-01-live', title: 'MiniMax Image 01 Live', capabilities: { imageGeneration: true }, config: { imageGenerationProtocol: 'minimax' } },
+  { modelKey: 'image-01', title: 'MiniMax Image 01', capabilities: { imageGeneration: true }, config: { imageGenerationProtocol: 'minimax' } },
   { modelKey: 'dall-e-3', title: 'DALL-E 3', capabilities: { imageGeneration: true } },
   { modelKey: 'dall-e-2', title: 'DALL-E 2', capabilities: { imageGeneration: true } },
   { modelKey: 'tts-1', title: 'TTS 1', capabilities: { audio: true } },

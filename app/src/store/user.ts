@@ -1,4 +1,5 @@
 import { mergeProfileIdentity } from '@/lib/profileIdentity';
+import { isPublicRoute } from '@/lib/publicRoutes';
 import { syncHeroAccent } from '@/lib/themeAccent';
 // import { User } from 'next-auth';
 // import { useSession } from 'next-auth/react';
@@ -17,6 +18,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { signIn, TokenData, navigate } from '@/components/Auth/auth-client';
 import { DialogStore } from './module/Dialog';
 import { ShowTwoFactorModal } from '@/components/Common/TwoFactorModal';
+import { BRAND_ASSET_VERSION, BRAND_NAME } from '@/components/Common/Brand/brandGeometry';
 import { ToastPlugin } from './module/Toast/Toast';
 import { StorageState } from './standard/StorageState';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
@@ -215,20 +217,33 @@ export class UserStore implements Store {
   }
 
   updateAppTitle(customTitle?: string) {
-    const appTitle = customTitle?.trim() || 'Ink';
+    const appTitle = customTitle?.trim() || BRAND_NAME.en;
     document.title = appTitle;
     document.querySelector('meta[name="application-name"]')?.setAttribute('content', appTitle);
     document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appTitle);
   }
 
   updateAppIcon(icon?: string) {
-    const href = icon || '/favicon.ico';
-    for (const relation of ['icon', 'shortcut icon', 'apple-touch-icon']) {
+    const setLink = (relation: string, href: string, type?: string) => {
       let link = document.querySelector<HTMLLinkElement>(`link[rel="${relation}"]`);
       if (!link) { link = document.createElement('link'); link.rel = relation; document.head.appendChild(link); }
       link.href = href;
-      if (icon) link.type = 'image/png'; else link.removeAttribute('type');
+      if (type) link.type = type; else link.removeAttribute('type');
+    };
+    if (icon) {
+      setLink('icon', icon, 'image/png');
+      setLink('shortcut icon', icon, 'image/png');
+      setLink('apple-touch-icon', icon, 'image/png');
+      return;
     }
+    // Brand assets live in /public and are served `immutable` for a week, so
+    // the reference carries the asset version: bumping BRAND_ASSET_VERSION is
+    // enough to invalidate every icon at once.
+    const version = BRAND_ASSET_VERSION;
+    setLink('icon', `/favicon.svg?v=${version}`, 'image/svg+xml');
+    setLink('shortcut icon', `/favicon.svg?v=${version}`, 'image/svg+xml');
+    // iOS ignores SVG touch icons, so the raster one stays in place.
+    setLink('apple-touch-icon', `/icons/apple-touch-icon.png?v=${version}`, 'image/png');
   }
 
   async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
@@ -442,12 +457,7 @@ export class UserStore implements Store {
       const pathname = location.pathname;
       const isInitialLoad = !this.isSetup;
 
-      if (pathname !== '/signin' &&
-        pathname !== '/signup' &&
-        !pathname.includes('/share') &&
-        !pathname.includes('/ai-share') &&
-        !pathname.includes('/oauth-callback') &&
-        !isInitialLoad) {
+      if (!isPublicRoute(pathname) && !isInitialLoad) {
         navigate('/signin');
       }
     }
@@ -551,7 +561,7 @@ export class UserStore implements Store {
     useEffect(() => {
       const handleSignout = () => {
         const pathname = location.pathname;
-        if (pathname === '/signup' || pathname.includes('/share') || pathname.includes('/ai-share') || pathname.includes('/oauth-callback')) {
+        if (isPublicRoute(pathname)) {
           return
         }
         this.clear()

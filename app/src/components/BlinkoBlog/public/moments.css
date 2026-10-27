@@ -1,0 +1,851 @@
+/*
+ * 公开博客的「动态」页。
+ *
+ * 单独成文件，不塞进 blog.css：
+ * 这一页有自己的单列版式、图片网格与图片查看器作用域，
+ * 混进主样式文件会让两套规则互相干扰。
+ *
+ * 版式原则：单列、留白、细分隔线。
+ * 不做厚边框卡片、不加阴影、不做时间轴侧栏 —— 动态要读起来轻。
+ */
+
+/* ---------- 页面骨架 ---------- */
+
+.ink-moments {
+  padding-bottom: 64px;
+}
+
+.ink-moments-inner {
+  /* 桌面端居中单列，左右留白。不设右侧栏。 */
+  width: min(640px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* ---------- 顶部作者区 ---------- */
+
+.ink-moments-author {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 34px 0 26px;
+}
+
+.ink-moments-author-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ink-moments-author-avatar {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--ink-tint);
+}
+
+.ink-moments-author-avatar-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.ink-moments-author-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+  margin: 0 0 4px;
+}
+
+.ink-moments-author-bio {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.ink-moments-author-rss {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ink-moments-author-rss:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 标题 ---------- */
+
+.ink-moments-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  margin: 0 0 6px;
+}
+
+.ink-moments-subtitle {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* ---------- 筛选区 ---------- */
+
+.ink-moments-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-moments-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+}
+
+.ink-moments-chip {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ink-moments-chip:hover {
+  color: var(--ink-text);
+}
+
+.ink-moments-chip.is-active {
+  background: var(--ink-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.ink-moments-chip:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+.ink-moments-month {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 14px;
+  padding: 8px 30px 8px 12px;
+  cursor: pointer;
+  /* 自己画下拉箭头：原生箭头在暗色下不跟主题走。 */
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.ink-moments-month:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- 动态条目 ---------- */
+
+.ink-moment {
+  position: relative;
+  padding: 22px 0 20px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-moment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ink-moment-time {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ink-moment-more {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin: -6px -6px -6px 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.ink-moment-more:hover {
+  color: var(--ink-text);
+  background: var(--ink-tint);
+}
+
+.ink-moment-more:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* 省略号菜单：只放真能用的操作。 */
+.ink-moment-menu {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 20;
+  min-width: 168px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--ink-line);
+  background: var(--ink-surface);
+  box-shadow: var(--ink-shadow);
+}
+
+.ink-moment-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ink-moment-menu button:hover {
+  background: var(--ink-tint);
+}
+
+.ink-moment-menu button:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: -2px;
+}
+
+/* 正文：闪念的 markdown，图片内联在正文里。
+   渲染走公开正文那套白名单（PublicArticleBody），这里只管版式。 */
+.ink-moment-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+
+/* 折叠：按高度截断，正文再长也只占四行的位置。
+   量的是真实渲染高度，所以有图、有多段落的闪念也不会算错。 */
+.ink-moment-body.is-collapsed {
+  max-height: 7.2em;
+  overflow: hidden;
+}
+
+/* 动态里的正文比文章短，字号与段落间距跟着收一点。 */
+.ink-blog .ink-moment-body .markdown-body {
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.ink-blog .ink-moment-body .markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.ink-blog .ink-moment-body .markdown-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.ink-blog .ink-moment-body .markdown-body p {
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0 0 10px;
+}
+
+.ink-blog .ink-moment-body .markdown-body img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+/* 闪念里的引用块（迁移过来的旧引文就是正文里的 > 引用）。 */
+.ink-blog .ink-moment-body .markdown-body blockquote {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--ink-accent);
+  border-radius: 0 10px 10px 0;
+  background: var(--ink-tint);
+  color: var(--ink-text);
+}
+
+.ink-blog .ink-moment-body .markdown-body blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.ink-blog .ink-moment-body .markdown-body a {
+  color: var(--ink-accent);
+}
+
+.ink-blog .ink-moment-body .markdown-body ul,
+.ink-blog .ink-moment-body .markdown-body ol {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.ink-blog .ink-moment-body .markdown-body pre {
+  margin: 10px 0;
+  border-radius: 10px;
+}
+
+.ink-moment-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ink-moment-expand:hover {
+  text-decoration: underline;
+}
+
+.ink-moment-expand:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- 标签 ---------- */
+.ink-moment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ink-moment-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- 操作行 ---------- */
+
+.ink-moment-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.ink-moment-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ink-moment-action:hover {
+  color: var(--ink-text);
+}
+
+.ink-moment-action:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.ink-moment-action.is-on {
+  color: var(--ink-accent);
+}
+
+/* 白名单里没有实心心形：选中时给同一个心形填色。 */
+.ink-moment-action.is-on svg path {
+  fill: currentColor;
+}
+
+.ink-moment-action.is-pushed {
+  margin-left: auto;
+}
+
+.ink-moment-action-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 底部 ---------- */
+
+.ink-moments-more {
+  display: block;
+  width: 100%;
+  margin: 26px 0 0;
+  padding: 12px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ink-moments-more:hover {
+  border-color: var(--ink-accent);
+  color: var(--ink-accent);
+}
+
+.ink-moments-more:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+
+.ink-moments-more:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ink-moments-end {
+  margin: 26px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.ink-moments-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  font-size: 13px;
+}
+
+.ink-moments-foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-accent);
+  text-decoration: none;
+}
+
+.ink-moments-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 空态与失败态 ---------- */
+
+.ink-moments-empty {
+  padding: 56px 0;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.ink-moments-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.ink-moments-error button {
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 13px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.ink-moments-error button:hover {
+  border-color: var(--ink-accent);
+  color: var(--ink-accent);
+}
+
+/* 骨架：尺寸与真实条目一致，加载完成不跳。 */
+.ink-moment-skeleton {
+  padding: 22px 0 20px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ink-moment-skeleton-line {
+  display: block;
+  border-radius: 6px;
+  background: var(--ink-line);
+  opacity: 0.7;
+}
+
+.ink-moment-skeleton-time {
+  width: 92px;
+  height: 15px;
+  margin-bottom: 12px;
+}
+
+.ink-moment-skeleton-text {
+  width: 100%;
+  height: 17px;
+  margin-bottom: 8px;
+}
+
+.ink-moment-skeleton-text.is-short {
+  width: 62%;
+}
+
+/* ---------- 反馈弹窗 ---------- */
+
+/*
+ * 弹窗被 HeroUI 挂到 body 上，脱离了 .ink-blog 的变量作用域。
+ * 这里自己开一份同款作用域，明暗两套值都写死 —— 弹窗和公开站必须同色。
+ */
+.ink-moments-surface.ink-moments-surface {
+  --ink-bg: #f7f8fc;
+  --ink-surface: #ffffff;
+  --ink-text: #171927;
+  --ink-muted: #7e8499;
+  --ink-line: #e5e8f3;
+  --ink-accent: #7051ff;
+  --ink-tint: #f1eeff;
+  --background: #ffffff;
+  --foreground: #171927;
+  color-scheme: light;
+}
+
+.ink-moments-surface.ink-moments-surface.ink-moments-dark {
+  --ink-bg: #12131a;
+  --ink-surface: #1c1e28;
+  --ink-text: #e7e9f5;
+  --ink-muted: #a3a9c0;
+  --ink-line: #323646;
+  --ink-accent: #7051ff;
+  --ink-tint: #2f294a;
+  --background: #1c1e28;
+  --foreground: #e7e9f5;
+  color-scheme: dark;
+}
+
+.ink-moments-modal {
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  border-radius: 16px;
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--ink-shadow);
+}
+
+.ink-moments-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 4px;
+}
+
+.ink-moments-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+  margin: 0;
+}
+
+.ink-moments-modal-lead {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-moments-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--ink-line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.ink-moments-modal-close:hover {
+  color: var(--ink-text);
+}
+
+.ink-moments-modal-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px 24px 4px;
+}
+
+.ink-moments-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ink-moments-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+
+.ink-moments-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ink-moments-type {
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.ink-moments-type.is-active {
+  border-color: var(--ink-accent);
+  background: var(--ink-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.ink-moments-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: var(--ink-bg);
+  color: var(--ink-text);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.ink-moments-input:focus {
+  border-color: var(--ink-accent);
+}
+
+.ink-moments-textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.7;
+  font-family: inherit;
+}
+
+.ink-moments-field-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ink-moments-counter {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ink-moments-error {
+  font-size: 12px;
+  color: #d9482f;
+}
+
+.ink-moments-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-text);
+  cursor: pointer;
+}
+
+.ink-moments-hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.ink-moments-alert {
+  margin: 0;
+  font-size: 13px;
+  color: #d9482f;
+}
+
+.ink-moments-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 24px 20px;
+}
+
+.ink-moments-modal .blog-ui-button {
+  min-height: 40px;
+  height: auto;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+  box-shadow: none;
+}
+
+.ink-moments-modal .blog-ui-button.ink-moments-modal-submit {
+  background: var(--ink-accent);
+  color: #fff;
+}
+
+.ink-moments-modal-success {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 34px 24px 26px;
+  text-align: center;
+}
+
+.ink-moments-modal-success-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+
+.ink-moments-modal-success-title {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.ink-moments-modal-success-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.ink-moments-modal-success .ink-moments-modal-submit {
+  margin-top: 10px;
+}
+
+/* 操作提示条 */
+.ink-moments-hint-banner {
+  margin: 12px 0 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  color: var(--ink-text);
+  font-size: 13px;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 760px) {
+  .ink-moments {
+    padding-bottom: 44px;
+  }
+  .ink-moments-inner {
+    width: calc(100% - 32px);
+  }
+  .ink-moments-author {
+    flex-direction: column;
+    gap: 12px;
+    padding: 22px 0 20px;
+  }
+  .ink-moments-author-main {
+    align-items: flex-start;
+  }
+  .ink-moments-author-avatar {
+    width: 46px;
+    height: 46px;
+  }
+  .ink-moments-author-name {
+    font-size: 17px;
+  }
+  .ink-moments-author-rss {
+    margin-top: 0;
+  }
+  .ink-moments-title {
+    font-size: 26px;
+  }
+  .ink-moments-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ink-moments-filters {
+    flex: none;
+  }
+  .ink-moments-chip {
+    padding: 6px 13px;
+    font-size: 13px;
+  }
+  .ink-moments-month {
+    margin-left: auto;
+    padding: 7px 28px 7px 10px;
+    font-size: 13px;
+  }
+  .ink-moment {
+    padding: 18px 0 16px;
+  }
+  .ink-moment-body {
+    font-size: 14.5px;
+  }
+  .ink-blog .ink-moment-body .markdown-body,
+  .ink-blog .ink-moment-body .markdown-body p {
+    font-size: 14.5px;
+  }
+  .ink-moment-actions {
+    gap: 16px;
+  }
+}

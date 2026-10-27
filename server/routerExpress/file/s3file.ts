@@ -1,3 +1,4 @@
+import { isPublicBlogAsset } from '../../lib/blog';
 import express, { Request, Response } from 'express';
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -142,6 +143,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
     const { s3ClientInstance, config } = await FileService.getS3Client();
     const fullPath = decodeURIComponent(req.path.substring(1));
     const needThumbnail = req.query.thumbnail === 'true';
+    const publicBlogAsset = await isPublicBlogAsset(prisma, '/api/s3file/' + fullPath);
 
     // Security fix: Validate S3 file path and check user permissions
     // Check if the file exists in attachments and user has access
@@ -167,7 +169,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
         }
 
         if (!token) {
-          if (myFile.note?.isShare) {
+          if (myFile.note?.isShare || publicBlogAsset) {
             // Public shared file, allow access
           } else {
             return res.status(401).json({ error: "Unauthorized" });
@@ -178,7 +180,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
                           myFile.note?.accountId === Number(token.id) ||
                           token.role === 'superadmin';
           
-          if (!myFile.note?.isShare && !isOwner) {
+          if (!myFile.note?.isShare && !isOwner && !publicBlogAsset) {
             return res.status(401).json({ error: "Unauthorized" });
           }
         }
@@ -193,6 +195,11 @@ router.get(/.*/, async (req: Request, res: Response) => {
       }
     }
 
+    if (publicBlogAsset) {
+      const body = await FileService.getFileBuffer('/api/s3file/' + fullPath);
+      res.set({ 'Content-Type': mime.lookup(fullPath) || 'application/octet-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      return res.send(body);
+    }
     if (isImage(fullPath) && needThumbnail) {
       try {
         const thumbnail = await generateThumbnail(s3ClientInstance, config, fullPath);

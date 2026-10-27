@@ -71,7 +71,7 @@ export class AiStore implements Store {
 
   selectedProviderId = 0;
   chatModelId = 0;
-  selectedSkill: { title: string; prompt: string; key: WorkflowKey; scope?: { from?: string; to?: string; includeNotes?: boolean; read?: boolean; limited?: boolean; sourceCount?: number } } | null = null;
+  selectedSkill: { title: string; prompt: string; key: WorkflowKey; scope?: { from?: string; to?: string; includeNotes?: boolean; reviewDate?: string; read?: boolean; limited?: boolean; sourceCount?: number } } | null = null;
   isChatting = false;
   isAnswering = false;
   /** 打开中的日报工作区对应的 assistant 消息 id；null 表示结果区关闭 */
@@ -156,21 +156,30 @@ export class AiStore implements Store {
       if (!this.selectedSkill && !this.input.trim() && !this.referencesNotes.length) return;
       if (this.selectedSkill?.key === 'practice' && !this.referencesNotes.length) { RootStore.Get(ToastPlugin).error('请先引用要练习或复盘的文章'); return; }
       if (this.selectedSkill?.key === 'daily' && !this.input.trim()) { RootStore.Get(ToastPlugin).error('请补充昨日进展、今日计划或遇到的问题'); return; }
+      if (this.selectedSkill?.key === 'daily' && !this.selectedSkill.scope?.read) {
+        const selected = this.selectedSkill;
+        const result = await api.ai.skillSources.query({ skill: 'daily', ...selected.scope });
+        if (this.selectedSkill !== selected || this.chatStopRequested) return;
+        const extra = this.referencesNotes.filter(note => !result.items.some(source => source.id === note.id));
+        this.referencesNotes = [...result.items, ...extra] as any;
+        selected.scope = { ...selected.scope, read: true, limited: result.limited, sourceCount: result.items.length };
+      }
       if (['daily','weekly'].includes(this.selectedSkill?.key || '') && !this.selectedSkill?.scope?.read) { RootStore.Get(ToastPlugin).error('请先读取待办来源，确认时间范围'); return; }
       const displayContent = this.input.trim() || this.selectedSkill?.title || '整理引用内容';
       const sourceContext = {
         displayContent,
-        workflow: this.selectedSkill ? { key: this.selectedSkill.key, title: this.selectedSkill.title, ...this.selectedSkill.scope } : undefined,
+        workflow: this.selectedSkill ? { key: this.selectedSkill.key, title: this.selectedSkill.title, reviewDate: new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date()), ...this.selectedSkill.scope } : undefined,
         sources: this.referencesNotes.map(note => ({ id: note.id, type: note.type, content: note.content, metadata: note.metadata, isArchived: note.isArchived, updatedAt: note.updatedAt ? new Date(note.updatedAt).toISOString() : null })),
       };
       const scopeText = this.selectedSkill?.scope ? `统计范围：${JSON.stringify(this.selectedSkill.scope)}；当前日期：${new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())}。时区 Asia/Shanghai。` : '';
       const conversationTitle = cleanConversationTitle(this.selectedSkill?.title || this.input, '新对话');
       const userQuestion = [this.selectedSkill?.prompt, scopeText, this.input.trim(),
-        ...this.referencesNotes.map(note => `用户确认的来源 #${note.id}（类型 ${note.type}，创建 ${note.createdAt}，更新 ${note.updatedAt}，状态 ${note.type === 2 ? note.isArchived ? '已完成' : '未完成' : note.isArchived ? '已归档' : '正常'}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
+        ...this.referencesNotes.map(note => `用户确认的来源 (ID ${note.id})（类型 ${note.type}，创建 ${note.createdAt}，更新 ${note.updatedAt}，状态 ${note.type === 2 ? note.isArchived ? '已完成' : '未完成' : note.isArchived ? '已归档' : '正常'}）：\n${note.content}\n任务信息：${JSON.stringify(note.metadata ?? {})}`)
       ].filter(Boolean).join('\n\n');
       const resultKind = this.selectedSkill?.key === 'daily' ? 'daily' : this.selectedSkill?.key === 'note' || this.selectedSkill?.key === 'weekly' ? 'note' : this.selectedSkill?.key === 'tasks' ? 'tasks' : undefined;
       this.referencesNotes = [];
-      this.selectedSkill = null;
+      // Keep daily review active for same-day supplements; reread current tasks next time.
+      this.selectedSkill = this.selectedSkill?.key === 'daily' ? { ...this.selectedSkill, scope: { ...this.selectedSkill.scope, read: false } } : null;
       this.clearCurrentMessageResult();
       this.currentMessageResult.resultKind = resultKind;
       this.input = '';
@@ -353,7 +362,7 @@ export class AiStore implements Store {
       const original = fresh!.messages[editIndex];
       const context: any = original?.metadata || {};
       const workflow = workflows.find(workflow => workflow.key === context.workflow?.key);
-      const rebuilt = workflow ? [workflow.prompt, `统计范围：${JSON.stringify(context.workflow)}`, newContent, ...(context.sources || []).map((source: any) => `引用来源 #${source.id}（类型 ${source.type}，更新 ${source.updatedAt}，${source.isArchived ? '已完成/归档' : '未完成/正常'}）：${source.content}\n任务信息：${JSON.stringify(source.metadata || {})}`)].join('\n\n') : newContent;
+      const rebuilt = workflow ? [workflow.prompt, `统计范围：${JSON.stringify(context.workflow)}`, newContent, ...(context.sources || []).map((source: any) => `引用来源 (ID ${source.id})（类型 ${source.type}，更新 ${source.updatedAt}，${source.isArchived ? '已完成/归档' : '未完成/正常'}）：${source.content}\n任务信息：${JSON.stringify(source.metadata || {})}`)].join('\n\n') : newContent;
       await api.message.update.mutate({ id: messageId, content: rebuilt, displayContent: newContent });
       await api.message.clearAfter.mutate({ id: messageId });
       this.clearCurrentMessageResult();

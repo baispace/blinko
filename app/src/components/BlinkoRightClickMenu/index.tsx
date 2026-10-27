@@ -19,9 +19,9 @@ import { AiStore } from "@/store/aiStore";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import i18n from "@/lib/i18n";
 import { BlinkoShareDialog } from "../BlinkoShareDialog";
-import { BlinkoPublishDialog } from "../BlinkoPublishDialog";
 import { BaseStore } from "@/store/baseStore";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
+import { ServiceCapabilityStore } from "@/store/serviceCapabilityStore";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { Note } from "@shared/lib/types";
 import { BlinkoCard } from "../BlinkoCard";
@@ -185,7 +185,14 @@ export const ShowEditTimeModel = (showExpired: boolean = false) => {
   })
 }
 
-export const ShowEditBlinkoModel = async (size: string = '2xl', mode: 'create' | 'edit' = 'edit', initialData?: { file?: File, text?: string }) => {
+/**
+ * 打开编辑器弹层。
+ *
+ * fixedNoteType 传入时把内容类型钉死，并隐藏类型切换按钮 ——
+ * 移动端列表页统一这么做：闪念页只写闪念、笔记页只写笔记，
+ * 免得每次落笔前还要先选一次类型。不传则允许自由切换。
+ */
+export const ShowEditBlinkoModel = async (size: string = '2xl', mode: 'create' | 'edit' = 'edit', initialData?: { file?: File, text?: string }, fixedNoteType?: NoteType) => {
   const blinko = RootStore.Get(BlinkoStore)
   if (mode === 'edit' && blinko.curSelectedNote) { try { blinko.curSelectedNote = await getFullNote(blinko.curSelectedNote); } catch { RootStore.Get(ToastPlugin).error('读取全文失败，请重试'); return; } }
   RootStore.Get(DialogStore).setData({
@@ -194,7 +201,7 @@ export const ShowEditBlinkoModel = async (size: string = '2xl', mode: 'create' |
     onlyContent: true,
     isDismissable: false,
     showOnlyContentCloseButton: true,
-    content: <BlinkoEditor isInDialog mode={mode} initialData={initialData} key={`editor-key-${mode}`} onSended={() => {
+    content: <BlinkoEditor isInDialog mode={mode} initialData={initialData} fixedNoteType={fixedNoteType} hideNoteTypeButton={!!fixedNoteType} key={`editor-key-${mode}`} onSended={() => {
       RootStore.Get(DialogStore).close()
       blinko.isCreateMode = false
     }} />
@@ -260,13 +267,32 @@ export const handlePublic = () => {
 export const handlePublish = () => {
   const blinko = RootStore.Get(BlinkoStore)
   if (!blinko.curSelectedNote) return
-  RootStore.Get(DialogStore).setData({
-    size: 'md' as any,
-    isOpen: true,
-    title: i18n.t('publish-to-home'),
-    isDismissable: false,
-    content: <BlinkoPublishDialog note={blinko.curSelectedNote} />
-  })
+  window.location.assign(`/blog-manage/content/${blinko.curSelectedNote.id}?publish=1`)
+}
+
+/**
+ * 把这条闪念公开到博客的动态流，或者撤回它。
+ *
+ * 动态不是独立实体 —— 它就是「被公开的闪念」。
+ * 所以这里没有「新建动态」：公开就是打开一个开关，撤回就是关掉，
+ * 内容一个字都不动，随时可以再公开。
+ */
+export const handleMomentPublish = async () => {
+  const blinko = RootStore.Get(BlinkoStore)
+  const note = blinko.curSelectedNote
+  if (!note?.id) return
+  const toast = RootStore.Get(ToastPlugin)
+  const published = !note.isMoment
+  try {
+    await api.blog.momentPublish.mutate({ noteId: note.id, published })
+    // 等待期间可能已经选中了别的笔记 —— 只更新当初那一条。
+    if (blinko.curSelectedNote?.id === note.id)
+      blinko.curSelectedNote = { ...note, isMoment: published }
+    blinko.forceQuery++
+    toast.success(published ? '已公开为动态' : '已撤回动态')
+  } catch (e: any) {
+    toast.error(e?.message || '操作失败，请重试')
+  }
 }
 
 export const handleArchived = () => {
@@ -524,7 +550,17 @@ export const PublishItem = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   return <div className="flex items-start gap-2">
     <Icon icon="tabler:world" width="20" height="20" />
-    <div>{blinko.curSelectedNote?.isPublished ? t('cancel-publish') : t('publish-to-home')}</div>
+    <div>{blinko.curSelectedNote?.isPublished ? '管理发布' : '发布到博客'}</div>
+  </div>
+})
+
+/** 动态入口：闪念专属，已公开时变成「撤回动态」。 */
+export const MomentItem = observer(() => {
+  const blinko = RootStore.Get(BlinkoStore)
+  const published = !!blinko.curSelectedNote?.isMoment
+  return <div className="flex items-start gap-2">
+    <Icon icon={published ? 'tabler:eye-off' : 'tabler:bolt'} width="20" height="20" />
+    <div>{published ? '撤回动态' : '发布为动态'}</div>
   </div>
 })
 
@@ -616,14 +652,20 @@ export const ExportItem = observer(() => {
 export const BlinkoRightClickMenu = observer(() => {
   const [isDetailPage, setIsDetailPage] = useState(false)
   const location = useLocation()
-  
+
   const blinko = RootStore.Get(BlinkoStore)
   const pluginApi = RootStore.Get(PluginApiStore)
+  const capability = RootStore.Get(ServiceCapabilityStore)
   const isPc = useMediaQuery('(min-width: 768px)')
 
   useEffect(() => {
     setIsDetailPage(location.pathname.includes('/detail'))
   }, [location.pathname])
+
+  // 服务就绪状态读一次就够 —— 之后由 AI 设置的改动来刷新。
+  useEffect(() => {
+    void capability.load()
+  }, [capability])
 
   return <ContextMenu className='font-bold' id="blink-item-context-menu" hideOnLeave={false} animation="zoom">
     <ContextMenuItem onClick={() => handleEdit(isDetailPage)}>
@@ -679,19 +721,28 @@ export const BlinkoRightClickMenu = observer(() => {
       </ContextMenuItem>
     ) : <></>}
 
+    {/* 动态就是闪念：入口挂在闪念上，后台不再单独维护一份动态内容。 */}
+    {!blinko.curSelectedNote?.isRecycle && blinko.curSelectedNote?.type === NoteType.BLINKO ? (
+      <ContextMenuItem onClick={handleMomentPublish}>
+        <MomentItem />
+      </ContextMenuItem>
+    ) : <></>}
+
     {!isPc ? (
       <ContextMenuItem onClick={handleComment}>
         <CommentItem />
       </ContextMenuItem>
     ) : <></>}
 
-    {blinko.config.value?.mainModelId ? (
+    {/* 依赖 AI 服务的入口：服务没真的配好就不出现在菜单里。
+        「AI 标签」只要对话模型可用；「关联笔记」还要向量模型（它要检索语义相近的笔记）。 */}
+    {capability.chat ? (
       <ContextMenuItem onClick={handleAITag}>
         <AITagItem />
       </ContextMenuItem>
     ) : <></>}
 
-    {blinko.config.value?.mainModelId ? (
+    {capability.chat && capability.embedding ? (
       <ContextMenuItem onClick={handleRelatedNotes}>
         <RelatedNotesItem />
       </ContextMenuItem>
@@ -724,12 +775,17 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
   const [isDetailPage, setIsDetailPage] = useState(false)
   const blinko = RootStore.Get(BlinkoStore)
   const pluginApi = RootStore.Get(PluginApiStore)
+  const capability = RootStore.Get(ServiceCapabilityStore)
   const location = useLocation()
   const isPc = useMediaQuery('(min-width: 768px)')
 
   useEffect(() => {
     setIsDetailPage(location.pathname.includes('/detail'))
   }, [location.pathname])
+
+  useEffect(() => {
+    void capability.load()
+  }, [capability])
 
   const disabledKeys = isDetailPage ? ['MutiSelectItem'] : []
 
@@ -774,19 +830,27 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
         </DropdownItem>
       ) : <></>}
 
+      {/* 动态就是闪念：入口挂在闪念上，后台不再单独维护一份动态内容。 */}
+      {!blinko.curSelectedNote?.isRecycle && blinko.curSelectedNote?.type === NoteType.BLINKO ? (
+        <DropdownItem key="MomentItem" onPress={handleMomentPublish}>
+          <MomentItem />
+        </DropdownItem>
+      ) : <></>}
+
       {!isPc ? (
         <DropdownItem key="CommentItem" onPress={handleComment}>
           <CommentItem />
         </DropdownItem>
       ) : <></>}
 
-      {blinko.config.value?.mainModelId ? (
+      {/* 依赖 AI 服务的入口：服务没真的配好就不出现在菜单里。 */}
+      {capability.chat ? (
         <DropdownItem key="AITagItem" onPress={handleAITag}>
           <AITagItem />
         </DropdownItem>
       ) : <></>}
 
-      {blinko.config.value?.mainModelId ? (
+      {capability.chat && capability.embedding ? (
         <DropdownItem key="RelatedNotesItem" onPress={handleRelatedNotes}>
           <RelatedNotesItem />
         </DropdownItem>

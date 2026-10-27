@@ -10,6 +10,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { PromiseCall } from '@/store/standard/PromiseState';
 import { api } from '@/lib/trpc';
 import { AiSettingStore } from '@/store/aiSettingStore';
+import { ServiceCapabilityStore } from '@/store/serviceCapabilityStore';
 
 export const DefaultModelsSection = observer(() => {
   const { t,i18n } = useTranslation();
@@ -85,6 +86,8 @@ export const DefaultModelsSection = observer(() => {
                     value: Number(value)
                   }), { autoAlert: false }).then(() => {
                     blinko.config.call()
+                    // 默认对话模型换了 —— 依赖它的入口要按新结论显示。
+                    RootStore.Get(ServiceCapabilityStore).load(true);
                   });
                 }
               }}
@@ -146,6 +149,8 @@ export const DefaultModelsSection = observer(() => {
                     value: Number(value)
                   }), { autoAlert: false }).then(() => {
                     blinko.config.call();
+                    // 默认向量模型换了 —— 「关联笔记」这类入口要按新结论显示。
+                    RootStore.Get(ServiceCapabilityStore).load(true);
                   });
                 }
               }}

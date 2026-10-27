@@ -1,0 +1,45 @@
+/* Match prototypes/blog/src/styles.css. Explicit weights are needed because
+   the workspace's Tailwind reset removes the browser's bold heading defaults. */
+.ink-blog {
+  font-size: 16px;
+  font-weight: 400;
+}
+.ink-blog :where(h1, h2, h3, h4) {
+  font-weight: 700;
+}
+.ink-blog .ink-post-card h3,
+.ink-blog .ink-post-row h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.ink-blog .ink-article-hero-full .ink-article-hero h1 {
+  font-size: 33px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.6px;
+}
+.ink-blog .ink-prose .markdown-body p {
+  font-size: 17px;
+  line-height: 1.85;
+}
+.ink-blog .ink-prose h2 {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .ink-blog .ink-post-row h3 {
+    font-size: 15px;
+  }
+  .ink-blog .ink-post-card h3 {
+    font-size: 18px;
+  }
+  .ink-blog .ink-article-hero-full .ink-article-hero h1 {
+    font-size: 27px;
+    line-height: 1.5;
+  }
+  .ink-blog .ink-prose h2 {
+    font-size: 21px;
+  }
+}

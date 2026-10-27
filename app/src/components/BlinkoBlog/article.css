@@ -1,0 +1,971 @@
+/*
+ * 「文章管理」详情页的样式层。
+ *
+ * 与管理后台共用 .ink-manage 的变量层与 .ink-mg-* 组件层，
+ * 这里只补详情页特有的结构：左编辑右预览的双栏、页签、候选区与底部操作条。
+ */
+
+.ink-ad-page {
+  min-height: 100dvh;
+  background: var(--ink-bg);
+  color: var(--ink-text);
+  padding-bottom: 84px;
+}
+
+.ink-ad-wrap {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (max-width: 760px) {
+  .ink-ad-wrap {
+    padding: 0 14px;
+  }
+}
+
+/* ---------- 顶栏 ---------- */
+.ink-ad-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--ink-bg) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-ad-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+/* ---------- 页头 ---------- */
+.ink-ad-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 24px 0 16px;
+}
+.ink-ad-crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  overflow: hidden;
+}
+.ink-ad-crumb a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ink-ad-crumb a:hover {
+  color: var(--ink-accent);
+}
+.ink-ad-crumb span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-ad-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--ink-text);
+}
+.ink-ad-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/*
+ * 发布前检查的问题清单。
+ * 拦路的事要一眼看到 —— 之前只有一条二级链接，点了才知道能不能发。
+ */
+.ink-ad-blockers {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.ink-ad-blockers li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #b91c1c;
+  background: color-mix(in srgb, #b91c1c 10%, transparent);
+  border: 1px solid color-mix(in srgb, #b91c1c 22%, transparent);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+[data-theme="dark"] .ink-ad-blockers li {
+  color: #fca5a5;
+  background: color-mix(in srgb, #f87171 14%, transparent);
+  border-color: color-mix(in srgb, #f87171 28%, transparent);
+}
+.ink-ad-card .ink-mg-button {
+  margin-top: 12px;
+}
+.ink-ad-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- 页签 ---------- */
+.ink-ad-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--ink-line);
+  margin-bottom: 18px;
+  overflow-x: auto;
+}
+.ink-ad-tabs button {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.ink-ad-tabs button:hover {
+  color: var(--ink-text);
+}
+.ink-ad-tabs button[aria-current="page"] {
+  color: var(--ink-accent);
+  border-bottom-color: var(--ink-accent);
+  font-weight: 600;
+}
+
+/* ---------- 双栏 ---------- */
+.ink-ad-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .ink-ad-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ink-ad-main,
+.ink-ad-aside {
+  min-width: 0;
+}
+.ink-ad-aside {
+  position: sticky;
+  top: 84px;
+}
+
+/* ---------- 卡片 ---------- */
+.ink-ad-card {
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+  padding: 18px;
+}
+.ink-ad-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.ink-ad-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+.ink-ad-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ink-ad-sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+.ink-ad-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+.ink-ad-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-text);
+}
+.ink-ad-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* ---------- 表单 ---------- */
+.ink-ad-field {
+  margin-bottom: 18px;
+}
+.ink-ad-field:last-child {
+  margin-bottom: 0;
+}
+.ink-ad-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+.ink-ad-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ink-ad-regen {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+.ink-ad-regen:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.ink-ad-regen:disabled {
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+/* ---------- 公开标签 ---------- */
+.ink-ad-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ink-ad-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+.ink-ad-tag button {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.ink-ad-tag button:hover {
+  background: color-mix(in srgb, var(--ink-accent) 18%, transparent);
+}
+.ink-ad-tag-input {
+  border: 1px dashed var(--ink-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-text);
+  font-size: 12px;
+  padding: 4px 12px;
+  width: 120px;
+}
+.ink-ad-tag-input:focus {
+  outline: none;
+  border-color: var(--ink-accent);
+}
+
+/* ---------- 专题与章节 ---------- */
+.ink-ad-topics {
+  display: grid;
+  gap: 10px;
+}
+.ink-ad-topic-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ink-ad-topic-row select {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.ink-ad-topic-add select {
+  width: auto;
+  min-width: 160px;
+}
+
+/* ---------- 原笔记依据 ---------- */
+.ink-ad-source {
+  margin-top: 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.ink-ad-source summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-text);
+  list-style: none;
+}
+.ink-ad-source summary::-webkit-details-marker {
+  display: none;
+}
+.ink-ad-source summary small {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+.ink-ad-source-body {
+  margin-top: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--ink-bg);
+}
+.ink-ad-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-accent);
+  text-decoration: none;
+}
+.ink-ad-source-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 预览 ---------- */
+.ink-ad-preview-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  background: var(--ink-tint);
+}
+.ink-ad-preview-title {
+  margin: 14px 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.4px;
+  color: var(--ink-text);
+  overflow-wrap: anywhere;
+}
+.ink-ad-preview-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 14px;
+}
+.ink-ad-preview-topic {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+  font-size: 12px;
+}
+.ink-ad-preview-summary {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ink-muted) 8%, transparent);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-text);
+}
+.ink-ad-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.ink-ad-preview-body {
+  max-height: 460px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+.ink-ad-preview-body .markdown-body {
+  font-size: 14px !important;
+  line-height: 1.8 !important;
+}
+
+/* ---------- 封面页签 ---------- */
+/*
+ * 封面页现在只有封面工作区一栏：
+ * 右侧原来的「封面状态」对比（当前公开封面 / 待发布封面）已去掉 ——
+ * 工作区里本来就有各场景的实时预览，再摆一份不带文字层的裸图反而误导。
+ */
+.ink-ad-columns.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------- 推荐设置 ---------- */
+.ink-ad-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ink-ad-inline select {
+  width: auto;
+  min-width: 90px;
+}
+
+/* ---------- 底部操作条 ---------- */
+.ink-ad-bottombar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--ink-surface) 94%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--ink-line);
+}
+.ink-ad-bottombar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+.ink-ad-bottom-note {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-ad-bottom-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* ---------- 封面裁切：调整显示位置 ---------- */
+/*
+ * 三个展示位同时预览。后台跟公开站用同一组 CSS 变量
+ * （--ink-cover-<位置>-x/y），所以这里拖出来的位置，线上就是这个样子。
+ */
+.ink-cfp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .ink-cfp-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+.ink-cfp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.ink-cfp-shot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  box-shadow: inset 0 0 0 1px var(--ink-line);
+}
+.ink-cfp-shot:active {
+  cursor: grabbing;
+}
+.ink-cfp-shot:focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 2px;
+}
+.ink-cfp-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /*
+   * 图片本身不能接管指针：
+   * 浏览器默认可以「拖动图片」—— 那是原生 drag-and-drop，
+   * 一旦触发就会给指针流发 pointercancel，我们自己的拖拽当场断掉，
+   * 表现为「拖一下只动几像素就卡住」。
+   * 指针交给外层预览框，图片只负责显示。
+   */
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+.ink-cfp-shot[data-placement="double"] img {
+  object-position: var(--ink-cover-double-x, 50%) var(--ink-cover-double-y, 50%);
+}
+.ink-cfp-shot[data-placement="single"] img {
+  object-position: var(--ink-cover-single-x, 50%) var(--ink-cover-single-y, 50%);
+}
+.ink-cfp-shot[data-placement="banner"] img {
+  object-position: var(--ink-cover-banner-x, 50%) var(--ink-cover-banner-y, 50%);
+}
+.ink-cfp-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ink-cfp-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+.ink-cfp-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/*
+ * 封面工作区：左编辑、右预览与主操作，下方是各场景的真实尺寸效果。
+ */
+.ink-mg-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  gap: 20px;
+  align-items: start;
+}
+.ink-mg-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .ink-mg-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+ * 各场景预览：按公开站的真实容器尺寸渲染。
+ * 分享图是 1200×630，这里整体缩放展示 ——
+ * 缩放只影响显示，排版仍按 1200×630 算（所以字号和换行跟真图一致）。
+ */
+.ink-cov-scenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-start;
+}
+.ink-cov-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.ink-cov-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--ink-tint);
+  box-shadow: inset 0 0 0 1px var(--ink-line);
+}
+.ink-cov-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+.ink-cov-note {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* 预览说明文字跟着上面的画框宽度走，别自己撑开。 */
+.ink-cov-scene figcaption {
+  max-width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 发布内容：设置项列表 ---------- */
+/*
+ * 这一页不再铺开整张表单，改成一列设置项：
+ * 每项一个「操作设置」按钮，点开才编辑这一项。
+ * 少铺一屏表单，就少一屏看不见「改了什么」的地方。
+ */
+.ink-ad-settings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ink-ad-setting {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+.ink-ad-setting + .ink-ad-setting {
+  border-top: 1px solid var(--ink-line);
+}
+.ink-ad-setting-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--ink-tint);
+  color: var(--ink-accent);
+}
+.ink-ad-setting-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ink-ad-setting-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+.ink-ad-setting-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--ink-muted) 14%, transparent);
+  color: var(--ink-muted);
+}
+.ink-ad-setting-chip[data-tone="ok"] {
+  background: rgb(22 163 74 / 14%);
+  color: #15803d;
+}
+.ink-ad-setting-chip[data-tone="warn"] {
+  background: rgb(217 119 6 / 14%);
+  color: #b45309;
+}
+.ink-ad-setting-value {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+  /* 概要可能很长：留一行，完整内容去弹窗里看。 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-ad-setting-action {
+  flex: 0 0 auto;
+}
+
+/* ---------- 生成中 ---------- */
+.ink-ad-generating {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ink-ad-generating-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-accent);
+}
+.ink-ad-generating-sec {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+.ink-ad-generating-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-muted) 18%, transparent);
+  overflow: hidden;
+}
+.ink-ad-generating-bar i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ink-accent),
+    transparent
+  );
+  animation: ink-ad-indeterminate 1.5s ease-in-out infinite;
+}
+@keyframes ink-ad-indeterminate {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+@keyframes ink-ad-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ink-ad-spin {
+  animation: ink-ad-spin 0.9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-ad-generating-bar i,
+  .ink-ad-spin {
+    animation: none;
+  }
+}
+
+/* ---------- 操作弹窗 ---------- */
+.ink-ad-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgb(12 14 24 / 45%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.ink-ad-dialog-panel {
+  width: 100%;
+  max-width: 560px;
+  max-height: min(86dvh, 760px);
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-bg);
+  border: 1px solid var(--ink-line);
+  border-radius: 16px;
+  box-shadow: var(--ink-shadow);
+  overflow: hidden;
+}
+.ink-ad-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--ink-surface);
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-ad-dialog-title b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+.ink-ad-dialog-title small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+.ink-ad-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.ink-ad-dialog-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.ink-ad-dialog-close:hover:not(:disabled) {
+  color: var(--ink-text);
+  border-color: var(--ink-accent);
+}
+.ink-ad-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ink-ad-dialog-body {
+  padding: 16px;
+  overflow-y: auto;
+}
+/*
+ * 重新生成时旧值还在，但明确压暗 ——
+ * 作者要能看出「现在显示的是上一版」，不能让它看着像刚生成好的结果。
+ */
+.ink-ad-dialog-body[data-busy="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ink-ad-dialog-body .ink-ad-generating {
+  margin: 0 0 12px;
+}
+.ink-ad-dialog-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--ink-surface);
+  border-top: 1px solid var(--ink-line);
+}
+.ink-ad-dialog-foot-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* ---------- AI 归属建议 ---------- */
+.ink-ad-suggest {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px dashed var(--ink-line);
+  border-radius: 12px;
+}
+.ink-ad-suggest-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-text);
+}
+.ink-ad-suggest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-text);
+}
+.ink-ad-suggest-row + .ink-ad-suggest-row {
+  margin-top: 8px;
+}
+.ink-ad-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-accent);
+  font: inherit;
+  cursor: pointer;
+}
+.ink-ad-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 760px) {
+  .ink-ad-setting {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+  .ink-ad-setting-main {
+    flex: 1 1 100%;
+    order: 2;
+  }
+  .ink-ad-setting-action {
+    order: 3;
+    margin-left: auto;
+  }
+  .ink-ad-setting-value {
+    white-space: normal;
+  }
+  .ink-ad-dialog {
+    padding: 12px;
+  }
+  .ink-ad-dialog-panel {
+    max-height: 92dvh;
+  }
+  .ink-ad-dialog-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ink-ad-dialog-foot-actions {
+    margin-left: 0;
+  }
+  .ink-ad-dialog-foot-actions .ink-mg-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

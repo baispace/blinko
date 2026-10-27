@@ -1,4 +1,5 @@
-import { SiteBrand } from '@/components/Common/SiteBrand';
+import { BrandLogo } from '@/components/Common/Brand/BrandLogo';
+import { resolveBrandName } from '@/components/Common/Brand/brandGeometry';
 import React, { useEffect, useState } from "react";
 import { Button, Input, Checkbox, Image, Divider } from "@heroui/react";
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -38,6 +39,8 @@ export default function Component() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const blinko = RootStore.Get(BlinkoStore);
+  // 默认品牌名时把中文名一起带上（登录页空间足够）；用户自定义了名称就不强加副标题。
+  const { name: brandName, showChinese } = resolveBrandName(blinko.config.value?.customTitle);
   useEffect(() => {
     const user = RootStore.Get(UserStore);
     user.updateAppTitle(blinko.config.value?.customTitle);
@@ -142,9 +145,13 @@ export default function Component() {
     <GradientBackground>
       <div className="flex h-full w-screen items-center justify-center p-2 sm:p-4 lg:p-8">
         <div className="flex w-full max-w-sm flex-col gap-4 rounded-large glass-effect px-8 pb-10 pt-6 shadow-large">
-          <p className="pb-2 text-xl font-medium flex gap-2 items-center justiy-center">
-            <SiteBrand size={36} />
-          </p>
+          <div className="flex flex-col items-center gap-1.5 pb-2">
+            <BrandLogo
+              size={40}
+              name={brandName}
+              showChinese={showChinese}
+            />
+          </div>
 
           {providers.length > 0 && (
             <>

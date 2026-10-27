@@ -1,9 +1,6 @@
 import ReactDOM from "react-dom/client";
-import App from "./App";
 import "./styles/globals.css";
 import { silenceKnownDevNoise } from "./lib/devConsole";
-import { FontManager } from "./lib/fontManager";
-import { waitForStartupFont } from "./lib/fontStartup";
 
 silenceKnownDevNoise();
 
@@ -17,8 +14,44 @@ silenceKnownDevNoise();
  * 生产构建直接失败，而 dev server 不做这项转译、照跑不误，问题会被藏住。
  */
 void (async () => {
-  await waitForStartupFont(FontManager.restoreSavedFont());
+  /**
+   * 公开站和工作区分流。
+   *
+   * 公开域名可以把博客挂在根路径上，所以不能再写死 /blog：
+   * 优先用服务端注入的运行时配置（基础路径、公开地址、部署方式），
+   * 拿不到时退回 /blog —— 和改造前的行为完全一致。
+   */
+  const runtime = window.__INK_BLOG_RUNTIME__;
+  const basePath =
+    typeof runtime?.basePath === "string" && runtime.basePath.startsWith("/")
+      ? runtime.basePath.replace(/\/+$/, "") || "/"
+      : "/blog";
+  const separate =
+    runtime?.deploymentMode === "separate" &&
+    typeof runtime?.publicOrigin === "string" &&
+    runtime.publicOrigin.length > 0;
+  const publicOnlyBuild = import.meta.env.VITE_BLOG_PUBLIC_ONLY === "true";
+  const publicBlog = publicOnlyBuild
+    ? true
+    : separate
+      ? window.location.origin === runtime?.publicOrigin
+      : window.location.pathname === basePath ||
+        window.location.pathname.startsWith(basePath + "/");
+  const { default: App } = publicBlog
+    ? await import("./PublicBlogApp")
+    : await import("./App");
+  if (publicBlog) {
+    const { initializeBlogDevice } = await import("./lib/blogDevice");
+    await initializeBlogDevice();
+  }
+  if (!publicBlog) {
+    const [{ FontManager }, { waitForStartupFont }] = await Promise.all([
+      import("./lib/fontManager"),
+      import("./lib/fontStartup"),
+    ]);
+    await waitForStartupFont(FontManager.restoreSavedFont());
+  }
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <App />
+    <App />,
   );
 })();

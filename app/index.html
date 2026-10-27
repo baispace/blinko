@@ -3,30 +3,126 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml" />
+  <link rel="alternate icon" href="/favicon.ico?v=1" sizes="any" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
-  <meta name="application-name" content="Ink" />
+  <meta name="application-name" content="Jomio" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Ink" />
+  <meta name="apple-mobile-web-app-title" content="Jomio" />
 
-  <link rel="apple-touch-icon" sizes="120x120" href="/icons/Square142x142Logo.png" />
-  <link rel="apple-touch-icon" sizes="152x152" href="/icons/Square150x150Logo.png" />
-  <link rel="apple-touch-icon" sizes="167x167" href="/icons/Square284x284Logo.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/Square284x284Logo.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=1" />
 
-  <meta name="description" content="Ink personal workspace" />
+  <meta name="description" content="Jomio · 拾成 — 拾起想法，让它成形。" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-  <meta name="msapplication-TileColor" content="#2B5797" />
+  <meta name="msapplication-TileColor" content="#5F40FD" />
   <meta name="msapplication-tap-highlight" content="no" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#f8f8f8" />
 
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <title>Ink</title>
+  <link rel="manifest" href="/manifest.json?v=1" />
+  <link rel="shortcut icon" href="/favicon.svg?v=1" type="image/svg+xml" />
+  <title>Jomio</title>
+
+  <!--
+    首屏占位与主题预置。
+
+    React 与业务请求之前，浏览器只拿到这一个 HTML。这里做两件事：
+
+    1. 主题：读取 next-themes 使用的同一个存储键（theme），在首帧之前把
+       light / dark 写进 <html> 的 class。next-themes 自带的脚本要等 React
+       挂载后才执行，深色用户会先看到一片白；这里提前一步，避免闪烁。
+    2. 占位：样式与图标全部内联，不等待任何外部资源，页面一到达就有完整的
+       品牌标识，而不是无样式文字或白屏。app-ready 标记由 main.tsx 在
+       React 首次提交后添加。
+
+    ⚠️ 下面的 path 数据必须与 src/components/Common/Brand/brandGeometry.ts
+       保持一致，由 scripts/tests/brand-assets.test.ts 校验。
+  -->
+  <style>
+    :root {
+      color-scheme: light;
+      --app-boot-bg: #ffffff;
+      --app-boot-mark: #5f40fd;
+      --app-boot-text: #101229;
+    }
+
+    html.dark {
+      color-scheme: dark;
+      --app-boot-bg: #000000;
+      --app-boot-mark: #cabefc;
+      --app-boot-text: #f5f5f7;
+    }
+
+    #app-boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: var(--app-boot-bg);
+      color: var(--app-boot-text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    html.app-ready #app-boot {
+      display: none;
+    }
+
+    /* 公开博客有自己的品牌与骨架屏：那里不出现产品标识。 */
+    html.app-boot-off #app-boot,
+    html.ink-blog-js #app-boot {
+      display: none;
+    }
+
+    #app-boot svg {
+      display: block;
+      width: 52px;
+      height: 82px;
+    }
+
+    #app-boot p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1;
+      color: var(--app-boot-mark);
+      opacity: 0.75;
+    }
+  </style>
+  <script id="app-boot-theme">
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var resolved = stored || 'system';
+        if (resolved === 'system') {
+          resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var root = document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add(resolved);
+        root.style.colorScheme = resolved;
+        var themeColor = resolved === 'dark' ? '#1c1c1e' : '#f8f8f8';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', themeColor);
+        var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (bar) bar.setAttribute('content', themeColor);
+        var text = document.getElementById('app-boot-text');
+        if (text) {
+          text.textContent = (navigator.language || '').toLowerCase().indexOf('zh') === 0 ? '正在加载…' : 'Loading…';
+        }
+        // 公开博客有自己的品牌与首屏骨架，不显示产品标识。
+        if (/^\/blog(\/|$)/.test(location.pathname)) {
+          root.classList.add('app-boot-off');
+        }
+      } catch (e) {
+        /* 隐私模式 / 存储不可用：保持默认浅色即可 */
+      }
+    })();
+  </script>
 
   <!--
     首屏字体补丁：同步执行，位置必须在 React 与业务请求之前。
@@ -96,17 +192,19 @@
       }
     })();
   </script>
-
-  <meta name="apple-mobile-web-app-status-bar-style" content="#ffffff" />
-  <!-- 
-  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-  <script>
-    var vConsole = new window.VConsole();
-  </script> -->
 </head>
 
 <body>
   <div id="root"></div>
+  <div id="app-boot" role="status" aria-live="polite">
+    <svg viewBox="0 0 64 100" width="52" height="82" aria-hidden="true" focusable="false">
+      <path fill="var(--app-boot-mark)"
+        d="M 47.35 1.49 C 52.69 3.26 53.00 5.14 53.00 5.14 C 53.81 18.66 52.77 20.12 52.77 20.12 C 51.19 24.90 48.18 25.29 48.18 25.29 L 32.10 31.59 C 29.18 32.67 27.36 31.23 27.36 31.23 C 26.00 30.44 25.56 28.87 25.56 28.87 L 25.39 14.49 C 25.57 10.48 28.85 8.64 28.85 8.64 C 42.60 1.95 47.35 1.49 47.35 1.49 Z" />
+      <path fill="var(--app-boot-mark)"
+        d="M 58.21 29.87 L 62.25 31.88 C 62.70 61.30 61.87 68.44 61.87 68.44 C 60.91 76.14 58.93 79.17 58.93 79.17 C 55.11 87.01 51.23 88.74 51.23 88.74 C 50.94 92.36 47.72 91.33 47.72 91.33 L 39.46 95.59 C 33.46 97.90 26.25 98.27 26.25 98.27 C 22.47 98.64 16.57 97.17 16.57 97.17 L 12.15 95.18 L 11.10 94.67 C 5.20 91.38 7.39 91.90 7.39 91.90 L 4.78 88.08 L 2.92 84.59 C 0.84 77.10 2.21 77.51 2.21 77.51 C 2.41 76.79 4.35 75.40 4.32 75.41 C 29.23 66.15 32.08 66.37 32.08 66.37 L 32.38 76.14 C 32.05 83.02 30.24 86.69 30.24 86.69 C 29.44 88.79 29.57 88.11 29.57 88.11 L 28.97 88.94 L 28.26 89.95 L 26.89 91.60 C 26.89 91.60 25.57 93.19 25.57 93.19 C 28.94 91.10 30.70 88.37 30.70 88.37 C 34.13 83.69 34.41 78.67 34.41 78.67 L 34.85 43.43 C 36.02 39.33 37.57 38.84 37.57 38.84 C 40.58 35.86 41.89 36.41 41.89 36.41 L 45.11 35.13 C 58.79 29.76 58.21 29.87 58.21 29.87 Z" />
+    </svg>
+    <p id="app-boot-text">Loading…</p>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
   <script type="text/javascript" id="vditorIconScript">
     document.body.insertAdjacentHTML('afterBegin', `

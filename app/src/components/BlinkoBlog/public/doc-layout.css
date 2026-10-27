@@ -1,0 +1,854 @@
+/*
+ * 文档模式版式。
+ *
+ * 两栏：左边是专题目录，右边是正文。目录是「地图」，正文是「地方」，
+ * 读者的注意力应该落在右边 —— 所以右栏不套厚重卡片外框，只用留白和
+ * 一条分隔线把两块分开，文字行宽也收在舒服的范围里。
+ *
+ * 所有颜色都走博客现有的语义变量，深浅主题自动跟着走。
+ */
+
+/* 强调色：文档模式单独一个变量，暗色下可提亮一档。 */
+.ink-doc-layout,
+.ink-doc-toc {
+  --doc-accent: var(--ink-accent);
+  /* 右栏内容统一行宽：标题、元信息、分隔线、正文、前后篇都对齐到这条右边界。 */
+  --doc-content-w: 976px;
+}
+.ink-blog[data-theme="dark"] .ink-doc-layout,
+.ink-blog[data-theme="dark"] .ink-doc-toc {
+  /* 深底上原来的紫太闷，对比度也不够 —— 提亮一档。 */
+  --doc-accent: #a99bff;
+}
+
+/* ---------- 双栏骨架 ---------- */
+.ink-doc-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 0;
+  width: min(1328px, calc(100% - 96px));
+  margin-inline: auto;
+  align-items: start;
+}
+.ink-doc-side {
+  position: sticky;
+  top: var(--ink-header-h, 78px);
+  align-self: start;
+  max-height: calc(100dvh - var(--ink-header-h, 78px));
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ink-line);
+  padding: 28px 20px 24px 0;
+  min-width: 0;
+}
+.ink-doc-main {
+  min-width: 0;
+  padding: 28px 0 56px 64px;
+}
+
+/* ---------- 左侧：专题信息 ---------- */
+.ink-doc-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: inherit;
+  gap: 20px;
+}
+.ink-doc-sidebar-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--ink-text);
+  margin: 0 0 6px;
+}
+.ink-doc-sidebar-desc {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink-muted);
+  margin: 0;
+}
+.ink-doc-sidebar-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-doc-sidebar-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.ink-doc-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+.ink-doc-sidebar-toggle:hover {
+  color: var(--doc-accent);
+  border-color: var(--doc-accent);
+}
+
+/* 目录本身可以独立滚动 —— 条目再多也不会把底部「返回全部专题」顶出去。 */
+.ink-doc-sidebar-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+.ink-doc-sidebar-list::-webkit-scrollbar {
+  width: 6px;
+}
+.ink-doc-sidebar-list::-webkit-scrollbar-thumb {
+  background: var(--ink-line);
+  border-radius: 3px;
+}
+.ink-doc-sidebar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ink-line);
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color 0.16s;
+}
+.ink-doc-sidebar-back:hover {
+  color: var(--doc-accent);
+}
+.ink-doc-sidebar-empty {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 12px 0;
+}
+
+/* ---------- 左侧：目录条目 ---------- */
+/*
+ * 目录排版只认一套尺寸变量：标记栏宽度、文字栏起点、行高与上下内边距。
+ *
+ * 选中态只换颜色（紫字 + 紫点 + 极浅底），不加边框、不改内边距、
+ * 不换字号也不换字重 —— 所以选中与未选中的文字左边缘完全一致，
+ * 长标题也不会因为「被选中变粗」而换行。
+ */
+.ink-doc-nav {
+  --doc-nav-text-x: 40px; /* 文字栏起点：章节名与文章标题共用一条竖线 */
+  --doc-nav-marker-x: 14px; /* 引导线在标记栏内的位置 */
+  --doc-nav-dot: 7px; /* 圆点直径 */
+  --doc-nav-dot-x: 11px; /* 圆点左边缘（圆点正好坐在引导线上） */
+  --doc-nav-pad-y: 9px; /* 条目上下内边距 */
+  --doc-nav-line: calc(15px * 1.65); /* 行高，与正文行距一致 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ink-doc-nav-group + .ink-doc-nav-group {
+  margin-top: 22px;
+}
+/* 章节行：序号 / 名称 / 篇数 / 折叠箭头各占一列，彼此对齐。 */
+.ink-doc-nav-section {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 22px 15px;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.16s;
+}
+.ink-doc-nav-section:hover {
+  color: var(--doc-accent);
+}
+.ink-doc-nav-section.is-static {
+  cursor: default;
+}
+.ink-doc-nav-section-num {
+  min-width: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+.ink-doc-nav-section-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ink-doc-nav-section-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-muted);
+}
+.ink-doc-nav-caret {
+  justify-self: end;
+  color: var(--ink-muted);
+  transition: transform 0.18s;
+}
+.ink-doc-nav-section[data-open] .ink-doc-nav-caret {
+  transform: rotate(180deg);
+}
+/* 当前文章所在的那一章：只强调章节名，整组文章不跟着变高亮。 */
+.ink-doc-nav-section[data-current] .ink-doc-nav-section-name {
+  color: var(--doc-accent);
+}
+
+.ink-doc-sidebar-list > .ink-doc-nav {
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+/* 文章条目：标记栏 + 文字栏。圆点与引导线在标记栏里，文字从同一条竖线开始。 */
+.ink-doc-nav .ink-doc-nav-link {
+  display: grid;
+  grid-template-columns: var(--doc-nav-text-x) minmax(0, 1fr);
+  align-items: stretch;
+  font-size: 15px;
+  /* 中等字重：选中不额外加粗，长标题的换行位置因此保持稳定。 */
+  font-weight: 500;
+  line-height: 1.65;
+  color: var(--ink-text);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.16s, background-color 0.16s;
+}
+.ink-doc-nav .ink-doc-nav-text {
+  min-width: 0;
+  padding: var(--doc-nav-pad-y) 10px var(--doc-nav-pad-y) 0;
+  overflow-wrap: anywhere;
+}
+.ink-doc-nav .ink-doc-nav-marker {
+  position: relative;
+  display: block;
+}
+/* 引导线：贯穿整列的细线，条目之间连成一条。 */
+.ink-doc-nav .ink-doc-nav-marker::before {
+  content: "";
+  position: absolute;
+  left: var(--doc-nav-marker-x);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink-line);
+}
+/* 圆点：坐在引导线上，与第一行文字垂直居中。 */
+.ink-doc-nav .ink-doc-nav-marker::after {
+  content: "";
+  position: absolute;
+  left: var(--doc-nav-dot-x);
+  top: calc(
+    var(--doc-nav-pad-y) + (var(--doc-nav-line) - var(--doc-nav-dot)) / 2
+  );
+  width: var(--doc-nav-dot);
+  height: var(--doc-nav-dot);
+  border-radius: 50%;
+  background: var(--ink-line);
+  transition: background-color 0.16s;
+}
+.ink-doc-nav .ink-doc-nav-link:hover {
+  color: var(--doc-accent);
+}
+.ink-doc-nav .ink-doc-nav-link:hover .ink-doc-nav-marker::after {
+  background: var(--doc-accent);
+}
+/* 当前文章：紫色文字 + 紫色圆点 + 极浅底。不叠粗竖线，不动任何尺寸。 */
+.ink-doc-nav .ink-doc-nav-link[data-active] {
+  color: var(--doc-accent);
+  background: color-mix(in srgb, var(--doc-accent) 7%, transparent);
+}
+.ink-doc-nav .ink-doc-nav-link[data-active] .ink-doc-nav-marker::after {
+  background: var(--doc-accent);
+}
+/* 专题概述是目录里的一级条目，标记栏与文章共用同一宽度，
+   文字起点因此与文章标题完全对齐；不单独加粗，避免选中后换行位置跳动。
+   概述不参与文章的圆点与引导线，所以把标记藏起来。 */
+.ink-doc-nav .ink-doc-nav-link.is-overview {
+  font-weight: 500;
+}
+.ink-doc-nav .ink-doc-nav-link.is-overview .ink-doc-nav-marker::before,
+.ink-doc-nav .ink-doc-nav-link.is-overview .ink-doc-nav-marker::after {
+  display: none;
+}
+
+/* ---------- 右侧：文章头 ---------- */
+.ink-doc-crumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin-bottom: 14px;
+}
+.ink-doc-crumb a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color 0.16s;
+}
+.ink-doc-crumb a:hover {
+  color: var(--doc-accent);
+}
+.ink-doc-article-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: var(--doc-content-w);
+}
+.ink-doc-article-title {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+.ink-doc-article-excerpt {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink-muted);
+  margin: 0 0 12px;
+  max-width: var(--doc-content-w);
+}
+.ink-doc-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+  max-width: var(--doc-content-w);
+}
+.ink-doc-meta > span + span::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--ink-muted);
+}
+.ink-doc-nav .ink-doc-nav-link:focus-visible,
+.ink-doc-nav-section:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
+}
+.ink-doc-rule {
+  height: 1px;
+  background: var(--ink-line);
+  border: 0;
+  margin: 0 0 26px;
+  max-width: var(--doc-content-w);
+}
+
+/* ---------- 右侧：正文 ---------- */
+.ink-doc-body {
+  max-width: var(--doc-content-w);
+}
+.ink-doc-body .ink-prose {
+  font-size: 17px;
+  line-height: 1.85;
+}
+.ink-blog .ink-doc-body .markdown-body {
+  color: color-mix(in srgb, var(--ink-text) 82%, var(--ink-muted));
+  background: transparent;
+}
+.ink-blog .ink-doc-body .markdown-body :is(h1, h2, h3, h4) {
+  color: var(--ink-text);
+}
+.ink-blog .ink-doc-body .markdown-body h2 {
+  margin-top: 32px;
+}
+.ink-blog .ink-doc-body .markdown-body > h2:first-child {
+  margin-top: 0;
+}
+/* 跳转时给固定导航留出余量，标题不会贴在导航底下。 */
+.ink-doc-body .ink-prose h2,
+.ink-doc-body .ink-prose h3,
+.ink-doc-body .ink-prose h4 {
+  scroll-margin-top: 96px;
+}
+.ink-doc-body .ink-prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.ink-doc-body .ink-prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.ink-doc-body .ink-prose a {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 本文目录浮层 ---------- */
+.ink-doc-toc-anchor {
+  position: relative;
+  flex-shrink: 0;
+}
+.ink-doc-toc-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--ink-line);
+  border-radius: 9px;
+  background: var(--ink-surface);
+  color: var(--ink-text);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.16s, color 0.16s;
+}
+.ink-doc-toc-trigger:hover {
+  border-color: var(--doc-accent);
+  color: var(--doc-accent);
+}
+.ink-doc-toc {
+  position: fixed;
+  z-index: 70;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--ink-line);
+  border-radius: 14px;
+  background: var(--ink-surface);
+  box-shadow: 0 12px 32px rgb(18 21 42 / 9%);
+}
+.ink-doc-toc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 9px;
+  margin-bottom: 7px;
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-doc-toc-head strong {
+  font-size: 13.5px;
+  color: var(--ink-text);
+}
+.ink-doc-toc-head span {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ink-doc-toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ink-doc-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-text);
+  text-decoration: none;
+  transition: background-color 0.16s, color 0.16s;
+}
+.ink-doc-toc-link:hover {
+  background: var(--ink-default-100, var(--ink-tint));
+  color: var(--doc-accent);
+}
+.ink-doc-toc-link[data-active] {
+  background: color-mix(in srgb, var(--doc-accent) 8%, transparent);
+  color: var(--doc-accent);
+  font-weight: 600;
+}
+.ink-doc-toc-num {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--doc-accent);
+}
+.ink-doc-toc-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 底部：上一篇 / 下一篇 ---------- */
+.ink-doc-prev-next {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: var(--doc-content-w);
+  margin-top: 40px;
+}
+.ink-doc-prev-next a {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink-surface);
+  text-decoration: none;
+  transition: border-color 0.16s;
+}
+.ink-doc-prev-next a:hover {
+  border-color: var(--doc-accent);
+}
+.ink-doc-prev-next small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+.ink-doc-prev-next strong {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-text);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ink-doc-prev-next .is-next {
+  text-align: right;
+  align-items: flex-end;
+}
+.ink-doc-prev-next .is-next small,
+.ink-doc-prev-next .is-next strong {
+  align-self: flex-end;
+}
+/* 没有前后篇时收紧布局，不留一块空卡片。 */
+.ink-doc-prev-next > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* ---------- 专题概述（文档模式） ---------- */
+.ink-doc-overview {
+  max-width: 720px;
+}
+.ink-doc-overview h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  color: var(--ink-text);
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.ink-doc-overview .ink-doc-overview-desc {
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--ink-muted);
+  margin: 0 0 18px;
+}
+.ink-doc-overview-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 22px;
+}
+.ink-doc-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--doc-accent);
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+  transition: opacity 0.16s;
+}
+.ink-doc-start:hover {
+  opacity: 0.86;
+}
+.ink-doc-overview-section {
+  margin-top: 34px;
+}
+.ink-doc-overview-section h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-text);
+  margin: 0 0 10px;
+}
+.ink-doc-overview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ink-doc-overview-list a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--ink-text);
+  text-decoration: none;
+  transition: background-color 0.16s, color 0.16s;
+}
+.ink-doc-overview-list a:hover {
+  background: var(--ink-tint);
+  color: var(--doc-accent);
+}
+.ink-doc-overview-list small {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* 专题索引页里的「文档」标识：低调，不抢封面。 */
+.ink-topic-doc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--ink-line);
+  font-size: 11px;
+  color: var(--ink-muted);
+  background: var(--ink-surface);
+}
+
+/* ---------- 移动端：抽屉 ---------- */
+.ink-doc-drawer-button {
+  display: none;
+}
+.ink-doc-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgb(12 14 24 / 42%);
+  backdrop-filter: blur(2px);
+}
+.ink-doc-drawer {
+  position: fixed;
+  z-index: 81;
+  inset: 0 auto 0 0;
+  width: min(320px, 86vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-surface);
+  border-right: 1px solid var(--ink-line);
+  box-shadow: 12px 0 40px rgb(12 14 24 / 18%);
+}
+.ink-doc-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--ink-line);
+}
+.ink-doc-drawer-head strong {
+  font-size: 14px;
+  color: var(--ink-text);
+}
+.ink-doc-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.ink-doc-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 20px;
+}
+
+@media (min-width: 1001px) and (max-width: 1200px) {
+  .ink-doc-layout {
+    width: calc(100% - 48px);
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+  .ink-doc-main { padding-left: 32px; }
+}
+
+@media (max-width: 1000px) {
+  .ink-doc-layout {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100% - 32px, 800px);
+  }
+  .ink-doc-side {
+    display: none;
+  }
+  .ink-doc-main {
+    padding: 18px 0 48px;
+  }
+  .ink-doc-drawer-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border: 1px solid var(--ink-line);
+    border-radius: 9px;
+    background: var(--ink-surface);
+    color: var(--ink-text);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .ink-doc-article-title {
+    font-size: 27px;
+  }
+  .ink-doc-prev-next {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ink-doc-prev-next .is-next {
+    text-align: left;
+    align-items: flex-start;
+  }
+  .ink-doc-prev-next .is-next small,
+  .ink-doc-prev-next .is-next strong {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-doc-nav-caret,
+  .ink-doc-nav .ink-doc-nav-link,
+  .ink-doc-toc-link {
+    transition: none;
+  }
+}
+
+/* 专题索引卡：标题与「文档」标识同一行。 */
+.ink-topic-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ink-topic-title-row .ink-topic-name {
+  min-width: 0;
+}
+
+/* ---------- 加载态（文档模式） ---------- */
+/*
+ * 骨架和真页面同尺寸：左栏目录 + 右栏正文。
+ * 解析默认文章的这段时间里页面不塌陷，跳过去时也不会错位。
+ */
+.ink-doc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ink-doc-skeleton-line {
+  border-radius: 6px;
+  background: var(--ink-line);
+  opacity: 0.6;
+}
+.ink-doc-skeleton-line.is-title {
+  width: 58%;
+  height: 20px;
+}
+.ink-doc-skeleton-line.is-desc {
+  width: 82%;
+  height: 12px;
+  margin-top: 10px;
+}
+.ink-doc-skeleton-line.is-bar {
+  width: 62%;
+  height: 12px;
+}
+.ink-doc-skeleton-line.is-item {
+  height: 11px;
+  margin: 14px 0 0 30px;
+}
+.ink-doc-skeleton-main {
+  max-width: 760px;
+}
+.ink-doc-skeleton-line.is-crumb {
+  width: 30%;
+  height: 11px;
+  margin-bottom: 18px;
+}
+.ink-doc-skeleton-line.is-h1 {
+  width: 66%;
+  height: 34px;
+  margin-bottom: 14px;
+}
+.ink-doc-skeleton-line.is-text {
+  width: 88%;
+  height: 13px;
+  margin-bottom: 9px;
+}
+.ink-doc-skeleton-line.is-text.is-short {
+  width: 58%;
+}
+.ink-doc-skeleton-line.is-meta {
+  width: 42%;
+  height: 11px;
+  margin: 18px 0 26px;
+}
+.ink-doc-skeleton-line.is-body {
+  width: 100%;
+  height: 13px;
+  margin-bottom: 12px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ink-doc-skeleton-line {
+    animation: ink-doc-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+@keyframes ink-doc-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* ---------- 深色主题的细节校正 ---------- */
+/* 浅色下 8% 的紫叠在白底上是「轻浅底色」；深底上同样的比例几乎看不见，
+   提到 16% —— 仍然是淡紫，不是大块亮色。 */
+.ink-blog[data-theme="dark"] .ink-doc-nav .ink-doc-nav-link[data-active] {
+  background: color-mix(in srgb, var(--doc-accent) 16%, transparent);
+}
+.ink-blog[data-theme="dark"] .ink-doc-toc-link[data-active] {
+  background: color-mix(in srgb, var(--doc-accent) 16%, transparent);
+}
+.ink-blog[data-theme="dark"] .ink-doc-toc-link:hover {
+  background: color-mix(in srgb, var(--doc-accent) 12%, transparent);
+}
+.ink-blog[data-theme="dark"] .ink-doc-sidebar-list::-webkit-scrollbar-thumb {
+  background: #3a3e52;
+}

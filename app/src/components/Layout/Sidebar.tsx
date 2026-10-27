@@ -156,11 +156,14 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
         />
       )}
 
-      {/* Workspace identity stays separate from the personal account menu. */}
+      {/* Workspace identity stays separate from the personal account menu.
+          Desktop shows mark + name; the collapsed rail and the mobile drawer
+          keep only the mark, so the compact navigation never squeezes a
+          wordmark into a narrow column. */}
       <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2 mt-9' : 'pl-2.5 pr-10'}`}>
         <Dropdown placement="bottom-start" disableAnimation><DropdownTrigger>
           <button type="button" aria-label={text('工作空间菜单','Workspace menu')} className="flex min-w-0 w-full items-center rounded-xl p-1 hover:bg-default-100/60 focus-visible:outline-primary">
-            <SiteBrand compact={base.isSidebarCollapsed} framed size={30} />
+            <SiteBrand compact={base.isSidebarCollapsed || !isPc} size={30} />
           </button>
         </DropdownTrigger><DropdownMenu aria-label={text('工作空间菜单','Workspace menu')}>
           {workspaceMenu.map(item => (

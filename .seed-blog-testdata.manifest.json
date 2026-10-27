@@ -1,0 +1,117 @@
+{
+  "seed": "blog-testdata-v1",
+  "before": {
+    "profile": {
+      "accountId": 1,
+      "displayName": "Baihe",
+      "tagline": "",
+      "bio": "测试产品，产品经理、ai产品",
+      "avatarUrl": "",
+      "homepage": "",
+      "links": [],
+      "isPublished": true,
+      "createdAt": "2026-10-19T12:39:52.242Z",
+      "updatedAt": "2026-10-19T14:13:10.238Z"
+    },
+    "topics": [
+      {
+        "id": 11,
+        "name": "推荐系统",
+        "slug": "recsys",
+        "desc": "召回、排序与线上策略的工程实践",
+        "color": "#7055f8",
+        "sortOrder": 0,
+        "isPublished": true,
+        "noteIds": [
+          15
+        ]
+      },
+      {
+        "id": 69,
+        "name": "产品思考",
+        "slug": "topic-3ca34f",
+        "desc": "",
+        "color": "#7055f8",
+        "sortOrder": 1,
+        "isPublished": false,
+        "noteIds": [
+          8,
+          175,
+          174
+        ]
+      }
+    ]
+  },
+  "createdNotes": [
+    {
+      "id": 359,
+      "publishId": "1848569f6c87e1b3f279d817",
+      "title": "推荐召回的三段式改造：从规则到向量再到融合"
+    },
+    {
+      "id": 360,
+      "publishId": "d844f57e117d64cbbe5f96ae",
+      "title": "AB 实验平台里最容易踩的五个坑"
+    },
+    {
+      "id": 361,
+      "publishId": "da808576d5a6e2bac0bee74f",
+      "title": "埋点方案评审清单：从事件定义到回溯口径"
+    },
+    {
+      "id": 362,
+      "publishId": "372c14835bfb26427d279dd4",
+      "title": "AI 搜索的离线评测怎么做才靠谱"
+    },
+    {
+      "id": 363,
+      "publishId": "391debb0d1a54cc37c8bca17",
+      "title": "一线产品经理的周报写作法：把流水账变成决策记录"
+    }
+  ],
+  "createdTopics": [
+    {
+      "id": 74,
+      "name": "产品思考"
+    },
+    {
+      "id": 75,
+      "name": "AI 工程"
+    },
+    {
+      "id": 76,
+      "name": "数据体系"
+    },
+    {
+      "id": 77,
+      "name": "工程效率"
+    }
+  ],
+  "createdAttachments": [
+    {
+      "id": 111,
+      "path": "/api/file/ink-seed-recall-three-stage-292abe87.webp",
+      "file": "ink-seed-recall-three-stage-292abe87.webp"
+    },
+    {
+      "id": 112,
+      "path": "/api/file/ink-seed-ab-platform-pitfalls-0cf5d834.webp",
+      "file": "ink-seed-ab-platform-pitfalls-0cf5d834.webp"
+    },
+    {
+      "id": 113,
+      "path": "/api/file/ink-seed-tracking-review-checklist-7f3d0197.webp",
+      "file": "ink-seed-tracking-review-checklist-7f3d0197.webp"
+    },
+    {
+      "id": 114,
+      "path": "/api/file/ink-seed-ai-search-offline-eval-bfbf0478.webp",
+      "file": "ink-seed-ai-search-offline-eval-bfbf0478.webp"
+    },
+    {
+      "id": 115,
+      "path": "/api/file/ink-seed-weekly-report-decision-a523b903.webp",
+      "file": "ink-seed-weekly-report-decision-a523b903.webp"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { contentVersion, publicationChanges, publishSnapshot, publicationReviewT
 import { readDraftBody, buildPublishCheck, withDraftBody, withSourceBaseline, sourceVersionOf } from './blogPublishCheck';
 import { readDraftCoverConfig, readPublicCoverConfig, emptyCoverConfig, writeDraftCoverConfig, normalizeCoverConfig } from './blogCoverConfig';
 import { validShortCoverTitle } from '../../shared/lib/blogPublishSettings';
+import { publicBodyOf } from '../../shared/lib/blogPublicBody';
 
 export const savePublishSettingsSchema = z.object({
   noteId: z.number().int().positive(), token: z.string().length(64),
@@ -73,7 +74,8 @@ export async function savePublishSettings(db: PrismaClient, accountId: number, i
       const conflict = check.conflicts.some(c => c.field === 'body');
       if (conflict && !input.sourceChoice) throw new TRPCError({ code: 'CONFLICT', message: '原笔记与发布草稿都有修改，请选择要发布的正文。' });
       const draft = readDraftBody(note.metadata, note.content);
-      const adopt = input.sourceChoice === 'adopt' || (!conflict && check.source.changed && draft.content === note.publication?.content);
+      // 公开快照里存的是「公开正文形态」，比对要用同一形态。
+      const adopt = input.sourceChoice === 'adopt' || (!conflict && check.source.changed && publicBodyOf(draft.content) === note.publication?.content);
       const version = sourceVersionOf(note.content, note.type);
       let metadata = note.metadata;
       if (adopt) metadata = withDraftBody(metadata, { content: note.content, sourceVersion: version }) as typeof metadata;

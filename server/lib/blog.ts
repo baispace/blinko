@@ -1076,7 +1076,25 @@ export async function attachBlogCover(
   });
 }
 
-export async function isPublicBlogAsset(db: PrismaClient, path: string) {
+/**
+ * 这个地址是不是公开素材（匿名可读）。
+ *
+ * 放行的五类：
+ *   1. 已发布文章的封面；
+ *   2. 已发布文章的分享图；
+ *   3. 已公开闪念里的图片；
+ *   4. 博客头像；
+ *   5. 订阅二维码。
+ *
+ * 另外还有一类是「正文内联素材」：公开正文里引用到的附件就是公开内容的一部分。
+ * 判定口径是「已发布文章的公开快照正文里有没有这个地址」，
+ * 不是「这篇笔记的附件全放开」—— 后者等于公开整篇笔记的所有附件。
+ */
+export async function isPublicBlogAsset(
+  db: PrismaClient,
+  path: string,
+  opts?: { needPublicAccess?: boolean },
+) {
   const images = await db.attachments.findMany({
     where: { path },
     select: {
@@ -1138,6 +1156,51 @@ export async function isPublicBlogAsset(db: PrismaClient, path: string) {
     )
   )
     return true;
+  /*
+   * 正文内联素材：公开快照正文里引用到的附件，就是公开内容的一部分。
+   *
+   * needPublicAccess=false 表示「这次调用不需要公开判定」——
+   * 比如本人取自己的文件。判定要扫正文，能省一次就省一次。
+   */
+  if (opts?.needPublicAccess !== false) {
+    /*
+     * 先走便宜的一条路：附件挂在哪篇笔记名下，就看那篇笔记的公开快照正文
+     * 有没有引用这个地址 —— 命中即公开，撤回发布立刻收回。
+     */
+    const ownerNoteIds = images
+      .map((image) => image.noteId)
+      .filter((id): id is number => typeof id === "number");
+    if (ownerNoteIds.length) {
+      const ownersPublished = await db.notes.findMany({
+        where: {
+          id: { in: ownerNoteIds },
+          isPublished: true,
+          isRecycle: false,
+        },
+        select: { publication: { select: { content: true } } },
+      });
+      if (
+        ownersPublished.some(
+          (note) => note.publication?.content.includes(path) ?? false,
+        )
+      )
+        return true;
+    }
+    /*
+     * 兜底：附件可能挂在这篇笔记名下、正文却引用在另一篇已发布文章里
+     * （从别的笔记复制过来的图），也可能压根没挂到笔记上。
+     * 这时按内容找：已发布文章的公开快照正文里引用了这个地址就算公开。
+     */
+    const escaped = path.replace(/[\\%_]/g, (char) => `\\${char}`);
+    const rows = await db.$queryRaw<{ noteId: number }[]>`
+      SELECT p."noteId" FROM "notePublication" p
+      JOIN "notes" n ON n.id = p."noteId"
+      WHERE p."content" LIKE ${`%${escaped}%`} ESCAPE '\\'
+        AND n."isPublished" = TRUE AND n."isRecycle" = FALSE
+      LIMIT 1
+    `;
+    if (rows.length) return true;
+  }
   const owners = candidates.flatMap((image) =>
     image.accountId ? [image.accountId] : [],
   );

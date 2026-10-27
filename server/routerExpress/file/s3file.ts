@@ -143,7 +143,8 @@ router.get(/.*/, async (req: Request, res: Response) => {
     const { s3ClientInstance, config } = await FileService.getS3Client();
     const fullPath = decodeURIComponent(req.path.substring(1));
     const needThumbnail = req.query.thumbnail === 'true';
-    const publicBlogAsset = await isPublicBlogAsset(prisma, '/api/s3file/' + fullPath);
+    const assetPath = '/api/s3file/' + fullPath;
+    let publicBlogAsset = false;
 
     // Security fix: Validate S3 file path and check user permissions
     // Check if the file exists in attachments and user has access
@@ -151,7 +152,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
       try {
         const myFile = await prisma.attachments.findFirst({
           where: {
-            path: '/api/s3file/' + fullPath
+            path: assetPath
           },
           include: {
             note: {
@@ -168,6 +169,20 @@ router.get(/.*/, async (req: Request, res: Response) => {
           return res.status(404).json({ error: "File not found" });
         }
 
+        // Check if user owns the file or the note containing the file
+        const isOwner = !!token && (
+          myFile.accountId === Number(token.id) ||
+          myFile.note?.accountId === Number(token.id) ||
+          token.role === 'superadmin'
+        );
+        /*
+         * 公开素材：封面、分享图、正文内联图等 —— 匿名可读，且随发布状态开关。
+         * 本人取自己的文件不需要这个判定（要扫正文），省一次。
+         */
+        publicBlogAsset = await isPublicBlogAsset(prisma, assetPath, {
+          needPublicAccess: !isOwner,
+        });
+
         if (!token) {
           if (myFile.note?.isShare || publicBlogAsset) {
             // Public shared file, allow access
@@ -175,11 +190,6 @@ router.get(/.*/, async (req: Request, res: Response) => {
             return res.status(401).json({ error: "Unauthorized" });
           }
         } else {
-          // Check if user owns the file or the note containing the file
-          const isOwner = myFile.accountId === Number(token.id) || 
-                          myFile.note?.accountId === Number(token.id) ||
-                          token.role === 'superadmin';
-          
           if (!myFile.note?.isShare && !isOwner && !publicBlogAsset) {
             return res.status(401).json({ error: "Unauthorized" });
           }
@@ -193,6 +203,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
       if (!token) {
         return res.status(401).json({ error: "Unauthorized" });
       }
+      publicBlogAsset = await isPublicBlogAsset(prisma, assetPath);
     }
 
     if (publicBlogAsset) {

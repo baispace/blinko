@@ -28,6 +28,7 @@ import {
   publicationSummary,
   publicationTitle,
 } from "../../shared/lib/blogPublication";
+import { hasCredentialLeak, publicBodyOf } from "../../shared/lib/blogPublicBody";
 
 export {
   contentVersion,
@@ -35,26 +36,24 @@ export {
   publicationTitle,
 } from "../../shared/lib/blogPublication";
 
-// Publishing only accepts self-contained body content in this first iteration.
-// Private attachment URLs (including HTML-escaped/percent-encoded paths) cannot
-// become silently broken public images or expose an authenticated URL.
+/*
+ * 站内图片可以发布。
+ *
+ * 笔记里的图片一律是站内地址（/api/file/*、/api/s3file/*），
+ * 原来的口径把它们全挡了 —— 结果是「正文里有一张图就发不出去」。
+ * 现在改成：
+ *   站内地址放行 —— 发布时把地址里的凭据剥掉（见 rewritePublicBodyAssets），
+ *                   服务端再按「公开素材」判定放行匿名读取；
+ *   外链带 token / authorization 仍然挡 —— 那是凭据，公开快照谁都能读。
+ */
 export function assertPublishableBody(content: string) {
   if (!content.replace(/<[^>]*>/g, "").trim() && !/<img\b/i.test(content))
     throw new TRPCError({ code: "BAD_REQUEST", message: "正文为空，无法发布" });
-  let decoded = content.replace(/&#(?:x([0-9a-f]+)|(\d+));?/gi, (_, hex, dec) =>
-    String.fromCodePoint(parseInt(hex || dec, hex ? 16 : 10)),
-  );
-  try {
-    decoded = decodeURIComponent(decoded);
-  } catch {}
-  if (
-    /\/api\/(?:file|s3file)\//i.test(decoded) ||
-    /(?:[?&]|&amp;)(?:token|authorization)=/i.test(decoded)
-  )
+  if (hasCredentialLeak(content))
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
-        "正文包含站内图片、文件或带授权的链接，本轮暂不支持公开这些资源，请移除后重试",
+        "正文包含带授权参数的链接（token / authorization），公开后凭据会泄露，请去掉凭据后重试",
     });
 }
 
@@ -79,6 +78,11 @@ export function publicationChanges(note: PublicationDraft) {
   const p = note.publication;
   // 正文比的是「发布草稿」那份：草稿分叉之后，原笔记怎么改都不算待发布改动。
   const draftContent = readDraftBody(note.metadata, note.content).content;
+  /*
+   * 公开快照里存的是「公开正文形态」：站内文件地址的凭据参数已被剥掉。
+   * 比对必须拿同一形态比 —— 否则刚发布完就说正文又变了。
+   */
+  const publicContent = publicBodyOf(draftContent);
   // 封面分两块：底图附件（草稿指针）和文字层配置（草稿 metadata）。
   // 草稿没配过封面文字时沿用公开那份 —— 那表示作者自上次发布后没动过。
   const draftCover = effectiveDraftCover(note);
@@ -90,13 +94,13 @@ export function publicationChanges(note: PublicationDraft) {
    * 否则刚发布完管理列表就说有未保存修改。
    */
   const draftTitle =
-    publicationTitle(note.metadata) || deriveTitle(draftContent);
+    publicationTitle(note.metadata) || deriveTitle(publicContent);
   return [
     !p || p.title !== draftTitle ? "title" : null,
     !p || (p.summary ?? "") !== publicationSummary(note.metadata)
       ? "summary"
       : null,
-    !p || p.content !== draftContent ? "content" : null,
+    !p || p.content !== publicContent ? "content" : null,
     !p || p.type !== note.type ? "type" : null,
     p?.coverAttachmentId !== p?.draftCoverAttachmentId ||
     !coverConfigEqual(draftCover, publicCover)
@@ -342,6 +346,12 @@ export async function publishSnapshot(
     // 发布的是「发布草稿」那份正文：草稿没分叉时它就是原笔记正文，
     // 分叉之后原笔记再改也不会跟着变。
     const draftBody = readDraftBody(note.metadata, note.content);
+    /*
+     * 写进公开快照的正文是「公开正文形态」：
+     * 站内文件地址里的凭据参数在写之前剥掉，公开页不需要登录态也能取到图。
+     * 指纹仍按原文算（草稿正文一个字节都不改）。
+     */
+    const publicContent = publicBodyOf(draftBody.content);
     const sourceVersion = sourceVersionOf(note.content ?? "", note.type);
     const draftTags = readDraftPublicTags(note.metadata);
     const draftTitle = publicationTitle(note.metadata);
@@ -352,7 +362,7 @@ export async function publishSnapshot(
     const draftCoverConfig = effectiveDraftCover(note);
     const publicCoverConfig = readPublicCoverConfig(p?.coverConfig);
     const draftVersion = draftVersionOf({
-      title: draftTitle || deriveTitle(draftBody.content),
+      title: draftTitle || deriveTitle(publicContent),
       summary: draftSummary,
       body: draftBody.content,
       tags: draftTags,
@@ -393,9 +403,9 @@ export async function publishSnapshot(
         });
     }
     const unchanged =
-      p?.content === draftBody.content &&
+      p?.content === publicContent &&
       p?.type === note.type &&
-      p?.title === (draftTitle || deriveTitle(draftBody.content)) &&
+      p?.title === (draftTitle || deriveTitle(publicContent)) &&
       (p?.summary ?? "") === draftSummary &&
       (p?.coverAttachmentId ?? null) === coverId &&
       coverConfigEqual(draftCoverConfig, publicCoverConfig) &&
@@ -447,7 +457,7 @@ export async function publishSnapshot(
       await tx.notePublication.upsert({
         where: { noteId: note.id },
         create: {
-          title: draftTitle || deriveTitle(draftBody.content),
+          title: draftTitle || deriveTitle(publicContent),
           summary: draftSummary,
           coverAttachmentId: coverId,
           draftCoverAttachmentId: coverId,
@@ -456,7 +466,7 @@ export async function publishSnapshot(
             ? (draftCoverConfig.focus as unknown as Prisma.InputJsonValue)
             : undefined,
           noteId: note.id,
-          content: draftBody.content,
+          content: publicContent,
           type: note.type,
           publicTags: draftTags,
           sourceUpdatedAt: note.updatedAt,
@@ -470,7 +480,7 @@ export async function publishSnapshot(
           updatedAt: now,
         },
         update: {
-          title: draftTitle || deriveTitle(draftBody.content),
+          title: draftTitle || deriveTitle(publicContent),
           summary: draftSummary,
           coverAttachmentId: coverId,
           draftCoverAttachmentId: coverId,
@@ -478,7 +488,7 @@ export async function publishSnapshot(
           coverFocus: draftCoverConfig?.focus
             ? (draftCoverConfig.focus as unknown as Prisma.InputJsonValue)
             : undefined,
-          content: draftBody.content,
+          content: publicContent,
           type: note.type,
           publicTags: draftTags,
           sourceUpdatedAt: note.updatedAt,
@@ -504,9 +514,9 @@ export async function publishSnapshot(
             {
               noteId: note.id,
               revision: published.revision,
-              title: draftTitle || deriveTitle(draftBody.content),
+              title: draftTitle || deriveTitle(publicContent),
               summary: draftSummary || null,
-              content: draftBody.content,
+              content: publicContent,
               type: note.type,
               coverAttachmentId: coverId,
               publicTags: draftTags,

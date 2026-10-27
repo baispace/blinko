@@ -313,7 +313,7 @@ export function BlogArticleDetail() {
                 </div>
               )}
               <div className="ink-ad-preview-body ink-prose">
-                <PublicArticleBody content={shown.content} />
+                <PublicArticleBody content={shown.content} authenticated />
               </div>
             </section>
 
@@ -327,7 +327,7 @@ export function BlogArticleDetail() {
                   <small>已保存 {plainLength(status.draft.content)} 字</small>
                 </summary>
                 <div className="ink-prose ink-ad-source-body">
-                  <PublicArticleBody content={status.draft.content} />
+                  <PublicArticleBody content={status.draft.content} authenticated />
                 </div>
                 <a
                   className="ink-ad-source-link"

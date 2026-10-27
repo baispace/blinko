@@ -8,18 +8,34 @@ import {
   publicPublicationWhere,
   publicPublicationDTO,
 } from "../../server/lib/publication";
+import { isPublicBlogAsset } from "../../server/lib/blog";
 
-test("rejects private resource paths and empty bodies before publishing", () => {
+test("rejects empty bodies and credential-bearing links before publishing", () => {
+  for (const value of ["", "<p> </p>"])
+    expect(() => assertPublishableBody(value)).toThrow();
+  // 外链带凭据 = 泄露，公开快照谁都能读 —— 一律挡住。
   for (const value of [
-    "",
-    "<p> </p>",
-    "![private](/api/file/secret.png)",
-    '<img src="https://ink.example/api/s3file/private.png">',
-    "[file](%2Fapi%2Ffile%2Fx)",
     "[file](https://x.test?token=secret)",
+    '<img src="https://x.test/a.png?authorization=Bearer%20abc">',
+    "[file](https://x.test?a=1&amp;token=secret)",
   ])
     expect(() => assertPublishableBody(value)).toThrow();
   expect(() => assertPublishableBody("# 已保存标题\n公开正文")).not.toThrow();
+});
+
+test("站内图片可以发布：地址里的凭据在写快照时剥掉", () => {
+  // 站内地址放行 —— 笔记里的图片一律是站内地址，挡掉就没法发带图的正文。
+  for (const value of [
+    "![private](/api/file/secret.png)",
+    '<img src="https://ink.example/api/s3file/private.png">',
+    "[file](%2Fapi%2Ffile%2Fx)",
+    "![图](/api/file/a.png?token=abc&v=2)",
+  ])
+    expect(() => assertPublishableBody(value)).not.toThrow();
+  // 但带凭据的外链仍然要挡。
+  expect(() =>
+    assertPublishableBody("[x](https://x.test/a.png?token=abc)"),
+  ).toThrow();
 });
 
 // Only run against the explicitly selected local development database.
@@ -117,12 +133,58 @@ suite("publication database lifecycle", () => {
     await publishSnapshot(db, owner, { id, isCancel: true });
     await db.notes.update({
       where: { id },
-      data: { isRecycle: false, content: "![private](/api/file/private.png)" },
+      data: {
+        isRecycle: false,
+        content: "![private](https://x.test/a.png?token=secret)",
+      },
     });
-    await expect(publishSnapshot(db, owner, { id })).rejects.toThrow(
-      "站内图片",
-    );
+    await expect(publishSnapshot(db, owner, { id })).rejects.toThrow("凭据");
     expect(await readPublicPublication(db, key)).toBeNull();
+  });
+  test("正文里的站内图片可以发布，公开快照里不留下凭据", async () => {
+    const withImage = await db.notes.create({
+      data: {
+        accountId: owner,
+        content: "配图正文\n\n![图](/api/file/pub-test.png?token=secret)",
+      },
+    });
+    const attachment = await db.attachments.create({
+      data: {
+        path: "/api/file/pub-test.png",
+        name: "pub-test.png",
+        type: "image/png",
+        size: 1,
+        noteId: withImage.id,
+        accountId: owner,
+      },
+    });
+    try {
+      await publishSnapshot(db, owner, { id: withImage.id });
+      const snapshot = await readPublicPublication(
+        db,
+        (await db.notes.findUniqueOrThrow({ where: { id: withImage.id } }))
+          .publishId!,
+      );
+      // 公开快照里不能带凭据。
+      expect(snapshot?.content).toContain("/api/file/pub-test.png");
+      expect(snapshot?.content).not.toContain("token=");
+      // 正文引用到的附件是公开内容的一部分：匿名可读。
+      expect(
+        await isPublicBlogAsset(db, "/api/file/pub-test.png", {
+          needPublicAccess: true,
+        }),
+      ).toBe(true);
+      // 撤回后立刻收回。
+      await publishSnapshot(db, owner, { id: withImage.id, isCancel: true });
+      expect(
+        await isPublicBlogAsset(db, "/api/file/pub-test.png", {
+          needPublicAccess: true,
+        }),
+      ).toBe(false);
+    } finally {
+      await db.attachments.delete({ where: { id: attachment.id } });
+      await db.notes.delete({ where: { id: withImage.id } });
+    }
   });
   test("the document title is also an explicit public snapshot", async () => {
     const titled = await db.notes.create({

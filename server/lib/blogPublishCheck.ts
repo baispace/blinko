@@ -19,6 +19,7 @@ import {
   publicationTitle,
 } from "../../shared/lib/blogPublication";
 import { normalizePublicTags, readDraftPublicTags } from "./blogPublicTags";
+import { publicBodyOf } from "../../shared/lib/blogPublicBody";
 import { normalizeCoverConfig } from "./blogCoverConfig";
 import {
   readDraftCoverConfig,
@@ -392,6 +393,12 @@ export async function buildPublishCheck(
   const sourceVersion = sourceVersionOf(sourceBody, note.type);
   const draftBody = readDraftBody(note.metadata, sourceBody);
   const baseline = readSourceBaseline(note.metadata);
+  /*
+   * 公开快照里存的是「公开正文形态」：站内文件地址的凭据参数已被剥掉。
+   * 比对一律拿同一形态比 —— 否则刚发布完就说正文又变了。
+   */
+  const publicContent = publicBodyOf(draftBody.content);
+  const publicSourceBody = publicBodyOf(sourceBody);
 
   const draftTitle = publicationTitle(note.metadata);
   const draftSummary = publicationSummary(note.metadata);
@@ -408,7 +415,7 @@ export async function buildPublishCheck(
   const draftCoverConfig =
     readDraftCoverConfig(note.metadata) ?? publicCoverConfig;
 
-  const draftTitleEffective = draftTitle || deriveTitle(draftBody.content);
+  const draftTitleEffective = draftTitle || deriveTitle(publicContent);
   const publicTitle = p?.title || (p ? deriveTitle(p.content) : "");
   const publicSummary = p?.summary ?? "";
   const publicTags = normalizePublicTags(p?.publicTags ?? []);
@@ -439,11 +446,11 @@ export async function buildPublishCheck(
   /* ---- 正文差异 ---- */
   const contentSegments = diffBlocks(
     splitBlocks(p?.content ?? ""),
-    splitBlocks(draftBody.content),
+    splitBlocks(publicContent),
   );
   const contentChangeCount = countChanges(contentSegments);
   const contentChanged =
-    (p?.content ?? "") !== draftBody.content || contentChangeCount > 0;
+    (p?.content ?? "") !== publicContent || contentChangeCount > 0;
 
   /* ---- 标题 / 概要 / 标签 / 封面 / SEO ---- */
   const titleChanged = draftTitleEffective !== publicTitle;
@@ -474,11 +481,12 @@ export async function buildPublishCheck(
   );
 
   /* ---- 来源变化与冲突 ---- */
-  const sourceTitle = deriveTitle(sourceBody);
+  const sourceTitle = deriveTitle(publicSourceBody);
   const baselineVersion = baseline.version ?? p?.sourceContentVersion ?? null;
   const sourceChanged = baselineVersion ? baselineVersion !== sourceVersion : false;
-  const sourceBodyDiffersFromPublic = sourceBody !== (p?.content ?? "");
-  const draftBodyDiffersFromPublic = draftBody.content !== (p?.content ?? "");
+  const sourceBodyDiffersFromPublic =
+    publicSourceBody !== (p?.content ?? "");
+  const draftBodyDiffersFromPublic = publicContent !== (p?.content ?? "");
   const draftBodyDiffersFromSource = draftBody.content !== sourceBody;
 
   const conflicts: PublishConflict[] = [];
@@ -617,7 +625,7 @@ export async function buildPublishCheck(
       content: {
         changed: contentChanged,
         before: p?.content ?? "",
-        after: draftBody.content,
+        after: publicContent,
         segments: contentSegments,
         changeCount: contentChangeCount,
       },

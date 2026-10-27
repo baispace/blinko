@@ -1,34 +1,16 @@
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { getLocalToken, toAuthenticatedFileUrl } from './localToken';
 
 /**
  * 内部文件路径（/api/file/*、/api/s3file/*）在 <img>/<a> 里无法携带
  * Authorization 头，后端 getTokenFromRequest 支持 ?token= 查询参数兜底。
  * 这里集中处理，避免各处重复拼 token（封面、正文内联图片都走它）。
+ *
+ * 凭据相关的两个函数放在 localToken.ts —— 它不带 store 依赖，
+ * 公开正文渲染器也能直接用。
  */
-
-/** 读取当前登录 JWT（与编辑器的 localStorage key 一致）。 */
-export const getLocalToken = (): string | null => {
-  try {
-    const raw = localStorage.getItem('blinkoToken');
-    if (!raw) return null;
-    return JSON.parse(raw)?.token || null;
-  } catch {
-    return null;
-  }
-};
-
-/**
- * 给内部文件路径补 ?token=；外部绝对地址（CDN/图床）原样返回。
- */
-export const toAuthenticatedFileUrl = (url?: string | null): string | undefined => {
-  if (!url) return url ?? undefined;
-  const isInternal = url.startsWith('/api/file/') || url.startsWith('/api/s3file/');
-  if (!isInternal) return url;
-  const token = getLocalToken();
-  if (!token) return url;
-  return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`;
-};
+export { getLocalToken, toAuthenticatedFileUrl };
 
 /**
  * 把存进笔记内容的文件路径转成「最终写入正文的链接」。

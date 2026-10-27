@@ -133,11 +133,11 @@ suite("publish review and first-cover lifecycle", () => {
     expect((await publicationStatus(db, owner, note.id)).revision).toBe(0);
     await db.notes.update({
       where: { id: note.id },
-      data: { content: "![private](/api/file/private.png)" },
+      data: { content: "![private](https://x.test/a.png?token=secret)" },
     });
     const review = await publicationStatus(db, owner, note.id);
     expect(review.canPublish).toBe(false);
-    expect(review.blockers.join(" ")).toContain("站内图片");
+    expect(review.blockers.join(" ")).toContain("凭据");
   });
   test("withdrawal and republication require fresh preview tokens and keep the original URL", async () => {
     const note = await draft(),

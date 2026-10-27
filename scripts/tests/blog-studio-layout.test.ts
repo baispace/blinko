@@ -96,8 +96,9 @@ describe("侧边栏渲染", () => {
     }
   });
 
-  test("底部有主题切换和返回笔记", () => {
-    expect(html).toContain("深色模式");
+  test("侧边栏底部保留返回笔记", () => {
+    // 主题切换不在侧栏：侧栏底部只留一个「返回笔记」。
+    expect(html).toContain("ink-studio-side-foot");
     expect(html).toContain("返回笔记");
   });
 });

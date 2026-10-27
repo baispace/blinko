@@ -112,7 +112,8 @@ test('公开顶栏：左侧收束面板 / 品牌回首页 / 专题与友链一�
   // ② 品牌区 hover 换成「返回博客主页」的房子图标
   expect(shellSrc).toContain('ink-brand-home');
   expect(shellSrc).toContain('icon="tabler:home"');
-  expect(shellSrc).toContain('title="返回博客主页"');
+  // 左上角只剩圆形标识，可访问名就落在它身上（不再有站名文字与 title 气泡）。
+  expect(shellSrc).toContain('aria-label="返回博客主页"');
   expect(blogCss).toContain('.ink-blog .ink-brand-logo:hover .ink-brand-home');
   // ③ 导航结构是固定的：专题、友链都是一级直链，「我的」是唯一的二级下拉。
   //    原来的「一级 / 多级」开关已退役 —— 专题下面不再挂各专题的子菜单，

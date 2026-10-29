@@ -132,28 +132,30 @@ function StatCard({
   const [open, setOpen] = useState(false);
   return (
     <div className="ink-stats-card">
-      <span className="ink-stats-card-icon" aria-hidden="true">
-        <Icon icon={icon} width={17} />
-      </span>
-      <p className="ink-stats-figure">
-        <b className="ink-stats-value">{value}</b>
-        <span className="ink-stats-unit">{unit}</span>
-      </p>
-      <span className="ink-stats-label">
-        {label}
-        {tip && (
-          <button
-            type="button"
-            className="ink-stats-help-btn"
-            aria-expanded={open}
-            aria-controls={id}
-            aria-label={`${label}的口径说明`}
-            onClick={() => setOpen((v) => !v)}
-          >
-            <Icon icon="tabler:help-circle" width={13} />
-          </button>
-        )}
-      </span>
+      <div className="ink-stats-card-head">
+        <span className="ink-stats-card-icon" aria-hidden="true">
+          <Icon icon={icon} width={17} />
+        </span>
+        <p className="ink-stats-figure">
+          <b className="ink-stats-value">{value}</b>
+          <span className="ink-stats-unit">{unit}</span>
+        </p>
+        <span className="ink-stats-label">
+          {label}
+          {tip && (
+            <button
+              type="button"
+              className="ink-stats-help-btn"
+              aria-expanded={open}
+              aria-controls={id}
+              aria-label={`${label}的口径说明`}
+              onClick={() => setOpen((v) => !v)}
+            >
+              <Icon icon="tabler:help-circle" width={13} />
+            </button>
+          )}
+        </span>
+      </div>
       <small className="ink-stats-desc">{desc}</small>
       {open && tip && (
         <p className="ink-stats-help-text" id={id}>

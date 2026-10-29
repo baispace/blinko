@@ -155,6 +155,17 @@
   background: var(--ink-surface);
 }
 
+/* 卡片头部：图标、数值与指标名同处一行。
+   之前三者竖着排，卡片空出一大片留白，视线要上下跳；横过来之后一行读完，
+   卡片压扁一截，四张卡的信息密度也上来了。 */
+.ink-blog .ink-stats-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 9px;
+  min-width: 0;
+}
+
 /* 卡片图标：淡紫圆角底 + 主色线性图标，和专题卡的图标块同一套语言。 */
 .ink-blog .ink-stats-card-icon {
   display: inline-flex;
@@ -162,7 +173,7 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  margin-bottom: 3px;
+  flex: 0 0 auto;
   border-radius: 9px;
   background: var(--ink-tint);
   color: var(--ink-accent);
@@ -216,6 +227,12 @@
   gap: 4px;
   margin: 0;
   min-height: 34px;
+}
+
+/* 卡片里的数字与指标名同行，不再需要留固定高度。 */
+.ink-blog .ink-stats-card .ink-stats-figure {
+  min-height: 0;
+  flex: 0 0 auto;
 }
 
 .ink-blog .ink-stats-value {

@@ -62,4 +62,14 @@ server/public
 /blinko-ui-proposal.html
 /blinko-ui-checklist.md
 design-qa.md
-docs/
+# 本地生成的素材与临时产物（设计预览、品牌动效视频、脚本工具等），不入库
+/.tmp/
+/.tmp-an/
+/cover-style-preview/
+/output/
+/tools/
+/videos/
+# docs/ 下多为本地工作笔记，默认不入库；使用与接入手册是对外文档，需要跟踪。
+# 用 docs/* 而非 docs/：父目录被整体排除时，无法再用 ! 重新包含其中的文件。
+docs/*
+!docs/使用手册.md

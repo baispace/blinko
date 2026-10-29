@@ -339,10 +339,21 @@ export default function BlogHome() {
     setHeroIndex(
       (active + delta + bannerList.length) % Math.max(1, bannerList.length),
     );
-  // 顶部有 banner、正在加载、或一篇公开文章都没有时保留顶部区块；
-  // 其余情况（最新 tab / 专题筛选 / 热门榜 / 归档）顶部不留空位，列表直接顶上来。
   const loading = site.loading || (busy && !posts.length);
-  const heroVisible = !hot && !all && (loading || !!lead || !posts.length);  return (
+  /*
+   * 顶部区块留不留，取决于这一屏有没有东西可放：
+   *   · 有 banner 文章 → 展示头条，精选视图的主视觉
+   *   · 正在加载 → 先占住位置，免得列表先顶上再往下跳
+   *   · 专题筛选且该专题一篇公开文章都没有 → 留一句「这个专题暂无公开文章」
+   * 其余情况（最新 tab / 热门榜 / 全部文章 / 归档，以及精选视图下没有勾
+   * banner 的文章）顶部不留空位：作者卡挪进右侧栏，列表直接顶上来。
+   *
+   * 精选视图本来就是靠 banner 头条立起来的。一篇 banner 都没勾的时候，
+   * 再摆一个「文章即将更新」的空占位框，只是白占掉一大块版面。
+   */
+  const heroVisible =
+    !hot && !all && (loading || !!lead || (!!filter && !posts.length));
+  return (
     <main className="ink-wrap">
       {/* 首页唯一的 h1：与 SEO title / 服务端 fallback 的 h1 保持一致。
           头条 banner 把标题烤进了封面，画面上不再叠标题，所以这里用

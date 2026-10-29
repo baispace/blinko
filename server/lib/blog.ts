@@ -14,7 +14,7 @@ import {
   sanitizeFeaturedPosts,
   sanitizeSpaceIntro,
 } from "./blogAboutConfig";
-import { publicText } from "./publicText";
+import { publicExcerpt } from "./publicText";
 import { publicSubscribeQrPaths } from "./blogSiteSettings";
 import {
   normalizePublicTags,
@@ -854,10 +854,11 @@ export async function listPublishedForManage(
       // 具体改了哪些字段：列表行要写「正文、摘要已修改」这样的说明。
       changes,
       // 列表行的摘要：与公开站卡片用的是同一套逻辑，管理页看到的就是读者看到的。
-      excerpt:
-        rest.publication?.summary?.trim() ||
-        publicationSummary(note.metadata) ||
-        publicText(rest.publication?.content ?? note.content ?? "").slice(0, 120),
+      excerpt: publicExcerpt(
+        rest.publication?.content ?? note.content ?? "",
+        rest.publication?.summary?.trim() || publicationSummary(note.metadata),
+        120,
+      ),
       /*
        * 规范化后的展示字段。
        *

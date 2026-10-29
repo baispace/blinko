@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { publicBlogOwner, sanitizeLinks } from "./blog";
 import { publicPublicationDTO, publicPublicationWhere } from "./publication";
 import { articleStats, noteViewCounts } from "./blogStats";
-import { publicText } from "./publicText";
+import { publicExcerpt, publicText } from "./publicText";
 import { toPublicPath } from "../../shared/lib/blogSeo";
 import { normalizeCoverFocus } from "../../shared/lib/blogCover";
 import { normalizeTopicDisplayMode } from "../../shared/lib/blogTopicMode";
@@ -13,7 +13,7 @@ import {
 } from "./blogCoverConfig";
 
 // 再导出一次：既有调用方继续从 publicBlog 取，避免大面积改 import。
-export { publicText };
+export { publicExcerpt, publicText };
 
 /** 公开列表统一页长。首页、专题页、推荐流共用，页码数量才有一致的观感。 */
 export const BLOG_PAGE_SIZE = 12;
@@ -107,8 +107,8 @@ export function publicCard(note: PublicRow, views = 0) {
           .find((line) => publicText(line)) || p.content,
       ).slice(0, 100) ||
       "无标题",
-    // AI 摘要优先；没有就退回正文截断。
-    excerpt: p.summary?.trim() || publicText(p.content).slice(0, 200),
+    // AI 摘要优先；没有就退回正文里开头像样的一段。
+    excerpt: publicExcerpt(p.content, p.summary, 200),
     coverUrl: p.coverAttachment?.path ?? null,
     /*
      * 封面文字层配置：公开快照里的那份。
@@ -948,9 +948,11 @@ export async function publicArticle(
   return {
     ...base,
     title: publicCard(note).title,
-    excerpt:
-      note.publication!.summary?.trim() ||
-      publicText(note.publication!.content).slice(0, 180),
+    excerpt: publicExcerpt(
+      note.publication!.content,
+      note.publication!.summary,
+      180,
+    ),
     coverUrl: note.publication!.coverAttachment?.path ?? null,
     // 文章页也要画文字层，用的还是公开快照里那份配置。
     coverConfig: publicCoverTextDTO(

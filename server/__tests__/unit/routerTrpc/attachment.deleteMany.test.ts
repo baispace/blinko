@@ -1,4 +1,8 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
+import {
+  attachmentFindMany,
+  attachmentDeleteMany,
+} from '../../__fixtures__/attachmentsPrismaMock';
 
 /**
  * Regression test for issue #1192.
@@ -8,26 +12,22 @@ import { describe, test, expect, mock, beforeEach } from 'bun:test';
  * disk / S3. The fix routes every deletion through `FileService.deleteFile()` (which
  * removes both the file AND the DB record), mirroring the single `delete` endpoint.
  *
- * The heavy modules (`../middleware`, `../prisma`, `@prisma/client`, `../lib/files`)
- * are mocked so we can exercise the real resolver in `routerTrpc/attachment.ts`
- * without standing up tRPC, Prisma or any storage backend.
+ * The heavy modules (`../middleware`, `../prisma`, `@prisma/client`) are mocked so we
+ * can exercise the real resolver in `routerTrpc/attachment.ts` without standing up
+ * tRPC, Prisma or any storage backend.
  */
 
 // --- mock the storage layer: this is what the fix must invoke -------------------
+// 只替换 FileService.deleteFile 这一个静态方法，不能整块替换 `lib/files` 模块：
+// bun 的 mock.module 是进程级的，整块替换会连带把 upload.test.ts 依赖的
+// sanitizeUploadFileName / FileService.uploadFileStream 一起换成桩。
 const deleteFile = mock((_path: string) => Promise.resolve());
-mock.module('../../../lib/files', () => ({
-  FileService: { deleteFile },
-}));
+const { FileService } = await import('../../../lib/files');
+FileService.deleteFile = deleteFile as unknown as typeof FileService.deleteFile;
 
 // --- mock prisma: findMany returns the owned attachments, deleteMany must NOT be used
-const findMany = mock((_args: any) => Promise.resolve([] as any[]));
-const deleteMany = mock((_args: any) => Promise.resolve({ count: 0 }));
-mock.module('../../../prisma', () => ({
-  prisma: { attachments: { findMany, deleteMany } },
-}));
-
-// `@prisma/client` is imported at module scope only for the `Prisma` namespace.
-mock.module('@prisma/client', () => ({ Prisma: {} }));
+const findMany = attachmentFindMany;
+const deleteMany = attachmentDeleteMany;
 
 // --- mock the tRPC middleware so we can grab each procedure's raw resolver -------
 function createProcedureBuilder(): any {

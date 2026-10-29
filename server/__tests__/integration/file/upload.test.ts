@@ -2,17 +2,9 @@ import { describe, test, expect, beforeAll, afterAll, mock, beforeEach } from 'b
 import fs from 'fs/promises';
 import path from 'path';
 import { Readable } from 'stream';
-
-// Mock prisma before importing FileService
-mock.module('../../../prisma', () => ({
-  prisma: {
-    attachments: {
-      create: mock(() => Promise.resolve({ id: 1 })),
-      findFirst: mock(() => Promise.resolve(null)),
-      delete: mock(() => Promise.resolve()),
-    }
-  }
-}));
+// prisma 的 mock 走共享模块：bun 的 mock.module 是进程级的，两边各建一套会互相覆盖，
+// 导致 attachment.deleteMany.test.ts 拿不到 findMany / deleteMany
+import '../../__fixtures__/attachmentsPrismaMock';
 
 // Mock getGlobalConfig to return local storage config
 const TEMP_UPLOAD_DIR = path.join(import.meta.dir, '../../__fixtures__/uploads');
@@ -83,8 +75,9 @@ describe('File Upload — Full Flow', () => {
     });
 
     expect(result.filePath).toContain('/api/file/');
-    expect(result.filePath).toContain('test-document');
-    expect(result.filePath).toContain('.txt');
+    // 落盘用的是 FileService.generateStorageFileName 生成的时间戳名（YYYYMMDD-五位随机），
+    // 原始文件名不会保留在路径里
+    expect(result.filePath).toMatch(/\/api\/file\/\d{8}-\d{5}\.txt$/);
     expect(result.fileName).toContain('.txt');
 
     // Verify file actually written to disk

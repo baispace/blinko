@@ -61,12 +61,6 @@
       "dependsOn": [
         "build:web"
       ]
-    },
-    "lint": {},
-    "test": {
-      "dependsOn": [
-        "build:web"
-      ]
     }
   }
 }

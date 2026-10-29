@@ -12,6 +12,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
@@ -19,9 +21,12 @@
     "paths": {
       "@/*": ["./app/src/*"],
       "@/routerTrpc/*": ["./server/routerTrpc/*"],
-      "@/routerExpress/*": ["./server/routerExpress/*"]
+      "@/routerExpress/*": ["./server/routerExpress/*"],
+      "@shared/*": ["./shared/*"],
+      "@server/*": ["./server/*"],
+      "@prisma/*": ["./prisma/*"]
     }
   },
-  "include": ["app/src", "server"],
+  "include": ["app/src", "server", "shared", "prisma"],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "cd app && bun run tauri dev",
     "build:web": "turbo run build:web",
-    "test": "turbo run test",
+    "test": "bun test scripts/tests/ server/__tests__ shared/lib/__tests__ app/src",
     "start:server:production": "ncp dist/public server/public && cd server && bun run start",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev:backend": "turbo run dev --filter=@blinko/backend",

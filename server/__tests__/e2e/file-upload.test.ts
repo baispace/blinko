@@ -28,13 +28,18 @@ beforeAll(async () => {
     );
   }
 
-  // Read JWT secret from database
+  // 取 secret 必须和服务端 getNextAuthSecret 的优先级一致：
+  // 服务端优先用 process.env.JWT_SECRET，只有在它缺失或是默认占位值时才回落到数据库。
+  // 这里原来只读数据库，两边不一致时签出的 token 验不过，接口直接返回 401。
   const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient();
   try {
-    const config = await prisma.config.findFirst({ where: { key: 'JWT_SECRET' } });
-    const secret = (config?.config as any)?.value;
-    if (!secret) throw new Error('JWT_SECRET not found in database');
+    let secret = process.env.JWT_SECRET;
+    if (!secret || secret === 'my_ultra_secure_nextauth_secret') {
+      const config = await prisma.config.findFirst({ where: { key: 'JWT_SECRET' } });
+      secret = (config?.config as any)?.value;
+    }
+    if (!secret) throw new Error('JWT_SECRET not found in env or database');
 
     AUTH_TOKEN = jwt.sign(
       { sub: '1', id: '1', name: 'e2e-test', role: 'superadmin' },
@@ -82,7 +87,8 @@ describe('E2E: POST /api/file/upload', () => {
     expect(res.status).toBe(200);
     expect(body.Message).toBe('Success');
     expect(body.filePath).toBeTruthy();
-    expect(body.filePath).toContain('simple-test');
+    // 存储名由 FileService.generateStorageFileName 生成（时间戳 + 原扩展名），
+    // 原始文件名不保留 —— 这里只校验扩展名透传。
     expect(body.filePath).toContain('.txt');
     expect(body.size).toBeGreaterThan(0);
   });

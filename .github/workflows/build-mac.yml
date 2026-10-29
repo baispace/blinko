@@ -74,15 +74,28 @@ jobs:
         run: bun install --frozen-lockfile
 
       # dev 版本号：只在本次构建里生效，不提交回仓库，
-      # 且 0.0.0-dev.* 低于任何正式版本，确保 dev 包永远不会被应用内更新通道拉走
+      # 且 0.0.0-dev.* 低于任何正式版本，确保 dev 包永远不会被应用内更新通道拉走。
+      #
+      # 同时关掉 updater 产物：dev 包不发布、不进自动更新通道，签它没有意义；
+      # 而 tauri 配置里带了 updater 公钥，createUpdaterArtifacts 为 true 时
+      # tauri build 找不到 TAURI_SIGNING_PRIVATE_KEY 会直接报错退出（"A public key
+      # has been found, but no private key"），整条构建红。
+      # 正式签名包走 release-mac.yml —— 那条有 INK_TAURI_PRIVATE_KEY。
+      #
+      # 两份配置都要改：macOS 构建会自动合并 tauri.macos.conf.json，
+      # 平台配置里的值盖过基础配置，只改 tauri.conf.json 不够。
       - name: 写入 dev 版本号
         run: |
           V="0.0.0-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA:0:7}"
           echo "DEV_VERSION=$V" >> "$GITHUB_ENV"
-          jq --arg v "$V" '.version = $v' app/src-tauri/tauri.conf.json > tmp.json \
-            && mv tmp.json app/src-tauri/tauri.conf.json
+          for CONF in app/src-tauri/tauri.conf.json app/src-tauri/tauri.macos.conf.json; do
+            jq --arg v "$V" '.version = $v | .bundle.createUpdaterArtifacts = false' "$CONF" > tmp.json \
+              && mv tmp.json "$CONF"
+          done
           echo "dev 版本号: $V"
           grep '"version"' app/src-tauri/tauri.conf.json | head -1
+          jq -c '{file: input_filename, updater: .bundle.createUpdaterArtifacts}' \
+            app/src-tauri/tauri.conf.json app/src-tauri/tauri.macos.conf.json
 
       # 只出 .app，不打 DMG：省掉压缩与挂载步骤，下载后直接拖进「应用程序」。
       # 不覆盖 beforeBuildCommand —— tauri.macos.conf.json 里那条会构建前端并把

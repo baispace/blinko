@@ -1041,6 +1041,15 @@
   border-radius: 16px;
 }
 
+/* 列表区的一句话说明：内容并没有缺失，只是都在别处（比如头条），
+   所以不用虚线空框 —— 虚线框是「这里什么都没有」的信号，用在这里会像出了错。 */
+.ink-empty-note {
+  padding: 26px 4px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
 /* ---------- 文章页 ---------- */
 
 .ink-article-hero {

@@ -638,6 +638,29 @@ export default function BlogHome() {
               {hot ? "这段时间还没有文章被读过。" : "还没有公开文章。"}
             </p>
           )}
+          {/* 列表空态分两种，样子也不一样：
+              · 有内容但都在上面头条里了 → 这是「内容在别处」，不是「没内容」，
+                摆个虚线空框反而像出了错，一行灰字说明白就够；
+              · 真的没内容（没公开文章）→ 沿用虚线空框，跟热门榜、归档视图一致。
+              专题筛选的空态由顶部横幅的「这个专题暂无公开文章」负责，不重复。 */}
+          {!busy &&
+            rest.length === 0 &&
+            (posts.length > 0 || !!lead) &&
+            !(hot || all) && (
+              <p className="ink-empty-note" role="status">
+                公开的文章都放在上面的头条里了。
+              </p>
+            )}
+          {!busy &&
+            rest.length === 0 &&
+            posts.length === 0 &&
+            !lead &&
+            !(hot || all) &&
+            !(filter && !posts.length) && (
+              <p className="ink-empty" role="status">
+                还没有公开文章。
+              </p>
+            )}
           {/* 分页走独立 URL：?page=N 每一页都能分享、能被收录 */}
           <Pagination page={page} pageCount={pageCount} onChange={goToPage} />
         </div>

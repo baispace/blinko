@@ -56,6 +56,8 @@ export function ContentQuickPanel({
   const [data, setData] = useState<Settings | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [base, setBase] = useState<Base>(null);
+  /** 作者点了「移除草稿封面」：存下去，下次别把笔记封面又自动复用回来。 */
+  const [coverDetached, setCoverDetached] = useState(false);
   const [busy, setBusy] = useState<null | 'load' | 'copy' | 'upload' | 'save'>(
     'load',
   );
@@ -100,6 +102,7 @@ export function ContentQuickPanel({
       setData(state);
       setForm(value);
       setBase(image);
+      setCoverDetached(false);
       setCopy(null);
       setCopyPicked([]);
       setSourceChoice(undefined);
@@ -173,6 +176,7 @@ export function ContentQuickPanel({
       if (!path) throw new Error('上传未返回图片地址，请重试。');
       if (!alive.current) return;
       setBase({ id: null, path });
+      setCoverDetached(false);
       patch({ coverMode: 'full' });
       setNotice('图片已选好。默认不另加标题，图片自带的文字会保留。');
     } catch (error) {
@@ -196,6 +200,7 @@ export function ContentQuickPanel({
         expectedContentVersion: aiVersion,
         coverAttachmentId: base?.id ?? null,
         ...(base && !base.id ? { coverPath: base.path } : {}),
+        coverDetached,
       });
       RootStore.Get(ToastPlugin).success(
         action === 'publish'
@@ -484,6 +489,11 @@ export function ContentQuickPanel({
               <p className="text-sm text-default-400">尚未设置封面</p>
             )}
           </div>
+          {base && data.coverSource === 'note' && !coverDetached && (
+            <p className="text-xs text-default-400">
+              复用笔记里已设置的封面。保存后它就是文章封面；换一张请用「上传替换」或从「已有图片」里选。
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
@@ -536,6 +546,7 @@ export function ContentQuickPanel({
                   );
                   if (image) {
                     setBase({ id: image.id, path: image.path });
+                    setCoverDetached(false);
                     patch({ coverMode: 'full' });
                   }
                 }}
@@ -565,7 +576,10 @@ export function ContentQuickPanel({
               type="button"
               className="text-xs text-primary hover:underline disabled:text-default-400"
               disabled={!!busy}
-              onClick={() => setBase(null)}
+              onClick={() => {
+                setBase(null);
+                setCoverDetached(true);
+              }}
             >
               移除草稿封面
             </button>
@@ -896,6 +910,7 @@ export function ContentQuickPanel({
           }}
           onApply={(result) => {
             setBase({ id: result.id, path: result.path });
+            setCoverDetached(false);
             patch({
               coverTitle: result.coverTitle,
               coverSubtitle: result.coverSubtitle,

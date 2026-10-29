@@ -16,6 +16,8 @@ export const savePublishSettingsSchema = z.object({
   coverMode: z.enum(['full','overlay']),
   coverPalette: z.string().regex(/^(?:violet|blue|slate|teal|#[0-9a-f]{3}|#[0-9a-f]{6})$/i).optional(),
   coverAttachmentId: z.number().int().positive().nullable(), coverPath: z.string().max(1000).optional(),
+  /** 作者在面板里明确移除了封面。没有它，笔记封面会被自动复用回来。 */
+  coverDetached: z.boolean().optional(),
   displayMode: z.enum(['default', 'pinned', 'featured']), displayOrder: z.number().int().min(0).max(999),
   action: z.enum(['display', 'draft', 'publish']).default('draft'),
   sourceChoice: z.enum(['keep', 'adopt']).optional(),
@@ -23,20 +25,60 @@ export const savePublishSettingsSchema = z.object({
 });
 const include = { publication: true, blogTopics: { select: { topicId: true, sectionId: true } }, attachments: { select: { id: true, path: true, name: true, type: true } } } as const;
 type SettingsNote = Prisma.notesGetPayload<{ include: typeof include }>;
+type CoverImage = SettingsNote['attachments'][number];
+/** 草稿里「作者明确不要封面」的标记。 */
+const DRAFT_COVER_DETACHED_KEY = 'blogCoverDetached';
+
+function isCoverDetached(metadata: unknown) {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return false;
+  return (metadata as Record<string, unknown>)[DRAFT_COVER_DETACHED_KEY] === true;
+}
+
+/**
+ * 笔记自己那张封面（编辑器里设的那张）。
+ *
+ * 笔记封面存在 notes.metadata.cover（图片路径），博客封面存在
+ * notePublication.draftCoverAttachmentId（附件 id）—— 本来是两套互不相通的体系，
+ * 作者在笔记里设好的封面到博客后台就「消失」了。这里把它作为回落：博客自己还没
+ * 配过封面时直接复用笔记那张。
+ *
+ * 只认查得到附件行的路径：博客封面靠附件行做免鉴权读取与公开快照，
+ * 拿不到附件就没有可复用的东西。
+ */
+async function resolveNoteCover(
+  db: Pick<PrismaClient, 'attachments'>,
+  accountId: number,
+  note: SettingsNote,
+): Promise<CoverImage | null> {
+  const path = (note.metadata as any)?.cover;
+  if (typeof path !== 'string' || !path.startsWith('/')) return null;
+  const attachment = await db.attachments.findFirst({
+    where: { accountId, path, OR: [{ noteId: null }, { noteId: note.id }] },
+    select: { id: true, path: true, name: true, type: true },
+  });
+  if (!attachment || !/^image\/(png|jpeg|webp|gif|avif)$/.test(attachment.type)) return null;
+  return attachment;
+}
+
 function settingsToken(note: SettingsNote) {
   const p = note.publication;
   return createHash('sha256').update(JSON.stringify([note.updatedAt.toISOString(), note.content, note.type, note.metadata, note.isPublished, note.blogTopics, p?.revision ?? 0, p?.draftCoverAttachmentId ?? null, p?.coverConfig ?? null, p?.isFeatured ?? false, p?.featuredOrder ?? 0, p?.isBanner ?? false, p?.bannerOrder ?? 0])).digest('hex');
 }
-function dto(note: SettingsNote) {
+function dto(note: SettingsNote, noteCover: CoverImage | null = null) {
   const p = note.publication;
-  const config = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig) ?? { ...emptyCoverConfig(), mode: p?.draftCoverAttachmentId ? 'full' as const : 'overlay' as const };
+  // 博客自己配过封面就用自己的；没有就复用笔记那张。
+  const blogCover = note.attachments.find(image => image.id === p?.draftCoverAttachmentId) ?? null;
+  const cover = blogCover ?? noteCover ?? null;
+  const config = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig) ?? { ...emptyCoverConfig(), mode: cover ? 'full' as const : 'overlay' as const };
   const metadata = (note.metadata || {}) as Record<string, unknown>;
   return {
     token: settingsToken(note), reviewToken: publicationReviewToken(note), publicCoverConfig: readPublicCoverConfig(p?.coverConfig), revision: p?.revision ?? 0, isPublished: note.isPublished, publishId: note.publishId ?? null, hasChanges: publicationChanges(note).length > 0,
     contentVersion: contentVersion(readDraftBody(note.metadata, note.content).content, note.type),
     title: typeof metadata.title === 'string' ? metadata.title : p?.title || '',
     summary: typeof metadata.summary === 'string' ? metadata.summary : p?.summary || '',
-    config, cover: note.attachments.find(image => image.id === p?.draftCoverAttachmentId) ?? null,
+    config, cover,
+    /** 封面来源：blog=博客自己配的，note=复用笔记封面。面板据此说明这张图是哪来的。 */
+    coverSource: blogCover ? 'blog' as const : noteCover ? 'note' as const : null,
     images: note.attachments.filter(image => /^image\/(png|jpeg|webp|gif|avif)$/.test(image.type)),
     topics: note.blogTopics,
     // 展示方式：默认就是精选（置顶 + banner）。
@@ -49,11 +91,13 @@ function dto(note: SettingsNote) {
 export async function readPublishSettings(db: PrismaClient, accountId: number, noteId: number) {
   const note = await db.notes.findFirst({ where: { id: noteId, accountId, isRecycle: false }, include });
   if (!note) throw new TRPCError({ code: 'NOT_FOUND', message: '文章不存在或无权管理' });
-  const [check, availableTopics] = await Promise.all([
+  const [check, availableTopics, noteCover] = await Promise.all([
     buildPublishCheck(db, accountId, noteId),
     db.blogTopic.findMany({ where: { accountId }, orderBy: { sortOrder: 'asc' }, select: { id: true, name: true, sections: { orderBy: { sortOrder: 'asc' }, select: { id: true, name: true } } } }),
+    // 作者明确移除过封面就不再复用笔记那张。
+    isCoverDetached(note.metadata) ? Promise.resolve(null) : resolveNoteCover(db, accountId, note),
   ]);
-  return { ...dto(note), sourceBody: note.content, check, availableTopics };
+  return { ...dto(note, noteCover), sourceBody: note.content, check, availableTopics };
 }
 export async function savePublishSettings(db: PrismaClient, accountId: number, input: z.infer<typeof savePublishSettingsSchema>) {
   return db.$transaction(async tx => {
@@ -63,7 +107,8 @@ export async function savePublishSettings(db: PrismaClient, accountId: number, i
     if (!note) throw new TRPCError({ code: 'NOT_FOUND', message: '文章不存在或无权管理' });
     if (settingsToken(note) !== input.token) throw new TRPCError({ code: 'CONFLICT', message: '文章或展示设置已在其他位置变化，请保留当前内容并重新打开核对后保存。' });
     if (input.expectedContentVersion && input.expectedContentVersion !== contentVersion(readDraftBody(note.metadata, note.content).content, note.type)) throw new TRPCError({ code: 'CONFLICT', message: 'AI 建议对应的正文已变化，请重新生成建议。' });
-    const current = dto(note);
+    const noteCover = isCoverDetached(note.metadata) ? null : await resolveNoteCover(tx, accountId, note);
+    const current = dto(note, noteCover);
     const promotion = { isFeatured: input.displayMode !== 'default', isBanner: input.displayMode === 'featured', featuredOrder: input.displayOrder, bannerOrder: input.displayOrder };
     if (input.action === 'display') {
       await tx.notePublication.upsert({ where: { noteId: note.id }, create: { noteId: note.id, content: '', type: note.type, revision: 0, sourceUpdatedAt: note.updatedAt, ...promotion }, update: promotion });
@@ -94,6 +139,8 @@ export async function savePublishSettings(db: PrismaClient, accountId: number, i
     const metadata = { ...writeDraftCoverConfig(note.metadata, config), title: input.title, summary: input.summary,
       // Empty overrides make search/share metadata inherit the public article.
       blogSeo: { title: '', description: '', image: '', imageAlt: '' },
+      // 作者明确移除过封面就记下来，下次别把笔记封面又自动复用回来。
+      [DRAFT_COVER_DETACHED_KEY]: input.coverDetached === true,
     } as Prisma.InputJsonValue;
     await tx.notes.update({ where: { id: note.id }, data: { metadata } });
     const display = { ...promotion, draftCoverAttachmentId: imageId };

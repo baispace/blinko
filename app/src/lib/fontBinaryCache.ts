@@ -114,27 +114,3 @@ export async function writeCachedFontBinary(name: string, buffer: ArrayBuffer, f
     // 配额不足 / 隐私模式：静默放弃缓存
   }
 }
-
-/** 删掉某个字体的缓存（用户换字体、字体被移除时调用）。 */
-export async function deleteCachedFontBinary(name: string): Promise<void> {
-  try {
-    const db = await openDB();
-    if (!db) return;
-
-    await new Promise<void>((resolve) => {
-      let tx: IDBTransaction;
-      try {
-        tx = db.transaction(STORE_NAME, 'readwrite');
-      } catch {
-        resolve();
-        return;
-      }
-      tx.objectStore(STORE_NAME).delete(name);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
-      tx.onabort = () => resolve();
-    });
-  } catch {
-    // 同上
-  }
-}

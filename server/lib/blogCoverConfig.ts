@@ -3,7 +3,6 @@ import { TRPCError } from "@trpc/server";
 import {
   normalizeCoverFocus,
   type CoverFocus,
-  type CoverFocusValue,
   type CoverPlacementKey,
 } from "../../shared/lib/blogCover";
 import {
@@ -130,18 +129,6 @@ export function coverConfigFingerprint(config: CoverConfig | null | undefined) {
     ),
   ];
   return parts.join("|");
-}
-
-/** 取某个展示位的裁切位置；换过底图就当没调过。 */
-export function readFocusFor(
-  focus: CoverFocus | null | undefined,
-  placement: CoverPlacementKey,
-  sourceId: number | null,
-): CoverFocusValue | null {
-  const normalized = normalizeCoverFocus(focus);
-  if (!normalized) return null;
-  if ((normalized.sourceId ?? null) !== (sourceId ?? null)) return null;
-  return normalized.placements?.[placement] ?? null;
 }
 
 /** 存进数据库的 JSON 形态。 */

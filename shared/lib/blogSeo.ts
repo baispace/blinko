@@ -189,11 +189,6 @@ export const SEO_SOURCE_LABELS: Record<SeoSource, string> = {
   default: "系统默认",
 };
 
-/** 某个字段是否处于「继承」状态（没有显式覆盖）。 */
-export function isInherited(source: SeoSource) {
-  return source !== "override";
-}
-
 /**
  * 把图片地址补成绝对地址。
  *

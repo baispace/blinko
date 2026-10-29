@@ -33,13 +33,6 @@ export const coverSafeRect = {
   },
 };
 
-/**
- * 页面覆盖标识（卡片左上角的「置顶」角标）落在这块区域里。
- * 它不是图片的一部分，所以排版时要把这一块留空，
- * 角标叠上来才不会压住短标题。
- */
-export const COVER_BADGE_ZONE = { width: 300, height: 150 } as const;
-
 export type CoverPlacementKey = "double" | "single" | "banner";
 
 export type CoverPlacement = {
@@ -86,12 +79,6 @@ export const coverPlacementKeys: CoverPlacementKey[] = [
   "banner",
 ];
 
-/** 展示位比例的写法：16:9 保持分数写法，其余写成 x:1。 */
-export function coverRatioLabel(placement: CoverPlacement) {
-  if (Math.abs(placement.ratio - 16 / 9) < 0.01) return "16:9";
-  return `${placement.ratio}:1`;
-}
-
 /** 裁切位置：对应 CSS object-position 的百分比。 */
 export type CoverFocusValue = { x: number; y: number };
 
@@ -105,11 +92,6 @@ export const defaultCoverFocus: CoverFocusValue = { x: 50, y: 50 };
 export type CoverFocus = {
   sourceId: number | null;
   placements: Partial<Record<CoverPlacementKey, CoverFocusValue>>;
-};
-
-export const emptyCoverFocus: CoverFocus = {
-  sourceId: null,
-  placements: {},
 };
 
 function clamp(value: number, min: number, max: number) {

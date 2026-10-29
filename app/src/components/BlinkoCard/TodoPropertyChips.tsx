@@ -1,9 +1,7 @@
-import { readTodoStatuses, type TodoStatus } from '@shared/lib/todoStatus';
-import { TODO_PRIORITIES, todoPriorityMetadata, type TodoPriority } from '@shared/lib/todoPriority';
+import { type TodoStatus } from '@shared/lib/todoStatus';
+import { TODO_PRIORITIES, type TodoPriority } from '@shared/lib/todoPriority';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
-import { RootStore } from '@/store';
-import { BlinkoStore } from '@/store/blinkoStore';
 
 /**
  * 任务属性的胶囊控件。
@@ -71,12 +69,4 @@ export function TodoPriorityChip({ priorityKey, onPick, busy, className = '' }: 
       </DropdownMenu>
     </Dropdown>
   );
-}
-
-/** 描述 / 优先级元信息 → 服务端 metadata 补丁（服务端是合并语义，只传要改的字段） */
-export const priorityPatch = todoPriorityMetadata;
-
-/** 从全局配置读自定义状态，列表、看板、弹窗共用 */
-export function useTodoStatuses(): TodoStatus[] {
-  return readTodoStatuses(RootStore.Get(BlinkoStore).config.value?.todoStatuses);
 }

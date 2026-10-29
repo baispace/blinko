@@ -1,7 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import { CellSelection } from '@tiptap/pm/tables';
-import { Node as PMNode } from '@tiptap/pm/model';
-import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { NodeSelection } from '@tiptap/pm/state';
 
 /** DOM table element the current selection lives in, if any. */
 export const findTableDom = (editor: Editor): HTMLElement | null => {
@@ -18,13 +17,6 @@ export const findTableDom = (editor: Editor): HTMLElement | null => {
   } catch {
     return null;
   }
-};
-
-/** True when the cursor, a cell range or the table node itself is selected. */
-export const isTableActive = (editor: Editor) => {
-  const selection = editor.state.selection as any;
-  if (selection instanceof NodeSelection) return selection.node?.type?.name === 'table';
-  return editor.isActive('table');
 };
 
 /** Depth of the closest ancestor whose type is in `types`. */
@@ -96,76 +88,6 @@ export const selectRowOrColumn = (editor: Editor, scope: 'row' | 'col', index: n
   }
 };
 
-/**
- * Moves the row the cursor sits in by one slot.
- * Tiptap has no built-in command: the row is re-created from its JSON at the
- * target offset and the original removed. Net length change is 0, so the
- * surrounding positions stay valid.
- */
-/**
- * Moves the row the cursor sits in by one slot.
- * Tiptap has no built-in command, so we rebuild the table JSON with the two
- * adjacent rows swapped and replace the whole table node in one step. Building
- * from JSON (instead of `node.copy`) sidesteps a ProseMirror quirk where
- * `copy` dropped the content when given an array, yielding a node with no size.
- */
-export const moveRow = (editor: Editor, direction: -1 | 1) => {
-  const { state, view } = editor;
-  const table = currentCellGeometry(editor);
-  if (!table) return;
-  const { tableNode, rowIndex } = table;
-  const target = rowIndex + direction;
-  if (target < 0 || target >= tableNode.childCount) return;
-
-  const json: any = tableNode.toJSON();
-  const rows = json.content;
-  const moved = rows[rowIndex];
-  rows[rowIndex] = rows[target];
-  rows[target] = moved;
-
-  const tr = state.tr;
-  tr.replaceWith(table.tablePos, table.tablePos + tableNode.nodeSize, PMNode.fromJSON(state.schema, json));
-  view.dispatch(tr.scrollIntoView());
-};
-
-/**
- * Moves the column the cursor sits in by one slot. The table JSON is rebuilt
- * with the two adjacent columns swapped per row, then the whole table node is
- * replaced in a single step. Merged cells make column geometry ambiguous, so
- * we bail out rather than corrupt the table.
- */
-export const moveColumn = (editor: Editor, direction: -1 | 1) => {
-  const { state, view } = editor;
-  const table = currentCellGeometry(editor);
-  if (!table) return;
-  const { tableNode, colIndex } = table;
-  const colCount = tableNode.child(0)?.childCount ?? 0;
-  const target = colIndex + direction;
-  if (target < 0 || target >= colCount) return;
-
-  // Bail out on merged cells (column geometry is ambiguous).
-  for (let i = 0; i < tableNode.childCount; i++) {
-    if (tableNode.child(i).childCount !== colCount) return;
-  }
-
-  const json: any = tableNode.toJSON();
-  for (const row of json.content) {
-    const cells = row.content;
-    if (!Array.isArray(cells) || cells.length !== colCount) continue;
-    const moved = cells[colIndex];
-    cells[colIndex] = cells[target];
-    cells[target] = moved;
-  }
-
-  const tr = state.tr;
-  tr.replaceWith(table.tablePos, table.tablePos + tableNode.nodeSize, PMNode.fromJSON(state.schema, json));
-  view.dispatch(tr.scrollIntoView());
-};
-
-/** Whether the current selection spans more than one cell. */
-export const isCellSelection = (editor: Editor) =>
-  editor.state.selection instanceof CellSelection;
-
 /** Bounding rect of the currently selected cell(s). Falls back to the first cell the cursor is in. */
 export const getSelectedCellsRect = (editor: Editor, tableEl?: HTMLElement | null): DOMRect | null => {
   try {
@@ -187,32 +109,6 @@ export const getSelectedCellsRect = (editor: Editor, tableEl?: HTMLElement | nul
   } catch {
     return null;
   }
-};
-
-/** Select the whole table (node selection). */
-export const selectTable = (editor: Editor) => {
-  const table = currentCellGeometry(editor);
-  if (!table) return;
-  editor.view.dispatch(
-    editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, table.tablePos))
-  );
-  editor.view.focus();
-};
-
-/** Insert a copy of the current row directly below it. */
-export const duplicateRow = (editor: Editor) => {
-  const { state, view } = editor;
-  const rowDepth = findSingleDepth(editor, 'tableRow');
-  if (rowDepth < 0) return;
-  const rowPos = state.selection.$from.before(rowDepth);
-  const rowNode = state.selection.$from.node(rowDepth);
-  const insertAt = rowPos + rowNode.nodeSize;
-  view.dispatch(
-    state.tr
-      .insert(insertAt, state.schema.nodeFromJSON(rowNode.toJSON()))
-      .setSelection(TextSelection.near(state.tr.doc.resolve(insertAt + 2)))
-      .scrollIntoView()
-  );
 };
 
 /** Clear alignment and background for selected cells. */

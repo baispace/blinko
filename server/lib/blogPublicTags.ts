@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -39,21 +39,6 @@ export function readDraftPublicTags(metadata: unknown): string[] {
       ? (metadata as Record<string, unknown>)
       : {};
   return normalizePublicTags(m.blogPublicTags);
-}
-
-/** 写草稿态公开标签：只动 blogPublicTags 这一个键，别的 metadata 原样保留。 */
-export function withDraftPublicTags(
-  metadata: unknown,
-  tags: string[],
-): Prisma.InputJsonValue {
-  const current =
-    metadata && typeof metadata === "object" && !Array.isArray(metadata)
-      ? (metadata as Record<string, unknown>)
-      : {};
-  return {
-    ...current,
-    blogPublicTags: normalizePublicTags(tags),
-  } as Prisma.InputJsonValue;
 }
 
 /** 账号的公开标签池：给「优先匹配已有公开标签」用。 */

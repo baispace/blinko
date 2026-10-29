@@ -173,24 +173,3 @@ export const SOURCE_LABELS: Record<TrafficSource, string> = {
   internal: "站内跳转",
   unknown: "未知来源",
 };
-
-/** 站内来源的补充说明：站内跳转包含哪些入口。 */
-export const SOURCE_HINTS: Record<TrafficSource, string> = {
-  direct: "没有来源信息的全新访问（直接输入地址、书签或分享链接）",
-  search: "来自搜索引擎结果页",
-  referral: "来自站外其他网站的链接",
-  internal: "站内跳转：首页推荐、专题、站内搜索与文章之间互相跳转",
-  unknown: "浏览器未提供来源信息，或来自无法识别的来源",
-};
-
-/** 站内入口的中文标签。 */
-export const ENTRY_LABELS: Record<TrafficEntry, string> = {
-  home: "首页",
-  topic: "专题",
-  search: "站内搜索",
-  recommend: "推荐列表",
-  detail: "文章页",
-  topics: "专题目录",
-  about: "关于页",
-  unknown: "未知入口",
-};

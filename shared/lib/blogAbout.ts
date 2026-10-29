@@ -13,5 +13,3 @@ export const ABOUT_TOPIC_MAX = 4;
 export const ABOUT_REASON_MAX = 120;
 /** 站点说明最长。 */
 export const ABOUT_SPACE_INTRO_MAX = 2000;
-/** 头像旁签名最长。 */
-export const ABOUT_SIGNATURE_MAX = 80;

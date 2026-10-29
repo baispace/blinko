@@ -393,10 +393,3 @@ export const cdnFonts: FontSeed[] = [
     sortOrder: 211,
   },
 ];
-
-/**
- * Get all default fonts (system + CDN)
- */
-export function getDefaultFonts(): FontSeed[] {
-  return [systemDefaultFont, ...cdnFonts];
-}

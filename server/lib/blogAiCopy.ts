@@ -48,8 +48,6 @@ export type BlogCopy = {
  */
 export type CopyKind = "all" | "title" | "summary" | "cover";
 
-export const COPY_KINDS: CopyKind[] = ["all", "title", "summary", "cover"];
-
 /** 单项生成会覆盖哪几项候选（整组一次出齐四项里的三份文案）。 */
 const COPY_KIND_FIELDS: Record<CopyKind, AiCopyField[]> = {
   all: ["title", "summary", "cover"],

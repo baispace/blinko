@@ -155,13 +155,6 @@ export function shiftDayInZone(date: Date, days: number, timeZone: string) {
   return startOfDayInZone(shifted, timeZone);
 }
 
-/** "2026-10-25" → "10/25"（趋势图上的短标签）。 */
-export function formatDayLabel(key: string) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
-  if (!m) return key;
-  return `${Number(m[2])}/${Number(m[3])}`;
-}
-
 /** "2026-10-25" → "2026.10.25"（页面上的日期展示）。 */
 export function formatDayText(key: string) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
@@ -181,10 +174,4 @@ export function formatMonthLabel(key: string) {
   const parsed = parseMonthKey(key);
   if (!parsed) return key;
   return `${parsed.year}年${parsed.month}月`;
-}
-/** "2026-10" → "2026年10月" 的短标签，用于紧凑选择器。 */
-export function formatMonthShortLabel(key: string) {
-  const parsed = parseMonthKey(key);
-  if (!parsed) return key;
-  return `${parsed.month}月`;
 }

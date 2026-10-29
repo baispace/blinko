@@ -481,9 +481,6 @@ export const toCoverUrl = (cover?: string | null): string | undefined => {
   return DEFAULT_COVERS.find((c) => c.key === cover)?.src ?? cover
 }
 
-export const isDefaultCoverKey = (cover?: string | null): boolean =>
-  !!cover && cover.startsWith(PREFIX)
-
 export const randomDefaultCoverKey = (exclude?: string | null): string => {
   const excludedKey = exclude?.startsWith(PREFIX) ? exclude.slice(PREFIX.length) : exclude
   const pool = DEFAULT_COVERS.filter((c) => c.key !== excludedKey)

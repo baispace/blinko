@@ -9,7 +9,6 @@ import { UserStore } from '@/store/user'
 import { download } from '@tauri-apps/plugin-upload'
 import { downloadDir, publicDir } from '@tauri-apps/api/path'
 import { setStatusBarColor } from 'tauri-plugin-blinko-api'
-import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 export interface PermissionStatus {
@@ -137,9 +136,6 @@ export async function setTauriTheme(theme: any) {
     }
 }
 
-
-
-
 export const requestMicrophonePermission = async (): Promise<boolean> => {
     try {
         // Check cached permission first
@@ -266,45 +262,4 @@ export const checkMicrophonePermission = async (): Promise<boolean> => {
         localStorage.removeItem('microphone_permission_granted');
         return false;
     }
-};
-
-export const usePermissions = () => {
-    const [permissions, setPermissions] = useState<PermissionStatus>({
-        audio: false,
-        camera: false,
-    });
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const checkPermissions = async () => {
-            setLoading(true);
-            
-            try {
-                const audioPermission = await checkMicrophonePermission();
-                
-                setPermissions({
-                    audio: audioPermission,
-                    camera: false, // Camera permission check can be added later
-                });
-            } catch (error) {
-                console.error('Error checking permissions:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        checkPermissions();
-    }, []);
-
-    const requestAudioPermission = async () => {
-        const granted = await requestMicrophonePermission();
-        setPermissions(prev => ({ ...prev, audio: granted }));
-        return granted;
-    };
-
-    return {
-        permissions,
-        loading,
-        requestAudioPermission,
-    };
 };

@@ -14,16 +14,6 @@ export const IsTagSelectVisible = () => {
   return isTagSelectVisible
 }
 
-export const showTagSelectPop = (text: string = '', _rect: DOMRect | null = null) => {
-  setTimeout(() => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const rect = _rect ?? selection.getRangeAt(0).getBoundingClientRect();
-      eventBus.emit('tagselect:update', { rect, text })
-    }
-  })
-}
-
 const TagSelect = observer(() => {
   const blinko = RootStore.Get(BlinkoStore)
   const { t } = useTranslation()

@@ -46,12 +46,6 @@ export const HandleFileType = (originFiles: Attachment[]): FileType[] => {
   return res
 }
 
-export const getEditorElements = (mode: ViewMode, editor: any) => {
-  if (!editor) return
-  // TiptapEditorAdapter: return the ProseMirror root DOM
-  return editor?.editor?.view?.dom ?? null
-}
-
 export const FocusEditorFixMobile = () => {
   try {
     requestAnimationFrame(() => {

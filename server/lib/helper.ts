@@ -58,7 +58,6 @@ export function verifyTOTP(token: string, secret: string): boolean {
   }
 }
 
-
 export async function generateFeed(userId: number, origin: string, rows: number = 20) {
   const hasAccountId: any = {}
   if (userId != 0) {
@@ -302,7 +301,6 @@ export const getAllPathTags = async () => {
   }
 };
 
-
 export const resetSequences = async () => {
   await prisma.$executeRaw`SELECT setval('notes_id_seq', (SELECT MAX(id) FROM "notes") + 1);`;
   await prisma.$executeRaw`SELECT setval('tag_id_seq', (SELECT MAX(id) FROM "tag") + 1);`;
@@ -324,23 +322,6 @@ export const getUserFromSession = (req: any) => {
   }
   return null;
 };
-
-export const getUserFromRequest = async (req: any) => {
-  const sessionUser = getUserFromSession(req);
-  if (sessionUser) {
-    return sessionUser;
-  }
-
-  return await getTokenFromRequest(req);
-};
-
-// 生成带token的URL
-export const generateUrlWithToken = async (url: string, user: any) => {
-  const token = await generateToken(user);
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}token=${token}`;
-}
-
 
 /**
  * 生成短随机串（默认 8 位 [a-z0-9]），用于分享链接 / 发布 ID 这类对外标识。

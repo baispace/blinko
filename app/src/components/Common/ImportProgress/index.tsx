@@ -85,8 +85,3 @@ export const ShowImportProgressDialog = async (filePath: string, kind: ImportKin
     size: 'lg',
   })
 }
-
-// 保留旧 helper 以兼容现有调用
-export const ShowMarkdownProgressDialog = async (filePath: string) => {
-  return ShowImportProgressDialog(filePath, 'markdown')
-}

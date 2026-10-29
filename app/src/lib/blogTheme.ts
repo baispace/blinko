@@ -13,11 +13,3 @@ export function readBlogTheme(): "light" | "dark" {
     return "light";
   }
 }
-
-export function writeBlogTheme(theme: "light" | "dark") {
-  try {
-    localStorage.setItem(BLOG_THEME_KEY, theme);
-  } catch {
-    /* 隐私模式下写不进去也不影响使用 */
-  }
-}

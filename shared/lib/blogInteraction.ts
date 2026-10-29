@@ -52,14 +52,6 @@ export const FEEDBACK_MAIL_STATUSES = [
 ] as const;
 export type FeedbackMailStatus = (typeof FEEDBACK_MAIL_STATUSES)[number];
 
-export const FEEDBACK_MAIL_LABEL: Record<FeedbackMailStatus, string> = {
-  none: "未发送",
-  sending: "发送中",
-  sent: "已发送",
-  failed: "发送失败",
-  skipped: "读者未订阅通知",
-};
-
 export const FEEDBACK_CONTENT_MAX = 500;
 export const FEEDBACK_NICKNAME_MAX = 30;
 export const FEEDBACK_EMAIL_MAX = 200;

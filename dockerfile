@@ -85,7 +85,6 @@ ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-li
 # Copy Build Artifacts and Necessary Files（必须在上面的 RUN 之前，
 # 因为 RUN 里要 prune /app/server/*.map 并对 .prisma/client 做平台裁剪）
 COPY --from=builder /app/dist ./server
-COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=builder /app/start.sh ./

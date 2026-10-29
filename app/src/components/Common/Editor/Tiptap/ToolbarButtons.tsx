@@ -122,46 +122,6 @@ const IconButtonWrap = ({ tooltip, onClick, icon, children, label }: {
   </Tooltip>
 );
 
-/**
- * List toggle buttons (bullet / ordered) with active state.
- */
-export const ListToggleButton = ({ editor, type }: { editor: Editor | null | undefined; type: 'bullet' | 'ordered' }) => {
-  const { t } = useTranslation();
-  useEditorTick(editor);
-  if (!editor) return null;
-  const isActive = type === 'bullet' ? editor.isActive('bulletList') : editor.isActive('orderedList');
-  const onClick = () => {
-    type === 'bullet'
-      ? editor.chain().focus().toggleBulletList().run()
-      : editor.chain().focus().toggleOrderedList().run();
-  };
-  return (
-    <IconButtonWrap
-      tooltip={t(type === 'bullet' ? 'bullet-list' : 'ordered-list')}
-      onClick={onClick}
-      icon={type === 'bullet' ? 'mdi:format-list-bulleted' : 'mdi:format-list-numbered'}
-    />
-  );
-};
-
-/**
- * Task list toggle button (Notion-style checkboxes) with active state.
- */
-export const TaskListButton = ({ editor }: { editor: Editor | null | undefined }) => {
-  const { t } = useTranslation();
-  useEditorTick(editor);
-  if (!editor) return null;
-  const isActive = editor.isActive('taskList');
-  const onClick = () => editor.chain().focus().toggleTaskList().run();
-  return (
-    <IconButtonWrap
-      tooltip={t('task-list')}
-      onClick={onClick}
-      icon="mdi:format-list-checks"
-    />
-  );
-};
-
 /** Callout type → { label-key, color } (icon is user-selectable, defaults per type). */
 const CALLOUT_TYPES: { type: CalloutType; color: string }[] = [
   { type: 'info', color: '#7454fc' },
@@ -256,34 +216,6 @@ export const CalloutPickerContent = ({ editor, onDone }: { editor: Editor; onDon
         </div>
       </div>
     </div>
-  );
-};
-
-/**
- * Callout / highlight block button with a color + emoji picker popover.
- */
-export const CalloutButton = ({ editor }: { editor: Editor | null | undefined }) => {
-  const [open, setOpen] = useState(false);
-  useEditorTick(editor);
-  if (!editor) return null;
-
-  const isActive = editor.isActive('callout');
-
-  return (
-    <Popover placement="bottom-start" isOpen={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <div
-          className={`hover:bg-hover !transition-all duration-200 cursor-pointer rounded-md flex items-center justify-center w-[23px] h-[23px]
-            ${isActive ? 'text-primary' : 'text-default-600'}`}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(!open); }}
-        >
-          <Icon icon="mdi:lightbulb-on-outline" width={20} height={20} />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="p-2 w-[224px]">
-        <CalloutPickerContent editor={editor} />
-      </PopoverContent>
-    </Popover>
   );
 };
 

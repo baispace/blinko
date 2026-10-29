@@ -52,20 +52,6 @@ export const BRAND_PATH_CREASE =
   'L 26.89 91.60 L 28.26 89.95 L 29.57 88.11 L 30.24 86.69 L 32.38 76.14 Z';
 
 /**
- * Brand palette.
- *
- * `primary` is the product purple; `soft` / `light` are the lighter steps used
- * on dark backgrounds and in the app icon gradient.
- */
-export const BRAND_COLOR = {
-  primary: '#5F40FD',
-  soft: '#A791FE',
-  light: '#CABEFC',
-  ink: '#101229',
-  muted: '#88899D',
-} as const;
-
-/**
  * Product name, Chinese name and tagline. */
 export const BRAND_NAME = {
   en: 'Jomio',
@@ -96,12 +82,3 @@ export const resolveBrandName = (customTitle?: string | null) => {
  * files without a manual cache clear.
  */
 export const BRAND_ASSET_VERSION = '1';
-
-/**
- * Font stack used by the wordmark.
- *
- * Only fonts the project already ships or the platform provides are listed —
- * no third-party or commercial typeface is pulled in.
- */
-export const BRAND_FONT_STACK =
-  '"Noto Sans SC", "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';

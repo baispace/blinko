@@ -55,23 +55,6 @@ export function blogNavigationType(): string {
   }
 }
 
-/** 当前页面属于站内哪个位置。 */
-export function blogEntryFor(pathname: string, search: string): string {
-  if (pathname.startsWith("/blog/t/")) return "topic";
-  if (pathname === "/blog/topics") return "topics";
-  if (pathname === "/blog/about") return "about";
-  if (pathname === "/blog/moments") return "moments";
-  if (pathname.startsWith("/blog/") && pathname.length > "/blog/".length)
-    return "detail";
-  if (pathname === "/blog" || pathname === "/blog/") {
-    const query = new URLSearchParams(search);
-    if (query.get("q") || query.get("search") || query.get("tag"))
-      return "search";
-    return "home";
-  }
-  return "unknown";
-}
-
 /** 记下「用户是从站内哪个位置点过来的」。 */
 export function rememberBlogEntry(entry: string) {
   try {

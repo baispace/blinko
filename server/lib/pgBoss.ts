@@ -58,10 +58,3 @@ export async function stopPgBoss(): Promise<void> {
   }
 }
 
-/**
- * Check if pg-boss is running
- */
-export function isPgBossRunning(): boolean {
-  return boss !== null;
-}
-

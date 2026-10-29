@@ -174,26 +174,6 @@ export async function getMcpMastraTools(): Promise<Record<string, ReturnType<typ
 }
 
 /**
- * Get MCP tools from a specific server
- */
-export async function getMcpToolsFromServer(serverId: number): Promise<Record<string, ReturnType<typeof createTool>>> {
-  try {
-    const mcpTools = await mcpClientManager.getTools(serverId);
-    const tools: Record<string, ReturnType<typeof createTool>> = {};
-
-    for (const mcpTool of mcpTools) {
-      const toolId = `mcp_${mcpTool.serverName}_${mcpTool.name}`.replace(/[^a-zA-Z0-9_]/g, '_');
-      tools[toolId] = convertMcpToolToMastra(mcpTool);
-    }
-
-    return tools;
-  } catch (error) {
-    console.error(`[MCP Tool Bridge] Failed to get tools from server ${serverId}:`, error);
-    return {};
-  }
-}
-
-/**
  * Check if MCP tools are available (any enabled servers exist)
  */
 export async function hasMcpServers(): Promise<boolean> {

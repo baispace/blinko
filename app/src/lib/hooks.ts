@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { helper } from "./helper";
-import { BlinkoStore } from "@/store/blinkoStore";
 import { RootStore } from "@/store";
 import { isAndroid, isInTauri } from '@/lib/tauriHelper';
 import { ShowEditBlinkoModel } from '@/components/BlinkoRightClickMenu';
@@ -9,35 +8,6 @@ import { eventBus } from '@/lib/event';
 import { readFile } from "@tauri-apps/plugin-fs";
 import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
-
-export const useConfigSetting = (configKey: keyof BlinkoStore['config']['value']) => {
-  const blinko = RootStore.Get(BlinkoStore);
-
-  const store = RootStore.Local(() => ({
-    value: '',
-    isVisible: false,
-    setValue(newValue: string) {
-      this.value = newValue;
-    },
-    toggleVisibility() {
-      this.isVisible = !this.isVisible;
-    }
-  }));
-
-  useEffect(() => {
-    if (blinko.config.value && blinko.config.value[configKey]) {
-      store.setValue(blinko.config.value[configKey] as string);
-    }
-  }, [blinko.config.value, configKey]);
-
-  return {
-    value: store.value,
-    isVisible: store.isVisible,
-    setValue: store.setValue,
-    toggleVisibility: store.toggleVisibility
-  };
-};
-
 
 export const useSwiper = (threshold = 50) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -77,7 +47,6 @@ export const useSwiper = (threshold = 50) => {
   return isVisible;
 };
 
-
 export const handlePaste = (event) => {
   //@ts-ignore
   const clipboardData = event.clipboardData || window.clipboardData;
@@ -96,30 +65,6 @@ export const handlePaste = (event) => {
     return files
   }
 };
-
-
-export const usePasteFile = (targetRef) => {
-  const [pastedFiles, setPastedFiles] = useState([]);
-
-  useEffect(() => {
-
-
-    const targetElement = targetRef.current;
-
-    if (targetElement) {
-      targetElement.addEventListener("paste", handlePaste);
-    }
-
-    return () => {
-      if (targetElement) {
-        targetElement.removeEventListener("paste", handlePaste);
-      }
-    };
-  }, [targetRef]);
-
-  return pastedFiles;
-};
-
 
 interface HistoryBackProps<T extends string> {
   state: boolean;
@@ -284,6 +229,4 @@ export const useAndroidShortcuts = () => {
     };
   }, []);
 };
-
-
 

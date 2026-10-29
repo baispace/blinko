@@ -15,17 +15,6 @@ import { ScrollArea, ScrollAreaHandles } from '../ScrollArea';
 import { useMediaQuery } from 'usehooks-ts';
 import ReactDOM from 'react-dom';
 
-export const showAiWriteSuggestions = () => {
-  setTimeout(() => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      eventBus.emit('aiwrite:update', { rect })
-    }
-  })
-}
-
 const AiWritePop = observer(() => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')

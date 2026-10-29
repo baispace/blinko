@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SettingsWorkspace } from '@/components/BlinkoSettings/SettingsWorkspace';
 import { ImportAIDialog } from '@/components/BlinkoSettings/ImportAIDialog';
-export { allSettings } from '@/components/BlinkoSettings/settingsRegistry';
 
 export default function SettingsPage() {
   const [params, setParams] = useSearchParams();

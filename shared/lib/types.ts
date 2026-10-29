@@ -380,13 +380,6 @@ export interface SystemTrayConfig {
   closeToTray: boolean;
 }
 
-export const DEFAULT_SYSTEM_TRAY_CONFIG: SystemTrayConfig = {
-  enabled: true,
-  showInTray: true,
-  minimizeToTray: true,
-  closeToTray: false
-};
-
 // Platform detection utility type
 export interface PlatformInfo {
   isTauri: boolean;

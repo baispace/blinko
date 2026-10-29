@@ -9,6 +9,8 @@ import {
 import { FileService } from "./files";
 import { fetchWithProxy } from "./proxy";
 
+import { preferCoverModels, coverArtPlan, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
+
 const pending = new Set<number>();
 /** Generate a private candidate; only saveTopic makes it the selected topic cover. */
 export async function generateTopicCover(
@@ -54,7 +56,7 @@ export async function generateTopicCover(
       include: { provider: true },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     });
-    const model = models.find(
+    const model = preferCoverModels(models).find(
       (model) => imageProtocol(model) && model.provider.apiKey?.trim(),
     );
     if (!model)
@@ -62,14 +64,10 @@ export async function generateTopicCover(
         code: "BAD_REQUEST",
         message: "请先在 AI 设置中配置可用的生图模型。",
       });
-    const prompt = coverPrompt(
-      input.name,
-      input.desc +
-        "\n" +
-        topic.notes
-          .map((member) => member.note.publication?.title || "")
-          .join("、"),
-    );
+    const context = input.desc + "\n" + topic.notes
+      .map((member) => member.note.publication?.title || "")
+      .join("、");
+    const prompt = coverPrompt(input.name, context);
     const raw = await (dependencies?.generate || generateImageBytes)(
       model,
       prompt,
@@ -96,6 +94,9 @@ export async function generateTopicCover(
         blogAITopicCover: {
           topicId: topic.id,
           modelId: model.id,
+          artVersion: COVER_ART_VERSION,
+          artPlan: coverArtPlan(input.name, context),
+          prompt,
           width: 1600,
           height: 900,
         },

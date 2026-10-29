@@ -199,12 +199,6 @@
   font-weight: 700;
   color: var(--ink-text);
 }
-.ink-ad-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
 .ink-ad-sub {
   margin: 6px 0 0;
   font-size: 12px;
@@ -213,7 +207,7 @@
 }
 .ink-ad-hint {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: var(--ink-muted);
 }
@@ -255,7 +249,7 @@
   color: var(--ink-text);
 }
 .ink-ad-count {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
@@ -369,7 +363,7 @@
 }
 .ink-ad-source summary small {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--ink-muted);
 }
@@ -461,22 +455,6 @@
  * 右侧原来的「封面状态」对比（当前公开封面 / 待发布封面）已去掉 ——
  * 工作区里本来就有各场景的实时预览，再摆一份不带文字层的裸图反而误导。
  */
-.ink-ad-columns.is-single {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-/* ---------- 推荐设置 ---------- */
-.ink-ad-inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.ink-ad-inline select {
-  width: auto;
-  min-width: 90px;
-}
-
 /* ---------- 底部操作条 ---------- */
 .ink-ad-bottombar {
   position: fixed;
@@ -498,93 +476,6 @@
 }
 .ink-ad-bottom-note {
   font-size: 12px;
-  color: var(--ink-muted);
-}
-.ink-ad-bottom-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-/* ---------- 封面裁切：调整显示位置 ---------- */
-/*
- * 三个展示位同时预览。后台跟公开站用同一组 CSS 变量
- * （--ink-cover-<位置>-x/y），所以这里拖出来的位置，线上就是这个样子。
- */
-.ink-cfp-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-@media (max-width: 900px) {
-  .ink-cfp-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-}
-.ink-cfp-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-.ink-cfp-shot {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  border-radius: 10px;
-  background: var(--ink-tint);
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  box-shadow: inset 0 0 0 1px var(--ink-line);
-}
-.ink-cfp-shot:active {
-  cursor: grabbing;
-}
-.ink-cfp-shot:focus-visible {
-  outline: 2px solid var(--ink-accent);
-  outline-offset: 2px;
-}
-.ink-cfp-shot img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /*
-   * 图片本身不能接管指针：
-   * 浏览器默认可以「拖动图片」—— 那是原生 drag-and-drop，
-   * 一旦触发就会给指针流发 pointercancel，我们自己的拖拽当场断掉，
-   * 表现为「拖一下只动几像素就卡住」。
-   * 指针交给外层预览框，图片只负责显示。
-   */
-  pointer-events: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-}
-.ink-cfp-shot[data-placement="double"] img {
-  object-position: var(--ink-cover-double-x, 50%) var(--ink-cover-double-y, 50%);
-}
-.ink-cfp-shot[data-placement="single"] img {
-  object-position: var(--ink-cover-single-x, 50%) var(--ink-cover-single-y, 50%);
-}
-.ink-cfp-shot[data-placement="banner"] img {
-  object-position: var(--ink-cover-banner-x, 50%) var(--ink-cover-banner-y, 50%);
-}
-.ink-cfp-meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-.ink-cfp-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-text);
-}
-.ink-cfp-hint {
-  margin: 0;
-  font-size: 11px;
   color: var(--ink-muted);
 }
 
@@ -641,7 +532,7 @@
 }
 .ink-cov-note {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-muted);
 }
 
@@ -702,7 +593,7 @@
 .ink-ad-setting-chip {
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   background: color-mix(in srgb, var(--ink-muted) 14%, transparent);
   color: var(--ink-muted);

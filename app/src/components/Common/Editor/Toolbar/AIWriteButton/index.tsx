@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/Common/ScrollArea';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { RootStore } from '@/store/root';
 import { AiStore } from '@/store/aiStore';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -124,6 +125,7 @@ export const AIWriteButton = observer(() => {
                 }
                 ai.writingResponseText = '';
                 localStore.setShow(false);
+                RootStore.Get(ToastPlugin).success('已应用到笔记');
               }} startContent={<Icon icon="ic:sharp-check" className='green' />}
                 size='sm' variant='light' color='success'>{t('accept')}</Button>
 

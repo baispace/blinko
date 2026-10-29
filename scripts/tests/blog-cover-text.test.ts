@@ -1,6 +1,8 @@
 import { describe, test, expect } from "bun:test";
 import {
   COVER_TEMPLATE_VERSION,
+  COVER_TEXT_SAFE_RATIO,
+  COVER_TITLE_SCALE_X,
   computeCoverTextLayout,
   coverHasTextLayer,
   coverPaletteColor,
@@ -48,9 +50,10 @@ describe("封面文字排版：按容器实际尺寸", () => {
     expect(layout.fontSize).toBeGreaterThanOrEqual(11);
     expect(layout.top).toBeGreaterThanOrEqual(0);
     expect(layout.top + layout.blockHeight).toBeLessThanOrEqual(94);
+    // 标题是压窄后渲染的，宽度要按压窄后的算（与 fitLines 同一套口径）。
     for (const line of layout.titleLines)
       expect(
-        coverTextEmWidth(line) * layout.fontSize,
+        coverTextEmWidth(line, COVER_TITLE_SCALE_X) * layout.fontSize,
       ).toBeLessThanOrEqual(layout.maxWidth + 1);
   });
 
@@ -101,6 +104,43 @@ describe("封面文字排版：按容器实际尺寸", () => {
     });
     expect(layout.subtitleLines).toEqual([]);
     expect(layout.titleLines.length).toBeGreaterThan(0);
+  });
+
+  test("大字与小字都要在时，标题让一档把位置让给小字", () => {
+    const withSubtitle = computeCoverTextLayout({
+      containerWidth: 1600,
+      containerHeight: 571,
+      placement: "double",
+      title: "复盘笔记",
+      subtitle: "一次上线，三段召回",
+    });
+    const withoutSubtitle = computeCoverTextLayout({
+      containerWidth: 1600,
+      containerHeight: 571,
+      placement: "double",
+      title: "复盘笔记",
+    });
+    // 有小字时小字要真的出现，作者写的东西不能被悄悄丢掉。
+    expect(withSubtitle.subtitleLines.length).toBeGreaterThan(0);
+    expect(withSubtitle.subtitleHidden).toBe(false);
+    // 代价是大字让一档 —— 但仍然是醒目的大字，不是缩成小注解。
+    expect(withSubtitle.fontSize).toBeLessThan(withoutSubtitle.fontSize);
+    expect(withSubtitle.fontSize).toBeGreaterThan(withoutSubtitle.fontSize * 0.7);
+    // 两块加起来不能超出画布。
+    expect(
+      withSubtitle.top + withSubtitle.blockHeight,
+    ).toBeLessThanOrEqual(571);
+  });
+
+  test("小字放得下一行时就排一行，不为了均分硬断成两行", () => {
+    const layout = computeCoverTextLayout({
+      containerWidth: 1200,
+      containerHeight: 630,
+      placement: "share",
+      title: "复盘笔记",
+      subtitle: "一次上线",
+    });
+    expect(layout.subtitleLines).toEqual(["一次上线"]);
   });
 
   test("标题长到可读下限也放不下时给出提示，而不是悄悄截断", () => {
@@ -295,5 +335,38 @@ describe("封面配置读写", () => {
   test("中文断行工具：没有合适断点时按字符均分，不丢字", () => {
     expect(coverTextLines("召回三段式改造", 2).join("")).toBe("召回三段式改造");
     expect(coverTextLines("", 2)).toEqual([]);
+  });
+});
+
+
+describe("标题安全区与整幅铺底", () => {
+  test("底图整幅铺满封面，标题列落在左侧安全区里", () => {
+    for (const [placement, width, height] of [
+      ["double", 640, 229], ["double", 350, 125],
+      ["single", 160, 90], ["single", 420, 236],
+      ["banner", 720, 248], ["banner", 350, 121], ["share", 1200, 630],
+    ] as const) {
+      for (const align of ["left", "right", "center"] as const) {
+        const layout = computeCoverTextLayout({ containerWidth: width, containerHeight: height,
+          placement, title: "推荐策略调优", subtitle: "持续验证真实业务收益", align, sizeScale: 1.2 });
+        // 插画不再切独立槽位：底图整幅铺满，标题压在底图左侧的留白上。
+        expect(layout.artwork).toEqual({ left: 0, top: 0, width, height });
+        // 文字块不出画布。
+        expect(layout.top).toBeGreaterThanOrEqual(0);
+        expect(layout.top + layout.blockHeight).toBeLessThanOrEqual(height);
+        expect(layout.left).toBeGreaterThanOrEqual(0);
+        expect(layout.left + layout.maxWidth).toBeLessThanOrEqual(width);
+        // 左对齐时标题列不能越过安全区 —— 越过就压到插画上了。
+        if (align === "left")
+          expect((layout.left + layout.maxWidth) / width).toBeLessThanOrEqual(COVER_TEXT_SAFE_RATIO);
+      }
+    }
+  });
+
+  test("各场景的标题列宽度都收在安全区内", () => {
+    for (const key of ["double", "single", "banner", "share"] as const) {
+      const rule = coverSceneRules[key];
+      expect(rule.padXRatio + rule.columnRatio).toBeLessThanOrEqual(COVER_TEXT_SAFE_RATIO);
+    }
   });
 });

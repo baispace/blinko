@@ -1,13 +1,8 @@
 import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
-import { Slider } from "@heroui/react";
+import { Slider, Button, Chip, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
 import { BlogSiteSettingsPanel } from "./BlogSiteSettingsPanel";
-import { ContentSeoPanel } from "./ContentSeoPanel";
-import "./blog.css";
-import "./manage.css";
-import "./studio.css";
-import { BlogStudioNav } from "./BlogStudioNav";
 import { BlogContentList } from "./BlogContentList";
 import { RowMenu } from "./RowMenu";
 import {
@@ -33,22 +28,13 @@ import { BlogFriendsPanel } from "./BlogFriendsPanel";
 import { BlogMailSettingsPanel } from "./BlogMailSettingsPanel";
 import { BlogAboutConfig } from "./BlogAboutConfig";
 import { BlogFeedbackPanel } from "./BlogFeedbackPanel";
+import { BlogStudioNav } from "./BlogStudioNav";
 
 type Post = Awaited<ReturnType<typeof api.blog.published.query>>[number];
 type Topic = Awaited<ReturnType<typeof api.blog.topics.query>>[number];
 type Profile = Awaited<ReturnType<typeof api.blog.profile.query>>;
 type Distribution = Awaited<ReturnType<typeof api.blog.distribution.query>>;
 type Section = StudioSection;
-
-/** 公开站的主题也存这个键，管理页跟公开站保持同一套明暗。 */
-const THEME_KEY = "ink-blog-theme";
-function readTheme(): "light" | "dark" {
-  try {
-    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
-  } catch {
-    return "light";
-  }
-}
 
 function notify(error: unknown) {
   RootStore.Get(ToastPlugin).error(
@@ -84,7 +70,6 @@ function useLeaveGuard(dirty: boolean) {
   }, [dirty]);
 }
 
-/** 专题树：按 parentId 分组，父在前、子按原顺序。 */
 function topicChildren(topics: Topic[], parentId: number | null) {
   return topics.filter((t) => (t.parentId ?? null) === parentId);
 }
@@ -92,7 +77,8 @@ function topicChildren(topics: Topic[], parentId: number | null) {
 const DISTRIBUTION_LABELS: Record<
   Distribution["mode"],
   { title: string; desc: string }
-> = {  recency: {
+> = {
+  recency: {
     title: "按发布时间",
     desc: "越新越靠前，适合刚起步、还没有阅读数据的站点。",
   },
@@ -132,7 +118,6 @@ function ProfileEditor({
       homepage: profile.homepage,
       links: profile.links ?? [],
       isPublished: profile.isPublished,
-      // 关于页的三项配置：站点说明、签名、精选与展示专题。
       spaceIntro: profile.spaceIntro ?? "",
       signature: profile.signature ?? "",
       featuredPosts: (profile.featuredPosts ?? []).map((f) => ({
@@ -184,7 +169,6 @@ function ProfileEditor({
     try {
       await api.blog.saveProfile.mutate({
         ...draft,
-        // 没挑完的槽位不下发 —— 空槽留着只会让公开页多出一行空白。
         featuredPosts: draft.featuredPosts
           .filter((f) => Number.isInteger(f.noteId) && f.noteId > 0)
           .map((f) => ({ noteId: f.noteId as number, reason: f.reason })),
@@ -198,174 +182,186 @@ function ProfileEditor({
     }
   };
   return (
-    <div className="ink-mg-grid-2" style={{ alignItems: "start" }}>
-      <div className="ink-mg-section">
-        {error && <div className="ink-mg-alert">{error}</div>}
-        <div className="ink-mg-panel">
-          <div className="ink-mg-section-head">
-            <h2 className="ink-mg-section-title">作者与公开资料</h2>
-            {dirty && <BlogChip color="warning" variant="flat">有未保存修改</BlogChip>}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+      <div className="flex flex-col gap-6">
+        {error && (
+          <div className="rounded-lg bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">
+            {error}
           </div>
-          <p className="ink-mg-sub" style={{ marginTop: 8 }}>
-            与登录账号资料独立。只有明确开启公开并保存的内容才对外展示。
-          </p>
-          <label className="ink-mg-switch" style={{ marginTop: 12 }}>
-            <BlogCheckbox aria-label="公开作者资料（保存后生效）"
-              type="checkbox"
-              checked={draft.isPublished}
-              onChange={(e) => patch({ isPublished: e.target.checked })}
-            />
-            公开作者资料（保存后生效）
-          </label>
-        </div>
-        <div className="ink-mg-panel ink-mg-section" style={{ gap: 14 }}>
-          <div className="ink-mg-grid-2">
-            <label className="ink-mg-section" style={{ gap: 6 }}>
-              <span className="ink-mg-sub">公开名称</span>
-              <BlogInput
-                className="ink-mg-field"
-                maxLength={80}
-                placeholder="你的公开名称"
-                value={draft.displayName}
-                onChange={(e) => patch({ displayName: e.target.value })}
+        )}
+        <Card>
+          <CardHeader className="flex items-center justify-between pb-2">
+            <h2 className="text-xl font-semibold">作者与公开资料</h2>
+            {dirty && <Chip color="warning" variant="flat">有未保存修改</Chip>}
+          </CardHeader>
+          <CardBody className="pt-0">
+            <p className="text-sm text-default-500">
+              与登录账号资料独立。只有明确开启公开并保存的内容才对外展示。
+            </p>
+            <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
+              <BlogCheckbox
+                type="checkbox"
+                checked={draft.isPublished}
+                onChange={(e) => patch({ isPublished: e.target.checked })}
+              />
+              公开作者资料（保存后生效）
+            </label>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-default-500">公开名称</span>
+                <BlogInput
+                  maxLength={80}
+                  placeholder="你的公开名称"
+                  value={draft.displayName}
+                  onChange={(e) => patch({ displayName: e.target.value })}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-default-500">一句话介绍</span>
+                <BlogInput
+                  maxLength={160}
+                  value={draft.tagline}
+                  onChange={(e) => patch({ tagline: e.target.value })}
+                />
+              </label>
+            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">个人介绍</span>
+              <BlogTextarea
+                rows={6}
+                maxLength={5000}
+                value={draft.bio}
+                onChange={(e) => patch({ bio: e.target.value })}
               />
             </label>
-            <label className="ink-mg-section" style={{ gap: 6 }}>
-              <span className="ink-mg-sub">一句话介绍</span>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">头像地址</span>
               <BlogInput
-                className="ink-mg-field"
-                maxLength={160}
-                value={draft.tagline}
-                onChange={(e) => patch({ tagline: e.target.value })}
+                value={draft.avatarUrl}
+                onChange={(e) => patch({ avatarUrl: e.target.value })}
+                placeholder="公开图片网址，或上传图片"
               />
             </label>
-          </div>
-          <label className="ink-mg-section" style={{ gap: 6 }}>
-            <span className="ink-mg-sub">个人介绍</span>
-            <BlogTextarea
-              className="ink-mg-field"
-              rows={6}
-              maxLength={5000}
-              value={draft.bio}
-              onChange={(e) => patch({ bio: e.target.value })}
+            <input
+              ref={file}
+              type="file"
+              className="hidden"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+              aria-label="上传公开头像"
+              onChange={(e) => void upload(e.target.files)}
             />
-          </label>
-          <label className="ink-mg-section" style={{ gap: 6 }}>
-            <span className="ink-mg-sub">头像地址</span>
-            <BlogInput
-              className="ink-mg-field"
-              value={draft.avatarUrl}
-              onChange={(e) => patch({ avatarUrl: e.target.value })}
-              placeholder="公开图片网址，或上传图片"
-            />
-          </label>
-          <input
-            ref={file}
-            type="file"
-            className="hidden"
-            accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-            aria-label="上传公开头像"
-            onChange={(e) => void upload(e.target.files)}
-          />
-          <BlogButton
-            className="ink-mg-button"
-            disabled={busy}
-            onClick={() => file.current?.click()}
-            style={{ alignSelf: "flex-start" }}
-          >
-            上传头像
-          </BlogButton>
-          <label className="ink-mg-section" style={{ gap: 6 }}>
-            <span className="ink-mg-sub">个人主页</span>
-            <BlogInput
-              className="ink-mg-field"
-              value={draft.homepage}
-              onChange={(e) => patch({ homepage: e.target.value })}
-              placeholder="https://example.com"
-            />
-          </label>
-        </div>
-        <div className="ink-mg-panel">
-          <div className="ink-mg-section-head">
-            <h3 className="ink-mg-section-title">其他站点与相关链接</h3>
-            <BlogButton
-              className="ink-mg-button"
-              disabled={draft.links.length >= 12}
-              onClick={() =>
+            <Button
+              variant="flat"
+              size="sm"
+              isDisabled={busy}
+              onPress={() => file.current?.click()}
+              className="self-start"
+            >
+              上传头像
+            </Button>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">个人主页</span>
+              <BlogInput
+                value={draft.homepage}
+                onChange={(e) => patch({ homepage: e.target.value })}
+                placeholder="https://example.com"
+              />
+            </label>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex items-center justify-between pb-2">
+            <h3 className="text-lg font-semibold">其他站点与相关链接</h3>
+            <Button
+              variant="flat"
+              size="sm"
+              isDisabled={draft.links.length >= 12}
+              onPress={() =>
                 patch({ links: [...draft.links, { label: "", url: "" }] })
               }
             >
               ＋ 添加
-            </BlogButton>
-          </div>
-          <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-            {draft.links.map((link, i) => (
-              <div key={i} style={{ display: "flex", gap: 8 }}>
-                <BlogInput
-                  className="ink-mg-field"
-                  style={{ width: 120, flex: "none" }}
-                  aria-label={`链接${i + 1}名称`}
-                  placeholder="名称"
-                  value={link.label}
-                  onChange={(e) =>
-                    patch({
-                      links: draft.links.map((l, j) =>
-                        j === i ? { ...l, label: e.target.value } : l,
-                      ),
-                    })
-                  }
-                />
-                <BlogInput
-                  className="ink-mg-field"
-                  style={{ minWidth: 0 }}
-                  aria-label={`链接${i + 1}地址`}
-                  placeholder="https://"
-                  value={link.url}
-                  onChange={(e) =>
-                    patch({
-                      links: draft.links.map((l, j) =>
-                        j === i ? { ...l, url: e.target.value } : l,
-                      ),
-                    })
-                  }
-                />
-                <BlogButton
-                  className="ink-mg-mini"
-                  aria-label={`移除链接${i + 1}`}
-                  onClick={() =>
-                    patch({ links: draft.links.filter((_, j) => j !== i) })
-                  }
-                >
-                  ×
-                </BlogButton>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* 关于页的可配置项：紧跟在公开资料后面，不另开管理分区。 */}
+            </Button>
+          </CardHeader>
+          <CardBody className="pt-0">
+            <div className="flex flex-col gap-2">
+              {draft.links.map((link, i) => (
+                <div key={i} className="flex gap-2">
+                  <BlogInput
+                    style={{ width: 120, flex: "none" }}
+                    aria-label={`链接${i + 1}名称`}
+                    placeholder="名称"
+                    value={link.label}
+                    onChange={(e) =>
+                      patch({
+                        links: draft.links.map((l, j) =>
+                          j === i ? { ...l, label: e.target.value } : l,
+                        ),
+                      })
+                    }
+                  />
+                  <BlogInput
+                    style={{ minWidth: 0 }}
+                    aria-label={`链接${i + 1}地址`}
+                    placeholder="https://"
+                    value={link.url}
+                    onChange={(e) =>
+                      patch({
+                        links: draft.links.map((l, j) =>
+                          j === i ? { ...l, url: e.target.value } : l,
+                        ),
+                      })
+                    }
+                  />
+                  <Button
+                    variant="light"
+                    size="sm"
+                    isIconOnly
+                    aria-label={`移除链接${i + 1}`}
+                    onPress={() =>
+                      patch({ links: draft.links.filter((_, j) => j !== i) })
+                    }
+                  >
+                    <Icon icon="tabler:x" width={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+
         <BlogAboutConfig
           draft={draft}
           patch={patch}
           posts={posts}
           topics={topics}
         />
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <BlogButton
-            className="ink-mg-button-primary ink-mg-button"
-            disabled={busy || !dirty}
-            onClick={() => void save()}
+
+        <div className="flex justify-end">
+          <Button
+            color="primary"
+            isDisabled={busy || !dirty}
+            isLoading={busy}
+            onPress={() => void save()}
           >
             {busy ? "保存中…" : "保存公开资料"}
-          </BlogButton>
+          </Button>
         </div>
       </div>
+
       <aside>
-        <p className="ink-mg-sub" style={{ marginBottom: 8 }}>
+        <p className="text-sm text-default-500 mb-2">
           待保存效果预览 · 悬浮或点击查看介绍
         </p>
         <div
           className="flex min-h-80 flex-col rounded-2xl p-6 text-white"
-          style={{ background: "var(--ink-accent)" }}
+          style={{ background: "hsl(var(--heroui-primary))" }}
           onMouseEnter={() => {
             if (matchMedia("(hover: hover)").matches) setHovered(true);
           }}
@@ -374,8 +370,9 @@ function ProfileEditor({
           <span className="self-center rounded-full bg-white/15 px-3 py-1 text-xs">
             保持好奇，持续记录
           </span>
-          <BlogButton
-            className="my-6 flex min-h-36 flex-1 items-center justify-center text-left"
+          <button
+            type="button"
+            className="my-6 flex min-h-36 flex-1 items-center justify-center text-left bg-transparent border-0 cursor-pointer text-white"
             aria-label="切换作者介绍预览"
             onClick={() => setBio((v) => !v)}
           >
@@ -392,7 +389,7 @@ function ProfileEditor({
             ) : (
               <Icon icon="tabler:user-circle" width={112} />
             )}
-          </BlogButton>
+          </button>
           <strong className="text-xl">{draft.displayName || "作者名称"}</strong>
           <p className="mt-1 text-xs text-white/70">
             {draft.tagline || "一句话介绍"}
@@ -456,129 +453,133 @@ function DistributionEditor({
     ["searchWeight", "搜索命中", "与站内搜索词的相关度"],
   ];
   return (
-    <div className="ink-mg-section">
-      <div className="ink-mg-section-head">
-        <div>
-          <h2 className="ink-mg-section-title">流量分发口径</h2>
-          <p className="ink-mg-sub" style={{ marginTop: 6 }}>
-            决定公开站「推荐」列表怎么排。「最新」始终按发布时间，不受这里影响。
-          </p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-xl font-semibold">流量分发口径</h2>
+        <p className="text-sm text-default-500 mt-1.5">
+          决定公开站「推荐」列表怎么排。「最新」始终按发布时间，不受这里影响。
+        </p>
       </div>
-      {error && <div className="ink-mg-alert">{error}</div>}
-      <div className="ink-mg-modes" role="group" aria-label="分发口径">
+      {error && (
+        <div className="rounded-lg bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">
+          {error}
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="分发口径">
         {(Object.keys(DISTRIBUTION_LABELS) as Distribution["mode"][]).map(
           (mode) => (
-            <BlogButton
+            <button
               key={mode}
               type="button"
-              className="ink-mg-mode"
+              className={`flex flex-col items-start text-left p-4 rounded-xl border transition-colors
+                ${draft.mode === mode
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-default-200 bg-content1 hover:bg-default-50"
+                }
+              `}
               aria-pressed={draft.mode === mode}
               onClick={() => patch({ mode })}
             >
-              <b>{DISTRIBUTION_LABELS[mode].title}</b>
-              <small>{DISTRIBUTION_LABELS[mode].desc}</small>
-            </BlogButton>
+              <b className="text-sm font-semibold">{DISTRIBUTION_LABELS[mode].title}</b>
+              <small className="text-xs text-default-500 mt-1">{DISTRIBUTION_LABELS[mode].desc}</small>
+            </button>
           ),
         )}
       </div>
 
       {draft.mode === "blended" ? (
-        <div className="ink-mg-panel">
-          <h3 className="ink-mg-section-title">综合排序权重</h3>
-          <div className="ink-mg-weights">
-            {weights.map(([key, label, desc]) => (
-              <div key={key} className="ink-mg-weight">
-                <span>
-                  {label}
-                  <small
-                    style={{
-                      display: "block",
-                      fontSize: 11,
-                      color: "var(--ink-muted)",
-                    }}
-                  >
-                    {desc}
-                  </small>
-                </span>
-                <Slider
-                  aria-label={`${label}权重`}
-                  size="sm"
-                  minValue={0}
-                  maxValue={20}
-                  step={1}
-                  value={draft[key] as number}
-                  onChange={(value) =>
-                    patch({
-                      [key]: Number(Array.isArray(value) ? value[0] : value),
-                    } as Partial<Distribution>)
-                  }
-                  className="ink-mg-slider"
-                />
-                <output>{draft[key] as number}</output>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold">综合排序权重</h3>
+          </CardHeader>
+          <CardBody>
+            <div className="flex flex-col gap-4">
+              {weights.map(([key, label, desc]) => (
+                <div key={key} className="flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium">{label}</span>
+                    <small className="block text-xs text-default-500">{desc}</small>
+                  </div>
+                  <Slider
+                    aria-label={`${label}权重`}
+                    size="sm"
+                    minValue={0}
+                    maxValue={20}
+                    step={1}
+                    value={draft[key] as number}
+                    onChange={(value) =>
+                      patch({
+                        [key]: Number(Array.isArray(value) ? value[0] : value),
+                      } as Partial<Distribution>)
+                    }
+                    className="w-48"
+                  />
+                  <output className="text-sm font-medium w-8 text-right">{draft[key] as number}</output>
+                </div>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
       ) : (
-        <p className="ink-mg-note">
+        <p className="text-sm text-default-500">
           当前口径是单一因子，权重不参与计算。切到「综合排序」可以逐项调权重。
         </p>
       )}
 
-      <div className="ink-mg-panel ink-mg-section" style={{ gap: 12 }}>
-        <h3 className="ink-mg-section-title">时间衰减</h3>
-        <div className="ink-mg-grid-2">
-          <label className="ink-mg-section" style={{ gap: 6 }}>
-            <span className="ink-mg-sub">新品分半衰期（天）</span>
-            <BlogInput
-              className="ink-mg-field"
-              type="number"
-              min={0.5}
-              max={365}
-              step={0.5}
-              value={draft.freshHalfLife}
-              onChange={(e) =>
-                patch({ freshHalfLife: Number(e.target.value) })
-              }
+      <Card>
+        <CardBody className="flex flex-col gap-3">
+          <h3 className="text-lg font-semibold">时间衰减</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">新品分半衰期（天）</span>
+              <BlogInput
+                type="number"
+                min={0.5}
+                max={365}
+                step={0.5}
+                value={draft.freshHalfLife}
+                onChange={(e) =>
+                  patch({ freshHalfLife: Number(e.target.value) })
+                }
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">热度分半衰期（天）</span>
+              <BlogInput
+                type="number"
+                min={0.5}
+                max={365}
+                step={0.5}
+                value={draft.hotHalfLife}
+                onChange={(e) =>
+                  patch({ hotHalfLife: Number(e.target.value) })
+                }
+              />
+            </label>
+          </div>
+          <p className="text-sm text-default-500">
+            半衰期越短，旧文章掉得越快。默认新品 14 天、热度 60 天。
+          </p>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <BlogCheckbox
+              type="checkbox"
+              checked={draft.featuredFirst}
+              onChange={(e) => patch({ featuredFirst: e.target.checked })}
             />
+            手动精选的文章强制排在推荐列表最前
           </label>
-          <label className="ink-mg-section" style={{ gap: 6 }}>
-            <span className="ink-mg-sub">热度分半衰期（天）</span>
-            <BlogInput
-              className="ink-mg-field"
-              type="number"
-              min={0.5}
-              max={365}
-              step={0.5}
-              value={draft.hotHalfLife}
-              onChange={(e) =>
-                patch({ hotHalfLife: Number(e.target.value) })
-              }
-            />
-          </label>
-        </div>
-        <p className="ink-mg-sub">
-          半衰期越短，旧文章掉得越快。默认新品 14 天、热度 60 天。
-        </p>
-        <label className="ink-mg-switch">
-          <BlogCheckbox aria-label="手动精选的文章强制排在推荐列表最前"
-            type="checkbox"
-            checked={draft.featuredFirst}
-            onChange={(e) => patch({ featuredFirst: e.target.checked })}
-          />
-          手动精选的文章强制排在推荐列表最前
-        </label>
-      </div>
+        </CardBody>
+      </Card>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <BlogButton
-          className="ink-mg-button-primary ink-mg-button"
-          disabled={busy}
-          onClick={() => void save()}
+      <div className="flex justify-end">
+        <Button
+          color="primary"
+          isDisabled={busy}
+          isLoading={busy}
+          onPress={() => void save()}
         >
           {busy ? "保存中…" : "保存分发策略"}
-        </BlogButton>
+        </Button>
       </div>
     </div>
   );
@@ -586,7 +587,6 @@ function DistributionEditor({
 
 export function BlogManagePage() {
   useEffect(() => { markBlogManager(); }, []);
-  const [seoTab,setSeoTab]=useState("content");
   const [section, setSection] = useState<Section>("posts");
   const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -594,14 +594,8 @@ export function BlogManagePage() {
   const [distribution, setDistribution] = useState<Distribution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  /** 封面资源分区自己的搜索：跟内容列表的筛选各走各的，不互相干扰。 */
   const [coverKeyword, setCoverKeyword] = useState("");
   const [dirty, setDirty] = useState(false);
-  const [theme, setTheme] = useState(readTheme);
-  /**
-   * 侧边栏折叠状态记在本地：桌面端折叠过一次，
-   * 下次进后台应该还是同一条图标轨，而不是每次重新折叠。
-   */
   const [sideCollapsed, setSideCollapsed] = useState(() => {
     try {
       return localStorage.getItem("ink-blog-studio-collapsed") === "1";
@@ -609,9 +603,7 @@ export function BlogManagePage() {
       return false;
     }
   });
-  /** 窄屏下侧边栏变抽屉，这个状态控制抽屉开合。 */
   const [sideOpen, setSideOpen] = useState(false);
-  /** 960px 以下算窄屏：同一套骨架在窄屏走抽屉，宽屏走折叠。 */
   const [narrow, setNarrow] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -624,10 +616,8 @@ export function BlogManagePage() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
   const requestId = useRef(0);
-  const pageRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  // 深链：/blog-manage?section=topics 直接落到专题分区。
   const deepSection = params.get("section");
   useEffect(() => {
     if (!deepSection) return;
@@ -662,13 +652,6 @@ export function BlogManagePage() {
       requestId.current++;
     };
   }, [load]);
-  useEffect(() => {
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {
-      /* 隐私模式下写不进去也不影响使用 */
-    }
-  }, [theme]);
   const reload = async () => {
     try {
       await load();
@@ -676,16 +659,8 @@ export function BlogManagePage() {
       throw new Error("操作可能已保存，但刷新失败，请重试刷新。");
     }
   };
-  /**
-   * 封面资源分区里点某张封面：跳到那篇文章的工作台，
-   * 快捷操作面板在右侧，换封面、预览都在那里。
-   */
   const openArticle = (post: Post) => navigate(`/blog-manage/content/${post.id}`);
 
-  /**
-   * 封面资源分区要显示的是"公开封面" ——
-   * 草稿箱里的笔记还没有公开版本，没有封面可看，这里直接跳过。
-   */
   const coverRows = useMemo(() => {
     const keyword = coverKeyword.trim().toLowerCase();
     return posts.filter(
@@ -699,7 +674,6 @@ export function BlogManagePage() {
     setDirty(false);
     setSection(key);
   };
-  /** 汉堡按钮：宽屏折叠侧边栏，窄屏拉出抽屉。 */
   const toggleSide = () => {
     if (narrow) {
       setSideOpen((v) => !v);
@@ -708,22 +682,18 @@ export function BlogManagePage() {
     setSideCollapsed((v) => {
       try {
         localStorage.setItem("ink-blog-studio-collapsed", v ? "0" : "1");
-      } catch {
-        /* 隐私模式下写不进去也不影响使用 */
-      }
+      } catch {}
       return !v;
     });
   };
-  /** 侧边栏选分区：抽屉模式下选完顺手关掉抽屉。 */
   const selectSection = (key: Section) => {
     change(key);
     if (narrow) setSideOpen(false);
   };
-  const backToNotes = async () => {
+  const backToWorkspace = async () => {
     if (!dirty || await confirmBlogAction("有未保存修改，确定返回？"))
-      navigate("/?path=notes");
+      navigate(-1);
   };
-  /** 同一父级下的相邻专题互换顺序。 */
   const moveTopic = async (id: number, delta: number) => {
     const current = topics.find((t) => t.id === id);
     if (!current) return;
@@ -746,7 +716,6 @@ export function BlogManagePage() {
       notify(e);
     }
   };
-  /** 专题树里的一行：拖拽手柄、封面、名称简介、文章数、公开状态、操作。 */
   const renderTopicNode = (topic: Topic, depth: number): JSX.Element => {
     const children = topicChildren(topics, topic.id);
     const siblings = topics.filter(
@@ -756,10 +725,9 @@ export function BlogManagePage() {
     const cover = topic.cover;
     return (
       <div key={topic.id}>
-
         <div
-          className="ink-mg-topic-row"
-          style={{ paddingLeft: 16 + depth * 20 }}
+          className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-default-50 cursor-pointer group"
+          style={{ paddingLeft: 12 + depth * 20 }}
           draggable
           onDragStart={(e) =>
             e.dataTransfer.setData("text/plain", String(topic.id))
@@ -786,23 +754,23 @@ export function BlogManagePage() {
           <Icon
             icon="tabler:grip-vertical"
             width={15}
-            style={{ color: "var(--ink-muted)", flex: "none" }}
+            className="text-default-400 shrink-0 cursor-grab"
           />
           <span
-            className="ink-mg-topic-thumb"
-            style={cover ? undefined : { background: topic.color || "#7051ff" }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-white font-medium shrink-0 overflow-hidden"
+            style={cover ? undefined : { background: topic.color || "hsl(var(--heroui-primary))" }}
           >
             {cover ? (
-              <img src={imageUrl(cover.path)} alt="" />
+              <img src={imageUrl(cover.path)} alt="" className="w-full h-full object-cover" />
             ) : (
               topic.name.slice(0, 1)
             )}
           </span>
-          <span style={{ minWidth: 0, flex: 1 }}>
-            <span className="ink-mg-topic-name" style={{ display: "block" }}>
-              <BlogButton
+          <span className="min-w-0 flex-1">
+            <span className="block">
+              <button
                 type="button"
-                className="ink-mg-topic-link"
+                className="text-sm font-medium text-foreground hover:text-primary bg-transparent border-0 p-0 cursor-pointer text-left truncate block"
                 title={`编辑「${topic.name}」的设置`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -810,54 +778,58 @@ export function BlogManagePage() {
                 }}
               >
                 {topic.name}
-              </BlogButton>
+              </button>
             </span>
-            <span className="ink-mg-topic-desc">
+            <span className="text-xs text-default-500 truncate block">
               {topic.desc || "暂无简介"}
             </span>
           </span>
-          <span className="ink-mg-topic-count">{topic.noteIds.length} 篇</span>
-          <BlogChip color={topic.isPublished ? "success" : "default"} variant="flat">
+          <span className="text-xs text-default-500 shrink-0">{topic.noteIds.length} 篇</span>
+          <Chip size="sm" color={topic.isPublished ? "success" : "default"} variant="flat">
             {topic.isPublished ? "公开" : "未公开"}
-          </BlogChip>
+          </Chip>
           <span onClick={(e) => e.stopPropagation()}>
             <RowMenu label={`${topic.name} 更多操作`}>
-              <BlogButton
-                className="ink-mg-menu-item"
-                onClick={() => navigate(`/blog-manage/topic/${topic.id}`)}
+              <Button
+                variant="light"
+                className="justify-start w-full text-sm"
+                onPress={() => navigate(`/blog-manage/topic/${topic.id}`)}
               >
                 <Icon icon="tabler:edit" width={15} />
                 编辑专题
-              </BlogButton>
-              <BlogButton
-                className="ink-mg-menu-item"
-                onClick={() =>
+              </Button>
+              <Button
+                variant="light"
+                className="justify-start w-full text-sm"
+                onPress={() =>
                   navigate(`/blog-manage/topic/${topic.id}#chapters`)
                 }
               >
                 <Icon icon="tabler:layout-list" width={15} />
                 编排章节
-              </BlogButton>
-              <BlogButton
-                className="ink-mg-menu-item"
-                disabled={pos === 0}
-                onClick={() => void moveTopic(topic.id, -1)}
+              </Button>
+              <Button
+                variant="light"
+                className="justify-start w-full text-sm"
+                isDisabled={pos === 0}
+                onPress={() => void moveTopic(topic.id, -1)}
               >
                 <Icon icon="tabler:arrow-up" width={15} />
                 上移
-              </BlogButton>
-              <BlogButton
-                className="ink-mg-menu-item"
-                disabled={pos === siblings.length - 1}
-                onClick={() => void moveTopic(topic.id, 1)}
+              </Button>
+              <Button
+                variant="light"
+                className="justify-start w-full text-sm"
+                isDisabled={pos === siblings.length - 1}
+                onPress={() => void moveTopic(topic.id, 1)}
               >
                 <Icon icon="tabler:arrow-down" width={15} />
                 下移
-              </BlogButton>
-              <BlogButton
-                className="ink-mg-menu-item"
-                data-danger="true"
-                onClick={async () => {
+              </Button>
+              <Button
+                variant="light"
+                className="justify-start w-full text-sm text-danger"
+                onPress={async () => {
                   if (
                     !await confirmBlogAction("删除专题只解除关联，不会删除文章。确定删除？")
                   )
@@ -872,7 +844,7 @@ export function BlogManagePage() {
               >
                 <Icon icon="tabler:trash" width={15} />
                 删除专题
-              </BlogButton>
+              </Button>
             </RowMenu>
           </span>
         </div>
@@ -882,34 +854,59 @@ export function BlogManagePage() {
   };
 
   return (
-    <div className="ink-blog ink-manage" data-theme={theme} ref={pageRef}>
-      <div
-        className="ink-studio"
-        data-collapsed={sideCollapsed ? "1" : undefined}
-        data-drawer={sideOpen ? "open" : "closed"}
-      >
-        <header className="ink-studio-top">
-          <BlogButton
-            className="ink-studio-icon-btn"
-            onClick={toggleSide}
+    <div className="flex h-[100dvh] bg-background text-foreground">
+      {/* Sidebar */}
+      {!narrow && (
+        <BlogStudioNav
+          section={section}
+          onSelect={selectSection}
+          collapsed={sideCollapsed}
+          postCount={posts.length}
+          topicCount={topics.length}
+          onBack={backToWorkspace}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      {narrow && sideOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/35"
+            onClick={() => setSideOpen(false)}
+          />
+          <div className="fixed top-0 left-0 bottom-0 z-50 w-[264px] bg-background shadow-xl">
+            <BlogStudioNav
+              section={section}
+              onSelect={selectSection}
+              collapsed={false}
+              postCount={posts.length}
+              topicCount={topics.length}
+              onBack={backToWorkspace}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-background border-b border-default-200 shrink-0">
+          <Button
+            variant="light"
+            isIconOnly
+            size="sm"
+            className="rounded-lg"
+            onPress={toggleSide}
             aria-label={narrow ? "打开导航菜单" : sideCollapsed ? "展开侧边栏" : "收起侧边栏"}
-            aria-expanded={narrow ? sideOpen : !sideCollapsed}
           >
             <Icon icon="tabler:menu-2" width={18} />
-          </BlogButton>
-          <span className="ink-mg-brand">
-            Ink
-            <small>博客管理</small>
+          </Button>
+          <span className="text-base font-semibold">
+            Jomio <span className="text-default-400 font-normal">· 拾成</span>
           </span>
-          {/*
-            这里刻意不放搜索框。
-            内容管理页里已经有搜索框，和状态、专题、排序排在一起。
-            顶栏再来一个就变成两处搜索：用户在顶栏打字，列表上的筛选却
-            纹丝不动，反而更迷糊。搜索就放在内容列表里。
-          */}
-          <span style={{ flex: 1 }} />
+          <span className="flex-1" />
           <a
-            className="ink-studio-icon-btn"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-default-500 hover:bg-hover hover:text-foreground transition-colors"
             href="/blog"
             target="_blank"
             rel="noopener noreferrer"
@@ -918,212 +915,157 @@ export function BlogManagePage() {
           >
             <Icon icon="tabler:external-link" width={18} />
           </a>
-          <BlogButton
-            className="ink-studio-icon-btn"
-            onClick={() =>
-              setTheme((v) => (v === "light" ? "dark" : "light"))
-            }
-            aria-label="切换明暗主题"
-            title="切换明暗主题"
-          >
-            <Icon icon={theme === "light" ? "tabler:moon" : "tabler:sun"} width={18} />
-          </BlogButton>
         </header>
 
-        <BlogStudioNav
-          section={section}
-          onSelect={selectSection}
-          collapsed={sideCollapsed}
-          siteName={profile?.displayName || "Ink 博客"}
-          avatarSrc={profile?.avatarUrl ? imageUrl(profile.avatarUrl) : ""}
-          postCount={posts.length}
-          topicCount={topics.length}
-          onBack={backToNotes}
-        />
-
-        {sideOpen && (
-          <div className="ink-studio-scrim" onClick={() => setSideOpen(false)} />
-        )}
-
-        <main className="ink-studio-main">
-          <div className="ink-studio-page">
-            <header className="ink-studio-head">
-              <h1 className="ink-studio-title">
+        {/* Page content */}
+        <main className="flex-1 min-h-0 overflow-y-auto p-6 lg:p-8">
+          <div className="w-full max-w-[1080px] mx-auto">
+            <header className="mb-6">
+              <h1 className="text-2xl font-semibold tracking-tight">
                 {STUDIO_SECTION_META[section].title}
               </h1>
-              <p className="ink-studio-desc">
+              <p className="text-sm text-default-500 mt-1">
                 {STUDIO_SECTION_META[section].desc}
               </p>
             </header>
-          {error && (
-            <div className="ink-mg-alert" style={{ marginBottom: 16 }}>
-              <span>{error}</span>
-              <BlogButton
-                className="ink-mg-button"
-                onClick={() => void load().catch(() => {})}
-              >
-                重试加载
-              </BlogButton>
-            </div>
-          )}
-          {loading ? (
-            <p className="ink-mg-empty" role="status">
-              正在加载博客管理…
-            </p>
-          ) : (
-            <>
-              {section === "posts" && (
-                <BlogContentList
-                  posts={posts}
-                  topics={topics}
-                  onReload={reload}
-                />
-              )}
 
-              {section === "covers" && (
-                <div className="ink-mg-section">
-                  <div className="ink-mg-toolbar">
-                    <BlogInput
-                      className="ink-mg-field"
-                      aria-label="搜索封面所属文章"
-                      placeholder="搜索封面所属文章…"
-                      value={coverKeyword}
-                      onChange={(e) => setCoverKeyword(e.target.value)}
-                    
-              startContent={<Icon icon="tabler:search" width={15} />}
-            />
-                    <span className="ink-mg-sub">
-                      共 {coverRows.length} 张公开封面
-                    </span>
+            {error && (
+              <div className="flex items-center gap-3 rounded-lg bg-danger-50 border border-danger-200 px-4 py-3 mb-4">
+                <span className="text-sm text-danger-700">{error}</span>
+                <Button
+                  variant="flat"
+                  size="sm"
+                  color="danger"
+                  onPress={() => void load().catch(() => {})}
+                >
+                  重试加载
+                </Button>
+              </div>
+            )}
+
+            {loading ? (
+              <p className="text-sm text-default-500 py-12 text-center" role="status">
+                正在加载博客管理…
+              </p>
+            ) : (
+              <>
+                {section === "posts" && (
+                  <BlogContentList
+                    posts={posts}
+                    topics={topics}
+                    onReload={reload}
+                  />
+                )}
+
+                {section === "covers" && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <BlogInput
+                        aria-label="搜索封面所属文章"
+                        placeholder="搜索封面所属文章…"
+                        value={coverKeyword}
+                        onChange={(e) => setCoverKeyword(e.target.value)}
+                        startContent={<Icon icon="tabler:search" width={15} />}
+                        className="max-w-xs"
+                      />
+                      <span className="text-sm text-default-500">
+                        共 {coverRows.length} 张公开封面
+                      </span>
+                    </div>
+                    {coverRows.length ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {coverRows.map((p) => {
+                          const image = p.attachments.find(
+                            (a) => a.id === p.publication?.coverAttachmentId,
+                          );
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              className="flex flex-col rounded-xl border border-default-200 bg-content1 overflow-hidden hover:border-primary transition-colors text-left"
+                              onClick={() => openArticle(p)}
+                            >
+                              <span className="w-full aspect-[2.8/1] bg-default-100 flex items-center justify-center overflow-hidden">
+                                {image ? (
+                                  <img
+                                    src={imageUrl(image.path)}
+                                    alt="公开封面"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Icon icon="tabler:photo" width={26} className="text-default-400" />
+                                )}
+                              </span>
+                              <span className="px-3 pt-2 text-sm font-medium truncate">{p.title}</span>
+                              <span className="px-3 pb-3 pt-1 text-xs text-default-500">
+                                {image ? "已有公开封面" : "尚未设置封面"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-16 text-default-400">
+                        <Icon icon="tabler:photo" width={28} />
+                        <h2 className="text-base font-medium mt-3 text-default-600">没有匹配的封面</h2>
+                        <p className="text-sm mt-1">换个关键词，或先在内容管理里给文章设置封面。</p>
+                      </div>
+                    )}
                   </div>
-                  {coverRows.length ? (
-                    <div className="ink-mg-scene-grid">
-                      {coverRows.map((p) => {
-                        const image = p.attachments.find(
-                          (a) => a.id === p.publication?.coverAttachmentId,
-                        );
-                        return (
-                          <BlogButton
-                            key={p.id}
-                            type="button"
-                            className="ink-mg-scene"
-                            onClick={() => openArticle(p)}
-                          >
-                            <span className="ink-mg-scene-shot" data-ratio="banner">
-                              {image ? (
-                                <img
-                                  src={imageUrl(image.path)}
-                                  alt="公开封面"
-                                />
-                              ) : (
-                                <Icon icon="tabler:photo" width={26} />
-                              )}
-                            </span>
-                            <span className="ink-mg-scene-name">{p.title}</span>
-                            <span className="ink-mg-scene-size">
-                              {image ? "已有公开封面" : "尚未设置封面"}
-                            </span>
-                          </BlogButton>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="ink-mg-empty">
-                      <Icon icon="tabler:photo" width={28} />
-                      <h2>没有匹配的封面</h2>
-                      <p>换个关键词，或先在内容管理里给文章设置封面。</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
 
-              {section === "topics" && (
-                <div className="ink-mg-section">
-                  <div className="ink-mg-section-head">
+                {section === "topics" && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="ink-mg-section-title">全部专题</h2>
-                        <p className="ink-mg-sub">
+                        <h2 className="text-xl font-semibold">全部专题</h2>
+                        <p className="text-sm text-default-500 mt-1">
                           {topics.length} 个专题 · 共{" "}
                           {topics.reduce((sum, t) => sum + t.noteIds.length, 0)} 篇文章
                         </p>
                       </div>
-                      <div className="ink-mg-row-actions" style={{ marginLeft: 0 }}>
-                        <BlogButton
-                          className="ink-mg-button-primary ink-mg-button"
-                          onClick={() => navigate("/blog-manage/topic/new")}
-                        >
-                          ＋ 新建专题
-                        </BlogButton>
+                      <Button
+                        color="primary"
+                        onPress={() => navigate("/blog-manage/topic/new")}
+                      >
+                         新建专题
+                      </Button>
+                    </div>
+                    {topics.length ? (
+                      <div className="flex flex-col">
+                        {topicChildren(topics, null).map((t) =>
+                          renderTopicNode(t, 0),
+                        )}
                       </div>
-                    </div>
-                  {topics.length ? (
-                    <div className="ink-mg-topic-list">
-                      {topicChildren(topics, null).map((t) =>
-                        renderTopicNode(t, 0),
-                      )}
-                    </div>
-                  ) : (
-                    <div className="ink-mg-empty">
-                      <h2>还没有专题</h2>
-                      <p>先创建一个并添加已发布文章。</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-16 text-default-400">
+                        <h2 className="text-base font-medium text-default-600">还没有专题</h2>
+                        <p className="text-sm mt-1">先创建一个并添加已发布文章。</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {section === "distribution" && distribution && (
-                <DistributionEditor value={distribution} reload={reload} />
-              )}
+                {section === "distribution" && distribution && (
+                  <DistributionEditor value={distribution} reload={reload} />
+                )}
 
-              {section === "friends" && <BlogFriendsPanel />}
-              {section === "feedback" && <BlogFeedbackPanel />}
-              {section === "mail" && <BlogMailSettingsPanel onDirty={setDirty} />}
-
-              {section === "settings" && <BlogSiteSettingsPanel onDirty={setDirty} />}
-              {section === "seo" && (
-                <>
-                  <BlogTabs
-                    label="SEO 分区"
-                    value={seoTab}
-                    onChange={async (id) => {
-                      if (
-                        !dirty ||
-                        (await confirmBlogAction("有未保存修改，确定切换？"))
-                      ) {
-                        setDirty(false);
-                        setSeoTab(id);
-                      }
-                    }}
-                    items={[
-                      { key: "content", label: "内容 SEO" },
-                      { key: "defaults", label: "站点默认规则" },
-                    ]}
+                {section === "friends" && <BlogFriendsPanel />}
+                {section === "feedback" && <BlogFeedbackPanel />}
+                {section === "mail" && <BlogMailSettingsPanel onDirty={setDirty} />}
+                {section === "settings" && <BlogSiteSettingsPanel onDirty={setDirty} />}
+                {section === "profile" && profile && (
+                  <ProfileEditor
+                    profile={profile}
+                    posts={posts}
+                    topics={topics}
+                    reload={reload}
+                    onDirty={setDirty}
                   />
-                  {seoTab === "defaults" ? (
-                    <BlogSiteSettingsPanel seo onDirty={setDirty} />
-                  ) : (
-                    <ContentSeoPanel
-                      onDirty={setDirty}
-                      onReview={async (id) =>
-                        navigate(`/blog-manage/content/${id}`)
-                      }
-                    />
-                  )}
-                </>
-              )}
-              {section === "profile" && profile && (
-                <ProfileEditor
-                  profile={profile}
-                  posts={posts}
-                  topics={topics}
-                  reload={reload}
-                  onDirty={setDirty}
-                />
-              )}
-
-              {section === "stats" && <BlogStatsPanel />}
-            </>
-          )}
+                )}
+                {section === "stats" && <BlogStatsPanel />}
+              </>
+            )}
           </div>
         </main>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Button, Card, CardBody, Chip } from '@heroui/react';
 import { api } from '@/lib/trpc';
 import axios from '@/lib/axios';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
@@ -10,14 +10,13 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { CoverCanvas } from './CoverCanvas';
 import { BlogCoverGeneratorDialog } from './BlogCoverGeneratorDialog';
-import { BlogButton, BlogCheckbox, BlogInput, BlogSelect, BlogTextarea } from './BlogUI';
+import { BlogCheckbox, BlogInput, BlogSelect, BlogTextarea } from './BlogUI';
 import { confirmBlogAction } from './confirmBlogAction';
 import { CONTENT_STATUS_META, resolveContentStatus } from './contentStatus';
 import {
   shortCoverTitleLength,
   validShortCoverTitle,
 } from '@shared/lib/blogPublishSettings';
-import './quick-panel.css';
 
 type Settings = Awaited<ReturnType<typeof api.blog.publishSettings.query>>;
 type Copy = Awaited<ReturnType<typeof api.blog.generateCopyGroup.mutate>>;
@@ -28,12 +27,12 @@ type Form = {
   coverTitle: string;
   coverSubtitle: string;
   coverMode: 'full' | 'overlay';
+  coverPalette: string;
   displayMode: 'default' | 'pinned' | 'featured';
   displayOrder: number;
   topics: { topicId: number; sectionId: number | null }[];
 };
 
-/** AI 能改的三个字段：公开标题、文章概要、封面短标题。 */
 const copyFields = [
   ['title', '公开标题'],
   ['summary', '文章概要'],
@@ -43,16 +42,6 @@ const copyFields = [
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '操作失败，请重试。';
 
-/**
- * 右侧快捷操作面板：这一篇文章的全部操作都在这里。
- *
- * 分三块，按「写什么 → 长什么样 → 怎么运营」排：
- *   1. 管理内容 —— 标题、概要、封面文案，AI 顺手优化；
- *   2. 封面生成 —— 生成、预览、上传、换已有图；
- *   3. 运营管理 —— 发布、撤回、首页展示、专题归属。
- *
- * 面板只改草稿：公开快照要等点「更新发布」才变。
- */
 export function ContentQuickPanel({
   noteId,
   onChanged,
@@ -62,10 +51,8 @@ export function ContentQuickPanel({
   noteId: number | null;
   onChanged?: () => void | Promise<void>;
   onClose?: () => void;
-  /** 从别处跳过来时高亮一下，告诉用户操作在这一侧。 */
   focus?: boolean;
 }) {
-  const navigate = useNavigate();
   const [data, setData] = useState<Settings | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [base, setBase] = useState<Base>(null);
@@ -102,6 +89,7 @@ export function ContentQuickPanel({
         coverTitle: state.config.title,
         coverSubtitle: state.config.subtitle,
         coverMode: state.config.mode,
+        coverPalette: state.config.palette,
         displayMode: state.displayMode,
         displayOrder: state.displayOrder,
         topics: state.topics,
@@ -140,7 +128,6 @@ export function ContentQuickPanel({
     RootStore.Get(ToastPlugin).error(text === '操作失败，请重试。' ? fallback : text);
   };
 
-  /** AI 顺手把标题、概要、封面短标题各给一版建议。 */
   const suggest = async () => {
     if (!noteId) return;
     setBusy('copy');
@@ -252,23 +239,30 @@ export function ContentQuickPanel({
 
   if (!noteId)
     return (
-      <aside className="ink-qp ink-qp-empty">
-        <p>选中左侧的一篇文章，这里会显示它的快捷操作。</p>
-      </aside>
+      <Card className="rounded-xl border border-default-200 shadow-none">
+        <CardBody className="py-8 text-center text-sm text-default-500">
+          选中左侧的一篇文章，这里会显示它的快捷操作。
+        </CardBody>
+      </Card>
     );
 
   if (!form || !data)
     return (
-      <aside className="ink-qp ink-qp-empty">
-        {error ? <p className="ink-qp-error">{error}</p> : <p>正在读取…</p>}
-      </aside>
+      <Card className="rounded-xl border border-default-200 shadow-none">
+        <CardBody className="py-8 text-center text-sm">
+          {error ? (
+            <span className="text-danger">{error}</span>
+          ) : (
+            <span className="text-default-500">正在读取…</span>
+          )}
+        </CardBody>
+      </Card>
     );
 
   const invalidShort =
     !!form.coverTitle && !validShortCoverTitle(form.coverTitle);
   const missingShort = !!base && form.coverMode === 'overlay' && !form.coverTitle.trim();
   const canSave = !busy && !invalidShort && !missingShort;
-  // 发布按钮的文案走全站统一的状态模型；「查看公开页」在运营管理里单独给。
   const state = resolveContentStatus({
     isPublished: data.isPublished,
     hasDraftChanges: data.hasChanges,
@@ -284,62 +278,64 @@ export function ContentQuickPanel({
     title: form.coverTitle,
     subtitle: form.coverSubtitle,
     mode: form.coverMode,
+    palette: form.coverPalette,
   };
 
   return (
-    <aside className="ink-qp" aria-label="快捷操作" data-focus={focus ? "1" : undefined}>
-      <header className="ink-qp-head">
-        <div className="ink-qp-head-main">
-          <strong>{data.title || '未命名文章'}</strong>
-          <span>
-            {CONTENT_STATUS_META[state].label}
+    <aside
+      className={`space-y-4 rounded-xl border border-default-200 bg-surface ${
+        focus ? 'ring-2 ring-primary/30' : ''
+      }`}
+      aria-label="快捷操作"
+    >
+      {/* 头部 */}
+      <div className="flex items-center justify-between gap-3 border-b border-default-200 px-4 py-3">
+        <div className="min-w-0">
+          <strong className="block truncate text-sm font-semibold">
+            {data.title || '未命名文章'}
+          </strong>
+          <span className="text-xs text-default-500">
+            <Chip size="sm" variant="flat" color={state === 'published' ? 'success' : 'default'}>
+              {CONTENT_STATUS_META[state].label}
+            </Chip>
             {data.revision ? ` · v${data.revision}` : ''}
           </span>
         </div>
-        <div className="ink-qp-head-actions">
-          <BlogButton
-            type="button"
-            className="ink-mg-link"
-            onClick={() => navigate(`/blog-manage/content/${noteId}`)}
+        {onClose && (
+          <Button
+            size="sm"
+            isIconOnly
+            variant="light"
+            aria-label="收起快捷操作"
+            onPress={onClose}
           >
-            工作台
-            <Icon icon="tabler:chevron-right" width={13} />
-          </BlogButton>
-          {onClose && (
-            <BlogButton
-              type="button"
-              className="ink-qp-close"
-              aria-label="收起快捷操作"
-              onClick={onClose}
-            >
-              <Icon icon="tabler:x" width={16} />
-            </BlogButton>
-          )}
-        </div>
-      </header>
+            <Icon icon="tabler:x" width={16} />
+          </Button>
+        )}
+      </div>
 
       {!!notice && (
-        <p className="ink-qp-feedback" role="status">
+        <p className="mx-4 rounded-lg bg-success-50 px-3 py-2 text-xs text-success" role="status">
           {notice}
         </p>
       )}
       {!!error && (
-        <p className="ink-qp-error" role="alert">
+        <p className="mx-4 rounded-lg bg-danger-50 px-3 py-2 text-xs text-danger" role="alert">
           {error}
         </p>
       )}
 
-      <div className="ink-qp-scroll">
+      <div className="max-h-[calc(100dvh-260px)] space-y-4 overflow-y-auto px-4 pb-4">
         {/* ---------- ① 管理内容 ---------- */}
-        <section className="ink-qp-block">
-          <h3>
+        <section className="space-y-3 pt-1">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
             <Icon icon="tabler:edit" width={15} />
             管理内容
           </h3>
-          <label className="ink-qp-field">
-            <span>公开标题</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-default-500">公开标题</span>
             <BlogInput
-              className="ink-mg-field"
+              className="w-full"
               maxLength={200}
               value={form.title}
               disabled={!!busy}
@@ -347,10 +343,10 @@ export function ContentQuickPanel({
               placeholder="留空时沿用正文标题"
             />
           </label>
-          <label className="ink-qp-field">
-            <span>文章概要</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-default-500">文章概要</span>
             <BlogTextarea
-              className="ink-mg-field"
+              className="w-full"
               rows={3}
               maxLength={2000}
               value={form.summary}
@@ -358,16 +354,16 @@ export function ContentQuickPanel({
               onChange={(event) => patch({ summary: event.target.value })}
             />
           </label>
-          <label className="ink-qp-field">
-            <span>
+          <label className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-2 text-xs font-medium text-default-500">
               封面短标题
-              <small>4–6 字</small>
-              <small className={invalidShort ? 'ink-qp-error' : ''}>
+              <small className="text-default-400">4–6 字</small>
+              <small className={invalidShort ? 'text-danger' : 'text-default-400'}>
                 {shortCoverTitleLength(form.coverTitle)}/6
               </small>
             </span>
             <BlogInput
-              className="ink-mg-field"
+              className="w-full"
               maxLength={24}
               aria-invalid={invalidShort || missingShort}
               value={form.coverTitle}
@@ -376,20 +372,20 @@ export function ContentQuickPanel({
               placeholder="例如：三段式改造"
             />
             {(invalidShort || missingShort) && (
-              <small className="ink-qp-error">
+              <small className="text-xs text-danger">
                 {missingShort
                   ? '在图片上显示标题时，封面短标题不能为空。'
                   : '封面短标题要 4–6 字，太长会被裁断。'}
               </small>
             )}
           </label>
-          <label className="ink-qp-field">
-            <span>
+          <label className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-2 text-xs font-medium text-default-500">
               封面小字
-              <small>可留空</small>
+              <small className="text-default-400">可留空</small>
             </span>
             <BlogInput
-              className="ink-mg-field"
+              className="w-full"
               maxLength={40}
               value={form.coverSubtitle}
               disabled={!!busy}
@@ -397,20 +393,20 @@ export function ContentQuickPanel({
               placeholder="例如：一次上线，三段召回"
             />
           </label>
-          <BlogButton
-            type="button"
-            className="ink-mg-button"
-            disabled={!!busy}
-            onClick={() => void suggest()}
+          <Button
+            size="sm"
+            variant="flat"
+            isDisabled={!!busy}
+            startContent={<Icon icon="tabler:sparkles" width={15} />}
+            onPress={() => void suggest()}
           >
-            <Icon icon="tabler:sparkles" width={15} />
             {busy === 'copy' ? '正在想…' : 'AI 优化文案'}
-          </BlogButton>
+          </Button>
           {copy && (
-            <div className="ink-qp-copy">
-              <p>选择要采用的建议，未选字段保留当前内容。</p>
+            <div className="space-y-2 rounded-lg border border-default-200 bg-default-50 p-3">
+              <p className="text-xs text-default-500">选择要采用的建议，未选字段保留当前内容。</p>
               {copyFields.map(([key, label]) => (
-                <label key={key}>
+                <label key={key} className="flex items-start gap-2 text-sm">
                   <BlogCheckbox
                     type="checkbox"
                     disabled={
@@ -427,26 +423,28 @@ export function ContentQuickPanel({
                       )
                     }
                   />
-                  <span>
-                    <b>{label}</b>
-                    <span>{copy[key] || '未生成'}</span>
+                  <span className="min-w-0">
+                    <b className="block text-xs">{label}</b>
+                    <span className="block truncate text-xs text-default-500">
+                      {copy[key] || '未生成'}
+                    </span>
                   </span>
                 </label>
               ))}
-              <div className="ink-qp-inline-actions">
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={() => setCopy(null)}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant="light"
+                  isDisabled={!!busy}
+                  onPress={() => setCopy(null)}
                 >
                   暂不采用
-                </BlogButton>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button ink-mg-button-primary"
-                  disabled={!!busy || !copyPicked.length}
-                  onClick={() => {
+                </Button>
+                <Button
+                  size="sm"
+                  color="primary"
+                  isDisabled={!!busy || !copyPicked.length}
+                  onPress={() => {
                     patch(
                       Object.fromEntries(
                         copyPicked.map((key) => [
@@ -461,19 +459,19 @@ export function ContentQuickPanel({
                   }}
                 >
                   采用选中建议
-                </BlogButton>
+                </Button>
               </div>
             </div>
           )}
         </section>
 
         {/* ---------- ② 封面生成 ---------- */}
-        <section className="ink-qp-block">
-          <h3>
+        <section className="space-y-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
             <Icon icon="tabler:photo" width={15} />
             封面生成
           </h3>
-          <div className="ink-qp-cover">
+          <div className="flex h-40 items-center justify-center overflow-hidden rounded-lg border border-default-200 bg-default-50">
             {base ? (
               <CoverCanvas
                 key={base.path}
@@ -483,36 +481,36 @@ export function ContentQuickPanel({
                 loading="eager"
               />
             ) : (
-              <p>尚未设置封面</p>
+              <p className="text-sm text-default-400">尚未设置封面</p>
             )}
           </div>
-          <div className="ink-qp-actions">
-            <BlogButton
-              type="button"
-              className="ink-mg-button ink-mg-button-primary"
-              disabled={!!busy}
-              onClick={() => setCoverAssistant('generate')}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              color="primary"
+              isDisabled={!!busy}
+              startContent={<Icon icon="tabler:sparkles" width={15} />}
+              onPress={() => setCoverAssistant('generate')}
             >
-              <Icon icon="tabler:sparkles" width={15} />
               生成封面
-            </BlogButton>
-            <BlogButton
-              type="button"
-              className="ink-mg-button"
-              disabled={!!busy || !base}
-              onClick={() => setCoverAssistant('preview')}
+            </Button>
+            <Button
+              size="sm"
+              variant="flat"
+              isDisabled={!!busy || !base}
+              startContent={<Icon icon="tabler:eye" width={15} />}
+              onPress={() => setCoverAssistant('preview')}
             >
-              <Icon icon="tabler:eye" width={15} />
               预览封面
-            </BlogButton>
-            <BlogButton
-              type="button"
-              className="ink-mg-button"
-              disabled={!!busy}
-              onClick={() => file.current?.click()}
+            </Button>
+            <Button
+              size="sm"
+              variant="flat"
+              isDisabled={!!busy}
+              onPress={() => file.current?.click()}
             >
               {busy === 'upload' ? '正在上传…' : '上传替换'}
-            </BlogButton>
+            </Button>
           </div>
           <input
             type="file"
@@ -526,10 +524,10 @@ export function ContentQuickPanel({
             }}
           />
           {!!data.images.length && (
-            <label className="ink-qp-field">
-              <span>已有图片</span>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-default-500">已有图片</span>
               <BlogSelect
-                className="ink-mg-field"
+                className="w-full"
                 disabled={!!busy}
                 value={base?.id || ''}
                 onChange={(event) => {
@@ -551,7 +549,7 @@ export function ContentQuickPanel({
               </BlogSelect>
             </label>
           )}
-          <label className="ink-qp-toggle">
+          <label className="flex items-center gap-2 text-sm">
             <BlogCheckbox
               type="checkbox"
               checked={form.coverMode === 'overlay'}
@@ -563,91 +561,99 @@ export function ContentQuickPanel({
             在图片上显示标题
           </label>
           {base && (
-            <BlogButton
+            <button
               type="button"
-              className="ink-mg-link"
+              className="text-xs text-primary hover:underline disabled:text-default-400"
               disabled={!!busy}
               onClick={() => setBase(null)}
             >
               移除草稿封面
-            </BlogButton>
+            </button>
           )}
         </section>
 
         {/* ---------- ③ 运营管理 ---------- */}
-        <section className="ink-qp-block">
-          <h3>
+        <section className="space-y-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
             <Icon icon="tabler:adjustments" width={15} />
             运营管理
           </h3>
-          <div className="ink-qp-actions">
+          <div className="flex flex-wrap gap-2">
             {data.isPublished ? (
-              <BlogButton
-                type="button"
-                className="ink-mg-button"
-                disabled={!!busy}
-                onClick={() => void withdraw()}
+              <Button
+                size="sm"
+                variant="flat"
+                isDisabled={!!busy}
+                onPress={() => void withdraw()}
               >
                 撤回发布
-              </BlogButton>
+              </Button>
             ) : null}
             {data.publishId ? (
-              <BlogButton
+              <Button
+                size="sm"
+                variant="flat"
                 as="a"
-                className="ink-mg-button"
                 href={`/blog/${data.publishId}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                endContent={<Icon icon="tabler:external-link" width={14} />}
               >
                 查看公开页
-                <Icon icon="tabler:external-link" width={14} />
-              </BlogButton>
+              </Button>
             ) : null}
-            <BlogButton
+            <Button
+              size="sm"
+              variant="flat"
               as="a"
-              className="ink-mg-button"
               href={`/detail?id=${noteId}`}
               target="_blank"
               rel="noopener noreferrer"
+              endContent={<Icon icon="tabler:external-link" width={14} />}
             >
               编辑原笔记
-              <Icon icon="tabler:external-link" width={14} />
-            </BlogButton>
+            </Button>
           </div>
-          <div className="ink-qp-field">
-            <span>首页展示</span>
-            <div className="ink-qp-display" role="group" aria-label="首页展示">
+
+          {/* 首页展示 */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium text-default-500">首页展示</span>
+            <div className="grid grid-cols-1 gap-2" role="group" aria-label="首页展示">
               {(
                 [
-                  // 精选排在第一位：它是默认展示方式（置顶 + banner），
-                  // 「默认展示」是作者明确要退出精选时才选的退路。
                   ['featured', '首页精选', '默认 · 加入 Banner，同时置顶'],
                   ['pinned', '列表置顶', '优先出现在推荐列表'],
                   ['default', '默认展示', '按列表规则排序'],
                 ] as const
               ).map(([value, label, hint]) => (
-                <BlogButton
+                <button
                   key={value}
                   type="button"
+                  className={`rounded-lg border p-2.5 text-left text-sm transition-colors ${
+                    form.displayMode === value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-default-200 hover:border-default-300'
+                  }`}
                   aria-pressed={form.displayMode === value}
                   disabled={!!busy}
                   onClick={() => patch({ displayMode: value })}
                 >
-                  <strong>{label}</strong>
-                  <small>{hint}</small>
-                </BlogButton>
+                  <strong className="block text-sm font-semibold">{label}</strong>
+                  <small className="text-xs text-default-500">{hint}</small>
+                </button>
               ))}
             </div>
           </div>
+
           {form.displayMode !== 'default' && (
-            <label className="ink-qp-field">
-              <span>
+            <label className="flex flex-col gap-1.5">
+              <span className="flex items-center gap-2 text-xs font-medium text-default-500">
                 展示顺序
-                <small>数值越小越靠前</small>
+                <small className="text-default-400">数值越小越靠前</small>
               </span>
               <BlogInput
                 type="number"
-                className="ink-mg-field"
+                className="w-full"
                 min={1}
                 max={1000}
                 value={form.displayOrder + 1}
@@ -663,9 +669,11 @@ export function ContentQuickPanel({
               />
             </label>
           )}
+
+          {/* 专题与章节 */}
           <button
             type="button"
-            className="ink-qp-toggle-row"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium transition-colors hover:bg-default-100"
             aria-expanded={expanded === 'topics'}
             onClick={() =>
               setExpanded((previous) =>
@@ -676,22 +684,22 @@ export function ContentQuickPanel({
             <Icon
               icon="tabler:chevron-down"
               width={14}
-              className={expanded === 'topics' ? 'ink-qp-open' : ''}
+              className={`text-default-400 transition-transform ${expanded === 'topics' ? 'rotate-180' : ''}`}
             />
             专题与章节
-            <small>
+            <small className="ml-auto text-xs font-normal text-default-500">
               {form.topics.length ? `${form.topics.length} 个专题` : '未归属'}
             </small>
           </button>
           {expanded === 'topics' && (
-            <div className="ink-qp-topics">
+            <div className="space-y-2 pl-6">
               {data.availableTopics.map((topic) => {
                 const member = form.topics.find(
                   (item) => item.topicId === topic.id,
                 );
                 return (
-                  <div className="ink-qp-topic-row" key={topic.id}>
-                    <label>
+                  <div key={topic.id} className="flex flex-wrap items-center gap-2">
+                    <label className="flex items-center gap-2 text-sm">
                       <BlogCheckbox
                         type="checkbox"
                         checked={!!member}
@@ -714,7 +722,7 @@ export function ContentQuickPanel({
                     {member && !!topic.sections.length && (
                       <BlogSelect
                         aria-label={`${topic.name}章节`}
-                        className="ink-mg-field"
+                        className="w-full"
                         disabled={!!busy}
                         value={member.sectionId ?? ''}
                         onChange={(event) =>
@@ -742,13 +750,15 @@ export function ContentQuickPanel({
                 );
               })}
               {!data.availableTopics.length && (
-                <p className="ink-qp-hint">暂无专题，可发布后再编排。</p>
+                <p className="text-xs text-default-500">暂无专题，可发布后再编排。</p>
               )}
             </div>
           )}
+
+          {/* 查看改动 */}
           <button
             type="button"
-            className="ink-qp-toggle-row"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium transition-colors hover:bg-default-100"
             aria-expanded={expanded === 'diff'}
             onClick={() =>
               setExpanded((previous) => (previous === 'diff' ? '' : 'diff'))
@@ -757,15 +767,15 @@ export function ContentQuickPanel({
             <Icon
               icon="tabler:chevron-down"
               width={14}
-              className={expanded === 'diff' ? 'ink-qp-open' : ''}
+              className={`text-default-400 transition-transform ${expanded === 'diff' ? 'rotate-180' : ''}`}
             />
             查看改动
-            <small>
+            <small className="ml-auto text-xs font-normal text-default-500">
               {data.hasChanges ? '有未发布修改' : '与公开版一致'}
             </small>
           </button>
           {expanded === 'diff' && (
-            <div className="ink-qp-diff">
+            <div className="space-y-3 pl-6">
               {[
                 [
                   '标题',
@@ -779,30 +789,39 @@ export function ContentQuickPanel({
                 ],
               ].map(([label, before, after]) => (
                 <section key={label}>
-                  <h4>{label}</h4>
-                  <div>
-                    <p>{before || '（无）'}</p>
-                    <p>{after || '（无）'}</p>
+                  <h4 className="text-xs font-semibold text-default-500">{label}</h4>
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded bg-default-50 p-2 text-default-600">
+                      <p>{before || '（无）'}</p>
+                    </div>
+                    <div className="rounded bg-primary/5 p-2 text-default-700">
+                      <p>{after || '（无）'}</p>
+                    </div>
                   </div>
                 </section>
               ))}
               <section>
-                <h4>正文</h4>
-                <div>
-                  <p>
-                    {data.check.changes.content.before ||
-                      data.check.draft.body ||
-                      '（无）'}
-                  </p>
-                  <p>{data.check.draft.body || '（无）'}</p>
+                <h4 className="text-xs font-semibold text-default-500">正文</h4>
+                <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded bg-default-50 p-2 text-default-600">
+                    <p>
+                      {data.check.changes.content.before ||
+                        data.check.draft.body ||
+                        '（无）'}
+                    </p>
+                  </div>
+                  <div className="rounded bg-primary/5 p-2 text-default-700">
+                    <p>{data.check.draft.body || '（无）'}</p>
+                  </div>
                 </div>
               </section>
             </div>
           )}
+
           {bodyConflict && (
-            <div className="ink-qp-conflict" role="group" aria-label="正文冲突处理">
-              <p>原笔记与发布草稿都有修改，选择本次要发布的正文。</p>
-              <label>
+            <div className="space-y-2 rounded-lg border border-warning-200 bg-warning-50 p-3" role="group" aria-label="正文冲突处理">
+              <p className="text-xs text-warning">原笔记与发布草稿都有修改，选择本次要发布的正文。</p>
+              <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name={`body-${noteId}`}
@@ -813,7 +832,7 @@ export function ContentQuickPanel({
                 />
                 保留发布草稿
               </label>
-              <label>
+              <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name={`body-${noteId}`}
@@ -829,30 +848,35 @@ export function ContentQuickPanel({
         </section>
       </div>
 
-      <footer className="ink-qp-foot">
-        <div>
-          <BlogButton
-            type="button"
-            className="ink-mg-button"
-            disabled={!canSave}
-            onClick={() => void save('draft')}
+      {/* 底部操作 */}
+      <div className="border-t border-default-200 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="flat"
+            className="flex-1"
+            isDisabled={!canSave}
+            onPress={() => void save('draft')}
           >
             {busy === 'save' ? '处理中…' : '保存草稿'}
-          </BlogButton>
-          <BlogButton
-            type="button"
-            className="ink-mg-button ink-mg-button-primary"
-            disabled={
+          </Button>
+          <Button
+            size="sm"
+            color="primary"
+            className="flex-1"
+            isDisabled={
               !canSave ||
               (bodyConflict && !sourceChoice)
             }
-            onClick={() => void save('publish')}
+            onPress={() => void save('publish')}
           >
             {publishLabel}
-          </BlogButton>
+          </Button>
         </div>
-        <p>改动先存在草稿里，点「{publishLabel}」才会对外生效。</p>
-      </footer>
+        <p className="mt-2 text-center text-xs text-default-500">
+          改动先存在草稿里，点「{publishLabel}」才会对外生效。
+        </p>
+      </div>
 
       {coverAssistant && (
         <BlogCoverGeneratorDialog
@@ -865,7 +889,7 @@ export function ContentQuickPanel({
             coverMode: form.coverMode,
             text: {
               align: data.config.align,
-              palette: data.config.palette,
+              palette: form.coverPalette,
               sizeScale: data.config.sizeScale,
               templateVersion: data.config.templateVersion,
             },
@@ -876,6 +900,7 @@ export function ContentQuickPanel({
               coverTitle: result.coverTitle,
               coverSubtitle: result.coverSubtitle,
               coverMode: result.coverMode,
+              coverPalette: result.coverPalette ?? form.coverPalette,
             });
             setNotice('封面已更新，保存后写入草稿。');
           }}

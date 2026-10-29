@@ -65,7 +65,7 @@ export function BlogTrendChart({
           top: 0,
           itemWidth: 10,
           itemHeight: 10,
-          textStyle: { color: muted, fontSize: 11 },
+          textStyle: { color: muted, fontSize: 12 },
         },
         grid: { top: 34, right: 16, bottom: 24, left: 44, containLabel: true },
         xAxis: {
@@ -74,7 +74,7 @@ export function BlogTrendChart({
           data: label,
           axisLine: { show: false },
           axisTick: { show: false },
-          axisLabel: { color: muted, fontSize: 10 },
+          axisLabel: { color: muted, fontSize: 12 },
         },
         yAxis: {
           type: "value",
@@ -82,7 +82,7 @@ export function BlogTrendChart({
           axisLine: { show: false },
           axisTick: { show: false },
           splitLine: { lineStyle: { color: line } },
-          axisLabel: { color: muted, fontSize: 10 },
+          axisLabel: { color: muted, fontSize: 12 },
         },
         series: [
           {

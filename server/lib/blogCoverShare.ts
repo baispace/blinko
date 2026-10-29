@@ -1,8 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { FileService } from "./files";
 import { composeCoverImage } from "./blogCoverComposition";
-import { cropCoverToRatio } from "./blogCoverGeneration";
-import { computeCoverTextLayout } from "../../shared/lib/blogCoverText";
+import { COVER_TEMPLATE_VERSION, computeCoverTextLayout } from "../../shared/lib/blogCoverText";
 import {
   coverConfigFingerprint,
   readPublicCoverConfig,
@@ -27,7 +26,7 @@ export function shareFingerprint(
   revision: number,
   baseAttachmentId: number | null,
 ) {
-  return `${coverConfigFingerprint(config)}|rev=${revision}|base=${baseAttachmentId ?? ""}`;
+  return `layout=${COVER_TEMPLATE_VERSION}|${coverConfigFingerprint(config)}|rev=${revision}|base=${baseAttachmentId ?? ""}`;
 }
 
 /**
@@ -66,15 +65,6 @@ export async function ensureShareImage(
 
   try {
     const base = await FileService.getFileBuffer(p.coverAttachment.path);
-    const focus =
-      config.focus && config.focus.sourceId === p.coverAttachmentId
-        ? (config.focus.placements?.banner ?? null)
-        : null;
-    const cropped = await cropCoverToRatio(base, {
-      width: SHARE_SIZE.width,
-      height: SHARE_SIZE.height,
-      focus,
-    });
     const layout = computeCoverTextLayout({
       containerWidth: SHARE_SIZE.width,
       containerHeight: SHARE_SIZE.height,
@@ -85,7 +75,7 @@ export async function ensureShareImage(
       sizeScale: config.sizeScale,
     });
     const buffer = await composeCoverImage({
-      base: cropped,
+      base,
       layout,
       canvasWidth: SHARE_SIZE.width,
       canvasHeight: SHARE_SIZE.height,

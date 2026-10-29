@@ -1,90 +1,88 @@
-import { BlogButton } from "./BlogUI";
+import { Button } from "@heroui/react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { STUDIO_NAV, type StudioSection } from "./studioNav";
 
 type Props = {
   section: StudioSection;
   onSelect: (key: StudioSection) => void;
-  /** 折叠态只留图标轨，文字靠 title / aria-label 兜底。 */
   collapsed: boolean;
-  siteName: string;
-  avatarSrc: string;
   postCount: number;
   topicCount: number;
   onBack: () => void;
 };
 
-/**
- * 博客后台的左侧导航。
- *
- * 结构照着 YouTube Studio 来：上面是站点身份块，中间是分组导航，
- * 底下是退出类的操作。分组只在 studioNav.ts 里定义一次，
- * 主内容区的标题也从同一份模型取，两边不会各写一套。
- * 明暗切换放在顶栏，这里不重复放。
- */
 export function BlogStudioNav({
   section,
   onSelect,
   collapsed,
-  siteName,
-  avatarSrc,
   postCount,
   topicCount,
   onBack,
 }: Props) {
   return (
-    <aside className="ink-studio-side" aria-label="博客管理导航">
-      <div className="ink-studio-identity">
-        <span className="ink-studio-avatar">
-          {avatarSrc ? (
-            <img src={avatarSrc} alt="" />
-          ) : (
-            <Icon icon="tabler:user-circle" width={22} />
-          )}
-        </span>
-        <span className="ink-studio-identity-text">
-          <strong>{siteName}</strong>
-          <small>我的博客</small>
-        </span>
-      </div>
-
-      <nav className="ink-studio-nav">
+    <aside
+      className={`flex flex-col h-full overflow-y-auto border-r border-default-200 bg-background py-3 px-2
+        transition-all duration-200 ${collapsed ? "w-[76px] items-center" : "w-[240px]"}`}
+      aria-label="博客管理导航"
+    >
+      <nav className="flex flex-col gap-3 flex-1 w-full">
         {STUDIO_NAV.map((group) => (
-          <div className="ink-studio-nav-group" key={group.title}>
-            <p className="ink-studio-nav-title">{group.title}</p>
-            {group.items.map((item) => (
-              <BlogButton
-                key={item.key}
-                type="button"
-                className="ink-studio-nav-item"
-                aria-current={section === item.key ? "page" : undefined}
-                title={collapsed ? item.label : item.hint}
-                onClick={() => onSelect(item.key)}
-              >
-                <Icon icon={item.icon} width={18} />
-                <span className="ink-studio-nav-label">{item.label}</span>
-                {item.key === "posts" && (
-                  <span className="ink-studio-nav-count">{postCount}</span>
-                )}
-                {item.key === "topics" && (
-                  <span className="ink-studio-nav-count">{topicCount}</span>
-                )}
-              </BlogButton>
-            ))}
+          <div key={group.title} className="flex flex-col gap-0.5">
+            {!collapsed && (
+              <p className="px-3 pb-1 text-[11.5px] font-medium tracking-[0.04em] uppercase text-default-600">
+                {group.title}
+              </p>
+            )}
+            {group.items.map((item) => {
+              const isActive = section === item.key;
+              return (
+                <Button
+                  key={item.key}
+                  type="button"
+                  variant="light"
+                  className={`justify-start gap-3 rounded-xl h-10 px-3 text-sm font-medium
+                    ${isActive
+                      ? "bg-default-100 text-foreground"
+                      : "text-default-500 hover:bg-hover"
+                    }
+                    ${collapsed ? "w-10 px-0 justify-center mx-auto" : "w-full"}
+                  `}
+                  aria-current={isActive ? "page" : undefined}
+                  title={collapsed ? item.label : item.hint}
+                  onPress={() => onSelect(item.key)}
+                >
+                  <Icon icon={item.icon} width={18} className="shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="truncate flex-1 text-left">{item.label}</span>
+                      {item.key === "posts" && (
+                        <span className="text-xs text-default-400 shrink-0">{postCount}</span>
+                      )}
+                      {item.key === "topics" && (
+                        <span className="text-xs text-default-400 shrink-0">{topicCount}</span>
+                      )}
+                    </>
+                  )}
+                </Button>
+              );
+            })}
           </div>
         ))}
       </nav>
 
-      <div className="ink-studio-side-foot">
-        <BlogButton
+      <div className="mt-2 pt-2 border-t border-default-200 w-full">
+        <Button
           type="button"
-          className="ink-studio-nav-item"
-          onClick={onBack}
-          title="返回笔记"
+          variant="light"
+          className={`justify-start gap-3 rounded-xl h-10 px-3 text-sm font-medium text-default-500 hover:bg-hover
+            ${collapsed ? "w-10 px-0 justify-center mx-auto" : "w-full"}
+          `}
+          onPress={onBack}
+          title="返回工作区"
         >
-          <Icon icon="tabler:arrow-left" width={18} />
-          <span className="ink-studio-nav-label">返回笔记</span>
-        </BlogButton>
+          <Icon icon="tabler:arrow-left" width={18} className="shrink-0" />
+          {!collapsed && <span className="truncate">返回工作区</span>}
+        </Button>
       </div>
     </aside>
   );

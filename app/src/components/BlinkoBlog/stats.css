@@ -211,7 +211,7 @@
   border-radius: 999px;
   background: var(--ink-tint);
   color: var(--ink-muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .ink-stats-sort {

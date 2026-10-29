@@ -8,6 +8,7 @@ import {
 import {
   computeCoverTextLayout,
   coverScrimCss,
+  coverBackdropCss,
   normalizeCoverTextConfig,
   type CoverSceneKey,
   type CoverTextConfig,
@@ -19,7 +20,8 @@ import "./cover.css";
 /**
  * 统一的封面渲染：底图层 + 文字层 + 页面状态层。
  *
- * 底图只有一张（1600×900），文字是真实 DOM 文字 ——
+ * 底图只有一张（1600×900），整幅铺满封面 —— 底图左侧留干净底色，
+ * 右侧那组插画被画框裁掉，标题压在左侧留白上。
  * 不再把标题烤进图片，也不按场景各存一张图。
  * 排版按容器的**实际像素尺寸**算：同一个短标题在头条大图和列表缩略图里
  * 字号、行数、是否留副标题都不一样。
@@ -132,26 +134,19 @@ export function CoverCanvas({
       data-placement={placement}
       data-text={withText ? "on" : "off"}
       data-broken={broken ? "1" : undefined}
-      style={{ ...vars, ...style }}
+      style={{ ...vars, ...(withText ? { background: coverBackdropCss(text.palette) } : {}), ...style }}
     >
       {!broken && (
-        <img
-          className="ink-cover-base"
-          src={src}
-          alt={alt}
-          loading={loading}
-          // React 18 只认小写 DOM 属性（fetchPriority 是 React 19 的写法），
-          // 直接输出 fetchpriority，给浏览器一个首屏图片的优先级提示。
-          {...(fetchpriority
-            ? ({ fetchpriority: fetchpriority } as unknown as {
-                fetchpriority?: "high" | "low" | "auto";
-              })
-            : {})}
-          onError={() => {
-            setBroken(true);
-            onError?.();
-          }}
-        />
+        <div className="ink-cover-artwork">
+          <img
+            className="ink-cover-base"
+            src={src}
+            alt={alt}
+            loading={loading}
+            {...(fetchpriority ? ({ fetchpriority } as unknown as { fetchpriority?: "high" | "low" | "auto" }) : {})}
+            onError={() => { setBroken(true); onError?.(); }}
+          />
+        </div>
       )}
       {withText && <div className="ink-cover-scrim" style={{ background: scrim }} />}
       {withText && layout && (

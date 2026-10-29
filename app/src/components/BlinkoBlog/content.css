@@ -89,11 +89,6 @@
 .ink-cl-row:hover {
   background: var(--ink-tint);
 }
-/* 右侧快捷操作面板当前针对的行。 */
-.ink-cl-row[data-active="1"] {
-  background: var(--ink-tint);
-  box-shadow: inset 3px 0 0 var(--ink-accent);
-}
 .ink-cl-cell {
   min-width: 0;
   overflow: hidden;

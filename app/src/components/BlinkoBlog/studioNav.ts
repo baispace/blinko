@@ -8,7 +8,6 @@
 /** 后台的全部分区。深链 ?section=xxx 用的是同一批键。 */
 export type StudioSection =
   | "settings"
-  | "seo"
   | "posts"
   | "topics"
   | "covers"
@@ -29,7 +28,6 @@ export const STUDIO_SECTION_KEYS: StudioSection[] = [
   "stats",
   "distribution",
   "settings",
-  "seo",
   "mail",
   "profile",
 ];
@@ -49,8 +47,8 @@ export type StudioNavGroup = {
 };
 
 /**
- * 侧边栏的分组顺序：先内容、再数据、最后站点设置。
- * 跟原来的横向 tab 比，"站点设置"从第二屏提到了最后 —— 它是低频入口。
+ * 侧边栏的分组顺序：内容 → 读者 → 数据 → 设置。
+ * 低频设置收进设置页的二级导航，一级菜单只保留高频入口。
  */
 export const STUDIO_NAV: StudioNavGroup[] = [
   {
@@ -58,7 +56,7 @@ export const STUDIO_NAV: StudioNavGroup[] = [
     items: [
       {
         key: "posts",
-        label: "内容管理",
+        label: "文章",
         icon: "tabler:files",
         hint: "已发布文章、发布状态与公开版本",
       },
@@ -74,22 +72,27 @@ export const STUDIO_NAV: StudioNavGroup[] = [
         icon: "tabler:photo",
         hint: "公开封面与 AI 生成",
       },
-      {
-        key: "friends",
-        label: "友链管理",
-        icon: "tabler:world",
-        hint: "友链申请、审核与公开展示",
-      },
+    ],
+  },
+  {
+    title: "读者",
+    items: [
       {
         key: "feedback",
         label: "读者反馈",
         icon: "tabler:message",
         hint: "读者对文章与动态的私密反馈与回复",
       },
+      {
+        key: "friends",
+        label: "友链管理",
+        icon: "tabler:world",
+        hint: "友链申请、审核与公开展示",
+      },
     ],
   },
   {
-    title: "数据与增长",
+    title: "数据",
     items: [
       {
         key: "stats",
@@ -101,24 +104,18 @@ export const STUDIO_NAV: StudioNavGroup[] = [
         key: "distribution",
         label: "推荐分发",
         icon: "tabler:share-2",
-        hint: "公开站里文章怎么排",
+        hint: "公开站里文章的排序规则",
       },
     ],
   },
   {
-    title: "站点",
+    title: "设置",
     items: [
       {
         key: "settings",
         label: "站点设置",
         icon: "tabler:settings",
-        hint: "域名、部署与站点统计",
-      },
-      {
-        key: "seo",
-        label: "SEO",
-        icon: "tabler:search",
-        hint: "标题、描述与站点默认规则",
+        hint: "基础信息、域名与部署、统计接入",
       },
       {
         key: "profile",
@@ -141,15 +138,14 @@ export const STUDIO_SECTION_META: Record<
   StudioSection,
   { title: string; desc: string }
 > = {
-  posts: { title: "内容管理", desc: "管理已发布的文章与公开版本" },
+  posts: { title: "文章", desc: "管理已发布的文章与公开版本" },
   topics: { title: "专题", desc: "组织文章的阅读脉络" },
   covers: { title: "封面资源", desc: "维护公开封面与生成结果" },
   friends: { title: "友链管理", desc: "审核友链申请并管理公开展示" },
   feedback: { title: "读者反馈", desc: "处理读者对文章与动态的私密反馈" },
   stats: { title: "数据分析", desc: "查看站点表现、访客与内容分析" },
   distribution: { title: "推荐分发", desc: "决定公开站里文章的排序规则" },
-  settings: { title: "站点设置", desc: "域名、部署与站点统计" },
-  seo: { title: "SEO", desc: "标题、描述与站点默认规则" },
+  settings: { title: "站点设置", desc: "基础信息、域名与部署、统计接入" },
   mail: { title: "邮件服务", desc: "SMTP 配置：友链通知与读者回复通知" },
   profile: { title: "公开作者", desc: "对外展示的作者资料与链接" },
 };

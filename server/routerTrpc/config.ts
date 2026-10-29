@@ -128,10 +128,6 @@ export const configRouter = router({
       if (key === 'customIcon') siteIconSchema.parse(value);
       if (key === 'customTitle') z.string().trim().max(50).parse(value);
       if (key === 'customTagline') z.string().trim().max(50).parse(value);
-      if (key === 'customQuickLinks') {
-        z.string().max(20000).parse(value);
-        try { JSON.parse(value); } catch { throw new Error('customQuickLinks must be a valid JSON array'); }
-      }
       if (key === 'siteInfo') throw new Error('请通过站点信息页面保存版本记录');
       const isUserPreferConfig = ZUserPerferConfigKey.safeParse(key).success;
       console.log('isUserPreferConfig', isUserPreferConfig)

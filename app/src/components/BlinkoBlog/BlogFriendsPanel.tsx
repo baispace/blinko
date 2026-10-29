@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, ModalContent } from "@heroui/react";
+import { Modal, ModalContent, Button, Card, CardBody, Chip } from "@heroui/react";
 import { Icon } from "@/components/Common/Iconify/icons";
-import { BlogButton, BlogChipGroup, BlogInput, BlogTextarea } from "./BlogUI";
+import { BlogChipGroup, BlogInput, BlogTextarea } from "./BlogUI";
 import { api } from "@/lib/trpc";
 import { RootStore } from "@/store";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
@@ -10,7 +10,6 @@ import {
   FRIEND_TYPE_LABEL,
   type FriendStatus,
 } from "@shared/lib/blogFriends";
-import "./friends-manage.css";
 
 type FriendLink = Awaited<ReturnType<typeof api.blog.friendLinks.query>>[number];
 type Feedback = Awaited<ReturnType<typeof api.blog.friendFeedbacks.query>>[number];
@@ -31,14 +30,12 @@ const MAIL_STATUS_LABEL: Record<string, string> = {
   not_configured: "未配置邮件服务",
 };
 
-/**
- * 友情链接管理。
- *
- * 三件事分开放：
- *   审核状态（pending / approved / rejected）—— 决定这条申请走没走完流程；
- *   公开展示（isHidden）—— 决定它现在出不现在公开列表里；
- *   邮件状态 —— 只如实反映发送结果，不会因为审核成功就假装发过信。
- */
+const STATUS_COLOR: Record<string, "default" | "success" | "danger" | "warning"> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "danger",
+};
+
 export function BlogFriendsPanel() {
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [links, setLinks] = useState<FriendLink[]>([]);
@@ -93,7 +90,7 @@ export function BlogFriendsPanel() {
     setBusyId(id);
     try {
       await task();
-    } catch (e) {
+    } catch (e: any) {
       toastError(e);
     } finally {
       setBusyId(null);
@@ -142,212 +139,239 @@ export function BlogFriendsPanel() {
 
   if (loading) {
     return (
-      <p className="ink-mg-empty" role="status">
+      <p className="py-8 text-center text-sm text-default-500" role="status">
         正在加载友链数据…
       </p>
     );
   }
 
   return (
-    <div className="ink-mg-section">
+    <div className="space-y-6">
       {error && (
-        <div className="ink-mg-alert" style={{ marginBottom: 16 }}>
-          <span>{error}</span>
-          <BlogButton className="ink-mg-button" onClick={() => void load()}>
+        <div className="flex items-center gap-3 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger">
+          <span className="flex-1">{error}</span>
+          <Button size="sm" variant="flat" color="danger" onPress={() => void load()}>
             重试加载
-          </BlogButton>
+          </Button>
         </div>
       )}
 
       {mail && !mail.configured && (
-        <div className="ink-fm-notice" role="note">
-          <Icon icon="tabler:alert-circle" width={16} />
+        <div className="flex items-start gap-2 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning" role="note">
+          <Icon icon="tabler:alert-circle" width={16} className="mt-0.5 shrink-0" />
           <span>
             邮件服务未配置，审核通过 / 拒绝后无法给申请人发通知。{mail.message}{" "}
-            <a href="/blog-manage?section=mail">去配置邮件服务</a>
+            <a className="font-medium text-warning hover:underline" href="/blog-manage?section=mail">
+              去配置邮件服务
+            </a>
           </span>
         </div>
       )}
 
-      <div className="ink-mg-section-head">
+      {/* ---------- 友链申请 ---------- */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="ink-mg-section-title">友链申请</h2>
-          <p className="ink-mg-sub">
+          <h2 className="text-base font-semibold">友链申请</h2>
+          <p className="text-xs text-default-500">
             共 {links.length} 条记录 · 待审核 {counts.pending ?? 0} 条
           </p>
         </div>
-        <div className="ink-mg-row-actions" style={{ marginLeft: 0 }}>
-          <BlogChipGroup
-            label="友链状态筛选"
-            value={filter}
-            onChange={(key) => setFilter(key as StatusFilter)}
-            items={STATUS_FILTERS.map((item) => ({
-              key: item.key,
-              label: item.label,
-              count: counts[item.key] ?? 0,
-            }))}
-          />
-        </div>
+        <BlogChipGroup
+          label="友链状态筛选"
+          value={filter}
+          onChange={(key) => setFilter(key as StatusFilter)}
+          items={STATUS_FILTERS.map((item) => ({
+            key: item.key,
+            label: item.label,
+            count: counts[item.key] ?? 0,
+          }))}
+        />
       </div>
 
       {visible.length === 0 ? (
-        <div className="ink-mg-empty">
-          <Icon icon="tabler:world" width={28} />
-          <h2>没有符合条件的友链</h2>
-          <p>换个状态筛选，或等待访客提交申请。</p>
+        <div className="py-10 text-center">
+          <Icon icon="tabler:world" width={28} className="mx-auto text-default-300" />
+          <h2 className="mt-2 text-sm font-semibold">没有符合条件的友链</h2>
+          <p className="mt-1 text-xs text-default-500">换个状态筛选，或等待访客提交申请。</p>
         </div>
       ) : (
-        <div className="ink-fm-list">
+        <div className="space-y-3">
           {visible.map((link) => (
-            <article key={link.id} className="ink-fm-item">
-              <span className="ink-fm-item-icon">
-                {link.iconUrl ? (
-                  <img src={link.iconUrl} alt="" onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }} />
-                ) : (
-                  <Icon icon="tabler:world" width={20} />
-                )}
-              </span>
-              <div className="ink-fm-item-main">
-                <div className="ink-fm-item-head">
-                  <b>{link.name}</b>
-                  <span className={`ink-fm-badge is-${link.status}`}>
-                    {FRIEND_STATUS_LABEL[link.status as FriendStatus] ?? link.status}
-                  </span>
-                  {link.isHidden && <span className="ink-fm-badge is-hidden">已隐藏</span>}
-                  <span className="ink-fm-badge is-mail">
-                    邮件：{MAIL_STATUS_LABEL[link.emailStatus] ?? link.emailStatus}
-                  </span>
+            <Card key={link.id} className="rounded-xl border border-default-200 shadow-none">
+              <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-default-100">
+                  {link.iconUrl ? (
+                    <img
+                      className="h-9 w-9 rounded-full object-cover"
+                      src={link.iconUrl}
+                      alt=""
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <Icon icon="tabler:world" width={18} className="text-default-400" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="text-sm">{link.name}</b>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={STATUS_COLOR[link.status] ?? "default"}
+                    >
+                      {FRIEND_STATUS_LABEL[link.status as FriendStatus] ?? link.status}
+                    </Chip>
+                    {link.isHidden && (
+                      <Chip size="sm" variant="flat" color="default">已隐藏</Chip>
+                    )}
+                    <Chip size="sm" variant="flat" color="default">
+                      邮件：{MAIL_STATUS_LABEL[link.emailStatus] ?? link.emailStatus}
+                    </Chip>
+                  </div>
+                  <a
+                    className="block truncate text-xs text-primary hover:underline"
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.url}
+                  </a>
+                  {link.description && (
+                    <p className="text-xs text-default-600">{link.description}</p>
+                  )}
+                  <p className="text-xs text-default-500">
+                    申请邮箱：{link.email || "未填写"}
+                    {link.emailError && ` · ${link.emailError}`}
+                  </p>
+                  {link.reviewNote && (
+                    <p className="text-xs text-default-500">审核说明：{link.reviewNote}</p>
+                  )}
                 </div>
-                <a
-                  className="ink-fm-item-url"
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.url}
-                </a>
-                {link.description && (
-                  <p className="ink-fm-item-desc">{link.description}</p>
-                )}
-                <p className="ink-fm-item-meta">
-                  申请邮箱：{link.email || "未填写"}
-                  {link.emailError && ` · ${link.emailError}`}
-                </p>
-                {link.reviewNote && (
-                  <p className="ink-fm-item-note">审核说明：{link.reviewNote}</p>
-                )}
-              </div>
-              <div className="ink-fm-item-actions">
-                <BlogButton
-                  className="ink-mg-mini"
-                  title="上移"
-                  aria-label="上移"
-                  disabled={busyId === link.id}
-                  onClick={() => void move(link, -1)}
-                >
-                  <Icon icon="tabler:chevron-up" width={15} />
-                </BlogButton>
-                <BlogButton
-                  className="ink-mg-mini"
-                  title="下移"
-                  aria-label="下移"
-                  disabled={busyId === link.id}
-                  onClick={() => void move(link, 1)}
-                >
-                  <Icon icon="tabler:chevron-down" width={15} />
-                </BlogButton>
-                <BlogButton
-                  className="ink-mg-mini"
-                  disabled={busyId === link.id}
-                  onClick={() => setEditing(link)}
-                >
-                  编辑 / 审核
-                </BlogButton>
-                {link.status !== "pending" && link.emailStatus !== "sent" && (
-                  <BlogButton
-                    className="ink-mg-mini"
-                    disabled={busyId === link.id}
-                    onClick={() => void resendMail(link)}
+                <div className="flex shrink-0 flex-wrap gap-1.5">
+                  <Button
+                    size="sm"
+                    isIconOnly
+                    variant="light"
+                    title="上移"
+                    aria-label="上移"
+                    isDisabled={busyId === link.id}
+                    onPress={() => void move(link, -1)}
                   >
-                    重发通知
-                  </BlogButton>
-                )}
-                {link.status === "approved" && (
-                  <BlogButton
-                    className="ink-mg-mini"
-                    disabled={busyId === link.id}
-                    onClick={() => void toggleHidden(link)}
+                    <Icon icon="tabler:chevron-up" width={15} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    isIconOnly
+                    variant="light"
+                    title="下移"
+                    aria-label="下移"
+                    isDisabled={busyId === link.id}
+                    onPress={() => void move(link, 1)}
                   >
-                    {link.isHidden ? "恢复展示" : "隐藏"}
-                  </BlogButton>
-                )}
-              </div>
-            </article>
+                    <Icon icon="tabler:chevron-down" width={15} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={busyId === link.id}
+                    onPress={() => setEditing(link)}
+                  >
+                    编辑 / 审核
+                  </Button>
+                  {link.status !== "pending" && link.emailStatus !== "sent" && (
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      isDisabled={busyId === link.id}
+                      onPress={() => void resendMail(link)}
+                    >
+                      重发通知
+                    </Button>
+                  )}
+                  {link.status === "approved" && (
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      isDisabled={busyId === link.id}
+                      onPress={() => void toggleHidden(link)}
+                    >
+                      {link.isHidden ? "恢复展示" : "隐藏"}
+                    </Button>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
           ))}
         </div>
       )}
 
-      <div className="ink-mg-section-head" style={{ marginTop: 28 }}>
+      {/* ---------- 异常链接反馈 ---------- */}
+      <div className="flex items-start gap-3 pt-2">
         <div>
-          <h2 className="ink-mg-section-title">异常链接反馈</h2>
-          <p className="ink-mg-sub">
+          <h2 className="text-base font-semibold">异常链接反馈</h2>
+          <p className="text-xs text-default-500">
             {feedbacks.length} 条待处理 · 反馈本身不会自动隐藏任何友链
           </p>
         </div>
       </div>
 
       {feedbacks.length === 0 ? (
-        <div className="ink-mg-empty">
-          <p>暂时没有待处理的反馈。</p>
+        <div className="py-6 text-center">
+          <p className="text-sm text-default-500">暂时没有待处理的反馈。</p>
         </div>
       ) : (
-        <div className="ink-fm-list">
+        <div className="space-y-3">
           {feedbacks.map((feedback) => (
-            <article key={feedback.id} className="ink-fm-item">
-              <span className="ink-fm-item-icon is-feedback">
-                <Icon icon="tabler:alert-circle" width={18} />
-              </span>
-              <div className="ink-fm-item-main">
-                <div className="ink-fm-item-head">
-                  <b>{feedback.linkName || "未指定站点"}</b>
-                  <span className="ink-fm-badge is-feedback">
-                    {FRIEND_TYPE_LABEL[feedback.type as keyof typeof FRIEND_TYPE_LABEL] ??
-                      feedback.type}
-                  </span>
+            <Card key={feedback.id} className="rounded-xl border border-default-200 shadow-none">
+              <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning-50">
+                  <Icon icon="tabler:alert-circle" width={18} className="text-warning" />
+                </span>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="text-sm">{feedback.linkName || "未指定站点"}</b>
+                    <Chip size="sm" variant="flat" color="default">
+                      {FRIEND_TYPE_LABEL[feedback.type as keyof typeof FRIEND_TYPE_LABEL] ??
+                        feedback.type}
+                    </Chip>
+                  </div>
+                  {feedback.linkUrl && (
+                    <a
+                      className="block truncate text-xs text-primary hover:underline"
+                      href={feedback.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {feedback.linkUrl}
+                    </a>
+                  )}
+                  {feedback.message && (
+                    <p className="text-xs text-default-600">{feedback.message}</p>
+                  )}
                 </div>
-                {feedback.linkUrl && (
-                  <a
-                    className="ink-fm-item-url"
-                    href={feedback.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div className="flex shrink-0 gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="success"
+                    isDisabled={busyId === feedback.id}
+                    onPress={() => void resolveFeedback(feedback, "resolved")}
                   >
-                    {feedback.linkUrl}
-                  </a>
-                )}
-                {feedback.message && (
-                  <p className="ink-fm-item-desc">{feedback.message}</p>
-                )}
-              </div>
-              <div className="ink-fm-item-actions">
-                <BlogButton
-                  className="ink-mg-mini"
-                  disabled={busyId === feedback.id}
-                  onClick={() => void resolveFeedback(feedback, "resolved")}
-                >
-                  标记已处理
-                </BlogButton>
-                <BlogButton
-                  className="ink-mg-mini"
-                  disabled={busyId === feedback.id}
-                  onClick={() => void resolveFeedback(feedback, "dismissed")}
-                >
-                  忽略
-                </BlogButton>
-              </div>
-            </article>
+                    标记已处理
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    isDisabled={busyId === feedback.id}
+                    onPress={() => void resolveFeedback(feedback, "dismissed")}
+                  >
+                    忽略
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
           ))}
         </div>
       )}
@@ -366,7 +390,6 @@ export function BlogFriendsPanel() {
   );
 }
 
-/** 编辑公开字段 + 审核（通过 / 拒绝）+ 审核说明。 */
 function FriendLinkEditor({
   link,
   onClose,
@@ -424,42 +447,43 @@ function FriendLinkEditor({
       backdrop="blur"
       isDismissable={!busy}
       hideCloseButton
-      classNames={{ base: "ink-fm-modal" }}
     >
-      <ModalContent aria-label="编辑友链">
-        <header className="ink-fm-modal-head">
-          <h2 className="ink-fm-modal-title">编辑友链</h2>
-          <BlogButton
-            className="ink-mg-button ink-mg-button-ghost"
+      <ModalContent aria-label="编辑友链" className="overflow-hidden rounded-2xl">
+        <header className="flex items-center justify-between border-b border-default-200 px-5 py-3.5">
+          <h2 className="text-base font-semibold">编辑友链</h2>
+          <Button
+            size="sm"
+            isIconOnly
+            variant="light"
             onClick={onClose}
             aria-label="关闭"
-            disabled={!!busy}
+            isDisabled={!!busy}
           >
             <Icon icon="tabler:x" width={16} />
-          </BlogButton>
+          </Button>
         </header>
 
-        <div className="ink-fm-modal-body">
-          <div className="ink-fm-field">
-            <label htmlFor="fm-name">站点名称</label>
+        <div className="space-y-4 px-5 py-4">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">站点名称</span>
             <BlogInput
               id="fm-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="站点名称"
             />
-          </div>
-          <div className="ink-fm-field">
-            <label htmlFor="fm-url">站点地址</label>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">站点地址</span>
             <BlogInput
               id="fm-url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
             />
-          </div>
-          <div className="ink-fm-field">
-            <label htmlFor="fm-desc">一句话介绍</label>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">一句话介绍</span>
             <BlogTextarea
               id="fm-desc"
               minRows={2}
@@ -467,18 +491,18 @@ function FriendLinkEditor({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="最多 100 字"
             />
-          </div>
-          <div className="ink-fm-field">
-            <label htmlFor="fm-icon">站点图标地址</label>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">站点图标地址</span>
             <BlogInput
               id="fm-icon"
               value={iconUrl}
               onChange={(e) => setIconUrl(e.target.value)}
               placeholder="https://example.com/avatar.png"
             />
-          </div>
-          <div className="ink-fm-field">
-            <label htmlFor="fm-note">审核说明（仅后台可见）</label>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">审核说明（仅后台可见）</span>
             <BlogTextarea
               id="fm-note"
               minRows={2}
@@ -486,40 +510,44 @@ function FriendLinkEditor({
               onChange={(e) => setNote(e.target.value)}
               placeholder="通过或拒绝时随通知一起发给申请人"
             />
-          </div>
-          <p className="ink-fm-hint">
+          </label>
+          <p className="text-xs text-default-500">
             申请邮箱：{link.email || "未填写"}（仅后台可见，不会进入公开接口）
           </p>
           {error && (
-            <p className="ink-mg-alert" role="alert">
+            <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger" role="alert">
               {error}
             </p>
           )}
         </div>
 
-        <footer className="ink-fm-modal-footer">
-          <BlogButton
-            className="ink-mg-button"
-            onClick={() => void save()}
-            disabled={!!busy}
+        <footer className="flex items-center justify-between border-t border-default-200 px-5 py-3">
+          <Button
+            size="sm"
+            variant="flat"
+            onPress={() => void save()}
+            isDisabled={!!busy}
           >
             {busy === "save" ? "保存中…" : "保存修改"}
-          </BlogButton>
-          <div className="ink-fm-modal-actions">
-            <BlogButton
-              className="ink-mg-button ink-mg-button-ghost"
-              onClick={() => void save("rejected")}
-              disabled={!!busy}
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="flat"
+              color="danger"
+              onPress={() => void save("rejected")}
+              isDisabled={!!busy}
             >
               {busy === "reject" ? "处理中…" : "拒绝"}
-            </BlogButton>
-            <BlogButton
-              className="ink-mg-button ink-mg-button-primary"
-              onClick={() => void save("approved")}
-              disabled={!!busy}
+            </Button>
+            <Button
+              size="sm"
+              color="primary"
+              onPress={() => void save("approved")}
+              isDisabled={!!busy}
             >
               {busy === "approve" ? "处理中…" : "通过审核"}
-            </BlogButton>
+            </Button>
           </div>
         </footer>
       </ModalContent>

@@ -8,7 +8,6 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { api } from '@/lib/trpc';
 import { SiteBrand } from '../Common/SiteBrand';
 import { Item } from './Item';
-import { SiteBrandingQuickLinksEditor } from './SiteBrandingQuickLinksEditor';
 
 
 export const SiteBrandingSettings = observer(() => {
@@ -185,21 +184,6 @@ export const SiteBrandingSettings = observer(() => {
             </Button>
           </div>
         }
-      />
-      <Item
-        type="col"
-        leftContent={
-          <div className="flex flex-col">
-            <span>{text('快速链接', 'Quick links')}</span>
-            <span className="mt-1 text-[11px] font-normal text-default-400">
-              {text(
-                '在侧边栏顶部展示一行胶囊入口，可指向站内页面或外部链接。',
-                'Show a row of pill links at the top of the sidebar — either in-app pages or external URLs.'
-              )}
-            </span>
-          </div>
-        }
-        rightContent={<SiteBrandingQuickLinksEditor />}
       />
     </div>
   );

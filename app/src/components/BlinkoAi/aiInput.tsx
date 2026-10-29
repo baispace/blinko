@@ -1,4 +1,3 @@
-import { splitDailyInput, joinDailyInput } from '@shared/lib/dailyInput';
 import { observer } from 'mobx-react-lite';
 import { Button, Textarea, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -105,13 +104,6 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
       />
 
       <div className="flex flex-col gap-2">
-        {aiStore.selectedSkill?.key === 'daily' ? <div className="space-y-3" onKeyDown={event => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); handleSubmit(); } }}>
-          <Textarea label="昨日事项与进展" labelPlacement="outside" placeholder="做了什么、哪些已完成、哪些仍在推进或遇到阻碍…" minRows={2} maxRows={5} isDisabled={busy}
-            value={splitDailyInput(aiStore.input).yesterday} onValueChange={value => { aiStore.input = joinDailyInput(value, splitDailyInput(aiStore.input).today); }} />
-          <Textarea label="今日安排" labelPlacement="outside" placeholder="继续推进的事项、新增任务，以及明确的时间要求…" minRows={2} maxRows={5} isDisabled={busy}
-            value={splitDailyInput(aiStore.input).today} onValueChange={value => { aiStore.input = joinDailyInput(splitDailyInput(aiStore.input).yesterday, value); }} />
-          <p className="text-xs leading-5 text-default-500">发送时自动读取历史待办与最近日报，生成变更后由你确认。截止时间不会因计划顺延而改变。</p>
-        </div> : <>
         <Textarea
           className="w-full"
           data-focus-visible="false"
@@ -130,7 +122,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
             // Handle Enter key press to submit input, but ignore if user is composing text (e.g. using IME)
             const isComposing = Boolean(e.isComposing || (e.nativeEvent && e.nativeEvent.isComposing));
 
-            if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+            if (e.key === 'Enter' && !isComposing && (aiStore.selectedSkill?.key === 'daily' ? (e.metaKey || e.ctrlKey) : !e.shiftKey)) {
               e.preventDefault();
               handleSubmit();
             }
@@ -143,9 +135,8 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           }}
           minRows={mode == 'inline' ? 1 : 3}
           maxRows={8}
-          placeholder={workflows.find(workflow => workflow.key === aiStore.selectedSkill?.key)?.placeholder || '输入你的问题，或引用历史内容继续讨论…'}
+          placeholder={aiStore.selectedSkill?.key === 'daily' ? '填写昨日进展与今日安排，或继续补充、修正本次事项…' : workflows.find(workflow => workflow.key === aiStore.selectedSkill?.key)?.placeholder || '输入你的问题，或引用历史内容继续讨论…'}
         />
-        </>}
         {/* 底部一行收束全部操作：+ 附件 → 技能 / 能力开关在左，模型 / 设置 / 发送在右 */}
         <div className="w-full gap-1 flex flex-wrap items-center">
           <AiAttachmentMenu staged={staged} onChange={setStaged} disabled={busy} />
@@ -164,8 +155,8 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           {aiStore.selectedSkill && (
             <span className="ai-skill-chip">
               <Icon icon="tabler:route" width={13} />
-              <span className="truncate">{aiStore.selectedSkill.title}</span>
-              <button type="button" aria-label={`取消技能 ${aiStore.selectedSkill.title}`} disabled={busy}
+              <span className="truncate">{aiStore.selectedSkill.key === 'daily' ? '每日整理' : aiStore.selectedSkill.title}</span>
+              <button type="button" aria-label={`取消技能 ${aiStore.selectedSkill.key === 'daily' ? '每日整理' : aiStore.selectedSkill.title}`} disabled={busy}
                 onClick={() => { aiStore.selectedSkill = null; aiStore.referencesNotes = []; setSkillsOpen(false); }}>
                 <Icon icon="tabler:x" width={12} />
               </button>

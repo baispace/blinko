@@ -1,12 +1,9 @@
-import { BlogButton, BlogChip, BlogChipGroup } from "./BlogUI";
-import "./blog.css";
-import "./manage.css";
-import "./article.css";
+import { BlogChipGroup } from "./BlogUI";
+import { Button, Chip, Card, CardBody, CardHeader } from "@heroui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/trpc";
 import { blogImageUrl } from "@/lib/blogImage";
-import { readBlogTheme, writeBlogTheme } from "@/lib/blogTheme";
 import { RootStore } from "@/store";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { Icon } from "@/components/Common/Iconify/icons";
@@ -18,22 +15,14 @@ import {
   describeChanges,
   resolveContentStatus,
 } from "./contentStatus";
-import "./content.css";
 
 type Status = Awaited<ReturnType<typeof api.notes.publicationStatus.query>>;
 
-/** 状态语气 → HeroUI Chip 语义色。 */
 const TONE_COLOR: Record<string, "default" | "primary" | "success" | "warning"> = {
   plain: "default",
   ok: "success",
   warn: "warning",
 };
-
-/*
- * 状态、变更字段名、标题算法都收口到 contentStatus.ts。
- * 这里再写一份的话，内容列表和工作台会对同一篇文章显示不同的标题、
- * 不同的状态叫法 —— 用户会以为是两篇不同的文章。
- */
 
 function plainLength(content: string) {
   return (content || "").replace(/<[^>]*>/g, "").trim().length;
@@ -45,17 +34,9 @@ export function BlogArticleDetail() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status | null>(null);
   const [preview, setPreview] = useState<"draft" | "public">("draft");
-  const [busy, setBusy] = useState(false);
   const [params, setParams] = useSearchParams();
-  /** 从笔记右键「发布到博客」跳过来时，把注意力引到右侧的操作面板。 */
   const [focusPanel, setFocusPanel] = useState(params.get('publish') === '1');
   const [error, setError] = useState("");
-  const [theme, setTheme] = useState(readBlogTheme);
-
-  const notify = (e: unknown, fallback = "操作失败，请重试") =>
-    RootStore.Get(ToastPlugin).error(
-      e instanceof Error && e.message ? e.message : fallback,
-    );
 
   const applyStatus = useCallback((next: Status) => {
     setStatus(next);
@@ -74,11 +55,6 @@ export function BlogArticleDetail() {
   }, [load]);
 
   useEffect(() => {
-    writeBlogTheme(theme);
-  }, [theme]);
-
-  /** 高亮只闪一下，顺手把 URL 里的 publish=1 去掉。 */
-  useEffect(() => {
     if (!focusPanel) return;
     const timer = setTimeout(() => {
       setFocusPanel(false);
@@ -94,7 +70,6 @@ export function BlogArticleDetail() {
     return () => clearTimeout(timer);
   }, [focusPanel, setParams]);
 
-  /** 待发布的字段级变更。内容列表、发布检查用的是同一套名字。 */
   const changedFields = useMemo(() => status?.changes ?? [], [status?.changes]);
   const changeText = describeChanges(changedFields);
 
@@ -106,25 +81,25 @@ export function BlogArticleDetail() {
 
   if (!status)
     return (
-      <div className="ink-blog ink-manage ink-ad-page" data-theme={theme}>
-        <div className="ink-ad-wrap" style={{ paddingTop: 40 }}>
-          <div className="ink-mg-alert">
+      <div className="flex min-h-screen bg-background text-foreground">
+        <div className="mx-auto w-full max-w-3xl px-6 pt-10">
+          <div className="rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger">
             <span>{error || "正在加载文章…"}</span>
             {error && (
-              <BlogButton className="ink-mg-button" onClick={() => navigate("/blog-manage")}>
+              <Button
+                size="sm"
+                variant="flat"
+                className="ml-3"
+                onPress={() => navigate("/blog-manage")}
+              >
                 返回管理
-              </BlogButton>
+              </Button>
             )}
           </div>
         </div>
       </div>
     );
 
-  /*
-   * 状态只有四种，判定方式跟内容列表完全一致。
-   * 这里原来自己写了一套说法，内容列表写的是另一套，同一个状态两种叫法，
-   * 用户得来回对照才知道是一回事。
-   */
   const state = resolveContentStatus({
     isPublished: status.isPublished,
     hasDraftChanges: changedFields.length > 0,
@@ -154,123 +129,115 @@ export function BlogArticleDetail() {
   );
 
   return (
-    <div className="ink-blog ink-manage ink-ad-page" data-theme={theme}>
-      <header className="ink-ad-topbar">
-        <div className="ink-ad-wrap">
-          <div className="ink-ad-topbar-inner">
-            <span className="ink-mg-brand">
-              Ink
-              <small>博客管理</small>
-            </span>
-            <span style={{ flex: 1 }} />
-            <BlogButton
-              className="ink-mg-button ink-mg-button-ghost"
-              onClick={() => setTheme((v) => (v === "light" ? "dark" : "light"))}
-              aria-label="切换明暗主题"
-            >
-              <Icon icon="tabler:adjustments" width={16} />
-              {theme === "light" ? "浅色" : "深色"}
-            </BlogButton>
-            <BlogButton
-              as="a"
-              className="ink-mg-button"
-              href="/blog"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              查看公开站 <Icon icon="tabler:external-link" width={15} />
-            </BlogButton>
-            <BlogButton className="ink-mg-button" onClick={() => navigate("/blog-manage")}>
-              返回管理
-            </BlogButton>
-          </div>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      {/* ---------- 顶部栏 ---------- */}
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default-200 bg-background px-4">
+        <span className="text-sm font-semibold">
+          Jomio
+          <span className="ml-1 text-xs font-normal text-default-500">· 拾成</span>
+        </span>
+        <span className="flex-1" />
+        <Button
+          size="sm"
+          variant="light"
+          as="a"
+          href="/blog"
+          target="_blank"
+          rel="noopener noreferrer"
+          startContent={<Icon icon="tabler:external-link" width={15} />}
+        >
+          查看公开站
+        </Button>
+        <Button
+          size="sm"
+          variant="flat"
+          onPress={() => navigate("/blog-manage")}
+        >
+          返回管理
+        </Button>
       </header>
 
-      <div className="ink-ad-wrap">
-        <div className="ink-ad-head">
-          <div style={{ minWidth: 0 }}>
-            <p className="ink-ad-crumb">
-              <a
-                href="/blog-manage"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/blog-manage");
-                }}
-              >
-                博客管理
-              </a>
-              <Icon icon="tabler:chevron-right" width={13} />
-              <a
-                href="/blog-manage"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/blog-manage");
-                }}
-              >
-                内容
-              </a>
-              <Icon icon="tabler:chevron-right" width={13} />
-              <span>{draftTitle || "无标题"}</span>
-            </p>
-            <h1 className="ink-ad-title">
-              文章管理
-              <BlogChip color={TONE_COLOR[badge.tone]} variant="flat">
-                {badge.text}
-              </BlogChip>
-            </h1>
-            <p className="ink-ad-note">
-              {stateMeta.desc}
-              {changeText && ` 待发布变更：${changeText}。`}
-            </p>
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 lg:px-8">
+        {/* ---------- 页头 ---------- */}
+        <div className="mb-6 min-w-0">
+          <nav className="mb-2 flex items-center gap-1.5 text-xs text-default-500">
+            <button
+              type="button"
+              className="transition-colors hover:text-foreground"
+              onClick={() => navigate("/blog-manage")}
+            >
+              博客管理
+            </button>
+            <Icon icon="tabler:chevron-right" width={12} />
+            <button
+              type="button"
+              className="transition-colors hover:text-foreground"
+              onClick={() => navigate("/blog-manage")}
+            >
+              内容
+            </button>
+            <Icon icon="tabler:chevron-right" width={12} />
+            <span className="truncate text-default-700">{draftTitle || "无标题"}</span>
+          </nav>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold">{draftTitle || "文章管理"}</h1>
+            <Chip
+              size="sm"
+              variant="flat"
+              color={TONE_COLOR[badge.tone]}
+            >
+              {badge.text}
+            </Chip>
           </div>
-          {/*
-            页头不再摆公开页链接 —— 右侧面板的「运营管理」里已经有一份，
-            同一个页面给两个入口只会让人以为它们不一样。
-          */}
+          <p className="mt-1 text-sm text-default-500">
+            {stateMeta.desc}
+            {changeText && ` 待发布变更：${changeText}。`}
+          </p>
         </div>
+
         {error && (
-          <div className="ink-mg-alert" style={{ marginBottom: 14 }}>
-            <span>{error}</span>
+          <div className="mb-4 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger">
+            {error}
           </div>
         )}
 
-        <div className="ink-ad-columns">
-          <div className="ink-ad-main">
-            {/*
-              发布前检查的摘要卡。
-              之前只有一条"检查并发布"的链接，点了才知道能不能发；
-              现在把拦路的问题直接摆在这里，省掉一次来回。
-            */}
-            <section className="ink-ad-card">
-              <div className="ink-ad-card-head">
-                <h2 className="ink-ad-card-title">发布前检查</h2>
-                <BlogChip
-                  color={status.canPublish ? "success" : "warning"}
+        <div className="flex flex-col gap-6 lg:flex-row">
+          {/* ---------- 主内容 ---------- */}
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            {/* 发布前检查 */}
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardHeader className="flex items-center justify-between gap-3 pb-1">
+                <h2 className="text-base font-semibold">发布前检查</h2>
+                <Chip
+                  size="sm"
                   variant="flat"
+                  color={status.canPublish ? "success" : "warning"}
                 >
                   {status.canPublish
                     ? "可以发布"
                     : `${status.blockers.length} 项待处理`}
-                </BlogChip>
-              </div>
-              {status.blockers.length ? (
-                <ul className="ink-ad-blockers">
-                  {status.blockers.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="ink-ad-note">没有阻塞发布的问题。</p>
-              )}
-              {changeText && (
-                <p className="ink-ad-note">待发布变更：{changeText}。</p>
-              )}
-            </section>
+                </Chip>
+              </CardHeader>
+              <CardBody className="pt-2">
+                {status.blockers.length ? (
+                  <ul className="list-inside list-disc space-y-1 text-sm text-danger">
+                    {status.blockers.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-default-500">没有阻塞发布的问题。</p>
+                )}
+                {changeText && (
+                  <p className="mt-2 text-sm text-default-500">待发布变更：{changeText}。</p>
+                )}
+              </CardBody>
+            </Card>
 
-            <section className="ink-ad-card">
-              <div className="ink-ad-card-head">
-                <h2 className="ink-ad-card-title">公开效果预览</h2>
+            {/* 公开效果预览 */}
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardHeader className="flex items-center justify-between gap-3 pb-1">
+                <h2 className="text-base font-semibold">公开效果预览</h2>
                 <BlogChipGroup
                   label="预览版本"
                   value={preview}
@@ -280,86 +247,112 @@ export function BlogArticleDetail() {
                     { key: "public", label: "当前公开" },
                   ]}
                 />
-              </div>
-              {shownCover && (
-                <img
-                  className="ink-ad-preview-cover"
-                  src={blogImageUrl(shownCover.path)}
-                  alt="文章封面"
-                />
-              )}
-              <h3 className="ink-ad-preview-title">{shown.title || "无标题"}</h3>
-              <div className="ink-ad-preview-meta">
-                {status.topics.map((t) => (
-                  <span className="ink-ad-preview-topic" key={t.id}>
-                    {t.name}
-                    {t.sectionName ? ` › ${t.sectionName}` : ""}
-                  </span>
-                ))}
-                {shown.at && (
-                  <time>{new Date(shown.at).toLocaleDateString("zh-CN")}</time>
+              </CardHeader>
+              <CardBody className="space-y-3 pt-2">
+                {shownCover && (
+                  <img
+                    className="max-h-56 w-full rounded-lg object-cover"
+                    src={blogImageUrl(shownCover.path)}
+                    alt="文章封面"
+                  />
                 )}
-              </div>
-              {shown.summary && (
-                <p className="ink-ad-preview-summary">{shown.summary}</p>
-              )}
-              {shown.publicTags.length > 0 && (
-                <div className="ink-ad-preview-tags">
-                  {shown.publicTags.map((tag) => (
-                    <span className="ink-ad-preview-topic" key={tag}>
-                      {tag}
+                <h3 className="text-lg font-semibold leading-snug">
+                  {shown.title || "无标题"}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-default-500">
+                  {status.topics.map((t) => (
+                    <span
+                      className="rounded-full bg-default-100 px-2.5 py-0.5 text-default-600"
+                      key={t.id}
+                    >
+                      {t.name}
+                      {t.sectionName ? ` › ${t.sectionName}` : ""}
                     </span>
                   ))}
+                  {shown.at && (
+                    <time>{new Date(shown.at).toLocaleDateString("zh-CN")}</time>
+                  )}
                 </div>
-              )}
-              <div className="ink-ad-preview-body ink-prose">
-                <PublicArticleBody content={shown.content} authenticated />
-              </div>
-            </section>
-
-            <section className="ink-ad-card"><h2>发布信息</h2><p>{draftTitle}</p><p className="ink-ad-note">{status.draft.summary || '尚未填写概要'}</p></section>
-
-            <section className="ink-ad-card">
-              <details className="ink-ad-source">
-                <summary>
-                  <Icon icon="tabler:chevron-down" width={15} />
-                  原笔记依据
-                  <small>已保存 {plainLength(status.draft.content)} 字</small>
-                </summary>
-                <div className="ink-prose ink-ad-source-body">
-                  <PublicArticleBody content={status.draft.content} authenticated />
+                {shown.summary && (
+                  <p className="text-sm text-default-600">{shown.summary}</p>
+                )}
+                {shown.publicTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {shown.publicTags.map((tag) => (
+                      <span
+                        className="rounded-full bg-default-100 px-2.5 py-0.5 text-xs text-default-600"
+                        key={tag}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="ink-prose pt-2 text-sm leading-relaxed">
+                  <PublicArticleBody content={shown.content} authenticated />
                 </div>
-                <a
-                  className="ink-ad-source-link"
-                  href={`/detail?id=${id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  打开原笔记 <Icon icon="tabler:external-link" width={13} />
-                </a>
-              </details>
-            </section>
+              </CardBody>
+            </Card>
+
+            {/* 发布信息 */}
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardBody className="space-y-1">
+                <h2 className="text-base font-semibold">发布信息</h2>
+                <p className="text-sm">{draftTitle}</p>
+                <p className="text-sm text-default-500">
+                  {status.draft.summary || "尚未填写概要"}
+                </p>
+              </CardBody>
+            </Card>
+
+            {/* 原笔记依据 */}
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardBody className="p-0">
+                <details className="group">
+                  <summary className="flex cursor-pointer items-center gap-2 px-5 py-3.5 text-sm font-medium select-none">
+                    <Icon
+                      icon="tabler:chevron-down"
+                      width={15}
+                      className="transition-transform group-open:rotate-180"
+                    />
+                    原笔记依据
+                    <small className="text-xs font-normal text-default-500">
+                      已保存 {plainLength(status.draft.content)} 字
+                    </small>
+                  </summary>
+                  <div className="ink-prose border-t border-default-200 px-5 py-4 text-sm leading-relaxed">
+                    <PublicArticleBody content={status.draft.content} authenticated />
+                  </div>
+                  <div className="border-t border-default-200 px-5 py-3">
+                    <a
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      href={`/detail?id=${id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      打开原笔记 <Icon icon="tabler:external-link" width={13} />
+                    </a>
+                  </div>
+                </details>
+              </CardBody>
+            </Card>
           </div>
 
-          {/* 快捷操作面板：与内容列表右侧是同一套。 */}
-          <aside className="ink-ad-aside">
+          {/* ---------- 侧栏 ---------- */}
+          <aside className="w-full shrink-0 lg:w-80">
             <ContentQuickPanel noteId={id} onChanged={load} focus={focusPanel} />
           </aside>
         </div>
       </div>
 
-      <div className="ink-ad-bottombar">
-        <div className="ink-ad-wrap">
-          <div className="ink-ad-bottombar-inner">
-            <span className="ink-ad-bottom-note">
-              {changeText
-                ? `待发布变更：${changeText}。`
-                : "标题、封面与展示设置都在右侧快捷操作里改；改动先存在草稿，发布后才对外生效。"}
-            </span>
-          </div>
-        </div>
+      {/* ---------- 底部提示 ---------- */}
+      <div className="sticky bottom-0 border-t border-default-200 bg-background px-4 py-3">
+        <p className="mx-auto w-full max-w-6xl text-xs text-default-500">
+          {changeText
+            ? `待发布变更：${changeText}。`
+            : "标题、封面与展示设置都在右侧快捷操作里改；改动先存在草稿，发布后才对外生效。"}
+        </p>
       </div>
     </div>
   );
 }
-

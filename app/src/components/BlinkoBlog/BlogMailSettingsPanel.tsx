@@ -1,20 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { api } from "@/lib/trpc";
-import { BlogButton, BlogCheckbox, BlogInput } from "./BlogUI";
+import { Button, Card, CardBody, Chip } from "@heroui/react";
+import { BlogCheckbox, BlogInput } from "./BlogUI";
 import type { BlogMailSettingsView } from "@shared/lib/blogMailSettings";
-
-/**
- * 博客后台的「邮件服务」分区。
- *
- * 邮件服务只做两件事：给友链申请的结果发通知、给订阅了回复通知的读者发回复。
- * 没有它，这两件事都做不了 —— 所以这里必须让作者看得见「现在能不能发信」。
- *
- * 三条硬规矩：
- *   1. 密码只写不读 —— 读回来只有「是否已设置」；
- *   2. 当前生效来源如实显示（后台配置 / 环境变量 / 未配置），不替用户猜；
- *   3. 测试邮件发出去是什么样就显示什么样，失败就把服务器给的原话摆出来。
- */
 
 type MailSource = "settings" | "env" | "none";
 
@@ -30,7 +19,6 @@ type Draft = {
   secure: boolean;
   user: string;
   from: string;
-  /** 只在本次编辑里出现：留空 = 沿用已保存的密码。 */
   pass: string;
   clearPass: boolean;
 };
@@ -130,7 +118,6 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
       setDraft(next);
       setSaved(next);
       setMessage("邮件服务设置已保存。");
-      // 保存后来源可能变了（后台配置从「没填全」变成「已生效」）—— 重新读一次状态。
       const status = await api.blog.mailSettings.query();
       setSource(status.source);
     } catch (e: any) {
@@ -159,199 +146,195 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
   };
 
   return (
-    <div className="ink-admin-columns">
-      <div className="ink-mg-panel ink-mg-section">
-        <div className="ink-mg-section-head">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <Card className="border border-default-200 bg-surface">
+        <CardBody className="gap-4 p-5">
           <div>
-            <h3 className="ink-mg-section-title">SMTP 配置</h3>
-            <p className="ink-mg-sub">
-              友链申请通知与读者回复通知都走这里。没配置时这两件事都做不了，
-              公开页会如实写「尚未配置邮件服务」。
+            <h3 className="text-base font-semibold text-foreground">SMTP 配置</h3>
+            <p className="mt-1 text-sm text-default-500">
+              友链申请通知与读者回复通知都走这里。没配置时这两件事都做不了，公开页会如实写「尚未配置邮件服务」。
             </p>
           </div>
-        </div>
 
-        {error && (
-          <p className="ink-mg-alert" role="alert">
-            {error}
-          </p>
-        )}
-        {message && (
-          <p className="ink-mg-note" role="status">
-            {message}
-          </p>
-        )}
+          {error && (
+            <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger" role="alert">
+              {error}
+            </div>
+          )}
+          {message && (
+            <div className="rounded-lg bg-primary-50 px-3 py-2 text-sm text-primary" role="status">
+              {message}
+            </div>
+          )}
 
-        <label className="ink-admin-field">
-          <span>SMTP 服务器</span>
-          <BlogInput
-            className="ink-mg-field"
-            value={draft.host}
-            placeholder="例如 smtp.exmail.qq.com"
-            onChange={(e) => patch({ host: e.target.value })}
-          />
-          <small>邮箱服务商的 SMTP 主机名。</small>
-        </label>
-
-        <div className="ink-mg-grid-2">
-          <label className="ink-admin-field">
-            <span>端口</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm">SMTP 服务器</span>
             <BlogInput
-              className="ink-mg-field"
-              type="number"
-              min={1}
-              max={65535}
-              value={String(draft.port)}
-              onChange={(e) => patch({ port: Number(e.target.value) })}
+              className="w-full"
+              value={draft.host}
+              placeholder="例如 smtp.exmail.qq.com"
+              onChange={(e) => patch({ host: e.target.value })}
             />
-            <small>465 走直接 TLS，587 走 STARTTLS。</small>
+            <small className="text-xs text-default-400">邮箱服务商的 SMTP 主机名。</small>
           </label>
-          <label className="ink-admin-field">
-            <span>加密方式</span>
-            <span className="ink-admin-toggle">
-              <BlogCheckbox
-                type="checkbox"
-                checked={draft.secure}
-                onChange={(e) => patch({ secure: e.target.checked })}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm">端口</span>
+              <BlogInput
+                className="w-full"
+                type="number"
+                min={1}
+                max={65535}
+                value={String(draft.port)}
+                onChange={(e) => patch({ port: Number(e.target.value) })}
               />
-              直接 TLS（{draft.secure ? "已开启" : "已关闭"}）
-            </span>
-            <small>
-              关闭后先明文连接，服务器支持时自动升级 STARTTLS —— 账号密码不会裸奔。
+              <small className="text-xs text-default-400">465 走直接 TLS，587 走 STARTTLS。</small>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm">加密方式</span>
+              <span className="flex items-center gap-2 text-sm">
+                <BlogCheckbox
+                  type="checkbox"
+                  checked={draft.secure}
+                  onChange={(e) => patch({ secure: e.target.checked })}
+                />
+                直接 TLS（{draft.secure ? "已开启" : "已关闭"}）
+              </span>
+              <small className="text-xs text-default-400">
+                关闭后先明文连接，服务器支持时自动升级 STARTTLS —— 账号密码不会裸奔。
+              </small>
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm">发件人地址</span>
+            <BlogInput
+              className="w-full"
+              value={draft.from}
+              placeholder="blog@example.com"
+              onChange={(e) => patch({ from: e.target.value })}
+            />
+            <small className="text-xs text-default-400">通知邮件的落款地址，读者能看到。</small>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm">登录账号</span>
+            <BlogInput
+              className="w-full"
+              value={draft.user}
+              placeholder="多数邮箱服务商要求填完整邮箱地址"
+              onChange={(e) => patch({ user: e.target.value })}
+            />
+            <small className="text-xs text-default-400">不需要认证的服务器可以留空。</small>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm">密码 / 授权码</span>
+            <BlogInput
+              className="w-full"
+              type="password"
+              value={draft.pass}
+              placeholder={view?.hasPass ? "已设置 · 留空表示不修改" : "尚未设置"}
+              onChange={(e) => patch({ pass: e.target.value })}
+            />
+            <small className="text-xs text-default-400">
+              密码只保存不显示。邮箱服务商要的通常是「授权码」而不是登录密码。
             </small>
           </label>
-        </div>
 
-        <label className="ink-admin-field">
-          <span>发件人地址</span>
-          <BlogInput
-            className="ink-mg-field"
-            value={draft.from}
-            placeholder="blog@example.com"
-            onChange={(e) => patch({ from: e.target.value })}
-          />
-          <small>通知邮件的落款地址，读者能看到。</small>
-        </label>
+          {view?.hasPass && !draft.clearPass ? (
+            <div>
+              <Button size="sm" variant="light" onPress={() => patch({ clearPass: true, pass: "" })}>
+                清除已保存的密码
+              </Button>
+            </div>
+          ) : null}
+          {draft.clearPass ? (
+            <p className="flex items-center gap-2 text-sm text-default-500">
+              保存后会清空已保存的密码。
+              <Button size="sm" variant="light" onPress={() => patch({ clearPass: false })}>
+                撤销
+              </Button>
+            </p>
+          ) : null}
 
-        <label className="ink-admin-field">
-          <span>登录账号</span>
-          <BlogInput
-            className="ink-mg-field"
-            value={draft.user}
-            placeholder="多数邮箱服务商要求填完整邮箱地址"
-            onChange={(e) => patch({ user: e.target.value })}
-          />
-          <small>不需要认证的服务器可以留空。</small>
-        </label>
+          <div className="flex items-center justify-between border-t border-default-200 pt-4">
+            <span className="text-sm text-default-500">{dirty ? "有未保存修改" : "设置已同步"}</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="flat" isDisabled={busy} onPress={() => void load()}>
+                重新载入
+              </Button>
+              <Button
+                size="sm"
+                color="primary"
+                isDisabled={!revision || !dirty || busy}
+                onPress={() => void save()}
+              >
+                {busy ? "保存中…" : "保存邮件服务设置"}
+              </Button>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
 
-        <label className="ink-admin-field">
-          <span>密码 / 授权码</span>
-          <BlogInput
-            className="ink-mg-field"
-            type="password"
-            value={draft.pass}
-            placeholder={view?.hasPass ? "已设置 · 留空表示不修改" : "尚未设置"}
-            onChange={(e) => patch({ pass: e.target.value })}
-          />
-          <small>
-            密码只保存不显示。邮箱服务商要的通常是「授权码」而不是登录密码。
-          </small>
-        </label>
-
-        {view?.hasPass && !draft.clearPass ? (
+      <Card className="h-fit border border-default-200 bg-surface">
+        <CardBody className="gap-4 p-5">
           <div>
-            <BlogButton
-              className="ink-mg-button ink-mg-button-ghost"
-              onClick={() => patch({ clearPass: true, pass: "" })}
-            >
-              清除已保存的密码
-            </BlogButton>
+            <h3 className="text-base font-semibold text-foreground">当前状态</h3>
+            <p className="mt-1 text-sm text-default-500">
+              生效来源：<strong>{source === "none" ? "未配置" : SOURCE_LABEL[source]}</strong>
+            </p>
           </div>
-        ) : null}
-        {draft.clearPass ? (
-          <p className="ink-mg-note">
-            保存后会清空已保存的密码。
-            <button
-              type="button"
-              className="ink-mg-button-ghost"
-              onClick={() => patch({ clearPass: false })}
-            >
-              撤销
-            </button>
-          </p>
-        ) : null}
+          {source === "none" ? (
+            <div className="flex items-start gap-2 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger" role="note">
+              <Icon icon="tabler:alert-circle" width={16} className="mt-0.5 shrink-0" />
+              <span>
+                邮件服务还没配置。友链审核通知与读者回复通知都发不出去，公开页会如实告诉读者「暂时无法开通回复通知」。
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-default-500">
+              {source === "env"
+                ? "当前用的是服务端环境变量里的 BLOG_SMTP_* 配置。在下面填完整后以后台配置为准。"
+                : "当前用的是这里保存的后台配置。"}
+            </p>
+          )}
 
-        <div className="ink-admin-footer">
-          <span>{dirty ? "有未保存修改" : "设置已同步"}</span>
-          <div className="ink-mg-row-actions">
-            <BlogButton className="ink-mg-button" disabled={busy} onClick={() => void load()}>
-              重新载入
-            </BlogButton>
-            <BlogButton
-              className="ink-mg-button ink-mg-button-primary"
-              disabled={!revision || !dirty || busy}
-              onClick={() => void save()}
-            >
-              {busy ? "保存中…" : "保存邮件服务设置"}
-            </BlogButton>
+          <div>
+            <h3 className="text-base font-semibold text-foreground">发送测试邮件</h3>
+            <p className="mt-1 text-sm text-default-500">
+              发一封真实的信到指定地址，确认握手、认证、投递都通。
+            </p>
           </div>
-        </div>
-      </div>
-
-      <div className="ink-mg-panel">
-        <h3 className="ink-mg-section-title">当前状态</h3>
-        <p className="ink-mg-sub">
-          生效来源：
-          <strong>{source === "none" ? "未配置" : SOURCE_LABEL[source]}</strong>
-        </p>
-        {source === "none" ? (
-          <div className="ink-mg-alert" role="note">
-            <Icon icon="tabler:alert-circle" width={16} />
-            <span>
-              邮件服务还没配置。友链审核通知与读者回复通知都发不出去，
-              公开页会如实告诉读者「暂时无法开通回复通知」。
-            </span>
-          </div>
-        ) : (
-          <p className="ink-mg-sub">
-            {source === "env"
-              ? "当前用的是服务端环境变量里的 BLOG_SMTP_* 配置。在下面填完整后以后台配置为准。"
-              : "当前用的是这里保存的后台配置。"}
-          </p>
-        )}
-
-        <h3 className="ink-mg-section-title">发送测试邮件</h3>
-        <p className="ink-mg-sub">
-          发一封真实的信到指定地址，确认握手、认证、投递都通。
-        </p>
-        <label className="ink-admin-field">
-          <span>收件地址</span>
-          <BlogInput
-            className="ink-mg-field"
-            type="email"
-            value={testTo}
-            placeholder="you@example.com"
-            onChange={(e) => setTestTo(e.target.value)}
-          />
-        </label>
-        <BlogButton
-          className="ink-mg-button"
-          disabled={testing}
-          onClick={() => void sendTest()}
-        >
-          {testing ? "发送中…" : "发送测试邮件"}
-        </BlogButton>
-        {testResult ? (
-          <p
-            className={testResult.status === "sent" ? "ink-mg-note" : "ink-mg-alert"}
-            role="status"
-            style={{ marginTop: 12 }}
-          >
-            {testResult.status === "sent" ? "已发送：" : "未发送成功："}{" "}
-            {testResult.message}
-          </p>
-        ) : null}
-      </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm">收件地址</span>
+            <BlogInput
+              className="w-full"
+              type="email"
+              value={testTo}
+              placeholder="you@example.com"
+              onChange={(e) => setTestTo(e.target.value)}
+            />
+          </label>
+          <Button size="sm" isDisabled={testing} onPress={() => void sendTest()}>
+            {testing ? "发送中…" : "发送测试邮件"}
+          </Button>
+          {testResult ? (
+            <div
+              className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                testResult.status === "sent"
+                  ? "bg-primary-50 text-primary"
+                  : "bg-danger-50 text-danger"
+              }`}
+              role="status"
+            >
+              {testResult.status === "sent" ? "已发送：" : "未发送成功："}{" "}
+              {testResult.message}
+            </div>
+          ) : null}
+        </CardBody>
+      </Card>
     </div>
   );
 }

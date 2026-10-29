@@ -18,7 +18,7 @@ import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
 import { getChatContext } from '../lib/conversationPages';
 import { workflowKeys } from '../../shared/lib/aiWorkflows';
-import { dailySyncInput, syncDailyWorkflow } from '../lib/dailyWorkflow';
+import { dailySyncInput, syncDailyWorkflow, dailyTaskCandidates } from '../lib/dailyWorkflow';
 import { getChatCapabilities, getServiceCapabilities } from '../lib/chatCapabilities';
 
 export const aiRouter = router({
@@ -60,6 +60,7 @@ export const aiRouter = router({
     }) : candidates;
     return { items: matching.slice(0,80), total: matching.length, limited: matching.length > 80 || candidates.length > 500 };
   }),
+  dailyTaskCandidates: authProcedure.input(z.object({ messageId: z.number().int().positive(), query: z.string().max(100).default('') })).query(({ input, ctx }) => dailyTaskCandidates(Number(ctx.id), input)),
   syncDaily: authProcedure.input(dailySyncInput).mutation(({ input, ctx }) => syncDailyWorkflow(input, Number(ctx.id))),
   saveDraft: authProcedure.input(z.object({
     messageId: z.number().int().positive(),

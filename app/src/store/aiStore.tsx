@@ -74,8 +74,6 @@ export class AiStore implements Store {
   selectedSkill: { title: string; prompt: string; key: WorkflowKey; scope?: { from?: string; to?: string; includeNotes?: boolean; reviewDate?: string; read?: boolean; limited?: boolean; sourceCount?: number } } | null = null;
   isChatting = false;
   isAnswering = false;
-  /** 打开中的日报工作区对应的 assistant 消息 id；null 表示结果区关闭 */
-  dailyWorkspaceId: number | null = null;
   isPreparing = false;
   chatStatus: 'idle' | 'preparing' | 'generating' | 'stopping' | 'stopped' | 'error' | 'completed' = 'idle';
   chatError = '';

@@ -1,10 +1,7 @@
-import { BlogButton, BlogChip, BlogInput, BlogTextarea, BlogSelect, BlogCheckbox } from "./BlogUI";
+import { BlogInput, BlogTextarea, BlogSelect, BlogCheckbox } from "./BlogUI";
+import { Button, Chip, Card, CardBody, CardHeader } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
-import "./blog.css";
-import "./manage.css";
-import "./article.css";
-import "./topic-workspace.css";
 import { BlogTopicArrange } from "./BlogTopicArrange";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -22,15 +19,8 @@ import {
 
 type Post = Awaited<ReturnType<typeof api.blog.published.query>>[number];
 type Topic = Awaited<ReturnType<typeof api.blog.topics.query>>[number];
-/** 专题的章节编排：章节 + 每章文章 + 未分章节的文章。 */
 type Arrangement = Awaited<ReturnType<typeof api.blog.topicSections.query>>;
 
-/**
- * 展示方式的两个选项。
- *
- * 说明只写「排版上有什么不同」，不写实现细节 —— 作者要判断的是
- * 「这个专题适合让人一篇篇读下去，还是适合先看介绍再挑着看」。
- */
 const DISPLAY_MODE_OPTIONS: {
   value: TopicDisplayMode;
   label: string;
@@ -47,16 +37,6 @@ const DISPLAY_MODE_OPTIONS: {
     desc: "以章节目录和正文为主，适合系列教程、手册与连续阅读。",
   },
 ];
-
-/** 公开站与管理页共用同一个明暗键。 */
-const THEME_KEY = "ink-blog-theme";
-function readTheme() {
-  try {
-    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
-  } catch {
-    return "light";
-  }
-}
 
 function title(content: string, explicit = "") {
   if (explicit.trim()) return explicit.trim();
@@ -97,7 +77,6 @@ function imageUrl(path: string) {
   }
 }
 
-/** 有未保存修改时拦一下刷新 / 关闭标签页。 */
 function useLeaveGuard(dirty: boolean) {
   useEffect(() => {
     const guard = (e: BeforeUnloadEvent) => {
@@ -109,12 +88,10 @@ function useLeaveGuard(dirty: boolean) {
   }, [dirty]);
 }
 
-/** 专题树：按 parentId 分组，父在前、子按原顺序。 */
 function topicChildren(topics: Topic[], parentId: number | null) {
   return topics.filter((t) => (t.parentId ?? null) === parentId);
 }
 
-/** 连同自己在内的所有子孙 —— 上级专题下拉里要把它们排除掉。 */
 function descendantIds(topics: Topic[], rootId: number) {
   const result = new Set<number>([rootId]);
   const queue = [rootId];
@@ -129,13 +106,6 @@ function descendantIds(topics: Topic[], rootId: number) {
   return result;
 }
 
-/**
- * 专题详情页。
- *
- * 专题列表不再右侧挂表单：点「编辑专题」直接落到这个全屏页面，
- * 一个页面只干一件事 —— 改专题自己的设置、封面与文章归属。
- * 资料折叠、封面与章节编排共用当前页面。
- */
 export function BlogTopicDetail() {
   useEffect(() => { markBlogManager(); }, []);
   const { topicId } = useParams();
@@ -147,7 +117,6 @@ export function BlogTopicDetail() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [theme, setTheme] = useState(readTheme);
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
@@ -162,7 +131,6 @@ export function BlogTopicDetail() {
     () => (isNew ? null : (topics.find((t) => t.id === id) ?? null)),
     [topics, id, isNew],
   );
-  /** URL 里的 id 不是正整数，或者专题已被删掉，都算「找不到」。 */
   const badId = !isNew && (!Number.isInteger(id) || id <= 0);
   const missing = badId || (!loading && !topic);
 
@@ -177,9 +145,7 @@ export function BlogTopicDetail() {
     parentId: t?.parentId ?? null,
     coverTitle: t?.coverTitle || "",
     coverAttachmentId: t?.coverAttachmentId ?? null,
-    // 展示方式：老专题没这个字段时按专题模式处理，行为不变。
     displayMode: normalizeTopicDisplayMode(t?.displayMode) as TopicDisplayMode,
-    // 默认打开的文章：文档模式才用得上。切回专题模式也留着，不影响展示。
     defaultNoteId: t?.defaultNoteId ?? null,
     noteIds: t?.noteIds || [],
   });
@@ -201,15 +167,6 @@ export function BlogTopicDetail() {
       .finally(() => setLoading(false));
   }, [load]);
 
-  useEffect(() => {
-    writeTheme(theme);
-  }, [theme]);
-
-  /**
-   * 章节编排：既是「章节编排」入口的上下文，也是「默认打开文章」的候选来源。
-   *
-   * 候选必须来自编排 —— 只有排在这个专题里的文章才能当默认文章。
-   */
   const [arrangement, setArrangement] = useState<Arrangement | null>(null);
   const sectionStats = useMemo(
     () =>
@@ -251,7 +208,6 @@ export function BlogTopicDetail() {
   const dirty = JSON.stringify(draft) !== initial.current;
   useLeaveGuard(dirty || arrangementDirty);
 
-  // 切换专题时重置草稿：上一个专题的未保存内容不能带到下一个。
   useEffect(() => {
     const next = buildDraft(topic);
     setDraft(next);
@@ -273,10 +229,6 @@ export function BlogTopicDetail() {
         id: topic?.id,
         slug: draft.slug || undefined,
         coverAttachmentId: draft.coverAttachmentId,
-        /**
-         * 编排还没加载出来时不动这一项：
-         * 宁可保持原样，也不要因为一次盲写把作者设好的默认文章清掉。
-         */
         defaultNoteId: arrangement
           ? defaultArticleValue
             ? Number(defaultArticleValue)
@@ -286,7 +238,6 @@ export function BlogTopicDetail() {
       await load();
       RootStore.Get(ToastPlugin).success("专题已保存");
       initial.current = JSON.stringify(draft);
-      // 新建保存后换成正式地址，避免停在 /new 上再存一次变成第二个专题。
       if (isNew && saved?.id)
         navigate(`/blog-manage/topic/${saved.id}`, { replace: true });
     } catch (e) {
@@ -342,10 +293,8 @@ export function BlogTopicDetail() {
     }
   };
 
-  // 上级专题下拉：排除自己与自己的子孙，避免选出一个环。
   const excluded = topic ? descendantIds(topics, topic.id) : new Set<number>();
   const parentOptions = topics.filter((t) => !excluded.has(t.id));
-  // 专题封面候选：成员文章的公开封面 + 已发布文章的附件。
   const coverCandidates = useMemo(() => {
     const map = new Map<number, { id: number; path: string; name: string }>();
     const memberIds = new Set(draft.noteIds);
@@ -377,11 +326,6 @@ export function BlogTopicDetail() {
     return null;
   }, [topic?.cover, posts, draft.coverAttachmentId, generatedCovers]);
 
-  /**
-   * 默认打开文章的候选：编排里、且当前公开可访问的文章。
-   *
-   * 章节名一起带上 —— 同名文章不少，只看标题分不清是哪一篇。
-   */
   const defaultArticleOptions = useMemo(() => {
     if (!arrangement) return [];
     const postById = new Map(posts.map((p) => [p.id, p]));
@@ -415,166 +359,142 @@ export function BlogTopicDetail() {
     return options;
   }, [arrangement, posts]);
 
-  /**
-   * 选中的默认文章（存的是笔记 id）。
-   *
-   * 存着的文章已经不可用时按「自动」处理 —— 前台读的时候还会再校验一次，
-   * 两边都不会因为一条过期设置把专题页弄挂。
-   */
   const defaultArticleValue = useMemo(() => {
     const id = draft.defaultNoteId;
     if (!id) return "";
     return defaultArticleOptions.some((o) => o.id === id) ? String(id) : "";
   }, [draft.defaultNoteId, defaultArticleOptions]);
 
-  /** 存着的默认文章已经不可用了：告诉作者一句，别静默改掉。 */
   const defaultArticleStale =
     !!arrangement && !!draft.defaultNoteId && !defaultArticleValue;
 
+  /* ---------- 共用布局片段 ---------- */
 
-  const header = (
-    <>
-      <header className="ink-ad-topbar">
-        <div className="ink-ad-wrap">
-          <div className="ink-ad-topbar-inner">
-            <span className="ink-mg-brand">
-              Ink
-              <small>博客管理</small>
-            </span>
-            <span style={{ flex: 1 }} />
-            <BlogButton
-              className="ink-mg-button ink-mg-button-ghost"
-              onClick={() =>
-                setTheme((v) => (v === "light" ? "dark" : "light"))
-              }
-              aria-label="切换明暗主题"
-            >
-              <Icon icon="tabler:adjustments" width={16} />
-              {theme === "light" ? "浅色" : "深色"}
-            </BlogButton>
-            <a
-              className="ink-mg-button"
-              href="/blog"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              查看公开站 <Icon icon="tabler:external-link" width={15} />
-            </a>
-            <BlogButton className="ink-mg-button" onClick={goBack}>
-              返回专题
-            </BlogButton>
-          </div>
-        </div>
-      </header>
+  const topBar = (
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default-200 bg-background px-4">
+      <span className="text-sm font-semibold">
+        Jomio
+        <span className="ml-1 text-xs font-normal text-default-500">· 拾成</span>
+      </span>
+      <span className="flex-1" />
+      <Button
+        size="sm"
+        variant="light"
+        as="a"
+        href="/blog"
+        target="_blank"
+        rel="noopener noreferrer"
+        startContent={<Icon icon="tabler:external-link" width={15} />}
+      >
+        查看公开站
+      </Button>
+      <Button size="sm" variant="flat" onPress={goBack}>
+        返回专题
+      </Button>
+    </header>
+  );
 
-      <div className="ink-ad-wrap">
-        <div className="ink-ad-head">
-          <div style={{ minWidth: 0 }}>
-            <p className="ink-ad-crumb">
-              <a
-                href="/blog-manage"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/blog-manage");
-                }}
-              >
-                博客管理
-              </a>
-              <Icon icon="tabler:chevron-right" width={13} />
-              <a
-                href="/blog-manage?section=topics"
-                onClick={(e) => {
-                  e.preventDefault();
-                  goBack();
-                }}
-              >
-                专题
-              </a>
-              <Icon icon="tabler:chevron-right" width={13} />
-              <span>
-                {topic?.name ||
-                  (isNew ? "新建专题" : missing ? "专题不存在" : "加载中…")}
-              </span>
-            </p>
-            <h1 className="ink-ad-title">
-              {topic ? "专题管理" : "新建专题"}
-              {topic && (
-                <BlogChip
-                  color={topic.isPublished ? "success" : "default"}
-                  variant="flat"
-                >
-                  {topic.isPublished ? "已公开" : "未公开"}
-                </BlogChip>
-              )}
-            </h1>
-            <p className="ink-ad-note">
-              专题设置保存后立即生效。
-              {topic && sectionStats
-                ? ` 当前 ${sectionStats.sections} 个章节，${sectionStats.unassigned} 篇未分章节。`
-                : ""}
-            </p>
-          </div>
-          <div className="ink-ad-head-actions">
-            {topic && (
-              <>
-                <BlogButton
-                  className="ink-mg-button"
-                  disabled={working}
-                  onClick={() =>
-                    chapterArea.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    })
-                  }
-                >
-                  <Icon icon="tabler:layout-list" width={15} />
-                  编排章节
-                </BlogButton>
-                {topic.isPublished && (
-                  <a
-                    className="ink-mg-button ink-mg-button-ghost"
-                    href={`/blog/t/${topic.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    查看专题 <Icon icon="tabler:external-link" width={14} />
-                  </a>
-                )}
-              </>
-            )}
-            <BlogButton
-              className="ink-mg-button-primary ink-mg-button"
-              disabled={working || !draft.name.trim() || (!dirty && !!topic)}
-              onClick={() => void save()}
-            >
-              {busy ? "保存中…" : "保存资料"}
-            </BlogButton>
-          </div>
-        </div>
-
-        {error && (
-          <div className="ink-mg-alert" style={{ marginBottom: 14 }}>
-            <span>{error}</span>
-          </div>
+  const pageHeader = (
+    <div className="mb-6 min-w-0">
+      <nav className="mb-2 flex items-center gap-1.5 text-xs text-default-500">
+        <button
+          type="button"
+          className="transition-colors hover:text-foreground"
+          onClick={(e) => { e.preventDefault(); navigate("/blog-manage"); }}
+        >
+          博客管理
+        </button>
+        <Icon icon="tabler:chevron-right" width={12} />
+        <button
+          type="button"
+          className="transition-colors hover:text-foreground"
+          onClick={(e) => { e.preventDefault(); goBack(); }}
+        >
+          专题
+        </button>
+        <Icon icon="tabler:chevron-right" width={12} />
+        <span className="truncate text-default-700">
+          {topic?.name || (isNew ? "新建专题" : missing ? "专题不存在" : "加载中…")}
+        </span>
+      </nav>
+      <div className="flex items-center gap-3">
+        <h1 className="text-xl font-bold">
+          {topic ? "专题管理" : "新建专题"}
+        </h1>
+        {topic && (
+          <Chip
+            size="sm"
+            variant="flat"
+            color={topic.isPublished ? "success" : "default"}
+          >
+            {topic.isPublished ? "已公开" : "未公开"}
+          </Chip>
         )}
       </div>
-    </>
+      <p className="mt-1 text-sm text-default-500">
+        专题设置保存后立即生效。
+        {topic && sectionStats
+          ? ` 当前 ${sectionStats.sections} 个章节，${sectionStats.unassigned} 篇未分章节。`
+          : ""}
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        {topic && (
+          <>
+            <Button
+              size="sm"
+              variant="flat"
+              isDisabled={working}
+              startContent={<Icon icon="tabler:layout-list" width={15} />}
+              onPress={() =>
+                chapterArea.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              编排章节
+            </Button>
+            {topic.isPublished && (
+              <Button
+                size="sm"
+                variant="light"
+                as="a"
+                href={`/blog/t/${topic.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                endContent={<Icon icon="tabler:external-link" width={14} />}
+              >
+                查看专题
+              </Button>
+            )}
+          </>
+        )}
+        <span className="flex-1" />
+        <Button
+          size="sm"
+          color="primary"
+          isDisabled={working || !draft.name.trim() || (!dirty && !!topic)}
+          onPress={() => void save()}
+        >
+          {busy ? "保存中…" : "保存资料"}
+        </Button>
+      </div>
+    </div>
   );
+
+  const shellClass = "flex min-h-screen flex-col bg-background text-foreground";
 
   if (missing)
     return (
-      <div
-        className="ink-blog ink-manage ink-ad-page ink-topic-workspace"
-        data-theme={theme}
-      >
-        {header}
-        <div className="ink-ad-wrap">
-          <div className="ink-mg-empty">
-            <h2>专题不存在</h2>
-            <p>它可能已经被删除了。</p>
-            <BlogButton className="ink-mg-button" onClick={goBack}>
+      <div className={shellClass}>
+        {topBar}
+        <div className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center px-6">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">专题不存在</h2>
+            <p className="mt-1 text-sm text-default-500">它可能已经被删除了。</p>
+            <Button className="mt-4" variant="flat" onPress={goBack}>
               返回专题列表
-            </BlogButton>
+            </Button>
           </div>
         </div>
       </div>
@@ -582,13 +502,10 @@ export function BlogTopicDetail() {
 
   if (loading && !topics.length)
     return (
-      <div
-        className="ink-blog ink-manage ink-ad-page ink-topic-workspace"
-        data-theme={theme}
-      >
-        {header}
-        <div className="ink-ad-wrap">
-          <p className="ink-mg-empty" role="status">
+      <div className={shellClass}>
+        {topBar}
+        <div className="mx-auto w-full max-w-3xl px-6 py-10">
+          <p className="text-center text-sm text-default-500" role="status">
             正在加载专题…
           </p>
         </div>
@@ -596,249 +513,266 @@ export function BlogTopicDetail() {
     );
 
   return (
-    <div
-      className="ink-blog ink-manage ink-ad-page ink-topic-workspace"
-      data-theme={theme}
-    >
-      {header}
+    <div className={shellClass}>
+      {topBar}
 
-      <div className="ink-ad-wrap">
-        <div className="ink-td-form">
-          <details
-            className="ink-ad-card ink-td-basics"
-            open
-          >
-            <summary>
-              <strong>基本信息</strong>
-              <span>{draft.name || "填写专题名称、简介和链接"}</span>
-              <small>收起</small>
-            </summary>
-            <div className="ink-td-basics-grid">
-              <label className="ink-mg-section" style={{ gap: 6 }}>
-                <span className="ink-mg-sub">名称</span>
-                <BlogInput
-                  className="ink-mg-field"
-                  maxLength={60}
-                  value={draft.name}
-                  onChange={(e) => patch({ name: e.target.value })}
-                  placeholder="如：产品思考"
-                />
-              </label>
+      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 lg:px-8">
+        {pageHeader}
 
-              <label className="ink-mg-section" style={{ gap: 6 }}>
-                <span className="ink-mg-sub">简介</span>
-                <BlogTextarea
-                  className="ink-mg-field"
-                  rows={3}
-                  maxLength={500}
-                  value={draft.desc}
-                  onChange={(e) => patch({ desc: e.target.value })}
-                  placeholder="一句话说明这个专题在讲什么"
-                />
-              </label>
+        {error && (
+          <div className="mb-4 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
-              <div className="ink-mg-section" style={{ gap: 6 }}>
-                <span className="ink-mg-sub">页面链接 (Slug)</span>
-                <div className="ink-mg-slug">
-                  <span>/topics/</span>
-                  <BlogInput
-                    value={draft.slug}
-                    maxLength={80}
-                    readOnly={!!topic}
-                    placeholder="product-thinking"
-                    onChange={(e) =>
-                      patch({
-                        slug: e.target.value
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, "-")
-                          .replace(/-+/g, "-"),
-                      })
-                    }
-                  />
-                </div>
-                {!!topic && (
-                  <span className="ink-mg-sub">
-                    标识创建后不可改，避免公开链接失效。
+        <div className="space-y-5">
+          {/* ---------- 基本信息 ---------- */}
+          <Card className="rounded-xl border border-default-200 shadow-none">
+            <details open>
+              <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 select-none">
+                <div className="min-w-0">
+                  <strong className="text-sm font-semibold">基本信息</strong>
+                  <span className="ml-2 truncate text-xs text-default-500">
+                    {draft.name || "填写专题名称、简介和链接"}
                   </span>
-                )}
-              </div>
-
-              {/*
-                展示方式：只决定「怎么排版」，不决定「有什么内容」。
-                两种模式共用同一套专题、章节、文章与排序 —— 切换不会动封面、
-                文章关系与章节编排，保存后立刻在公开站生效。
-              */}
-              <fieldset className="ink-td-display-mode">
-                <legend className="ink-mg-sub">展示方式</legend>
-                <div className="ink-td-display-mode-options">
-                  {DISPLAY_MODE_OPTIONS.map((option) => (
-                    <label
-                      key={option.value}
-                      className="ink-td-display-mode-option"
-                      data-active={draft.displayMode === option.value}
-                    >
-                      <input
-                        type="radio"
-                        name="topic-display-mode"
-                        value={option.value}
-                        checked={draft.displayMode === option.value}
-                        onChange={() =>
-                          patch({ displayMode: option.value as TopicDisplayMode })
-                        }
-                      />
-                      <span className="ink-td-display-mode-text">
-                        <strong>{option.label}</strong>
-                        <small>{option.desc}</small>
-                      </span>
-                    </label>
-                  ))}
                 </div>
-              </fieldset>
+                <small className="shrink-0 text-xs text-default-400">收起</small>
+              </summary>
+              <CardBody className="grid grid-cols-1 gap-5 pt-0 md:grid-cols-2">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-default-500">名称</span>
+                  <BlogInput
+                    className="w-full"
+                    maxLength={60}
+                    value={draft.name}
+                    onChange={(e) => patch({ name: e.target.value })}
+                    placeholder="如：产品思考"
+                  />
+                </label>
 
-              {/*
-                默认打开文章：只对文档模式有意义。
+                <label className="flex flex-col gap-1.5 md:col-span-2">
+                  <span className="text-xs font-medium text-default-500">简介</span>
+                  <BlogTextarea
+                    className="w-full"
+                    rows={3}
+                    maxLength={500}
+                    value={draft.desc}
+                    onChange={(e) => patch({ desc: e.target.value })}
+                    placeholder="一句话说明这个专题在讲什么"
+                  />
+                </label>
 
-                读者进专题时默认看到哪一篇，由作者在这里定。
-                切回专题模式时这一项会收起，但配置仍然留着 ——
-                专题模式的展示逻辑完全不受影响。
-              */}
-              {draft.displayMode === "doc" && (
-                <div className="ink-td-default-article">
-                  <span className="ink-mg-sub">默认打开文章</span>
-                  <BlogSelect
-                    className="ink-mg-field"
-                    value={defaultArticleValue}
-                    onChange={(e) =>
-                      patch({
-                        defaultNoteId: e.target.value
-                          ? Number(e.target.value)
-                          : null,
-                      })
-                    }
-                  >
-                    <option value="">自动选择第一篇公开文章</option>
-                    {defaultArticleOptions.map((option) => (
-                      <option key={option.id} value={String(option.id)}>
-                        {option.section} · {option.title}
-                      </option>
+                <div className="flex flex-col gap-1.5 md:col-span-2">
+                  <span className="text-xs font-medium text-default-500">页面链接 (Slug)</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-default-400">/topics/</span>
+                    <BlogInput
+                      value={draft.slug}
+                      maxLength={80}
+                      readOnly={!!topic}
+                      placeholder="product-thinking"
+                      onChange={(e) =>
+                        patch({
+                          slug: e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9-]/g, "-")
+                            .replace(/-+/g, "-"),
+                        })
+                      }
+                    />
+                  </div>
+                  {!!topic && (
+                    <span className="text-xs text-default-500">
+                      标识创建后不可改，避免公开链接失效。
+                    </span>
+                  )}
+                </div>
+
+                {/* 展示方式 */}
+                <fieldset className="flex flex-col gap-2 md:col-span-2">
+                  <legend className="text-xs font-medium text-default-500">展示方式</legend>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {DISPLAY_MODE_OPTIONS.map((option) => (
+                      <label
+                        key={option.value}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-sm transition-colors ${
+                          draft.displayMode === option.value
+                            ? "border-primary bg-primary/5"
+                            : "border-default-200 hover:border-default-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="topic-display-mode"
+                          value={option.value}
+                          checked={draft.displayMode === option.value}
+                          onChange={() =>
+                            patch({ displayMode: option.value as TopicDisplayMode })
+                          }
+                          className="mt-0.5"
+                        />
+                        <div>
+                          <strong className="font-semibold">{option.label}</strong>
+                          <small className="mt-0.5 block text-xs text-default-500">
+                            {option.desc}
+                          </small>
+                        </div>
+                      </label>
                     ))}
-                  </BlogSelect>
-                  <small className="ink-mg-sub">
-                    未指定，或指定的文章已撤回、移出专题、被删除时，自动打开编排中的第一篇公开文章。
-                  </small>
-                  {defaultArticleStale && (
-                    <small className="ink-mg-sub is-warn">
-                      原设置的文章已经不可访问，保存后将自动改为第一篇公开文章。
+                  </div>
+                </fieldset>
+
+                {/* 默认打开文章 */}
+                {draft.displayMode === "doc" && (
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <span className="text-xs font-medium text-default-500">默认打开文章</span>
+                    <BlogSelect
+                      className="w-full"
+                      value={defaultArticleValue}
+                      onChange={(e) =>
+                        patch({
+                          defaultNoteId: e.target.value
+                            ? Number(e.target.value)
+                            : null,
+                        })
+                      }
+                    >
+                      <option value="">自动选择第一篇公开文章</option>
+                      {defaultArticleOptions.map((option) => (
+                        <option key={option.id} value={String(option.id)}>
+                          {option.section} · {option.title}
+                        </option>
+                      ))}
+                    </BlogSelect>
+                    <small className="text-xs text-default-500">
+                      未指定，或指定的文章已撤回、移出专题、被删除时，自动打开编排中的第一篇公开文章。
+                    </small>
+                    {defaultArticleStale && (
+                      <small className="text-xs text-warning">
+                        原设置的文章已经不可访问，保存后将自动改为第一篇公开文章。
+                      </small>
+                    )}
+                  </div>
+                )}
+              </CardBody>
+            </details>
+          </Card>
+
+          {/* ---------- 封面与展示 ---------- */}
+          <Card className="rounded-xl border border-default-200 shadow-none">
+            <CardHeader className="flex flex-col items-start gap-1 pb-1">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
+                <Icon icon="tabler:photo" width={17} />
+                封面与展示
+              </h2>
+              <p className="text-xs text-default-500">专题页首屏的封面、颜色与导航位置</p>
+            </CardHeader>
+            <CardBody className="space-y-5 pt-2">
+              {/* 封面 */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-medium text-default-500">封面</span>
+                <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-default-200 bg-default-50">
+                  {currentCover ? (
+                    <img
+                      className="h-full w-full object-cover"
+                      src={imageUrl(currentCover.path)}
+                      alt="专题封面"
+                    />
+                  ) : (
+                    <span className="text-sm text-default-400">
+                      未设置封面 · 公开站会显示专题色块
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    color="primary"
+                    isDisabled={!topic || working || !draft.name.trim()}
+                    startContent={<Icon icon="tabler:sparkles" width={15} />}
+                    onPress={() => void generateCover()}
+                  >
+                    {generatingCover ? "正在生成…" : "AI 生成封面"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    startContent={<Icon icon="tabler:photo" width={15} />}
+                    onPress={() => setPicking((v) => !v)}
+                  >
+                    {picking ? "收起封面选择" : "更换封面"}
+                  </Button>
+                  {!topic && (
+                    <small className="text-xs text-default-500">
+                      先保存专题，再根据名称和简介生成封面。
                     </small>
                   )}
-                </div>
-              )}
-            </div>
-          </details>
-
-          <section className="ink-ad-card ink-td-display">
-            <div className="ink-ad-card-head">
-              <div>
-                <h2 className="ink-ad-card-title">
-                  <Icon icon="tabler:photo" width={17} />
-                  封面与展示
-                </h2>
-                <p className="ink-ad-sub">专题页首屏的封面、颜色与导航位置</p>
-              </div>
-            </div>
-
-            <div className="ink-mg-section" style={{ gap: 8 }}>
-              <span className="ink-mg-sub">封面</span>
-              <div className="ink-mg-topic-cover">
-                {currentCover ? (
-                  <img src={imageUrl(currentCover.path)} alt="专题封面" />
-                ) : (
-                  <span className="ink-mg-topic-cover-empty">
-                    未设置封面 · 公开站会显示专题色块
-                  </span>
-                )}
-              </div>
-              <div className="ink-mg-row-actions" style={{ marginLeft: 0 }}>
-                <BlogButton
-                  className="ink-mg-button ink-mg-button-primary"
-                  type="button"
-                  disabled={!topic || working || !draft.name.trim()}
-                  onClick={() => void generateCover()}
-                >
-                  <Icon icon="tabler:sparkles" width={15} />
-                  {generatingCover ? "正在生成…" : "AI 生成封面"}
-                </BlogButton>
-                <BlogButton
-                  className="ink-mg-button"
-                  type="button"
-                  onClick={() => setPicking((v) => !v)}
-                >
-                  <Icon icon="tabler:photo" width={15} />
-                  {picking ? "收起封面选择" : "更换封面"}
-                </BlogButton>
-                {!topic && (
-                  <small className="ink-mg-sub">
-                    先保存专题，再根据名称和简介生成封面。
-                  </small>
-                )}
-                {draft.coverAttachmentId !== null && (
-                  <BlogButton
-                    className="ink-mg-button"
-                    type="button"
-                    onClick={() => patch({ coverAttachmentId: null })}
-                  >
-                    使用专题色块
-                  </BlogButton>
-                )}
-              </div>
-              {picking && (
-                <div className="ink-mg-cover-picker">
-                  {coverCandidates.map((c) => (
-                    <BlogButton
-                      key={c.id}
-                      type="button"
-                      className="ink-mg-cover-option"
-                      aria-label={`选择封面 ${c.name}`}
-                      aria-pressed={draft.coverAttachmentId === c.id}
-                      onClick={() => {
-                        patch({ coverAttachmentId: c.id });
-                        setPicking(false);
-                      }}
+                  {draft.coverAttachmentId !== null && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onPress={() => patch({ coverAttachmentId: null })}
                     >
-                      <img src={imageUrl(c.path)} alt={c.name} />
-                    </BlogButton>
-                  ))}
-                  {!coverCandidates.length && (
-                    <p className="ink-mg-sub">
-                      还没有可选的图片，先把文章发布并设置封面。
-                    </p>
+                      使用专题色块
+                    </Button>
                   )}
                 </div>
-              )}
-              <label className="ink-mg-section" style={{ gap: 6 }}>
-                <span className="ink-mg-sub">封面短标题（最多 24 字）</span>
-                <BlogInput
-                  className="ink-mg-field"
-                  maxLength={24}
-                  value={draft.coverTitle}
-                  onChange={(e) => patch({ coverTitle: e.target.value })}
-                  placeholder="留空则用专题名"
-                />
-              </label>
-            </div>
+                {picking && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {coverCandidates.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`overflow-hidden rounded-lg border-2 transition-colors ${
+                          draft.coverAttachmentId === c.id
+                            ? "border-primary"
+                            : "border-transparent hover:border-default-300"
+                        }`}
+                        aria-label={`选择封面 ${c.name}`}
+                        aria-pressed={draft.coverAttachmentId === c.id}
+                        onClick={() => {
+                          patch({ coverAttachmentId: c.id });
+                          setPicking(false);
+                        }}
+                      >
+                        <img
+                          className="h-24 w-full object-cover"
+                          src={imageUrl(c.path)}
+                          alt={c.name}
+                        />
+                      </button>
+                    ))}
+                    {!coverCandidates.length && (
+                      <p className="col-span-full text-sm text-default-500">
+                        还没有可选的图片，先把文章发布并设置封面。
+                      </p>
+                    )}
+                  </div>
+                )}
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-default-500">
+                    封面短标题（最多 24 字）
+                  </span>
+                  <BlogInput
+                    className="w-full"
+                    maxLength={24}
+                    value={draft.coverTitle}
+                    onChange={(e) => patch({ coverTitle: e.target.value })}
+                    placeholder="留空则用专题名"
+                  />
+                </label>
+              </div>
 
-            <div className="ink-td-display-options">
-              <div className="ink-mg-grid-2">
-                <label className="ink-mg-section" style={{ gap: 6 }}>
-                  <span className="ink-mg-sub">上级专题</span>
+              {/* 上级专题 + 颜色 */}
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-default-500">上级专题</span>
                   <BlogSelect
-                    className="ink-mg-field ink-mg-parent-select"
+                    className="w-full"
                     value={draft.parentId ?? ""}
                     onChange={(e) =>
                       patch({
-                        parentId: e.target.value
-                          ? Number(e.target.value)
-                          : null,
+                        parentId: e.target.value ? Number(e.target.value) : null,
                       })
                     }
                   >
@@ -850,47 +784,48 @@ export function BlogTopicDetail() {
                     ))}
                   </BlogSelect>
                 </label>
-                <label className="ink-mg-section" style={{ gap: 6 }}>
-                  <span className="ink-mg-sub">专题颜色</span>
-                  <span
-                    style={{ display: "flex", alignItems: "center", gap: 10 }}
-                  >
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-default-500">专题颜色</span>
+                  <span className="flex items-center gap-2.5">
                     <input
                       type="color"
-                      className="ink-mg-color"
+                      className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent"
                       value={draft.color}
                       onChange={(e) => patch({ color: e.target.value })}
                       aria-label="专题颜色"
                     />
-                    <span className="ink-mg-sub">{draft.color}</span>
+                    <span className="text-xs text-default-500">{draft.color}</span>
                   </span>
                 </label>
               </div>
 
-              <div className="ink-mg-section" style={{ gap: 10 }}>
-                <label className="ink-mg-toggle">
-                  <BlogCheckbox toggle
+              {/* 公开 / 导航 / 推荐 */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2.5">
+                  <BlogCheckbox
+                    toggle
                     type="checkbox"
                     checked={draft.isPublished}
                     onChange={(e) => patch({ isPublished: e.target.checked })}
                   />
-                  <span className="ink-mg-toggle-track" />
-                  <span style={{ fontSize: 13 }}>公开专题页</span>
+                  <span className="text-sm">公开专题页</span>
                 </label>
-                <span className="ink-mg-sub">
+                <p className="text-xs text-default-500">
                   关闭后专题页不对外访问，文章仍单独公开。
-                </span>
-                <div className="ink-mg-grid-2">
-                  <label className="ink-mg-switch">
-                    <BlogCheckbox aria-label="导航展示"
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 text-sm">
+                    <BlogCheckbox
+                      aria-label="导航展示"
                       type="checkbox"
                       checked={draft.showInNav}
                       onChange={(e) => patch({ showInNav: e.target.checked })}
                     />
                     导航展示
                   </label>
-                  <label className="ink-mg-switch">
-                    <BlogCheckbox aria-label="首页推荐"
+                  <label className="flex items-center gap-2 text-sm">
+                    <BlogCheckbox
+                      aria-label="首页推荐"
                       type="checkbox"
                       checked={draft.isFeatured}
                       onChange={(e) => patch({ isFeatured: e.target.checked })}
@@ -899,40 +834,44 @@ export function BlogTopicDetail() {
                   </label>
                 </div>
               </div>
-            </div>
-          </section>
+            </CardBody>
+          </Card>
 
-          {/* 底部操作条不吸底：吸底会盖住卡片内容。顶部页头也有一个保存按钮。 */}
-          <div className="ink-mg-panel-footer">
-            <span>{dirty ? "有未保存修改。" : "专题设置保存后立即生效。"}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* ---------- 底部操作 ---------- */}
+          <div className="flex items-center justify-between rounded-xl border border-default-200 bg-surface px-5 py-3.5">
+            <span className="text-sm text-default-500">
+              {dirty ? "有未保存修改。" : "专题设置保存后立即生效。"}
+            </span>
+            <div className="flex items-center gap-2.5">
               {topic && (
-                <BlogButton
-                  className="ink-mg-button"
-                  type="button"
-                  disabled={working}
-                  onClick={() => void remove()}
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="danger"
+                  isDisabled={working}
+                  onPress={() => void remove()}
                 >
                   删除专题
-                </BlogButton>
+                </Button>
               )}
-              <BlogButton
-                className="ink-mg-button-primary ink-mg-button"
-                disabled={working || !draft.name.trim() || (!dirty && !!topic)}
-                onClick={() => void save()}
+              <Button
+                size="sm"
+                color="primary"
+                isDisabled={working || !draft.name.trim() || (!dirty && !!topic)}
+                onPress={() => void save()}
               >
                 {busy ? "保存中…" : "保存资料"}
-              </BlogButton>
-            </span>
+              </Button>
+            </div>
           </div>
-          <section className="ink-td-chapters" id="chapters" ref={chapterArea}>
-            <div className="ink-ad-card-head">
-              <div>
-                <h2 className="ink-ad-card-title">章节与文章</h2>
-                <p className="ink-ad-sub">
-                  直接添加章节、拖动文章编排；保存编排后更新公开目录。
-                </p>
-              </div>
+
+          {/* ---------- 章节与文章 ---------- */}
+          <section id="chapters" ref={chapterArea}>
+            <div className="mb-3">
+              <h2 className="text-base font-semibold">章节与文章</h2>
+              <p className="text-xs text-default-500">
+                直接添加章节、拖动文章编排；保存编排后更新公开目录。
+              </p>
             </div>
             {topic ? (
               <BlogTopicArrange
@@ -942,20 +881,11 @@ export function BlogTopicDetail() {
                 onDirtyChange={setArrangementDirty}
               />
             ) : (
-              <p className="ink-mg-empty">保存专题后即可添加章节与文章。</p>
+              <p className="text-sm text-default-500">保存专题后即可添加章节与文章。</p>
             )}
           </section>
         </div>
       </div>
     </div>
   );
-}
-
-/** 明暗偏好写回同一个键，公开站与管理页共用。 */
-function writeTheme(theme: string) {
-  try {
-    localStorage.setItem(THEME_KEY, theme);
-  } catch {
-    /* 隐私模式下写不进去也不影响使用 */
-  }
 }

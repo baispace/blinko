@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/trpc';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import Editor from '@/components/Common/Editor';
 import { NoteType } from '@shared/lib/types';
 import { observer } from 'mobx-react-lite';
@@ -32,7 +33,7 @@ export const AiDraftResult = observer(function AiDraftResult({ draft, messageId,
     <div className="ai-result-heading"><p className="text-sm font-medium">{draft.kind === 'note' ? '笔记草稿' : '待办建议'}</p><span className="text-xs text-default-500">{draft.kind === 'note' ? '可直接编辑，确认后保存' : `${items.length} 项 · 选择后创建`}</span></div>
     {!items.length && <p className="text-sm text-default-500">没有提取到明确的待办，可以补充内容后再试。</p>}
     {items.map((item, index) => <div key={index} className={`ai-result-item rounded-xl border border-default-200 p-4 space-y-3 ${saved[index]?'is-saved':''}`}>
-      {saved[index] ? <div className="flex justify-between text-sm"><span>已保存 · {item.title}</span><Link className="text-primary" to={`/detail?id=${saved[index]}`}>打开{draft.kind === 'note' ? '笔记' : '待办'}</Link></div> : <>
+      {saved[index] ? <div className="flex justify-between text-sm"><span>已保存为草稿 · {item.title}</span><Link className="text-primary" to={`/detail?id=${saved[index]}`}>打开{draft.kind === 'note' ? '笔记' : '待办'}</Link></div> : <>
         <div className="flex gap-2 items-center">{draft.kind === 'tasks' && <Checkbox aria-label={`选择 ${item.title}`} isSelected={item.selected} isDisabled={busy} onValueChange={selected => edit(index, { selected })} />}<Input aria-label="标题" placeholder="填写标题" variant="underlined" size="sm" isDisabled={busy} value={item.title} onValueChange={title => edit(index, { title })} classNames={{input:'font-medium'}} /></div>
         {draft.kind === 'tasks' && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input type="datetime-local" label="截止时间" labelPlacement="outside" description={!item.due?'未提供日期，保持留空':undefined} size="sm" variant="bordered" isDisabled={busy} value={item.due} onValueChange={due=>edit(index,{due})} />
@@ -49,7 +50,7 @@ export const AiDraftResult = observer(function AiDraftResult({ draft, messageId,
     {error && <p role="alert" className="text-danger text-sm">{error}</p>}
     {!!pending.length && <Button color="primary" radius="sm" size="sm" isLoading={busy} isDisabled={busy || pending.some(t => !t.title.trim())} onPress={async () => {
       setBusy(true); setError('');
-      try { const result = await api.ai.saveDraft.mutate({ messageId, drafts: pending.map(({ index, title, content, due, priority, tags }) => ({ index, title, content, due: due ? new Date(due).toISOString() : '', priority, tags })) }); setSaved(result as Record<string, number>); RootStore.Get(BlinkoStore).refreshData(); }
+      try { const result = await api.ai.saveDraft.mutate({ messageId, drafts: pending.map(({ index, title, content, due, priority, tags }) => ({ index, title, content, due: due ? new Date(due).toISOString() : '', priority, tags })) }); setSaved(result as Record<string, number>); RootStore.Get(BlinkoStore).refreshData(); RootStore.Get(ToastPlugin).success(`已保存 ${Object.keys(result).length} 项草稿`); }
       catch { setError('保存失败，未完成的条目可以重试。'); }
       finally { setBusy(false); }
     }}>{busy ? '正在保存…' : draft.kind === 'note' ? '保存为笔记' : `创建选中的 ${pending.length} 个待办`}</Button>}

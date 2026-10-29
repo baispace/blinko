@@ -1,16 +1,15 @@
-import { BlogButton, BlogChipGroup, BlogInput, BlogTabs } from "./BlogUI";
+import { BlogChipGroup, BlogInput, BlogTabs } from "./BlogUI";
+import { Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { BlogStatsBreakdowns } from "./BlogStatsBreakdowns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/trpc";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { BlogTrendChart } from "./BlogTrendChart";
-import "./stats.css";
 
 type Analytics = Awaited<ReturnType<typeof api.blog.analytics.query>>;
 type ArticleRow = Analytics["articles"]["rows"][number];
 type RangePreset = "today" | "7d" | "30d" | "custom";
-/** 与服务端 analytics 路由同形状的范围入参。 */
 type RangeInput = {
   preset?: "today" | "7d" | "30d";
   from?: string;
@@ -39,13 +38,8 @@ function formatNumber(value: number) {
 }
 
 function formatPercent(value: number | null) {
-  // 曝光为 0 时不编造百分比，直接显示「—」。
   if (value === null || !Number.isFinite(value)) return "—";
   return (value * 100).toFixed(1) + "%";
-}
-
-function metricHint(range: string) {
-  return range;
 }
 
 export function BlogStatsPanel() {
@@ -56,11 +50,6 @@ export function BlogStatsPanel() {
     ? params.get("statsTab")!
     : "core";
 
-  /**
-   * 筛选条件全部放在 URL 里：刷新、后退、从文章下钻返回都能恢复。
-   * 顶部指标、趋势、来源、文章表共用同一个 range —— 不会出现「顶部近7天、
-   * 下面却是累计」。
-   */
   const preset = (params.get("range") as RangePreset | null) ?? "7d";
   const from = params.get("from") ?? "";
   const to = params.get("to") ?? "";
@@ -68,7 +57,6 @@ export function BlogStatsPanel() {
   const q = params.get("q") ?? "";
   const page = Math.max(1, Number(params.get("page")) || 1);
   const noteId = params.get("note") ? Number(params.get("note")) : null;
-  /** 手动刷新用的令牌：URL 其余参数没变时，靠它触发一次新的取数。 */
   const refresh = Number(params.get("refresh") || 0);
 
   const patch = useCallback(
@@ -95,9 +83,6 @@ export function BlogStatsPanel() {
   const [customOpen, setCustomOpen] = useState(preset === "custom");
   const [customFrom, setCustomFrom] = useState(from);
   const [customTo, setCustomTo] = useState(to);
-  /**
-   * 请求序号：快速切换范围时，旧请求回来不能覆盖新结果。
-   */
   const seq = useRef(0);
 
   useEffect(() => setSearchDraft(q), [q]);
@@ -144,11 +129,9 @@ export function BlogStatsPanel() {
       .finally(() => {
         if (id === seq.current) setLoading(false);
       });
-    // requestKey 覆盖了全部入参，避免逐字段列依赖。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestKey]);
 
-  // 搜索输入防抖：只写 URL，不在每次按键时打接口。
   useEffect(() => {
     if (searchDraft === q) return;
     const timer = setTimeout(() => {
@@ -192,7 +175,7 @@ export function BlogStatsPanel() {
   const pageCount = data?.articles.pageCount ?? 1;
 
   return (
-    <div className="ink-stats">
+    <div className="space-y-5">
       <BlogTabs
         label="数据分析维度"
         value={tab}
@@ -203,66 +186,70 @@ export function BlogStatsPanel() {
           { key: "content", label: "内容分析", description: "专题与文章表现" },
         ]}
       />
+
       {/* ---------- 时间筛选 ---------- */}
-      <div className="ink-stats-toolbar">
+      <div className="flex flex-wrap items-center gap-3">
         <BlogChipGroup
           label="统计时间范围"
           value={preset}
           onChange={key => switchPreset(key as RangePreset)}
           items={PRESETS.map((p) => ({ key: p.id, label: p.label }))}
         />
-          {customOpen && (
-            <div className="ink-stats-custom">
-              <BlogInput
-                type="date"
-                className="ink-mg-field"
-                value={customFrom}
-                max={customTo || undefined}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                aria-label="开始日期"
-              />
-              <span className="ink-mg-sub">至</span>
-              <BlogInput
-                type="date"
-                className="ink-mg-field"
-                value={customTo}
-                min={customFrom || undefined}
-                onChange={(e) => setCustomTo(e.target.value)}
-                aria-label="结束日期"
-              />
-              <BlogButton
-                className="ink-mg-button ink-mg-button-primary"
-                onClick={applyCustom}
-                disabled={!customFrom || !customTo}
-              >
-                应用
-              </BlogButton>
-            </div>
-          )}
-        <div className="ink-stats-toolbar-meta">
-          <span className="ink-mg-sub">
-            {loading ? "正在加载…" : `统计区间 ${rangeLabel}（Asia/Shanghai）`}
-          </span>
-          <BlogButton
-            className="ink-mg-button"
-            onClick={() => patch({ refresh: String(refresh + 1) })}
-            disabled={loading}
-          >
-            <Icon icon="tabler:refresh" width={15} />
-            刷新
-          </BlogButton>
-        </div>
+        {customOpen && (
+          <div className="flex items-center gap-2">
+            <BlogInput
+              type="date"
+              className="w-full"
+              value={customFrom}
+              max={customTo || undefined}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              aria-label="开始日期"
+            />
+            <span className="text-xs text-default-500">至</span>
+            <BlogInput
+              type="date"
+              className="w-full"
+              value={customTo}
+              min={customFrom || undefined}
+              onChange={(e) => setCustomTo(e.target.value)}
+              aria-label="结束日期"
+            />
+            <Button
+              size="sm"
+              color="primary"
+              isDisabled={!customFrom || !customTo}
+              onPress={applyCustom}
+            >
+              应用
+            </Button>
+          </div>
+        )}
+        <span className="flex-1" />
+        <span className="text-xs text-default-500">
+          {loading ? "正在加载…" : `统计区间 ${rangeLabel}（Asia/Shanghai）`}
+        </span>
+        <Button
+          size="sm"
+          variant="flat"
+          isDisabled={loading}
+          startContent={<Icon icon="tabler:refresh" width={15} />}
+          onPress={() => patch({ refresh: String(refresh + 1) })}
+        >
+          刷新
+        </Button>
       </div>
 
       {error && (
-        <div className="ink-mg-alert" role="alert">
-          {error}
-          <BlogButton
-            className="ink-mg-button"
-            onClick={() => patch({ refresh: String(refresh + 1) })}
+        <div className="flex items-center gap-3 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger" role="alert">
+          <span className="flex-1">{error}</span>
+          <Button
+            size="sm"
+            variant="flat"
+            color="danger"
+            onPress={() => patch({ refresh: String(refresh + 1) })}
           >
             重试
-          </BlogButton>
+          </Button>
         </div>
       )}
 
@@ -272,9 +259,9 @@ export function BlogStatsPanel() {
         aria-labelledby={"stats-tab-" + tab}
       >
         {tab === "core" && (
-          <>
+          <div className="space-y-5">
             {/* ---------- 顶部指标 ---------- */}
-            <div className="ink-stats-metrics">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard
                 icon="tabler:eye"
                 label="阅读次数"
@@ -302,7 +289,7 @@ export function BlogStatsPanel() {
             </div>
 
             {metrics && (
-              <p className="ink-mg-sub">
+              <p className="text-xs text-default-500">
                 全部区块使用同一区间 {rangeLabel}（{data?.range.timezone}
                 ），按当前图表粒度聚合； 没有事件的日期按 0 计入。曝光为 0
                 时点击率显示「—」，不做强行百分比。
@@ -310,73 +297,115 @@ export function BlogStatsPanel() {
             )}
 
             {/* ---------- 趋势 + 来源 ---------- */}
-            <div className="ink-stats-split">
-              <section className="ink-mg-panel ink-stats-card">
-                <div className="ink-mg-section-head">
-                  <h2 className="ink-mg-section-title">访问趋势</h2>
-                  <span className="ink-mg-sub">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <Card className="rounded-xl border border-default-200 shadow-none">
+                <CardHeader className="flex items-center justify-between gap-3 pb-1">
+                  <h2 className="text-base font-semibold">访问趋势</h2>
+                  <span className="text-xs text-default-500">
                     {data?.range.granularity === "day"
                       ? "按天"
                       : data?.range.granularity === "week"
                         ? "按周"
                         : "按月"}
                   </span>
-                </div>
-                {loading && !data ? (
-                  <p className="ink-mg-sub" role="status">
-                    正在加载趋势…
-                  </p>
-                ) : data?.trend.length ? (
-                  <BlogTrendChart
-                    data={data.trend}
-                    granularity={data.range.granularity}
-                  />
-                ) : (
-                  <p className="ink-mg-sub">所选区间还没有阅读数据。</p>
-                )}
-              </section>
+                </CardHeader>
+                <CardBody className="pt-2">
+                  {loading && !data ? (
+                    <p className="text-sm text-default-500" role="status">
+                      正在加载趋势…
+                    </p>
+                  ) : data?.trend.length ? (
+                    <BlogTrendChart
+                      data={data.trend}
+                      granularity={data.range.granularity}
+                    />
+                  ) : (
+                    <p className="text-sm text-default-500">所选区间还没有阅读数据。</p>
+                  )}
+                </CardBody>
+              </Card>
 
-              <section className="ink-mg-panel ink-stats-card">
-                <div className="ink-mg-section-head">
-                  <h2 className="ink-mg-section-title">来源分布</h2>
-                  <span className="ink-mg-sub">按阅读次数</span>
-                </div>
-                {data?.sources.length ? (
-                  <ul className="ink-stats-sources">
-                    {data.sources.map((s) => (
-                      <li key={s.source}>
-                        <div className="ink-stats-source-row">
-                          <span className="ink-stats-source-name">
-                            {s.label}
+              <Card className="rounded-xl border border-default-200 shadow-none">
+                <CardHeader className="flex items-center justify-between gap-3 pb-1">
+                  <h2 className="text-base font-semibold">来源分布</h2>
+                  <span className="text-xs text-default-500">按阅读次数</span>
+                </CardHeader>
+                <CardBody className="space-y-3 pt-2">
+                  {data?.sources.length ? (
+                    <ul className="space-y-3">
+                      {data.sources.map((s) => (
+                        <li key={s.source}>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium">{s.label}</span>
+                            <span className="text-default-500">
+                              {formatPercent(s.share)}
+                            </span>
+                          </div>
+                          <div className="mt-1 h-2 overflow-hidden rounded-full bg-default-100">
+                            <span
+                              className="block h-full rounded-full bg-primary transition-all"
+                              style={{
+                                width: Math.max(2, s.share * 100) + "%",
+                              }}
+                            />
+                          </div>
+                          <span className="mt-1 block text-xs text-default-500">
+                            {formatNumber(s.views)} 次阅读 ·{" "}
+                            {formatNumber(s.visitors)} 位访客
                           </span>
-                          <span className="ink-stats-source-value">
-                            {formatPercent(s.share)}
-                          </span>
-                        </div>
-                        <div className="ink-stats-source-bar">
-                          <span
-                            style={{
-                              width: Math.max(2, s.share * 100) + "%",
-                            }}
-                          />
-                        </div>
-                        <span className="ink-mg-sub">
-                          {formatNumber(s.views)} 次阅读 ·{" "}
-                          {formatNumber(s.visitors)} 位访客
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="ink-mg-sub">所选区间还没有来源数据。</p>
-                )}
-                <p className="ink-mg-sub">
-                  站内跳转包含首页推荐、专题与站内搜索之间的互相跳转；浏览器未提供来源信息的访问记为未知，不猜测。
-                </p>
-              </section>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-default-500">所选区间还没有来源数据。</p>
+                  )}
+                  <p className="text-xs text-default-500">
+                    站内跳转包含首页推荐、专题与站内搜索之间的互相跳转；浏览器未提供来源信息的访问记为未知，不猜测。
+                  </p>
+                </CardBody>
+              </Card>
             </div>
-          </>
+
+            {/* ---------- 第三方报表 ---------- */}
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardBody className="space-y-3">
+                <h2 className="text-base font-semibold">第三方报表</h2>
+                <p className="text-sm text-default-500">
+                  第三方数据独立查看，未授权报表 API 时不与站内数据混合。
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    as="a"
+                    href="https://analytics.google.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    endContent={<Icon icon="tabler:external-link" width={14} />}
+                  >
+                    Google Analytics 报表
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    as="a"
+                    href="https://tongji.baidu.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    endContent={<Icon icon="tabler:external-link" width={14} />}
+                  >
+                    百度统计报表
+                  </Button>
+                </div>
+                <p className="text-xs text-default-500">
+                  三方结果与站内数据不同通常来自去重窗口、浏览器拦截、时区与平台规则；
+                  站内口径与第三方口径不合并计算。
+                </p>
+              </CardBody>
+            </Card>
+          </div>
         )}
+
         {(tab === "users" || tab === "content") && (
           <BlogStatsBreakdowns
             key={tab}
@@ -385,103 +414,108 @@ export function BlogStatsPanel() {
             refresh={refresh}
           />
         )}
+
         {tab === "content" && (
-          <>
+          <div className="space-y-5">
             {/* ---------- 文章表现 ---------- */}
-            <section className="ink-mg-panel ink-stats-card">
-              <div className="ink-mg-section-head">
+            <Card className="rounded-xl border border-default-200 shadow-none">
+              <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-1">
                 <div>
-                  <h2 className="ink-mg-section-title">文章表现</h2>
-                  <p className="ink-mg-sub">
+                  <h2 className="text-base font-semibold">文章表现</h2>
+                  <p className="text-xs text-default-500">
                     按当前区间统计，共 {formatNumber(total)} 篇有数据。
                   </p>
                 </div>
-                <div className="ink-stats-search">
-                  <Icon icon="tabler:search" width={15} />
+                <div className="flex items-center gap-2">
+                  <Icon icon="tabler:search" width={15} className="text-default-400" />
                   <BlogInput
-                    className="ink-mg-field"
+                    className="w-full"
                     value={searchDraft}
                     placeholder="搜索文章标题"
                     aria-label="搜索文章"
                     onChange={(e) => setSearchDraft(e.target.value)}
                   />
                 </div>
-              </div>
-
-              {loading && !data ? (
-                <p className="ink-mg-sub" role="status">
-                  正在加载文章表现…
-                </p>
-              ) : data?.articles.rows.length ? (
-                <>
-                  <div className="ink-stats-tablewrap">
-                    <table className="ink-stats-table">
-                      <thead>
-                        <tr>
-                          <th className="ink-stats-title-col">文章</th>
-                          {SORT_OPTIONS.map((s) => (
-                            <th key={s.id}>
-                              <BlogButton
-                                className="ink-stats-sort"
-                                aria-pressed={sort === s.id}
-                                onClick={() => toggleSort(s.id)}
-                              >
-                                {s.label}
-                                {sort === s.id && (
-                                  <Icon icon="tabler:chevron-down" width={13} />
-                                )}
-                              </BlogButton>
-                            </th>
+              </CardHeader>
+              <CardBody className="pt-2">
+                {loading && !data ? (
+                  <p className="text-sm text-default-500" role="status">
+                    正在加载文章表现…
+                  </p>
+                ) : data?.articles.rows.length ? (
+                  <div className="space-y-3">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-default-200 text-left text-xs font-semibold text-default-500">
+                            <th className="pb-2 pr-4">文章</th>
+                            {SORT_OPTIONS.map((s) => (
+                              <th key={s.id} className="pb-2 pr-3 text-right">
+                                <button
+                                  type="button"
+                                  className={`inline-flex items-center gap-0.5 transition-colors ${
+                                    sort === s.id
+                                      ? "text-primary"
+                                      : "text-default-500 hover:text-foreground"
+                                  }`}
+                                  onClick={() => toggleSort(s.id)}
+                                >
+                                  {s.label}
+                                  {sort === s.id && (
+                                    <Icon icon="tabler:chevron-down" width={13} />
+                                  )}
+                                </button>
+                              </th>
+                            ))}
+                            <th className="pb-2 pl-3 text-right">操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.articles.rows.map((row) => (
+                            <ArticleTableRow
+                              key={row.noteId}
+                              row={row}
+                              onOpen={() => patch({ note: String(row.noteId) })}
+                            />
                           ))}
-                          <th>操作</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.articles.rows.map((row) => (
-                          <ArticleTableRow
-                            key={row.noteId}
-                            row={row}
-                            onOpen={() => patch({ note: String(row.noteId) })}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="ink-stats-pager">
-                    <span className="ink-mg-sub">
-                      第 {data.articles.page} / {pageCount} 页
-                    </span>
-                    <div
-                      className="ink-mg-row-actions"
-                      style={{ marginLeft: 0 }}
-                    >
-                      <BlogButton
-                        className="ink-mg-button"
-                        disabled={page <= 1}
-                        onClick={() => patch({ page: String(page - 1) })}
-                      >
-                        <Icon icon="tabler:chevron-left" width={15} />
-                        上一页
-                      </BlogButton>
-                      <BlogButton
-                        className="ink-mg-button"
-                        disabled={page >= pageCount}
-                        onClick={() => patch({ page: String(page + 1) })}
-                      >
-                        下一页
-                        <Icon icon="tabler:chevron-right" width={15} />
-                      </BlogButton>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-default-500">
+                        第 {data.articles.page} / {pageCount} 页
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          isDisabled={page <= 1}
+                          startContent={<Icon icon="tabler:chevron-left" width={15} />}
+                          onPress={() => patch({ page: String(page - 1) })}
+                        >
+                          上一页
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          isDisabled={page >= pageCount}
+                          endContent={<Icon icon="tabler:chevron-right" width={15} />}
+                          onPress={() => patch({ page: String(page + 1) })}
+                        >
+                          下一页
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </>
-              ) : (
-                <p className="ink-mg-sub">
-                  {q
-                    ? "没有匹配的文章，换个关键词试试。"
-                    : "所选区间还没有文章数据。"}
-                </p>
-              )}
-            </section>
+                ) : (
+                  <p className="text-sm text-default-500">
+                    {q
+                      ? "没有匹配的文章，换个关键词试试。"
+                      : "所选区间还没有文章数据。"}
+                  </p>
+                )}
+              </CardBody>
+            </Card>
 
             {noteId && (
               <ArticleDrawer
@@ -490,48 +524,20 @@ export function BlogStatsPanel() {
                 onClose={() => patch({ note: null })}
               />
             )}
-          </>
-        )}
-        {tab === "core" && (
-          <>
-            {/* ---------- 第三方报表 ---------- */}
-            <section className="ink-mg-panel ink-stats-card">
-              <h2 className="ink-mg-section-title">第三方报表</h2>
-              <p className="ink-mg-sub">
-                第三方数据独立查看，未授权报表 API 时不与站内数据混合。
-              </p>
-              <div className="ink-stats-thirdparty">
-                <BlogButton
-                  as="a"
-                  className="ink-mg-button"
-                  href="https://analytics.google.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Google Analytics 报表{" "}
-                  <Icon icon="tabler:external-link" width={14} />
-                </BlogButton>
-                <BlogButton
-                  as="a"
-                  className="ink-mg-button"
-                  href="https://tongji.baidu.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  百度统计报表 <Icon icon="tabler:external-link" width={14} />
-                </BlogButton>
-              </div>
-              <p className="ink-mg-sub">
-                三方结果与站内数据不同通常来自去重窗口、浏览器拦截、时区与平台规则；
-                站内口径与第三方口径不合并计算。
-              </p>
-            </section>
-          </>
+          </div>
         )}
       </div>
-      <details className="ink-stats-notes">
-        <summary>统计口径说明</summary>
-        <ul>
+
+      <details className="group rounded-xl border border-default-200 bg-surface">
+        <summary className="flex cursor-pointer items-center justify-between px-5 py-3 text-sm font-medium select-none">
+          统计口径说明
+          <Icon
+            icon="tabler:chevron-down"
+            width={15}
+            className="text-default-400 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <ul className="space-y-1.5 px-5 pb-4 text-xs text-default-500">
           <li>
             阅读次数：公开文章详情页的有效阅读事件。同一浏览器 30
             分钟内重复打开只记一次（刷新不重复计数）。
@@ -558,8 +564,8 @@ export function BlogStatsPanel() {
             浏览器未提供来源信息的访问记为未知，不生成推测分布。
           </li>
           <li>
-            访客可在浏览器把 localStorage 的 <code>ink-blog-statistics</code>{" "}
-            设为 <code>off</code> 停止上报。
+            访客可在浏览器把 localStorage 的 <code className="rounded bg-default-100 px-1">ink-blog-statistics</code>{" "}
+            设为 <code className="rounded bg-default-100 px-1">off</code> 停止上报。
           </li>
         </ul>
       </details>
@@ -579,13 +585,13 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="ink-stats-metric">
-      <div className="ink-stats-metric-head">
+    <div className="rounded-xl border border-default-200 bg-surface p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-default-600">
         <Icon icon={icon} width={16} />
         <span>{label}</span>
       </div>
-      <div className="ink-stats-metric-value">{value}</div>
-      <div className="ink-stats-metric-hint">{hint}</div>
+      <div className="mt-2 text-2xl font-bold tabular-nums">{value}</div>
+      <div className="mt-1.5 text-xs text-default-500">{hint}</div>
     </div>
   );
 }
@@ -598,30 +604,50 @@ function ArticleTableRow({
   onOpen: () => void;
 }) {
   return (
-    <tr>
-      <td className="ink-stats-title-col">
-        <BlogButton className="ink-stats-link" onClick={onOpen} title={row.title}>
-          {row.title}
-        </BlogButton>
+    <tr className="border-b border-default-100 last:border-0">
+      <td className="py-2.5 pr-4">
+        <button
+          type="button"
+          className="text-left text-sm text-primary hover:underline"
+          onClick={onOpen}
+          title={row.title}
+        >
+          <span className="line-clamp-1">{row.title}</span>
+        </button>
         {!row.hasPublication && (
-          <span className="ink-stats-tag">已撤回 / 未公开</span>
+          <span className="mt-0.5 inline-block rounded-full bg-default-100 px-2 py-0.5 text-[11px] text-default-500">
+            已撤回 / 未公开
+          </span>
         )}
       </td>
-      <td className="ink-stats-num">{formatNumber(row.impressions)}</td>
-      <td className="ink-stats-num">{formatNumber(row.clicks)}</td>
-      <td className="ink-stats-num">{formatPercent(row.ctr)}</td>
-      <td className="ink-stats-num">{formatNumber(row.views)}</td>
-      <td className="ink-stats-num">{formatNumber(row.visitors)}</td>
-      <td>
-        <BlogButton className="ink-stats-link" onClick={onOpen}>
+      <td className="py-2.5 pr-3 text-right tabular-nums text-default-600">
+        {formatNumber(row.impressions)}
+      </td>
+      <td className="py-2.5 pr-3 text-right tabular-nums text-default-600">
+        {formatNumber(row.clicks)}
+      </td>
+      <td className="py-2.5 pr-3 text-right tabular-nums text-default-600">
+        {formatPercent(row.ctr)}
+      </td>
+      <td className="py-2.5 pr-3 text-right tabular-nums text-default-600">
+        {formatNumber(row.views)}
+      </td>
+      <td className="py-2.5 pr-3 text-right tabular-nums text-default-600">
+        {formatNumber(row.visitors)}
+      </td>
+      <td className="py-2.5 pl-3 text-right">
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          onClick={onOpen}
+        >
           查看详情 <Icon icon="tabler:arrow-right" width={13} />
-        </BlogButton>
+        </button>
       </td>
     </tr>
   );
 }
 
-/** 单篇文章下钻：区间内的指标与趋势。 */
 function ArticleDrawer({
   noteId,
   rangeInput,
@@ -654,45 +680,78 @@ function ArticleDrawer({
   }, [noteId, JSON.stringify(rangeInput)]);
 
   return (
-    <div className="ink-stats-drawer" role="dialog" aria-label="文章指标详情">
-      <div className="ink-stats-drawer-head">
-        <h3>{detail?.title ?? "加载中…"}</h3>
-        <BlogButton className="ink-mg-button" onClick={onClose}>
-          <Icon icon="tabler:x" width={15} />
-          关闭
-        </BlogButton>
-      </div>
-      {error && <p className="ink-mg-alert">{error}</p>}
-      {detail && (
-        <>
-          <div className="ink-stats-drawer-metrics">
-            <span>曝光 {formatNumber(detail.metrics.impressions)}</span>
-            <span>点击 {formatNumber(detail.metrics.clicks)}</span>
-            <span>点击率 {formatPercent(detail.metrics.ctr)}</span>
-            <span>阅读 {formatNumber(detail.metrics.views)}</span>
-            <span>访客 {formatNumber(detail.metrics.visitors)}</span>
+    <div
+      className="fixed inset-0 z-40 flex justify-end bg-black/30"
+      role="dialog"
+      aria-label="文章指标详情"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-default-200 bg-background p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold">
+            {detail?.title ?? "加载中…"}
+          </h3>
+          <Button
+            size="sm"
+            variant="flat"
+            startContent={<Icon icon="tabler:x" width={15} />}
+            onPress={onClose}
+          >
+            关闭
+          </Button>
+        </div>
+        {error && (
+          <div className="mb-3 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger">
+            {error}
           </div>
-          {detail.trend.length ? (
-            <BlogTrendChart
-              data={detail.trend}
-              granularity={detail.range.granularity}
-              height={200}
-            />
-          ) : (
-            <p className="ink-mg-sub">该区间没有数据。</p>
-          )}
-          {detail.publishId && (
-            <a
-              className="ink-mg-button"
-              href={`/blog/${detail.publishId}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              查看公开文章 <Icon icon="tabler:external-link" width={14} />
-            </a>
-          )}
-        </>
-      )}
+        )}
+        {detail && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-3">
+              {[
+                ["曝光", formatNumber(detail.metrics.impressions)],
+                ["点击", formatNumber(detail.metrics.clicks)],
+                ["点击率", formatPercent(detail.metrics.ctr)],
+                ["阅读", formatNumber(detail.metrics.views)],
+                ["访客", formatNumber(detail.metrics.visitors)],
+              ].map(([label, val]) => (
+                <div
+                  key={label}
+                  className="rounded-lg border border-default-200 bg-surface px-3 py-2"
+                >
+                  <div className="text-xs text-default-500">{label}</div>
+                  <div className="text-sm font-semibold tabular-nums">{val}</div>
+                </div>
+              ))}
+            </div>
+            {detail.trend.length ? (
+              <BlogTrendChart
+                data={detail.trend}
+                granularity={detail.range.granularity}
+                height={200}
+              />
+            ) : (
+              <p className="text-sm text-default-500">该区间没有数据。</p>
+            )}
+            {detail.publishId && (
+              <Button
+                size="sm"
+                variant="flat"
+                as="a"
+                href={`/blog/${detail.publishId}`}
+                target="_blank"
+                rel="noreferrer"
+                endContent={<Icon icon="tabler:external-link" width={14} />}
+              >
+                查看公开文章
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

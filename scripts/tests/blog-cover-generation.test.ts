@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import sharp from "sharp";
 import {
   coverPrompt,
+  coverPromptForModel,
   imageProtocol,
   imageRequest,
   generateImageBytes,
@@ -32,13 +33,65 @@ describe("image adapter and crop", () => {
       "<h2>公开正文</h2>\n" + "资料".repeat(1000),
     );
     expect(prompt).toContain("指标");
-    expect(prompt).toContain("紫蓝");
+    expect(prompt).toContain("cobalt blue to azure");
     expect(prompt).not.toContain("<h2>");
     expect(prompt.length).toBeLessThan(1500);
     expect(prompt).toContain('产品功能发布封面');
     expect(prompt).toContain('No text');
-    expect(prompt).toContain('1280×450');
+    expect(prompt).toContain('cropped by the right edge');
     expect(prompt).toContain('禁止：低饱和');
+    // 参考封面抽象出来的风格契约：哑光质感 + 饱和渐变 + 纯白界面。
+    expect(prompt).toContain('Clean 3D app-icon illustration');
+    expect(prompt).toContain('the backdrop uses exactly this gradient');
+    expect(prompt).toContain('Surfaces solid white and pale grey-blue');
+    expect(prompt).toContain('Matte premium materials, not plastic');
+  });
+  test("all model briefs retain wordless and crop constraints within provider limit", () => {
+    for (const style of ["ink"] as const) {
+      const args = ["标题".repeat(100), "正文".repeat(1000), style, "细节".repeat(200)] as const;
+      const standard = coverPromptForModel({modelKey:"image-01"}, ...args);
+      const live = coverPromptForModel({modelKey:"image-01-live"}, ...args);
+      expect(live).toBe(standard);
+      expect(standard.length).toBeLessThanOrEqual(1500);
+      const request = imageRequest({...model, modelKey:"image-01-live", provider:{...model.provider, provider:"minimax"}}, standard);
+      expect(request.body.prompt).toBe(standard);
+      expect(request.body).not.toHaveProperty("style");
+      expect(request.body).not.toHaveProperty("subject_reference");
+      expect(request.body.n).toBe(1);
+      expect(standard).toContain("the left 38% must stay clean");
+      expect(standard).toContain("no duplicate copies");
+      expect(standard).toContain("No text");
+      expect(standard).toContain("tabletop");
+      expect(standard).toContain("circular hub");
+      expect(standard).toContain("thin extruded side face");
+    }
+  });
+  test("长标题 + 长正文 + 画面要求也不会超出服务商上限", () => {
+    // MiniMax 侧按 1500 字符截断，超了就悄悄丢掉尾部的硬约束。
+    const worst = coverPrompt(
+      "标".repeat(80),
+      "内".repeat(80),
+      "ink",
+      "细".repeat(100),
+    );
+    expect(worst.length).toBeLessThanOrEqual(1500);
+    expect(worst).toContain("禁止：低饱和粉紫摄影棚。");
+    expect(worst).toContain("No text, letters, numbers, logos");
+    // 空间不够时先牺牲作者的画面要求，风格契约不能丢。
+    expect(worst).toContain("Clean 3D app-icon illustration");
+  });
+  test("画面要求优先吃掉剩余预算，硬约束永远完整", () => {
+    const roomy = coverPrompt("短标题", "短正文", "ink", "一只铅笔和三个卡片");
+    expect(roomy).toContain("Optional detail: 一只铅笔和三个卡片");
+    // 标题与正文都很长时，画面要求被截短，但尾巴一字不少。
+    const tight = coverPrompt(
+      "标".repeat(80),
+      "内".repeat(80),
+      "ink",
+      "细节".repeat(100),
+    );
+    expect(tight.length).toBeLessThanOrEqual(1500);
+    expect(tight.endsWith("禁止：低饱和粉紫摄影棚。")).toBe(true);
   });
   test("protocols reuse configured endpoints and distinguish text-only models", () => {
     expect(

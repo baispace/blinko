@@ -1,56 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, ModalContent } from '@heroui/react';
+import { Button, Modal, ModalContent } from '@heroui/react';
 import { api } from '@/lib/trpc';
 import { blogImageUrl } from '@/lib/blogImage';
-import { readBlogTheme } from '@/lib/blogTheme';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { CoverCanvas } from './CoverCanvas';
-import { BlogButton, BlogInput, BlogTextarea, BlogCheckbox } from './BlogUI';
+import {
+  COVER_PREVIEW_SCENES,
+  CoverScenePreview,
+  CoverSceneSwitch,
+  type CoverPreviewSceneKey,
+} from './BlogCoverPreview';
+import { BlogInput, BlogTextarea, BlogCheckbox } from './BlogUI';
 import {
   shortCoverTitleLength,
   validShortCoverTitle,
 } from '@shared/lib/blogPublishSettings';
 import { COVER_TEMPLATE_VERSION } from '@shared/lib/blogCoverText';
-import './cover-generator.css';
 
 type Options = Awaited<ReturnType<typeof api.blog.coverGenerationOptions.query>>;
 type Copy = Awaited<ReturnType<typeof api.blog.generateCopyGroup.mutate>>;
-type CoverStyle = 'ink' | 'minimal' | 'editorial';
-type Base = { id: number | null; path: string };
-
-/**
- * 预览用的真实容器尺寸（取自公开站实际 CSS）。
- * 排版按真实尺寸算，所以缩放只影响看的尺寸，字号与断行跟线上完全一致。
- */
-const PREVIEW_SCENES: {
-  key: 'double' | 'single' | 'banner';
-  label: string;
-  width: number;
-  height: number;
-  note: string;
-  scale?: number;
-}[] = [
-  { key: 'double', label: '双栏卡片', width: 640, height: 229, note: '首页头条大图 2.8:1', scale: 0.68 },
-  { key: 'single', label: '单栏列表', width: 420, height: 236, note: '卡片与列表缩略图 16:9', scale: 0.68 },
-  { key: 'banner', label: '首页 Banner', width: 720, height: 248, note: '桌面首页横幅 2.9:1', scale: 0.68 },
-];
-
-const STYLES: { value: CoverStyle; label: string; hint: string }[] = [
-  { value: 'ink', label: '紫蓝渐变', hint: '2.5D 立体界面卡片与图表' },
-  { value: 'minimal', label: '极简留白', hint: '少量几何物件，背景更安静' },
-  { value: 'editorial', label: '杂志质感', hint: '静物雕塑，自然光' },
-];
+type Base = { id: number | null; path: string; palette?: string };
 
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '操作失败，请重试。';
 
 export type CoverGeneratorInitial = {
-  /** 现有底图：预览模式直接看它，生成模式作为「已选中的图」。 */
   base?: Base | null;
   coverTitle?: string;
   coverSubtitle?: string;
   coverMode?: 'full' | 'overlay';
-  /** 公开版封面的文字配置，预览要跟线上排版一致。 */
   text?: {
     align?: 'left' | 'center' | 'right';
     palette?: string;
@@ -65,19 +42,9 @@ export type CoverGeneratorResult = {
   coverTitle: string;
   coverSubtitle: string;
   coverMode: 'full' | 'overlay';
+  coverPalette?: string;
 };
 
-/**
- * 封面助手：把封面这件事从「管理发布」里拆出来。
- *
- * 流程按「先想清楚 → 再出图 → 再看效果」走：
- *   1. 填信息：画面风格、封面大字、想画什么；
- *   2. 出图：一次出几张候选，选一张；
- *   3. 预览：按公开站的真实尺寸看它在各个位置上的样子；
- *   4. 应用：确认后把底图和文字写回发布设置。
- *
- * 这一步只改草稿：公开快照要等作者点「更新发布」才变。
- */
 export function BlogCoverGeneratorDialog({
   noteId,
   mode = 'generate',
@@ -91,14 +58,13 @@ export function BlogCoverGeneratorDialog({
   onApply?: (result: CoverGeneratorResult) => void;
   onClose: () => void;
 }) {
-  const [theme] = useState(readBlogTheme);
   const [step, setStep] = useState<'input' | 'result' | 'preview'>(
     mode === 'preview' && initial?.base ? 'preview' : 'input',
   );
   const [busy, setBusy] = useState<null | 'load' | 'copy' | 'image'>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [style, setStyle] = useState<CoverStyle>('ink');
+  const style = 'ink' as const;
   const [title, setTitle] = useState(initial?.coverTitle ?? '');
   const [subtitle, setSubtitle] = useState(initial?.coverSubtitle ?? '');
   const [direction, setDirection] = useState('');
@@ -108,39 +74,36 @@ export function BlogCoverGeneratorDialog({
   const [previewTitle, setPreviewTitle] = useState(initial?.coverTitle ?? '');
   const [previewSubtitle, setPreviewSubtitle] = useState(initial?.coverSubtitle ?? '');
   const [overlay, setOverlay] = useState(initial?.coverMode !== 'full');
+  const [scene, setScene] = useState<CoverPreviewSceneKey>('double');
   const alive = useRef(true);
+  const loadRequest = useRef(0);
 
   useEffect(() => {
     alive.current = true;
-    return () => {
-      alive.current = false;
-    };
+    return () => { alive.current = false; };
   }, []);
 
-  /** 读一次可用的生图模型与提示词模板：风格变了要重新读。 */
-  const load = async (nextStyle: CoverStyle) => {
+  const load = async (nextStyle: 'ink') => {
+    const request = ++loadRequest.current;
+    setOptions(null);
     setBusy('load');
     setError('');
     try {
-      const config = await api.blog.coverGenerationOptions.query({
-        noteId,
-        style: nextStyle,
-      });
-      if (!alive.current) return;
+      const config = await api.blog.coverGenerationOptions.query({ noteId, style: nextStyle });
+      if (!alive.current || request !== loadRequest.current) return;
       setOptions(config);
     } catch (error) {
-      if (alive.current) setError(errorText(error));
+      if (alive.current && request === loadRequest.current) setError(errorText(error));
     } finally {
-      if (alive.current) setBusy(null);
+      if (alive.current && request === loadRequest.current) setBusy(null);
     }
   };
 
   useEffect(() => {
     void load(style);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [style]);
+  }, [style, noteId]);
 
-  /** AI 建议：一句话给出封面大字与副标题，省得自己想。 */
   const suggest = async () => {
     setBusy('copy');
     setError('');
@@ -165,21 +128,18 @@ export function BlogCoverGeneratorDialog({
 
   const generate = async () => {
     if (!validShortCoverTitle(title)) {
-      setError('封面大字要 4–6 字，它会排在画面左侧，模型需要知道留多大位置。');
+      setError('封面大字要 4–6 字，它会排在画面左侧，系统会为文字和插画分别留出空间。');
       return;
     }
     setBusy('image');
     setError('');
     setNotice('');
     try {
-      const config =
-        options ??
-        (await api.blog.coverGenerationOptions.query({ noteId, style }));
+      const config = options ?? (await api.blog.coverGenerationOptions.query({ noteId, style }));
       if (!alive.current) return;
       setOptions(config);
       const model = config.models.find((item) => item.available);
-      if (!model)
-        throw new Error('尚未配置可用生图模型，可上传图片，或到 AI 设置中配置。');
+      if (!model) throw new Error('尚未配置可用生图模型，可上传图片，或到 AI 设置中配置。');
       const result = await api.blog.generateCover.mutate({
         noteId,
         modelId: model.id,
@@ -188,13 +148,10 @@ export function BlogCoverGeneratorDialog({
         revision: config.revision,
       });
       if (!alive.current) return;
-      const list = (result.candidates ?? []).map((item) => ({
-        id: item.id,
-        path: item.path,
-      }));
+      const list = (result.candidates ?? []).map((item) => ({ id: item.id, path: item.path, palette: result.coverPalette }));
       if (!list.length) throw new Error('模型没有返回图片，请重试。');
       setPicks(list);
-      setPicked({ id: result.id, path: result.path });
+      setPicked({ id: result.id, path: result.path, palette: result.coverPalette });
       setPreviewTitle(title);
       setPreviewSubtitle(subtitle);
       setOverlay(true);
@@ -219,6 +176,7 @@ export function BlogCoverGeneratorDialog({
       coverTitle: previewTitle,
       coverSubtitle: previewSubtitle,
       coverMode: overlay ? 'overlay' : 'full',
+      coverPalette: picked.palette ?? initial?.text?.palette,
     });
     onClose();
   };
@@ -227,39 +185,32 @@ export function BlogCoverGeneratorDialog({
   const textConfig = previewTitle.trim()
     ? {
         mode: (overlay ? 'overlay' : 'full') as 'overlay' | 'full',
-        templateVersion:
-          initial?.text?.templateVersion || COVER_TEMPLATE_VERSION,
+        templateVersion: initial?.text?.templateVersion || COVER_TEMPLATE_VERSION,
         title: previewTitle,
         subtitle: previewSubtitle,
         align: initial?.text?.align || ('left' as const),
         sizeScale: initial?.text?.sizeScale || 1,
-        palette: initial?.text?.palette || 'violet',
+        palette: picked?.palette || initial?.text?.palette || 'violet',
       }
     : null;
 
   return (
     <Modal
       isOpen
-      onOpenChange={(open) => {
-        if (!open && !busy) onClose();
-      }}
+      onOpenChange={(open) => { if (!open && !busy) onClose(); }}
       hideCloseButton
       disableAnimation
       isDismissable={!busy}
       isKeyboardDismissDisabled={!!busy}
       scrollBehavior="inside"
       placement="center"
-      classNames={{ backdrop: 'ink-cg-backdrop', wrapper: 'ink-cg-wrapper' }}
+      size="xl"
     >
-      <ModalContent
-        aria-label="封面助手"
-        className="ink-promo ink-cg"
-        data-blog-theme={theme}
-      >
-        <header className="ink-cg-head">
+      <ModalContent aria-label="封面助手" className="bg-background">
+        <header className="flex items-center justify-between border-b border-default-200 px-5 py-4">
           <div>
-            <h2>封面助手</h2>
-            <small>
+            <h2 className="text-lg font-semibold text-foreground">封面助手</h2>
+            <small className="text-sm text-default-500">
               {step === 'input'
                 ? '先说清楚想要什么，再出图'
                 : step === 'result'
@@ -267,69 +218,64 @@ export function BlogCoverGeneratorDialog({
                   : '这是封面在公开站上的真实效果'}
             </small>
           </div>
-          <BlogButton
-            type="button"
-            onClick={onClose}
-            disabled={!!busy}
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={onClose}
+            isDisabled={!!busy}
             aria-label="关闭封面助手"
-            className="ink-cg-close"
           >
             <Icon icon="tabler:x" width={18} />
-          </BlogButton>
+          </Button>
         </header>
 
-        <div className="ink-cg-body" aria-busy={!!busy}>
-          {busy === 'load' && <p role="status">正在读取生图设置…</p>}
-          {busy === 'copy' && <p role="status">正在想文案…</p>}
+        <div className="flex-1 overflow-y-auto px-5 py-4" aria-busy={!!busy}>
+          {busy === 'load' && <p className="text-sm text-default-500" role="status">正在读取生图设置…</p>}
+          {busy === 'copy' && <p className="text-sm text-default-500" role="status">正在想文案…</p>}
           {busy === 'image' && (
-            <p role="status" className="ink-cg-feedback">
-              正在生成封面配图，稍等片刻…
-            </p>
+            <p className="text-sm text-default-500" role="status">正在生成封面配图，稍等片刻…</p>
           )}
           {!!notice && (
-            <p role="status" className="ink-cg-feedback">
+            <div className="mb-3 rounded-lg bg-primary-50 px-3 py-2 text-sm text-primary" role="status">
               {notice}
-            </p>
+            </div>
           )}
           {!!error && (
-            <p role="alert" className="ink-cg-error">
+            <div className="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger" role="alert">
               {error}
-            </p>
+            </div>
           )}
 
           {step === 'input' && (
-            <div className="ink-cg-form">
-              <section className="ink-cg-block">
-                <h3>画面风格</h3>
-                <div className="ink-cg-styles" role="group" aria-label="画面风格">
-                  {STYLES.map((item) => (
-                    <BlogButton
-                      key={item.value}
-                      type="button"
-                      className="ink-cg-style"
-                      aria-pressed={style === item.value}
-                      disabled={!!busy}
-                      onClick={() => setStyle(item.value)}
-                    >
-                      <strong>{item.label}</strong>
-                      <small>{item.hint}</small>
-                    </BlogButton>
-                  ))}
-                </div>
+            <div className="flex flex-col gap-5">
+              <section className="flex flex-col gap-1">
+                <h3 className="text-sm font-medium text-foreground">文章封面</h3>
+                <p className="text-xs leading-6 text-default-500">统一使用大幅白色界面卡片与浅立体叠层，物件和配色随文章主题变化。</p>
               </section>
 
-              <section className="ink-cg-block">
-                <h3>封面文字</h3>
-                <label className="ink-cg-field">
-                  <span>
+              {options?.artPlan && (
+                <div className="rounded-xl bg-default-50 px-3 py-2.5 text-xs leading-6 text-default-600">
+                  <p>画面方案：{options.artPlan.label} · 单张插画，系统按场景安排图文位置</p>
+                  <p>模型：{options.modelKey || options.modelTitle} · 每次生成一张</p>
+                  {options.modelKey && options.modelKey.trim().toLowerCase() !== 'image-01' && (
+                    <p>未找到可用的 image-01，暂用已配置模型；可到 AI 设置中添加。</p>
+                  )}
+                  <p>复用固定视觉规范，不上传参考图，不额外调用 AI 分析。</p>
+                </div>
+              )}
+
+              <section className="flex flex-col gap-3">
+                <h3 className="text-sm font-medium text-foreground">封面文字</h3>
+                <label className="flex flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-sm">
                     封面大字
-                    <small>4–6 字</small>
-                    <small className={invalidTitle ? 'ink-cg-error' : ''}>
+                    <small className="text-xs text-default-400">4–6 字</small>
+                    <small className={`text-xs ${invalidTitle ? 'text-danger' : 'text-default-400'}`}>
                       {shortCoverTitleLength(title)}/6
                     </small>
                   </span>
                   <BlogInput
-                    className="ink-mg-field"
+                    className="w-full"
                     maxLength={24}
                     value={title}
                     disabled={!!busy}
@@ -338,18 +284,18 @@ export function BlogCoverGeneratorDialog({
                     onChange={(event) => setTitle(event.target.value)}
                   />
                   {invalidTitle && (
-                    <small className="ink-cg-error">
+                    <small className="text-xs text-danger">
                       封面大字要 4–6 字：它会排在画面左侧，太长会被裁断。
                     </small>
                   )}
                 </label>
-                <label className="ink-cg-field">
-                  <span>
+                <label className="flex flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-sm">
                     封面小字
-                    <small>可留空</small>
+                    <small className="text-xs text-default-400">可留空</small>
                   </span>
                   <BlogInput
-                    className="ink-mg-field"
+                    className="w-full"
                     maxLength={40}
                     value={subtitle}
                     disabled={!!busy}
@@ -357,26 +303,27 @@ export function BlogCoverGeneratorDialog({
                     onChange={(event) => setSubtitle(event.target.value)}
                   />
                 </label>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={() => void suggest()}
+                <Button
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!!busy}
+                  onPress={() => void suggest()}
+                  startContent={<Icon icon="tabler:sparkles" width={15} />}
+                  className="self-start"
                 >
-                  <Icon icon="tabler:sparkles" width={15} />
                   {busy === 'copy' ? '正在想…' : '让 AI 想文案'}
-                </BlogButton>
+                </Button>
               </section>
 
-              <section className="ink-cg-block">
-                <h3>想画什么</h3>
-                <label className="ink-cg-field">
-                  <span>
+              <section className="flex flex-col gap-3">
+                <h3 className="text-sm font-medium text-foreground">想画什么</h3>
+                <label className="flex flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-sm">
                     画面描述
-                    <small>可留空，留空则按文章内容自动判断</small>
+                    <small className="text-xs text-default-400">可留空，留空则按文章内容自动判断</small>
                   </span>
                   <BlogTextarea
-                    className="ink-mg-field"
+                    className="w-full"
                     rows={3}
                     maxLength={200}
                     value={direction}
@@ -386,13 +333,21 @@ export function BlogCoverGeneratorDialog({
                   />
                 </label>
                 {!!options?.prompt && (
-                  <details className="ink-cg-prompt">
-                    <summary>查看将要使用的提示词</summary>
-                    <pre>{options.prompt}</pre>
+                  <details className="group rounded-lg border border-default-200 p-3">
+                    <summary className="flex cursor-pointer items-center gap-2 text-sm text-default-600">
+                      <Icon
+                        icon="tabler:chevron-right"
+                        width={14}
+                        className="transition-transform group-open:rotate-90"
+                      />
+                      查看基础提示词
+                    </summary>
+                    <pre className="mt-2 overflow-x-auto rounded bg-default-50 p-3 text-xs text-default-600">
+                      {options.prompt}
+                    </pre>
                     {direction.trim() && (
-                      <p className="ink-cg-prompt-extra">
-                        你的画面要求会一起发给模型：
-                        {direction.trim()}
+                      <p className="mt-2 text-xs text-default-500">
+                        你的画面要求会一起发给模型：{direction.trim()}
                       </p>
                     )}
                   </details>
@@ -402,29 +357,34 @@ export function BlogCoverGeneratorDialog({
           )}
 
           {step === 'result' && (
-            <div className="ink-cg-result">
-              <div className="ink-cg-hero">
-                {picked ? (
-                  <CoverCanvas
-                    key={picked.path}
-                    src={blogImageUrl(picked.path)}
-                    config={textConfig}
-                    placement="double"
-                    loading="eager"
-                  />
-                ) : (
-                  <p>尚未生成</p>
-                )}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CoverSceneSwitch value={scene} onChange={setScene} disabled={!!busy} />
+                <small className="text-xs text-default-400">
+                  {COVER_PREVIEW_SCENES.find((item) => item.key === scene)?.note}
+                </small>
               </div>
+              {picked ? (
+                <CoverScenePreview
+                  scene={scene}
+                  src={blogImageUrl(picked.path)}
+                  title={options?.suggestedTitle}
+                  config={textConfig}
+                />
+              ) : (
+                <p className="py-8 text-center text-sm text-default-500">尚未生成</p>
+              )}
               {picks.length > 1 && (
-                <div className="ink-cg-picks" role="group" aria-label="候选底图">
-                  <p>出了 {picks.length} 张，选一张用：</p>
-                  <div className="ink-cg-picks-row">
+                <div className="flex flex-col gap-2" role="group" aria-label="候选底图">
+                  <p className="text-sm text-default-500">出了 {picks.length} 张，选一张用：</p>
+                  <div className="flex gap-2 overflow-x-auto">
                     {picks.map((item) => (
-                      <BlogButton
+                      <button
                         key={item.id}
                         type="button"
-                        className="ink-cg-pick"
+                        className={`shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                          picked?.id === item.id ? 'border-primary' : 'border-default-200 hover:border-default-300'
+                        }`}
                         aria-pressed={picked?.id === item.id}
                         disabled={!!busy}
                         onClick={() => setPicked(item)}
@@ -433,8 +393,9 @@ export function BlogCoverGeneratorDialog({
                           src={blogImageUrl(item.path)}
                           alt="候选底图"
                           loading="lazy"
+                          className="h-16 w-28 object-cover"
                         />
-                      </BlogButton>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -443,15 +404,15 @@ export function BlogCoverGeneratorDialog({
           )}
 
           {step === 'preview' && (
-            <div className="ink-cg-step" role="region" aria-label="封面预览">
-              <div className="ink-cg-text">
-                <label className="ink-cg-field">
-                  <span>
+            <div className="flex flex-col gap-5" role="region" aria-label="封面预览">
+              <div className="flex flex-col gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-sm">
                     封面大字
-                    <small>4–6 字</small>
+                    <small className="text-xs text-default-400">4–6 字</small>
                   </span>
                   <BlogInput
-                    className="ink-mg-field"
+                    className="w-full"
                     maxLength={24}
                     value={previewTitle}
                     disabled={!!busy}
@@ -459,13 +420,13 @@ export function BlogCoverGeneratorDialog({
                     onChange={(event) => setPreviewTitle(event.target.value)}
                   />
                 </label>
-                <label className="ink-cg-field">
-                  <span>
+                <label className="flex flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-sm">
                     封面小字
-                    <small>可留空</small>
+                    <small className="text-xs text-default-400">可留空</small>
                   </span>
                   <BlogInput
-                    className="ink-mg-field"
+                    className="w-full"
                     maxLength={40}
                     value={previewSubtitle}
                     disabled={!!busy}
@@ -473,7 +434,7 @@ export function BlogCoverGeneratorDialog({
                     onChange={(event) => setPreviewSubtitle(event.target.value)}
                   />
                 </label>
-                <label className="ink-cg-toggle">
+                <label className="flex items-center gap-2 text-sm">
                   <BlogCheckbox
                     type="checkbox"
                     checked={overlay}
@@ -482,134 +443,82 @@ export function BlogCoverGeneratorDialog({
                   />
                   在图片上显示标题
                 </label>
-                <p className="ink-cg-hint">
-                  文字按容器的真实尺寸排版：大图上更大，列表缩略图上自动缩小；空间不够时副标题会自动隐藏。
+                <p className="text-xs text-default-500">
+                  文字与插画分区展示，不互相遮挡。Banner 留出底部控件位置；卡片突出短标题；列表小图自动隐藏副标题。
                 </p>
               </div>
-              <div className="ink-cg-scenes">
-                {PREVIEW_SCENES.map((scene) => {
-                  const scale = scene.scale ?? 1;
-                  return (
-                    <figure className="ink-cg-scene" key={scene.key}>
-                      <div
-                        className="ink-cg-scene-frame"
-                        style={{
-                          width: scene.width * scale,
-                          height: scene.height * scale,
-                        }}
-                      >
-                        <div
-                          className="ink-cg-scene-scale"
-                          style={{
-                            width: scene.width,
-                            height: scene.height,
-                            transform:
-                              scale === 1 ? undefined : `scale(${scale})`,
-                          }}
-                        >
-                          <CoverCanvas
-                            src={picked ? blogImageUrl(picked.path) : ''}
-                            alt=""
-                            config={textConfig}
-                            placement={scene.key}
-                            loading="eager"
-                          />
-                        </div>
-                      </div>
-                      <figcaption className="ink-mg-sub">
-                        {scene.label} · {scene.width}×{scene.height}
-                        <span>{scene.note}</span>
-                      </figcaption>
-                    </figure>
-                  );
-                })}
+              <div className="flex min-w-0 flex-col gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CoverSceneSwitch value={scene} onChange={setScene} disabled={!!busy} />
+                  <small className="text-xs text-default-400">
+                    {COVER_PREVIEW_SCENES.find((item) => item.key === scene)?.note}
+                  </small>
+                </div>
+                {picked ? (
+                  <CoverScenePreview
+                    scene={scene}
+                    src={blogImageUrl(picked.path)}
+                    title={options?.suggestedTitle}
+                    config={textConfig}
+                  />
+                ) : (
+                  <p className="py-8 text-center text-sm text-default-500">还没有底图</p>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        <footer className="ink-cg-foot">
-          <p>
+        <footer className="flex items-center justify-between border-t border-default-200 px-5 py-4">
+          <p className="text-xs text-default-500">
             {step === 'input'
               ? '生成的只是草稿底图，保存后才会进入发布设置。'
               : step === 'result'
                 ? '先看看效果，满意再应用。'
                 : '预览的是待发布效果；应用后仍需在发布设置里保存。'}
           </p>
-          <div>
+          <div className="flex gap-2">
             {step === 'input' && (
               <>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={onClose}
-                >
+                <Button variant="flat" isDisabled={!!busy} onPress={onClose}>
                   取消
-                </BlogButton>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button ink-mg-button-primary"
-                  disabled={!!busy || !validShortCoverTitle(title)}
-                  onClick={() => void generate()}
+                </Button>
+                <Button
+                  color="primary"
+                  isDisabled={!!busy || !validShortCoverTitle(title)}
+                  onPress={() => void generate()}
+                  startContent={<Icon icon="tabler:sparkles" width={15} />}
                 >
-                  <Icon icon="tabler:sparkles" width={15} />
                   {busy === 'image' ? '正在生成…' : '生成封面'}
-                </BlogButton>
+                </Button>
               </>
             )}
             {step === 'result' && (
               <>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={() => setStep('input')}
-                >
-                  <Icon icon="tabler:arrow-left" width={15} />
+                <Button variant="flat" isDisabled={!!busy} onPress={() => setStep('input')} startContent={<Icon icon="tabler:arrow-left" width={15} />}>
                   改一下条件
-                </BlogButton>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={() => void generate()}
-                >
-                  <Icon icon="tabler:refresh" width={15} />
+                </Button>
+                <Button variant="flat" isDisabled={!!busy} onPress={() => void generate()} startContent={<Icon icon="tabler:refresh" width={15} />}>
                   重新生成
-                </BlogButton>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button ink-mg-button-primary"
-                  disabled={!!busy}
-                  onClick={() => setStep('preview')}
-                >
-                  <Icon icon="tabler:eye" width={15} />
+                </Button>
+                <Button color="primary" isDisabled={!!busy} onPress={() => setStep('preview')} startContent={<Icon icon="tabler:eye" width={15} />}>
                   预览各场景
-                </BlogButton>
+                </Button>
               </>
             )}
             {step === 'preview' && (
               <>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button"
-                  disabled={!!busy}
-                  onClick={() =>
-                    setStep(picks.length || mode === 'generate' ? 'result' : 'input')
-                  }
+                <Button
+                  variant="flat"
+                  isDisabled={!!busy}
+                  onPress={() => setStep(picks.length || mode === 'generate' ? 'result' : 'input')}
+                  startContent={<Icon icon="tabler:arrow-left" width={15} />}
                 >
-                  <Icon icon="tabler:arrow-left" width={15} />
                   返回
-                </BlogButton>
-                <BlogButton
-                  type="button"
-                  className="ink-mg-button ink-mg-button-primary"
-                  disabled={!!busy || !picked}
-                  onClick={apply}
-                >
+                </Button>
+                <Button color="primary" isDisabled={!!busy || !picked} onPress={apply}>
                   应用到封面
-                </BlogButton>
+                </Button>
               </>
             )}
           </div>

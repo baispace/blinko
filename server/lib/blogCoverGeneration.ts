@@ -23,13 +23,9 @@ import {
 } from "./blogCoverConfig";
 import { composeCoverImage } from "./blogCoverComposition";
 
-export const coverStyles = {
-  ink: "原型封面风格：饱和紫蓝渐变背景，精致圆角立体图标、白色悬浮卡片、玻璃与软质材质，强对比和清晰体积感；主体集中在右侧55%，左侧留白给站点排版标题。",
-  minimal:
-    "极简编辑插画：低饱和配色，少量几何物件，干净背景，突出一个核心意象。",
-  editorial: "杂志风格摄影：自然光，真实材质，有叙事感，构图简洁，不堆砌元素。",
-} as const;
-export type CoverStyle = keyof typeof coverStyles;
+import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
+
+export type CoverStyle = "ink";
 type ConfiguredModel = {
   id: number;
   title: string;
@@ -47,46 +43,12 @@ function isMiniMaxTextModel(model: ConfiguredModel) {
   return /^minimax-m[23](?:[._-]|$)/i.test(model.modelKey);
 }
 
-/**
- * image-01-live：MiniMax 生图的低延迟变体。
- *
- * 与 image-01 的差异（官方 OpenAPI）：
- *   - 支持画风增强 style（image-01 不认，传了直接报参数异常）；
- *   - 只认 aspect_ratio，不支持 width/height，也不支持 21:9；
- *   - 16:9 输出 1456×816，比 image-01 的 1280×720 更接近封面源图 1600×900。
- */
+/** Provider-specific capabilities remain in the adapter, not the visual brief. */
 export function isMiniMaxLiveModel(model: { modelKey: string }) {
   return /^image-01-live$/i.test(model.modelKey.trim());
 }
+export type MinimaxStyle = { style_type: "漫画" | "元气" | "中世纪" | "水彩"; style_weight: number };
 
-/** MiniMax 画风增强的取值（仅 image-01-live 支持）。 */
-export const minimaxStyleTypes = ["漫画", "元气", "中世纪", "水彩"] as const;
-export type MinimaxStyleType = (typeof minimaxStyleTypes)[number];
-export type MinimaxStyle = { style_type: MinimaxStyleType; style_weight: number };
-
-/**
- * 博客封面风格 → MiniMax 画风 + 权重。
- *
- * 实测（同一段描述，同一个模型）：
- *   - 不下发 style：配色失控，容易跑成暗调微缩场景。
- *   - 漫画 0.4：紫蓝渐变铺满 + 3D 立体物件 + 零文字，最贴合博客封面。
- *   - 元气：主体居中，没有左侧标题位，只适合极简封面。
- * 权重压到 0.4 以下：画风只做点缀，不至于盖掉构图。
- */
-const minimaxStyleByCoverStyle: Record<CoverStyle, MinimaxStyle> = {
-  ink: { style_type: "漫画", style_weight: 0.4 },
-  minimal: { style_type: "元气", style_weight: 0.35 },
-  editorial: { style_type: "漫画", style_weight: 0.25 },
-};
-
-export function minimaxStyleFor(style: CoverStyle = "ink"): MinimaxStyle {
-  return minimaxStyleByCoverStyle[style] ?? minimaxStyleByCoverStyle.ink;
-}
-
-/** 一次生成几张候选底图。live 够快，多出几张几乎不占等待时间。 */
-function imageCandidateCount(model: { modelKey: string }) {
-  return isMiniMaxLiveModel(model) ? 3 : 1;
-}
 export function imageProtocol(
   model: ConfiguredModel,
 ): "openai" | "minimax" | null {
@@ -107,97 +69,72 @@ export function imageProtocol(
 }
 
 /**
- * 底图提示词。
+ * 生图提示词的长度上限。
  *
- * 底图 = 不含任何文字的画面：背景、插画、装饰。
- * 短标题由站点用系统字体排上去，所以这里必须反复强调「不要画字」，
- * 否则模型很容易顺手写几个假字或一段像文字的纹理。
+ * MiniMax 的生图接口按 1500 字符截断 —— 超了不是报错，是悄悄丢掉尾部。
+ * 尾部恰好是「无文字 / 无地面 / 不要低饱和粉紫摄影棚」这些硬约束，
+ * 丢了就等于白写。所以提示词按预算拼装，不是拼完再祈祷它够短。
  */
+export const COVER_PROMPT_LIMIT = 1500;
+
+/** Same visual contract for every model. Keep the complete brief below MiniMax's limit. */
 export function coverPrompt(
   title: string,
   content: string,
   style: CoverStyle = "ink",
   direction?: string,
 ) {
+  const cleanTitle = publicText(title).replace(/\s+/g, " ").slice(0, 80);
+  const cleanContent = publicText(content).replace(/\s+/g, " ");
+  const plan = coverArtPlan(cleanTitle, cleanContent, style);
+  const extra = publicText(direction || "").replace(/\s+/g, " ").slice(0, 100);
+
   /*
-   * 主题放在最前面：MiniMax 协议会把提示词截到 1500 字，
-   * 主题放在末尾会被截掉 —— 那就等于白说了。
+   * 提示词按优先级分块，超预算时从最不重要的块开始让位：
+   *   1. 风格契约（画法、配色、主体、构图、材质、画幅）—— 永远完整；
+   *   2. 主题参考（标题）—— 永远完整，主题词库主要靠它命中；
+   *   3. 内容参考（正文摘要）—— 先让位，标题的权重本就是正文的五倍；
+   *   4. 作者的画面要求 —— 最后让位，按剩余字符截短。
+   * 硬约束尾巴任何情况下都不动。
    */
-  const extra = userDirection(direction);
-  return `主题参考：${publicText(title).slice(0, 80)}
-内容参考：${publicText(content).slice(0, 260)}
-${extra}绘制一张用于中文个人博客的高品质产品设计插画配图，不是海报，也不是实物摄影。横向16:9，1600×900。
-视觉目标：鲜明、饱和的紫蓝/亮蓝/青绿渐变铺满画面，清晰的明暗层次；精致的2.5D圆角界面卡片、图表、流程节点或工具图标。物体有厚度、细腻高光、轻微半透明叠层和短阴影，像产品功能发布封面，简洁而有分量。
-构图：左侧45%干净留给系统后期添加大标题；右侧55%用2–3个较大的主题物件组成紧凑、错落的插画。根据内容选意象：分析用图表/仪表板，方法用卡片/步骤，复盘用清单/笔，阅读用书页。允许白色界面卡片，避免每篇都用同一个图标。主体约占右侧可用区域80%，不能缩成小摆件。
-裁切安全区：1600×900画布的中心1280×450区域保留主体，关键物件位于x=800–1440、y=225–675。上下只延伸渐变、光影和几何装饰，适配2.8:1及2.9:1横幅裁切。左侧与主体保持自然衔接，不画硬分割线。
-${coverStyles[style]}
-Wordless artwork only. No text, Chinese characters, letters, numbers, logos, watermark or fake writing. Cards and screens contain only geometric bars, circles and blocks, no labels. 标题由站点独立排版，绝对不要画字。
-禁止：低饱和浅粉浅紫摄影棚、地面和地平线、手机产品摆拍、黏土玩具、软萌公仔、孤零零的小物件、杂乱场景。`;
+  const contract = `${plan.treatment}
+Palette: ${plan.palette} — the backdrop uses exactly this gradient, deep and rich; background panels barely visible.
+Subject: ${plan.subject}.
+${plan.composition}
+Matte premium materials, not plastic: no neon halos, no candy saturation, no lens flare, no heavy blur. Surfaces solid white and pale grey-blue; glyphs flat 2D line-art marks; one vivid accent only; no duplicate copies.
+16:9 illustration asset, 1600x900. The site uses this image as the full cover background and prints the title on the empty left part, so the left 38% must stay clean and the illustration must run off the right edge.`;
 
+  // 硬约束尾巴：任何情况下都不能被截断。
+  const tail = `No text, letters, numbers, logos, watermark or fake writing. UI content is geometric bars and blocks only. No floor, tabletop, pedestal, platform, circular hub, room, miniature scene. 禁止：低饱和粉紫摄影棚。`;
+
+  const titleLine = `主题参考：${cleanTitle}`;
+  const contentLine = `内容参考：${cleanContent.slice(0, 48)}`;
+  const detailLabel = "Optional detail: ";
+  const budget = COVER_PROMPT_LIMIT - tail.length - 1;
+
+  // 依次尝试：带正文 → 不带正文 → 只留风格契约。主题命中主要靠标题，
+  // 而「Subject」那一行已经把主题写进提示词了，所以最后一步也还能用。
+  let fixed = [`[${COVER_ART_VERSION}]`, titleLine, contentLine, contract].join("\n");
+  if (fixed.length > budget)
+    fixed = [`[${COVER_ART_VERSION}]`, titleLine, contract].join("\n");
+  if (fixed.length > budget)
+    fixed = [`[${COVER_ART_VERSION}]`, contract].join("\n");
+
+  const room = budget - fixed.length - detailLabel.length - 1;
+  const detail =
+    extra && room > 0 ? `\n${detailLabel}${extra.slice(0, room)}` : "";
+  return `${fixed}${detail}\n${tail}`;
 }
 
-/**
- * 作者自己写的「想要什么画面」。
- *
- * 它是增补，不是替换 —— 底图无字、左侧留白这些硬约束不能被用户输入顶掉。
- */
-function userDirection(direction?: string) {
-  const text = publicText(direction ?? "").trim();
-  if (!text) return "";
-  return `画面要求：${text.slice(0, 200)}\n`;
-}
-
-/**
- * image-01-live 专用底图提示词。
- *
- * 实测（同篇文章、同一段描述，两个模型各出一次）：
- *   - image-01 对长中文指令跟随得好：出「紫蓝渐变 + 2.5D 立体卡片」。
- *   - image-01-live 明显更弱：同一段中文提示词会跑成水墨山水或四格漫画，
- *     还自带假文字。
- *   - image-01-live 换成结构化英文 + 画风增强后最稳：
- *     紫蓝渐变铺满、3D 立体物件、零文字。
- * 所以 live 走独立的一套提示词，不复用中文长稿。
- */
-export function coverPromptLive(
-  title: string,
-  content: string,
-  style: CoverStyle = "ink",
-  direction?: string,
-) {
-  const scene = {
-    ink: "On the right: large rounded 3D product UI elements — a chunky bar chart, stacked glass cards, connected flow nodes — arranged as one compact cluster.",
-    minimal: "On the right: only a few simple rounded 3D blocks and one sphere, sparse minimal composition, lots of open space.",
-    editorial: "On the right: a sculptural still life of soft matte blocks and one glossy sphere, natural window light, muted neutral backdrop.",
-  }[style];
-  /*
-   * 内容也带上：只给标题的话，模型不知道该画图表还是画清单，
-   * 出来的东西千篇一律。内容只当「画什么」的提示，不当指令。
-   */
-  const extra = userDirection(direction);
-  return `Theme hint: ${publicText(title).slice(0, 60)}
-Subject hint: ${publicText(content).slice(0, 160)}
-${extra}3D glossy illustration on a smooth purple-to-blue gradient background that fills the entire frame, saturated and luminous.
-${scene}
-The left 40 percent of the frame stays a completely empty smooth gradient area, nothing in it.
-Glossy plastic and frosted glass material, clean studio lighting, soft short shadows, premium product launch poster quality.
-Plain solid shapes only, no text, no letters, no numbers, no labels, no screens, no logos, no watermark, no people, no scenery.`;
-}
-
-/**
- * 按模型选提示词。
- *
- * image-01-live 与 image-01 的指令遵循度差很多，提示词不能通用。
- */
+// Keep existing callers on the same design contract; no model-specific scene replacement.
 export function coverPromptForModel(
-  model: { modelKey: string } | null | undefined,
+  _model: { modelKey: string } | null | undefined,
   title: string,
   content: string,
   style: CoverStyle = "ink",
   direction?: string,
 ) {
-  return model && isMiniMaxLiveModel(model)
-    ? coverPromptLive(title, content, style, direction)
-    : coverPrompt(title, content, style, direction);
+  return coverPrompt(title, content, style, direction);
 }
 
 export function imageRequest(
@@ -210,7 +147,7 @@ export function imageRequest(
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
-        "MiniMax M 系列用于对话与视觉理解，无法通过勾选能力变成生图模型；请添加 Image-01-Live（低延迟，支持画风增强）或 Image-01。",
+        "MiniMax M 系列用于对话与视觉理解，无法通过勾选能力变成生图模型；请添加 Image-01 或 Image-01-Live。",
     });
   if (!protocol)
     throw new TRPCError({
@@ -266,8 +203,7 @@ export function imageRequest(
       : {
           model: model.modelKey,
           prompt,
-          // OpenAI 兼容接口一次只出一张（dall-e-3 / gpt-image-1 也只收 n=1），
-          // 多候选是 live 的能力，不往这边带。
+          // This workflow intentionally requests one candidate to bound cost.
           n: 1,
           ...(/^dall-e-2$/.test(model.modelKey)
             ? { size: "1024x1024", response_format: "b64_json" }
@@ -342,8 +278,8 @@ async function limitedBytes(response: Response, limit: number) {
 /**
  * 调生图接口，取回若干张图。
  *
- * 一次请求可以要多张（MiniMax 的 n）：image-01-live 够快，
- * 一次出 3 张几乎不增加等待，作者还能挑构图更合适的那张。
+ * The provider adapter supports n; the cover workflow defaults to one image.
+ * Historical candidates stay available without being selected automatically.
  */
 export async function generateImageBuffers(
   model: ConfiguredModel,
@@ -517,16 +453,7 @@ export async function coverGenerationOptions(
     include: { provider: true },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
   });
-  /*
-   * image-01-live 排前面。
-   *
-   * 它比 image-01 快一半，还多一个画风增强参数，出图更稳 ——
-   * 前端取第一个可用模型，所以顺序就是默认选择。
-   */
-  const ordered = [...models].sort(
-    (a, b) =>
-      Number(isMiniMaxLiveModel(b)) - Number(isMiniMaxLiveModel(a)),
-  );
+  const ordered = preferCoverModels(models);
   const images = await db.attachments.findMany({
     where: {
       accountId,
@@ -555,7 +482,7 @@ export async function coverGenerationOptions(
   const draftConfig = readDraftCoverConfig(note.metadata);
   const { title: coverTitle, content: coverContent } = coverContext(note, note.publication);
   const imageModels = ordered.filter((m) => (m.capabilities as any)?.imageGeneration);
-  // 提示词跟着「将被选中的那个模型」走：live 与 image-01 的写法不通用。
+  // Report the actual default model alongside the shared visual brief.
   const preferred = imageModels.find(
     (m) => imageProtocol(m) && !!m.provider.apiKey?.trim(),
   );
@@ -566,6 +493,10 @@ export async function coverGenerationOptions(
       publicText(note.publication.content).slice(0, 24)
     ).slice(0, 24),
     prompt: coverPromptForModel(preferred, coverTitle, coverContent, style),
+    artPlan: coverArtPlan(publicText(coverTitle), publicText(coverContent), style),
+    modelTitle: preferred?.title || "",
+    modelKey: preferred?.modelKey || "",
+    candidateCount: 1,
     revision: note.publication.revision,
     /** 草稿里的封面配置：面板据此回填，改字不会重新生图。 */
     draftCover: draftConfig,
@@ -630,8 +561,8 @@ export async function generateBlogCover(
       include: { provider: true },
     });
     /*
-     * 提示词由服务端统一组装：模型决定写法（live 与 image-01 不通用），
-     * 作者的「画面要求」只作增补，底图无字、左侧留白这些硬约束不被顶掉。
+     * 服务端统一组装视觉模板和主题方案，不额外调用文本模型。
+     * 作者的画面要求只作增补，不替换无字和安全区约束。
      */
     const source = await db.notes.findFirst({
       where: { id: input.noteId, accountId, isRecycle: false },
@@ -650,8 +581,7 @@ export async function generateBlogCover(
       input.style,
       input.direction,
     );
-    const live = isMiniMaxLiveModel(model);
-    const count = imageCandidateCount(model);
+    const artPlan = coverArtPlan(publicText(context.title), publicText(context.content), input.style);
     const fetcher = await fetchWithProxy();
     const raws = dependencies?.generate
       ? [await dependencies.generate(model, prompt, fetcher)]
@@ -659,8 +589,7 @@ export async function generateBlogCover(
           dependencies?.generateMany ||
           generateImageBuffers
         )(model, prompt, fetcher, {
-          n: count,
-          ...(live ? { style: minimaxStyleFor(input.style) } : {}),
+          n: 1,
         });
     // 底图统一成 1600×900：不拉伸，只按比例裁切。
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
@@ -677,6 +606,8 @@ export async function generateBlogCover(
             noteId: input.noteId,
             modelId: input.modelId,
             prompt,
+            artVersion: COVER_ART_VERSION,
+            artPlan,
             style: input.style,
             sourceRevision: input.revision,
             width: COVER_SOURCE.width,
@@ -712,6 +643,7 @@ export async function generateBlogCover(
       id: uploaded[0].id,
       path: uploaded[0].path,
       revision: input.revision,
+      coverPalette: artPlan.overlayPalette,
       /** 本次一起出图的候选底图：作者挑一张，别的留在附件里。 */
       candidates: uploaded,
     };
@@ -864,7 +796,7 @@ export async function exportCoverImage(
   const buffer =
     config.mode === "overlay" && config.title.trim()
       ? await composeCoverImage({
-          base: cropped,
+          base: original,
           layout,
           canvasWidth: input.width,
           canvasHeight: input.height,

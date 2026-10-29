@@ -11,11 +11,11 @@
  *
  * 关键约束：排版依据是**容器实际像素尺寸**，不是「桌面 / 手机」两档断点。
  * 同一个短标题在 640×229 的头条大图和 150×94 的列表缩略图里，
- * 字号、行数、是否留副标题都应��不同。
+ * 字号、行数、是否留副标题都应不同。
  */
 
 /** 排版模板版本：规则变了就往上加一位，公开快照里记着用的是哪一版。 */
-export const COVER_TEMPLATE_VERSION = "v1";
+export const COVER_TEMPLATE_VERSION = "v2";
 
 /**
  * 封面模式：
@@ -61,8 +61,19 @@ export const COVER_SUBTITLE_MAX = 40;
  * 现在提到 shared：页面上的文字层要用同一套断行，分享图才能对得上）
  * ------------------------------------------------------------------ */
 
-/** 字距（em）。0.12 太散，像加了空格；0.04 接近正常标题字距。 */
-const TRACKING = 0.04;
+/** 字距（em）。参考封面的标题字距很紧，接近贴住；0.04 会显得松垮。 */
+const TRACKING = -0.02;
+
+/**
+ * 标题的横向压缩系数。
+ *
+ * 参考封面的标题是窄体：量下来每字宽高比约 0.83（Noto Sans SC 原生约 1.0），
+ * 笔画密度 0.63（原生 Black 约 0.40）。压窄之后密度自然上来，
+ * 字形才和参考图对得上。
+ *
+ * 页面用 CSS transform: scaleX()，服务端用 SVG 路径缩放，两边同一个系数。
+ */
+export const COVER_TITLE_SCALE_X = 0.84;
 
 const segmenter =
   typeof Intl !== "undefined" && "Segmenter" in Intl
@@ -88,8 +99,11 @@ const NO_LINE_END = new Set("（【《「『〔〖".split(""));
  *
  * 中文按 1em、拉丁按经验值算 —— 排版要在渲染之前就知道「放不放得下」，
  * 不能等浏览器量完再决定放哪。
+ *
+ * scale 是横向压缩系数：标题压窄后占的宽度比字面宽度小，
+ * 排版必须按压窄后的实际宽度算，否则会选过大的字号。
  */
-export function coverTextEmWidth(text: string): number {
+export function coverTextEmWidth(text: string, scale = 1): number {
   let w = 0;
   for (const ch of text) {
     if (/[⺀-鿿豈-﫿︰-﹏＀-｠￠-￦]/.test(ch)) w += 1;
@@ -99,7 +113,7 @@ export function coverTextEmWidth(text: string): number {
     else w += 0.56;
   }
   const chars = [...text].length;
-  return w + TRACKING * Math.max(0, chars - 1);
+  return (w + TRACKING * Math.max(0, chars - 1)) * scale;
 }
 
 type Token = { text: string; space: boolean };
@@ -208,7 +222,7 @@ type SceneRule = {
 export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
   // 双栏头条大图 2.8:1：宽而扁，字号可以放大，副标题看空间。
   double: {
-    columnRatio: 0.46,
+    columnRatio: 0.32,
     maxFontRatio: 0.34,
     minFontRatio: 0.15,
     maxLines: 2,
@@ -219,12 +233,12 @@ export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
     footerReserveRatio: 0,
     footerReserveMinPx: 0,
     anchor: "center",
-    padXRatio: 0.05,
+    padXRatio: 0.075,
     padYRatio: 0.09,
   },
   // 单栏缩略图 16:9：小尺寸，只留短标题，允许两行。
   single: {
-    columnRatio: 0.54,
+    columnRatio: 0.34,
     maxFontRatio: 0.3,
     minFontRatio: 0.13,
     maxLines: 2,
@@ -235,7 +249,7 @@ export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
     footerReserveRatio: 0,
     footerReserveMinPx: 0,
     anchor: "center",
-    padXRatio: 0.05,
+    padXRatio: 0.075,
     padYRatio: 0.09,
   },
   /*
@@ -249,7 +263,7 @@ export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
    *     controlsReserve 归零，字号也收一档（maxFontRatio），画面不再被字塞满。
    */
   banner: {
-    columnRatio: 0.5,
+    columnRatio: 0.33,
     maxFontRatio: 0.2,
     minFontRatio: 0.12,
     maxLines: 2,
@@ -260,12 +274,12 @@ export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
     footerReserveRatio: 0.16,
     footerReserveMinPx: 34,
     anchor: "bottom",
-    padXRatio: 0.05,
+    padXRatio: 0.075,
     padYRatio: 0.09,
   },
   // 社交分享图 1200×630。
   share: {
-    columnRatio: 0.54,
+    columnRatio: 0.34,
     maxFontRatio: 0.24,
     minFontRatio: 0.11,
     maxLines: 2,
@@ -276,12 +290,52 @@ export const coverSceneRules: Record<CoverSceneKey, SceneRule> = {
     footerReserveRatio: 0,
     footerReserveMinPx: 0,
     anchor: "center",
-    padXRatio: 0.055,
+    padXRatio: 0.075,
     padYRatio: 0.09,
   },
 };
 
+/**
+ * 标题字号的绝对上限（px）。
+ *
+ * 场景规则已经用「容器高度的百分比」限住了字号，这条只是防呆：
+ * 容器特别高时（比如整屏宽的大图）不至于算出几百像素的标题。
+ */
+export const COVER_TITLE_MAX_PX = 240;
+
+/**
+ * 标题安全区：标题列最右只能到容器宽度的这个比例。
+ *
+ * 底图左 38% 是留给标题的干净底色，插画从右边压过来。
+ * 标题列越过这条线就可能压到插画上 —— 排版时用 columnRatio + padXRatio 卡住。
+ */
+export const COVER_TEXT_SAFE_RATIO = 0.42;
+
+export type CoverArtworkRect = { left: number; top: number; width: number; height: number };
+
+/**
+ * 插画区：整幅铺满封面。
+ *
+ * 底图本身就是一张完整构图 —— 左侧留干净底色给标题，右侧那组插画被画框裁掉，
+ * 和参考封面的做法一样。所以铺字时不再切一块独立的「插画槽位」：
+ * 标题直接压在底图的留白上，插画也不会因为换展示位而左右跑位。
+ */
+export function coverArtworkRect(
+  width: number,
+  height: number,
+  _placement: CoverSceneKey,
+  _align: CoverTextAlign = "left",
+): CoverArtworkRect {
+  return {
+    left: 0,
+    top: 0,
+    width: Math.max(1, Math.round(width)),
+    height: Math.max(1, Math.round(height)),
+  };
+}
+
 export type CoverTextLayout = {
+  artwork: CoverArtworkRect;
   /** 标题字号（px）。 */
   fontSize: number;
   /** 副标题字号（px）。 */
@@ -345,7 +399,7 @@ export function computeCoverTextLayout(input: {
 
   const paddingX = Math.round(w * rules.padXRatio);
   const paddingY = Math.round(h * rules.padYRatio);
-  const maxWidth = Math.max(24, Math.round(w * rules.columnRatio));
+  const maxWidth = Math.max(24, Math.round(w * (align === "center" ? 0.8 : rules.columnRatio)));
   const topInset = input.badge
     ? Math.round(h * rules.badgeReserve)
     : 0;
@@ -358,27 +412,41 @@ export function computeCoverTextLayout(input: {
     Math.max(Math.round(h * rules.footerReserveRatio), rules.footerReserveMinPx),
   );
 
-  const minFont = Math.max(11, h * rules.minFontRatio);
+  const minFont = Math.max(11, Math.min(h * rules.minFontRatio, w * 0.045));
   const maxFont = Math.max(minFont, h * rules.maxFontRatio);
 
   // 可用高度：扣掉上下内边距，以及角标 / 轮播控件让出来的位置。
-  const bandTop = paddingY + topInset;
+  const bandTop = Math.max(paddingY + topInset, align === "center" ? Math.round(h * 0.44) : 0);
   // 贴底排版时，底边距由状态行决定，不再另留一层 padding。
   const bandBottom =
     rules.anchor === "bottom" ? h - bottomInset : h - paddingY - bottomInset;
   const bandHeight = Math.max(0, bandBottom - bandTop);
 
-  // 从大到小试字号：先保证放得下，再谈好看。
-  let chosen: {
-    size: number;
-    lines: string[];
-    overflow: boolean;
-  } | null = null;
+  /*
+   * 从大到小试字号：先保证放得下，再谈好看。
+   *
+   * 两轮：
+   *   1. 标题单独放得下的最大字号 —— 这就是参考封面那种「大字占满左半边」的排法；
+   *   2. 如果作者写了副标题，再找一个标题与副标题都放得下的字号。
+   *      两轮都成立时用第 2 轮（标题让一让，副标题保住）——
+   *      作者特意写的小字不该被悄悄丢掉；标题缩小一档仍然是醒目的大字。
+   */
   const steps = 24;
-  for (let i = 0; i <= steps; i++) {
-    const size = maxFont - ((maxFont - minFont) * i) / steps;
-    const lines = fitLines(title, maxWidth, size, rules.maxLines);
-    if (!lines) continue;
+  const sizeAt = (i: number) =>
+    Math.min(
+      COVER_TITLE_MAX_PX,
+      (maxFont - ((maxFont - minFont) * i) / steps) * scale,
+    );
+  const titleLayoutAt = (i: number) => {
+    const size = sizeAt(i);
+    const lines = fitLines(
+      title,
+      maxWidth,
+      size,
+      rules.maxLines,
+      COVER_TITLE_SCALE_X,
+    );
+    if (!lines) return null;
     /*
      * 宽度放得下还不够：宽扁的容器（2.8:1 的双栏大图）里，
      * 按宽度选出来的字号排成两行后可能比画布还高 ——
@@ -386,9 +454,37 @@ export function computeCoverTextLayout(input: {
      * 高度也放不下就继续试更小的字号。
      */
     const lineHeight = Math.round(size * 1.22);
-    if (lines.lines.length * lineHeight > bandHeight) continue;
-    chosen = { size, lines: lines.lines, overflow: false };
+    if (lines.lines.length * lineHeight > bandHeight) return null;
+    return { size, lines: lines.lines, lineHeight };
+  };
+
+  let chosen: {
+    size: number;
+    lines: string[];
+    overflow: boolean;
+  } | null = null;
+  let chosenSubtitle: { lines: string[]; size: number } | null = null;
+  for (let i = 0; i <= steps; i++) {
+    const candidate = titleLayoutAt(i);
+    if (!candidate) continue;
+    chosen = { size: candidate.size, lines: candidate.lines, overflow: false };
     break;
+  }
+  if (chosen && subtitle && rules.allowSubtitle) {
+    for (let i = 0; i <= steps; i++) {
+      const candidate = titleLayoutAt(i);
+      if (!candidate) continue;
+      const subSize = Math.round(clamp(candidate.size * rules.subtitleRatio, 10, 64));
+      const sub = fitLines(subtitle, maxWidth, subSize, 2, 1, true);
+      if (!sub) break;
+      const gap = Math.round(candidate.size * 0.3);
+      const subHeight = sub.lines.length * Math.round(subSize * 1.35);
+      if (candidate.lines.length * candidate.lineHeight + gap + subHeight > bandHeight)
+        continue;
+      chosen = { size: candidate.size, lines: candidate.lines, overflow: false };
+      chosenSubtitle = { lines: sub.lines, size: subSize };
+      break;
+    }
   }
   if (!chosen) {
     // 到可读下限了还是放不下：不硬缩，标记出来让作者改文案。
@@ -400,28 +496,21 @@ export function computeCoverTextLayout(input: {
     };
   }
 
-  const fontSize = Math.round(clamp(chosen.size * scale, 11, 132));
+  const fontSize = Math.floor(clamp(chosen.size, 11, COVER_TITLE_MAX_PX));
   const titleLines = chosen.lines;
   const titleLineHeight = Math.round(fontSize * 1.22);
   const titleHeight = titleLines.length * titleLineHeight;
 
-  const subtitleSize = Math.round(clamp(fontSize * rules.subtitleRatio, 10, 64));
+  const subtitleSize = chosenSubtitle?.size ?? Math.round(clamp(fontSize * rules.subtitleRatio, 10, 64));
   const subtitleLineHeight = Math.round(subtitleSize * 1.35);
 
   // 副标题：先按「能放下」判断，放不下就藏起来（它可以自动隐藏，短标题不行）。
-  let subtitleLines: string[] = [];
+  let subtitleLines: string[] = chosenSubtitle?.lines ?? [];
   let subtitleGap = 0;
   let subtitleHidden = false;
   const subtitleGapBase = Math.round(fontSize * 0.3);
-  if (subtitle && rules.allowSubtitle) {
-    const candidate = fitLines(subtitle, maxWidth, subtitleSize, 2);
-    const subHeight = candidate ? candidate.lines.length * subtitleLineHeight : 0;
-    if (candidate && titleHeight + subtitleGapBase + subHeight <= bandHeight) {
-      subtitleLines = candidate.lines;
-      subtitleGap = subtitleGapBase;
-    } else {
-      subtitleHidden = true;
-    }
+  if (subtitleLines.length) {
+    subtitleGap = subtitleGapBase;
   } else if (subtitle) {
     subtitleHidden = true;
   }
@@ -443,6 +532,7 @@ export function computeCoverTextLayout(input: {
   else if (align === "right") left = Math.max(paddingX, w - paddingX - maxWidth);
 
   return {
+    artwork: coverArtworkRect(w, h, input.placement, align),
     fontSize,
     subtitleSize,
     titleLineHeight,
@@ -466,22 +556,46 @@ export function computeCoverTextLayout(input: {
  * 给定字号，看文字能不能排进 maxWidth / maxLines。
  *
  * 放得下返回断好的行，放不下返回 null（调用方继续试更小的字号）。
+ *
+ * scale 是横向压缩系数：标题压窄，按压窄后的宽度算。
+ *
+ * preferSingle 是给小字用的：小字优先排成一行（放得下就别断行），
+ * 标题相反 —— 海报标题宁可两行均分，也不要一行小字。
  */
 function fitLines(
   text: string,
   maxWidth: number,
   size: number,
   maxLines: number,
+  scale = 1,
+  preferSingle = false,
 ): { lines: string[] } | null {
   const trimmed = text.trim();
   if (!trimmed) return { lines: [] };
-  const single = coverTextEmWidth(trimmed) * size;
+  if (preferSingle) {
+    const single = coverTextEmWidth(trimmed, scale) * size;
+    if (single <= maxWidth) return { lines: [trimmed] };
+  }
+  /*
+   * 短标题优先排成两行均分（参考封面：「复盘 / 笔记」「高效 / 工作流」）。
+   * 两行的视觉重心比一行小字稳，也更像海报标题；
+   * 只有放不下时才退回单行。
+   */
+  if (maxLines >= 2) {
+    const balanced = coverTextLines(trimmed, 2);
+    if (
+      balanced.length === 2 &&
+      balanced.every((l) => coverTextEmWidth(l, scale) * size <= maxWidth * 0.98)
+    )
+      return { lines: balanced };
+  }
+  const single = coverTextEmWidth(trimmed, scale) * size;
   if (single <= maxWidth) return { lines: [trimmed] };
   if (maxLines < 2) return null;
   const lines = coverTextLines(trimmed, 2);
   if (lines.length < 2) return null;
   // 每行都要放得下；留 2% 余量给字体度量误差。
-  if (lines.every((l) => coverTextEmWidth(l) * size <= maxWidth * 0.98))
+  if (lines.every((l) => coverTextEmWidth(l, scale) * size <= maxWidth * 0.98))
     return { lines };
   return null;
 }
@@ -585,7 +699,13 @@ export function hexToRgb(hex: string): [number, number, number] {
 
 export type CoverScrimStop = { offset: number; alpha: number };
 
-/** 遮罩的渐变节点：按文字对齐方向决定从哪一侧压暗。 */
+/**
+ * 遮罩的渐变节点：按文字对齐方向决定从哪一侧压暗。
+ *
+ * 左对齐时整幅底图铺满，标题就压在底图的左半边 ——
+ * 所以渐变要一直铺到标题列的右边缘（约 40% 处）才收干净，
+ * 否则底图偏亮时，标题右侧那几个字会发飘。
+ */
 export function coverScrimStops(align: CoverTextAlign): CoverScrimStop[] {
   if (align === "center")
     return [
@@ -600,9 +720,10 @@ export function coverScrimStops(align: CoverTextAlign): CoverScrimStop[] {
       { offset: 1, alpha: 0.6 },
     ];
   return [
-    { offset: 0, alpha: 0.6 },
-    { offset: 0.42, alpha: 0.3 },
-    { offset: 1, alpha: 0 },
+    { offset: 0, alpha: 0.62 },
+    { offset: 0.3, alpha: 0.38 },
+    { offset: 0.44, alpha: 0.16 },
+    { offset: 0.58, alpha: 0 },
   ];
 }
 
@@ -618,3 +739,14 @@ export function coverScrimCss(palette: string, align: CoverTextAlign): string {
   return `linear-gradient(to right, ${stops})`;
 }
 
+
+/** 页面与导出共用背景，单张插画以 contain 放入独立区域，不再裁切核心主体。 */
+export function coverBackdropColors(palette: string) {
+  const rgb = hexToRgb(coverPaletteColor(palette));
+  const hex = (values: number[]) => "#" + values.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+  return { left: hex(rgb.map(v => v * 0.88)), right: hex(rgb.map(v => v + (255 - v) * 0.18)) };
+}
+export function coverBackdropCss(palette: string) {
+  const colors = coverBackdropColors(palette);
+  return `linear-gradient(to right, ${colors.left}, ${colors.right})`;
+}

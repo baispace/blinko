@@ -1,4 +1,28 @@
 /*
+ * 封面标题字库：两档静态字重（Black 900 / Medium 500）。
+ *
+ * 不用可变字体：服务端导出的分享图要渲染同一份字形，
+ * 而 sharp 的文字渲染依赖 fontconfig —— 没有 fontconfig 的机器上
+ * fontfile 会被静默忽略，导出图就会变成系统兜底字体。
+ * 静态实例由 scripts/build-cover-font.py 从可变字体切出来，
+ * 页面与服务端共用，导出图和页面永远一致。
+ */
+@font-face {
+  font-family: "Ink Cover Sans";
+  src: url("/fonts/cover/NotoSansSC-Black.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ink Cover Sans";
+  src: url("/fonts/cover/NotoSansSC-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+/*
  * 封面三层：底图层（图片）、文字层（真文字）、状态层（页面自己的角标/控件）。
  *
  * 底图统一 1600×900，各展示位用 object-fit: cover 裁，
@@ -62,6 +86,7 @@
   flex-direction: column;
   justify-content: flex-start;
   font-family:
+    "Ink Cover Sans",
     "PingFang SC",
     "Microsoft YaHei",
     "Noto Sans SC",
@@ -69,9 +94,10 @@
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
-  font-weight: 800;
+  font-weight: 900;
   color: #fff;
-  letter-spacing: 0.01em;
+  /* 字距要跟服务端一致（shared/lib/blogCoverText.ts 的 TRACKING）。 */
+  letter-spacing: -0.02em;
   text-shadow: 0 2px 12px rgb(18 10 60 / 32%);
   pointer-events: none;
   overflow: hidden;
@@ -82,6 +108,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+ * 标题是窄体（参考封面的字宽高比约 0.83），横向压一道。
+ * 排版按压窄后的宽度算字号，所以这里只改视觉、不改盒子。
+ * 副标题保持正常字宽 —— 参考图里只有大字是窄的。
+ */
+.ink-cover-line:not(.ink-cover-subtitle) {
+  transform: scaleX(0.84);
+  transform-origin: left center;
 }
 
 .ink-cover-subtitle {
@@ -98,3 +134,11 @@
   -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
 }
+
+/*
+ * 叠字封面：底图整幅铺满，标题直接压在底图左侧的留白上。
+ * 底图本身就是完整构图（左边留干净底色给字，右边那组插画被画框裁掉），
+ * 所以这里不再切一块独立插画区 —— 各展示位看到的插画位置一致，
+ * 标题和插画也不会因为换位置而互相跑位。
+ */
+.ink-cover-artwork { position: absolute; inset: 0; overflow: hidden; }

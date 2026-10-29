@@ -14,6 +14,7 @@ export const savePublishSettingsSchema = z.object({
   title: z.string().trim().max(200), summary: z.string().trim().max(2000),
   coverTitle: z.string().trim().max(24), coverSubtitle: z.string().trim().max(40),
   coverMode: z.enum(['full','overlay']),
+  coverPalette: z.string().regex(/^(?:violet|blue|slate|teal|#[0-9a-f]{3}|#[0-9a-f]{6})$/i).optional(),
   coverAttachmentId: z.number().int().positive().nullable(), coverPath: z.string().max(1000).optional(),
   displayMode: z.enum(['default', 'pinned', 'featured']), displayOrder: z.number().int().min(0).max(999),
   action: z.enum(['display', 'draft', 'publish']).default('draft'),
@@ -89,7 +90,7 @@ export async function savePublishSettings(db: PrismaClient, accountId: number, i
       await tx.attachments.update({ where: { id: image.id }, data: { noteId: note.id } }); imageId = image.id;
     }
     if (imageId && input.coverMode === 'overlay' && !input.coverTitle) throw new TRPCError({ code: 'BAD_REQUEST', message: '底图模式需要填写封面短标题。' });
-    const config = normalizeCoverConfig({ ...current.config, title: input.coverTitle, subtitle: input.coverSubtitle, mode: input.coverMode, focus: imageId !== note.publication?.draftCoverAttachmentId ? null : current.config.focus });
+    const config = normalizeCoverConfig({ ...current.config, title: input.coverTitle, subtitle: input.coverSubtitle, mode: input.coverMode, palette: input.coverPalette ?? current.config.palette, focus: imageId !== note.publication?.draftCoverAttachmentId ? null : current.config.focus });
     const metadata = { ...writeDraftCoverConfig(note.metadata, config), title: input.title, summary: input.summary,
       // Empty overrides make search/share metadata inherit the public article.
       blogSeo: { title: '', description: '', image: '', imageAlt: '' },

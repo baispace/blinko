@@ -366,8 +366,8 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: #fff;
   font-size: 13px;
@@ -518,7 +518,7 @@
   border-radius: 10px;
   background: var(--ink-tint);
   color: var(--ink-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .ink-mg-scene-shot img {
   display: block;
@@ -551,7 +551,7 @@
   line-height: 1.5;
 }
 .ink-mg-scene-size {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -613,7 +613,7 @@
   border: 1px solid var(--ink-line);
   background: var(--ink-surface);
   color: var(--ink-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 18px;
   white-space: nowrap;
@@ -640,7 +640,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-muted);
   cursor: pointer;
   user-select: none;
@@ -711,7 +711,7 @@
   place-items: center;
   width: 100%;
   height: 100%;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-muted);
 }
 
@@ -921,8 +921,8 @@
   gap: 6px;
 }
 .ink-mg-page-btn {
-  min-width: 32px;
-  height: 32px;
+  min-width: 36px;
+  height: 36px;
   padding: 0 9px;
   border-radius: 8px;
   border: 1px solid var(--ink-line);
@@ -1163,17 +1163,13 @@
   }
 }
 
-/* 公开站点管理：统一设置和内容级 SEO 的信息层级。 */
+/* 公开站点管理：统一设置的信息层级。 */
 .ink-admin-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-.ink-admin-seo-layout{display:grid;grid-template-columns:minmax(170px,.7fr) minmax(270px,1.2fr) minmax(240px,1fr);gap:18px;align-items:start}
 .ink-admin-field{display:flex;flex-direction:column;gap:8px;font-size:13px}.ink-admin-field small,.ink-admin-check span{color:var(--ink-muted);font-size:12px;line-height:1.6}
 .ink-admin-toggle{display:flex;gap:8px;align-items:center;font-size:13px;padding:8px 0}.ink-admin-toggle input{accent-color:var(--ink-accent)}
 .ink-admin-footer{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;background:var(--ink-bg);border-top:1px solid var(--ink-line)}.ink-admin-footer>span{font-size:12px;color:var(--ink-muted)}
-.ink-admin-content-choice{display:block;width:100%;text-align:left;padding:14px 10px;border-radius:8px;font-size:13px;border:0;background:transparent;color:inherit;cursor:pointer}.ink-admin-content-choice small{display:block;margin-top:6px;color:var(--ink-muted)}.ink-admin-content-choice[aria-pressed=true]{background:var(--ink-tint,#f1eeff);color:var(--ink-accent)}
-.ink-admin-preview-title{color:var(--ink-accent);font-size:18px;margin-top:20px}.ink-admin-icon-preview{width:64px;height:64px;object-fit:cover;border-radius:12px}.ink-admin-share-preview{width:100%;aspect-ratio:1.91;object-fit:cover;border-radius:10px}.ink-admin-check{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:1px solid var(--ink-line)}.ink-manage details summary{cursor:pointer;font-size:13px;margin:10px 0}.ink-manage textarea.ink-mg-field{resize:vertical;line-height:1.7}
-@media(max-width:1000px){.ink-admin-seo-layout{grid-template-columns:1fr 1fr}.ink-admin-seo-layout>aside{grid-column:1/-1;max-height:200px;overflow:auto}}
-@media(max-width:640px){.ink-admin-columns,.ink-admin-seo-layout{grid-template-columns:1fr}.ink-admin-footer{flex-wrap:wrap}}
-.ink-admin-row-menu{position:relative}.ink-admin-row-menu summary{list-style:none;padding:8px;border:1px solid var(--ink-line);border-radius:8px}.ink-admin-row-menu>div{position:absolute;right:0;top:40px;z-index:5;display:flex;flex-direction:column;gap:10px;padding:14px;min-width:150px;background:var(--ink-surface);border:1px solid var(--ink-line);border-radius:10px;box-shadow:0 8px 24px #0001}.ink-admin-row-menu>div>button{text-align:left;justify-content:flex-start}
+.ink-admin-preview-title{color:var(--ink-accent);font-size:22px;margin-top:20px}.ink-admin-icon-preview{width:64px;height:64px;object-fit:cover;border-radius:12px}.ink-admin-share-preview{width:100%;aspect-ratio:1.91;object-fit:cover;border-radius:10px}.ink-admin-check{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:1px solid var(--ink-line)}.ink-manage details summary{cursor:pointer;font-size:13px;margin:10px 0}.ink-manage textarea.ink-mg-field{resize:vertical;line-height:1.7}
+@media(max-width:640px){.ink-admin-columns{grid-template-columns:1fr}.ink-admin-footer{flex-wrap:wrap}}
 
 /* 推荐运营列：置顶与 banner 是两个独立开关，列表只显示状态，操作在文章详情页。 */
 .ink-mg-ops {
@@ -1258,20 +1254,6 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-}
-.ink-promo-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink-text);
-}
-.ink-promo-sub {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--ink-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .ink-promo-close {
   margin-left: auto;
@@ -1388,39 +1370,8 @@
 }
 
 /* ---------------- 内容 SEO 三栏 ---------------- */
-.ink-seo-list{display:flex;flex-direction:column;gap:4px;margin-top:8px;max-height:520px;overflow:auto}
-.ink-seo-item{display:flex;flex: none;flex-direction:column;align-items:flex-start;gap:3px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:inherit;cursor:pointer;white-space:normal}
-.ink-seo-item:hover{background:var(--ink-tint,#f4f1ff)}
-.ink-seo-item[aria-pressed=true]{background:var(--ink-tint,#f1eeff);border-color:var(--ink-accent);color:var(--ink-accent)}
-.ink-seo-item-title{display:block;font-size:13px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ink-seo-item small{display:block;margin-top:0;color:var(--ink-muted);font-size:12px;line-height:1.5}
-.ink-seo-more{align-self:flex-start;margin-top:6px}
-.ink-seo-field{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.ink-seo-field-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
-.ink-seo-field-head>span:first-child{font-weight:600}
-.ink-seo-radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-muted);cursor:pointer}
-.ink-seo-radio input{margin:0;accent-color:var(--ink-accent)}
-.ink-seo-radio-row{display:flex;gap:16px;flex-wrap:wrap}
-.ink-seo-hint,.ink-seo-source{color:var(--ink-muted);font-size:12px;line-height:1.6}
-.ink-seo-source{opacity:.85}
-.ink-seo-canonical{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;font-size:13px}
-.ink-seo-canonical>div{display:flex;gap:8px;align-items:center}
-.ink-seo-canonical input{flex:1;min-width:0}
-.ink-seo-image-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.ink-seo-image-picker button{width:56px;height:56px;padding:0;border:1px solid var(--ink-line);border-radius:10px;overflow:hidden;background:transparent;cursor:pointer}
-.ink-seo-image-picker img{width:100%;height:100%;object-fit:cover;display:block}
-.ink-seo-preview-search{display:flex;flex-direction:column;gap:6px}
-.ink-seo-preview-url{color:var(--ink-muted);font-size:12px;word-break:break-all}
-.ink-seo-preview-share{display:flex;flex-direction:column;gap:8px}
-.ink-seo-preview-host{color:var(--ink-muted);font-size:12px}
-.ink-seo-subhead{margin:18px 0 8px;font-size:13px}
 .ink-seo-steps{margin:0 0 14px;padding-left:20px;font-size:13px;line-height:1.9;color:var(--ink-muted)}
 .ink-seo-steps code{background:var(--ink-tint,#f4f1ff);padding:1px 5px;border-radius:4px;font-size:12px}
-.ink-seo-code{background:var(--ink-code-bg,#1e1b2e);color:#e6e1ff;padding:14px;border-radius:12px;overflow:auto;font-size:12px;line-height:1.7;max-height:340px}
-.ink-seo-mapping{display:flex;flex-direction:column;gap:8px}
-.ink-seo-mapping-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
-.ink-seo-mapping-label{min-width:56px;color:var(--ink-muted)}
-.ink-seo-mapping-row code{background:var(--ink-tint,#f4f1ff);padding:3px 7px;border-radius:6px;word-break:break-all}
 .ink-mg-note-block{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--ink-tint,#f4f1ff);color:var(--ink-accent);font-size:13px;line-height:1.7;margin:0 0 18px;border:0;text-align:left}
 
 /* ---------------- 站点检查 ---------------- */
@@ -1436,9 +1387,6 @@
 .ink-check-suggestion{margin:4px 0 0;font-size:12px;line-height:1.7;color:var(--ink-accent)}
 .ink-check-chip{display:inline-block;margin-left:10px;font-size:12px}
 @media(max-width:640px){
-  .ink-seo-list{max-height:320px}
-  .ink-seo-canonical>div{flex-direction:column;align-items:stretch}
-  .ink-seo-mapping-row code{font-size:11px}
 }
 
 /* 站点设置「页脚与备案」的预览：把公开页页脚的样子先摆出来，

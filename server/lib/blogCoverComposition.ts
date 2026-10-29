@@ -1,13 +1,13 @@
 import sharp from "sharp";
-import path from "node:path";
-import { existsSync } from "node:fs";
-import { resolveStaticPublicDir } from "./cdnStaticDir";
 import {
   coverScrimStops,
+  coverBackdropColors,
+  COVER_TITLE_SCALE_X,
   coverPaletteColor,
   type CoverTextAlign,
   type CoverTextLayout,
 } from "../../shared/lib/blogCoverText";
+import { renderCoverLine, type CoverFontWeight } from "./coverTextRaster";
 
 /**
  * 服务端渲染封面文字层。
@@ -15,64 +15,38 @@ import {
  * 页面上的文字层是真文字（DOM），分享图上的文字层是这里画出来的 ——
  * 两者用同一份 shared/lib/blogCoverText.ts 的断行结果与字号，
  * 所以「页面长这样、分享出去长这样」。
- */
-
-/** 封面中文字库：与页面 .ink-cover-text 用的是同一套字形来源。 */
-export function coverFontPath() {
-  const suffix = "fonts/cover/NotoSansSC.ttf";
-  const paths = [
-    path.join(resolveStaticPublicDir() || "", suffix),
-    path.resolve(__dirname, "../../app/public", suffix),
-    path.resolve(process.cwd(), "app/public", suffix),
-    path.resolve(process.cwd(), "../app/public", suffix),
-    path.resolve(process.cwd(), "public", suffix),
-  ];
-  const found = paths.find((p) => existsSync(p));
-  if (!found)
-    throw new Error(
-      "封面中文字库未找到，请部署 fonts/cover/NotoSansSC.ttf 后重试。",
-    );
-  return found;
-}
-
-/**
- * XML 转义。
  *
- * 文字是塞进 <span> 里交给 sharp 的文本渲染器解析的，
- * 所以 & < > " ' 都得转义，否则标题里一个 & 就能把整段打散。
+ * 字形来源见 coverTextRaster.ts：不走 Pango，绕开 fontconfig 依赖，
+ * 页面与导出用的是同一份字库文件。
  */
-const AMP = String.fromCharCode(38);
-const escape = (s: string) =>
-  s
-    .replace(/&/g, AMP + "amp;")
-    .replace(/</g, AMP + "lt;")
-    .replace(/>/g, AMP + "gt;")
-    .replace(/"/g, AMP + "quot;")
-    .replace(/'/g, AMP + "apos;");
+
+/** XML 转义在旧的 Pango 方案里需要；现在文字走 SVG 路径，用不上了。 */
 
 type Rendered = { buffer: Buffer; width: number; height: number };
 
+/**
+ * 画一行字。
+ *
+ * tracking 与 scaleX 必须和 shared/lib/blogCoverText.ts 的排版参数一致：
+ * 页面上是 CSS 的 letter-spacing / scaleX，这里是几何上的等价物。
+ */
 async function renderLine(
   text: string,
   size: number,
   color: string,
   tracking: number,
+  weight: CoverFontWeight,
+  scaleX: number,
 ): Promise<Rendered> {
-  const buffer = await sharp({
-    text: {
-      text: `<span foreground="${color}" weight="heavy">${escape(text)}</span>`,
-      font: `Noto Sans SC Heavy ${size}`,
-      fontfile: coverFontPath(),
-      align: "left",
-      dpi: 72,
-      rgba: true,
-      spacing: Math.round(size * tracking),
-    },
-  })
-    .png()
-    .toBuffer();
-  const meta = await sharp(buffer).metadata();
-  return { buffer, width: meta.width ?? 0, height: meta.height ?? 0 };
+  const line = await renderCoverLine({
+    text,
+    size,
+    color,
+    weight,
+    tracking,
+    scaleX,
+  });
+  return { buffer: line.buffer, width: line.width, height: line.height };
 }
 
 /** 遮罩：与页面 CSS 渐变同参数（shared 里定义节点）。 */
@@ -109,7 +83,8 @@ export async function renderCoverTextLayer(opts: {
 }): Promise<Buffer> {
   const { layout } = opts;
   const composites: sharp.OverlayOptions[] = [];
-  const tracking = 0.04;
+  // 字距与 shared/lib/blogCoverText.ts 的 TRACKING 一致（页面是 CSS letter-spacing）。
+  const tracking = -0.02;
 
   const place = async (
     lines: string[],
@@ -117,22 +92,31 @@ export async function renderCoverTextLayer(opts: {
     color: string,
     lineHeight: number,
     startTop: number,
+    weight: CoverFontWeight,
+    scaleX: number,
   ) => {
     let offset = startTop;
     for (const line of lines) {
-      const rendered = await renderLine(line, size, color, tracking);
+      let rendered = await renderLine(line, size, color, tracking, weight, scaleX);
+      if (rendered.width > layout.maxWidth) {
+        rendered = { ...rendered, width: layout.maxWidth,
+          buffer: await sharp(rendered.buffer).extract({ left: 0, top: 0, width: layout.maxWidth, height: rendered.height }).png().toBuffer() };
+      }
       const x =
         opts.align === "center"
           ? layout.left + (layout.maxWidth - rendered.width) / 2
           : opts.align === "right"
             ? layout.left + layout.maxWidth - rendered.width
             : layout.left;
-      // 行高由排版决定，字形在行盒里居中。
-      const y = offset + Math.max(0, (lineHeight - rendered.height) / 2);
+      /*
+       * 行盒顶就是行位（baseline 在盒内 1.27em 处），
+       * 栅格化时按同一套盒模型落的基线，所以这里直接贴顶，
+       * 不要再按「字形在行盒里居中」二次偏移。
+       */
       composites.push({
         input: rendered.buffer,
         left: Math.round(x),
-        top: Math.round(y),
+        top: Math.round(offset),
       });
       offset += lineHeight;
     }
@@ -144,6 +128,8 @@ export async function renderCoverTextLayer(opts: {
     "#ffffff",
     layout.titleLineHeight,
     layout.top,
+    "black",
+    COVER_TITLE_SCALE_X,
   );
   if (layout.subtitleLines.length)
     await place(
@@ -154,6 +140,8 @@ export async function renderCoverTextLayer(opts: {
       layout.top +
         layout.titleLines.length * layout.titleLineHeight +
         layout.subtitleGap,
+      "medium",
+      1,
     );
 
   return sharp({
@@ -172,7 +160,9 @@ export async function renderCoverTextLayer(opts: {
 /**
  * 合成一张完整封面：底图 + 遮罩 + 文字层。
  *
- * 底图由调用方先裁到目标比例 —— 这里只负责叠加。
+ * 底图整幅铺满画布（object-fit: cover 的等价物），与页面一致：
+ * 底图左侧留干净底色给标题，右侧那组插画被画框裁掉。
+ * 调用方不能先裁切主体 —— 主体在源图里的位置就是它在封面里的位置。
  */
 export async function composeCoverImage(opts: {
   base: Buffer;
@@ -182,9 +172,22 @@ export async function composeCoverImage(opts: {
   palette: string;
   align: CoverTextAlign;
 }): Promise<Buffer> {
-  const base = await sharp(opts.base)
-    .resize(opts.canvasWidth, opts.canvasHeight, { fit: "cover" })
+  const colors = coverBackdropColors(opts.palette);
+  const background = Buffer.from(`<svg width="${opts.canvasWidth}" height="${opts.canvasHeight}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg"><stop stop-color="${colors.left}"/><stop offset="1" stop-color="${colors.right}"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#bg)"/></svg>`);
+  /*
+   * 整幅铺满：源图是 16:9，封面比它更宽 —— 整幅宽都露出来，上下裁。
+   * 这与页面 object-fit: cover + 各展示位的裁切位置是同一套数学。
+   */
+  const artwork = await sharp(opts.base)
+    .resize(opts.canvasWidth, opts.canvasHeight, {
+      fit: "cover",
+      position: "centre",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .ensureAlpha()
+    .png()
     .toBuffer();
+  const base = await sharp(background).composite([{ input: artwork, left: 0, top: 0 }]).png().toBuffer();
   const scrim = coverScrimSvg(
     opts.canvasWidth,
     opts.canvasHeight,

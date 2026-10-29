@@ -15,6 +15,13 @@ test('compact cover copy is four to six visible characters', () => {
   expect(copyInstructions).toContain('4–6 字');
   expect(groupInstructions({ publicTags: [], topics: [] })).toContain('4–6 字');
 });
+test('new cover palette is validated; old callers may omit it', () => {
+  const schema = savePublishSettingsSchema.shape.coverPalette;
+  expect(schema.parse(undefined)).toBeUndefined();
+  expect(schema.parse('teal')).toBe('teal');
+  expect(schema.parse('#087d85')).toBe('#087d85');
+  expect(() => schema.parse('url(https://example.com)')).toThrow();
+});
 const suite = process.env.RUN_PUBLISH_DB_TESTS === '1' ? describe : describe.skip;
 suite('unified settings persist atomically while keeping the public snapshot isolated', () => {
   const db = new PrismaClient(); let owner = 0, other = 0, noteId = 0, imageId = 0, foreignId = 0;

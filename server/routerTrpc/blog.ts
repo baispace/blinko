@@ -560,7 +560,7 @@ export const blogRouter = router({
     .input(
       z.object({
         noteId: z.number().int().positive(),
-        style: z.enum(["ink", "minimal", "editorial"]).default("ink"),
+        style: z.literal("ink").default("ink"),
       }),
     )
     .query(({ input, ctx }) =>
@@ -573,7 +573,7 @@ export const blogRouter = router({
         modelId: z.number().int().positive(),
         /** 作者写的「想要什么画面」；留空按模型默认模板生成。 */
         direction: z.string().trim().max(300).optional(),
-        style: z.enum(["ink", "minimal", "editorial"]),
+        style: z.literal("ink").default("ink"),
         revision: z.number().int().positive(),
       }),
     )

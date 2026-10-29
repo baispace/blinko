@@ -131,7 +131,6 @@ export const ZConfigKey = z.union([
   z.literal('customTitle'),
   z.literal('customIcon'),
   z.literal('customTagline'),
-  z.literal('customQuickLinks'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -239,7 +238,6 @@ export const ZConfigSchema = z.object({
   customTitle: z.string().optional(),
   customIcon: siteIconSchema.optional(),
   customTagline: z.string().optional(),
-  customQuickLinks: z.string().optional(),
   cardSpacing: z.number().optional(),
   noteListStyle: z.string().optional(),
   noteListSortBy: z.string().optional(),

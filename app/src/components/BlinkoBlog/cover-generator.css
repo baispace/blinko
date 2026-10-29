@@ -17,7 +17,7 @@
 .ink-cg-body h3{font-size:14px;font-weight:600;margin:0 0 11px}
 .ink-cg-feedback{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:var(--ink-tint);color:var(--ink-text);font-size:12px}
 .ink-cg-error{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fff1f0;border:1px solid #f5c2bd;color:#b42318;font-size:12px}
-.ink-cg-hint{margin:0;font-size:11px;line-height:1.7;color:var(--ink-muted)}
+.ink-cg-hint{margin:0;font-size:12px;line-height:1.7;color:var(--ink-muted)}
 
 /* ---------- 表单 ---------- */
 .ink-cg-form{display:flex;flex-direction:column;gap:20px}
@@ -25,7 +25,7 @@
 .ink-cg-block:first-child{border-top:0;padding-top:0}
 .ink-cg-field{display:flex;flex-direction:column;gap:6px;margin:0 0 13px}
 .ink-cg-field>span{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:550}
-.ink-cg-field>span small{font-size:11px;font-weight:400;color:var(--ink-muted)}
+.ink-cg-field>span small{font-size:12px;font-weight:400;color:var(--ink-muted)}
 .ink-cg-field>span small:last-child{margin-left:auto}
 .ink-cg .ink-mg-field{width:100%;min-height:38px;padding:9px 12px;border-radius:7px;font-size:14px;color:var(--ink-text);background:var(--ink-surface);border:1px solid var(--ink-line);outline:none;box-shadow:none}
 .ink-cg .ink-mg-field:focus-visible{border-color:var(--ink-accent);outline:2px solid color-mix(in srgb,var(--ink-accent) 17%,transparent);outline-offset:1px}
@@ -39,15 +39,15 @@
 .ink-cg-styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 .ink-cg .ink-cg-style{display:block;text-align:left;width:100%;min-width:0;padding:11px 12px;border:1px solid var(--ink-line);border-radius:9px;background:var(--ink-surface);cursor:pointer}
 .ink-cg .ink-cg-style strong{display:block;font-size:13px;font-weight:600;color:var(--ink-text)}
-.ink-cg .ink-cg-style small{display:block;margin-top:3px;font-size:11px;font-weight:400;color:var(--ink-muted);white-space:normal}
+.ink-cg .ink-cg-style small{display:block;margin-top:3px;font-size:12px;font-weight:400;color:var(--ink-muted);white-space:normal}
 .ink-cg .ink-cg-style[aria-pressed=true]{border-color:var(--ink-accent);background:var(--ink-tint)}
 .ink-cg .ink-cg-style[aria-pressed=true] strong{color:var(--ink-accent)}
 
 .ink-cg-prompt{margin-top:4px;font-size:12px}
 .ink-cg-prompt>summary{color:var(--ink-accent);cursor:pointer;list-style:revert}
 .ink-cg-prompt[open]>summary{margin-bottom:8px}
-.ink-cg-prompt pre{margin:0;padding:10px 12px;border-radius:8px;background:var(--ink-tint);color:var(--ink-muted);font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto}
-.ink-cg-prompt-extra{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:var(--ink-tint);color:var(--ink-text);font-size:11px;line-height:1.7}
+.ink-cg-prompt pre{margin:0;padding:10px 12px;border-radius:8px;background:var(--ink-tint);color:var(--ink-muted);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto}
+.ink-cg-prompt-extra{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:var(--ink-tint);color:var(--ink-text);font-size:12px;line-height:1.7}
 
 /* ---------- 出图结果 ---------- */
 .ink-cg-hero{aspect-ratio:2.8/1;border-radius:9px;overflow:hidden;background:var(--ink-tint)}
@@ -70,11 +70,11 @@
 .ink-cg-scene-frame{position:relative;overflow:hidden;border-radius:10px;background:var(--ink-tint);box-shadow:inset 0 0 0 1px var(--ink-line)}
 .ink-cg-scene-scale{position:absolute;top:0;left:0;transform-origin:top left}
 .ink-cg-scene figcaption{max-width:100%;text-align:left;overflow-wrap:anywhere}
-.ink-cg-scene figcaption span{display:block;font-size:11px;font-weight:400;color:var(--ink-muted)}
+.ink-cg-scene figcaption span{display:block;font-size:12px;font-weight:400;color:var(--ink-muted)}
 
 /* ---------- 底栏 ---------- */
 .ink-cg-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 28px;border-top:1px solid var(--ink-line);background:var(--ink-surface);flex-shrink:0}
-.ink-cg-foot p{margin:0;font-size:11px;color:var(--ink-muted)}
+.ink-cg-foot p{margin:0;font-size:12px;color:var(--ink-muted)}
 .ink-cg-foot>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 
 @media(max-width:640px){

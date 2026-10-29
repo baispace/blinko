@@ -12,7 +12,7 @@ const tx = {
     if (sql.startsWith('ROLLBACK')) Object.assign(state, savepoint);
   },
   message: {
-    findFirst: async ({where}: any) => where.role === 'assistant' ? { id: state.messageId || 20, conversationId: 1, createdAt: new Date('2026-10-22T03:00:00Z'), content: JSON.stringify({ kind: 'daily', title: '日报', content: '未确认事项不能作为成果', actions: state.actions }), metadata: state.metadata } : { createdAt: new Date('2026-10-22T03:00:00Z'), metadata: { workflow: { key: 'daily', reviewDate: '2026-10-22' }, sources: [state.source] } },
+    findFirst: async ({where}: any) => where.role === 'assistant' ? { id: state.messageId || 20, conversationId: 1, createdAt: new Date('2026-10-22T03:00:00Z'), content: JSON.stringify({ kind: 'daily', title: '日报', content: '未确认事项不能作为成果', actions: state.actions }), metadata: state.metadata } : { id: 19, createdAt: new Date('2026-10-22T03:00:00Z'), metadata: { displayContent: state.original || '', workflow: { key: 'daily', reviewDate: '2026-10-22' }, sources: [state.source] } },
     update: async ({data}: any) => { state.metadata = data.metadata; },
   },
   notes: {
@@ -82,3 +82,51 @@ test('duplicate submitted indexes are rejected before writing', () => {
   initialize(); const value = input();
   expect(dailySyncInput.safeParse({ ...value, actions: [value.actions[0], value.actions[0]] }).success).toBe(false);
 });
+
+
+test('explicitly selected owned task may be linked by name with its fresh version', async () => {
+  initialize(); state.source.id = 99;
+  const request = input(); request.actions[0].expectedUpdatedAt = state.notes[0].updatedAt.toISOString();
+  const result = await syncDailyWorkflow(request, 1);
+  expect(result.errors).toEqual({});
+  expect(result.actions[0]).toBe(7);
+  expect(result.applied[0].source).toMatchObject({ id: 7, content: '原待办', isArchived: false, updatedAt: '2026-10-15T00:00:00.000Z' });
+  expect(state.notes[0].isArchived).toBe(true);
+});
+test('freshly selected task still rejects a later concurrent change', async () => {
+  initialize();
+  const request = input(); request.actions[0].expectedUpdatedAt = state.notes[0].updatedAt.toISOString();
+  state.notes[0].updatedAt = new Date('2026-10-15T02:00:00Z');
+  const result = await syncDailyWorkflow(request, 1);
+  expect(result.errors[0]).toContain('已变化');
+  expect(state.notes[0].isArchived).toBe(false);
+});
+test('raw work records survive even when no suggested task changes are applied', async () => {
+  initialize(); state.original = '昨日临时处理线上问题，尚未关联任务。今日先观察。';
+  const result = await syncDailyWorkflow(input([]), 1);
+  const report = state.notes.find((note: any) => note.id === result.reportId);
+  expect(report.content).toContain(state.original);
+  expect(report.content).toContain('不代表其中的待办建议已经同步');
+  expect(report.content).not.toContain('未经确认的建议');
+  expect(state.notes[0].isArchived).toBe(false);
+  await syncDailyWorkflow(input([]), 1);
+  expect(report.metadata.dailyRecords).toHaveLength(1);
+});
+test('moving the deadline needs a reason, moving only the plan does not', async () => {
+  initialize(); state.notes[0].metadata.expireAt = '2026-10-21T15:59:59.000Z';
+  const request = input(); request.actions[0].value.due = '2026-10-23';
+  const rejected = await syncDailyWorkflow(request, 1);
+  expect(rejected.errors[0]).toContain('调整原因');
+  request.actions[0].value.due = null; request.actions[0].value.planDate = '2026-10-23';
+  const accepted = await syncDailyWorkflow(request, 1);
+  expect(accepted.errors).toEqual({});
+  expect(state.notes[0].metadata.expireAt).toBe('2026-10-21T15:59:59.000Z');
+});
+
+ test('unconfirmed actions cannot bypass review by being selected', async () => {
+  initialize();
+  const request = input(); request.actions[0].value.needsConfirmation = true;
+  const result = await syncDailyWorkflow(request, 1);
+  expect(result.errors[0]).toContain('先核对');
+  expect(Object.keys(result.actions)).toHaveLength(0);
+ });

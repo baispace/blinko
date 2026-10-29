@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import { AiSkills } from '@/components/BlinkoAi/AiSkills';
-import { AiDailyWorkspace } from '@/components/BlinkoAi/AiDailyWorkspace';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { AiInput } from '@/components/BlinkoAi/aiInput';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -84,7 +83,7 @@ const AIPage = observer(() => {
 
   return (
     <div className="flex h-full w-full">
-    {/* 对话区：结果区展开时收缩自身宽度，内部 transcript 用 mx-auto 重新居中 */}
+    {/* 每日整理与其他回复共用会话流，不再分离结果工作区。 */}
     <div
       style={{
         height: isPc ? '100%' : `calc(100% - ${!isVisible ? '0px' : '60px'})`
@@ -144,8 +143,6 @@ const AIPage = observer(() => {
       </motion.div>
     </div>
 
-    {/* 结果区：日报草稿与待办变更在这里处理，不占用对话流 */}
-    {aiStore.dailyWorkspaceId != null && <AiDailyWorkspace messageId={aiStore.dailyWorkspaceId} onClose={() => { aiStore.dailyWorkspaceId = null; }} />}
     </div>
   );
 });

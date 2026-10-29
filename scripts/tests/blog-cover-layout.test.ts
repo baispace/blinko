@@ -14,7 +14,11 @@ import {
   readCoverFocus,
 } from "../../shared/lib/blogCover";
 import { composeCoverImage } from "../../server/lib/blogCoverComposition";
-import { computeCoverTextLayout } from "../../shared/lib/blogCoverText";
+import {
+  COVER_TITLE_SCALE_X,
+  computeCoverTextLayout,
+  coverTextEmWidth,
+} from "../../shared/lib/blogCoverText";
 
 describe("封面安全区域", () => {
   test("源图 1600×900，核心内容区是居中的 1280×450", () => {
@@ -186,7 +190,7 @@ describe("封面文字层合成", () => {
     expect(bounds.maxX).toBeLessThanOrEqual(1600);
     expect(bounds.maxY).toBeLessThanOrEqual(900);
     // 文字列宽度上限：标题不会跑到右侧插画那边去。
-    expect(bounds.maxX).toBeLessThanOrEqual(layout.maxWidth);
+    expect(bounds.maxX).toBeLessThanOrEqual(layout.left + layout.maxWidth);
   });
 
   test("有置顶角标时，标题让开左上角那块", async () => {
@@ -262,4 +266,25 @@ describe("封面文字层合成", () => {
       expect([meta.width, meta.height]).toEqual([width, height]);
     }
   });
+});
+
+
+test("导出时即便底图全是高亮主体，标题区也被遮罩压暗", async () => {
+  const source = await sharp({ create: { width: 1600, height: 900, channels: 3, background: "#ff0000" } }).png().toBuffer();
+  for (const placement of ["double", "single", "banner", "share"] as const) {
+    const width = 400, height = placement === "single" || placement === "share" ? 225 : 140;
+    const layout = computeCoverTextLayout({ containerWidth: width, containerHeight: height, placement, title: "召回调优" });
+    const output = await composeCoverImage({ base: source, layout, canvasWidth: width, canvasHeight: height, palette: "blue", align: "left" });
+    const { data, info } = await sharp(output).raw().toBuffer({ resolveWithObject: true });
+    const redAt = (x: number, y: number) => data[(y * width + x) * info.channels];
+    // 底图整幅铺满：插画侧还是原样的高亮底图。
+    const right = redAt(width - 4, Math.round(height * 0.2));
+    expect(right).toBeGreaterThan(200);
+    // 标题实际占的那一段被遮罩压暗 —— 高亮底图也不会让白字读不出来。
+    const titleWidth = Math.max(
+      ...layout.titleLines.map((line) => coverTextEmWidth(line, COVER_TITLE_SCALE_X) * layout.fontSize),
+    );
+    const probe = Math.round(layout.left + titleWidth * 0.5);
+    expect(redAt(probe, Math.round(height * 0.2))).toBeLessThan(right * 0.8);
+  }
 });

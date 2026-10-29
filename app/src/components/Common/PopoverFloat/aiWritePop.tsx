@@ -7,6 +7,7 @@ import PopoverFloat from '.';
 import { RootStore } from '@/store';
 import { AiStore } from '@/store/aiStore';
 import { BlinkoStore } from '@/store/blinkoStore';
+import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { SendIcon } from '../Icons';
 import { MarkdownRender } from '../MarkdownRender';
@@ -124,6 +125,7 @@ const AiWritePop = observer(() => {
                 eventBus.emit('editor:insert', ai.writingResponseText)
                 ai.writingResponseText = ''
                 store.hidden()
+                RootStore.Get(ToastPlugin).success('已应用到笔记')
               }} startContent={<Icon icon="ic:sharp-check" className='green' />} size='sm' variant='light' color='success'>{t('accept')}</Button>
               <Button onPress={() => {
                 ai.isWriting = false;

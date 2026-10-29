@@ -115,6 +115,7 @@
     "@types/ws": "^8.5.10",
     "@types/yauzl-promise": "^4.0.1",
     "bun-types": "latest",
+    "cross-env": "^7.0.3",
     "esbuild": "^0.25.3",
     "prisma": "5.22.0",
     "typescript": "^5.1.6"

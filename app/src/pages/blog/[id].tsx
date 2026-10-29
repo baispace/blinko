@@ -216,6 +216,9 @@ export default function PublishedNotePage() {
     );
   const context = article.primaryTopic?.slug;
   const shown = live ?? article.stats;
+  // 两个日期都按天展示：同一天就当成「没改过」，只显示发布日期。
+  const publishedDate = new Date(article.createdAt).toLocaleDateString("zh-CN");
+  const updatedDate = new Date(article.updatedAt).toLocaleDateString("zh-CN");
   /**
    * 文档模式但目录还没到手（且没失败）：摆文档版式的骨架。
    * 不能落到下面的普通版式 —— 那会闪一下带右侧个人信息卡的版式再切走。
@@ -273,11 +276,15 @@ export default function PublishedNotePage() {
                 </Link>
               ))}
               <time dateTime={new Date(article.createdAt).toISOString()}>
-                发布 {new Date(article.createdAt).toLocaleDateString("zh-CN")}
+                发布 {publishedDate}
               </time>
-              <time dateTime={new Date(article.updatedAt).toISOString()}>
-                更新 {new Date(article.updatedAt).toLocaleDateString("zh-CN")}
-              </time>
+              {/* 发布当天没改过内容时，两个日期是同一个 —— 只留「发布」一行。
+                  首页卡片、动态流那边都只给一个日期，这里也不重复。 */}
+              {updatedDate !== publishedDate && (
+                <time dateTime={new Date(article.updatedAt).toISOString()}>
+                  更新 {updatedDate}
+                </time>
+              )}
               {shown?.views ? (
                 <span className="ink-read-stat">
                   <Icon icon="tabler:eye" width={15} />

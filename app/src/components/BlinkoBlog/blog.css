@@ -3382,6 +3382,21 @@
   background-color: var(--ink-hero-bg-dark, var(--ink-accent));
 }
 /*
+ * 色带底部的 40px 渐隐：把色带收进页面背景。
+ * 少了这一层，紫色块会在下面那条硬边上直接截断，正文像是被切开了一样。
+ * 渐隐到 --ink-bg，跟色带下方真正的页面底色一致 —— 有封面染色时也一样。
+ */
+.ink-blog .ink-article-hero-full::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--ink-bg));
+  pointer-events: none;
+}
+/*
  * 顶部主题色：封面主色从导航栏一路铺到通栏顶部，中间没有接缝 ——
  * 导航栏和通栏共用同一片颜色变量（挂在 .ink-blog 根节点上，由文章页注入）。
  *

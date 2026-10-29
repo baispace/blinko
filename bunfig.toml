@@ -1,0 +1,5 @@
+# 依赖安装布局固定为 isolated（bun 默认的 hoisted 布局会让
+# app/tsconfig.json 的类型检查把全部包提升进同一个 program，
+# tsc 峰值内存超过 8GB 被 OOM kill；isolated 布局下 4GB 可跑通）。
+[install]
+linker = "isolated"

@@ -6,6 +6,11 @@
   "types": "index.ts",
   "dependencies": {
     "zod": "^4.1.12",
-    "lru-cache": "^11.1.0"
+    "lru-cache": "^11.1.0",
+    "dayjs": "^1.11.18",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.20"
   }
 }

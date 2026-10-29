@@ -27,6 +27,7 @@
     "build:blinko:types": "tsc -p tsconfig.blinko.json"
   },
   "devDependencies": {
+    "prisma": "5.22.0",
     "turbo": "latest",
     "typescript": "^5.1.6",
     "vite-plugin-pwa": "^1.0.0",
@@ -37,6 +38,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@prisma/client": "5.22.0",
     "ncp": "^2.0.0"
   }
 }

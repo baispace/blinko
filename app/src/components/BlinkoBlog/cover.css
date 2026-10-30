@@ -112,15 +112,18 @@
 
 /*
  * 标题是窄体（参考封面的字宽高比约 0.83），横向压一道。
- * 排版按压窄后的宽度算字号，所以这里只改视觉、不改盒子。
- * 副标题保持正常字宽 —— 参考图里只有大字是窄的。
+ * 排版按布局宽度做预算（shared/lib/blogCoverText.ts 的 titleMaxWidth），
+ * 这里只改视觉 —— 盒子宽度不能动，动了浏览器就不再按同一个宽度裁切。
+ * 收边从哪边起由 --ink-cover-origin 决定：居中 / 右对齐时收在另一头。
  */
 .ink-cover-line:not(.ink-cover-subtitle) {
   transform: scaleX(0.84);
-  transform-origin: left center;
+  transform-origin: var(--ink-cover-origin, left center);
 }
 
 .ink-cover-subtitle {
+  /* 副标题不压窄，宽度就是视觉宽度 —— 单独给一个阈值，别跟着标题放宽。 */
+  max-width: var(--ink-cover-text-max, 100%);
   font-weight: 500;
   color: #ecebff;
   text-shadow: 0 1px 8px rgb(18 10 60 / 28%);

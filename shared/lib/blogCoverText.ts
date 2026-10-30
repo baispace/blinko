@@ -167,6 +167,8 @@ export function coverTextLines(text: string, maxLines: number): string[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
   if (maxLines <= 1) return [trimmed];
+  // 一两个字没有「两行均分」这回事 —— 拆成两个单字行只是把标题写成了两行。
+  if ([...trimmed].length <= 2) return [trimmed];
   const tokens = tokenize(trimmed);
   const cut = chooseBreak(tokens);
   if (cut < 0) {
@@ -174,7 +176,7 @@ export function coverTextLines(text: string, maxLines: number): string[] {
     const mid = Math.ceil(chars.length / 2);
     return [chars.slice(0, mid).join(""), chars.slice(mid).join("")];
   }
-  return [
+  const lines = [
     tokens
       .slice(0, cut)
       .map((t) => t.text)
@@ -184,6 +186,21 @@ export function coverTextLines(text: string, maxLines: number): string[] {
       .map((t) => t.text)
       .join(""),
   ];
+  /*
+   * 词边界断出来的两行一边只剩一个字（「坎」/「坎坷坷」），海报标题里
+   * 一个孤字看着像排版事故。标题本来就短（4–6 字），这时宁可把词劈开
+   * 也要两行均衡 —— 视觉重心比「不劈词」更要紧。
+   */
+  const chars = [...trimmed];
+  if (chars.length <= 6 && lines.length === 2) {
+    const a = [...lines[0]].length;
+    const b = [...lines[1]].length;
+    if ((a <= 1 && b >= 3) || (b <= 1 && a >= 3)) {
+      const mid = Math.ceil(chars.length / 2);
+      return [chars.slice(0, mid).join(""), chars.slice(mid).join("")];
+    }
+  }
+  return lines;
 }
 
 /* ------------------------------------------------------------------ *
@@ -342,8 +359,17 @@ export type CoverTextLayout = {
   subtitleSize: number;
   titleLineHeight: number;
   subtitleLineHeight: number;
-  /** 文字列最大宽度（px）。 */
+  /** 文字列最大宽度（px）：**视觉**宽度预算，标题压窄后也按这个算。 */
   maxWidth: number;
+  /**
+   * 标题的**布局**宽度上限（px）。
+   *
+   * 标题是窄体：视觉宽度 = 布局宽度 × COVER_TITLE_SCALE_X。
+   * 浏览器按布局宽度裁切（CSS transform 只改视觉、不改盒子），
+   * 所以布局宽度得留出同样的余量，视觉宽度才刚好填满文字列。
+   * 居中 / 右对齐不扩宽 —— 那两种版式下扩宽会把居中基准一起带偏。
+   */
+  titleMaxWidth: number;
   /** 标题断行结果。 */
   titleLines: string[];
   /** 副标题断行结果（为空表示这次不显示副标题）。 */
@@ -400,6 +426,18 @@ export function computeCoverTextLayout(input: {
   const paddingX = Math.round(w * rules.padXRatio);
   const paddingY = Math.round(h * rules.padYRatio);
   const maxWidth = Math.max(24, Math.round(w * (align === "center" ? 0.8 : rules.columnRatio)));
+  /*
+   * 标题的布局宽度上限。
+   *
+   * 标题压窄 0.84 倍：视觉宽度 = 布局宽度 × 0.84。
+   * 浏览器是按**布局宽度**裁切的（CSS 的 scaleX 只改视觉、不改盒子），
+   * 所以这一步必须用布局宽度做预算；直接拿视觉宽度去比 maxWidth，
+   * 排版会以为放得下，浏览器却在未压缩的宽度上截断，标题就变成「坎…」。
+   * 布局宽度放大 1/0.84 之后，视觉宽度正好等于 maxWidth —— 与服务端
+   * （字形压缩后画进等宽盒子）算出来的完全一致。
+   */
+  const titleMaxWidth =
+    align === "left" ? Math.round(maxWidth / COVER_TITLE_SCALE_X) : maxWidth;
   const topInset = input.badge
     ? Math.round(h * rules.badgeReserve)
     : 0;
@@ -439,13 +477,12 @@ export function computeCoverTextLayout(input: {
     );
   const titleLayoutAt = (i: number) => {
     const size = sizeAt(i);
-    const lines = fitLines(
-      title,
-      maxWidth,
-      size,
-      rules.maxLines,
-      COVER_TITLE_SCALE_X,
-    );
+    /*
+     * 按**布局宽度**比，不是按压窄后的视觉宽度：
+     * 浏览器裁切用的是布局宽度，用视觉宽度做预算会低估 19%，
+     * 排版以为放得下、浏览器却截断成省略号。
+     */
+    const lines = fitLines(title, titleMaxWidth, size, rules.maxLines);
     if (!lines) return null;
     /*
      * 宽度放得下还不够：宽扁的容器（2.8:1 的双栏大图）里，
@@ -475,7 +512,7 @@ export function computeCoverTextLayout(input: {
       const candidate = titleLayoutAt(i);
       if (!candidate) continue;
       const subSize = Math.round(clamp(candidate.size * rules.subtitleRatio, 10, 64));
-      const sub = fitLines(subtitle, maxWidth, subSize, 2, 1, true);
+      const sub = fitLines(subtitle, maxWidth, subSize, 2, true);
       if (!sub) break;
       const gap = Math.round(candidate.size * 0.3);
       const subHeight = sub.lines.length * Math.round(subSize * 1.35);
@@ -538,6 +575,7 @@ export function computeCoverTextLayout(input: {
     titleLineHeight,
     subtitleLineHeight,
     maxWidth,
+    titleMaxWidth,
     titleLines,
     subtitleLines,
     subtitleGap,
@@ -557,7 +595,9 @@ export function computeCoverTextLayout(input: {
  *
  * 放得下返回断好的行，放不下返回 null（调用方继续试更小的字号）。
  *
- * scale 是横向压缩系数：标题压窄，按压窄后的宽度算。
+ * maxWidth 一律是**布局宽度**（浏览器裁切用的那个宽度）。
+ * 标题虽然压窄渲染，但预算必须按布局宽度算 ——
+ * 视觉宽度只是布局宽度乘 0.84，拿视觉宽度做预算会低估 19%。
  *
  * preferSingle 是给小字用的：小字优先排成一行（放得下就别断行），
  * 标题相反 —— 海报标题宁可两行均分，也不要一行小字。
@@ -567,13 +607,12 @@ function fitLines(
   maxWidth: number,
   size: number,
   maxLines: number,
-  scale = 1,
   preferSingle = false,
 ): { lines: string[] } | null {
   const trimmed = text.trim();
   if (!trimmed) return { lines: [] };
   if (preferSingle) {
-    const single = coverTextEmWidth(trimmed, scale) * size;
+    const single = coverTextEmWidth(trimmed) * size;
     if (single <= maxWidth) return { lines: [trimmed] };
   }
   /*
@@ -585,17 +624,17 @@ function fitLines(
     const balanced = coverTextLines(trimmed, 2);
     if (
       balanced.length === 2 &&
-      balanced.every((l) => coverTextEmWidth(l, scale) * size <= maxWidth * 0.98)
+      balanced.every((l) => coverTextEmWidth(l) * size <= maxWidth * 0.98)
     )
       return { lines: balanced };
   }
-  const single = coverTextEmWidth(trimmed, scale) * size;
+  const single = coverTextEmWidth(trimmed) * size;
   if (single <= maxWidth) return { lines: [trimmed] };
   if (maxLines < 2) return null;
   const lines = coverTextLines(trimmed, 2);
   if (lines.length < 2) return null;
   // 每行都要放得下；留 2% 余量给字体度量误差。
-  if (lines.every((l) => coverTextEmWidth(l, scale) * size <= maxWidth * 0.98))
+  if (lines.every((l) => coverTextEmWidth(l) * size <= maxWidth * 0.98))
     return { lines };
   return null;
 }

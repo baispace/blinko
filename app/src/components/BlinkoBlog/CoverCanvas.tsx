@@ -155,11 +155,25 @@ export function CoverCanvas({
           style={{
             left: `${layout.left}px`,
             top: `${layout.top}px`,
-            maxWidth: `${layout.maxWidth}px`,
+            /*
+             * 容器宽度 = 标题的**布局**宽度上限。
+             * 浏览器裁切用的是布局宽度（CSS scaleX 只改视觉、不改盒子），
+             * 所以这里要放宽到 titleMaxWidth，标题才不会在未压缩的宽度上被截断。
+             */
+            maxWidth: `${layout.titleMaxWidth}px`,
             fontSize: `${layout.fontSize}px`,
             lineHeight: `${layout.titleLineHeight}px`,
             textAlign: layout.align,
-          }}
+            // 副标题不压窄，裁切阈值就是视觉列宽。
+            "--ink-cover-text-max": `${layout.maxWidth}px`,
+            // 压窄的标题从哪边收：居中 / 右对齐时收在另一头，否则整体会偏。
+            "--ink-cover-origin":
+              layout.align === "center"
+                ? "center center"
+                : layout.align === "right"
+                  ? "right center"
+                  : "left center",
+          } as CSSProperties}
           data-overflow={layout.overflow ? "1" : undefined}
         >
           {layout.titleLines.map((line, index) => (

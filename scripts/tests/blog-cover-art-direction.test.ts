@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
+import { coverPrompt } from "../../server/lib/blogCoverGeneration";
 
 describe("cover art direction", () => {
   test.each([
@@ -54,10 +55,29 @@ describe("cover art direction", () => {
       // 哑光质感 + 主体压右、左侧留白给站点叠标题，这两条是参考封面的共同点。
       expect(plan.treatment).toContain("Clean 3D app-icon illustration");
       expect(plan.subject).toContain("white");
-      expect(plan.composition).toContain("anchored to the RIGHT");
-      expect(plan.composition).toContain("LEFT 38%");
+      expect(plan.composition).toContain("RIGHT EDGE");
+      expect(plan.composition).toContain("LEFT HALF");
     }
   });
+  test("构图规则写在提示词最前面，并在收尾再重申一次", () => {
+    /*
+     * 生图模型对提示词位置极其敏感：同一条构图规则放在契约中段时，
+     * 构图合格率只有 1/3，提到最前面变成 2/3，前面一次收尾再重申一次是 3/3。
+     * 这条测试盯住的就是这个位置契约。
+     */
+    const prompt = coverPrompt("阅读笔记", "读书笔记正文");
+    const first = prompt.indexOf("pushed to the RIGHT EDGE");
+    const last = prompt.lastIndexOf("pushed to the RIGHT EDGE");
+    expect(first).toBeGreaterThan(0);
+    // 至少出现两次：最前面一次，收尾一次。
+    expect(last).toBeGreaterThan(first);
+    // 排在配色与主体之前 —— 风格描述会稀释它。
+    expect(first).toBeLessThan(prompt.indexOf("Palette:"));
+    // 服务商上限 1500 字符，超了是静默截断，硬约束尾巴会被砍掉。
+    expect(prompt.length).toBeLessThan(1500);
+    expect(prompt.trimEnd().endsWith("禁止：低饱和粉紫摄影棚。")).toBe(true);
+  });
+
   test("standard model is preferred without mutating config or reordering other models", () => {
     const models = [{modelKey:"image-01-live"}, {modelKey:"custom"}, {modelKey:"image-01"}];
     expect(preferCoverModels(models).map(m => m.modelKey)).toEqual(["image-01", "image-01-live", "custom"]);

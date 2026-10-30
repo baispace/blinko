@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { PrismaClient } from "@prisma/client";
-import sharp from "sharp";
+import { createRequire } from "node:module";
 import {
   coverPrompt,
   coverPromptForModel,
@@ -15,6 +15,12 @@ import {
 } from "../../server/lib/blogCoverGeneration";
 import { publishSnapshot } from "../../server/lib/publication";
 import { isPublicBlogAsset } from "../../server/lib/blog";
+/*
+ * sharp 只装在 server 下（isolated 布局），脚本目录解析不到 ——
+ * 从 server 的位置去 require，测试才跑得起来。
+ */
+const require = createRequire(import.meta.dir + "/../../server/index.js");
+const sharp = require("sharp");
 const model: any = {
   id: 1,
   title: "test",
@@ -38,7 +44,7 @@ describe("image adapter and crop", () => {
     expect(prompt.length).toBeLessThan(1500);
     expect(prompt).toContain('产品功能发布封面');
     expect(prompt).toContain('No text');
-    expect(prompt).toContain('cropped by the right edge');
+    expect(prompt).toContain('pushed to the RIGHT EDGE');
     expect(prompt).toContain('禁止：低饱和');
     // 参考封面抽象出来的风格契约：哑光质感 + 饱和渐变 + 纯白界面。
     expect(prompt).toContain('Clean 3D app-icon illustration');
@@ -58,7 +64,8 @@ describe("image adapter and crop", () => {
       expect(request.body).not.toHaveProperty("style");
       expect(request.body).not.toHaveProperty("subject_reference");
       expect(request.body.n).toBe(1);
-      expect(standard).toContain("the left 38% must stay clean");
+      expect(standard).toContain("with the title printed on the empty left part");
+      expect(standard).toContain("The LEFT HALF of the frame is completely empty background");
       expect(standard).toContain("no duplicate copies");
       expect(standard).toContain("No text");
       expect(standard).toContain("tabletop");

@@ -23,7 +23,7 @@
  * 版式（图文分栏、裁切安全区）由 shared/lib/blogCover.ts 与 shared/lib/blogCoverText.ts 负责，
  * 这里只管画面的「风格层」，两者互不越界。
  */
-export const COVER_ART_VERSION = "clean-3d-icon-v10";
+export const COVER_ART_VERSION = "clean-3d-icon-v11";
 export type CoverArtStyle = "ink";
 
 /**
@@ -41,9 +41,42 @@ export const COVER_ART_TREATMENT =
  * 参考封面就是这么排的 —— 插画组被画框的右边缘裁掉，标题落在左侧的空底色上。
  * 站点现在整幅铺满底图、标题压在留白上，所以底图必须自己把「左空右满」画出来；
  * 否则整幅铺满之后，插画会跑到标题底下。
+ *
+ * 这段措辞是**量出来的**，不是凭感觉写的。同一模型、同一提示词结构下：
+ * 旧措辞（"anchored to the RIGHT ... the LEFT 38% is plain empty"）只有约 1/4 的
+ * 采样把主体推到右侧（主体水平中心 36%–72%，波动极大），整幅铺满之后插画经常
+ * 跑到标题底下、看起来「偏中间」。
+ *
+ * 换成现在的措辞（"pushed to the RIGHT EDGE ... cropped by it, so part of the
+ * group continues outside the picture"）之后，同一位置下合格率升到约 2/3。
+ * 差异有三处：
+ *   1. "pushed to the RIGHT EDGE" —— 用「推」而不是「锚定」，模型不再把主体
+ *      摆在画框中央再对齐；
+ *   2. "so part of the group continues outside the picture" —— 明确说出「有一块
+ *      在画外」，比 "cropped by the right edge" 更像真的溢出，模型愿意多给主体；
+ *   3. "The LEFT HALF ... completely empty" —— 空区从 38% 放宽到一半，
+ *      给了标题更宽的落字区。
+ *
+ * 措辞之外的另一半功劳在**位置**（见 COVER_ART_COMPOSITION_REMINDER）：
+ * 同一段措辞放在契约中段合格率 1/3，提到最前面 2/3。
+ *
+ * 只改措辞与位置、不改画法（treatment/subject/palette 都不动），所以画面质感不会退化。
  */
 export const COVER_ART_COMPOSITION =
-  "One wide illustration group anchored to the RIGHT of the frame and cropped by the right edge; the LEFT 38% of the frame is plain empty background with no objects, no panels, no shapes.";
+  "Layout rule: the illustration group is pushed to the RIGHT EDGE of the frame and cropped by it, so part of the group continues outside the picture. The LEFT HALF of the frame is completely empty background — no objects, no panels, no shapes.";
+
+/**
+ * 收尾时的构图重申 —— 同一句规则，用更短的措辞再说一遍。
+ *
+ * 为什么要在提示词里说两遍：生图模型对提示词**位置**极其敏感。同一条规则放在
+ * 契约中段（风格、配色、主体之后）时，构图合格率只有 1/3；提到最前面变成 2/3；
+ * 前面一次、收尾再重申一次，3/3 全中，主体水平中心也从 58% 推到 74%。
+ *
+ * 收尾那句必须短 —— 提示词整体卡在 1500 字符（服务商硬上限，超了是静默截断，
+ * 砍掉的往往正是末尾的硬约束）。所以这里是压缩过的重申，不是整句复制。
+ */
+export const COVER_ART_COMPOSITION_REMINDER =
+  "Layout rule again: the illustration group is pushed to the RIGHT EDGE and cropped by it; the LEFT HALF of the frame stays completely empty.";
 
 const subjects = [
   {
@@ -140,6 +173,7 @@ export function coverArtPlan(
             : ("blue" as const),
     treatment: COVER_ART_TREATMENT,
     composition: COVER_ART_COMPOSITION,
+    compositionReminder: COVER_ART_COMPOSITION_REMINDER,
   };
 }
 

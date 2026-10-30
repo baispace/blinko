@@ -10,6 +10,8 @@ import { FileService } from "./files";
 import { fetchWithProxy } from "./proxy";
 
 import { preferCoverModels, coverArtPlan, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
+import { generateGuardedCoverBase } from "./coverCompositionGuard";
+
 
 const pending = new Set<number>();
 /** Generate a private candidate; only saveTopic makes it the selected topic cover. */
@@ -68,12 +70,18 @@ export async function generateTopicCover(
       .map((member) => member.note.publication?.title || "")
       .join("、");
     const prompt = coverPrompt(input.name, context);
-    const raw = await (dependencies?.generate || generateImageBytes)(
-      model,
-      prompt,
-      dependencies?.fetcher || (await fetchWithProxy()),
-    );
-    const buffer = await normalizeCoverBase(raw);
+    /* 构图护栏：主体没落在右半区就换一张重来，试满上限取最好的那张。 */
+    const generate = dependencies?.generate || generateImageBytes;
+    const fetcher = dependencies?.fetcher || (await fetchWithProxy());
+    const guarded = await generateGuardedCoverBase({
+      attempt: async () => [await generate(model, prompt, fetcher)],
+    });
+    if (!guarded)
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
+      });
+    const buffer = await normalizeCoverBase(guarded.buffer);
     // Recheck after a slow model call; a deleted or transferred topic cannot be applied.
     const current = await db.blogTopic.findFirst({
       where: { id: input.topicId, accountId },

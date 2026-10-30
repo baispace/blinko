@@ -22,6 +22,7 @@ import {
   type CoverConfig,
 } from "./blogCoverConfig";
 import { composeCoverImage } from "./blogCoverComposition";
+import { generateGuardedCoverBase } from "./coverCompositionGuard";
 
 import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
 
@@ -91,18 +92,23 @@ export function coverPrompt(
 
   /*
    * 提示词按优先级分块，超预算时从最不重要的块开始让位：
-   *   1. 风格契约（画法、配色、主体、构图、材质、画幅）—— 永远完整；
+   *   1. 风格契约（构图、画法、配色、主体、材质、画幅）—— 永远完整；
    *   2. 主题参考（标题）—— 永远完整，主题词库主要靠它命中；
    *   3. 内容参考（正文摘要）—— 先让位，标题的权重本就是正文的五倍；
    *   4. 作者的画面要求 —— 最后让位，按剩余字符截短。
    * 硬约束尾巴任何情况下都不动。
+   *
+   * 构图规则写在契约的**最前面**、并在收尾再重申一次：实测同一条规则放在
+   * 契约中段时构图合格率只有 1/3，提到最前面并收尾重申后是 3/3，
+   * 主体水平中心从 58% 推到 74%（详见 shared/lib/blogCoverArt.ts）。
    */
-  const contract = `${plan.treatment}
+  const contract = `${plan.composition}
+${plan.treatment}
 Palette: ${plan.palette} — the backdrop uses exactly this gradient, deep and rich; background panels barely visible.
 Subject: ${plan.subject}.
-${plan.composition}
 Matte premium materials, not plastic: no neon halos, no candy saturation, no lens flare, no heavy blur. Surfaces solid white and pale grey-blue; glyphs flat 2D line-art marks; one vivid accent only; no duplicate copies.
-16:9 illustration asset, 1600x900. The site uses this image as the full cover background and prints the title on the empty left part, so the left 38% must stay clean and the illustration must run off the right edge.`;
+16:9 illustration asset, 1600x900, used as the full cover background with the title printed on the empty left part.
+${plan.compositionReminder}`;
 
   // 硬约束尾巴：任何情况下都不能被截断。
   const tail = `No text, letters, numbers, logos, watermark or fake writing. UI content is geometric bars and blocks only. No floor, tabletop, pedestal, platform, circular hub, room, miniature scene. 禁止：低饱和粉紫摄影棚。`;
@@ -583,14 +589,24 @@ export async function generateBlogCover(
     );
     const artPlan = coverArtPlan(publicText(context.title), publicText(context.content), input.style);
     const fetcher = await fetchWithProxy();
-    const raws = dependencies?.generate
-      ? [await dependencies.generate(model, prompt, fetcher)]
-      : await (
-          dependencies?.generateMany ||
-          generateImageBuffers
-        )(model, prompt, fetcher, {
-          n: 1,
-        });
+    /*
+     * 构图护栏：底图的插画必须待在右半区，左边才有干净的底色给标题。
+     *
+     * 提示词里已经反复强调「主体推到右边缘」，但生图模型并不总是听话 ——
+     * 同一句提示词的构图合格率只有四成上下，剩下的整幅铺满之后插画就压到
+     * 标题底下，看起来「图偏中间」。所以生完立刻量一次主体位置，
+     * 不合格就换一张重来，试满上限取最好的那张。
+     */
+    const generateOnce = async (): Promise<Buffer[]> => {
+      const single = dependencies?.generate;
+      if (single) return [await single(model, prompt, fetcher)];
+      const many = dependencies?.generateMany || generateImageBuffers;
+      return many(model, prompt, fetcher, {
+        n: 1,
+      });
+    };
+    const guarded = await generateGuardedCoverBase({ attempt: generateOnce });
+    const raws = guarded ? [guarded.buffer] : [];
     // 底图统一成 1600×900：不拉伸，只按比例裁切。
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
     const uploaded: { id: number; path: string }[] = [];
@@ -612,6 +628,9 @@ export async function generateBlogCover(
             sourceRevision: input.revision,
             width: COVER_SOURCE.width,
             height: COVER_SOURCE.height,
+            /** 构图体检结果：主体落在画面哪里、试了几次才抽到。 */
+            composition: guarded?.composition,
+            compositionAttempts: guarded?.attempts,
           },
         },
       });

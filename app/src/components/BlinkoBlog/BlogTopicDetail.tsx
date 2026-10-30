@@ -1,4 +1,5 @@
 import { BlogInput, BlogTextarea, BlogSelect, BlogCheckbox } from "./BlogUI";
+import { BlogStudioBrand } from "./BlogStudioBrand";
 import { Button, Chip, Card, CardBody, CardHeader } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
@@ -372,10 +373,7 @@ export function BlogTopicDetail() {
 
   const topBar = (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default-200 bg-background px-4">
-      <span className="text-sm font-semibold">
-        Jomio
-        <span className="ml-1 text-xs font-normal text-default-500">· 拾成</span>
-      </span>
+      <BlogStudioBrand className="text-sm" />
       <span className="flex-1" />
       <Button
         size="sm"

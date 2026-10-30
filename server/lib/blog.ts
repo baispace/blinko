@@ -873,6 +873,17 @@ export async function listPublishedForManage(
       revision: note.publication?.revision ?? 0,
       // 草稿箱里的笔记：只有草稿，没有公开版本。
       isDraft: !note.publication,
+      /*
+       * 「是否已发布」按**真的公开了**来算。
+       *
+       * notes.isPublished 只是一个标记位：它为真但公开快照缺失时，
+       * 公开页是 404 的。列表若直接信这个标记，就会给出一篇打不开的文章
+       * 「已发布 / 待发布更新」的徽章，还挂一个点进去是 404 的「查看公开页」。
+       *
+       * 口径与文章页、右侧快捷操作面板一致（标记为已发布 且 有公开快照），
+       * 三处必须给同一个答案。
+       */
+      isPublished: note.isPublished && !!note.publication,
     };
   });
 }

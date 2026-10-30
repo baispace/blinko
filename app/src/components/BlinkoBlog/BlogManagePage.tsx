@@ -1,4 +1,5 @@
 import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
+import { BlogStudioBrand } from "./BlogStudioBrand";
 import { Slider, Button, Chip, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
@@ -456,8 +457,12 @@ function DistributionEditor({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-xl font-semibold">流量分发口径</h2>
+        {/*
+          页头已经说过「推荐分发 / 决定公开站里文章的排序规则」，
+          这里只补一句页头没有的信息。
+        */}
         <p className="text-sm text-default-500 mt-1.5">
-          决定公开站「推荐」列表怎么排。「最新」始终按发布时间，不受这里影响。
+          「最新」始终按发布时间，不受这里影响。
         </p>
       </div>
       {error && (
@@ -901,9 +906,7 @@ export function BlogManagePage() {
           >
             <Icon icon="tabler:menu-2" width={18} />
           </Button>
-          <span className="text-base font-semibold">
-            Jomio <span className="text-default-400 font-normal">· 拾成</span>
-          </span>
+          <BlogStudioBrand className="text-base" />
           <span className="flex-1" />
           <a
             className="flex items-center justify-center w-8 h-8 rounded-lg text-default-500 hover:bg-hover hover:text-foreground transition-colors"
@@ -1016,19 +1019,20 @@ export function BlogManagePage() {
 
                 {section === "topics" && (
                   <div className="flex flex-col gap-4">
+                    {/*
+                      页头已经写了「专题」，这里不再重复一遍标题 ——
+                      只留计数与新建按钮。
+                    */}
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl font-semibold">全部专题</h2>
-                        <p className="text-sm text-default-500 mt-1">
-                          {topics.length} 个专题 · 共{" "}
-                          {topics.reduce((sum, t) => sum + t.noteIds.length, 0)} 篇文章
-                        </p>
-                      </div>
+                      <span className="text-sm text-default-500">
+                        {topics.length} 个专题 · 共{" "}
+                        {topics.reduce((sum, t) => sum + t.noteIds.length, 0)} 篇文章
+                      </span>
                       <Button
                         color="primary"
                         onPress={() => navigate("/blog-manage/topic/new")}
                       >
-                         新建专题
+                        新建专题
                       </Button>
                     </div>
                     {topics.length ? (

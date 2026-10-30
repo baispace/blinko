@@ -180,7 +180,12 @@ export function BlogFriendsPanel() {
           label="友链状态筛选"
           value={filter}
           onChange={(key) => setFilter(key as StatusFilter)}
-          items={STATUS_FILTERS.map((item) => ({
+          items={STATUS_FILTERS.filter(
+            (item) =>
+              item.key === "all" ||
+              item.key === filter ||
+              (counts[item.key] ?? 0) > 0,
+          ).map((item) => ({
             key: item.key,
             label: item.label,
             count: counts[item.key] ?? 0,

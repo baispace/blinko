@@ -290,8 +290,11 @@ export function BlogStatsPanel() {
 
             {metrics && (
               <p className="text-xs text-default-500">
-                全部区块使用同一区间 {rangeLabel}（{data?.range.timezone}
-                ），按当前图表粒度聚合； 没有事件的日期按 0 计入。曝光为 0
+                {/*
+                  统计区间已经写在上面的工具条里了，这里不再重复一遍 ——
+                  两行相邻的同一句话纯属占地方。
+                */}
+                全部区块按当前图表粒度聚合；没有事件的日期按 0 计入。曝光为 0
                 时点击率显示「—」，不做强行百分比。
               </p>
             )}

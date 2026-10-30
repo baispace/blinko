@@ -1,4 +1,5 @@
 import { BlogChipGroup } from "./BlogUI";
+import { BlogStudioBrand } from "./BlogStudioBrand";
 import { Button, Chip, Card, CardBody, CardHeader } from "@heroui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -11,18 +12,13 @@ import { PublicArticleBody } from "./PublicArticleBody";
 import { ContentQuickPanel } from "./ContentQuickPanel";
 import {
   CONTENT_STATUS_META,
+  STATUS_TONE_COLOR,
   contentTitle,
   describeChanges,
   resolveContentStatus,
 } from "./contentStatus";
 
 type Status = Awaited<ReturnType<typeof api.notes.publicationStatus.query>>;
-
-const TONE_COLOR: Record<string, "default" | "primary" | "success" | "warning"> = {
-  plain: "default",
-  ok: "success",
-  warn: "warning",
-};
 
 function plainLength(content: string) {
   return (content || "").replace(/<[^>]*>/g, "").trim().length;
@@ -132,10 +128,7 @@ export function BlogArticleDetail() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* ---------- 顶部栏 ---------- */}
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default-200 bg-background px-4">
-        <span className="text-sm font-semibold">
-          Jomio
-          <span className="ml-1 text-xs font-normal text-default-500">· 拾成</span>
-        </span>
+        <BlogStudioBrand className="text-sm" />
         <span className="flex-1" />
         <Button
           size="sm"
@@ -169,14 +162,6 @@ export function BlogArticleDetail() {
               博客管理
             </button>
             <Icon icon="tabler:chevron-right" width={12} />
-            <button
-              type="button"
-              className="transition-colors hover:text-foreground"
-              onClick={() => navigate("/blog-manage")}
-            >
-              内容
-            </button>
-            <Icon icon="tabler:chevron-right" width={12} />
             <span className="truncate text-default-700">{draftTitle || "无标题"}</span>
           </nav>
           <div className="flex items-center gap-3">
@@ -184,14 +169,21 @@ export function BlogArticleDetail() {
             <Chip
               size="sm"
               variant="flat"
-              color={TONE_COLOR[badge.tone]}
+              color={STATUS_TONE_COLOR[badge.tone]}
             >
               {badge.text}
             </Chip>
           </div>
           <p className="mt-1 text-sm text-default-500">
             {stateMeta.desc}
-            {changeText && ` 待发布变更：${changeText}。`}
+            {/*
+              变更清单只在「线上还挂着旧版」时才有意义。
+              从未发布过的草稿跟空快照比，每个字段都算「变了」——
+              列一串「标题、摘要、正文…」等于没列。
+            */}
+            {state === "changed" && changeText
+              ? ` 待发布变更：${changeText}。`
+              : ""}
           </p>
         </div>
 
@@ -227,9 +219,6 @@ export function BlogArticleDetail() {
                   </ul>
                 ) : (
                   <p className="text-sm text-default-500">没有阻塞发布的问题。</p>
-                )}
-                {changeText && (
-                  <p className="mt-2 text-sm text-default-500">待发布变更：{changeText}。</p>
                 )}
               </CardBody>
             </Card>
@@ -294,17 +283,6 @@ export function BlogArticleDetail() {
               </CardBody>
             </Card>
 
-            {/* 发布信息 */}
-            <Card className="rounded-xl border border-default-200 shadow-none">
-              <CardBody className="space-y-1">
-                <h2 className="text-base font-semibold">发布信息</h2>
-                <p className="text-sm">{draftTitle}</p>
-                <p className="text-sm text-default-500">
-                  {status.draft.summary || "尚未填写概要"}
-                </p>
-              </CardBody>
-            </Card>
-
             {/* 原笔记依据 */}
             <Card className="rounded-xl border border-default-200 shadow-none">
               <CardBody className="p-0">
@@ -348,9 +326,7 @@ export function BlogArticleDetail() {
       {/* ---------- 底部提示 ---------- */}
       <div className="sticky bottom-0 border-t border-default-200 bg-background px-4 py-3">
         <p className="mx-auto w-full max-w-6xl text-xs text-default-500">
-          {changeText
-            ? `待发布变更：${changeText}。`
-            : "标题、封面与展示设置都在右侧快捷操作里改；改动先存在草稿，发布后才对外生效。"}
+          标题、封面与展示设置都在右侧快捷操作里改；改动先存在草稿，发布后才对外生效。
         </p>
       </div>
     </div>

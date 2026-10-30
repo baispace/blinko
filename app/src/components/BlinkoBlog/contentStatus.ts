@@ -57,6 +57,22 @@ export const CONTENT_STATUS_META: Record<ContentStatus, ContentStatusMeta> = {
 };
 
 /**
+ * 徽章色调 → 组件库的 color 名。
+ *
+ * 列表、文章页、快捷操作面板三处都用这一份：
+ * 之前列表把「已发布」染成主色（蓝紫）、面板却染成灰色、同一个状态两个颜色，
+ * 看的人会以为是两回事。
+ */
+export const STATUS_TONE_COLOR: Record<
+  ContentStatusMeta["tone"],
+  "default" | "success" | "warning"
+> = {
+  plain: "default",
+  ok: "success",
+  warn: "warning",
+};
+
+/**
  * 列表分段筛选的顺序。
  * 顺序按"作者下一步要处理什么"排，不按字母排：
  * 待发布的排前面，已发布的沉到后面。

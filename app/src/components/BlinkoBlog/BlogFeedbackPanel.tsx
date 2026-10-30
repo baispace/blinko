@@ -277,12 +277,13 @@ export function BlogFeedbackPanel() {
       )}
 
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">读者反馈</h2>
-          <p className="text-xs text-default-500">
-            共 {rows.length} 条 · 待处理 {counts.pending ?? 0} 条
-          </p>
-        </div>
+        {/*
+          页头已经写了「读者反馈」，这里不再重复一遍标题；
+          状态筛选也只留有内容的 —— 一排 0 计数的筛选只是噪声。
+        */}
+        <p className="text-xs text-default-500">
+          共 {rows.length} 条 · 待处理 {counts.pending ?? 0} 条
+        </p>
         <div className="flex flex-wrap gap-3">
           <BlogChipGroup
             label="反馈来源筛选"
@@ -297,7 +298,12 @@ export function BlogFeedbackPanel() {
             label="反馈状态筛选"
             value={filter}
             onChange={(key) => setFilter(key as Filter)}
-            items={FILTERS.map((item) => ({
+            items={FILTERS.filter(
+              (item) =>
+                item.key === "all" ||
+                item.key === filter ||
+                (counts[item.key] ?? 0) > 0,
+            ).map((item) => ({
               key: item.key,
               label: item.label,
               count: counts[item.key] ?? 0,

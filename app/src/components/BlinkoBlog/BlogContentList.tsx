@@ -29,6 +29,7 @@ import { RowMenu } from "./RowMenu";
 import {
   CONTENT_STATUS_FILTERS,
   CONTENT_STATUS_META,
+  STATUS_TONE_COLOR,
   describeChanges,
   resolveContentStatus,
   type ContentStatus,
@@ -56,16 +57,6 @@ function relativeTime(value: string | Date | null | undefined) {
   if (diff < 7 * 86_400_000) return `${Math.floor(diff / 86_400_000)} 天前`;
   return new Date(time).toLocaleDateString("zh-CN");
 }
-
-const STATUS_COLOR: Record<
-  ContentStatus,
-  "default" | "primary" | "success" | "warning" | "danger"
-> = {
-  draft: "default",
-  changed: "warning",
-  published: "primary",
-  withdrawn: "default",
-};
 
 export function BlogContentList({
   posts,
@@ -131,6 +122,28 @@ export function BlogContentList({
     }
     return acc;
   }, [posts, statusOf]);
+
+  /**
+   * 状态分段：只留有内容的。
+   *
+   * 一个新站通常只有「草稿」或「待发布更新」里有东西，其余三个都是 0 ——
+   * 一排 0 计数的页签只是噪声，还把真正有事的那一个挤到视线边缘。
+   * 当前选中的那个始终保留：筛出空结果时得留一条退路。
+   */
+  const statusItems = useMemo(
+    () =>
+      CONTENT_STATUS_FILTERS.filter(
+        (item) =>
+          item.key === "all" ||
+          item.key === status ||
+          (counts[item.key] ?? 0) > 0,
+      ).map((item) => ({
+        key: item.key,
+        label: item.label,
+        count: counts[item.key] ?? 0,
+      })),
+    [counts, status],
+  );
 
   const filtered = useMemo(() => {
     const keywordLower = keyword.trim().toLowerCase();
@@ -258,11 +271,7 @@ export function BlogContentList({
             page: null,
           })
         }
-        items={CONTENT_STATUS_FILTERS.map((item) => ({
-          key: item.key,
-          label: item.label,
-          count: counts[item.key] ?? 0,
-        }))}
+        items={statusItems}
       />
 
       <div className="flex flex-wrap items-center gap-2.5 mb-4">
@@ -274,21 +283,24 @@ export function BlogContentList({
           onChange={(e) => setKeyword(e.target.value)}
           className="flex-1 min-w-[180px] max-w-xs"
         />
-        <BlogSelect
-          aria-label="所属专题筛选"
-          value={topicFilter}
-          onChange={(e) =>
-            update({ topic: e.target.value === "all" ? null : e.target.value, page: null })
-          }
-          className="w-[150px]"
-        >
-          <option value="all">全部专题</option>
-          {topics.map((topic) => (
-            <option key={topic.id} value={topic.id}>
-              {topic.name}
-            </option>
-          ))}
-        </BlogSelect>
+        {/* 没有专题时不摆这个筛选 —— 一个只有「全部专题」的选项框没有信息量。 */}
+        {topics.length > 0 && (
+          <BlogSelect
+            aria-label="所属专题筛选"
+            value={topicFilter}
+            onChange={(e) =>
+              update({ topic: e.target.value === "all" ? null : e.target.value, page: null })
+            }
+            className="w-[150px]"
+          >
+            <option value="all">全部专题</option>
+            {topics.map((topic) => (
+              <option key={topic.id} value={topic.id}>
+                {topic.name}
+              </option>
+            ))}
+          </BlogSelect>
+        )}
         <BlogSelect
           aria-label="排序方式"
           value={sort}
@@ -375,10 +387,9 @@ export function BlogContentList({
             <TableHeader>
               <TableColumn width={40}> </TableColumn>
               <TableColumn>文章</TableColumn>
-              <TableColumn width={100}>状态</TableColumn>
-              <TableColumn width={120} className="hidden lg:table-cell">专题</TableColumn>
-              <TableColumn width={100} className="hidden lg:table-cell">更新</TableColumn>
-              <TableColumn width={60}>操作</TableColumn>
+              <TableColumn width={110}>状态</TableColumn>
+              <TableColumn width={90} className="hidden lg:table-cell">更新</TableColumn>
+              <TableColumn width={56}>操作</TableColumn>
             </TableHeader>
             <TableBody>
               {rows.map((post) => {
@@ -400,7 +411,7 @@ export function BlogContentList({
                   >
                     <TableCell> </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-start gap-3 min-w-0">
                         <span className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center shrink-0 overflow-hidden">
                           {cover ? (
                             <img src={blogImageUrl(cover.path)} alt="" className="w-full h-full object-cover" />
@@ -419,45 +430,49 @@ export function BlogContentList({
                           <span className="text-xs text-default-500 truncate block">
                             {post.excerpt}
                           </span>
+                          {/*
+                            变更明细与专题标签都收在标题下面。
+                            原来「专题」是一整列，没有专题时整列都是「—」——
+                            一列换来一个破折号不值；标签挂在标题下反而更好认。
+                            变更明细只在「线上还挂着旧版」时才有意义：草稿跟空快照比，
+                            每个字段都算变了，列出来等于没列。
+                          */}
+                          {((state === "changed" && changeText) ||
+                            post.topics.length > 0) && (
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              {state === "changed" && changeText && (
+                                <span className="text-xs text-warning-600">
+                                  {changeText}已修改
+                                </span>
+                              )}
+                              {post.topics.slice(0, 2).map((topic) => (
+                                <Chip key={topic.id} size="sm" color="primary" variant="flat">
+                                  {topic.name}
+                                </Chip>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Chip size="sm" color={STATUS_COLOR[state]} variant="flat">
-                          {meta.label}
-                        </Chip>
-                        {changeText && (
-                          <span className="text-xs text-default-500">{changeText}已修改</span>
-                        )}
-                      </div>
+                      <Chip size="sm" color={STATUS_TONE_COLOR[meta.tone]} variant="flat">
+                        {meta.label}
+                      </Chip>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <div className="flex flex-wrap gap-1">
-                        {post.topics.length ? (
-                          post.topics.slice(0, 2).map((topic) => (
-                            <Chip key={topic.id} size="sm" color="primary" variant="flat">
-                              {topic.name}
-                            </Chip>
-                          ))
-                        ) : (
-                          <span className="text-xs text-default-400">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs text-default-500">
-                          {relativeTime(post.updatedAt)}
-                        </span>
-                        <span className="text-xs text-default-400">
-                          {post.revision ? `v${post.revision}` : "草稿"}
-                        </span>
-                      </div>
+                      <span className="text-xs text-default-500 whitespace-nowrap">
+                        {relativeTime(post.updatedAt)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <RowMenu label={`《${post.title}》的更多操作`}>
-                        {post.publishId && (
+                        {/*
+                          只给真的公开了的文章这个入口。
+                          发布标记在、公开快照缺失时，那个地址打不开 ——
+                          给一个点进去是 404 的链接没有意义。
+                        */}
+                        {post.isPublished && post.publishId && (
                           <a
                             className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-default-100 no-underline text-foreground"
                             href={`/blog/${post.publishId}`}

@@ -72,7 +72,17 @@ function dto(note: SettingsNote, noteCover: CoverImage | null = null) {
   const config = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig) ?? { ...emptyCoverConfig(), mode: cover ? 'full' as const : 'overlay' as const };
   const metadata = (note.metadata || {}) as Record<string, unknown>;
   return {
-    token: settingsToken(note), reviewToken: publicationReviewToken(note), publicCoverConfig: readPublicCoverConfig(p?.coverConfig), revision: p?.revision ?? 0, isPublished: note.isPublished, publishId: note.publishId ?? null, hasChanges: publicationChanges(note).length > 0,
+    token: settingsToken(note), reviewToken: publicationReviewToken(note), publicCoverConfig: readPublicCoverConfig(p?.coverConfig), revision: p?.revision ?? 0,
+    /*
+     * 「是否已发布」按**真的公开了**来算，而不是只看 notes.isPublished 这个标记。
+     *
+     * 两个地方必须给同一个答案：文章页页头的状态徽章、右侧面板的状态徽章。
+     * 之前这里直接用 note.isPublished，页头却用「标记为已发布 且 有公开快照 且 不在回收站」，
+     * 于是一篇标记已发布但公开快照缺失的文章，左边写「草稿」、右边写「待发布更新」——
+     * 同一屏两个状态，作者无从判断到底发没发。
+     */
+    isPublished: note.isPublished && !!p && !note.isRecycle,
+    publishId: note.publishId ?? null, hasChanges: publicationChanges(note).length > 0,
     contentVersion: contentVersion(readDraftBody(note.metadata, note.content).content, note.type),
     title: typeof metadata.title === 'string' ? metadata.title : p?.title || '',
     summary: typeof metadata.summary === 'string' ? metadata.summary : p?.summary || '',

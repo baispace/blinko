@@ -12,7 +12,7 @@ import { CoverCanvas } from './CoverCanvas';
 import { BlogCoverGeneratorDialog } from './BlogCoverGeneratorDialog';
 import { BlogCheckbox, BlogInput, BlogSelect, BlogTextarea } from './BlogUI';
 import { confirmBlogAction } from './confirmBlogAction';
-import { CONTENT_STATUS_META, resolveContentStatus } from './contentStatus';
+import { CONTENT_STATUS_META, STATUS_TONE_COLOR, resolveContentStatus } from './contentStatus';
 import {
   shortCoverTitleLength,
   validShortCoverTitle,
@@ -293,19 +293,15 @@ export function ContentQuickPanel({
       }`}
       aria-label="快捷操作"
     >
-      {/* 头部 */}
+      {/*
+        面板头部只留状态徽章。
+        标题页头已经写过一次，修订号是内部计数 —— 都去掉，
+        这里只回答「这篇文章现在是什么状态」。
+      */}
       <div className="flex items-center justify-between gap-3 border-b border-default-200 px-4 py-3">
-        <div className="min-w-0">
-          <strong className="block truncate text-sm font-semibold">
-            {data.title || '未命名文章'}
-          </strong>
-          <span className="text-xs text-default-500">
-            <Chip size="sm" variant="flat" color={state === 'published' ? 'success' : 'default'}>
-              {CONTENT_STATUS_META[state].label}
-            </Chip>
-            {data.revision ? ` · v${data.revision}` : ''}
-          </span>
-        </div>
+        <Chip size="sm" variant="flat" color={STATUS_TONE_COLOR[CONTENT_STATUS_META[state].tone]}>
+          {CONTENT_STATUS_META[state].label}
+        </Chip>
         {onClose && (
           <Button
             size="sm"
@@ -603,7 +599,11 @@ export function ContentQuickPanel({
                 撤回发布
               </Button>
             ) : null}
-            {data.publishId ? (
+            {/*
+              只有真的公开了才给「查看公开页」。
+              公开快照缺失时那个地址打不开，给一个点进去是 404 的链接没有意义。
+            */}
+            {data.isPublished && data.publishId ? (
               <Button
                 size="sm"
                 variant="flat"

@@ -155,6 +155,14 @@ export const blogSiteSettingsSchema = z.object({
     .max(300)
     .default("记录思考与实践，让经验成为有脉络的内容。"),
   iconUrl: url.default(""),
+  /**
+   * 公开博客前台用的字体：字体注册表（fonts 表）里的字体名。
+   *
+   * 留空表示用系统字体（PingFang / 微软雅黑 / 系统 UI 字体）。
+   * 公开页把它拼成字体栈，连同 @font-face 样式表一起注入 head ——
+   * 访客第一次打开就能用上，不用等前端脚本跑完再换字体。
+   */
+  fontFamily: z.string().trim().max(80).default(""),
   titleTemplate: z
     .string()
     .trim()

@@ -22,6 +22,9 @@ import {
 import { publicBlogOwner } from "./blog";
 import { publicPublicationWhere } from "./publication";
 import { ensureShareImage } from "./blogCoverShare";
+import { BLOG_FONT_VARIABLE, blogFontStack } from "../../shared/lib/blogFont";
+import { resolveFontStylesheetUrl } from "../../shared/lib/fontStylesheetUrl";
+import { buildStaticCdnBase } from "../../shared/lib/pathConstant";
 
 export const SITEMAP_PAGE_SIZE = 5000;
 export const escapeXML = (value: string) =>
@@ -81,6 +84,8 @@ export type BlogSEO = {
   links: { title: string; url: string }[];
   /** 公开前端启动时需要的运行时配置（基础路径、API 地址等）。 */
   runtime: BlogRuntimeConfig;
+  /** 公开前台用的字体：样式表地址 + 字体栈。 */
+  font?: { name: string; stack: string; stylesheet?: string } | null;
 };
 
 /** 公开前端的运行时配置：由服务端注入 HTML，公开前端启动时读取。 */
@@ -207,6 +212,56 @@ export function fixedPageFacts(
     fallbackImage: site.profile?.avatarUrl ?? null,
   };
 }
+/**
+ * 公开前台用的字体。
+ *
+ * 字体名来自站点设置，指向注册表（fonts 表）里的一行；样式表地址按静态 CDN
+ * 配置解析 —— 与应用内字体列表用的是同一套口径。
+ *
+ * 只有本地二进制、没有样式表地址的字体公开页拿不到本体，直接不设字体，
+ * 让前台落回系统字体栈，而不是给出一个永远加载不出来的名字。
+ *
+ * 没有配置字体时一个查询都不发 —— 绝大多数站点用默认字体。
+ */
+async function resolveBlogFont(
+  db: PrismaClient,
+  name: string | null | undefined,
+): Promise<BlogSEO["font"]> {
+  const trimmed = (name || "").trim();
+  if (!trimmed) return null;
+  const font = await db.fonts.findFirst({ where: { name: trimmed } });
+  if (!font) return null;
+  const stylesheet = font.url
+    ? resolveFontStylesheetUrl(font.url, await staticCdnBase(db))
+    : "";
+  if (!stylesheet) return null;
+  return { name: font.name, stack: blogFontStack(font.name), stylesheet };
+}
+
+/**
+ * 静态 CDN 基址：只读用到的那三个配置键，不走整份全局配置。
+ *
+ * 公开页每个请求都要算字体样式表地址，这里多读一行配置就够 ——
+ * 把整份 config 拉下来只为了取三个字段，不值当。
+ */
+async function staticCdnBase(db: PrismaClient) {
+  const rows = await db.config.findMany({
+    where: {
+      key: { in: ["staticCdnEnabled", "staticCdnBaseUrl", "staticCdnPath"] },
+    },
+    select: { key: true, config: true },
+  });
+  const value = (key: string) =>
+    (rows.find((row) => row.key === key)?.config as { value?: unknown })
+      ?.value;
+  const enabled = value("staticCdnEnabled");
+  if (enabled !== true && enabled !== "true") return "";
+  return buildStaticCdnBase(
+    value("staticCdnBaseUrl") as string | undefined,
+    value("staticCdnPath") as string | undefined,
+  );
+}
+
 export async function resolveBlogSEO(
   db: PrismaClient,
   pathname: string,
@@ -255,6 +310,7 @@ export async function resolveBlogSEO(
       publicOrigin: origin,
       deploymentMode: settings?.deploymentMode ?? "proxy",
     },
+    font: await resolveBlogFont(db, settings?.fontFamily),
   };
   /**
    * 列表页分页：canonical 自指当前页，并串起 rel=prev / rel=next。
@@ -601,7 +657,26 @@ export function renderBlogHead(seo: BlogSEO, origin: string) {
     (seo.author ? meta("author", seo.author) : "") +
     (seo.published ? meta("article:published_time", seo.published, true) : "") +
     (seo.modified ? meta("article:modified_time", seo.modified, true) : "") +
+    (seo.font ? renderBlogFont(seo.font) : "") +
     `<script data-ink-blog-seo type="application/ld+json">${JSON.stringify(seo.structured).replace(/</g, "\\u003c")}</script>`
+  );
+}
+
+/**
+ * 公开页的前台字体。
+ *
+ * 两件事一起给：@font-face 样式表（字体本体）+ 字体栈变量。
+ * 样式表放在 head 里是同步阻塞的 —— 第一次打开时浏览器会等它，避免先闪一帧
+ * 系统字体再跳到目标字体。变量则保证「字体没加载出来」时也落回系统栈。
+ */
+function renderBlogFont(font: NonNullable<BlogSEO["font"]>) {
+  const e = escapeXML;
+  const stylesheet = font.stylesheet
+    ? `<link data-ink-blog-font rel="stylesheet" href="${e(font.stylesheet)}">`
+    : "";
+  return (
+    stylesheet +
+    `<style data-ink-blog-font>:root{${BLOG_FONT_VARIABLE}:${font.stack}}</style>`
   );
 }
 export function injectBlogSEO(html: string, seo: BlogSEO) {

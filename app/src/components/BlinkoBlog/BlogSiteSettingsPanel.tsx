@@ -1,4 +1,4 @@
-import { BlogInput, BlogCheckbox, BlogTabs, BlogTextarea } from "./BlogUI";
+import { BlogInput, BlogCheckbox, BlogTabs, BlogTextarea, BlogSelect } from "./BlogUI";
 import { Button, Card, CardBody } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { useEffect, useState } from "react";
@@ -7,11 +7,19 @@ import {
   blogSiteSettingsSchema,
   type BlogSiteSettings,
 } from "@shared/lib/blogSiteSettings";
+import { blogFontStack } from "@shared/lib/blogFont";
 import { BlogTrackingSettings } from "./BlogTrackingSettings";
 import { BlogSubscribeSettings } from "./BlogSubscribeSettings";
 import { BlogFooterSettingsPanel } from "./BlogFooterSettings";
 import { resolveSeoFields, BLOG_FIXED_PAGES } from "@shared/lib/blogSeo";
 import { BlogSiteCheckPanel } from "./BlogSiteCheckPanel";
+
+type BlogFontOption = {
+  name: string;
+  displayName: string;
+  url: string | null;
+  category: string;
+};
 
 const defaults = blogSiteSettingsSchema.parse({});
 const tabs = [
@@ -44,7 +52,39 @@ export function BlogSiteSettingsPanel({
     [tab, setTab] = useState("basic"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [fonts, setFonts] = useState<BlogFontOption[]>([]);
+
+  /*
+   * 字体候选来自字体注册表。只有带样式表地址的才进列表 ——
+   * 只存本地二进制的那种公开页拿不到本体，列出来选了就等于没选。
+   */
+  useEffect(() => {
+    void api.fonts.list
+      .query()
+      .then((list) =>
+        setFonts(
+          (list as BlogFontOption[]).filter(
+            (font) => !!font.url && font.name !== "default",
+          ),
+        ),
+      )
+      .catch(() => setFonts([]));
+  }, []);
+
+  /* 预览要用真字体：把选中字体的 @font-face 样式表挂到后台页面上。 */
+  const previewFont = fonts.find((font) => font.name === data.fontFamily);
+  useEffect(() => {
+    if (!previewFont?.url) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = previewFont.url;
+    link.dataset.inkBlogFontPreview = previewFont.name;
+    document.head.appendChild(link);
+    return () => {
+      link.remove();
+    };
+  }, [previewFont?.url, previewFont?.name]);
 
   const load = async () => {
     if (
@@ -241,6 +281,37 @@ export function BlogSiteSettingsPanel({
                 "站点图标地址",
                 "仅用于对外博客，不修改工作区标识。",
               )}
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">前台字体</span>
+                <BlogSelect
+                  className="w-full"
+                  value={data.fontFamily}
+                  onChange={(e) => patch({ fontFamily: e.target.value })}
+                >
+                  <option value="">系统默认（PingFang / 微软雅黑）</option>
+                  {fonts.map((font) => (
+                    <option key={font.name} value={font.name}>
+                      {font.displayName}
+                    </option>
+                  ))}
+                </BlogSelect>
+                <small className="text-xs text-default-500">
+                  公开博客正文的字体。字体来自应用内的字体库，
+                  公开页会连同字体文件一起加载，访客第一次打开就是设定的那款。
+                  没选时用系统字体，不额外加载任何东西。
+                </small>
+                <p
+                  className="mt-1 text-base text-default-700"
+                  style={{
+                    fontFamily: blogFontStack(data.fontFamily),
+                  }}
+                >
+                  {data.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
+                </p>
+                <small className="text-xs text-default-500">
+                  预览用系统字体栈兜底，与公开页一致。
+                </small>
+              </label>
               <div className="flex flex-col gap-1.5">
                 {toggle("showPublicStats", "在关于页公开展示站点数据")}
                 <small className="text-xs text-default-500">

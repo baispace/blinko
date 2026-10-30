@@ -39,13 +39,19 @@
 }
 
 .ink-blog {
-  font-family:
+  /*
+   * 前台字体由站点设置决定：服务端把 --ink-blog-font 注入 head，
+   * 没配置时就是下面这套系统栈（PingFang / 微软雅黑 / 系统 UI 字体）。
+   */
+  font-family: var(
+    --ink-blog-font,
     Inter,
     -apple-system,
     BlinkMacSystemFont,
     "PingFang SC",
     "Microsoft YaHei",
-    sans-serif;
+    sans-serif
+  );
   color: var(--ink-text);
   background: var(--ink-bg);
   font-synthesis: none;

@@ -34,7 +34,7 @@ env:
 
 jobs:
   build:
-    name: Build Ink.app
+    name: Build Jomio.app
     runs-on: macos-latest
     steps:
       - name: 拉取代码
@@ -112,19 +112,19 @@ jobs:
         run: |
           set -euo pipefail
           SRC="app/src-tauri/target/${{ steps.tgt.outputs.value }}/release/bundle/macos"
-          test -d "$SRC/Ink.app" || { echo "::error::未找到 $SRC/Ink.app"; ls -la "$SRC"; exit 1; }
-          OUT="$RUNNER_TEMP/Ink-${{ env.SHA_SHORT }}.app.tar.gz"
-          tar -C "$SRC" -czf "$OUT" "Ink.app"
+          test -d "$SRC/Jomio.app" || { echo "::error::未找到 $SRC/Jomio.app"; ls -la "$SRC"; exit 1; }
+          OUT="$RUNNER_TEMP/Jomio-${{ env.SHA_SHORT }}.app.tar.gz"
+          tar -C "$SRC" -czf "$OUT" "Jomio.app"
           echo "产物: $OUT"
           du -h "$OUT"
           # 把版本号写进 CFBundleShortVersionString 便于安装后肉眼确认
-          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$SRC/Ink.app/Contents/Info.plist" || true
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$SRC/Jomio.app/Contents/Info.plist" || true
 
       - name: 上传 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Ink-macOS-${{ steps.tgt.outputs.value }}-${{ env.SHA_SHORT }}
-          path: ${{ runner.temp }}/Ink-*.app.tar.gz
+          name: Jomio-macOS-${{ steps.tgt.outputs.value }}-${{ env.SHA_SHORT }}
+          path: ${{ runner.temp }}/Jomio-*.app.tar.gz
           if-no-files-found: error
           retention-days: 14
 
@@ -139,9 +139,9 @@ jobs:
             echo "| 架构 | \`${{ steps.tgt.outputs.value }}\` |"
             echo "| 版本 | \`${DEV_VERSION}\` |"
             echo
-            echo "在本次运行的 **Artifacts** 区域下载 \`Ink.app.tar.gz\`，"
-            echo "解压后把 \`Ink.app\` 拖进「应用程序」文件夹。"
+            echo "在本次运行的 **Artifacts** 区域下载 \`Jomio.app.tar.gz\`，"
+            echo "解压后把 \`Jomio.app\` 拖进「应用程序」文件夹。"
             echo
-            echo "首次打开若提示「无法验证开发者」，**右键点击 Ink.app → 打开** 即可绕过"
+            echo "首次打开若提示「无法验证开发者」，**右键点击 Jomio.app → 打开** 即可绕过"
             echo "（这是未做 Apple 公证的 ad-hoc 签名包的正常现象）。"
           } >> "$GITHUB_STEP_SUMMARY"

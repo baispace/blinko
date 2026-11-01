@@ -11,7 +11,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     let app_handle = app.handle();
     let main_window = app.get_webview_window("main").unwrap();
     #[cfg(target_os = "macos")]
-    main_window.set_title(app.config().product_name.as_deref().unwrap_or("Ink"))?;
+    main_window.set_title(app.config().product_name.as_deref().unwrap_or("Jomio"))?;
 
     // Check if launched via autostart
     let args: Vec<String> = std::env::args().collect();

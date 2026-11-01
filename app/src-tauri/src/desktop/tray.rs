@@ -13,7 +13,7 @@ use crate::desktop::{toggle_editor_window, toggle_quicknote_window};
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn setup_system_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error>> {
     #[cfg(target_os = "macos")]
-    let icon_bytes = include_bytes!("../../icons/ink/32x32.png");
+    let icon_bytes = include_bytes!("../../icons/jomio/32x32.png");
     #[cfg(not(target_os = "macos"))]
     let icon_bytes = include_bytes!("../../icons/32x32.png");
     let image = Image::from_bytes(icon_bytes)?;

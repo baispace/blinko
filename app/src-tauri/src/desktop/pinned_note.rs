@@ -39,7 +39,7 @@ pub fn close_pinned_note(window: WebviewWindow) -> Result<(), String> {
 #[tauri::command]
 pub fn open_pinned_note(app: AppHandle, note_id: u32, title: String) -> Result<(), String> {
     if note_id == 0 { return Err("Invalid note id".into()); }
-    // 只要有便签窗口在，就不让系统把 Ink nap 掉（见 disable_app_nap 注释）。
+    // 只要有便签窗口在，就不让系统把 Jomio nap 掉（见 disable_app_nap 注释）。
     #[cfg(target_os = "macos")]
     disable_app_nap();
     let label = format!("pinned-note-{}", note_id);
@@ -52,7 +52,7 @@ pub fn open_pinned_note(app: AppHandle, note_id: u32, title: String) -> Result<(
         return window.set_focus().map_err(|e| e.to_string());
     }
     let window = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("/desktop-note?id={}", note_id).into()))
-        .title(format!("Ink · {}", title.chars().take(70).collect::<String>()))
+        .title(format!("Jomio · {}", title.chars().take(70).collect::<String>()))
         .inner_size(440.0, 520.0).min_inner_size(280.0, 56.0)
         .resizable(true).decorations(false).shadow(false).transparent(true)
         .always_on_top(true).visible_on_all_workspaces(true)
@@ -98,7 +98,7 @@ fn disable_app_nap() {
     static INIT: std::sync::Once = std::sync::Once::new();
     INIT.call_once(|| {
         let info = NSProcessInfo::processInfo();
-        let reason = NSString::from_str("Ink desktop notes stay responsive");
+        let reason = NSString::from_str("Jomio desktop notes stay responsive");
         // UserInitiated 保住定时器/IO 精度；LatencyCritical 阻止被 nap；
         // Automatic/SuddenTerminationDisabled 阻止系统回收进程。
         let options = NSActivityOptions::UserInitiated
@@ -144,7 +144,7 @@ fn configure_note_panel_on_main(window: &WebviewWindow) -> Result<(), String> {
         .to_panel::<PinnedNotePanel>()
         .map_err(|error| format!("Failed to create pinned note panel: {error}"))?;
     // Nonactivating does not mean non-key: canBecomeKeyWindow remains true,
-    // allowing text input without activating Ink and leaving the full-screen app.
+    // allowing text input without activating Jomio and leaving the full-screen app.
     panel.add_style_mask(StyleMask::empty().nonactivating_panel().value())
         .map_err(|error| error.to_string())?;
     panel.set_floating_panel(true);
@@ -185,7 +185,7 @@ pub fn set_pinned_note_top(window: WebviewWindow, pinned: bool) -> Result<(), St
     apply_note_layer(&window, pinned)
 }
 
-// Apply AppKit behavior explicitly: a desktop note remains visible when Ink
+// Apply AppKit behavior explicitly: a desktop note remains visible when Jomio
 // deactivates, when the main application hides, and in full-screen Spaces.
 fn apply_note_layer(window: &WebviewWindow, pinned: bool) -> Result<(), String> {
     window.set_always_on_top(pinned).map_err(|e| e.to_string())?;

@@ -55,8 +55,8 @@ export default defineConfig({
         registerType: 'autoUpdate',
         includeAssets: ['icons/Square*.png'],
         manifest: {
-          name: 'Ink',
-          short_name: 'Ink',
+          name: 'Jomio',
+          short_name: 'Jomio',
           icons: [
             {
               src: '/icons/Square30x30Logo.png',

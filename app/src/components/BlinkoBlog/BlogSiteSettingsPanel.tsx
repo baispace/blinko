@@ -344,7 +344,7 @@ export function BlogSiteSettingsPanel({
                   alt="站点图标"
                 />
               )}
-              <h2 className="text-lg font-bold">{data.siteName || "Ink"}</h2>
+              <h2 className="text-lg font-bold">{data.siteName || "Jomio"}</h2>
               <p className="text-sm text-default-600">{data.tagline}</p>
               <small className="text-xs text-default-500">
                 作者头像、简介与其他站点地址请在「公开作者」中设置。

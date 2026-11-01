@@ -1,13 +1,14 @@
 name: Release macOS App
-# Ink macOS 正式发版：手动指定版本 → 构建 .app → 发布 GitHub Release（含 latest.json）
+# Jomio macOS 正式发版：手动指定版本 → 构建 .app → 发布 GitHub Release（含 latest.json）
 #
 # 与 app-release.yml 的关系：那条是上游 Blinko 的多平台发版线（Docker/Android/Windows/Linux），
-# 本仓库仍保留它用于其它分发线。本文件只负责 macOS 的 Ink 应用，职责单一、便于排查。
+# 本仓库仍保留它用于其它分发线。本文件只负责 macOS 的 Jomio 应用，职责单一、便于排查。
 #
 # 与 build-mac.yml 的关系：build-mac.yml 是「每次 push 出个包自己下载」的研发流，
 # 不产生 Release、不带更新清单；本文件才产出应用内自动更新所需的 latest.json。
 #
-# 签名现状：仅做 Tauri updater 的 minisign 签名（INK_TAURI_PRIVATE_KEY），
+# 签名现状：仅做 Tauri updater 的 minisign 签名（INK_TAURI_PRIVATE_KEY ——
+# 这个 secret 名是改名前留下的，仓库设置里的键名没动，避免发版链路断掉），
 # 不做 Apple Developer ID 代码签名与公证。产物只能在构建者本机运行，
 # 分发给他人会被 Gatekeeper 拦截。等申请到 Apple 账号后再补
 # APPLE_CERTIFICATE / APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID 即可切换。
@@ -46,7 +47,7 @@ env:
 
 jobs:
   release:
-    name: Build & Publish Ink ${{ inputs.version || github.ref_name }}
+    name: Build & Publish Jomio ${{ inputs.version || github.ref_name }}
     runs-on: macos-latest
     steps:
       - name: 拉取代码
@@ -83,8 +84,8 @@ jobs:
             echo "::error::INK_TAURI_PRIVATE_KEY secret 未配置，无法签名更新包"
             exit 1
           fi
-          printf '%s' "$KEY" > "$RUNNER_TEMP/ink-updater.key"
-          chmod 600 "$RUNNER_TEMP/ink-updater.key"
+          printf '%s' "$KEY" > "$RUNNER_TEMP/jomio-updater.key"
+          chmod 600 "$RUNNER_TEMP/jomio-updater.key"
           echo "updater 私钥已就位"
 
       - uses: actions/setup-node@v4
@@ -129,8 +130,8 @@ jobs:
           tauriScript: 'bun run tauri'
           args: --target ${{ inputs.target || 'aarch64-apple-darwin' }}
           tagName: ${{ steps.ver.outputs.value }}
-          releaseName: Ink ${{ steps.ver.outputs.value }}
-          releaseBody: ${{ inputs.release_notes || 'Ink 桌面端新版本。' }}
+          releaseName: Jomio ${{ steps.ver.outputs.value }}
+          releaseBody: ${{ inputs.release_notes || 'Jomio 桌面端新版本。' }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

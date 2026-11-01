@@ -123,6 +123,17 @@ test('the release workflow writes the tag version into the tauri config', () => 
   expect(workflow).toContain('缺少签名');
 });
 
+/**
+ * tauri-action 只认它自己那一批输入项。
+ * beforeBuildCommand 不是其中之一 —— 它只从 tauri 配置文件里读。
+ * 传了不会报错，但会被忽略，等于以为自己控制着前端构建命令。
+ */
+test('the release workflow only passes inputs tauri-action understands', () => {
+  const workflow = readText(join(WORKFLOWS_DIR, 'release-mac.yml'));
+  const actionBlock = workflow.split('uses: tauri-apps/tauri-action@v0')[1] ?? '';
+  expect(actionBlock).not.toMatch(/^\s*beforeBuildCommand:/m);
+});
+
 test('the release workflow verifies the version actually reached the bundle', () => {
   const workflow = readText(join(WORKFLOWS_DIR, 'release-mac.yml'));
   // 「配置里写了」不等于「产物里有了」，所以直接读打包出来的 .app。

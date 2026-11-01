@@ -205,10 +205,12 @@ jobs:
           releaseBody: ${{ inputs.release_notes || format('Jomio 桌面端 {0}。\n\n装了旧版的用户可以在「设置 → 关于 → 检查更新」里升级到这一版。', steps.ver.outputs.value) }}
           releaseDraft: false
           prerelease: false
+          # 产出 latest.json —— 应用内「检查更新」就靠它发现新版本。
           includeUpdaterJson: true
-          # 前端构建交给我们显式指定，以便把生产端点打进产物；
-          # 与 tauri.macos.conf.json 里的 beforeBuildCommand 保持一致
-          beforeBuildCommand: 'VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa'
+          # 前端构建命令不在这里配：tauri-action 没有 beforeBuildCommand 这个输入项，
+          # 它只认 tauri 配置文件里的。tauri.macos.conf.json 已经写了
+          # VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa，
+          # 由 tauri-cli 在 macOS 打包时自动合并生效。
 
       # 「写了配置」不等于「进了产物」。这里直接读打包出来的 .app，
       # 确认 CFBundleShortVersionString 就是本次发布的版本号。

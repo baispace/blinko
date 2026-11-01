@@ -3,8 +3,8 @@
 version = 4
 
 [[package]]
-name = "Blinko"
-version = "0.1.0"
+name = "Jomio"
+version = "0.0.0"
 dependencies = [
  "arboard",
  "enigo 0.3.0",

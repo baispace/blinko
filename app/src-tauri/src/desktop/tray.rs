@@ -40,7 +40,7 @@ pub fn setup_system_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error
     let tray_icon = TrayIconBuilder::with_id("blinko-tray")
         .icon(image)
         .menu(&tray_menu)
-        .tooltip(app.config().product_name.as_deref().unwrap_or("Blinko"))
+        .tooltip(app.config().product_name.as_deref().unwrap_or("Jomio"))
         .on_tray_icon_event(|tray, event| {
             match event {
                 TrayIconEvent::Click {

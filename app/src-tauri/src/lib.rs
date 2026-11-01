@@ -45,7 +45,7 @@ pub fn run() {
                         eprintln!("Failed to focus window: {}", e);
                     }
 
-                    println!("Focused existing Blinko window");
+                    println!("Focused existing Jomio window");
                 }
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())

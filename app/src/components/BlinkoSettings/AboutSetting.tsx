@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Button, Input, Textarea } from '@heroui/react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getVersion } from '@tauri-apps/api/app';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { UserStore } from '@/store/user';
@@ -21,6 +22,8 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
   const [snapshot, setSnapshot] = useState<{ data: SiteInfo; revision: string } | null>(null);
   const [loading, setLoading] = useState(true), [failed, setFailed] = useState(false), [saving, setSaving] = useState(false);
   const [serverVersion, setServerVersion] = useState('');
+  // 桌面端版本号：只有跑在 Tauri 壳里才有，浏览器端拿不到。
+  const [desktopVersion, setDesktopVersion] = useState('');
   const [editingDescription, setEditingDescription] = useState(false), [description, setDescription] = useState('');
   const [draft, setDraft] = useState<SiteRelease | null>(null);
   const [clearing, setClearing] = useState(false);
@@ -34,6 +37,12 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); void api.public.serverVersion.query().then(value => setServerVersion(String(value || ''))).catch(() => {}); }, []);
+  useEffect(() => {
+    // getVersion() 读的是 tauri.conf.json 的 version —— 也就是这次发版用的那个号，
+    // 和「检查更新」里比对的是同一份来源，不会出现两处版本号对不上的情况。
+    if (!isInTauri()) return;
+    void getVersion().then(value => setDesktopVersion(String(value || ''))).catch(() => {});
+  }, []);
   const save = async (data: SiteInfo) => {
     if (!snapshot || saving) return false;
     const parsed = siteInfoSchema.safeParse(data);
@@ -66,7 +75,7 @@ export const AboutSetting = observer(({ updatesOnly = false }: { updatesOnly?: b
         <Textarea label={text('站点介绍', 'Workspace introduction')} maxLength={500} value={description} onValueChange={setDescription} isDisabled={saving} />
         <div className="flex justify-end gap-2"><Button size="sm" variant="light" isDisabled={saving} onPress={() => setEditingDescription(false)}>{t('cancel')}</Button><Button size="sm" color="primary" isLoading={saving} onPress={async () => { if (snapshot && await save({ ...snapshot.data, description })) setEditingDescription(false); }}>{t('save')}</Button></div>
       </div> : <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-default-600">{snapshot?.data.description || text('整理工作与生活中的信息，把想法沉淀为笔记，把计划推进为行动。', 'Collect ideas, build knowledge and turn plans into action.')}</p>}
-      <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-default-100 pt-4 text-xs text-default-500"><span>{text('当前账户', 'Account')} · {user.name}</span><span>{text('已记录更新', 'Recorded updates')} · {releases.length}</span>{releases[0]?.version && <span>{text('最近版本', 'Latest recorded version')} · {releases[0].version}</span>}</div>
+      <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-default-100 pt-4 text-xs text-default-500"><span>{text('当前账户', 'Account')} · {user.name}</span><span>{text('已记录更新', 'Recorded updates')} · {releases.length}</span>{releases[0]?.version && <span>{text('最近版本', 'Latest recorded version')} · {releases[0].version}</span>}{desktopVersion && <span>{text('桌面端版本', 'Desktop version')} · v{desktopVersion}</span>}</div>
     </section>}
 
     <section>

@@ -1,10 +1,10 @@
 name: Build macOS App
 # macOS 应用自动构建：push 到 main → GitHub 机器上出 .app → 作为 artifact 上传
 # 定位：给「自己下载安装来用」的日常研发流服务。
-#   - 不碰版本号（用 0.0.0-dev.<run>.<sha>，不提交回仓库）
+#   - 不碰版本号（用 0.0.<run_number>，不提交回仓库）
 #   - 不产生 GitHub Release，不污染正式发版链路
 #   - 不需要任何 Secret，也不需要 Apple 开发者账号（沿用 tauri.macos.conf.json 的 ad-hoc 签名）
-# 正式发布 + 应用内自动更新走 app-release.yml + 通道 B（需要密钥与签名证书）
+# 正式发布 + 应用内自动更新走 release-mac.yml（tag 驱动，需要 INK_TAURI_PRIVATE_KEY）
 
 on:
   push:
@@ -74,7 +74,13 @@ jobs:
         run: bun install --frozen-lockfile
 
       # dev 版本号：只在本次构建里生效，不提交回仓库，
-      # 且 0.0.0-dev.* 低于任何正式版本，确保 dev 包永远不会被应用内更新通道拉走。
+      # 且 0.0.<run_number> 低于任何正式版本，确保 dev 包永远不会被应用内更新通道拉走。
+      #
+      # 为什么是 0.0.<run_number> 而不是 0.0.0-dev.<run>.<sha>：
+      # 这个值会直接写进 CFBundleShortVersionString，而 Apple 要求它是
+      # 「三段点分隔的数字」。带 -dev 后缀的字符串虽然语义上是合法 semver，
+      # 但不合 Apple 规范，在 Finder 的「显示简介」里也像个坏掉的版本号。
+      # 提交号不丢：artifact 文件名和本页的构建摘要里都带着完整 sha。
       #
       # 同时关掉 updater 产物：dev 包不发布、不进自动更新通道，签它没有意义；
       # 而 tauri 配置里带了 updater 公钥，createUpdaterArtifacts 为 true 时
@@ -86,7 +92,7 @@ jobs:
       # 平台配置里的值盖过基础配置，只改 tauri.conf.json 不够。
       - name: 写入 dev 版本号
         run: |
-          V="0.0.0-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA:0:7}"
+          V="0.0.${GITHUB_RUN_NUMBER}"
           echo "DEV_VERSION=$V" >> "$GITHUB_ENV"
           for CONF in app/src-tauri/tauri.conf.json app/src-tauri/tauri.macos.conf.json; do
             jq --arg v "$V" '.version = $v | .bundle.createUpdaterArtifacts = false' "$CONF" > tmp.json \
@@ -117,8 +123,15 @@ jobs:
           tar -C "$SRC" -czf "$OUT" "Jomio.app"
           echo "产物: $OUT"
           du -h "$OUT"
-          # 把版本号写进 CFBundleShortVersionString 便于安装后肉眼确认
-          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$SRC/Jomio.app/Contents/Info.plist" || true
+          # 确认版本号真的进了产物，并且可执行文件名跟着品牌改成了 Jomio
+          SHORT="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SRC/Jomio.app/Contents/Info.plist")"
+          EXEC="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$SRC/Jomio.app/Contents/Info.plist")"
+          echo "CFBundleShortVersionString = $SHORT"
+          echo "CFBundleExecutable         = $EXEC"
+          if [ "$SHORT" != "$DEV_VERSION" ]; then
+            echo "::error::产物版本号 $SHORT 与写入的 $DEV_VERSION 不一致"
+            exit 1
+          fi
 
       - name: 上传 artifact
         uses: actions/upload-artifact@v4
@@ -138,6 +151,8 @@ jobs:
             echo "| 提交 | \`${GITHUB_SHA}\` |"
             echo "| 架构 | \`${{ steps.tgt.outputs.value }}\` |"
             echo "| 版本 | \`${DEV_VERSION}\` |"
+            echo
+            echo "版本号是本次构建的序号（\`0.0.<run_number>\`），对应的提交是上面的 sha。"
             echo
             echo "在本次运行的 **Artifacts** 区域下载 \`Jomio.app.tar.gz\`，"
             echo "解压后把 \`Jomio.app\` 拖进「应用程序」文件夹。"

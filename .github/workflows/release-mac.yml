@@ -1,11 +1,25 @@
 name: Release macOS App
-# Jomio macOS 正式发版：手动指定版本 → 构建 .app → 发布 GitHub Release（含 latest.json）
+# Jomio macOS 正式发版：tag 驱动 → 构建 .app → 发布 GitHub Release（含 latest.json）
+#
+# 发版方式（不填表、不手输版本号）：
+#     git tag v1.0.0 && git push origin v1.0.0
+# tag 就是版本号的唯一真相源。CI 从 tag 读版本、校验、构建、发布，
+# 并产出带 minisign 签名的 latest.json —— 装了正式版的应用内「检查更新」就靠它。
+#
+# 版本号为什么要写进 tauri.conf.json：
+#   tauri-cli 打包时取 `PackageSettings.version`，规则是
+#   「tauri.conf.json 的 version 优先，没有才回落到 Cargo.toml」；
+#   客户端比较新旧版本用的 `app.package_info().version` 走的是同一份配置。
+#   所以 tauri.conf.json 的 version 一处改动，latest.json、CFBundleShortVersionString
+#   和客户端的自我判断三边同时对齐，不会出现「清单说 1.0.0、客户端以为自己是 0.0.0」
+#   这种装完就反复提示更新的情况。
 #
 # 与 app-release.yml 的关系：那条是上游 Blinko 的多平台发版线（Docker/Android/Windows/Linux），
 # 本仓库仍保留它用于其它分发线。本文件只负责 macOS 的 Jomio 应用，职责单一、便于排查。
 #
 # 与 build-mac.yml 的关系：build-mac.yml 是「每次 push 出个包自己下载」的研发流，
-# 不产生 Release、不带更新清单；本文件才产出应用内自动更新所需的 latest.json。
+# 版本号是 0.0.<run_number>（永远低于正式版），不产生 Release、不带更新清单；
+# 本文件才产出应用内自动更新所需的 latest.json。
 #
 # 签名现状：仅做 Tauri updater 的 minisign 签名（INK_TAURI_PRIVATE_KEY ——
 # 这个 secret 名是改名前留下的，仓库设置里的键名没动，避免发版链路断掉），
@@ -14,11 +28,15 @@ name: Release macOS App
 # APPLE_CERTIFICATE / APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID 即可切换。
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
-      version:
-        description: '版本号，如 1.9.1（不要带 v，不要带预发布后缀）'
-        required: true
+      tag:
+        description: '要发布的 tag，如 v1.0.0（留空则用仓库里最近的 tag，用于重发/补发）'
+        required: false
+        default: ''
         type: string
       target:
         description: '构建架构'
@@ -30,9 +48,6 @@ on:
         required: false
         default: ''
         type: string
-  push:
-    tags:
-      - 'v*'
 
 concurrency:
   group: release-mac
@@ -42,50 +57,96 @@ permissions:
   contents: write
 
 env:
+  # gh CLI 不会自动认领 Actions 的令牌，不显式给的话下面所有 gh 调用都会 401。
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.INK_TAURI_PRIVATE_KEY }}
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.INK_TAURI_PRIVATE_KEY_PASSWORD }}
 
 jobs:
   release:
-    name: Build & Publish Jomio ${{ inputs.version || github.ref_name }}
+    name: Build & Publish Jomio ${{ inputs.tag || github.ref_name }}
     runs-on: macos-latest
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
         with:
+          # 要拿到 tag 和历史，浅克隆不够
           fetch-depth: 0
 
       - name: 归一化版本号
         id: ver
         run: |
           set -euo pipefail
-          RAW="${{ inputs.version }}"
-          if [ -z "$RAW" ]; then RAW="${GITHUB_REF_NAME}"; fi
-          V="${RAW#v}"
-          # 预发布后缀会让 latest.json 的版本在语义上低于正式版，
-          # 已安装正式版的用户将永远判定「无需更新」，所以直接拒绝
-          if [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
-            echo "::error::版本号不能带预发布后缀（收到 '$V'）。预发布版本低于正式版，安装端会判定无需更新。"
+          # tag push 时 GITHUB_REF_NAME 就是 tag；手动触发时用输入的 tag，
+          # 没填就取仓库里最近的 tag（重发某一版时用）。
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="${{ inputs.tag }}"
+            if [ -z "$TAG" ]; then
+              TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+            fi
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::没找到要发布的 tag。发版是 tag 驱动的：先 git tag v1.0.0 && git push origin v1.0.0"
             exit 1
           fi
-          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::版本号格式应为 x.y.z（如 1.9.1），收到 '$V'"
+          git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || {
+            echo "::error::仓库里没有 tag '$TAG'（tag 必须在仓库里真实存在）"
             exit 1
-          fi
-          echo "value=$V" >> "$GITHUB_OUTPUT"
-          echo "版本: $V"
+          }
 
-      - name: 拉取密钥
-        env:
-          KEY: ${{ secrets.INK_TAURI_PRIVATE_KEY }}
+          V="${TAG#v}"
+          # 预发布后缀会让 latest.json 的版本在语义上低于正式版，
+          # 已安装正式版的用户将永远判定「无需更新」，所以直接拒绝。
+          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::版本号格式应为 x.y.z（tag 形如 v1.0.0），收到 '$V'。不要带预发布后缀。"
+            exit 1
+          fi
+
+          # 防降级：版本必须高于当前已发布的最新版本。
+          # 否则客户端比对下来会认为「已是最新」，更新通道就此哑火。
+          LATEST_TAG="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 \
+            --json tagName --jq '[.[].tagName] | map(select(test("^v?[0-9]+\\.[0-9]+\\.[0-9]+$"))) | first // empty')"
+          if [ -n "$LATEST_TAG" ]; then
+            python3 - "$LATEST_TAG" "$V" <<'PY'
+          import sys
+          def parse(tag: str):
+              return tuple(int(p) for p in tag.lstrip("v").split("."))
+          old, new = parse(sys.argv[1]), parse(sys.argv[2])
+          if new <= old:
+              # 走 stdout 而不是 stderr：GitHub 只把 stdout 里的 ::error:: 渲染成红色标注。
+              print(f"::error::版本 {sys.argv[2]} 不高于当前已发布的 {sys.argv[1]}，拒绝降级发版")
+              raise SystemExit(1)
+          print(f"当前最新 {sys.argv[1]} → 本次 {sys.argv[2]}")
+          PY
+          fi
+
+          # 防重复：同一个版本只发一次。重发要走人工确认后的新版本号。
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::Release '$TAG' 已存在，拒绝重复发布"
+            exit 1
+          fi
+
+          # 正式版只能从 main 发：分支上的 tag 不该产出对外的更新清单。
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$TAG" FETCH_HEAD; then
+            echo "::error::tag '$TAG' 不在 main 的历史上，正式版只能从 main 发"
+            exit 1
+          fi
+
+          echo "value=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "版本: ${V} （tag ${TAG}）"
+
+      - name: 检查签名密钥
         run: |
           set -euo pipefail
-          if [ -z "$KEY" ]; then
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
             echo "::error::INK_TAURI_PRIVATE_KEY secret 未配置，无法签名更新包"
             exit 1
           fi
-          printf '%s' "$KEY" > "$RUNNER_TEMP/jomio-updater.key"
-          chmod 600 "$RUNNER_TEMP/jomio-updater.key"
+          # 密钥内容直接走环境变量交给 tauri-action，这里只确认它可用。
           echo "updater 私钥已就位"
 
       - uses: actions/setup-node@v4
@@ -115,11 +176,21 @@ jobs:
 
       - name: 写入版本号
         run: |
+          set -euo pipefail
+          # 版本号的唯一真相源是 tag，仓库里存的是 0.0.0（语义 = 开发中）。
+          # 这里把它换成 tag 对应的版本，bundle 的 CFBundleShortVersionString
+          # 和 latest.json 里的 version 都取这个值。
           V="${{ steps.ver.outputs.value }}"
           jq --arg v "$V" '.version = $v' app/src-tauri/tauri.conf.json > tmp.json \
             && mv tmp.json app/src-tauri/tauri.conf.json
           # tauri.macos.conf.json 刻意不带 version，让 macOS 继承主线，避免版本脱钩
-          grep '"version"' app/src-tauri/tauri.conf.json | head -1
+          echo "--- 版本落位 ---"
+          jq -r '"tauri.conf.json  version = " + .version' app/src-tauri/tauri.conf.json
+          grep -E '^version' app/src-tauri/Cargo.toml | sed 's/^/Cargo.toml      /'
+          if grep -q '"version"' app/src-tauri/tauri.macos.conf.json; then
+            echo "::error::tauri.macos.conf.json 不该自带 version，它必须继承 tauri.conf.json"
+            exit 1
+          fi
 
       - name: 构建并发布
         uses: tauri-apps/tauri-action@v0
@@ -129,15 +200,34 @@ jobs:
           projectPath: 'app'
           tauriScript: 'bun run tauri'
           args: --target ${{ inputs.target || 'aarch64-apple-darwin' }}
-          tagName: ${{ steps.ver.outputs.value }}
+          tagName: ${{ steps.ver.outputs.tag }}
           releaseName: Jomio ${{ steps.ver.outputs.value }}
-          releaseBody: ${{ inputs.release_notes || 'Jomio 桌面端新版本。' }}
+          releaseBody: ${{ inputs.release_notes || format('Jomio 桌面端 {0}。\n\n装了旧版的用户可以在「设置 → 关于 → 检查更新」里升级到这一版。', steps.ver.outputs.value) }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
           # 前端构建交给我们显式指定，以便把生产端点打进产物；
           # 与 tauri.macos.conf.json 里的 beforeBuildCommand 保持一致
           beforeBuildCommand: 'VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa'
+
+      # 「写了配置」不等于「进了产物」。这里直接读打包出来的 .app，
+      # 确认 CFBundleShortVersionString 就是本次发布的版本号。
+      - name: 校验产物里的版本号
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.value }}"
+          APP="app/src-tauri/target/${{ inputs.target || 'aarch64-apple-darwin' }}/release/bundle/macos/Jomio.app"
+          test -d "$APP" || { echo "::error::没找到构建产物 $APP"; exit 1; }
+          SHORT="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+          EXEC="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
+          IDENT="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")"
+          echo "CFBundleShortVersionString = $SHORT"
+          echo "CFBundleExecutable         = $EXEC"
+          echo "CFBundleIdentifier         = $IDENT"
+          if [ "$SHORT" != "$V" ]; then
+            echo "::error::产物版本号 $SHORT 与发布版本 $V 不一致"
+            exit 1
+          fi
 
       - name: 校验更新清单
         run: |
@@ -150,18 +240,72 @@ jobs:
           done
           test -s "$RUNNER_TEMP/latest.json" || { echo "::error::latest.json 始终无法访问"; exit 1; }
           echo "--- latest.json ---"
-          cat "$RUNNER_TEMP/latest.json" | python3 -m json.tool
+          python3 -m json.tool "$RUNNER_TEMP/latest.json"
           python3 - "$RUNNER_TEMP/latest.json" "${{ steps.ver.outputs.value }}" <<'PY'
           import json, sys
           data = json.load(open(sys.argv[1]))
           want = sys.argv[2]
           got = str(data.get("version", "")).lstrip("v")
           if got != want:
-              raise SystemExit(f"::error::清单版本 {got} 与发布版本 {want} 不一致")
+              print(f"::error::清单版本 {got} 与发布版本 {want} 不一致")
+              raise SystemExit(1)
           plats = data.get("platforms", {})
+          if not plats:
+              print("::error::清单里没有任何平台")
+              raise SystemExit(1)
           missing = [p for p in ("darwin-aarch64", "darwin-x86_64") if p not in plats]
-          print(f"版本 {got} 校验通过")
-          print("平台:", ", ".join(plats) or "（空）")
           if missing:
-              print("::warning::清单中缺少平台:", ", ".join(missing))
+              # 只构建了单架构时这是正常的（本次只出了 aarch64）。
+              print(f"::note::清单中缺少平台: {missing}")
+          # 签名必须在：客户端会用公钥验签，缺了就是一次静默失败的更新。
+          for name, plat in plats.items():
+              sig = str(plat.get("signature", ""))
+              if not sig:
+                  print(f"::error::平台 {name} 缺少签名，客户端会拒绝安装")
+                  raise SystemExit(1)
+              if not plat.get("url"):
+                  print(f"::error::平台 {name} 缺少下载地址")
+                  raise SystemExit(1)
+          print(f"版本 {got} 校验通过")
+          print("平台:", ", ".join(plats))
           PY
+
+      - name: 校验更新包可下载
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/latest.json" <<'PY'
+          import json, sys, urllib.request
+          data = json.load(open(sys.argv[1]))
+          for name, plat in data.get("platforms", {}).items():
+              url = plat.get("url", "")
+              if not url:
+                  print(f"::error::平台 {name} 缺少下载地址")
+                  raise SystemExit(1)
+              # Release 资源走的是 API 地址，必须带 octet-stream，
+              # 否则拿回来的是资源元数据 JSON 而不是文件本身。
+              req = urllib.request.Request(url, headers={
+                  "Accept": "application/octet-stream",
+                  "User-Agent": "jomio-release-check",
+              })
+              req.add_header("Range", "bytes=0-1023")
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  chunk = resp.read()
+                  if not chunk:
+                      print(f"::error::平台 {name} 的更新包是空文件")
+                      raise SystemExit(1)
+                  print(f"{name}: HTTP {resp.status}, 首个分块 {len(chunk)} 字节可下载")
+          PY
+
+      - name: 输出发版说明
+        run: |
+          {
+            echo "### Jomio ${{ steps.ver.outputs.value }} 已发布"
+            echo
+            echo "| 项 | 值 |"
+            echo "|---|---|"
+            echo "| tag | \`${{ steps.ver.outputs.tag }}\` |"
+            echo "| 版本 | \`${{ steps.ver.outputs.value }}\` |"
+            echo "| 架构 | \`${{ inputs.target || 'aarch64-apple-darwin' }}\` |"
+            echo
+            echo "已安装正式版的用户，在「设置 → 关于 → 检查更新」里就能看到这一版。"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Jomio",
-  "version": "1.8.8",
+  "version": "0.0.0",
   "identifier": "com.blinko.app",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -103,9 +103,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENBNzZBMzZDRTUxQUM4RjcKUldUM3lCcmxiS04yeXYyOGZ0RVVBbE42WDMxUXFiQTI0R3RqT0ZBbkZEcFFRNlZTWVhwZzlwRmkK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZFNDI0NDlGQzFCODdEMEEKUldRS2ZiakJuMFJDYnZ4NDEvWFB4OUNnWEcxaFh1RVE2Ym9BY1pPckNUajRib3RnY2xyMDluMjcK",
       "endpoints": [
-        "https://github.com/blinkospace/blinko/releases/latest/download/latest.json"
+        "https://github.com/baispace/blinko/releases/latest/download/latest.json"
       ]
     }
   }

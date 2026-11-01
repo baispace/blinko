@@ -8,9 +8,14 @@ run-name: >-
   }}
 
 on:
-  push:
-    tags:
-      - '*' # Match all tags, not limited to v prefix
+  # 这条线不再自动认领 tag。
+  #
+  # v* 的发版归 release-mac.yml —— 它是 tag 驱动的正式发版线，
+  # 版本号只由 tag 决定，不写回仓库。两条线同时认领同一个 tag 会：
+  #   - 各自建一个 Release，latest.json 指向谁全看谁先跑完
+  #   - 这条线还会把版本号 commit 回 main，和「仓库里存 0.0.0」冲突
+  # 所以 tag 推送只触发 release-mac.yml；Docker/Android/Windows 等其它
+  # 分发线需要时用 workflow_dispatch 或 repository_dispatch 手动触发。
   repository_dispatch:
     types: [trigger-app-release]
   workflow_dispatch:

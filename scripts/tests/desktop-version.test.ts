@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -134,6 +134,19 @@ test('the release workflow only passes inputs tauri-action understands', () => {
   expect(actionBlock).not.toMatch(/^\s*beforeBuildCommand:/m);
 });
 
+/**
+ * GitHub 的 format() 不认 \n，正文里会出现字面的反斜杠 n。
+ * 发版说明在 shell 里用 printf 生成真正的换行。
+ */
+test('the release notes are generated in the shell, not by format()', () => {
+  const workflow = readText(join(WORKFLOWS_DIR, 'release-mac.yml'));
+  expect(workflow).toContain('body<<EOF_JOMIO_RELEASE');
+  expect(workflow).toContain('releaseBody: ${{ steps.ver.outputs.body }}');
+  // format() 里的 \n 不会被解释，正文不能从那儿来。
+  expect(workflow).not.toMatch(/releaseBody:.*format\(/);
+  expect(workflow).toContain("printf 'Jomio 桌面端");
+});
+
 test('the release workflow verifies the version actually reached the bundle', () => {
   const workflow = readText(join(WORKFLOWS_DIR, 'release-mac.yml'));
   // 「配置里写了」不等于「产物里有了」，所以直接读打包出来的 .app。
@@ -154,6 +167,19 @@ test('the dev build version follows the apple three-number format', () => {
   // dev 包不进更新通道，所以必须关掉 updater 产物，
   // 否则会因为找不到私钥而让整条构建红掉。
   expect(workflow).toContain('createUpdaterArtifacts = false');
+});
+
+/**
+ * 一个 tag 只能有一条发版线认领。
+ *
+ * 两条线同时认领会各自建一个 Release，应用内「检查更新」读的
+ * latest.json 就变成「指向谁取决于谁先跑完」——不确定的更新通道比没有更糟。
+ */
+test('only the release workflow claims pushed version tags', () => {
+  const claimants = readdirSync(WORKFLOWS_DIR)
+    .filter((file) => file.endsWith('.yml'))
+    .filter((file) => /tags:\s*\n\s*-\s*['"]v\*/.test(readText(join(WORKFLOWS_DIR, file))));
+  expect(claimants).toEqual(['release-mac.yml']);
 });
 
 /**

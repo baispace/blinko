@@ -139,6 +139,19 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "版本: ${V} （tag ${TAG}）"
 
+          # 发版说明。注意 GitHub 的 format() 不认 \n，写进去会是字面的反斜杠 n，
+          # 所以正文在 shell 里用 printf 生成真正的换行。
+          if [ -n "${{ inputs.release_notes }}" ]; then
+            BODY="${{ inputs.release_notes }}"
+          else
+            BODY="$(printf 'Jomio 桌面端 %s。\n\n装了旧版的用户可以在「设置 → 关于 → 检查更新」里升级到这一版。' "$V")"
+          fi
+          {
+            echo "body<<EOF_JOMIO_RELEASE"
+            echo "$BODY"
+            echo "EOF_JOMIO_RELEASE"
+          } >> "$GITHUB_OUTPUT"
+
       - name: 检查签名密钥
         run: |
           set -euo pipefail
@@ -202,7 +215,7 @@ jobs:
           args: --target ${{ inputs.target || 'aarch64-apple-darwin' }}
           tagName: ${{ steps.ver.outputs.tag }}
           releaseName: Jomio ${{ steps.ver.outputs.value }}
-          releaseBody: ${{ inputs.release_notes || format('Jomio 桌面端 {0}。\n\n装了旧版的用户可以在「设置 → 关于 → 检查更新」里升级到这一版。', steps.ver.outputs.value) }}
+          releaseBody: ${{ steps.ver.outputs.body }}
           releaseDraft: false
           prerelease: false
           # 产出 latest.json —— 应用内「检查更新」就靠它发现新版本。

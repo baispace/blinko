@@ -47,6 +47,35 @@ test('pink background with provider lighting variation is still separated withou
  expect([...data.subarray(0,4)]).toEqual([0,0,0,0]);
 });
 
+/*
+ * 模型未必照着 #FF00FF 画：MiniMax 常常把「洋红」画成暖一点的粉
+ * （r≈250、g≈b≈135），蓝通道并没有明显高于绿通道。
+ * 这张图复刻那个形状：暖粉底 + 一枚压着投影的象牙白方砖 + 橙色图标。
+ * 底色要抠得掉，投影不能留，砖面和图标不能被误伤。
+ */
+test('a warm pink backdrop is keyed out without eating the tile face or leaving a shadow',async()=>{
+ const raw=await sharp(Buffer.from('<svg width="300" height="300"><rect width="300" height="300" fill="#f7868b"/><rect x="60" y="70" width="200" height="200" rx="30" fill="#e34545"/><rect x="50" y="50" width="200" height="200" rx="30" fill="#fcead5"/><circle cx="150" cy="150" r="38" fill="#f68a3d"/></svg>')).png().toBuffer();
+ const out=await prepareCoverIllustration(raw,{kind:'tile',background:'chroma'});
+ const {data,info}=await sharp(out).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+ const at=(x:number,y:number)=>{const i=(y*info.width+x)*4;return [data[i],data[i+1],data[i+2],data[i+3]];};
+ // 四角是背景，必须透明。
+ expect([...data.subarray(0,4)]).toEqual([0,0,0,0]);
+ expect(at(info.width-1,0)[3]).toBe(0);
+ expect(at(0,info.height-1)[3]).toBe(0);
+ // 砖面要留住：中心附近是不透明的浅色。
+ const face=at(Math.floor(info.width/2),Math.floor(info.height/2));
+ expect(face[3]).toBe(255);
+ expect(face[0]).toBeGreaterThan(240);
+ // 投影不能残留：不透明像素里不该再有粉色。
+ let pinkLeft=0,visible=0;
+ for(let n=0;n<info.width*info.height;n++){
+  const i=n*4;if(data[i+3]<=16)continue;visible++;
+  if(data[i]-data[i+1]>60&&data[i+2]-data[i+1]>=-8)pinkLeft++;
+ }
+ expect(visible).toBeGreaterThan(info.width*info.height*.6);
+ expect(pinkLeft).toBe(0);
+});
+
 import {prepareGeneratedCover} from '../../server/lib/coverIllustration';
 test('quality fallback is explicit and never hides an invalid image payload',async()=>{
  const result=await prepareGeneratedCover(await tileOn('#fff'),{theme:'retrieval',overlayPalette:'green'});

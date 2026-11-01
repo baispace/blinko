@@ -75,9 +75,9 @@ describe("新版式排版：图标砖与背景大字", () => {
     expect(backdrop.centerX).toBe(600);
     // 字占画面宽度的七成上下 —— 参考封面的大字约莫这个比例。
     expect(backdrop.visualWidth / 1200).toBeGreaterThan(0.6);
-    expect(backdrop.visualWidth / 1200).toBeLessThan(0.85);
+    expect(backdrop.visualWidth / 1200).toBeLessThan(0.9);
     // 高度封顶：顶太满会压到图标砖。
-    expect(backdrop.fontSize).toBeLessThanOrEqual(Math.round(630 * 0.48));
+    expect(backdrop.fontSize).toBeLessThanOrEqual(Math.round(630 * 0.64));
     expect(backdrop.top).toBeGreaterThan(0);
   });
 
@@ -158,7 +158,7 @@ describe("新版式排版：图标砖与背景大字", () => {
     });
     expect(layouts.backdrop?.centerX).toBe(600);
     expect(layouts.tile.size).toBe(
-      computeCoverTileLayout({ containerWidth: 1200, containerHeight: 630 }).size,
+      computeCoverTileLayout({ containerWidth: 1200, containerHeight: 630, placement: "share" }).size,
     );
     expect(layouts.caption?.lines).toEqual(["小字"]);
     expect(layouts.title.titleLines.join("")).toBe("产品方法");
@@ -171,7 +171,7 @@ describe("新版式排版：图标砖与背景大字", () => {
   });
 
   test("排版模板版本升级，老文章会按新规则重画", () => {
-    expect(COVER_TEMPLATE_VERSION).toBe("v7");
+    expect(COVER_TEMPLATE_VERSION).toBe("v8");
   });
 });
 
@@ -206,7 +206,7 @@ describe("新版式合成：导出与页面一致", () => {
       const i = (y * info.width + x) * info.channels;
       return { r: data[i], g: data[i + 1], b: data[i + 2] };
     };
-    const tile = computeCoverTileLayout({ containerWidth: width, containerHeight: height });
+    const tile = computeCoverTileLayout({ containerWidth: width, containerHeight: height, placement: "share" });
     // 砖左侧中部是白的（图标在正中，圆角只吃四角）。
     const corner = at(tile.left + 20, tile.top + Math.round(tile.size / 2));
     expect(corner.r).toBeGreaterThan(240);
@@ -293,4 +293,13 @@ test("narrow mobile thumbnails keep a readable icon instead of inheriting the wi
  expect(tile.size).toBeGreaterThanOrEqual(36);
  expect(tile.size).toBeLessThanOrEqual(44);
  expect(tile.left).toBe(Math.round((88-tile.size)/2));
+});
+
+test("foreground tile obscures at most about one character of a typical four-character cover word", () => {
+ for(const [placement,w,h] of [["banner",1160,400],["double",560,200],["share",1200,630]] as const){
+  const layouts=computeCoverLayouts({containerWidth:w,containerHeight:h,placement,title:"指标入门"});
+  expect(layouts.tile.size / layouts.backdrop!.visualWidth).toBeLessThan(.30);
+  expect(layouts.tile.size / h).toBeGreaterThan(.35);
+  expect(layouts.tile.left).toBe(Math.round((w-layouts.tile.size)/2));
+ }
 });

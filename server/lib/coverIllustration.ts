@@ -14,7 +14,21 @@ export async function prepareCoverIllustration(input: Buffer, options: CoverIllu
   const {width:w,height:h}=info;
   let transparent=0;for(let i=3;i<data.length;i+=4)if(data[i]<16)transparent++;
   const transparentInput=transparent>w*h*.02;
-  const pink=(i:number)=>data[i]-data[i+1]>Math.max(3,Math.max(data[i],data[i+2])*.12) && data[i+2]-data[i+1]>Math.max(2,Math.max(data[i],data[i+2])*.02);
+  /*
+   * 专色底的判定必须和下面的边缘清理用同一把尺子。
+   *
+   * 模型未必照着 #FF00FF 画：实测 MiniMax 会把「洋红」画成暖一点的粉
+   * （r≈250、g≈135、b≈135），蓝通道并没有明显高于绿通道。原来这里要求
+   * b−g 大于 max(2, max(r,b)×2%)，暖粉差几个单位就被判死，于是每次生成
+   * 都回落成标准图标砖，v4 的素材永远用不上。
+   *
+   * 放宽成「蓝通道不能比绿通道低太多」：
+   *   - 排除的是黄/橙一族（b 明显低于 g）—— 砖面的暖色斜面和橙色图标
+   *     都属于这一族，不会被误抠；
+   *   - 砖面（象牙白，b−g≈−29）同样安全；
+   *   - 真正的洋红 b−g≈255，投影（b−g≈1）也照常被清掉。
+   */
+  const pink=(i:number)=>data[i]-data[i+1]>Math.max(3,Math.max(data[i],data[i+2])*.12) && data[i+2]-data[i+1]>=-8;
   let matteEdges=0,edgeCount=0;
   const edge=(x:number,y:number)=>{edgeCount++;if(pink((y*w+x)*4))matteEdges++;};
   for(let x=0;x<w;x++){edge(x,0);edge(x,h-1);}for(let y=0;y<h;y++){edge(0,y);edge(w-1,y);}

@@ -20,7 +20,7 @@
  * v6 起是「大标题横跨 + 图标砖覆盖」的参考封面版式：文字很大很粗，
  * 横跨整个画面，图标砖压在文字上方中央，形成文字围绕图标的效果。
  */
-export const COVER_TEMPLATE_VERSION = "v7";
+export const COVER_TEMPLATE_VERSION = "v8";
 
 /**
  * 封面模式：
@@ -696,6 +696,19 @@ function fitLines(
  */
 export const COVER_BACKDROP_ALPHA = 0.22;
 
+/**
+ * 背景大字的横向缩放。
+ *
+ * 背景大字是横贯画面的底纹，字形要保持方正 —— 参考封面上的大字是
+ * 接近 1:1 的粗体方块字。
+ *
+ * 窄体（COVER_TITLE_SCALE_X）只给封面小字那一层用：那一层要塞进
+ * 左侧文字列的窄列里，压扁才对。拿来压背景大字会又瘦又高，
+ * 而且居中的图标砖宽度是固定的，字一变窄，砖盖住的字数就变多
+ * （1.2 个字），中间的字会被整块吃掉。
+ */
+export const COVER_BACKDROP_SCALE_X = 1;
+
 export type CoverBackdropLayout = {
   text: string;
   fontSize: number;
@@ -733,8 +746,11 @@ export type CoverCaptionLayout = {
  * 背景大字：把封面短标题放大成横跨画面的一层底纹。
  *
  * 规则只有两条：
- *   - 宽度撑到画面的 72%（参考封面的大字约莫占满七成，图标砖压住正中）；
- *   - 高度不许超过画面的 48%（顶太满会压到图标砖）。
+ *   - 宽度最多撑到画面的 88%（参考封面的大字约莫占满九成，图标砖压住正中）；
+ *   - 高度不许超过画面的 64%（顶太满会压到图标砖）。
+ *
+ * 字形不横向压窄（COVER_BACKDROP_SCALE_X = 1）：压窄会让字又瘦又高，
+ * 居中的图标砖宽度是固定的，字一变窄，砖盖住的字数就变多。
  *
  * 标题特别长时字号会被高度上限压回来，视觉上就退成一排细字 ——
  * 这是有意的：短标题本来就是 4–6 字，超长说明作者没按规则填。
@@ -753,11 +769,11 @@ export function computeCoverBackdropLayout(input: {
   if (!coverSupportsText(w, input.placement)) return null;
 
   const emWidth = coverTextEmWidth(text);
-  const width = w * 0.86;
+  const width = w * 0.88;
   const fontSize = clamp(
-    width / Math.max(0.1, emWidth * COVER_TITLE_SCALE_X),
+    width / Math.max(0.1, emWidth * COVER_BACKDROP_SCALE_X),
     h * 0.1,
-    h * 0.48,
+    h * 0.64,
   );
   const naturalWidth = emWidth * fontSize;
   const lineHeight = Math.round(fontSize * 1.06);
@@ -766,10 +782,10 @@ export function computeCoverBackdropLayout(input: {
     fontSize: Math.round(fontSize),
     lineHeight,
     width: Math.round(naturalWidth),
-    visualWidth: Math.round(naturalWidth * COVER_TITLE_SCALE_X),
+    visualWidth: Math.round(naturalWidth * COVER_BACKDROP_SCALE_X),
     centerX: Math.round(w / 2),
     top: Math.round((h - lineHeight) / 2),
-    scaleX: COVER_TITLE_SCALE_X,
+    scaleX: COVER_BACKDROP_SCALE_X,
   };
 }
 
@@ -782,11 +798,16 @@ export function computeCoverBackdropLayout(input: {
 export function computeCoverTileLayout(input: {
   containerWidth: number;
   containerHeight: number;
+  placement?: CoverSceneKey;
 }): CoverTileLayout {
   const w = Math.max(1, Math.round(input.containerWidth));
   const h = Math.max(1, Math.round(input.containerHeight));
-  const widthCap = w / h < 1.8 ? 0.60 : 0.29;
-  const size = Math.round(Math.min(h * 0.60, w * widthCap));
+  // Text-bearing covers expose more of the continuous word behind the tile.
+  // Tiny list thumbnails keep the larger icon because their word is hidden.
+  const textCover = !!input.placement && input.placement !== "single";
+  const heightRatio = textCover ? 0.48 : 0.60;
+  const widthCap = w / h < 1.8 ? 0.60 : textCover ? 0.22 : 0.29;
+  const size = Math.round(Math.min(h * heightRatio, w * widthCap));
   return {
     size,
     left: Math.round((w - size) / 2),

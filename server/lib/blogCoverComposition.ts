@@ -386,7 +386,7 @@ export async function composeCoverImage(opts: {
         align: opts.align,
         sizeScale: opts.sizeScale,
       }),
-      tile: computeCoverTileLayout({ containerWidth: w, containerHeight: h }),
+      tile: computeCoverTileLayout({ containerWidth: w, containerHeight: h, placement }),
       canvasWidth: w,
       canvasHeight: h,
       palette: opts.palette,

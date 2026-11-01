@@ -154,6 +154,15 @@ export function publicCoverTextDTO(config: CoverConfig | null | undefined) {
   const c = normalizeCoverConfig(config);
   return {
     mode: c.mode,
+    /*
+     * artwork 必须带出去：它决定底图是「一枚图标」还是「一整块方砖」。
+     *
+     * 少了这个字段，公开页一律按 icon 画 —— 程序画一块白砖，再把模型出的
+     * 那枚完整方砖当成小图标塞进砖心（内缩 20%），于是多出一圈白边，
+     * 而且白砖与模型自己的砖底色对不上。
+     * 分享图那侧读的就是这个字段，两边一缺一有就会长成两个样子。
+     */
+    artwork: c.artwork,
     templateVersion: c.templateVersion,
     title: c.title,
     subtitle: c.subtitle,

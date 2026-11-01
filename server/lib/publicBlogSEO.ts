@@ -1,3 +1,4 @@
+import { publicBrandName } from "../../shared/lib/publicBrand";
 import { readBlogSiteSettings, readTopicSeo, readPageSeo } from "./blogSiteSettings";
 import { readArticleSeo } from "../../shared/lib/blogSiteSettings";
 import {
@@ -113,7 +114,7 @@ export async function siteSeoRules(
   const storedSettings = owner ? await readBlogSiteSettings(db, owner) : null;
   const settings = storedSettings?.configured ? storedSettings.data : null;
   const workspaceName = await workspaceSiteName(db);
-  const siteName = settings?.siteName || workspaceName || "Ink";
+  const siteName = publicBrandName(settings?.siteName || workspaceName);
   return {
     owner,
     settings,
@@ -272,7 +273,7 @@ export async function resolveBlogSEO(
 ): Promise<BlogSEO> {
   const site = await publicIndex(db, { accountId, page });
   const { owner, settings, siteName, rules } = await siteSeoRules(db, accountId);
-  const name = site.profile?.displayName || "Ink";
+  const name = site.siteName || "Jomio · 拾成";
   const tagline = publicText(
     site.profile?.tagline || "记录思考与实践，让经验成为有脉络的内容。",
   );
@@ -636,7 +637,7 @@ export function renderBlogHead(seo: BlogSEO, origin: string) {
     (seo.next
       ? `<link data-ink-blog-seo rel="next" href="${e(seo.next)}">`
       : "") +
-    meta("og:site_name", seo.siteName || "Ink", true) +
+    meta("og:site_name", publicBrandName(seo.siteName), true) +
     meta("og:locale", "zh_CN", true) +
     meta("og:type", seo.type, true) +
     meta("og:title", seo.title, true) +

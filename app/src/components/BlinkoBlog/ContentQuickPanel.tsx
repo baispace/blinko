@@ -28,6 +28,7 @@ type Form = {
   coverSubtitle: string;
   coverMode: 'full' | 'overlay';
   coverPalette: string;
+  coverArtwork?: 'icon' | 'tile' | 'image';
   displayMode: 'default' | 'pinned' | 'featured';
   displayOrder: number;
   topics: { topicId: number; sectionId: number | null }[];
@@ -92,6 +93,7 @@ export function ContentQuickPanel({
         coverSubtitle: state.config.subtitle,
         coverMode: state.config.mode,
         coverPalette: state.config.palette,
+        coverArtwork: state.config.artwork,
         displayMode: state.displayMode,
         displayOrder: state.displayOrder,
         topics: state.topics,
@@ -177,7 +179,7 @@ export function ContentQuickPanel({
       if (!alive.current) return;
       setBase({ id: null, path });
       setCoverDetached(false);
-      patch({ coverMode: 'full' });
+      patch({ coverMode: 'full', coverArtwork: 'image' });
       setNotice('图片已选好。默认不另加标题，图片自带的文字会保留。');
     } catch (error) {
       if (alive.current) notify(error, '图片上传失败，请重试。');
@@ -284,6 +286,7 @@ export function ContentQuickPanel({
     subtitle: form.coverSubtitle,
     mode: form.coverMode,
     palette: form.coverPalette,
+    artwork: form.coverArtwork,
   };
 
   return (
@@ -291,8 +294,16 @@ export function ContentQuickPanel({
       className={`space-y-4 rounded-xl border border-default-200 bg-surface ${
         focus ? 'ring-2 ring-primary/30' : ''
       }`}
-      aria-label="快捷操作"
+      aria-label="文章发布设置"
     >
+      <form id={`blog-publish-${noteId}`} onSubmit={(event) => {
+        event.preventDefault();
+        if (!canSave || (bodyConflict && !sourceChoice)) {
+          setError(bodyConflict && !sourceChoice ? '请先选择本次要发布的正文。' : '请先完善封面短标题等必填信息，再发布。');
+          return;
+        }
+        void save('publish');
+      }} />
       {/*
         面板头部只留状态徽章。
         标题页头已经写过一次，修订号是内部计数 —— 都去掉，
@@ -326,7 +337,7 @@ export function ContentQuickPanel({
         </p>
       )}
 
-      <div className="max-h-[calc(100dvh-260px)] space-y-4 overflow-y-auto px-4 pb-4">
+      <div className="space-y-5 px-4 pb-4">
         {/* ---------- ① 管理内容 ---------- */}
         <section className="space-y-3 pt-1">
           <h3 className="flex items-center gap-1.5 text-sm font-semibold">
@@ -358,9 +369,9 @@ export function ContentQuickPanel({
           <label className="flex flex-col gap-1.5">
             <span className="flex items-center gap-2 text-xs font-medium text-default-500">
               封面短标题
-              <small className="text-default-400">4–6 字</small>
+              <small className="text-default-400">2–8 字（推荐 4–6 字）</small>
               <small className={invalidShort ? 'text-danger' : 'text-default-400'}>
-                {shortCoverTitleLength(form.coverTitle)}/6
+                {shortCoverTitleLength(form.coverTitle)}/8
               </small>
             </span>
             <BlogInput
@@ -376,7 +387,7 @@ export function ContentQuickPanel({
               <small className="text-xs text-danger">
                 {missingShort
                   ? '在图片上显示标题时，封面短标题不能为空。'
-                  : '封面短标题要 4–6 字，太长会被裁断。'}
+                  : '封面短标题要 2–8 字（推荐 4–6 字），超过 8 字请精简。'}
               </small>
             )}
           </label>
@@ -543,7 +554,9 @@ export function ContentQuickPanel({
                   if (image) {
                     setBase({ id: image.id, path: image.path });
                     setCoverDetached(false);
-                    patch({ coverMode: 'full' });
+                    const kind = (image.metadata as any)?.blogAICover?.assetKind;
+                    const generated = kind === 'isolated-illustration' || kind === 'isolated-app-tile';
+                    patch({ coverMode: generated ? 'overlay' : 'full', coverArtwork: kind === 'isolated-app-tile' ? 'tile' : generated ? 'icon' : 'image' });
                   }
                 }}
               >
@@ -901,7 +914,9 @@ export function ContentQuickPanel({
             coverTitle: form.coverTitle,
             coverSubtitle: form.coverSubtitle,
             coverMode: form.coverMode,
+            articleTitle: form.title || data.title,
             text: {
+              artwork: form.coverArtwork,
               align: data.config.align,
               palette: form.coverPalette,
               sizeScale: data.config.sizeScale,
@@ -916,6 +931,7 @@ export function ContentQuickPanel({
               coverSubtitle: result.coverSubtitle,
               coverMode: result.coverMode,
               coverPalette: result.coverPalette ?? form.coverPalette,
+              coverArtwork: result.coverArtwork,
             });
             setNotice('封面已更新，保存后写入草稿。');
           }}

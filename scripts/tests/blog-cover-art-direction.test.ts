@@ -1,16 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
-import { coverPrompt } from "../../server/lib/blogCoverGeneration";
+import { coverPrompt, imageRequest } from "../../server/lib/blogCoverGeneration";
 
 describe("cover art direction", () => {
   test.each([
-    ["推荐系统召回改造", "retrieval", "results panel"],
-    ["把工作复盘写成可复用的方法", "review", "checklist"],
+    ["推荐系统召回改造", "retrieval", "magnifying glass"],
+    ["把工作复盘写成可复用的方法", "review", "clipboard"],
     ["阅读笔记", "reading", "book"],
-    ["我的 AI 工作流", "ai", "workflow"],
-    ["埋点指标与实验分析", "data", "analytics"],
+    ["我的 AI 工作流", "ai", "sparkle"],
+    ["埋点指标与实验分析", "data", "bar chart"],
     ["产品需求拆解", "product", "document"],
-  ])("%s chooses a meaningful main object", (title, theme, object) => {
+  ])("%s chooses a meaningful icon", (title, theme, object) => {
     const plan = coverArtPlan(title, "");
     expect(plan.theme).toBe(theme);
     expect(plan.subject).toContain(object);
@@ -23,7 +23,7 @@ describe("cover art direction", () => {
   });
   test("overlay follows the new base palette instead of always violet", () => {
     expect(coverArtPlan("工作复盘", "").overlayPalette).toBe("slate");
-    expect(coverArtPlan("阅读笔记", "").overlayPalette).toBe("blue");
+    expect(coverArtPlan("阅读笔记", "").overlayPalette).toBe("orange");
     expect(coverArtPlan("AI 工作流", "").overlayPalette).toBe("violet");
   });
   test("plan metadata and prompt context use identical whitespace and title limits", () => {
@@ -52,11 +52,14 @@ describe("cover art direction", () => {
   test("风格契约与构图契约对所有主题一致，并写进方案", () => {
     const plans = ["阅读笔记", "工作复盘", "AI 工具", "高效工作流"].map(t => coverArtPlan(t, ""));
     for (const plan of plans) {
-      // 哑光质感 + 主体压右、左侧留白给站点叠标题，这两条是参考封面的共同点。
+      /*
+       * 第二版契约：模型只画一枚单色 2D 线稿图标。
+       * 背景、大字、方块、位置全部由程序排 —— 模型画的越多，波动越大。
+       */
       expect(plan.treatment).toContain("Clean 3D app-icon illustration");
-      expect(plan.subject).toContain("white");
-      expect(plan.composition).toContain("RIGHT EDGE");
-      expect(plan.composition).toContain("LEFT HALF");
+      expect(plan.composition).toContain("isolated app-icon symbol");
+      expect(plan.composition).toContain("transparent or pure white");
+      expect(plan.subject).toContain("one ");
     }
   });
   test("构图规则写在提示词最前面，并在收尾再重申一次", () => {
@@ -66,16 +69,23 @@ describe("cover art direction", () => {
      * 这条测试盯住的就是这个位置契约。
      */
     const prompt = coverPrompt("阅读笔记", "读书笔记正文");
-    const first = prompt.indexOf("pushed to the RIGHT EDGE");
-    const last = prompt.lastIndexOf("pushed to the RIGHT EDGE");
+    const first = prompt.indexOf("Layout rule:");
+    const last = prompt.lastIndexOf("Layout rule again:");
     expect(first).toBeGreaterThan(0);
     // 至少出现两次：最前面一次，收尾一次。
     expect(last).toBeGreaterThan(first);
     // 排在配色与主体之前 —— 风格描述会稀释它。
-    expect(first).toBeLessThan(prompt.indexOf("Palette:"));
+    expect(first).toBeLessThan(prompt.indexOf("Accent color:"));
     // 服务商上限 1500 字符，超了是静默截断，硬约束尾巴会被砍掉。
     expect(prompt.length).toBeLessThan(1500);
     expect(prompt.trimEnd().endsWith("禁止：低饱和粉紫摄影棚。")).toBe(true);
+  });
+  test("提示词只要求一枚图标，不许模型画场景与配角", () => {
+    const prompt = coverPrompt("阅读笔记", "读书笔记正文");
+    expect(prompt).toContain("saturated solid color");
+    expect(prompt).toContain("exactly one glyph");
+    expect(prompt).toContain("no supporting pieces");
+    expect(prompt).toContain("3D app-icon illustration");
   });
 
   test("standard model is preferred without mutating config or reordering other models", () => {
@@ -83,4 +93,9 @@ describe("cover art direction", () => {
     expect(preferCoverModels(models).map(m => m.modelKey)).toEqual(["image-01", "image-01-live", "custom"]);
     expect(models[0].modelKey).toBe("image-01-live");
   });
+});
+
+test("icon generation uses a square canvas instead of wasting pixels on a wide cover", () => {
+ const provider={provider:"minimax",apiKey:"fixture",baseURL:"https://example.com/v1"};
+ expect(imageRequest({modelKey:"image-01",capabilities:{imageGeneration:true},provider} as any,"icon").body.aspect_ratio).toBe("1:1");
 });

@@ -4,7 +4,7 @@ module.exports = {
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     '../node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
-    '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}', // NextUI theme
+    './node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}', // Workspace-local HeroUI theme
   ],
   darkMode: 'class',
   theme: {

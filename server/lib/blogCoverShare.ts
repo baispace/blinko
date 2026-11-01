@@ -51,7 +51,7 @@ export async function ensureShareImage(
   if (!note || !p || !p.coverAttachment || !note.isPublished) return null;
   const config = readPublicCoverConfig(p.coverConfig);
   // 完整图片封面（历史封面自带文字）不叠字，也就没什么可派生的。
-  if (!config || config.mode !== "overlay" || !config.title.trim())
+  if (!config || ((config.mode !== "overlay" || !config.title.trim()) && config.artwork !== "icon" && config.artwork !== "tile"))
     return null;
 
   const fingerprint = shareFingerprint(
@@ -69,7 +69,7 @@ export async function ensureShareImage(
       containerWidth: SHARE_SIZE.width,
       containerHeight: SHARE_SIZE.height,
       placement: "share",
-      title: config.title,
+      title: config.mode === "overlay" ? config.title : "",
       subtitle: config.subtitle,
       align: config.align,
       sizeScale: config.sizeScale,
@@ -77,6 +77,11 @@ export async function ensureShareImage(
     const buffer = await composeCoverImage({
       base,
       layout,
+      // 新版式（图标砖）要用原始文案：背景大字与小字都从这里来。
+      title: config.mode === "overlay" ? config.title : "",
+      subtitle: config.subtitle,
+      sizeScale: config.sizeScale,
+      artwork: config.artwork,
       canvasWidth: SHARE_SIZE.width,
       canvasHeight: SHARE_SIZE.height,
       palette: config.palette,

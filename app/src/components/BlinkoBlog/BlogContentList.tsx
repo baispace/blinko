@@ -26,6 +26,8 @@ import { BlinkoStore } from "@/store/blinkoStore";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { RowMenu } from "./RowMenu";
+import { BlogAiCopyDialog } from "./BlogAiCopyDialog";
+import { BlogCoverAssistant } from "./BlogCoverAssistant";
 import {
   CONTENT_STATUS_FILTERS,
   CONTENT_STATUS_META,
@@ -69,9 +71,14 @@ export function BlogContentList({
 }) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const [selected, setSelected] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
+  /** 正在发布的那一行：只有它在转圈，其余行照常可点。 */
+  const [publishingId, setPublishingId] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  /** 正在做 AI 文案的文章。 */
+  const [copyTarget, setCopyTarget] = useState<number | null>(null);
+  /** 正在做 AI 封面的文章。 */
+  const [coverTarget, setCoverTarget] = useState<number | null>(null);
 
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
@@ -173,44 +180,49 @@ export function BlogContentList({
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  useEffect(() => {
-    setSelected((prev) =>
-      prev.filter((id) => filtered.some((post) => post.id === id)),
-    );
-  }, [filtered]);
 
   const notify = (error: unknown, fallback = "操作失败，请重试") =>
     RootStore.Get(ToastPlugin).error(
       error instanceof Error && error.message ? error.message : fallback,
     );
 
-  const bulk = async (action: "publish" | "withdraw") => {
-    if (!selected.length) return;
-    const verb = action === "publish" ? "发布" : "撤回发布";
-    if (!await confirmBlogAction(`确定要${verb}选中的 ${selected.length} 篇吗？`)) return;
+  /**
+   * 单篇发布。
+   *
+   * 不做批量：一次发多篇时最怕「到底发了哪几篇」说不清，
+   * 一篇一篇点反而踏实 —— 每篇要确认什么、改了什么、发了什么，都在这一行里看得见。
+   *
+   * 走的是笔记发布快照那条路：公开版读草稿（标题、概要、封面、标签都取草稿那份），
+   * 发布设置、SEO 与精选位一概不动。
+   */
+  const publish = async (post: Post) => {
+    if (busy) return;
     setBusy(true);
+    setPublishingId(post.id);
     try {
-      const result = await api.blog.bulkAction.mutate({
-        noteIds: selected,
-        action,
-      });
-      await onReload();
-      RootStore.Get(BlinkoStore).updateTicker++;
-      setSelected([]);
-      if (result.failCount) {
+      /*
+       * 正文撞车要先让作者决定：原笔记和发布草稿都改过、两边还不一样时，
+       * 默默替作者挑一份就是在丢内容。列表里不做这个选择，
+       * 把他送到文章页 —— 那里有「保留发布草稿 / 采用原笔记最新正文」两个选项。
+       */
+      const state = await api.blog.publishSettings.query({ noteId: post.id });
+      if (state.check.conflicts.some((conflict) => conflict.field === "body")) {
         RootStore.Get(ToastPlugin).error(
-          `${result.okCount} 篇成功，${result.failCount} 篇失败：${result.results.find((r) => !r.ok)?.message ?? ""}`,
+          "原笔记与发布草稿的正文都改过，请到文章页选择要发布的正文。",
         );
-      } else {
-        RootStore.Get(ToastPlugin).success(
-          action === "publish"
-            ? `已发布 ${result.okCount} 篇`
-            : `已撤回 ${result.okCount} 篇`,
-        );
+        navigate(`/blog-manage/content/${post.id}`);
+        return;
       }
+      await api.notes.publishNote.mutate({ id: post.id });
+      RootStore.Get(ToastPlugin).success(
+        state.isPublished ? "已更新发布" : "已发布",
+      );
+      RootStore.Get(BlinkoStore).updateTicker++;
+      await onReload();
     } catch (error) {
-      notify(error);
+      notify(error, "发布失败，请重试。");
     } finally {
+      setPublishingId(null);
       setBusy(false);
     }
   };
@@ -248,14 +260,6 @@ export function BlogContentList({
       setBusy(false);
     }
   };
-
-  const toggle = (id: number) =>
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id],
-    );
-
-  const allOnPageSelected =
-    rows.length > 0 && rows.every((row) => selected.includes(row.id));
 
   const emptyAll = posts.length === 0;
   const emptyFiltered = !emptyAll && filtered.length === 0;
@@ -323,21 +327,6 @@ export function BlogContentList({
         </Button>
       </div>
 
-      {selected.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2.5 mb-3 px-4 py-2.5 rounded-xl border border-primary/30 bg-primary/5 text-sm">
-          <span className="font-semibold mr-auto">已选 {selected.length} 篇</span>
-          <Button color="primary" size="sm" isDisabled={busy} onPress={() => void bulk("publish")}>
-            批量发布
-          </Button>
-          <Button variant="flat" size="sm" isDisabled={busy} onPress={() => void bulk("withdraw")}>
-            批量撤回
-          </Button>
-          <Button variant="light" size="sm" onPress={() => setSelected([])}>
-            取消选择
-          </Button>
-        </div>
-      )}
-
       {emptyAll ? (
         <div className="flex flex-col items-center justify-center py-16 text-default-400">
           <Icon icon="tabler:files" width={28} />
@@ -369,15 +358,6 @@ export function BlogContentList({
         <>
           <Table
             aria-label="文章列表"
-            selectionMode="multiple"
-            selectedKeys={new Set(selected.map(String))}
-            onSelectionChange={(keys) => {
-              if (keys === "all") {
-                setSelected(rows.map((r) => r.id));
-              } else {
-                setSelected(Array.from(keys).map(Number));
-              }
-            }}
             classNames={{
               base: "rounded-xl border border-default-200",
               th: "bg-default-50 text-default-500 text-xs font-semibold",
@@ -385,11 +365,10 @@ export function BlogContentList({
             }}
           >
             <TableHeader>
-              <TableColumn width={40}> </TableColumn>
               <TableColumn>文章</TableColumn>
               <TableColumn width={110}>状态</TableColumn>
               <TableColumn width={90} className="hidden lg:table-cell">更新</TableColumn>
-              <TableColumn width={56}>操作</TableColumn>
+              <TableColumn>操作</TableColumn>
             </TableHeader>
             <TableBody>
               {rows.map((post) => {
@@ -403,13 +382,12 @@ export function BlogContentList({
                   <TableRow
                     key={post.id}
                     className="cursor-pointer hover:bg-default-50"
-                    onClick={(event) => {
+                    onClickCapture={(event) => {
                       const target = event.target as HTMLElement;
-                      if (target.closest("button, a, [role=button]")) return;
+                      if (target.closest('button, a, input, label, [role="checkbox"], [role="menuitem"]')) return;
                       navigate(`/blog-manage/content/${post.id}`);
                     }}
                   >
-                    <TableCell> </TableCell>
                     <TableCell>
                       <div className="flex items-start gap-3 min-w-0">
                         <span className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center shrink-0 overflow-hidden">
@@ -419,14 +397,14 @@ export function BlogContentList({
                             <Icon icon="tabler:file-text" width={18} className="text-default-400" />
                           )}
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <button
-                            type="button"
+                        <div className="min-w-0 flex-1 max-w-[140px] sm:max-w-none">
+                          <a
+                            href={`/blog-manage/content/${post.id}`}
                             className="text-sm font-medium text-foreground hover:text-primary bg-transparent border-0 p-0 cursor-pointer text-left truncate block w-full"
-                            onClick={() => navigate(`/blog-manage/content/${post.id}`)}
+                            onClick={(event) => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(`/blog-manage/content/${post.id}`); }}
                           >
                             {post.title}
-                          </button>
+                          </a>
                           <span className="text-xs text-default-500 truncate block">
                             {post.excerpt}
                           </span>
@@ -466,6 +444,89 @@ export function BlogContentList({
                       </span>
                     </TableCell>
                     <TableCell>
+                      {/*
+                        两个 AI 入口直接摆在行里，不藏进「更多」：
+                        改标题、补概述、换封面是列表页最常做的三件事，
+                        藏进二级菜单等于让作者每篇都多点两下。
+                        图标按钮 + 原生 tooltip：列宽不用撑开，一眼能分清谁是谁。
+                      */}
+                      <div className="flex items-center justify-end gap-0.5">
+                        {/*
+                          手机上只留「发布」与「更多」：四个按钮挤在一行，
+                          标题就没地方放了，整张表只能横着滑出去。
+                          两个 AI 入口在文章页的快捷面板里一样有。
+                        */}
+                        <div className="hidden sm:flex items-center gap-0.5">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          radius="md"
+                          variant="light"
+                          aria-label={`AI 优化《${post.title}》的标题与概述`}
+                          title="AI 优化标题与概述"
+                          onPress={() => setCopyTarget(post.id)}
+                        >
+                          <Icon icon="tabler:sparkles" width={16} />
+                        </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          radius="md"
+                          variant="light"
+                          aria-label={`AI 生成《${post.title}》的封面`}
+                          title="AI 生成封面"
+                          onPress={() => setCoverTarget(post.id)}
+                        >
+                          <Icon icon="tabler:photo" width={16} />
+                        </Button>
+                        </div>
+                        {/*
+                          每行一个主动作，写法取自状态模型：
+                          草稿是「发布」、有改动是「更新发布」、撤回过是「重新发布」，
+                          已经是最新的就没有可发布的东西 —— 只给「查看公开页」。
+                          一个状态只给一个主动作，作者不用在一排等价按钮里挑。
+
+                          窄屏只留图标：操作列要跟标题抢宽度，
+                          与其让整张表横着滚出去、把主动作推到屏幕外，
+                          不如把字换成图标（tooltip 与 aria-label 仍说清是什么）。
+                        */}
+                        {state === "published" ? (
+                          post.publishId ? (
+                            <Button
+                              size="sm"
+                              radius="md"
+                              variant="light"
+                              as="a"
+                              href={`/blog/${post.publishId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`查看《${post.title}》的公开页`}
+                              className="px-2 min-w-[2rem]"
+                            >
+                              <span className="hidden sm:inline">{meta.action}</span>
+                              <Icon
+                                icon="tabler:external-link"
+                                width={15}
+                                className="sm:hidden"
+                              />
+                            </Button>
+                          ) : null
+                        ) : (
+                          <Button
+                            size="sm"
+                            radius="md"
+                            color="primary"
+                            variant="flat"
+                            isDisabled={busy}
+                            isLoading={publishingId === post.id}
+                            aria-label={`${meta.action}《${post.title}》`}
+                            onPress={() => void publish(post)}
+                            className="px-2 min-w-[2rem]"
+                          >
+                            <span className="hidden sm:inline">{meta.action}</span>
+                            <Icon icon="tabler:upload" width={15} className="sm:hidden" />
+                          </Button>
+                        )}
                       <RowMenu label={`《${post.title}》的更多操作`}>
                         {/*
                           只给真的公开了的文章这个入口。
@@ -513,6 +574,7 @@ export function BlogContentList({
                           </Button>
                         )}
                       </RowMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -540,6 +602,29 @@ export function BlogContentList({
             await onReload();
             RootStore.Get(ToastPlugin).success("已加入草稿箱");
           }}
+        />
+      )}
+
+      {/*
+        两个 AI 窗口都写到草稿里：公开页读的是快照，
+        改完要回文章页点「更新发布」才会对外生效。
+      */}
+      {copyTarget !== null && (
+        <BlogAiCopyDialog
+          noteId={copyTarget}
+          onApplied={async () => {
+            await onReload();
+          }}
+          onClose={() => setCopyTarget(null)}
+        />
+      )}
+      {coverTarget !== null && (
+        <BlogCoverAssistant
+          noteId={coverTarget}
+          onApplied={async () => {
+            await onReload();
+          }}
+          onClose={() => setCoverTarget(null)}
         />
       )}
     </div>

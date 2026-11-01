@@ -1,19 +1,18 @@
+import { prepareCoverIllustration, illustrationBase } from "./coverIllustration";
+import { coverGenerationJobs as pending } from './coverGenerationLock';
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
 import {
   coverPrompt,
   generateImageBytes,
   imageProtocol,
-  normalizeCoverBase,
 } from "./blogCoverGeneration";
 import { FileService } from "./files";
 import { fetchWithProxy } from "./proxy";
 
 import { preferCoverModels, coverArtPlan, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
-import { generateGuardedCoverBase } from "./coverCompositionGuard";
 
 
-const pending = new Set<number>();
 /** Generate a private candidate; only saveTopic makes it the selected topic cover. */
 export async function generateTopicCover(
   db: PrismaClient,
@@ -70,18 +69,19 @@ export async function generateTopicCover(
       .map((member) => member.note.publication?.title || "")
       .join("、");
     const prompt = coverPrompt(input.name, context);
-    /* 构图护栏：主体没落在右半区就换一张重来，试满上限取最好的那张。 */
+    /* Generate one isolated asset; the application owns its placement. */
     const generate = dependencies?.generate || generateImageBytes;
     const fetcher = dependencies?.fetcher || (await fetchWithProxy());
-    const guarded = await generateGuardedCoverBase({
-      attempt: async () => [await generate(model, prompt, fetcher)],
-    });
-    if (!guarded)
+    const raw = await generate(model, prompt, fetcher);
+    if (!raw)
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
-    const buffer = await normalizeCoverBase(guarded.buffer);
+    const buffer = await illustrationBase(
+      await prepareCoverIllustration(raw),
+      "violet",
+    );
     // Recheck after a slow model call; a deleted or transferred topic cannot be applied.
     const current = await db.blogTopic.findFirst({
       where: { id: input.topicId, accountId },

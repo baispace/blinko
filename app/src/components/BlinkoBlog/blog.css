@@ -4041,3 +4041,46 @@
 @media(max-width:760px){.ink-blog .ink-lead-hero{aspect-ratio:2.9 / 1}.ink-blog .ink-post-row .ink-cover-badge{width:20px;height:22px;padding:3px;border-radius:4px}.ink-blog .ink-post-row .ink-cover-badge-text{display:none}}
 
 .ink-blog .ink-post-card .ink-cover-base{object-position:var(--ink-cover-double-x,50%) var(--ink-cover-double-y,50%)}
+
+/* Article masthead shares its color band with the navigation, up to the viewport edge. */
+.ink-blog.has-cover-tint .ink-header:not([data-scrolled="true"]) {
+  background-color: var(--ink-hero-bg);
+  background-image: var(--ink-hero-band);
+  color: #fff;
+}
+.ink-blog[data-theme="dark"].has-cover-tint .ink-header:not([data-scrolled="true"]) { background-color: var(--ink-hero-bg-dark); }
+.ink-blog.has-cover-tint .ink-header:not([data-scrolled="true"]) .ink-brand-card { color:#fff; background:transparent; border-color:transparent; box-shadow:none; }
+.ink-blog .ink-article-hero-full .ink-crumb,
+.ink-blog .ink-article-hero-full .ink-meta { color:rgb(255 255 255 / 90%) !important; }
+
+/* Article masthead: editorial title first, compact cover as supporting artwork. */
+.ink-blog .ink-article-hero-full .ink-article-hero[data-cover] {
+  grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,64px);
+  align-items:center; min-height:260px;padding:48px 0 64px;
+}
+.ink-blog .ink-article-hero-full .ink-article-hero[data-cover="true"] {
+  grid-template-columns:minmax(0,1fr) clamp(220px,22vw,280px);
+}
+.ink-blog .ink-article-cover {
+  width:100%;aspect-ratio:16 / 9;overflow:hidden;border-radius:14px;
+  box-shadow:0 12px 30px rgb(0 0 0 / 12%);align-self:center;
+}
+.ink-blog .ink-article-hero-full .ink-article-hero h1 {
+  font-size:clamp(28px,3.2vw,44px);line-height:1.4;letter-spacing:-.025em;
+  margin:18px 0 24px;text-wrap:pretty;
+}
+.ink-blog .ink-article-hero-full .ink-crumb {font-size:13px;font-weight:500;}
+.ink-blog .ink-article-hero-full .ink-meta {display:flex;flex-wrap:wrap;gap:10px 14px;font-size:13px;line-height:1.7;}
+.ink-blog .ink-article-hero-full .ink-badge {padding:4px 10px;border-radius:8px;background:rgb(255 255 255 / 14%);}
+.ink-blog .ink-article-hero-full::after {
+  height:18px;background:var(--ink-bg);border-radius:18px 18px 0 0;
+}
+@media(max-width:760px){
+  .ink-blog .ink-article-hero-full .ink-article-hero[data-cover],
+  .ink-blog .ink-article-hero-full .ink-article-hero[data-cover="true"] {grid-template-columns:minmax(0,1fr);min-height:0;padding:32px 0 46px;}
+  .ink-blog .ink-article-cover {display:none;}
+  .ink-blog .ink-article-hero-full .ink-article-hero h1 {font-size:28px;margin:14px 0 20px;}
+}
+
+/* Banner footer aligns with the cover typography, independently of title height. */
+.ink-blog .ink-lead-hero-meta {left:6.5%;bottom:clamp(12px,6%,26px);}

@@ -114,7 +114,15 @@ export function coverConfigFingerprint(config: CoverConfig | null | undefined) {
   const placements = focus?.placements ?? {};
   const parts = [
     c.mode,
-    c.templateVersion || COVER_TEMPLATE_VERSION,
+    c.artwork,
+    /*
+     * 用**当前**的排版模板版本，而不是配置里存的那一版。
+     *
+     * 存的那一版只说明「作者当初是照哪版规则填的」，而分享图是用现在的
+     * 规则画出来的 —— 模板升级后老文章也要按新规则重画，
+     * 所以指纹必须跟着当前的常量走。
+     */
+    COVER_TEMPLATE_VERSION,
     c.title,
     c.subtitle,
     c.align,

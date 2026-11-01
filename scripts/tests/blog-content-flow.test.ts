@@ -118,10 +118,13 @@ describe("内容列表：筛选状态存在网址里", () => {
     expect(list).toContain("counts[item.key] ?? 0");
   });
 
-  test("列表里有批量发布和批量撤回", () => {
-    expect(list).toContain("批量发布");
-    expect(list).toContain("批量撤回");
-    expect(list).toContain("api.blog.bulkAction.mutate");
+  test("发布不做批量，每行一个操作按钮", () => {
+    // 批量发布最怕「这几篇到底发了哪几篇」说不清，一篇一篇点反而踏实。
+    expect(list).not.toContain("批量发布");
+    expect(list).not.toContain("批量撤回");
+    expect(list).not.toContain("selectionMode");
+    expect(list).not.toContain("api.blog.bulkAction.mutate");
+    expect(list).toContain("api.notes.publishNote.mutate");
   });
 
   test("两种空状态分开：没有内容 vs 筛不出结果", () => {
@@ -136,9 +139,10 @@ describe("内容列表：筛选状态存在网址里", () => {
     expect(list).toContain("移出草稿箱");
   });
 
-  test("每行都有主动作：行内统一叫「管理」，随状态变的是面板里的发布按钮", () => {
-    // 行内不再直接摆发布按钮，所有动作收进右侧面板
-    expect(list).not.toContain("meta.action");
+  test("每行的主动作取自统一的状态模型", () => {
+    // 行内按钮与右侧面板说同一套话：草稿是「发布」、有改动是「更新发布」。
+    expect(list).toContain("meta.action");
+    expect(list).toContain("CONTENT_STATUS_META");
     expect(quickPanel).toContain("CONTENT_STATUS_META");
     expect(CONTENT_STATUS_META.draft.action).toBe("发布");
     expect(CONTENT_STATUS_META.changed.action).toBe("更新发布");
@@ -163,8 +167,9 @@ describe("编辑入口收敛成一个工作台", () => {
     expect(appRoutes).not.toContain("BlogPublishWizard");
   });
 
-  test("发布入口统一收进右侧快捷操作面板，列表和详情共用", () => {
-    expect(list).toContain("ContentQuickPanel");
+  test("发布入口：列表行内一个按钮，完整设置收进右侧快捷操作面板", () => {
+    // 列表给的是「发布这一步」；标题、封面、专题这些设置在面板里。
+    expect(list).toContain("api.notes.publishNote.mutate");
     expect(detail).toContain("ContentQuickPanel");
     expect(list).not.toContain("BlogPublishSettingsDialog");
     expect(detail).not.toContain("BlogPublishSettingsDialog");
@@ -191,8 +196,9 @@ describe("状态文案在各页一致", () => {
     expect(status).toContain("待发布更新");
   });
 
-  test("检查区改叫「发布前检查」，跟工作台里的入口对得上", () => {
-    expect(detail).toContain("发布前检查");
+  test("发布前检查区跟工作台里的入口对得上", () => {
+    // 检查区现在说的是「可以发布 / N 项待处理」，与工作台的发布按钮同一件事。
+    expect(detail).toContain("可以发布");
   });
 });
 

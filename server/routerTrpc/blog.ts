@@ -1,3 +1,4 @@
+import { assetCoverOptions, generateAssetCover } from '../lib/assetCoverGeneration';
 import { analyticsAudience, analyticsTopics } from "../lib/blogAudienceAnalytics";
 import { generateTopicCover } from '../lib/blogTopicCover';
 import { readPublishSettings, savePublishSettings, savePublishSettingsSchema } from "../lib/blogPublishSettings";
@@ -186,6 +187,7 @@ const coverTextConfigSchema = z.object({
   /** overlay = 底图＋系统文字；full = 完整图片封面（历史封面自带文字，不再叠字）。 */
   mode: z.enum(["overlay", "full"]).default("overlay"),
   templateVersion: z.string().trim().max(16).default("v1"),
+  artwork: z.enum(["icon", "tile", "image"]).optional(),
   title: z.string().trim().max(24),
   subtitle: z.string().trim().max(40),
   align: z.enum(["left", "center", "right"]).default("left"),
@@ -273,7 +275,10 @@ function rateKey(ctx: { ip?: string }) {
   return ctx.ip || "0.0.0.0";
 }
 
+const assetCoverTarget = z.object({type:z.enum(['note','topic']),id:z.number().int().positive(),title:z.string().trim().max(500).optional(),description:z.string().max(30000).optional()});
 export const blogRouter = router({
+  assetCoverOptions: authProcedure.input(z.object({target:assetCoverTarget})).query(({input,ctx})=>assetCoverOptions(prisma,Number(ctx.id),input.target)),
+  generateAssetCover: authProcedure.input(z.object({target:assetCoverTarget,sourceVersion:z.string().datetime(),modelId:z.number().int().positive(),direction:z.string().trim().max(300).optional()})).mutation(({input,ctx})=>generateAssetCover(prisma,Number(ctx.id),input)),
   topicSEO: authProcedure.input(z.object({id:z.number().int().positive()})).query(({ctx,input})=>readTopicSeo(prisma,Number(ctx.id),input.id)),
   saveTopicSEO: authProcedure.input(z.object({id:z.number().int().positive(),data:articleSeoSchema,revision:z.string()})).mutation(({ctx,input})=>saveTopicSeo(prisma,Number(ctx.id),input.id,input.data,input.revision)),
   engagement: authProcedure.input(z.object({days:z.union([z.literal(1),z.literal(7),z.literal(30)])})).query(({ctx,input})=>blogEngagement(prisma,Number(ctx.id),input.days)),

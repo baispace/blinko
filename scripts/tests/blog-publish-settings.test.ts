@@ -6,11 +6,14 @@ import { copyInstructions, groupInstructions } from '../../server/lib/blogAiCopy
 import { withDraftBody, sourceVersionOf } from '../../server/lib/blogPublishCheck';
 import { publishSnapshot } from '../../server/lib/publication';
 
-test('compact cover copy is four to six visible characters', () => {
+test('cover copy supports two to eight characters and recommends four to six', () => {
   expect(validShortCoverTitle('产品实践')).toBe(true);
   expect(validShortCoverTitle('推荐召回优化')).toBe(true);
   expect(validShortCoverTitle('短')).toBe(false);
-  expect(validShortCoverTitle('推荐召回策略优化')).toBe(false);
+  expect(validShortCoverTitle('推荐召回策略优化')).toBe(true);
+  expect(validShortCoverTitle('复盘')).toBe(true);
+  expect(validShortCoverTitle('AI工具箱')).toBe(true);
+  expect(validShortCoverTitle('推荐召回策略优化方案')).toBe(false);
   expect(shortCoverTitleLength(' 产品 实践 ')).toBe(4);
   expect(copyInstructions).toContain('4–6 字');
   expect(groupInstructions({ publicTags: [], topics: [] })).toContain('4–6 字');
@@ -143,6 +146,19 @@ suite('unified settings persist atomically while keeping the public snapshot iso
     expect(after.metadata).toEqual(before.metadata); expect(after.updatedAt).toEqual(before.updatedAt);
     const updated = await db.notePublication.findUniqueOrThrow({ where: { noteId } });
     expect(updated.isFeatured && updated.isBanner).toBe(true); expect(updated.revision).toBe(publication.revision); expect(updated.draftCoverAttachmentId).toBe(publication.draftCoverAttachmentId);
+  });
+
+  test('settings report publication presence and draft public tags for the AI assistants', async () => {
+    // 有发布记录：封面生成、封面文案才落得下库，列表页据此放开入口。
+    const published = await readPublishSettings(db, owner, noteId);
+    expect(published.hasPublication).toBe(true);
+    // 草稿箱里的笔记还没有发布记录。
+    const draftNote = await db.notes.create({ data: { accountId: owner, type: 1, content: '草稿箱里的一篇笔记' } });
+    expect((await readPublishSettings(db, owner, draftNote.id)).hasPublication).toBe(false);
+    // 公开标签跟着草稿走：AI 建议面板要显示「当前」的那一份。
+    const raw = await db.notes.findUniqueOrThrow({ where: { id: noteId }, select: { metadata: true } });
+    await db.notes.update({ where: { id: noteId }, data: { metadata: { ...(raw.metadata as object), blogPublicTags: ['AI 效率', '推荐系统'] } } });
+    expect((await readPublishSettings(db, owner, noteId)).draftPublicTags).toEqual(['AI 效率', '推荐系统']);
   });
 
 });

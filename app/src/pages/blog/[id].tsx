@@ -5,7 +5,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/publicBlogClient";
 import { blogDeviceId, blogStatsEnabled } from "@/lib/blogDevice";
 import { blogAttribution, readBlogEntry } from "@/lib/blogReferrer";
-import { sampleCoverPalette } from "@/lib/coverColor";
+import { sampleCoverPalette, fallbackArticlePalette } from "@/lib/coverColor";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { PublicArticleBody } from "@/components/BlinkoBlog/PublicArticleBody";
 import { CoverCanvas } from "@/components/BlinkoBlog/CoverCanvas";
@@ -109,20 +109,23 @@ export default function PublishedNotePage() {
   const setCoverTint = site.setCoverTint;
   useEffect(() => {
     // 文档模式沿用全站浅色导航，不让封面采样把阅读页染成 Banner。
-    if (docMode || !coverUrl) {
+    if (docMode) {
       setCoverTint(null);
       return;
     }
+    const fallback = fallbackArticlePalette(id);
+    setCoverTint(fallback);
+    if (!coverUrl) return;
     let current = true;
     void sampleCoverPalette(coverUrl).then((value) => {
       if (!current) return;
       // 交给站点根节点：导航栏和通栏顶部共用这一片颜色。
-      setCoverTint(value);
+      setCoverTint(value ?? fallback);
     });
     return () => {
       current = false;
     };
-  }, [coverUrl, docMode, setCoverTint]);
+  }, [coverUrl, docMode, setCoverTint, id]);
   // 离开文章页才把顶部染色撤掉。
   // 延后一拍再清：React 严格模式会立刻重挂载，同步清会把颜色闪掉。
   const mounted = useRef(true);
@@ -244,7 +247,7 @@ export default function PublishedNotePage() {
       {/* 顶部通栏：底色由封面主色采样而来（QQ 音乐那套），内容仍按 1280 收口。
           变量实际挂在站点根节点上，导航栏也是同一片颜色。 */}
       <section className="ink-article-hero-full">
-        <div className="ink-article-hero">
+        <div className="ink-article-hero" data-cover={article.coverUrl ? "true" : "false"}>
           <div>
             <div className="ink-crumb">
               <Link to={blogRoute("/blog")}>首页</Link>
@@ -300,6 +303,7 @@ export default function PublishedNotePage() {
             </div>
           </div>
           {article.coverUrl && (
+            <div className="ink-article-cover">
             <CoverCanvas
               src={article.coverUrl}
               alt="文章封面"
@@ -308,6 +312,7 @@ export default function PublishedNotePage() {
               placement="single"
               loading="eager"
             />
+            </div>
           )}
         </div>
       </section>

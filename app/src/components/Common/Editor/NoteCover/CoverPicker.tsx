@@ -23,6 +23,7 @@ interface CoverPickerProps {
   cover?: string
   onPick: (cover: string) => void
   onRemove: () => void
+  onAI?: () => void
   onUpload: (file: File) => Promise<string | null>
 }
 
@@ -33,6 +34,7 @@ export const CoverPicker = ({
   onPick,
   onRemove,
   onUpload,
+  onAI,
 }: CoverPickerProps) => {
   const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
@@ -91,6 +93,7 @@ export const CoverPicker = ({
           <span className="text-base font-bold">{t('edit-cover')}</span>
         </ModalHeader>
         <ModalBody className="pb-0">
+          {onAI && <button type="button" className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 p-3 text-sm text-primary" onClick={() => { onClose(); onAI(); }}><Icon icon="tabler:sparkles" width={17} />AI 生成封面</button>}
           <Tabs
             defaultSelectedKey="gallery"
             size="sm"

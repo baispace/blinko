@@ -1,3 +1,5 @@
+import { prepareCoverIllustration } from "./coverIllustration";
+import { coverGenerationJobs as generating } from './coverGenerationLock';
 import { readDraftBody } from "./blogPublishCheck";
 import { TRPCError } from "@trpc/server";
 import { Prisma, type PrismaClient } from "@prisma/client";
@@ -22,7 +24,6 @@ import {
   type CoverConfig,
 } from "./blogCoverConfig";
 import { composeCoverImage } from "./blogCoverComposition";
-import { generateGuardedCoverBase } from "./coverCompositionGuard";
 
 import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
 
@@ -98,20 +99,18 @@ export function coverPrompt(
    *   4. 作者的画面要求 —— 最后让位，按剩余字符截短。
    * 硬约束尾巴任何情况下都不动。
    *
-   * 构图规则写在契约的**最前面**、并在收尾再重申一次：实测同一条规则放在
-   * 契约中段时构图合格率只有 1/3，提到最前面并收尾重申后是 3/3，
-   * 主体水平中心从 58% 推到 74%（详见 shared/lib/blogCoverArt.ts）。
+   * 构图规则写在契约的最前面，并在硬约束尾部重申：即便服务商
+   * 对中间描述降权，仍能保住「一枚图形、居中、留白、无字」这四个后处理前提。
    */
   const contract = `${plan.composition}
 ${plan.treatment}
-Palette: ${plan.palette} — the backdrop uses exactly this gradient, deep and rich; background panels barely visible.
+ONE rounded-square app icon tile with one simple raised symbol only.
+Accent color: ${plan.palette}; use a saturated solid color with subtle bevel highlights.
 Subject: ${plan.subject}.
-Matte premium materials, not plastic: no neon halos, no candy saturation, no lens flare, no heavy blur. Surfaces solid white and pale grey-blue; glyphs flat 2D line-art marks; one vivid accent only; no duplicate copies.
-16:9 illustration asset, 1600x900, used as the full cover background with the title printed on the empty left part.
-${plan.compositionReminder}`;
+Treat the subject as one unified symbol, not a collection of objects.`;
 
   // 硬约束尾巴：任何情况下都不能被截断。
-  const tail = `No text, letters, numbers, logos, watermark or fake writing. UI content is geometric bars and blocks only. No floor, tabletop, pedestal, platform, circular hub, room, miniature scene. 禁止：低饱和粉紫摄影棚。`;
+  const tail = `No text, letters, numbers, logos, labels, UI, frames, badges, or typography. Keep exactly one glyph: no extra objects, no supporting pieces, no scene, no background elements, no floor or tabletop. ${plan.compositionReminder} 禁止：低饱和粉紫摄影棚。`;
 
   const titleLine = `主题参考：${cleanTitle}`;
   const contentLine = `内容参考：${cleanContent.slice(0, 48)}`;
@@ -190,13 +189,8 @@ export function imageRequest(
       ? {
           model: model.modelKey,
           prompt: prompt.slice(0, 1500),
-          /*
-           * 只用 aspect_ratio：
-           *   - width/height 只有 image-01 认，image-01-live 会静默忽略，
-           *     所以这里永远不发自定义尺寸，别指望改它能生效；
-           *   - 21:9 只有 image-01 支持，live 不认 —— 博客封面统一 16:9。
-           */
-          aspect_ratio: "16:9",
+          // Generate a square icon asset; the application composes wide covers.
+          aspect_ratio: "1:1",
           n: Math.max(1, Math.min(9, options?.n ?? 1)),
           response_format: "url",
           // 提示词里带「绝对不要画字」这类硬约束，优化器改写会把约束丢掉。
@@ -214,10 +208,10 @@ export function imageRequest(
           ...(/^dall-e-2$/.test(model.modelKey)
             ? { size: "1024x1024", response_format: "b64_json" }
             : /^dall-e-3$/.test(model.modelKey)
-              ? { size: "1792x1024", response_format: "b64_json" }
+              ? { size: "1024x1024", response_format: "b64_json" }
               : /^gpt-image/.test(model.modelKey)
-                ? { size: "1536x1024" }
-                : { size: "1536x1024", response_format: "b64_json" }),
+                ? { size: "1024x1024" }
+                : { size: "1024x1024", response_format: "b64_json" }),
         };
   return {
     url: endpoint.href,
@@ -521,7 +515,7 @@ export async function coverGenerationOptions(
     })),
   };
 }
-const generating = new Set<number>();
+
 export async function generateBlogCover(
   db: PrismaClient,
   accountId: number,
@@ -589,14 +583,7 @@ export async function generateBlogCover(
     );
     const artPlan = coverArtPlan(publicText(context.title), publicText(context.content), input.style);
     const fetcher = await fetchWithProxy();
-    /*
-     * 构图护栏：底图的插画必须待在右半区，左边才有干净的底色给标题。
-     *
-     * 提示词里已经反复强调「主体推到右边缘」，但生图模型并不总是听话 ——
-     * 同一句提示词的构图合格率只有四成上下，剩下的整幅铺满之后插画就压到
-     * 标题底下，看起来「图偏中间」。所以生完立刻量一次主体位置，
-     * 不合格就换一张重来，试满上限取最好的那张。
-     */
+    // Generate once: the model draws an isolated icon; the application controls placement.
     const generateOnce = async (): Promise<Buffer[]> => {
       const single = dependencies?.generate;
       if (single) return [await single(model, prompt, fetcher)];
@@ -605,49 +592,46 @@ export async function generateBlogCover(
         n: 1,
       });
     };
-    const guarded = await generateGuardedCoverBase({ attempt: generateOnce });
-    const raws = guarded ? [guarded.buffer] : [];
-    // 底图统一成 1600×900：不拉伸，只按比例裁切。
-    const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
-    const uploaded: { id: number; path: string }[] = [];
-    for (const raw of raws) {
-      const image = await normalizeCoverBase(raw);
-      const result = await upload({
-        buffer: image,
-        originalName: `ink-cover-base-${input.noteId}-${crypto.randomUUID()}.webp`,
-        type: "image/webp",
-        accountId,
-        metadata: {
-          blogAICover: {
-            noteId: input.noteId,
-            modelId: input.modelId,
-            prompt,
-            artVersion: COVER_ART_VERSION,
-            artPlan,
-            style: input.style,
-            sourceRevision: input.revision,
-            width: COVER_SOURCE.width,
-            height: COVER_SOURCE.height,
-            /** 构图体检结果：主体落在画面哪里、试了几次才抽到。 */
-            composition: guarded?.composition,
-            compositionAttempts: guarded?.attempts,
-          },
-        },
-      });
-      const attachment = await db.attachments.findFirstOrThrow({
-        where: { path: result.filePath, accountId },
-      });
-      await db.attachments.update({
-        where: { id: attachment.id },
-        data: { noteId: input.noteId },
-      });
-      uploaded.push({ id: attachment.id, path: attachment.path });
-    }
-    if (!uploaded.length)
+    const raw = (await generateOnce())[0];
+    if (!raw)
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
+    // Keep the isolated illustration transparent and uncropped.
+    const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
+    const image = await prepareCoverIllustration(raw);
+    const dimensions = await sharp(image).metadata();
+    const result = await upload({
+      buffer: image,
+      originalName: `ink-cover-base-${input.noteId}-${crypto.randomUUID()}.webp`,
+      type: "image/webp",
+      accountId,
+      metadata: {
+        blogAICover: {
+          noteId: input.noteId,
+          modelId: input.modelId,
+          prompt,
+          artVersion: COVER_ART_VERSION,
+          artPlan,
+          style: input.style,
+          sourceRevision: input.revision,
+          width: dimensions.width,
+          height: dimensions.height,
+          assetKind: "isolated-app-tile",
+          composition: null,
+          compositionAttempts: 1,
+        },
+      },
+    });
+    const attachment = await db.attachments.findFirstOrThrow({
+      where: { path: result.filePath, accountId },
+    });
+    await db.attachments.update({
+      where: { id: attachment.id },
+      data: { noteId: input.noteId },
+    });
+    const uploaded = [{ id: attachment.id, path: attachment.path }];
     // Recheck ownership after a slow provider call. Never select/publish automatically.
     const note = await db.notes.findFirst({
       where: { id: input.noteId, accountId, isRecycle: false },
@@ -662,6 +646,7 @@ export async function generateBlogCover(
       id: uploaded[0].id,
       path: uploaded[0].path,
       revision: input.revision,
+      artwork: "tile" as const,
       coverPalette: artPlan.overlayPalette,
       /** 本次一起出图的候选底图：作者挑一张，别的留在附件里。 */
       candidates: uploaded,
@@ -813,10 +798,15 @@ export async function exportCoverImage(
     sizeScale: config.sizeScale,
   });
   const buffer =
-    config.mode === "overlay" && config.title.trim()
+    (config.mode === "overlay" && config.title.trim()) || config.artwork === "icon" || config.artwork === "tile"
       ? await composeCoverImage({
           base: original,
           layout,
+          // 新版式（图标砖）要的是原始文案，不是排好版的行。
+          title: config.mode === "overlay" ? config.title : "",
+          subtitle: config.subtitle,
+          sizeScale: config.sizeScale,
+          artwork: config.artwork,
           canvasWidth: input.width,
           canvasHeight: input.height,
           palette: config.palette,

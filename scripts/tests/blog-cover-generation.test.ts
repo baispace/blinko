@@ -39,18 +39,21 @@ describe("image adapter and crop", () => {
       "<h2>公开正文</h2>\n" + "资料".repeat(1000),
     );
     expect(prompt).toContain("指标");
-    expect(prompt).toContain("cobalt blue to azure");
+    expect(prompt).toContain("cobalt blue");
     expect(prompt).not.toContain("<h2>");
     expect(prompt.length).toBeLessThan(1500);
-    expect(prompt).toContain('产品功能发布封面');
-    expect(prompt).toContain('No text');
-    expect(prompt).toContain('pushed to the RIGHT EDGE');
-    expect(prompt).toContain('禁止：低饱和');
-    // 参考封面抽象出来的风格契约：哑光质感 + 饱和渐变 + 纯白界面。
-    expect(prompt).toContain('Clean 3D app-icon illustration');
-    expect(prompt).toContain('the backdrop uses exactly this gradient');
-    expect(prompt).toContain('Surfaces solid white and pale grey-blue');
-    expect(prompt).toContain('Matte premium materials, not plastic');
+    expect(prompt).toContain("No text");
+    expect(prompt).toContain("saturated solid color");
+    expect(prompt).toContain("禁止：低饱和");
+    /*
+     * 第三版契约：模型只出一枚可分离的图标砖（无字、居中、留白充足）。
+     * 背景、大字、方块、位置都由程序排 —— 模型画得越少，波动越小。
+     */
+    expect(prompt).toContain("Clean 3D app-icon illustration");
+    expect(prompt).toContain("ONE rounded-square app icon tile");
+    expect(prompt).toContain("exactly one isolated app-icon symbol");
+    expect(prompt).toContain("transparent or pure white background");
+    expect(prompt).toContain("exactly one glyph");
   });
   test("all model briefs retain wordless and crop constraints within provider limit", () => {
     for (const style of ["ink"] as const) {
@@ -64,13 +67,12 @@ describe("image adapter and crop", () => {
       expect(request.body).not.toHaveProperty("style");
       expect(request.body).not.toHaveProperty("subject_reference");
       expect(request.body.n).toBe(1);
-      expect(standard).toContain("with the title printed on the empty left part");
-      expect(standard).toContain("The LEFT HALF of the frame is completely empty background");
-      expect(standard).toContain("no duplicate copies");
+      expect(standard).toContain("ONE rounded-square app icon tile");
+      expect(standard).toContain("transparent or pure white");
+      expect(standard).toContain("exactly one glyph");
+      expect(standard).toContain("no supporting pieces");
       expect(standard).toContain("No text");
-      expect(standard).toContain("tabletop");
-      expect(standard).toContain("circular hub");
-      expect(standard).toContain("thin extruded side face");
+      expect(standard).toContain("no background elements");
     }
   });
   test("长标题 + 长正文 + 画面要求也不会超出服务商上限", () => {
@@ -178,7 +180,7 @@ describe("image adapter and crop", () => {
     };
     const fetcher: any = async (url: any, init: any) => {
       if (String(url).includes("image_generation")) {
-        expect(JSON.parse(init.body).aspect_ratio).toBe("16:9");
+        expect(JSON.parse(init.body).aspect_ratio).toBe("1:1");
         return Response.json({
           data: { image_urls: ["https://8.8.8.8/generated.png"] },
           base_resp: { status_code: 0 },

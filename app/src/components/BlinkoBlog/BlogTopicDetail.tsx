@@ -1,5 +1,6 @@
-import { BlogInput, BlogTextarea, BlogSelect, BlogCheckbox } from "./BlogUI";
+import { BlogCoverGeneratorDialog } from './BlogCoverGeneratorDialog';
 import { BlogStudioBrand } from "./BlogStudioBrand";
+import { BlogInput, BlogTextarea, BlogSelect, BlogCheckbox } from "./BlogUI";
 import { Button, Chip, Card, CardBody, CardHeader } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
@@ -133,7 +134,8 @@ export function BlogTopicDetail() {
     [topics, id, isNew],
   );
   const badId = !isNew && (!Number.isInteger(id) || id <= 0);
-  const missing = badId || (!loading && !topic);
+  // New topics intentionally have no persisted record until their first save.
+  const missing = !isNew && (badId || (!loading && !error && !topic));
 
   const buildDraft = (t: Topic | null) => ({
     name: t?.name || "",
@@ -248,25 +250,7 @@ export function BlogTopicDetail() {
     }
   };
 
-  const generateCover = async () => {
-    if (!topic || working) return;
-    setGeneratingCover(true);
-    setError("");
-    try {
-      const image = await api.blog.generateTopicCover.mutate({
-        topicId: topic.id,
-        name: draft.name,
-        desc: draft.desc,
-      });
-      setGeneratedCovers((previous) => [image, ...previous]);
-      patch({ coverAttachmentId: image.id });
-      RootStore.Get(ToastPlugin).success("封面已生成，保存资料后应用到专题。");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "生成失败，请重试。");
-    } finally {
-      setGeneratingCover(false);
-    }
-  };
+  const generateCover = () => setGeneratingCover(true);
   const chaptersSaved = async () => {
     await load();
     if (topic) {
@@ -884,6 +868,7 @@ export function BlogTopicDetail() {
           </section>
         </div>
       </div>
+      {generatingCover && topic && <BlogCoverGeneratorDialog target={{type:'topic',id:topic.id,title:draft.name,description:draft.desc}} initial={{coverTitle:draft.coverTitle || ''}} onClose={() => setGeneratingCover(false)} onApply={result => { if (!result.id) return; setGeneratedCovers(previous=>[{id:result.id!,path:result.path,name:'AI 封面'},...previous]); patch({coverAttachmentId:result.id,coverTitle:result.coverMode === 'full' ? '' : result.coverTitle}); }} />}
     </div>
   );
 }

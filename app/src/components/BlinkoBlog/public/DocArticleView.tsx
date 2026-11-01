@@ -39,7 +39,7 @@ function readingMinutes(content: string) {
 /**
  * 文档模式下的文章页。
  *
- * 左边是专题目录，右边是正文。正文用的是现成的公开渲染器
+ * 左边是专题目录，中间是正文，宽屏右侧展示本文目录。正文用的是现成的公开渲染器
  * （PublicArticleBody），图片、表格、代码块、引用、链接的能力全部照旧 ——
  * 文档模式只换版式，不换正文。
  */
@@ -59,6 +59,11 @@ export function DocArticleView({
   /** 正文容器：与普通文章页共用同一份标题计算逻辑。 */
   bodyRef: RefObject<HTMLDivElement>;
 }) {
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  useEffect(() => { if (!copied) return; const timer = setTimeout(() => setCopied(false), 2000); return () => clearTimeout(timer); }, [copied]);
+  const orderedPosts = [...directory.sections.flatMap(section => section.posts), ...directory.unassigned.posts];
+  const position = orderedPosts.findIndex(post => post.publishId === article.publishId) + 1;
   const topicSlug = directory.topic.slug;
   const site = useBlogSite();
   // 当前文章在哪个章节 —— 面包屑上的最后一段。
@@ -79,7 +84,7 @@ export function DocArticleView({
   );
 
   return (
-    <main className="ink-doc-layout">
+    <main className="ink-doc-layout ink-doc-reading-layout">
       <aside className="ink-doc-side">{sidebar}</aside>
 
       <div className="ink-doc-main">
@@ -110,21 +115,21 @@ export function DocArticleView({
           <div style={{ minWidth: 0 }}>
             <h1 className="ink-doc-article-title">{article.title}</h1>
           </div>
-          <ArticleTocPopover headings={headings} active={active} onJump={onJump} />
+          <div className="ink-doc-compact-toc"><ArticleTocPopover headings={headings} active={active} onJump={onJump} /></div>
         </div>
 
         {article.excerpt && (
           <p className="ink-doc-article-excerpt">{article.excerpt}</p>
         )}
 
-        <div className="ink-doc-meta">
+        <div className="ink-doc-meta-row"><div className="ink-doc-meta">
           {site.profile?.displayName && <span>{site.profile.displayName}</span>}
           <span>
             更新于{" "}
             {new Date(article.updatedAt).toLocaleDateString("zh-CN")}
           </span>
           <span>约 {readingMinutes(article.content)} 分钟</span>
-        </div>
+        </div><button type="button" className="ink-doc-copy" onClick={async () => { try { await navigator.clipboard.writeText(window.location.href); setCopied(true); setCopyError(false); } catch { setCopyError(true); } }}><Icon icon="tabler:copy" width={16} />{copied ? '已复制' : '复制链接'}</button>{copyError && <span role="status" className="ink-doc-copy-error">复制失败，请复制地址栏链接</span>}</div>
 
         <hr className="ink-doc-rule" />
 
@@ -165,6 +170,10 @@ export function DocArticleView({
           </nav>
         )}
       </div>
+      <aside className="ink-doc-reading-rail" aria-label="本文目录与专题进度"><h2>本文目录</h2>
+        {headings.length ? <nav aria-label="本文目录">{headings.map(heading => <a key={heading.id} href={'#' + heading.id} aria-current={active === heading.id ? 'location' : undefined} data-active={active === heading.id || undefined} style={{ paddingLeft: heading.level > 2 ? 28 : 18 }} onClick={event => { event.preventDefault(); onJump(heading.id); }}>{heading.text}</a>)}</nav> : <p className="ink-doc-rail-empty">本文暂无分节标题</p>}
+        <div className="ink-doc-reading-progress"><span>专题阅读进度</span><p>第 {position || 1} 篇 / 共 {directory.total} 篇</p></div>
+      </aside>
     </main>
   );
 }

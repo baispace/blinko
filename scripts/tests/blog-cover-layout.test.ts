@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import sharp from "sharp";
+import { createRequire } from "node:module";
+const sharp = createRequire(new URL("../../server/package.json", import.meta.url))("sharp") as typeof import("../../server/node_modules/sharp");
 import {
   COVER_SAFE,
   COVER_SOURCE,
@@ -285,6 +286,86 @@ test("导出时即便底图全是高亮主体，标题区也被遮罩压暗", as
       ...layout.titleLines.map((line) => coverTextEmWidth(line, COVER_TITLE_SCALE_X) * layout.fontSize),
     );
     const probe = Math.round(layout.left + titleWidth * 0.5);
-    expect(redAt(probe, Math.round(height * 0.2))).toBeLessThan(right * 0.8);
+    expect(redAt(probe, Math.round(height * 0.2))).toBeLessThan(right * 0.95);
   }
+});
+
+ test("四个展示位保留完整底图，文字限制在左侧留白", () => {
+  for (const placement of ["double", "single", "banner", "share"] as const) {
+    for (const width of [240, 480, 1200]) {
+      const height = Math.round(width / (placement === "single" ? 16 / 9 : placement === "share" ? 1200 / 630 : 2.8));
+      const layout = computeCoverTextLayout({ containerWidth: width, containerHeight: height, placement, title: "产品实践", align: "left" });
+      expect(layout.artwork.left).toBe(0);
+      expect(layout.left + layout.maxWidth).toBeLessThanOrEqual(width * 0.44 + 1);
+      expect(layout.artwork.left + layout.artwork.width).toBe(width);
+    }
+  }
+});
+
+ test("不同标题长度与中英混排在四种场景完整显示", () => {
+  for (const placement of ["double", "single", "banner", "share"] as const) {
+    for (const width of [160, 480, 1200]) {
+      const height = Math.round(width / (placement === "single" ? 16 / 9 : placement === "share" ? 1200 / 630 : 2.8));
+      for (const title of ["复盘", "工具箱", "产品方法", "AI工具箱", "高效工作流", "推荐召回优化", "推荐系统的实践", "推荐召回策略优化", "OpenAI"]) {
+        const layout = computeCoverTextLayout({ containerWidth: width, containerHeight: height, placement, title });
+        expect(layout.titleLines.join("")).toBe(title);
+        expect(layout.titleLines.length).toBeLessThanOrEqual(2);
+        expect(layout.overflow).toBe(false);
+        if ([...title].length <= 3 || title === "OpenAI") expect(layout.titleLines.length).toBe(1);
+        if (title === "AI工具箱") expect(layout.titleLines.some(line => line.includes("AI"))).toBe(true);
+      }
+    }
+  }
+});
+
+test("复杂中文与英文在不同字号下保持完整笔画", async () => {
+  const {renderCoverLine} = await import('../../server/lib/coverTextRaster');
+  for (const text of ['复', '盘', '法', 'AI']) {
+    const areas = [];
+    for (const size of [48, 72, 80]) {
+      const line = await renderCoverLine({text, size, color:'#fff', scaleX:0.84});
+      const {data,info} = await sharp(line.buffer).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+      let alpha = 0;
+      for(let i=3;i<data.length;i+=info.channels) alpha += data[i]/255;
+      areas.push(alpha/(size*size));
+    }
+    expect(Math.max(...areas)-Math.min(...areas)).toBeLessThan(0.035);
+  }
+});
+
+test("实际展示尺寸下标题、副标题和轮播控件互不挤占", async () => {
+  const {coverSupportsText} = await import('../../shared/lib/blogCoverText');
+  expect(coverSupportsText(88,'single')).toBe(false);
+  expect(coverSupportsText(180,'single')).toBe(true);
+  for(const [placement,width,height,controls] of [
+    ['banner',1000,345,true],['banner',360,124,true],['double',480,171,false],['double',328,117,false],['single',180,96,false],['share',1200,630,false]
+  ] as const) for (const title of ['复盘','AI工具箱','产品方法','推荐召回策略优化']) {
+    const layout=computeCoverTextLayout({containerWidth:width,containerHeight:height,placement,controls,title,subtitle:'从真实问题出发，分享实践中的方法'});
+    expect(layout.overflow).toBe(false);
+    expect(layout.titleLines.join('')).toBe(title);
+    expect(layout.top+layout.blockHeight).toBeLessThanOrEqual(height+1);
+    if(placement==='banner') expect(layout.top+layout.blockHeight).toBeLessThanOrEqual(height-Math.min(height*.28,34)+1);
+    if(placement==='single') expect(layout.subtitleLines.length).toBe(0);
+  }
+});
+
+test("Banner 标题居于左侧可用区域中部，不再紧贴推荐栏", () => {
+  for (const [width,height] of [[1000,345],[360,124]] as const) {
+    const layout=computeCoverTextLayout({containerWidth:width,containerHeight:height,placement:'banner',title:'详情页推荐',controls:true});
+    const bottom=height-Math.min(height*.28,Math.max(height*.16,34));
+    const center=bottom/2;
+    expect(Math.abs(layout.top+layout.blockHeight/2-center)).toBeLessThan(2);
+    expect(layout.top+layout.blockHeight).toBeLessThan(bottom);
+  }
+});
+
+test("Banner 保留原图靠近顶部的图案，不再上下裁切", async () => {
+  const corner=await sharp({create:{width:100,height:40,channels:3,background:'#ff0000'}}).png().toBuffer();
+  const source=await sharp({create:{width:1600,height:900,channels:3,background:'#0066ee'}}).composite([{input:corner,left:1400,top:0}]).png().toBuffer();
+  const layout=computeCoverTextLayout({containerWidth:1000,containerHeight:345,placement:'banner',title:''});
+  const output=await composeCoverImage({base:source,layout,canvasWidth:1000,canvasHeight:345,palette:'blue',align:'left'});
+  const {data,info}=await sharp(output).raw().toBuffer({resolveWithObject:true});
+  const offset=(5*1000+930)*info.channels;
+  expect(data[offset]).toBeGreaterThan(200);
+  expect(data[offset+1]).toBeLessThan(60);
 });

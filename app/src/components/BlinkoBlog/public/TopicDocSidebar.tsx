@@ -62,6 +62,11 @@ export function TopicDocSidebar({
   onNavigate?: () => void;
 }) {
   const { topic, sections, unassigned } = directory;
+  const [query, setQuery] = useState('');
+  const matches = (post: DocPost) => post.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+  const shownSections = sections.map(section => ({ ...section, posts: section.posts.filter(matches) })).filter(section => section.posts.length);
+  const shownUnassigned = unassigned.posts.filter(matches);
+  const searchRef = useRef<HTMLInputElement>(null);
   /**
    * 折叠状态只记「被折起来的那些」。
    *
@@ -129,7 +134,7 @@ export function TopicDocSidebar({
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
         >
-          {/* 标记栏：圆点与引导线都待在这里，绝不压到文字上。 */}
+          {/* 保持文字起点固定；选中标记由容器绘制，不参与布局。 */}
           <span className="ink-doc-nav-marker" aria-hidden="true" />
           <span className="ink-doc-nav-text">{post.title}</span>
         </Link>
@@ -137,35 +142,17 @@ export function TopicDocSidebar({
     );
   };
 
-  // 章节序号：只数「展示了标题」的章节，不留空号。
-  let visible = 0;
+
 
   return (
     <div className="ink-doc-sidebar" data-collapsed={collapsed || undefined}>
+      <Link to={blogRoute("/blog/topics")} className="ink-doc-back-top" onClick={onNavigate}><Icon icon="tabler:arrow-left" width={15} />返回全部专题</Link>
       <div className="ink-doc-sidebar-head">
         <h2 className="ink-doc-sidebar-title">{topic.name}</h2>
         {topic.desc && <p className="ink-doc-sidebar-desc">{topic.desc}</p>}
       </div>
 
-      <div className="ink-doc-sidebar-bar">
-        <span className="ink-doc-sidebar-count">
-          <Icon icon="tabler:file-text" width={16} />
-          专题目录 · {directory.sectionCount}章／{directory.total}篇
-        </span>
-        {onToggleCollapsed && (
-          <button
-            type="button"
-            className="ink-doc-sidebar-toggle"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? "展开专题目录" : "收起专题目录"}
-            aria-expanded={!collapsed}
-            title={collapsed ? "展开专题目录" : "收起专题目录"}
-          >
-            <Icon icon="tabler:chevrons-left" width={16} />
-          </button>
-        )}
-      </div>
-
+      <label className="ink-doc-search"><Icon icon="tabler:search" width={17} /><input ref={searchRef} type="search" aria-label="查找专题内容" placeholder="查找专题内容" value={query} onChange={event => setQuery(event.target.value)} />{query && <button type="button" aria-label="清空专题搜索" onClick={() => { setQuery(''); searchRef.current?.focus(); }}><Icon icon="tabler:x" width={14} /></button>}</label>
       {!collapsed && (
         <div className="ink-doc-sidebar-list" ref={listRef}>
           <ul className="ink-doc-nav">
@@ -177,16 +164,16 @@ export function TopicDocSidebar({
                 aria-current={overviewActive ? "page" : undefined}
                 onClick={onNavigate}
               >
-                <span className="ink-doc-nav-marker" aria-hidden="true" />
+                <span className="ink-doc-nav-marker" aria-hidden="true"><Icon icon="tabler:file-text" width={18} /></span>
                 <span className="ink-doc-nav-text">专题概述</span>
               </Link>
             </li>
           </ul>
 
-          {sections.map((section) => {
+          {shownSections.map((section) => {
             const showTitle = section.showTitle;
-            const number = showTitle ? ++visible : 0;
-            const open = isOpen(section.id);
+
+            const open = !!query.trim() || isOpen(section.id);
             return (
               <div className="ink-doc-nav-group" key={section.id}>
                 {showTitle && (
@@ -202,13 +189,7 @@ export function TopicDocSidebar({
                     aria-expanded={open}
                     onClick={() => toggleSection(section.id)}
                   >
-                    <span className="ink-doc-nav-section-num">
-                      {String(number).padStart(2, "0")}
-                    </span>
                     <span className="ink-doc-nav-section-name">{section.name}</span>
-                    <span className="ink-doc-nav-section-count">
-                      {section.posts.length}
-                    </span>
                     <Icon icon="tabler:chevron-down" width={15} className="ink-doc-nav-caret" />
                   </button>
                 )}
@@ -221,7 +202,7 @@ export function TopicDocSidebar({
             );
           })}
 
-          {unassigned.posts.length > 0 && (
+          {shownUnassigned.length > 0 && (
             <div className="ink-doc-nav-group">
               <div className="ink-doc-nav-section is-static">
                 <span className="ink-doc-nav-section-num">·</span>
@@ -230,10 +211,11 @@ export function TopicDocSidebar({
                   {unassigned.posts.length}
                 </span>
               </div>
-              <ul className="ink-doc-nav">{unassigned.posts.map(postEntry)}</ul>
+              <ul className="ink-doc-nav">{shownUnassigned.map(postEntry)}</ul>
             </div>
           )}
 
+          {query.trim() && !shownSections.length && !shownUnassigned.length && <p className="ink-doc-sidebar-empty" role="status">没有找到相关文章，试试其他关键词。</p>}
           {directory.total === 0 && (
             <p className="ink-doc-sidebar-empty">
               这个专题还没有公开文章。
@@ -242,15 +224,7 @@ export function TopicDocSidebar({
         </div>
       )}
 
-      {!collapsed && (
-        <Link
-          to={blogRoute("/blog/topics")}
-          className="ink-doc-sidebar-back"
-        >
-          <Icon icon="tabler:arrow-left" width={15} />
-          返回全部专题
-        </Link>
-      )}
+      {!collapsed && <div className="ink-doc-sidebar-foot">{directory.sectionCount}章 · {directory.total}篇文章</div>}
     </div>
   );
 }

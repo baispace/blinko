@@ -1,3 +1,4 @@
+import { publicBrandName } from "@shared/lib/publicBrand";
 import { BlogTracking } from "./BlogTracking";
 import {
   blogInternalPath,
@@ -796,7 +797,7 @@ export function RSSLink() {
 function Footer() {
   const { topics, profile, siteName, scrollRoot, publicSettings } = useBlogSite();
   // 品牌名跟工作区「站点名称」走，站点改名不用改代码
-  const brand = siteName || "Ink";
+  const brand = siteName || "Jomio · 拾成";
   // 页脚信息全部来自站点设置：备案号、版权署名、推广位。
   const footer = publicSettings?.footer;
   const timeZone = publicSettings?.timezone || "Asia/Shanghai";
@@ -809,7 +810,7 @@ function Footer() {
       <div className="ink-footer-grid ink-wrap">
         <div>
           <Link to={blogRoute("/blog")} className="ink-brand">
-            {brand}
+            <img src="/brand/mark.svg" alt="" width={18} height={28} />{brand}
           </Link>
           <p>
             {profile?.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
@@ -1371,7 +1372,7 @@ export function BlogShell() {
       posts: [],
       total: 0,
       nextCursor: null,
-      siteName: "Ink",
+      siteName: "Jomio · 拾成",
       publicSettings: null as any,
       // banner 池：没有服务端首屏数据时先空着，首页拿到数据后再渲染。
       banner: [],
@@ -1546,7 +1547,7 @@ export function BlogShell() {
       const page = isHome ? Math.max(1, Number(search.get("page")) || 1) : 1;
       const value = await api.blog.publicIndex.query({ page });
       if (request === seq.current) {
-        setData(value);
+        setData({ ...value, siteName: publicBrandName(value.siteName) });
         setError("");
       }
     } catch {
@@ -1557,7 +1558,7 @@ export function BlogShell() {
           posts: [],
           total: 0,
           nextCursor: null,
-          siteName: "Ink",
+          siteName: "Jomio · 拾成",
           publicSettings: null as any,
           banner: [],
           featured: [],
@@ -1606,7 +1607,8 @@ export function BlogShell() {
       ) {
         e.preventDefault();
         e.stopImmediatePropagation();
-        setSearch(true);
+        const field = document.querySelector<HTMLInputElement>('.ink-doc-side .ink-doc-search input');
+        if (field && field.offsetParent) field.focus(); else setSearch(true);
       }
       if (e.key === "Escape") setMenu(false);
     };
@@ -1686,9 +1688,7 @@ export function BlogShell() {
                 {siteLogo ? (
                   <img src={siteLogo} alt="" />
                 ) : (
-                  <span className="ink-brand-letter">
-                    {(data.siteName || "Ink").trim().charAt(0).toUpperCase()}
-                  </span>
+                  <img src="/brand/app-icon.svg" alt="Jomio · 拾成" />
                 )}
                 <Icon
                   icon="tabler:home"
@@ -1816,11 +1816,11 @@ export function BlogShell() {
               />
             </button>
             <button
-              className="ink-icon-btn"
+              className="ink-icon-btn ink-doc-header-search"
               aria-label="搜索文章与专题"
-              onClick={() => setSearch(true)}
+              onClick={() => { const field = document.querySelector<HTMLInputElement>('.ink-doc-side .ink-doc-search input'); if (field && field.offsetParent) field.focus(); else setSearch(true); }}
             >
-              <Icon icon="tabler:search" width={21} />
+              <Icon icon="tabler:search" width={21} /><span className="ink-doc-header-search-label">搜索当前专题…</span><kbd className="ink-doc-header-search-label">⌘K</kbd>
             </button>
             <button
               className="ink-icon-btn"

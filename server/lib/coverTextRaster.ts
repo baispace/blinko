@@ -88,7 +88,7 @@ export async function renderCoverLine(options: {
     weight = "black",
     tracking = 0,
     scaleX = 1,
-    lineHeightRatio = 1.22,
+    lineHeightRatio = 1.12,
   } = options;
   const font = loadFont(coverFontPath(weight));
   const upem = font.unitsPerEm;
@@ -103,11 +103,15 @@ export async function renderCoverLine(options: {
   for (const ch of text) {
     const glyph = font.charToGlyph(ch);
     if (!glyph) continue;
-    const glyphPath = glyph.getPath(pen, 0, size);
-    parts.push(glyphPath.toPathData(2));
+    const glyphPath = glyph.getPath(pen * 1000 / size, 0, 1000);
+    parts.push(glyphPath.commands.map(command => {
+      const c = command as unknown as Record<string, number | string>;
+      const values = c.type === "C" ? [c.x1,c.y1,c.x2,c.y2,c.x,c.y] : c.type === "Q" ? [c.x1,c.y1,c.x,c.y] : c.type === "Z" ? [] : [c.x,c.y];
+      return c.type + values.map(value => Number(value).toFixed(3)).join(" ");
+    }).join(" "));
     const box = glyphPath.getBoundingBox();
-    if (box.y1 < minY) minY = box.y1;
-    if (box.y2 > maxY) maxY = box.y2;
+    if (box.y1 * size / 1000 < minY) minY = box.y1 * size / 1000;
+    if (box.y2 * size / 1000 > maxY) maxY = box.y2 * size / 1000;
     pen += ((glyph.advanceWidth ?? upem) / upem) * size + tracking * size;
   }
   const advance = Math.max(0, pen - tracking * size);
@@ -125,7 +129,7 @@ export async function renderCoverLine(options: {
       height,
     };
   }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><g transform="translate(0 ${baseline}) scale(${scaleX} 1)"><path d="${parts.join(" ")}" fill="${color}"/></g></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><g transform="translate(0 ${baseline}) scale(${scaleX * size / 1000} ${size / 1000})">${parts.map(d => `<path d="${d}" fill="${color}"/>`).join("")}</g></svg>`;
   const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
   return { buffer, width, height };
 }

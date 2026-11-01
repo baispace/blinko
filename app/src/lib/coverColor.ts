@@ -116,6 +116,22 @@ function dominantColor(pixels: Uint8ClampedArray): RGB | null {
   };
 }
 
+/** Keep both primary and secondary white text readable in either theme. */
+export function paletteFromColor(color: RGB): CoverPalette {
+  const light = darkenForWhiteText(color, 7.1);
+  const dark = scale(light, 0.55);
+  return { base: toHex(color), light: toHex(light), lightDeep: toHex(scale(light, 0.8)), dark: toHex(dark), darkDeep: toHex(scale(dark, 0.78)) };
+}
+
+/** Random-looking per article, stable across refreshes and server/client rendering. */
+export function fallbackArticlePalette(id: string): CoverPalette {
+  const colors = ["#5269bd", "#8553a6", "#237f83", "#9a6547", "#4d729b", "#69794b", "#a34f72"];
+  let hash = 0;
+  for (const char of id) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
+  const hex = colors[hash % colors.length];
+  return paletteFromColor({ r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) });
+}
+
 /** 同一张封面只采一次，翻页回来不用重画。 */
 const cache = new Map<string, CoverPalette | null>();
 
@@ -156,15 +172,7 @@ export function sampleCoverPalette(src: string): Promise<CoverPalette | null> {
         const color = dominantColor(data);
         if (!color) return resolve(failed());
         // 白字压在上面对比度必须达标，按相对亮度压暗而不是按 HSL 明度。
-        const light = darkenForWhiteText(color, 4.5);
-        const dark = scale(light, 0.55);
-        const palette: CoverPalette = {
-          base: toHex(color),
-          light: toHex(light),
-          lightDeep: toHex(scale(light, 0.8)),
-          dark: toHex(dark),
-          darkDeep: toHex(scale(dark, 0.78)),
-        };
+        const palette = paletteFromColor(color);
         cache.set(src, palette);
         resolve(palette);
       } catch {

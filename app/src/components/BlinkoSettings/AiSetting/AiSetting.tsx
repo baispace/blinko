@@ -59,24 +59,7 @@ export default observer(function AiSetting({ section = 'models' }: { section?: '
       {section === 'models' && <>
       <CollapsibleCard icon="hugeicons:ai-magic" title={t('settings-ai-providers')}>
         <div className="space-y-4">
-          <div className="flex flex-wrap justify-between items-center gap-2"><p className="text-xs text-default-500">{text('选择服务商 → 填写模型 → 开始对话','Choose provider → enter model → start chatting')}</p>
-            <Button
-              size='md'
-              className='ml-auto'
-              color="primary"
-              startContent={<Icon icon="iconamoon:cloud-add-light" width="20" height="20" />}
-              onPress={() => {
-                RootStore.Get(DialogStore).setData({
-                  isOpen: true,
-                  size: '2xl',
-                  title: text('添加对话模型','Add chat model'),
-                  content: <QuickModelSetup />,
-                });
-              }}
-            >
-              {text('添加模型','Add model')}
-            </Button>
-          </div>
+          <p className="text-xs text-default-500">{text('选择服务商 → 刷新模型 → 按能力添加','Choose provider → refresh models → add by capability')}</p>
 
           {aiStore.aiProviders.value?.map(provider => (
             <ProviderCard key={provider.id} provider={provider as any} />
@@ -85,7 +68,6 @@ export default observer(function AiSetting({ section = 'models' }: { section?: '
       </CollapsibleCard>
 
       <DefaultModelsSection />
-      <details className="rounded-lg border border-default-200/70 p-4"><summary className="cursor-pointer text-xs text-default-500">{text('高级接入：Azure 或其他特殊配置','Advanced connections: Azure and other configurations')}</summary><Button className="mt-3" size="sm" variant="flat" onPress={()=>RootStore.Get(DialogStore).setData({isOpen:true,size:'2xl',title:t('add-provider'),content:<ProviderDialogContent />})}>{t('add-provider')}</Button></details>
       </>}
 
       {section === 'knowledge' && <EmbeddingSettingsSection />}

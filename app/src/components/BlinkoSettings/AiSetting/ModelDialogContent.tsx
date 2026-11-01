@@ -193,6 +193,8 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
     } else {
       await aiSettingStore.createModel.call(editingModel as any);
     }
+    // Refresh provider list and models after saving
+    await aiSettingStore.reloadProviders();
     RootStore.Get(DialogStore).close();
 
   };

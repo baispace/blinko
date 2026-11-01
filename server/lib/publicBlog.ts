@@ -1,3 +1,4 @@
+import { publicBrandName } from "../../shared/lib/publicBrand";
 import { readBlogSiteSettings } from "./blogSiteSettings";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { publicBlogOwner, sanitizeLinks } from "./blog";
@@ -383,9 +384,9 @@ export async function publicSiteName(db: PrismaClient): Promise<string> {
     });
     const value = (row?.config as { value?: unknown } | null)?.value;
     const name = typeof value === "string" ? value.trim() : "";
-    return name || "Ink";
+    return publicBrandName(name);
   } catch {
-    return "Ink";
+    return publicBrandName();
   }
 }
 
@@ -535,7 +536,7 @@ export async function publicIndex(
         }
       : null,
     topics,
-    siteName: settings.configured && settings.data.siteName ? settings.data.siteName : siteName,
+    siteName: publicBrandName(settings.configured && settings.data.siteName ? settings.data.siteName : siteName),
     publicSettings: {
       siteName: settings.data.siteName,
       tagline: settings.data.tagline,
@@ -999,5 +1000,5 @@ export function blogRSS(
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + toPublicPath("/blog/feed.xml", basePath))}" rel="self" type="application/rss+xml"/><title>${xml(site.profile?.displayName || "Ink")}</title><link>${xml(base + toPublicPath("/blog", basePath))}</link><description>${xml(site.profile?.tagline || "最新公开文章")}</description>${site.posts.length ? `<lastBuildDate>${new Date(Math.max(...site.posts.map((p) => p.updatedAt.getTime()))).toUTCString()}</lastBuildDate>` : ""}${site.posts.map((p) => `<item><title>${xml(p.title)}</title><link>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</link><guid>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</guid><pubDate>${p.createdAt.toUTCString()}</pubDate><description>${xml(p.excerpt)}</description></item>`).join("")}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + toPublicPath("/blog/feed.xml", basePath))}" rel="self" type="application/rss+xml"/><title>${xml(site.siteName || "Jomio · 拾成")}</title><link>${xml(base + toPublicPath("/blog", basePath))}</link><description>${xml(site.profile?.tagline || "最新公开文章")}</description>${site.posts.length ? `<lastBuildDate>${new Date(Math.max(...site.posts.map((p) => p.updatedAt.getTime()))).toUTCString()}</lastBuildDate>` : ""}${site.posts.map((p) => `<item><title>${xml(p.title)}</title><link>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</link><guid>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</guid><pubDate>${p.createdAt.toUTCString()}</pubDate><description>${xml(p.excerpt)}</description></item>`).join("")}</channel></rss>`;
 }

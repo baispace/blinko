@@ -359,7 +359,7 @@ export default function BlogHome() {
           头条 banner 把标题烤进了封面，画面上不再叠标题，所以这里用
           视觉隐藏的站点标题做页面主标题，兼顾 SEO 语义和无障碍。 */}
       <h1 className="sr-only">
-        思考与实践 · {site.profile?.displayName || "Ink"}
+        思考与实践 · {site.siteName || "Jomio · 拾成"}
       </h1>
       {/* 视图说明：告诉读者这一屏在看什么。精选视图有 banner 头条，不另起标题。 */}
       {introTitle ? (
@@ -500,7 +500,7 @@ export default function BlogHome() {
             ) : (
               !site.error && (
                 <div className="ink-empty">
-                  <h2>{site.profile?.displayName || "Ink"}</h2>
+                  <h2>{site.profile?.displayName || "Jomio · 拾成"}</h2>
                   <p>
                     {filter
                       ? "这个专题暂无公开文章。"

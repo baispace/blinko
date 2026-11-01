@@ -6,6 +6,7 @@ import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import type { EditorStore } from '../editorStore';
 import { IconPicker } from './IconPicker';
+import { BlogCoverGeneratorDialog } from '@/components/BlinkoBlog/BlogCoverGeneratorDialog';
 import { CoverPicker } from './CoverPicker';
 import { CoverAdjust } from './CoverAdjust';
 import { normalizeOffset, toObjectPosition } from './coverOffset';
@@ -62,6 +63,7 @@ export const NoteCoverHeader = observer(({ store, compact = false, readOnly = fa
   const { t } = useTranslation();
   const [iconOpen, setIconOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
+  const [aiCoverOpen, setAICoverOpen] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
@@ -227,12 +229,14 @@ export const NoteCoverHeader = observer(({ store, compact = false, readOnly = fa
         onClose={() => setIconOpen(false)}
         onSelect={(emoji) => { store.setIcon(emoji); persistMetadata({ icon: emoji }); }}
       />
+      {aiCoverOpen && !!store.noteId && <BlogCoverGeneratorDialog target={{type:'note',id:store.noteId,title:store.title || undefined,description:content ? content.slice(0,30000) : undefined}} initial={{coverMode:'full'}} onClose={() => setAICoverOpen(false)} onApply={result => { store.setCover(result.path); store.setCoverOffset({x:50,y:50}); persistMetadata({cover:result.path,coverOffset:store.coverOffset}); }} />}
       <CoverPicker
         isOpen={coverOpen}
         onClose={() => setCoverOpen(false)}
         cover={store.cover}
         onPick={(next) => { store.setCover(next); persistMetadata({ cover: next }); }}
         onRemove={() => { store.setCover(undefined); persistMetadata({ cover: null }); }}
+        onAI={store.noteId ? () => setAICoverOpen(true) : undefined}
         onUpload={async (file) => await store.uploadCoverFile(file)}
       />
     </>

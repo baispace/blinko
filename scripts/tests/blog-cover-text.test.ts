@@ -172,14 +172,17 @@ describe("封面文字排版：按容器实际尺寸", () => {
     expect(withBadge.top).toBeGreaterThan(without.top);
   });
 
-  test("Banner 的标题贴左下角，并给底部状态行让出位置", () => {
-    // 参照稿的版式：标题贴左下角，下面一行是状态角标（★ 全站推荐 + 圆点），
-    // 轮播箭头在右下角 —— 标题与状态行各占一条，谁也不压谁。
+  test("Banner 的标题落在可用带里，并给底部状态行让出位置", () => {
+    /*
+     * 参照稿的版式：标题占左侧可用带，下面一行是状态角标（★ 全站推荐 + 圆点），
+     * 轮播箭头在右下角 —— 标题与状态行各占一条，谁也不压谁。
+     */
     const rules = coverSceneRules.banner;
     const reserve = Math.max(
       Math.round(248 * rules.footerReserveRatio),
       rules.footerReserveMinPx,
     );
+    const band = 248 - reserve;
     const layout = computeCoverTextLayout({
       containerWidth: 720,
       containerHeight: 248,
@@ -187,18 +190,22 @@ describe("封面文字排版：按容器实际尺寸", () => {
       title: "召回三段式改造",
       subtitle: "先校准分数再融合",
     });
-    // 文字块的下沿 = 状态行预留带的上沿
-    expect(layout.top + layout.blockHeight).toBe(248 - reserve);
+    // 文字块整体落在可用带里：上沿不越界，下沿留给状态行。
+    expect(layout.top).toBeGreaterThanOrEqual(0);
+    expect(layout.top + layout.blockHeight).toBeLessThanOrEqual(band);
+    // 标题在可用带里垂直居中 —— 底部状态行单独预留，不跟标题抢位置。
+    expect(Math.abs(layout.top + layout.blockHeight / 2 - band / 2)).toBeLessThanOrEqual(1);
     // 标题不落在状态行那条带子里
     expect(layout.top + layout.blockHeight).toBeLessThanOrEqual(248 - 34);
-    // 长短标题共用同一条下沿 —— 换一篇 banner，版式不跳
+    // 长短标题都待在同一条带子里 —— 换一篇 banner，版式不跳
     const short = computeCoverTextLayout({
       containerWidth: 720,
       containerHeight: 248,
       placement: "banner",
       title: "来了看看",
     });
-    expect(short.top + short.blockHeight).toBe(layout.top + layout.blockHeight);
+    expect(short.top).toBeGreaterThanOrEqual(0);
+    expect(short.top + short.blockHeight).toBeLessThanOrEqual(band);
   });
 
   test("宽扁容器 + 置顶角标：标题不能顶出画布被裁掉", () => {
@@ -320,16 +327,21 @@ describe("封面配置读写", () => {
   });
 
   test("主题色支持预设名与自定义 hex", () => {
-    expect(coverPaletteColor("violet")).toBe("#4930e8");
+    expect(coverPaletteColor("violet")).toBe("#6b4ce6");
     expect(coverPaletteColor("#AABBCC")).toBe("#aabbcc");
-    expect(coverPaletteColor("不存在的颜色")).toBe("#4930e8");
+    expect(coverPaletteColor("不存在的颜色")).toBe("#6b4ce6");
   });
 
   test("遮罩渐变随文字对齐方向变化", () => {
     const left = coverScrimCss("violet", "left");
     const right = coverScrimCss("violet", "right");
     expect(left).not.toBe(right);
-    expect(left).toContain("rgba(73,48,232");
+    /*
+     * 左对齐时文字压在整幅底图上，用中性黑压暗，不给底图染色；
+     * 其余对齐压的是程序铺的主题色背景，用主题色遮罩才不违和。
+     */
+    expect(left).toContain("rgba(0,0,0,");
+    expect(right).toContain("rgba(107,76,230,");
   });
 
   test("中文断行工具：没有合适断点时按字符均分，不丢字", () => {
@@ -349,7 +361,10 @@ describe("标题安全区与整幅铺底", () => {
       for (const align of ["left", "right", "center"] as const) {
         const layout = computeCoverTextLayout({ containerWidth: width, containerHeight: height,
           placement, title: "推荐策略调优", subtitle: "持续验证真实业务收益", align, sizeScale: 1.2 });
-        // 插画不再切独立槽位：底图整幅铺满，标题压在底图左侧的留白上。
+        /*
+         * 插画区整幅铺满 —— 模型只出一枚图标，由程序摆进方砖，
+         * 不再为了避开标题列切掉底图的一部分。
+         */
         expect(layout.artwork).toEqual({ left: 0, top: 0, width, height });
         // 文字块不出画布。
         expect(layout.top).toBeGreaterThanOrEqual(0);

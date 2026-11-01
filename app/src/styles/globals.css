@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
+/* Dependencies are excluded from automatic detection; HeroUI lives in app/node_modules. */
+@source "../../node_modules/@heroui/theme/dist";
 
 /* Shared keyboard feedback; individual components can provide a stronger ring. */
 :where(button, a, input, textarea, select, [role="button"]):focus-visible {

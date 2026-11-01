@@ -52,7 +52,7 @@ export function BlogMetadata() {
           "og:url": seo.canonical,
           "og:type": seo.type,
           "og:locale": "zh_CN",
-          "og:site_name": seo.siteName || "Ink",
+          "og:site_name": seo.siteName || "Jomio · 拾成",
           "og:image": seo.image,
           "og:image:alt": seo.title,
           ...(seo.published ? { "article:published_time": seo.published } : {}),

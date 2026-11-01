@@ -171,7 +171,9 @@ export function BlogCoverGeneratorDialog({
       setOverlay(target?.type !== 'note');
       setStep('result');
       setNotice(
-        list.length > 1
+        result.generationMode === 'standard'
+          ? '模型图案未符合封面要求，已提供同主题的标准图标封面；可直接使用，也可再次尝试 AI。'
+          : list.length > 1
           ? `出了 ${list.length} 张，选一张用；也可以先看看各场景的效果。`
           : '封面已生成，可以先看看各场景的效果。',
       );
@@ -283,7 +285,7 @@ export function BlogCoverGeneratorDialog({
                   {options.modelKey && options.modelKey.trim().toLowerCase() !== 'image-01' && (
                     <p>未找到可用的 image-01，暂用已配置模型；可到 AI 设置中添加。</p>
                   )}
-                  <p>每次生成一张图案，自动处理透明底或纯白底。复杂背景会提示重试，不自动重复生图。</p>{!options.models.some(model => model.available) && <p className="text-warning-600">当前没有可用的生图模型。点击下方「配置生图模型」，配置完成后返回此窗口即可刷新。</p>}
+                  <p>每次生成一张图案，自动分离专用色底并检查图标完整性。图案不合格时提供并标注标准图标封面，不自动重复调用 AI。</p>{!options.models.some(model => model.available) && <p className="text-warning-600">当前没有可用的生图模型。点击下方「配置生图模型」，配置完成后返回此窗口即可刷新。</p>}
                 </div>
               )}
 

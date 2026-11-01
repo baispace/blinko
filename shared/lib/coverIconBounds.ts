@@ -1,5 +1,5 @@
 /** Ignore disconnected corner noise when measuring a generated icon's optical bounds. */
-export function coverIconBounds(data: Uint8Array | Uint8ClampedArray, width: number, height: number) {
+export function coverIconBounds(data: ArrayLike<number>, width: number, height: number) {
   const seen=new Uint8Array(width*height), queue=new Int32Array(width*height);
   const parts: {left:number;top:number;right:number;bottom:number;count:number}[]=[];
   for(let start=0;start<width*height;start++) {

@@ -306,7 +306,7 @@ export async function composeTileCoverImage(opts: {
   // 2. 图标砖与砖内的图标（压在文字上方）。
   const inset = opts.tileAsset ? 0 : tile.inset;
   const inner = Math.max(1, tile.size - inset * 2);
-  const normalizedIcon = await isIsolatedAsset(opts.icon) ? await prepareCoverIllustration(opts.icon) : opts.icon;
+  const normalizedIcon = await isIsolatedAsset(opts.icon) ? await prepareCoverIllustration(opts.icon, opts.tileAsset ? {kind:"tile"} : {}) : opts.icon;
   const art = await sharp(normalizedIcon)
     .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()

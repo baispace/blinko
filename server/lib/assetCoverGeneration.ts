@@ -1,4 +1,4 @@
-import { prepareCoverIllustration, illustrationBase } from "./coverIllustration";
+import { prepareGeneratedCover, illustrationBase } from "./coverIllustration";
 import { coverGenerationJobs as pending } from "./coverGenerationLock";
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
@@ -93,7 +93,7 @@ export async function assetCoverOptions(
     artPlan: coverArtPlan(context.title, context.content),
     prompt: coverPromptForModel(preferred, context.title, context.content),
     models: models
-      .filter((model) => model.capabilities?.imageGeneration)
+      .filter((model) => (model.capabilities as Record<string,unknown> | null)?.imageGeneration)
       .map((model) => ({
         id: model.id,
         title: model.title,
@@ -162,7 +162,7 @@ export async function generateAssetCover(
       });
 
     const artPlan = coverArtPlan(context.title, context.content);
-    const icon = await prepareCoverIllustration(raw);
+    const {image:icon, generationMode} = await prepareGeneratedCover(raw, artPlan);
     const buffer = await illustrationBase(icon, artPlan.overlayPalette);
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
     const image = await upload({
@@ -176,6 +176,7 @@ export async function generateAssetCover(
           sourceVersion: context.version,
           modelId: model.id,
           artVersion: COVER_ART_VERSION,
+          generationMode,
           composition: null,
           compositionAttempts: 1,
         },
@@ -188,6 +189,7 @@ export async function generateAssetCover(
       id: attachment.id,
       path: attachment.path,
       coverPalette: artPlan.overlayPalette,
+      generationMode,
       candidates: [{ id: attachment.id, path: attachment.path }],
     };
   } catch (error) {

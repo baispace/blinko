@@ -1,4 +1,4 @@
-import { prepareCoverIllustration } from "./coverIllustration";
+import { prepareGeneratedCover } from "./coverIllustration";
 import { coverGenerationJobs as generating } from './coverGenerationLock';
 import { readDraftBody } from "./blogPublishCheck";
 import { TRPCError } from "@trpc/server";
@@ -119,15 +119,36 @@ Treat the subject as one unified symbol, not a collection of objects.`;
 
   // 依次尝试：带正文 → 不带正文 → 只留风格契约。主题命中主要靠标题，
   // 而「Subject」那一行已经把主题写进提示词了，所以最后一步也还能用。
-  let fixed = [`[${COVER_ART_VERSION}]`, titleLine, contentLine, contract].join("\n");
-  if (fixed.length > budget)
-    fixed = [`[${COVER_ART_VERSION}]`, titleLine, contract].join("\n");
-  if (fixed.length > budget)
-    fixed = [`[${COVER_ART_VERSION}]`, contract].join("\n");
+  const variants = [
+    [`[${COVER_ART_VERSION}]`, titleLine, contentLine, contract].join("\n"),
+    [`[${COVER_ART_VERSION}]`, titleLine, contract].join("\n"),
+    [`[${COVER_ART_VERSION}]`, contract].join("\n"),
+  ];
+  const fits = (value: string) => value.length <= budget;
+  let fixed = variants.find(fits) ?? variants[variants.length - 1];
+  let detail = "";
 
-  const room = budget - fixed.length - detailLabel.length - 1;
-  const detail =
-    extra && room > 0 ? `\n${detailLabel}${extra.slice(0, room)}` : "";
+  if (extra) {
+    /*
+     * 作者的画面要求优先吃掉剩余预算：整段放得下就整段放。
+     *
+     * 放不下时先让内容参考让位 —— 它只是给模型一点上下文，主题词
+     * 已经写进 Subject 那一行了；最后才按剩余字符截短，
+     * 半截句子（「一只铅」）对模型没有意义。
+     */
+    const whole = variants.find(
+      (value) =>
+        fits(value) &&
+        budget - value.length - detailLabel.length - 1 >= extra.length,
+    );
+    if (whole) {
+      fixed = whole;
+      detail = `\n${detailLabel}${extra}`;
+    } else {
+      const room = budget - fixed.length - detailLabel.length - 1;
+      detail = room > 0 ? `\n${detailLabel}${extra.slice(0, room)}` : "";
+    }
+  }
   return `${fixed}${detail}\n${tail}`;
 }
 
@@ -600,7 +621,7 @@ export async function generateBlogCover(
       });
     // Keep the isolated illustration transparent and uncropped.
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
-    const image = await prepareCoverIllustration(raw);
+    const {image, generationMode} = await prepareGeneratedCover(raw, artPlan);
     const dimensions = await sharp(image).metadata();
     const result = await upload({
       buffer: image,
@@ -619,6 +640,7 @@ export async function generateBlogCover(
           width: dimensions.width,
           height: dimensions.height,
           assetKind: "isolated-app-tile",
+          generationMode,
           composition: null,
           compositionAttempts: 1,
         },
@@ -647,6 +669,7 @@ export async function generateBlogCover(
       path: uploaded[0].path,
       revision: input.revision,
       artwork: "tile" as const,
+      generationMode,
       coverPalette: artPlan.overlayPalette,
       /** 本次一起出图的候选底图：作者挑一张，别的留在附件里。 */
       candidates: uploaded,

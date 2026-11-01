@@ -785,7 +785,8 @@ export function computeCoverTileLayout(input: {
 }): CoverTileLayout {
   const w = Math.max(1, Math.round(input.containerWidth));
   const h = Math.max(1, Math.round(input.containerHeight));
-  const size = Math.round(Math.min(h * 0.60, w * 0.29));
+  const widthCap = w / h < 1.8 ? 0.60 : 0.29;
+  const size = Math.round(Math.min(h * 0.60, w * widthCap));
   return {
     size,
     left: Math.round((w - size) / 2),

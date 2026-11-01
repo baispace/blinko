@@ -46,13 +46,14 @@ describe("image adapter and crop", () => {
     expect(prompt).toContain("saturated solid color");
     expect(prompt).toContain("禁止：低饱和");
     /*
-     * 第三版契约：模型只出一枚可分离的图标砖（无字、居中、留白充足）。
+     * 第四版契约：模型只出一枚正视图的图标砖（无字、居中、留白充足），
+     * 背景用洋红色专色，方便后处理稳定抠出。
      * 背景、大字、方块、位置都由程序排 —— 模型画得越少，波动越小。
      */
-    expect(prompt).toContain("Clean 3D app-icon illustration");
+    expect(prompt).toContain("Digital app-icon graphic");
     expect(prompt).toContain("ONE rounded-square app icon tile");
     expect(prompt).toContain("exactly one isolated app-icon symbol");
-    expect(prompt).toContain("transparent or pure white background");
+    expect(prompt).toContain("solid magenta (#FF00FF) background");
     expect(prompt).toContain("exactly one glyph");
   });
   test("all model briefs retain wordless and crop constraints within provider limit", () => {
@@ -68,7 +69,7 @@ describe("image adapter and crop", () => {
       expect(request.body).not.toHaveProperty("subject_reference");
       expect(request.body.n).toBe(1);
       expect(standard).toContain("ONE rounded-square app icon tile");
-      expect(standard).toContain("transparent or pure white");
+      expect(standard).toContain("solid magenta (#FF00FF)");
       expect(standard).toContain("exactly one glyph");
       expect(standard).toContain("no supporting pieces");
       expect(standard).toContain("No text");
@@ -87,7 +88,7 @@ describe("image adapter and crop", () => {
     expect(worst).toContain("禁止：低饱和粉紫摄影棚。");
     expect(worst).toContain("No text, letters, numbers, logos");
     // 空间不够时先牺牲作者的画面要求，风格契约不能丢。
-    expect(worst).toContain("Clean 3D app-icon illustration");
+    expect(worst).toContain("Digital app-icon graphic");
   });
   test("画面要求优先吃掉剩余预算，硬约束永远完整", () => {
     const roomy = coverPrompt("短标题", "短正文", "ink", "一只铅笔和三个卡片");

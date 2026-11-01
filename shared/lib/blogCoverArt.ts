@@ -19,7 +19,7 @@
  * 版式（图标砖、背景大字、各场景大小位置）由 shared/lib/blogCoverText.ts 负责，
  * 这里只管画面的「风格层」，两者互不越界。
  */
-export const COVER_ART_VERSION = "isolated-icon-v3";
+export const COVER_ART_VERSION = "isolated-icon-v4";
 export type CoverArtStyle = "ink";
 
 /**
@@ -28,20 +28,20 @@ export type CoverArtStyle = "ink";
  * 模型只负责可分离的图形素材，不负责封面排版。
  */
 export const COVER_ART_TREATMENT =
-  "Clean 3D app-icon illustration. One bold, simple filled symbol with softly beveled edges and shallow extruded depth, almost front-facing. Glossy ceramic finish, crisp silhouette, restrained soft light. No thin outlines, no detailed pages, no realistic objects. Place the symbol on one rounded-square ceramic app tile with a subtle rim and shallow depth. Keep the symbol large and bold, about 65% of the tile.";
+  "Digital app-icon graphic with softly embossed highlights. STRICT ORTHOGRAPHIC FRONT VIEW, face parallel to canvas, upright, zero rotation, no tilted perspective. One ivory rounded-square tile, one bold colored symbol DIRECTLY on its face, occupying 65% of tile. Shallow beveled rim, smooth button surface, subtle inner shading only. No nested tile, second slab, outer frame, pedestal, realistic scene, or cast shadow.";
 
 /**
  * 构图契约必须在提示词的开头和结尾各出现一次。
  * 生图结果要能被后处理稳定抠出，因此只允许一枚居中图形和透明/纯白背景。
  */
 export const COVER_ART_COMPOSITION =
-  "Layout rule: create exactly one isolated app-icon symbol on a rounded-square tile, centered and fully visible, occupying about 58% of the canvas. Leave at least 18% empty margin on every side. Use a transparent or pure white background.";
+  "Layout rule: FRONT-FACING square app icon, no scene. Create exactly one isolated app-icon symbol on a rounded-square tile, centered and fully visible, occupying about 68% of the canvas. Leave at least 14% empty margin on every side. Use a perfectly flat solid magenta (#FF00FF) background for removal, no gradients or shadows outside the tile. Never white background.";
 
 /**
  * 收尾时的构图重申。
  */
 export const COVER_ART_COMPOSITION_REMINDER =
-  "Layout rule again: exactly one centered glyph, fully visible with generous empty margins, on a transparent or pure white background.";
+  "Layout rule again: exactly one centered glyph, fully visible with generous empty margins, on flat solid magenta (#FF00FF), no white background.";
 
 const subjects = [
   {
@@ -49,7 +49,7 @@ const subjects = [
     label: "搜索与推荐",
     words: /推荐|召回|排序|搜索|retrieval|ranking|search/gi,
     subject: "one magnifying glass icon with a circular lens and angled handle",
-    palette: "royal blue",
+    palette: "emerald green",
   },
   {
     key: "review",

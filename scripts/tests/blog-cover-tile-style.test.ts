@@ -287,3 +287,10 @@ test('explicit tile asset stays centered even when its pixels are opaque', async
   expect(at(300,107)[0]).toBeGreaterThan(200);
   expect(at(10,10)[2]).toBeGreaterThan(at(10,10)[0]+30);
 });
+
+test("narrow mobile thumbnails keep a readable icon instead of inheriting the wide-banner width cap", () => {
+ const tile=computeCoverTileLayout({containerWidth:88,containerHeight:66});
+ expect(tile.size).toBeGreaterThanOrEqual(36);
+ expect(tile.size).toBeLessThanOrEqual(44);
+ expect(tile.left).toBe(Math.round((88-tile.size)/2));
+});

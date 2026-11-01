@@ -1,4 +1,4 @@
-import { prepareCoverIllustration, illustrationBase } from "./coverIllustration";
+import { prepareGeneratedCover, illustrationBase } from "./coverIllustration";
 import { coverGenerationJobs as pending } from './coverGenerationLock';
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
@@ -78,10 +78,8 @@ export async function generateTopicCover(
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
-    const buffer = await illustrationBase(
-      await prepareCoverIllustration(raw),
-      "violet",
-    );
+    const {image:icon,generationMode} = await prepareGeneratedCover(raw,coverArtPlan(input.name,context));
+    const buffer = await illustrationBase(icon,"violet");
     // Recheck after a slow model call; a deleted or transferred topic cannot be applied.
     const current = await db.blogTopic.findFirst({
       where: { id: input.topicId, accountId },
@@ -103,6 +101,7 @@ export async function generateTopicCover(
           topicId: topic.id,
           modelId: model.id,
           artVersion: COVER_ART_VERSION,
+          generationMode,
           artPlan: coverArtPlan(input.name, context),
           prompt,
           width: 1600,
@@ -113,7 +112,7 @@ export async function generateTopicCover(
     const attachment = await db.attachments.findFirstOrThrow({
       where: { path: image.filePath, accountId },
     });
-    return { id: attachment.id, path: attachment.path, name: attachment.name };
+    return { id: attachment.id, path: attachment.path, name: attachment.name, generationMode };
   } catch (error) {
     if (error instanceof TRPCError) throw error;
     throw new TRPCError({

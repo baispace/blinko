@@ -56,9 +56,9 @@ describe("cover art direction", () => {
        * 第二版契约：模型只画一枚单色 2D 线稿图标。
        * 背景、大字、方块、位置全部由程序排 —— 模型画的越多，波动越大。
        */
-      expect(plan.treatment).toContain("Clean 3D app-icon illustration");
+      expect(plan.treatment).toContain("Digital app-icon graphic");
       expect(plan.composition).toContain("isolated app-icon symbol");
-      expect(plan.composition).toContain("transparent or pure white");
+      expect(plan.composition).toContain("#FF00FF");
       expect(plan.subject).toContain("one ");
     }
   });
@@ -85,7 +85,7 @@ describe("cover art direction", () => {
     expect(prompt).toContain("saturated solid color");
     expect(prompt).toContain("exactly one glyph");
     expect(prompt).toContain("no supporting pieces");
-    expect(prompt).toContain("3D app-icon illustration");
+    expect(prompt).toContain("Digital app-icon graphic");
   });
 
   test("standard model is preferred without mutating config or reordering other models", () => {

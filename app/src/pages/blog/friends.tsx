@@ -154,7 +154,7 @@ export default function BlogFriends() {
     publicSettings?.targetOrigin ||
     profile?.homepage ||
     publicSiteOrigin() + publicBasePath();
-  const siteIntro = publicSettings?.tagline || profile?.tagline || "";
+  const siteIntro = publicSettings?.tagline || "";
   const siteIcon = publicSettings?.iconUrl || "";
   const applyNote = publicSettings?.friendApplyNote || DEFAULT_APPLY_NOTE;
 

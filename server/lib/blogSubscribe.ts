@@ -72,12 +72,12 @@ export async function publicSubscribe(
   const rssCustom = sub.rssUrl.trim();
 
   // 介绍文案：优先用订阅页自己配的，其次是站点的公开介绍（spaceIntro），
-  // 再退到公开资料里的标语。绝不靠按空行切分个人简介来猜段落 ——
+  // 再退到站点标语。绝不靠按空行切分个人简介来猜段落 ——
   // 那会把作者随手分的段当成有意义的结构。
   const introText = (
     sub.intro.trim() ||
     (profile?.spaceIntro ?? "").trim() ||
-    (profile?.tagline ?? "").trim()
+    settings.data.tagline.trim()
   ).trim();
 
   const directions = sub.directions

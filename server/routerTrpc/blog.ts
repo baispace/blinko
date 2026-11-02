@@ -807,7 +807,8 @@ export const blogRouter = router({
     .input(
       z.object({
         displayName: z.string().max(80),
-        tagline: z.string().max(160),
+        // 标语已收口到站点设置；这里保留为可选，老调用方传了也不影响生效。
+        tagline: z.string().max(160).optional(),
         bio: z.string().max(5000),
         avatarUrl: z.string().max(500),
         homepage: z.string().max(300),
@@ -1158,9 +1159,11 @@ export const blogRouter = router({
         orderBy: { updatedAt: "desc" },
       });
       if (!profile) return null;
+      // 标语只有一个来源：站点设置里的站点标语。
+      const settings = await readBlogSiteSettings(prisma, accountId);
       return {
         displayName: profile.displayName,
-        tagline: profile.tagline,
+        tagline: settings.data.tagline,
         bio: profile.bio,
         avatarUrl: profile.avatarUrl,
         homepage: profile.homepage,

@@ -152,9 +152,9 @@ export function fixedPageFacts(
   site: Awaited<ReturnType<typeof publicIndex>>,
   key: "home" | "topics" | "about" | "friends" | "moments" | "subscribe" | "stats",
 ) {
-  const tagline = publicText(
-    site.profile?.tagline || "记录思考与实践，让经验成为有脉络的内容。",
-  );
+  // 标语只有一个来源：站点设置里的站点标语。作者资料未公开时也一样用，
+  // 不能因为「作者没公开」就让搜索结果里的描述变成空话。
+  const tagline = publicText(site.profile.tagline);
   if (key === "home")
     return {
       path: "/blog",
@@ -209,7 +209,7 @@ export function fixedPageFacts(
   return {
     path: "/blog/about",
     label: "关于页",
-    fallbackTitle: site.profile?.displayName
+    fallbackTitle: site.profile.published
       ? `关于 ${site.profile.displayName}`
       : "关于作者",
     fallbackDescription: publicText(site.profile?.bio || tagline).slice(0, 180),
@@ -277,9 +277,7 @@ export async function resolveBlogSEO(
   const site = await publicIndex(db, { accountId, page });
   const { owner, settings, siteName, rules } = await siteSeoRules(db, accountId);
   const name = site.siteName || "Jomio · 拾成";
-  const tagline = publicText(
-    site.profile?.tagline || "记录思考与实践，让经验成为有脉络的内容。",
-  );
+  const tagline = publicText(site.profile.tagline);
   const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
   // 公开站基础路径：应用内部固定在 /blog，公开域名可以把它映射到别的位置。
   // 后台「域名与部署」里填的优先，环境变量只在后台留空时兜底。
@@ -416,7 +414,9 @@ export async function resolveBlogSEO(
     }));
     seo.structured = { "@type": "CollectionPage", name: seo.title };
   } else if (canonicalPath === "/blog/about") {
-    if (!site.profile) missing();
+    // 作者资料没公开时，关于页整页不可用 —— 回退的站点名只是署名，
+    // 不能当成「作者公开了个人资料」。
+    if (!site.profile.published) missing();
     else {
       const bio = publicText(site.profile.bio || tagline);
       const facts = fixedPageFacts(site, "about");
@@ -582,7 +582,8 @@ export async function resolveBlogSEO(
         fallbackDescription: article.excerpt || article.title,
       });
       seo.type = "article";
-      seo.author = site.profile?.displayName || undefined;
+      // 作者没公开资料时不写 author 标签：署名回退的是站点名，不是作者本人。
+      seo.author = site.profile.published ? site.profile.displayName : undefined;
       seo.published = article.createdAt.toISOString();
       seo.modified = article.updatedAt.toISOString();
       seo.text = publicText(article.content);

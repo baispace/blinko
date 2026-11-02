@@ -35,7 +35,7 @@ const tabs = [
 ] as const;
 
 const TAB_HINT: Record<string, string> = {
-  basic: "公开博客与私有工作区分别设置：名称、标语与站点图标只对外展示。",
+  basic: "公开博客的站点标识：品牌名、标语与站点图标只对外展示，不影响工作区。",
   seo: "公开页面的默认标题模板、描述、分享图与搜索引擎收录开关。文章自动继承，也可在底层单独覆盖。",
   subscribe: "订阅页要用的渠道与文案：微信公众号、RSS、站点介绍与订阅说明。",
   footer: "页脚要挂的备案号、版权署名，以及带生效区间的推广位。",
@@ -295,8 +295,16 @@ export function BlogSiteSettingsPanel({
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Card className="rounded-xl border border-default-200 shadow-none">
             <CardBody className="space-y-4">
-              {field("siteName", "公开站点名称")}
-              {field("tagline", "站点标语")}
+              {field(
+                "siteName",
+                "站点品牌名",
+                "显示在页脚、搜索结果、RSS 与分享卡片里。留空则继承工作区的站点名称。",
+              )}
+              {field(
+                "tagline",
+                "站点标语",
+                "这个站点的一句话介绍：显示在页脚、关于页、动态页、友链页与搜索结果描述里。全站只有这一处标语。",
+              )}
               {field(
                 "iconUrl",
                 "站点图标地址",
@@ -368,7 +376,7 @@ export function BlogSiteSettingsPanel({
               <h2 className="text-lg font-bold">{data.siteName || "Jomio"}</h2>
               <p className="text-sm text-default-600">{data.tagline}</p>
               <small className="text-xs text-default-500">
-                作者头像、简介与其他站点地址请在「公开作者」中设置。
+                作者署名、头像、简介与其他站点地址请在「公开作者」中设置。
               </small>
             </CardBody>
           </Card>

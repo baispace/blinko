@@ -500,7 +500,7 @@ export default function BlogHome() {
             ) : (
               !site.error && (
                 <div className="ink-empty">
-                  <h2>{site.profile?.displayName || "Jomio · 拾成"}</h2>
+                  <h2>{site.profile?.displayName || site.siteName}</h2>
                   <p>
                     {filter
                       ? "这个专题暂无公开文章。"

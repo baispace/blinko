@@ -23,7 +23,7 @@ import "@/components/BlinkoBlog/public/moments.css";
  * 筛选与月份同步到 URL：刷新、前进、后退都能恢复原来的条件。
  */
 export default function BlogMoments() {
-  const { profile, siteName } = useBlogSite();
+  const { profile, siteName, publicSettings } = useBlogSite();
   useBlogTitle("动态");
   const [params, setParams] = useSearchParams();
   const [months, setMonths] = useState<{ key: string; count: number }[]>([]);
@@ -82,7 +82,7 @@ export default function BlogMoments() {
                 {profile?.displayName || siteName || "作者"}
               </h1>
               <p className="ink-moments-author-bio">
-                {profile?.tagline || "记录当下，也记录生活。"}
+                {publicSettings?.tagline || "记录当下，也记录生活。"}
               </p>
             </div>
           </div>

@@ -148,7 +148,12 @@ export async function upsertBlogProfile(
   accountId: number,
   input: {
     displayName: string;
-    tagline: string;
+    /**
+     * 标语已收口到站点设置（公开博客的「站点标语」）。
+     * 这里保留为可选：老调用方还在传，不传就保持原值不动 ——
+     * 迁移脚本执行前，库里那一份标语不能被误清空。
+     */
+    tagline?: string;
     bio: string;
     avatarUrl: string;
     homepage: string;
@@ -202,11 +207,14 @@ export async function upsertBlogProfile(
   }
   const data = {
     displayName: input.displayName.trim().slice(0, 80),
-    tagline: input.tagline.trim().slice(0, 160),
     bio: input.bio.trim().slice(0, 5000),
     avatarUrl: input.avatarUrl.trim().slice(0, 500),
     homepage: input.homepage.trim().slice(0, 300),
     links: links as unknown as Prisma.InputJsonValue,
+    // 标语不再由作者资料维护。没传就保持原值。
+    ...(input.tagline === undefined
+      ? {}
+      : { tagline: input.tagline.trim().slice(0, 160) }),
     // 关于页的三项配置。没传就保持原值 —— 老调用方只保存基本资料时不会误清空。
     ...(input.spaceIntro === undefined
       ? {}

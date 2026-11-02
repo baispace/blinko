@@ -127,7 +127,9 @@ export default function BlogAbout() {
       </main>
     );
 
-  if (!profile)
+  // 作者资料没公开时整页不可用：署名回退的是站点名，不是作者本人，
+  // 这页讲的是「作者」，拿站点名顶替没有意义。
+  if (!profile?.published)
     return (
       <main className="ink-about">
         <div className="ink-about-inner">
@@ -157,8 +159,8 @@ export default function BlogAbout() {
           <div className="ink-about-hero-copy">
             <span className="ink-about-hero-badge">关于我</span>
             <h1 className="ink-about-hero-name">{name}</h1>
-            {profile.tagline && (
-              <h2 className="ink-about-hero-tagline">{profile.tagline}</h2>
+            {publicSettings?.tagline && (
+              <h2 className="ink-about-hero-tagline">{publicSettings.tagline}</h2>
             )}
             {profile.bio && (
               <p className="ink-about-hero-bio">{profile.bio}</p>

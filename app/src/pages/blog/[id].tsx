@@ -319,7 +319,7 @@ export default function PublishedNotePage() {
       <div
         className={
           "ink-reading ink-wrap " +
-          (!headings.length && !site.profile ? "ink-reading-wide" : "")
+          (!headings.length && !site.profile?.published ? "ink-reading-wide" : "")
         }
       >
         <article className="ink-panel">

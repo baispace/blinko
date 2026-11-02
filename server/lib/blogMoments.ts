@@ -346,11 +346,9 @@ export async function momentsRSS(
   basePath: string = "/blog",
 ) {
   const owner = await publicBlogOwner(db, accountId);
-  const [profile, moments] = await Promise.all([
-    db.blogProfile.findFirst({
-      where: { accountId: owner, isPublished: true },
-      select: { displayName: true, tagline: true },
-    }),
+  const [settings, moments] = await Promise.all([
+    // 标语只有一个来源：站点设置里的站点标语。
+    readBlogSiteSettings(db, owner),
     db.notes.findMany({
       where: publicMomentWhere(owner),
       orderBy: [{ momentPublishedAt: "desc" }, { id: "desc" }],
@@ -374,7 +372,7 @@ export async function momentsRSS(
         Math.max(...moments.map((m) => m.momentPublishedAt!.getTime())),
       ).toUTCString()
     : "";
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + feedPath)}" rel="self" type="application/rss+xml"/><title>${xml("Jomio · 拾成")} · 动态</title><link>${xml(base + listPath)}</link><description>${xml(profile?.tagline || "公开动态")}</description>${lastBuildDate ? `<lastBuildDate>${lastBuildDate}</lastBuildDate>` : ""}${items}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + feedPath)}" rel="self" type="application/rss+xml"/><title>${xml("Jomio · 拾成")} · 动态</title><link>${xml(base + listPath)}</link><description>${xml(settings.data.tagline || "公开动态")}</description>${lastBuildDate ? `<lastBuildDate>${lastBuildDate}</lastBuildDate>` : ""}${items}</channel></rss>`;
 }
 
 /* -------------------------------------------------------------------------- */

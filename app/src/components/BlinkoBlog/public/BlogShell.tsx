@@ -501,12 +501,14 @@ function AuthorStatus() {
 }
 
 export function AuthorCard() {
-  const { profile } = useBlogSite();
+  const { profile, publicSettings } = useBlogSite();
   const [expanded, setExpanded] = useState(false);
-  if (!profile) return null;
+  // 作者资料没公开就不摆这张卡：署名回退的是站点名，不是作者本人。
+  if (!profile?.published) return null;
   // 原型这张卡分两层文案：顶部胶囊是一句会变的短句、底部是一句话介绍。
-  // tagline 按「·」分段刚好能对上：后段当介绍，前段那个身份标签不再上卡片。
-  const parts = (profile.tagline || "")
+  // 标语只有一个来源 —— 站点设置里的站点标语，
+  // 按「·」分段刚好能对上：后段当介绍，前段那个身份标签不再上卡片。
+  const parts = (publicSettings?.tagline || "")
     .split("·")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -515,7 +517,7 @@ export function AuthorCard() {
       ? parts.slice(1).join(" · ")
       : profile.bio
         ? oneLiner(profile.bio)
-        : profile.tagline;
+        : publicSettings?.tagline;
   // 卡片上只留一个作品集/代码入口（原型如此），其余链接在页脚。
   const rest = profile.links.filter((l) => !/rss|feed\.xml/i.test(l.url));
   const featured = rest.find((l) => /github\.com/i.test(l.url)) ?? rest[0];
@@ -813,7 +815,7 @@ function Footer() {
             <img src="/brand/mark.svg" alt="" width={18} height={28} />{brand}
           </Link>
           <p>
-            {profile?.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
+            {publicSettings?.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
           </p>
           {!!profile && (!!profile.links.length || !!profile.homepage) && (
             <div className="ink-footer-social">
@@ -1367,7 +1369,18 @@ export function BlogShell() {
   const scrollRoot = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<Index>(
     initial || {
-      profile: null,
+      // 没有服务端首屏数据时的占位：署名回退到站点名，published=false
+      // 表示作者资料还没公开，作者卡片与关于页不会渲染。
+      profile: {
+        displayName: "Jomio · 拾成",
+        tagline: "",
+        bio: "",
+        signature: "",
+        avatarUrl: "",
+        homepage: "",
+        links: [],
+        published: false,
+      },
       topics: [],
       posts: [],
       total: 0,
@@ -1553,7 +1566,16 @@ export function BlogShell() {
     } catch {
       if (request === seq.current) {
         setData({
-          profile: null,
+          profile: {
+            displayName: "Jomio · 拾成",
+            tagline: "",
+            bio: "",
+            signature: "",
+            avatarUrl: "",
+            homepage: "",
+            links: [],
+            published: false,
+          },
           topics: [],
           posts: [],
           total: 0,

@@ -113,7 +113,6 @@ function ProfileEditor({
   const base = useMemo(
     () => ({
       displayName: profile.displayName,
-      tagline: profile.tagline,
       bio: profile.bio,
       avatarUrl: profile.avatarUrl,
       homepage: profile.homepage,
@@ -212,25 +211,20 @@ function ProfileEditor({
 
         <Card>
           <CardBody className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm text-default-500">公开名称</span>
-                <BlogInput
-                  maxLength={80}
-                  placeholder="你的公开名称"
-                  value={draft.displayName}
-                  onChange={(e) => patch({ displayName: e.target.value })}
-                />
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm text-default-500">一句话介绍</span>
-                <BlogInput
-                  maxLength={160}
-                  value={draft.tagline}
-                  onChange={(e) => patch({ tagline: e.target.value })}
-                />
-              </label>
-            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-default-500">作者署名</span>
+              <BlogInput
+                maxLength={80}
+                placeholder="你的公开名称"
+                value={draft.displayName}
+                onChange={(e) => patch({ displayName: e.target.value })}
+              />
+              <small className="text-xs text-default-500">
+                显示在关于页、文章末尾和动态页。
+                站点自己的品牌名与一句话标语在「站点设置 → 站点信息」里填 ——
+                标语只有那一个出处，这里不再重复维护。
+              </small>
+            </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm text-default-500">个人介绍</span>
               <BlogTextarea
@@ -393,7 +387,7 @@ function ProfileEditor({
           </button>
           <strong className="text-xl">{draft.displayName || "作者名称"}</strong>
           <p className="mt-1 text-xs text-white/70">
-            {draft.tagline || "一句话介绍"}
+            一句话标语在「站点设置 → 站点信息」里填
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {draft.links.map((l, i) => (

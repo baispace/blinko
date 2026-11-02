@@ -524,20 +524,33 @@ export async function publicIndex(
       // 年份归档：公开文章按发布年份分组，给「全部文章」tab 的年份筛选用。
       publicYears(db, owner),
     ]);
+  /*
+   * 公开作者资料。
+   *
+   * 标语只有一个来源：站点设置里的「站点标语」。
+   * 作者资料里不再单独存标语 —— 两处各填各的，页脚和 SEO 显示的又不是同一句，
+   * 填了哪边都不生效的事已经发生过一次。
+   *
+   * 作者资料没公开时，署名回退到站点名，页面不空着；
+   * published=false 表示「这不是作者本人」，前端据此隐藏作者卡片、
+   * 关于页按未公开处理，SEO 也不写 author 标签。
+   */
+  const resolvedSiteName = publicBrandName(
+    settings.configured && settings.data.siteName ? settings.data.siteName : siteName,
+  );
   return {
-    profile: profile
-      ? {
-          displayName: profile.displayName,
-          tagline: profile.tagline,
-          bio: profile.bio,
-          signature: profile.signature,
-          avatarUrl: profile.avatarUrl,
-          homepage: profile.homepage,
-          links: sanitizeLinks(profile.links),
-        }
-      : null,
+    profile: {
+      displayName: profile?.displayName.trim() || resolvedSiteName,
+      tagline: settings.data.tagline,
+      bio: profile?.bio ?? "",
+      signature: profile?.signature ?? "",
+      avatarUrl: profile?.avatarUrl ?? "",
+      homepage: profile?.homepage ?? "",
+      links: profile ? sanitizeLinks(profile.links) : [],
+      published: !!profile,
+    },
     topics,
-    siteName: publicBrandName(settings.configured && settings.data.siteName ? settings.data.siteName : siteName),
+    siteName: resolvedSiteName,
     publicSettings: {
       siteName: settings.data.siteName,
       tagline: settings.data.tagline,
@@ -1002,5 +1015,5 @@ export function blogRSS(
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + toPublicPath("/blog/feed.xml", basePath))}" rel="self" type="application/rss+xml"/><title>${xml(site.siteName || "Jomio · 拾成")}</title><link>${xml(base + toPublicPath("/blog", basePath))}</link><description>${xml(site.profile?.tagline || "最新公开文章")}</description>${site.posts.length ? `<lastBuildDate>${new Date(Math.max(...site.posts.map((p) => p.updatedAt.getTime()))).toUTCString()}</lastBuildDate>` : ""}${site.posts.map((p) => `<item><title>${xml(p.title)}</title><link>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</link><guid>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</guid><pubDate>${p.createdAt.toUTCString()}</pubDate><description>${xml(p.excerpt)}</description></item>`).join("")}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><language>zh-CN</language><atom:link href="${xml(base + toPublicPath("/blog/feed.xml", basePath))}" rel="self" type="application/rss+xml"/><title>${xml(site.siteName || "Jomio · 拾成")}</title><link>${xml(base + toPublicPath("/blog", basePath))}</link><description>${xml(site.profile.tagline || "最新公开文章")}</description>${site.posts.length ? `<lastBuildDate>${new Date(Math.max(...site.posts.map((p) => p.updatedAt.getTime()))).toUTCString()}</lastBuildDate>` : ""}${site.posts.map((p) => `<item><title>${xml(p.title)}</title><link>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</link><guid>${xml(base + toPublicPath("/blog/" + p.publishId, basePath))}</guid><pubDate>${p.createdAt.toUTCString()}</pubDate><description>${xml(p.excerpt)}</description></item>`).join("")}</channel></rss>`;
 }

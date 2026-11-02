@@ -97,6 +97,57 @@ import {
   emptyArticleSeo,
 } from "../../shared/lib/blogSiteSettings";
 import { BLOG_FIXED_PAGE_KEYS } from "../../shared/lib/blogSeo";
+
+/**
+ * 一次性迁移：把作者资料里的旧标语搬进站点设置的「站点标语」。
+ *
+ * 背景：公开博客的标语之前存了两份 —— 站点设置里的「站点标语」和公开作者资料里的
+ * 「一句话介绍」。读者看到的绝大多数位置（页脚、关于页、动态页、SEO 描述、RSS 描述）
+ * 读的都是作者资料那份，站点设置那份只有友链页在用。两处各填各的必然对不上。
+ *
+ * 现在标语收口到站点设置一个出处。这个迁移把作者资料里已经填好的那句搬过去，
+ * 免得升级后页脚与 SEO 悄悄换成默认文案。搬运只在「站点设置的标语还是默认值」时
+ * 进行 —— 用户自己写过标语就不动。
+ *
+ * 幂等：搬完就把作者资料里那份清空，下次启动查不到待搬的记录，直接返回。
+ * 失败不应该拦住服务启动 —— 大不了一条标语没搬，用户在后台改一下就行。
+ */
+export async function migrateLegacyBlogTagline(db: PrismaClient) {
+  const profiles = await db.blogProfile.findMany({
+    where: { tagline: { not: "" } },
+    select: { accountId: true, tagline: true },
+  });
+  if (!profiles.length) return 0;
+
+  const defaultTagline = blogSiteSettingsSchema.parse({}).tagline;
+  let moved = 0;
+  for (const p of profiles) {
+    const oldTagline = p.tagline.trim();
+    if (!oldTagline) continue;
+    const settings = await readBlogSiteSettings(db, p.accountId);
+    const current = settings.data.tagline.trim();
+    if (current && current !== defaultTagline) {
+      // 站点设置里已经有一句自己的标语了，作者资料那份不再需要搬。
+      continue;
+    }
+    await saveBlogSiteSettings(
+      db,
+      p.accountId,
+      { ...settings.data, tagline: oldTagline },
+      settings.revision,
+    );
+    await db.blogProfile.update({
+      where: { accountId: p.accountId },
+      data: { tagline: "" },
+    });
+    moved += 1;
+    console.log(
+      `[blog] 已把账号 ${p.accountId} 的旧标语「${oldTagline}」并入站点设置的站点标语`,
+    );
+  }
+  return moved;
+}
+
 export async function readTopicSeo(
   db: Prisma.TransactionClient | PrismaClient,
   accountId: number,

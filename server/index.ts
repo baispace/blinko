@@ -2,7 +2,7 @@ import { prisma } from './prisma';
 import { resolveBlogSEO, injectBlogSEO, publicOrigin, sitemapIndex, sitemapPage, blogRobots, publicRSS, type BlogSEO } from './lib/publicBlogSEO';
 import { momentsRSS } from './lib/blogMoments';
 import { publicBlogOwner } from './lib/blog';
-import { readBlogSiteSettings } from './lib/blogSiteSettings';
+import { readBlogSiteSettings, migrateLegacyBlogTagline } from './lib/blogSiteSettings';
 import { legacyRedirectTarget } from './lib/blogRedirects';
 import { setSiteCheckSelfOrigin } from './lib/blogSiteCheck';
 import { publicRedirectTarget } from '../shared/lib/blogSeo';
@@ -638,6 +638,19 @@ async function bootstrap() {
 
     // Initialize scheduled jobs
     await initializeJobs();
+
+    /*
+     * 一次性迁移：把作者资料里的旧标语并入站点设置的「站点标语」。
+     *
+     * 标语收口到站点设置一个出处之后，作者资料里已填的那句必须搬过去，
+     * 否则升级后页脚、关于页与 SEO 会悄悄换成默认文案。
+     * 失败不拦启动 —— 少搬一条标语不影响服务，用户在后台改一下就行。
+     */
+    try {
+      await migrateLegacyBlogTagline(prisma);
+    } catch (e) {
+      console.error("[blog] 旧标语迁移失败（不影响服务启动）：", e);
+    }
 
     // Start or update server
     if (!server) {

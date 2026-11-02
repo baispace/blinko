@@ -6,6 +6,7 @@ import { upsertBlogProfile, getBlogProfile } from "../../server/lib/blog";
 import {
   readBlogSiteSettings,
   saveBlogSiteSettings,
+  migrateLegacyBlogTagline,
 } from "../../server/lib/blogSiteSettings";
 import { publishSnapshot } from "../../server/lib/publication";
 
@@ -155,5 +156,44 @@ describe("公开博客的站点标识只有一套出处", () => {
       isPublished: true,
     });
     expect((await getBlogProfile(db, owner)).tagline).toBe("保留下来的一句");
+  });
+
+  test("启动时的迁移把旧标语搬进站点设置，且不会覆盖用户自己写的那句", async () => {
+    // 场景一：站点设置的标语还是默认值 —— 搬。
+    await setSettings({ siteName: "拾成", tagline: "" });
+    await upsertBlogProfile(db, owner, {
+      displayName: "白贺",
+      tagline: "该被搬走的一句",
+      bio: "",
+      avatarUrl: "",
+      homepage: "",
+      links: [],
+      isPublished: true,
+    });
+    expect(await migrateLegacyBlogTagline(db)).toBe(1);
+    expect((await readBlogSiteSettings(db, owner)).data.tagline).toBe(
+      "该被搬走的一句",
+    );
+    // 搬完就清空作者资料里那份，不再有两份。
+    expect((await getBlogProfile(db, owner)).tagline).toBe("");
+    // 幂等：再跑一次没有可搬的。
+    expect(await migrateLegacyBlogTagline(db)).toBe(0);
+
+    // 场景二：站点设置里用户自己写过标语 —— 不动。
+    await setSettings({ siteName: "拾成", tagline: "站点自己那句" });
+    await upsertBlogProfile(db, owner, {
+      displayName: "白贺",
+      tagline: "另一句旧的",
+      bio: "",
+      avatarUrl: "",
+      homepage: "",
+      links: [],
+      isPublished: true,
+    });
+    expect(await migrateLegacyBlogTagline(db)).toBe(0);
+    expect((await readBlogSiteSettings(db, owner)).data.tagline).toBe(
+      "站点自己那句",
+    );
+    expect((await getBlogProfile(db, owner)).tagline).toBe("另一句旧的");
   });
 });

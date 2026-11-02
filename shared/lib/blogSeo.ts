@@ -267,3 +267,21 @@ export function toPublicPath(internalPath: string, basePath: string) {
   return joinBasePath(basePath, rest || "/");
 }
 
+/**
+ * 尾斜杠重定向的目标地址。
+ *
+ * 必须给「公开路径」而不是内部路径。应用内部固定挂在 /blog 下，公开域名
+ * 把博客映射到根路径时（publicBasePath = /），内部前缀泄漏出去会指到
+ * 不存在的地址：内部 /blog/ 会重定向到 /blog，而公开域名下的 /blog
+ * 指的是内部 /blog/blog —— 首页直接 404。
+ */
+export function publicRedirectTarget(
+  internalPath: string,
+  basePath: string,
+  query = "",
+) {
+  const clean = (internalPath || "/blog").replace(/\/+$/, "");
+  const suffix = query && !query.startsWith("?") ? `?${query}` : query;
+  return toPublicPath(clean || "/blog", basePath) + suffix;
+}
+

@@ -5,7 +5,7 @@ import { publicBlogOwner } from './lib/blog';
 import { readBlogSiteSettings } from './lib/blogSiteSettings';
 import { legacyRedirectTarget } from './lib/blogRedirects';
 import { setSiteCheckSelfOrigin } from './lib/blogSiteCheck';
-import { normalizeBasePath } from '../shared/lib/blogSeo';
+import { normalizeBasePath, publicRedirectTarget } from '../shared/lib/blogSeo';
 const blogSEOByRequest = new WeakMap<object, BlogSEO>();
 
 /**
@@ -582,7 +582,16 @@ async function bootstrap() {
           if (!payload) return res.status(404).set('X-Robots-Tag','noindex').type('text/plain').send('Not found');
           return res.type(pathname === '/blog/feed.xml' || pathname === '/blog/moments/feed.xml' ? 'application/rss+xml' : 'application/xml').send(payload);
         }
-        if (pathname.endsWith('/')) return res.redirect(301,pathname.replace(/\/+$/,'') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
+        if (pathname.endsWith('/')) {
+          // 重定向到「公开路径」，不能直接用内部路径。
+          //
+          // 应用内部固定挂在 /blog 下；公开域名把博客映射到根路径时
+          // （publicBasePath = /），内部前缀泄漏出去就会指到不存在的地址：
+          // 内部 /blog/ 会被重定向到 /blog，而公开域名下 /blog 指的是内部 /blog/blog。
+          // 那样首页直接 404。
+          const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+          return res.redirect(301, publicRedirectTarget(pathname, runtime.basePath, query));
+        }
         // 列表页的分页页码走 ?page=N，canonical / rel=prev,next 靠它
         const page = Number(req.query.page) || 1;
         const seo = await resolveBlogSEO(prisma,pathname,origin,undefined,page);

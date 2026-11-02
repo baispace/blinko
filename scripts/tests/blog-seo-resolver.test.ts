@@ -3,6 +3,7 @@ import {
   applyTitleTemplate,
   joinBasePath,
   normalizeBasePath,
+  publicRedirectTarget,
   resolveSeoFields,
   toPublicPath,
   absoluteSeoImage,
@@ -143,6 +144,25 @@ describe("公开地址与基础路径", () => {
     expect(toPublicPath("/blog/abc", "/")).toBe("/abc");
     expect(toPublicPath("/blog/topics", "/")).toBe("/topics");
     expect(toPublicPath("/blog/t/slug", "/")).toBe("/t/slug");
+  });
+
+  /**
+   * 尾斜杠重定向必须给公开路径。
+   *
+   * 公开域名把博客映射到根路径时，内部的 /blog 前缀一旦泄漏到 Location 里，
+   * 浏览器就会跳到公开域名的 /blog，而那里指向内部的 /blog/blog —— 首页 404。
+   */
+  test("尾斜杠重定向给公开路径，不泄漏内部前缀", () => {
+    expect(publicRedirectTarget("/blog/", "/blog")).toBe("/blog");
+    expect(publicRedirectTarget("/blog/topics/", "/blog")).toBe("/blog/topics");
+    expect(publicRedirectTarget("/blog/", "/")).toBe("/");
+    expect(publicRedirectTarget("/blog/topics/", "/")).toBe("/topics");
+    expect(publicRedirectTarget("/blog/t/slug/", "/")).toBe("/t/slug");
+    // 查询参数要跟着走
+    expect(publicRedirectTarget("/blog/", "/", "?page=2")).toBe("/?page=2");
+    expect(publicRedirectTarget("/blog/topics/", "/blog", "?page=2")).toBe(
+      "/blog/topics?page=2",
+    );
   });
 
   test("分享图片补成绝对地址，带凭据的地址被拒绝", () => {

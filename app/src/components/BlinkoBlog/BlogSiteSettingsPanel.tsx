@@ -11,7 +11,7 @@ import { blogFontStack } from "@shared/lib/blogFont";
 import { BlogTrackingSettings } from "./BlogTrackingSettings";
 import { BlogSubscribeSettings } from "./BlogSubscribeSettings";
 import { BlogFooterSettingsPanel } from "./BlogFooterSettings";
-import { resolveSeoFields, BLOG_FIXED_PAGES } from "@shared/lib/blogSeo";
+import { resolveSeoFields, BLOG_FIXED_PAGES, toPublicPath } from "@shared/lib/blogSeo";
 import { BlogSiteCheckPanel } from "./BlogSiteCheckPanel";
 
 type BlogFontOption = {
@@ -117,6 +117,19 @@ export function BlogSiteSettingsPanel({
   const patch = (p: Partial<BlogSiteSettings>) => {
     setData((d) => ({ ...d, ...p }));
     setMessage("");
+  };
+
+  /**
+   * 预览链接要指向读者真正访问的地址。
+   *
+   * 生效中的公开域名来自 BLOG_PUBLIC_URL，公开基础路径存在数据库里。
+   * 博客挂到独立域名的根路径后，内部路径 /blog/feed.xml 对外的地址是 /feed.xml ——
+   * 预览链接如果还写死内部路径，看到的就是旧地址，不是读者看到的那份。
+   */
+  const publicPreviewUrl = (internalPath: string) => {
+    const origin = (deployed || window.location.origin).replace(/\/+$/, "");
+    const basePath = saved.publicBasePath || "/blog";
+    return origin + toPublicPath(internalPath, basePath);
   };
 
   const save = async () => {
@@ -250,7 +263,7 @@ export function BlogSiteSettingsPanel({
                 <h3 className="text-sm font-semibold">站点地图与 RSS</h3>
                 <a
                   className="text-sm text-primary hover:underline"
-                  href="/sitemap.xml"
+                  href={publicPreviewUrl("/sitemap.xml")}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -259,7 +272,7 @@ export function BlogSiteSettingsPanel({
                 <br />
                 <a
                   className="text-sm text-primary hover:underline"
-                  href="/blog/feed.xml"
+                  href={publicPreviewUrl("/blog/feed.xml")}
                   target="_blank"
                   rel="noreferrer"
                 >

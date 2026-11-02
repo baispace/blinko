@@ -13,10 +13,7 @@ import {
 import { blogAttribution, rememberBlogEntry } from "@/lib/blogReferrer";
 import superjson from "superjson";
 import { BlogMetadata } from "./BlogMetadata";
-import {
-  AUTHOR_STATUS_INTERVAL,
-  authorStatusPool,
-} from "./authorStatus";
+import { AuthorCardView } from "./AuthorCard";
 import { copyrightYears, promoVisible } from "@shared/lib/blogFooter";
 import {
   createContext,
@@ -391,230 +388,24 @@ export function PostCard({
     </article>
   );
 }
-/** 一句话介绍：优先取 tagline 后段（作者自己写的定位句），没有就退回 bio 的第一句。 */
-function oneLiner(bio: string) {
-  const first = bio.split(/\n+/)[0]?.trim() ?? "";
-  const stop = first.indexOf("。");
-  return stop > 0 ? first.slice(0, stop + 1) : first;
-}
 
 /** 读者系统是否要求减少动效。开启后动态胶囊不再自动轮播。 */
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-  return reduced;
-}
-
-/**
- * 顶部胶囊：一句会变的短句。
- *
- * 固定文案打底 + 时段提示（深夜提示休息这一类），每 6 秒换一条，
- * 新旧两层叠在一起淡入淡出；鼠标悬停时暂停 —— 读者正在读这句就别把它换掉。
- *
- * 想立刻换一句就点它：定时轮播走「交叉淡换」，点击走「让位 → 箭头转一圈 → 新句淡入」，
- * 点击的动作有回应，读起来不生硬。
- *
- * 两层叠在同一个网格单元里，胶囊宽度不受文案长短影响，换句时不跳。
- */
-function AuthorStatus() {
-  const [layers, setLayers] = useState(() => {
-    const pool = authorStatusPool();
-    return [{ id: 0, index: 0, text: pool[0], out: false }];
-  });
-  const [paused, setPaused] = useState(false);
-  const [swapping, setSwapping] = useState(false);
-  const reduced = usePrefersReducedMotion();
-  const swapTimer = useRef<number | null>(null);
-
-  /** 定时轮播：新旧两句交叉淡换。 */
-  const advance = useCallback(() => {
-    setLayers((prev) => {
-      const pool = authorStatusPool();
-      const index = (prev[0].index + 1) % pool.length;
-      return [
-        { id: prev[0].id + 1, index, text: pool[index], out: false },
-        { ...prev[0], out: true },
-      ];
-    });
-  }, []);
-
-  /** 点击换句：只留新句，旧的直接让位给转圈的箭头。 */
-  const swapNow = useCallback(() => {
-    setLayers((prev) => {
-      const pool = authorStatusPool();
-      const index = (prev[0].index + 1) % pool.length;
-      return [{ id: prev[0].id + 1, index, text: pool[index], out: false }];
-    });
-  }, []);
-
-  const handleClick = useCallback(() => {
-    swapNow();
-    setSwapping(true);
-    if (swapTimer.current) window.clearTimeout(swapTimer.current);
-    swapTimer.current = window.setTimeout(() => setSwapping(false), 450);
-  }, [swapNow]);
-
-  useEffect(
-    () => () => {
-      if (swapTimer.current) window.clearTimeout(swapTimer.current);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (reduced || paused) return;
-    const timer = window.setInterval(advance, AUTHOR_STATUS_INTERVAL);
-    return () => window.clearInterval(timer);
-  }, [reduced, paused, advance]);
-
-  return (
-    <button
-      type="button"
-      className={"ink-author-tag" + (swapping ? " is-swapping" : "")}
-      title="点一下换一句"
-      aria-live="polite"
-      onClick={handleClick}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {layers.map((layer) => (
-        <span
-          key={layer.id}
-          className={"ink-author-tag-text " + (layer.out ? "is-out" : "is-in")}
-          aria-hidden={layer.out || undefined}
-        >
-          {layer.text}
-        </span>
-      ))}
-      {/* 点击瞬间占住正中的箭头：文字先让位，箭头转一圈，再把新句交回来。 */}
-      <span className="ink-author-tag-flash" aria-hidden="true">
-        <Icon icon="tabler:refresh" width={14} />
-      </span>
-    </button>
-  );
-}
 
 export function AuthorCard() {
   const { profile, publicSettings } = useBlogSite();
-  const [expanded, setExpanded] = useState(false);
-  // 作者资料没公开就不摆这张卡：署名回退的是站点名，不是作者本人。
-  if (!profile?.published) return null;
-  // 原型这张卡分两层文案：顶部胶囊是一句会变的短句、底部是一句话介绍。
-  // 标语只有一个来源 —— 站点设置里的站点标语，
-  // 按「·」分段刚好能对上：后段当介绍，前段那个身份标签不再上卡片。
-  const parts = (publicSettings?.tagline || "")
-    .split("·")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const intro =
-    parts.length > 1
-      ? parts.slice(1).join(" · ")
-      : profile.bio
-        ? oneLiner(profile.bio)
-        : publicSettings?.tagline;
-  // 卡片上只留一个作品集/代码入口（原型如此），其余链接在页脚。
-  const rest = profile.links.filter((l) => !/rss|feed\.xml/i.test(l.url));
-  const featured = rest.find((l) => /github\.com/i.test(l.url)) ?? rest[0];
-  const social = featured ? [featured] : [];
-  const avatar = profile.avatarUrl ? (
-    <img src={profile.avatarUrl} alt={profile.displayName || "作者"} />
-  ) : (
-    <Icon icon="tabler:user-circle" width={112} />
-  );
+  /*
+   * 作者名下方那一行是站点标语，唯一出处是「站点设置 → 站点信息 → 站点标语」。
+   * 早前这里放的是 bio 的第一句，于是「作者名旁边的字」和「个人介绍」是同一段话，
+   * 展开前后读两遍同一内容。现在两处各读各的。
+   */
   return (
-    <section
-      className={"ink-author " + (expanded ? "is-expanded" : "")}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setExpanded(false);
-      }}
-    >
-      <AuthorStatus />
-      <div className="ink-author-middle">
-        {/*
-          右上角原本挂着一个 ⓘ 按钮用来展开自述，视觉上多余 —— 改成直接点头像：
-          桌面端悬停本来就能展开，触屏与键盘靠这个头像。
-          自述和「了解作者 →」都还在，只是不再画一个图标按钮。
-        */}
-        {profile.bio ? (
-          <button
-            type="button"
-            className="ink-author-avatar"
-            aria-label={expanded ? "收起作者介绍" : "查看作者介绍"}
-            aria-expanded={expanded}
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {avatar}
-          </button>
-        ) : (
-          <div className="ink-author-avatar">{avatar}</div>
-        )}
-        {profile.bio && (
-          <div className="ink-author-bio">
-            <p>{profile.bio}</p>
-            <div className="ink-author-bio-foot">
-              <Link to={blogRoute("/blog/about")}>了解作者 →</Link>
-              {/* 展开后头像淡出，触屏就少了一个收起的入口 —— 这里补一个。 */}
-              {expanded && (
-                <button
-                  type="button"
-                  className="ink-author-bio-close"
-                  onClick={() => setExpanded(false)}
-                >
-                  收起
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="ink-author-base">
-        <div>
-          <h3>{profile.displayName || "作者"}</h3>
-          <small>{intro}</small>
-        </div>
-        <div className="ink-author-links">
-          {profile.homepage && (
-            <a
-              href={profile.homepage}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="个人主页"
-              title="个人主页"
-            >
-              <Icon icon="tabler:world" width={19} />
-            </a>
-          )}
-          {/* 原型这张卡只放两个：个人主页 + 作品集/GitHub。其余链接在页脚。 */}
-          {social.map((l, i) => (
-            <a
-              key={i}
-              href={l.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={l.label || "相关站点"}
-              title={l.label}
-            >
-              <Icon
-                icon={
-                  /github\.com/i.test(l.url)
-                    ? "tabler:brand-github"
-                    : "tabler:link"
-                }
-                width={19}
-              />
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
+    <AuthorCardView
+      profile={profile}
+      tagline={publicSettings?.tagline ?? ""}
+    />
   );
 }
+
 export function RecentUpdates({ posts }: { posts: Post[] }) {
   const list = posts.slice(0, 5);
   if (!list.length) return null;

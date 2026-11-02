@@ -392,6 +392,39 @@ export async function publicSiteName(db: PrismaClient): Promise<string> {
 }
 
 /**
+ * 站点品牌名：博客设置里的「站点品牌名」优先，没填就用工作区的站点名称。
+ *
+ * 公开页的署名回退值、页脚版权、og:site_name 都跟它走 —— 一处算，别处套。
+ */
+export function resolveSiteBrandName(
+  settings: { configured: boolean; data: { siteName?: string | null } },
+  workspaceName: string,
+): string {
+  return publicBrandName(
+    settings.configured && settings.data.siteName
+      ? settings.data.siteName
+      : workspaceName,
+  );
+}
+
+/**
+ * 署名回退值：作者名没填、或者作者资料没公开时，前台显示的就是站点品牌名。
+ *
+ * 后台「公开作者」面板的预览用的就是前台那张卡，名字必须一模一样。
+ * 这个值由服务端给 —— 前端自己拼一遍，早晚会跟前台对不上。
+ */
+export async function publicSiteBrandName(
+  db: PrismaClient,
+  accountId: number,
+): Promise<string> {
+  const [settings, workspaceName] = await Promise.all([
+    readBlogSiteSettings(db, accountId),
+    publicSiteName(db),
+  ]);
+  return resolveSiteBrandName(settings, workspaceName);
+}
+
+/**
  * 首页 banner 候选：只取作者勾了「加入推荐页 banner」的文章。
  *
  * 不用最新文章补齐 —— 补齐会让这个开关形同虚设（勾了没勾看起来一样）。
@@ -535,9 +568,7 @@ export async function publicIndex(
    * published=false 表示「这不是作者本人」，前端据此隐藏作者卡片、
    * 关于页按未公开处理，SEO 也不写 author 标签。
    */
-  const resolvedSiteName = publicBrandName(
-    settings.configured && settings.data.siteName ? settings.data.siteName : siteName,
-  );
+  const resolvedSiteName = resolveSiteBrandName(settings, siteName);
   return {
     profile: {
       displayName: profile?.displayName.trim() || resolvedSiteName,

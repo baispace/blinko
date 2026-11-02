@@ -43,6 +43,7 @@ import {
   publicArticle,
   publicTopics,
   publicRandomArticle,
+  publicSiteBrandName,
   BLOG_PAGE_SIZE,
 } from "../lib/publicBlog";
 import { normalizeCoverFocus } from "@shared/lib/blogCover";
@@ -801,7 +802,19 @@ export const blogRouter = router({
 
   profile: authProcedure
     .input(z.void())
-    .query(({ ctx }) => getBlogProfile(prisma, Number(ctx.id))),
+    .query(async ({ ctx }) => {
+      const accountId = Number(ctx.id);
+      const profile = await getBlogProfile(prisma, accountId);
+      return {
+        ...profile,
+        /*
+         * 署名回退值：作者名没填、或作者资料没公开时，前台显示的就是它。
+         * 后台「公开作者」的预览渲染的是前台那张卡，名字必须跟前台一致 ——
+         * 由服务端给，前端不自己拼。
+         */
+        siteBrandName: await publicSiteBrandName(prisma, accountId),
+      };
+    }),
 
   saveProfile: authProcedure
     .input(

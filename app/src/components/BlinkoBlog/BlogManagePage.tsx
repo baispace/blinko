@@ -14,6 +14,8 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/trpc";
+import { AuthorCardView } from "./public/AuthorCard";
+
 import axios from "@/lib/axios";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 import { getAvatarUrl } from "@/lib/profileIdentity";
@@ -131,9 +133,18 @@ function ProfileEditor({
   const [draft, setDraft] = useState(base);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [bio, setBio] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  /*
+   * 站点标语不在这个面板里 —— 它在「站点设置 → 站点信息 → 站点标语」，
+   * 是全站唯一的一句话出处。预览要显示前台真正会显示的那句，所以读已保存的值。
+   */
+  const [siteTagline, setSiteTagline] = useState("");
+  useEffect(() => {
+    void api.blog.siteSettings
+      .query()
+      .then((r) => setSiteTagline(r.data.tagline ?? ""))
+      .catch(() => setSiteTagline(""));
+  }, []);
   const dirty = JSON.stringify(draft) !== JSON.stringify(base);
   useLeaveGuard(dirty);
   useEffect(() => onDirty(dirty), [dirty, onDirty]);
@@ -352,54 +363,24 @@ function ProfileEditor({
 
       <aside>
         <p className="text-sm text-default-500 mb-2">
-          待保存效果预览 · 悬浮或点击查看介绍
+          前台效果预览 · 点头像展开介绍
         </p>
-        <div
-          className="flex min-h-80 flex-col rounded-2xl p-6 text-white"
-          style={{ background: "hsl(var(--heroui-primary))" }}
-          onMouseEnter={() => {
-            if (matchMedia("(hover: hover)").matches) setHovered(true);
+        {/*
+          预览用的就是前台那张卡（同一个组件、同一份样式），
+          不再另画一个「像那么回事」的版本 —— 否则后台看着对、线上不是那个样子。
+          站点标语不在这个面板里，显示的是站点设置里已保存的值；
+          署名没填时回退到站点品牌名 —— 前台也是这个回退值（服务端给的）。
+        */}
+        <AuthorCardView
+          profile={{
+            displayName: draft.displayName.trim() || profile.siteBrandName,
+            bio: draft.bio,
+            avatarUrl: draft.avatarUrl,
+            homepage: draft.homepage,
+            links: draft.links,
           }}
-          onMouseLeave={() => setHovered(false)}
-        >
-          <span className="self-center rounded-full bg-white/15 px-3 py-1 text-xs">
-            保持好奇，持续记录
-          </span>
-          <button
-            type="button"
-            className="my-6 flex min-h-36 flex-1 items-center justify-center text-left bg-transparent border-0 cursor-pointer text-white"
-            aria-label="切换作者介绍预览"
-            onClick={() => setBio((v) => !v)}
-          >
-            {bio || hovered ? (
-              <p className="max-h-44 overflow-auto whitespace-pre-wrap text-sm leading-6">
-                {draft.bio || "填写个人介绍后，将在这里展示。"}
-              </p>
-            ) : draft.avatarUrl ? (
-              <img
-                src={imageUrl(draft.avatarUrl)}
-                alt="待保存头像"
-                className="size-28 rounded-full border-4 border-white object-cover"
-              />
-            ) : (
-              <Icon icon="tabler:user-circle" width={112} />
-            )}
-          </button>
-          <strong className="text-xl">{draft.displayName || "作者名称"}</strong>
-          <p className="mt-1 text-xs text-white/70">
-            一句话标语在「站点设置 → 站点信息」里填
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {draft.links.map((l, i) => (
-              <span
-                key={i}
-                className="rounded-full bg-white/15 px-2 py-1 text-xs"
-              >
-                {l.label || "站点链接"}
-              </span>
-            ))}
-          </div>
-        </div>
+          tagline={siteTagline}
+        />
       </aside>
     </div>
   );

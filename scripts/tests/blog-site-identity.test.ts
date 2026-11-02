@@ -1,6 +1,11 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { PrismaClient } from "@prisma/client";
-import { publicIndex, blogRSS } from "../../server/lib/publicBlog";
+import {
+  publicIndex,
+  blogRSS,
+  resolveSiteBrandName,
+  publicSiteBrandName,
+} from "../../server/lib/publicBlog";
 import { resolveBlogSEO } from "../../server/lib/publicBlogSEO";
 import { upsertBlogProfile, getBlogProfile } from "../../server/lib/blog";
 import {
@@ -195,5 +200,70 @@ describe("公开博客的站点标识只有一套出处", () => {
       "站点自己那句",
     );
     expect((await getBlogProfile(db, owner)).tagline).toBe("另一句旧的");
+  });
+
+  /*
+   * 署名回退值：后台「公开作者」面板的预览渲染的就是前台那张卡，
+   * 名字必须一模一样 —— 这个值由服务端给，前端不自己拼。
+   * 前端拼一遍就会和前台对不上（站点名实际来自工作区设置，不是博客设置）。
+   */
+  test("署名回退值与前台显示的署名始终一致", async () => {
+    await setSettings({ siteName: "拾成", tagline: "站点标语·唯一出处" });
+
+    // 一、作者资料没公开 —— 前台署名回退到站点品牌名。
+    await db.blogProfile.updateMany({
+      where: { accountId: owner },
+      data: { isPublished: false },
+    });
+    let site = await publicIndex(db, { accountId: owner });
+    expect(site.profile?.displayName).toBe("拾成");
+    expect(await publicSiteBrandName(db, owner)).toBe("拾成");
+
+    // 二、公开了但没填署名 —— 还是回退到站点品牌名。
+    await upsertBlogProfile(db, owner, {
+      displayName: "",
+      bio: "",
+      avatarUrl: "",
+      homepage: "",
+      links: [],
+      isPublished: true,
+    });
+    site = await publicIndex(db, { accountId: owner });
+    expect(site.profile?.displayName).toBe("拾成");
+    expect(await publicSiteBrandName(db, owner)).toBe("拾成");
+
+    // 三、填了署名 —— 前台显示作者名，回退值仍是站点品牌名（供清空后回退）。
+    await upsertBlogProfile(db, owner, {
+      displayName: "白贺",
+      bio: "",
+      avatarUrl: "",
+      homepage: "",
+      links: [],
+      isPublished: true,
+    });
+    site = await publicIndex(db, { accountId: owner });
+    expect(site.profile?.displayName).toBe("白贺");
+    expect(await publicSiteBrandName(db, owner)).toBe("拾成");
+  });
+
+  test("站点品牌名：博客设置里的优先，legacy 名字换成正式品牌名", () => {
+    // 博客设置里填了就用它的。
+    expect(
+      resolveSiteBrandName({ configured: true, data: { siteName: "拾成" } }, "工作区名"),
+    ).toBe("拾成");
+    // 没填（或还没配过）就用工作区的站点名称。
+    expect(
+      resolveSiteBrandName({ configured: true, data: { siteName: "" } }, "工作区名"),
+    ).toBe("工作区名");
+    expect(
+      resolveSiteBrandName({ configured: false, data: {} }, "工作区名"),
+    ).toBe("工作区名");
+    // legacy 默认名不能漏到公开页上。
+    expect(
+      resolveSiteBrandName({ configured: true, data: { siteName: "jomio" } }, "工作区名"),
+    ).toBe("Jomio · 拾成");
+    expect(
+      resolveSiteBrandName({ configured: true, data: { siteName: "白贺" } }, "工作区名"),
+    ).toBe("Jomio · 拾成");
   });
 });

@@ -285,13 +285,15 @@ export const blogRouter = router({
   engagement: authProcedure.input(z.object({days:z.union([z.literal(1),z.literal(7),z.literal(30)])})).query(({ctx,input})=>blogEngagement(prisma,Number(ctx.id),input.days)),
   siteSettings: authProcedure.query(async ({ctx}) => {
     const stored = await readBlogSiteSettings(prisma, Number(ctx.id));
+    const deployment = resolveBlogDeployment(stored.configured ? stored.data : null);
     return {
       ...stored,
-      deployedOrigin: process.env.BLOG_PUBLIC_URL || '',
+      // 生效的公开地址：后台填的优先，环境变量兜底，都没有则跟随访问域名。
+      deployedOrigin: deployment.targetOrigin,
       backendOrigin: process.env.NEXTAUTH_URL || '',
-      // 生效的部署参数与「谁说了算」：
-      // 环境变量接管的字段在后台是只读的，避免出现「改了没反应」。
-      deployment: resolveBlogDeployment(stored.configured ? stored.data : null),
+      // 生效的部署参数，以及「哪些字段正由环境变量兜底」——
+      // 后台面板据此提示「留空时用哪个变量」，不再把字段锁成只读。
+      deployment,
     };
   }),
   saveSiteSettings: authProcedure.input(z.object({data: blogSiteSettingsSchema, revision: z.string()})).mutation(({ctx,input}) => saveBlogSiteSettings(prisma, Number(ctx.id), input.data, input.revision)),

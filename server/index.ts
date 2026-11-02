@@ -6,7 +6,7 @@ import { readBlogSiteSettings } from './lib/blogSiteSettings';
 import { legacyRedirectTarget } from './lib/blogRedirects';
 import { setSiteCheckSelfOrigin } from './lib/blogSiteCheck';
 import { publicRedirectTarget } from '../shared/lib/blogSeo';
-import { resolveBlogDeployment } from '../shared/lib/blogDeployment';
+import { resolveBlogDeployment, normalizeOrigin } from '../shared/lib/blogDeployment';
 const blogSEOByRequest = new WeakMap<object, BlogSEO>();
 
 /**
@@ -15,8 +15,8 @@ const blogSEOByRequest = new WeakMap<object, BlogSEO>();
  * 这些值默认存在数据库里，但每个请求都查一次太贵 —— 缓存 30 秒足够，
  * 改完配置最多半分钟生效。
  *
- * 环境变量优先于数据库：部署层面决定的挂载位置与目标域名写在容器的
- * environment 段，后台只接管没被环境变量设过的字段。
+ * 后台优先于环境变量：你在「域名与部署」里填的就是生效的，
+ * 环境变量只在后台留空时兜底。
  */
 type PublicRuntime = {
   loadedAt: number;
@@ -24,6 +24,7 @@ type PublicRuntime = {
   legacyEnabled: boolean;
   legacyBasePath: string;
   publicBasePath: string;
+  /** 生效的公开站点地址（origin）；留空表示跟随请求地址 */
   targetOrigin: string;
 };
 let publicRuntimeCache: PublicRuntime | null = null;
@@ -36,7 +37,8 @@ async function publicRuntime(): Promise<PublicRuntime> {
     legacyEnabled: false,
     legacyBasePath: '',
     publicBasePath: '/blog',
-    targetOrigin: '',
+    // 读库失败时仍然让环境变量兜底 —— 别把整站地址退回到请求 host。
+    targetOrigin: normalizeOrigin(process.env.BLOG_PUBLIC_URL),
   };
   try {
     const owner = await publicBlogOwner(prisma, undefined);
@@ -571,8 +573,13 @@ async function bootstrap() {
         return next();
       }
       try {
-        const origin = publicOrigin(`${req.protocol}://${req.get('host')}`);
         const runtime = await publicRuntime();
+        /**
+         * 公开站点地址：后台「域名与部署」里填的优先，
+         * 其次环境变量兜底，最后才跟随请求地址。
+         * 这样「在后台改地址」就等于「线上换地址」，不必改容器环境变量。
+         */
+        const origin = publicOrigin(`${req.protocol}://${req.get('host')}`, runtime.targetOrigin);
         // 公开域名和工作区同源时，robots 只放行公开博客路径；
         // 公开域名独立时，整站都是公开内容，才按公开基础路径放行。
         const isPublicOrigin = new URL(origin).host === req.get('host');

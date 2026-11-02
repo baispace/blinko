@@ -524,7 +524,7 @@ export async function runSiteChecks(
         name: "Canonical 与分享地址",
         state: "warn",
         evidence: `canonical 指向 ${canonicalHost}，与检查目标 ${safeOrigin(target)} 不一致。`,
-        suggestion: "检查 BLOG_PUBLIC_URL 是否与目标域名一致。",
+        suggestion: "检查「域名与部署」里的公开站点地址是否与目标域名一致。",
       });
     } else if (meta.ogUrl && safeOrigin(meta.ogUrl) !== safeOrigin(meta.canonical)) {
       push({
@@ -568,7 +568,7 @@ export async function runSiteChecks(
       name: "Sitemap / RSS / robots",
       state: "warn",
       evidence: "sitemap 里仍是旧地址，尚未切换到目标域名。",
-      suggestion: "部署完成后更新 BLOG_PUBLIC_URL，让站点地图使用当前生效域名。",
+      suggestion: "在「域名与部署」里把公开站点地址改成当前生效域名，让站点地图跟上。",
     });
   } else {
     push({
@@ -640,7 +640,7 @@ export async function runSiteChecks(
   }
 
   // ---- 旧地址永久跳转 ---------------------------------------------------
-  // 环境变量优先于后台设置 —— 检查要反映真正生效的那一套。
+  // 检查要反映真正生效的那一套：后台优先，环境变量兜底。
   const deployment = resolveBlogDeployment(settings);
   const legacyBase = deployment.legacyBasePath;
   if (!deployment.legacyRedirectEnabled) {

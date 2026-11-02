@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { publicPublicationWhere } from "./publication";
+import { effectivePublicOrigin } from "./blogPublicOrigin";
 import { publicBlogOwner } from "./blog";
 import { sendBlogMail } from "./blogMail";
 import { resolveBlogMailConfig } from "./blogMailSettings";
@@ -317,19 +318,24 @@ async function ownedFeedback(
   return row;
 }
 
-/** 反馈的公开文章链接：优先用配置的公开地址，其次退回工作区地址。 */
-function feedbackArticleUrl(publishId: string) {
-  const base = (
-    process.env.BLOG_PUBLIC_URL ||
-    process.env.NEXTAUTH_URL ||
-    ""
-  ).replace(/\/+$/, "");
+/**
+ * 反馈的公开文章链接：用生效的公开地址，没有就退回工作区地址。
+ *
+ * 生效地址由后台「域名与部署」决定（见 effectivePublicOrigin），
+ * 不在这里读环境变量 —— 后台改了域名，邮件里的链接要跟着改。
+ */
+function feedbackArticleUrl(publishId: string, publicOrigin: string) {
+  const base = (publicOrigin || process.env.NEXTAUTH_URL || "").replace(
+    /\/+$/,
+    "",
+  );
   return base ? `${base}/blog/${publishId}` : `/blog/${publishId}`;
 }
 
 function feedbackReplyMail(
   feedback: { title: string; publishId: string; nickname: string; content: string; type: string },
   reply: string,
+  publicOrigin: string,
 ) {
   return [
     `你好${feedback.nickname ? "，" + feedback.nickname : ""}：`,
@@ -341,7 +347,7 @@ function feedbackReplyMail(
     `—— 反馈原文`,
     feedback.content,
     ``,
-    `文章地址：${feedbackArticleUrl(feedback.publishId)}`,
+    `文章地址：${feedbackArticleUrl(feedback.publishId, publicOrigin)}`,
     ``,
     `这封邮件是你为这条反馈主动订阅的回复通知，不是营销邮件。`,
   ].join("\n");
@@ -434,6 +440,7 @@ export async function deliverFeedbackMail(
           type: feedback.type,
         },
         reply.content,
+        await effectivePublicOrigin(db),
       ),
     },
     config,

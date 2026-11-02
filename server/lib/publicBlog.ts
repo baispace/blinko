@@ -545,7 +545,7 @@ export async function publicIndex(
       gaId: settings.data.gaEnabled ? settings.data.gaId : "",
       baiduId: settings.data.baiduEnabled ? settings.data.baiduId : "",
       excludeOwner: settings.data.excludeOwner,
-      // 目标公开地址：后台填了以后台为准，没填才回落到 BLOG_PUBLIC_URL。
+      // 生效的公开站点地址：后台填的优先，环境变量只作兜底。
       targetOrigin: resolveBlogDeployment(settings.data).targetOrigin,
       friendApplyNote: settings.data.friendApplyNote,
       showPublicStats: settings.data.showPublicStats,

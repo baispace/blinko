@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { publicBlogOwner } from "./blog";
 import { sendBlogMail } from "./blogMail";
 import { resolveBlogMailConfig } from "./blogMailSettings";
+import { effectivePublicOrigin } from "./blogPublicOrigin";
 import { publicText } from "./publicText";
 import type {
   FeedbackStatus,
@@ -19,13 +20,16 @@ import type {
  *     保存成功 ≠ 邮件已发出。
  */
 
-/** 反馈的动态链接：定位到具体那一条。 */
-function feedbackMomentUrl(noteId: number) {
-  const base = (
-    process.env.BLOG_PUBLIC_URL ||
-    process.env.NEXTAUTH_URL ||
-    ""
-  ).replace(/\/+$/, "");
+/**
+ * 反馈的动态链接：定位到具体那一条。
+ *
+ * 用生效的公开地址（后台「域名与部署」决定），没有就退回工作区地址。
+ */
+function feedbackMomentUrl(noteId: number, publicOrigin: string) {
+  const base = (publicOrigin || process.env.NEXTAUTH_URL || "").replace(
+    /\/+$/,
+    "",
+  );
   return base ? `${base}/blog/moments#m${noteId}` : `/blog/moments#m${noteId}`;
 }
 
@@ -205,6 +209,7 @@ async function ownedFeedback(
 function feedbackReplyMail(
   feedback: { nickname: string; content: string; noteId: number },
   reply: string,
+  publicOrigin: string,
 ) {
   return [
     `你好${feedback.nickname ? "，" + feedback.nickname : ""}：`,
@@ -216,7 +221,7 @@ function feedbackReplyMail(
     `—— 反馈原文`,
     feedback.content,
     ``,
-    `动态地址：${feedbackMomentUrl(feedback.noteId)}`,
+    `动态地址：${feedbackMomentUrl(feedback.noteId, publicOrigin)}`,
     ``,
     `这封邮件是你为这条反馈主动订阅的回复通知，不是营销邮件。`,
   ].join("\n");
@@ -299,6 +304,7 @@ export async function deliverMomentFeedbackMail(
           noteId: feedback.noteId,
         },
         reply.content,
+        await effectivePublicOrigin(db),
       ),
     },
     config,

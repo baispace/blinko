@@ -39,10 +39,12 @@ export const escapeXML = (value: string) =>
 /**
  * 当前实际生效的公开站点地址。
  *
- * 优先级固定：环境变量 BLOG_PUBLIC_URL > 调用方传入的请求 origin。
- * 数据库里的 targetOrigin 只是「用户想要用的目标地址」，
- * 部署真正切换之前不能用它改写线上输出 —— 否则后台显示一个域名、
- * 服务端输出另一个域名。
+ * 优先级固定：调用方传入的生效地址 > 请求 origin。
+ * 调用方传进来的「生效地址」来自后台「域名与部署」里的公开站点地址
+ * （已归一化，见 resolveBlogDeployment），环境变量只作兜底。
+ *
+ * 传入的地址必须是 http(s)、不带用户名密码 —— 校验不过直接抛错，
+ * 不让一个坏地址变成 canonical。
  */
 export function publicOrigin(
   fallback: string,
@@ -55,7 +57,7 @@ export function publicOrigin(
     url.password ||
     !url.hostname
   )
-    throw new Error("Invalid BLOG_PUBLIC_URL");
+    throw new Error("Invalid public origin");
   return url.origin;
 }
 function absoluteImage(value: string | null | undefined, origin: string) {
@@ -280,7 +282,7 @@ export async function resolveBlogSEO(
   );
   const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
   // 公开站基础路径：应用内部固定在 /blog，公开域名可以把它映射到别的位置。
-  // 环境变量优先于后台设置 —— 部署层面的挂载位置写在容器配置里。
+  // 后台「域名与部署」里填的优先，环境变量只在后台留空时兜底。
   const deployment = resolveBlogDeployment(settings);
   const basePath = deployment.publicBasePath;
   const publicPath = toPublicPath(canonicalPath, basePath);

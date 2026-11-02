@@ -62,7 +62,8 @@ test('the deployment section can edit every field a domain migration needs', () 
     expect(deployment).toContain(field);
     expect(deployment).toContain(`patch({ ${field}:`);
   }
-  // 目标地址与实际生效地址必须分开显示：改目标不会改变线上输出。
+  // 生效地址仍然单独显示（只读），但它现在是「服务端算出来的结果」，
+  // 而不是另一个需要你单独维护的真相来源。
   expect(deployment).toContain('deployedOrigin');
   expect(deployment).toContain('BLOG_PUBLIC_URL');
 });
@@ -127,4 +128,65 @@ test('the server still reads the deployment fields the panel writes', () => {
   expect(resolver).toContain('settings?.legacyBasePath');
   expect(resolver).toContain('settings?.legacyRedirectEnabled');
   expect(resolver).toContain('settings?.targetOrigin');
+});
+
+/**
+ * 面板不能因为环境变量就把字段锁成只读。
+ *
+ * 曾经是「环境变量优先 + 后台只读」，结果是每次换域名都要去服务器改
+ * compose、重建容器，后台面板看着能改却改不动。现在环境变量只是兜底，
+ * 后台永远是主人 —— 面板必须保持可编辑。
+ */
+test('the deployment panel never locks a field because of an environment variable', () => {
+  expect(deployment).not.toContain('envOwned');
+  // 兜底变量只出现在提示文案里，不参与禁用输入框。
+  expect(deployment).not.toContain('disabled={owned');
+  expect(deployment).not.toContain('readOnly={owned');
+  expect(deployment).toContain('envFallback');
+});
+
+/**
+ * 面板必须告诉用户「保存就生效」。
+ *
+ * 这是这次改造的核心承诺：不用改服务器环境变量、不用重启容器。
+ * 文案没了，用户就会跑去改 compose。
+ */
+test('the deployment panel states that saving takes effect without a restart', () => {
+  expect(deployment).toContain('30 秒内生效');
+  expect(deployment).toContain('不用重启容器');
+});
+
+/**
+ * 后台填的地址必须真的驱动线上输出。
+ *
+ * canonical、站点地图、RSS 都以服务端算出的生效地址为准 ——
+ * 如果这里退回直接读环境变量，后台改地址就等于没改。
+ */
+test('the panel value drives the origin the server actually renders', () => {
+  expect(serverIndex).toContain(
+    "publicOrigin(`${req.protocol}://${req.get('host')}`, runtime.targetOrigin)",
+  );
+  // siteSettings 接口回给面板的生效地址，也必须是解析后的结果。
+  expect(router).toContain('deployedOrigin: deployment.targetOrigin');
+  expect(router).not.toContain("deployedOrigin: process.env.BLOG_PUBLIC_URL");
+});
+
+/**
+ * 反馈邮件里的公开链接也要跟着后台的地址走。
+ *
+ * 否则后台换了域名，读者收到的回复通知里还是旧地址。
+ */
+test('feedback links follow the effective public origin', () => {
+  const interaction = readFileSync(
+    join(ROOT, 'server/lib/blogInteraction.ts'),
+    'utf8',
+  );
+  const moment = readFileSync(
+    join(ROOT, 'server/lib/blogMomentFeedback.ts'),
+    'utf8',
+  );
+  for (const text of [interaction, moment]) {
+    expect(text).toContain('effectivePublicOrigin(db)');
+    expect(text).not.toContain('process.env.BLOG_PUBLIC_URL ||');
+  }
 });

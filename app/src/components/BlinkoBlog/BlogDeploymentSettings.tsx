@@ -9,11 +9,17 @@ import { normalizeBasePath } from "@shared/lib/blogSeo";
 /**
  * 域名与部署。
  *
- * 三件事必须分清楚：
- *   1. 目标配置 —— 你希望使用的域名、路径、API。
- *   2. 当前生效 —— 服务端现在实际在用的地址（BLOG_PUBLIC_URL 等环境变量）。
- *   3. 检测结果 —— 某次检查在某个环境里跑出来的结论。
- * 保存目标配置不会创建 DNS、不会改服务器，也不代表域名已经上线。
+ * 这里填的就是**线上生效的**：保存后 30 秒内生效，不需要重启容器，
+ * 也不需要改服务器的环境变量。
+ *
+ * 三件事分清楚：
+ *   1. 你填的 —— 公开站对外用什么域名、挂在哪个路径、旧地址怎么跳。
+ *   2. 服务端算出来的 —— 把你填的和兜底链合起来后的实际生效值（只读）。
+ *   3. 检测结果 —— 某次「站点检查」在某个环境里跑出来的结论。
+ *
+ * 兜底链：后台优先；后台留空或填坏时，才由容器的环境变量接手
+ * （BLOG_PUBLIC_URL / BLOG_PUBLIC_BASE_PATH / BLOG_LEGACY_*）。
+ * 环境变量只是兜底，不是主人。
  */
 
 /**
@@ -84,43 +90,25 @@ export function BlogDeploymentSettings({
 }: {
   data: BlogSiteSettings;
   patch: (p: Partial<BlogSiteSettings>) => void;
+  /** 服务端算出来的生效公开地址 */
   deployedOrigin: string;
   backendOrigin: string;
-  /** 服务端算好的生效部署参数，以及「哪个字段由环境变量接管」 */
+  /** 服务端算好的生效部署参数，以及「哪些字段正由环境变量兜底」 */
   deployment?: BlogDeployment | null;
   onOpenCheck: () => void;
 }) {
   const [showDoc, setShowDoc] = useState(false);
-  const owned = deployment?.envOwned;
-  // 环境变量接管的字段显示生效值并置为只读 ——
-  // 「改了没反应」比「不能改」更难查。
-  const effectiveBasePath = owned?.publicBasePath
-    ? deployment!.publicBasePath
-    : normalizeBasePath(data.publicBasePath) || "/blog";
-  const effectiveLegacyBase = owned?.legacyBasePath
-    ? deployment!.legacyBasePath
-    : normalizeBasePath(data.legacyBasePath) || "";
-  const effectiveLegacyEnabled = owned?.legacyRedirectEnabled
-    ? deployment!.legacyRedirectEnabled
-    : !!data.legacyRedirectEnabled;
-  const basePath = effectiveBasePath;
-  const legacyBase = effectiveLegacyBase;
-
-  const targetAligned = useMemo(() => {
-    const target = deployment?.targetOrigin || data.targetOrigin;
-    if (!target || !deployedOrigin) return false;
-    try {
-      return new URL(target).origin === new URL(deployedOrigin).origin;
-    } catch {
-      return false;
-    }
-  }, [deployment?.targetOrigin, data.targetOrigin, deployedOrigin]);
+  const fallback = deployment?.envFallback;
+  // 输入框里放「你填的值」，生效值放在提示里 ——
+  // 输入框显示别人的值，保存时就会把它变成你的设置，这不对。
+  const storedBasePath = normalizeBasePath(data.publicBasePath);
+  const storedLegacyBase = normalizeBasePath(data.legacyBasePath);
+  const basePath = deployment?.publicBasePath || "/blog";
+  const legacyBase = deployment?.legacyBasePath || "";
 
   const samples = useMemo(() => {
-    // 旧地址用当前实际生效的地址，新地址用目标地址。
     const target = deployment?.targetOrigin || data.targetOrigin;
-    const fromOrigin =
-      deployedOrigin || target || "https://blog.example.com";
+    const fromOrigin = deployedOrigin || target || "https://blog.example.com";
     const toOrigin = target || deployedOrigin || "https://blog.example.com";
     const rest = (p: string) => {
       const clean =
@@ -146,7 +134,6 @@ export function BlogDeploymentSettings({
     onChange: (value: string) => void,
     hint: string,
     placeholder = "",
-    readOnly = false,
     envVar?: string,
   ) => (
     <label className="flex flex-col gap-1.5">
@@ -155,14 +142,14 @@ export function BlogDeploymentSettings({
         className="w-full"
         value={value}
         placeholder={placeholder}
-        readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
       />
       <small className="text-xs text-default-500">
         {envVar ? (
           <>
-            由环境变量 <code className="rounded bg-default-100 px-1 py-0.5">{envVar}</code>{" "}
-            接管，改它要改容器的 environment 段并重建。{hint}
+            留空时由环境变量{" "}
+            <code className="rounded bg-default-100 px-1 py-0.5">{envVar}</code>{" "}
+            兜底。{hint}
           </>
         ) : (
           hint
@@ -178,36 +165,30 @@ export function BlogDeploymentSettings({
           <div className="flex items-start gap-2 rounded-xl bg-primary-50 p-3 text-sm text-default-700">
             <Icon icon="tabler:info-circle" width={16} className="mt-0.5 shrink-0 text-primary" />
             <span>
-              这里保存的是<strong>待部署目标</strong>：不会创建 DNS、不会改服务器配置，
-              也不会让服务端立刻改用新域名。真正生效以后，以「当前实际生效地址」为准。
-              {owned && (
-                <>
-                  <br />
-                  标着「由环境变量接管」的字段由容器的 environment 段决定，
-                  在这里改不会生效 —— 那是有意为之，避免「改了没反应」。
-                </>
-              )}
+              这里填的<strong>就是线上生效的</strong>：保存后 30 秒内生效，
+              不用重启容器，也不用改服务器的环境变量。
+              <br />
+              填了会改变对外地址（canonical、站点地图、RSS、分享地址），
+              所以换域名之前先在「站点检查」里核对一遍。
             </span>
           </div>
 
           {field(
-            "目标公开站点地址",
+            "公开站点地址",
             data.targetOrigin,
             (v) => patch({ targetOrigin: v.trim() }),
-            owned?.targetOrigin
-              ? "留空则使用环境变量 BLOG_PUBLIC_URL 的值；填了就以这里为准。"
-              : "这是你希望使用的公开站点地址；保存不会自动创建 DNS 或部署服务。",
+            "公开站对外使用的域名。填了之后 canonical、站点地图、RSS 与分享地址都以它为准；留空则跟随访客当前访问的域名。",
             "https://blog.example.com",
+            fallback?.targetOrigin ? "BLOG_PUBLIC_URL" : undefined,
           )}
 
           {field(
             "公开前端基础路径",
-            effectiveBasePath,
+            storedBasePath,
             (v) => patch({ publicBasePath: v.trim() }),
-            `公开域名下博客挂载的路径，例如 / 或 /blog。当前生效：${basePath}`,
+            `公开域名下博客挂载的路径：/ 表示挂在根路径，/blog 表示挂在 /blog 下。当前生效：${basePath}`,
             "/blog",
-            owned?.publicBasePath,
-            owned?.publicBasePath ? "BLOG_PUBLIC_BASE_PATH" : undefined,
+            fallback?.publicBasePath ? "BLOG_PUBLIC_BASE_PATH" : undefined,
           )}
 
           {field(
@@ -241,42 +222,34 @@ export function BlogDeploymentSettings({
             <label className="flex items-center gap-2 text-sm">
               <BlogCheckbox
                 type="checkbox"
-                checked={effectiveLegacyEnabled}
-                disabled={owned?.legacyRedirectEnabled}
+                checked={!!data.legacyRedirectEnabled}
                 onChange={(e) => patch({ legacyRedirectEnabled: e.target.checked })}
               />
               旧地址永久跳转到对应新地址（301）
             </label>
             <small className="text-xs text-default-500">
-              {owned?.legacyRedirectEnabled ? (
+              只在目标站点部署并验证后再开启。只迁移公开路径，工作区路径不迁移；
+              与目标同域时服务端不会跳转（避免死循环），这种情况请在网关上配 301。
+              {fallback?.legacyRedirectEnabled ? (
                 <>
-                  由环境变量{" "}
-                  <code className="rounded bg-default-100 px-1 py-0.5">BLOG_LEGACY_REDIRECT</code>{" "}
-                  接管，改它要改容器的 environment 段并重建。
+                  {" "}
+                  当前留空时由环境变量{" "}
+                  <code className="rounded bg-default-100 px-1 py-0.5">
+                    BLOG_LEGACY_REDIRECT
+                  </code>{" "}
+                  兜底。
                 </>
-              ) : (
-                <>
-                  只在目标站点部署并验证后再开启。只迁移公开路径，工作区路径不迁移；
-                  与目标同域时服务端不会跳转（避免死循环），这种情况请在网关上配 301。
-                </>
-              )}
+              ) : null}
             </small>
           </div>
 
           {field(
             "旧公开路径前缀",
-            effectiveLegacyBase,
+            storedLegacyBase,
             (v) => patch({ legacyBasePath: v.trim() }),
             "旧地址的前缀，例如 /blog；留空表示不做路径迁移。",
             "/blog",
-            owned?.legacyBasePath,
-            owned?.legacyBasePath ? "BLOG_LEGACY_BASE_PATH" : undefined,
-          )}
-
-          {targetAligned && (
-            <p className="text-xs text-default-500">
-              目标地址与服务端当前生效地址一致，保存后不会改变任何线上输出。
-            </p>
+            fallback?.legacyBasePath ? "BLOG_LEGACY_BASE_PATH" : undefined,
           )}
         </CardBody>
       </Card>
@@ -296,24 +269,25 @@ export function BlogDeploymentSettings({
               ))}
             </div>
             <p className="text-xs text-default-500">
-              上面是按你填写的目标域名与基础路径算出来的示意，实际生效要在目标站点部署完成后用「站点检查」核对。
+              上面是按你填的公开站点地址与基础路径算出来的示意，实际生效要在目标站点部署完成后用「站点检查」核对。
             </p>
           </CardBody>
         </Card>
 
         <Card className="rounded-xl border border-default-200 shadow-none">
           <CardBody className="space-y-3">
-            <h3 className="text-sm font-semibold">当前实际生效地址（只读）</h3>
+            <h3 className="text-sm font-semibold">当前实际生效（服务端算出来的，只读）</h3>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium">公开站点</span>
               <BlogInput
                 className="w-full"
                 readOnly
-                value={deployedOrigin || "未配置 BLOG_PUBLIC_URL（按请求地址兜底）"}
+                value={deployedOrigin || "跟随访客当前访问的域名（未设置公开站点地址）"}
               />
               <small className="text-xs text-default-500">
-                由服务端环境变量 BLOG_PUBLIC_URL 决定。canonical、站点地图、RSS
-                都以它为准；改了上面的目标地址不会改变这里的输出。
+                由「公开站点地址」与环境变量{" "}
+                <code className="rounded bg-default-100 px-1 py-0.5">BLOG_PUBLIC_URL</code>{" "}
+                兜底链算出。canonical、站点地图、RSS 都以它为准。
               </small>
             </label>
             <label className="flex flex-col gap-1.5">
@@ -334,16 +308,16 @@ export function BlogDeploymentSettings({
           <CardBody className="space-y-3">
             <h3 className="text-sm font-semibold">部署说明</h3>
             <p className="text-xs text-default-500">
-              以下配置需要你在服务器上手工完成，研发阶段只提供可审查的模板，不动线上代理与 DNS。
+              下面两步在服务器上完成，其余配置在这个面板里改。
             </p>
             <ol className="list-decimal space-y-1.5 pl-5 text-sm text-default-600">
               <li>在 DNS 服务商添加目标域名的 A / CNAME 记录，指向服务器。</li>
               <li>配置 HTTPS 证书（Let's Encrypt 或已有证书），确认 443 可访问。</li>
               <li>按下面模板配置反向代理，只映射公开页面与公开资源。</li>
               <li>
-                在服务端环境变量里把 <code>BLOG_PUBLIC_URL</code> 设为目标地址并重启服务。
+                回到本页填写「公开站点地址」与「公开前端基础路径」，保存后 30 秒内生效。
               </li>
-              <li>回到「站点检查」逐项核对，确认后再打开旧地址永久跳转。</li>
+              <li>用「站点检查」逐项核对，确认后再打开旧地址永久跳转。</li>
             </ol>
             <Button
               size="sm"
@@ -361,7 +335,7 @@ export function BlogDeploymentSettings({
             <h4 className="text-sm font-semibold">回滚</h4>
             <ol className="list-decimal space-y-1.5 pl-5 text-sm text-default-600">
               <li>
-                把 <code>BLOG_PUBLIC_URL</code> 改回原值并重启服务，公开输出立刻回到旧地址。
+                把「公开站点地址」改回原值（或清空让它跟随访问域名），30 秒内公开输出回到旧地址。
               </li>
               <li>关闭「旧地址永久跳转到对应新地址」，旧链接立即停止跳转。</li>
               <li>删除或停用新增的 DNS 记录与反向代理站点，公开域名回落到原状态。</li>

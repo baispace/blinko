@@ -24,6 +24,7 @@ import { publicBlogOwner } from "./blog";
 import { publicPublicationWhere } from "./publication";
 import { ensureShareImage } from "./blogCoverShare";
 import { BLOG_FONT_VARIABLE, blogFontStack } from "../../shared/lib/blogFont";
+import { resolveBlogDeployment } from "../../shared/lib/blogDeployment";
 import { resolveFontStylesheetUrl } from "../../shared/lib/fontStylesheetUrl";
 import { buildStaticCdnBase } from "../../shared/lib/pathConstant";
 
@@ -279,7 +280,9 @@ export async function resolveBlogSEO(
   );
   const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
   // 公开站基础路径：应用内部固定在 /blog，公开域名可以把它映射到别的位置。
-  const basePath = normalizeBasePath(settings?.publicBasePath) || "/blog";
+  // 环境变量优先于后台设置 —— 部署层面的挂载位置写在容器配置里。
+  const deployment = resolveBlogDeployment(settings);
+  const basePath = deployment.publicBasePath;
   const publicPath = toPublicPath(canonicalPath, basePath);
   const isList =
     canonicalPath === "/blog" || /^\/blog\/t\/[^/]+$/.test(canonicalPath);

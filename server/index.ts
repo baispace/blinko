@@ -5,14 +5,18 @@ import { publicBlogOwner } from './lib/blog';
 import { readBlogSiteSettings } from './lib/blogSiteSettings';
 import { legacyRedirectTarget } from './lib/blogRedirects';
 import { setSiteCheckSelfOrigin } from './lib/blogSiteCheck';
-import { normalizeBasePath, publicRedirectTarget } from '../shared/lib/blogSeo';
+import { publicRedirectTarget } from '../shared/lib/blogSeo';
+import { resolveBlogDeployment } from '../shared/lib/blogDeployment';
 const blogSEOByRequest = new WeakMap<object, BlogSEO>();
 
 /**
  * 公开站的运行时配置（基础路径、旧地址跳转规则）。
  *
- * 这些值存在数据库里，但每个请求都查一次太贵 —— 缓存 30 秒足够，
+ * 这些值默认存在数据库里，但每个请求都查一次太贵 —— 缓存 30 秒足够，
  * 改完配置最多半分钟生效。
+ *
+ * 环境变量优先于数据库：部署层面决定的挂载位置与目标域名写在容器的
+ * environment 段，后台只接管没被环境变量设过的字段。
  */
 type PublicRuntime = {
   loadedAt: number;
@@ -40,13 +44,14 @@ async function publicRuntime(): Promise<PublicRuntime> {
       const stored = await readBlogSiteSettings(prisma, owner);
       if (stored.configured) {
         const data = stored.data;
+        const deployment = resolveBlogDeployment(data);
         value = {
           loadedAt: Date.now(),
-          basePath: normalizeBasePath(data.publicBasePath) || '/blog',
-          legacyEnabled: !!data.legacyRedirectEnabled,
-          legacyBasePath: normalizeBasePath(data.legacyBasePath) || '',
-          publicBasePath: normalizeBasePath(data.publicBasePath) || '/blog',
-          targetOrigin: data.targetOrigin || '',
+          basePath: deployment.publicBasePath,
+          legacyEnabled: deployment.legacyRedirectEnabled,
+          legacyBasePath: deployment.legacyBasePath,
+          publicBasePath: deployment.publicBasePath,
+          targetOrigin: deployment.targetOrigin,
         };
       }
     }

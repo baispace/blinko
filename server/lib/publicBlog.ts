@@ -8,6 +8,7 @@ import { publicExcerpt, publicText } from "./publicText";
 import { toPublicPath } from "../../shared/lib/blogSeo";
 import { normalizeCoverFocus } from "../../shared/lib/blogCover";
 import { normalizeTopicDisplayMode } from "../../shared/lib/blogTopicMode";
+import { resolveBlogDeployment } from "../../shared/lib/blogDeployment";
 import {
   publicCoverTextDTO,
   readPublicCoverConfig,
@@ -544,7 +545,8 @@ export async function publicIndex(
       gaId: settings.data.gaEnabled ? settings.data.gaId : "",
       baiduId: settings.data.baiduEnabled ? settings.data.baiduId : "",
       excludeOwner: settings.data.excludeOwner,
-      targetOrigin: settings.data.targetOrigin,
+      // 目标公开地址：后台填了以后台为准，没填才回落到 BLOG_PUBLIC_URL。
+      targetOrigin: resolveBlogDeployment(settings.data).targetOrigin,
       friendApplyNote: settings.data.friendApplyNote,
       showPublicStats: settings.data.showPublicStats,
       // 站点时区：页脚推广位的起止日期按它判定，不按服务器所在时区。

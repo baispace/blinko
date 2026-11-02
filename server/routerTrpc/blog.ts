@@ -28,6 +28,7 @@ import {
 } from "../lib/blogSiteSettings";
 import { runSiteChecks, siteCheckRateLimited } from "../lib/blogSiteCheck";
 import { BLOG_FIXED_PAGES } from "../../shared/lib/blogSeo";
+import { resolveBlogDeployment } from "../../shared/lib/blogDeployment";
 import { Prisma } from "@prisma/client";
 import {
   DISTRIBUTION_MODES,
@@ -282,7 +283,17 @@ export const blogRouter = router({
   topicSEO: authProcedure.input(z.object({id:z.number().int().positive()})).query(({ctx,input})=>readTopicSeo(prisma,Number(ctx.id),input.id)),
   saveTopicSEO: authProcedure.input(z.object({id:z.number().int().positive(),data:articleSeoSchema,revision:z.string()})).mutation(({ctx,input})=>saveTopicSeo(prisma,Number(ctx.id),input.id,input.data,input.revision)),
   engagement: authProcedure.input(z.object({days:z.union([z.literal(1),z.literal(7),z.literal(30)])})).query(({ctx,input})=>blogEngagement(prisma,Number(ctx.id),input.days)),
-  siteSettings: authProcedure.query(async ({ctx}) => ({...await readBlogSiteSettings(prisma, Number(ctx.id)), deployedOrigin: process.env.BLOG_PUBLIC_URL || '', backendOrigin: process.env.NEXTAUTH_URL || ''})),
+  siteSettings: authProcedure.query(async ({ctx}) => {
+    const stored = await readBlogSiteSettings(prisma, Number(ctx.id));
+    return {
+      ...stored,
+      deployedOrigin: process.env.BLOG_PUBLIC_URL || '',
+      backendOrigin: process.env.NEXTAUTH_URL || '',
+      // 生效的部署参数与「谁说了算」：
+      // 环境变量接管的字段在后台是只读的，避免出现「改了没反应」。
+      deployment: resolveBlogDeployment(stored.configured ? stored.data : null),
+    };
+  }),
   saveSiteSettings: authProcedure.input(z.object({data: blogSiteSettingsSchema, revision: z.string()})).mutation(({ctx,input}) => saveBlogSiteSettings(prisma, Number(ctx.id), input.data, input.revision)),
   contentSEO: authProcedure.input(z.object({id: z.number().int().positive()})).query(async ({ctx,input}) => {
     const note = await prisma.notes.findFirst({where:{id:input.id,accountId:Number(ctx.id)},include:{publication:true}});

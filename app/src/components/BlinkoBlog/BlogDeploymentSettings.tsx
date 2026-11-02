@@ -3,6 +3,7 @@ import { Button, Card, CardBody } from "@heroui/react";
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import type { BlogSiteSettings } from "@shared/lib/blogSiteSettings";
+import type { BlogDeployment } from "@shared/lib/blogDeployment";
 import { normalizeBasePath } from "@shared/lib/blogSeo";
 
 /**
@@ -78,34 +79,49 @@ export function BlogDeploymentSettings({
   patch,
   deployedOrigin,
   backendOrigin,
+  deployment,
   onOpenCheck,
 }: {
   data: BlogSiteSettings;
   patch: (p: Partial<BlogSiteSettings>) => void;
   deployedOrigin: string;
   backendOrigin: string;
+  /** 服务端算好的生效部署参数，以及「哪个字段由环境变量接管」 */
+  deployment?: BlogDeployment | null;
   onOpenCheck: () => void;
 }) {
   const [showDoc, setShowDoc] = useState(false);
-  const basePath = normalizeBasePath(data.publicBasePath) || "/blog";
-  const legacyBase = normalizeBasePath(data.legacyBasePath) || "";
+  const owned = deployment?.envOwned;
+  // 环境变量接管的字段显示生效值并置为只读 ——
+  // 「改了没反应」比「不能改」更难查。
+  const effectiveBasePath = owned?.publicBasePath
+    ? deployment!.publicBasePath
+    : normalizeBasePath(data.publicBasePath) || "/blog";
+  const effectiveLegacyBase = owned?.legacyBasePath
+    ? deployment!.legacyBasePath
+    : normalizeBasePath(data.legacyBasePath) || "";
+  const effectiveLegacyEnabled = owned?.legacyRedirectEnabled
+    ? deployment!.legacyRedirectEnabled
+    : !!data.legacyRedirectEnabled;
+  const basePath = effectiveBasePath;
+  const legacyBase = effectiveLegacyBase;
 
   const targetAligned = useMemo(() => {
-    if (!data.targetOrigin || !deployedOrigin) return false;
+    const target = deployment?.targetOrigin || data.targetOrigin;
+    if (!target || !deployedOrigin) return false;
     try {
-      return (
-        new URL(data.targetOrigin).origin === new URL(deployedOrigin).origin
-      );
+      return new URL(target).origin === new URL(deployedOrigin).origin;
     } catch {
       return false;
     }
-  }, [data.targetOrigin, deployedOrigin]);
+  }, [deployment?.targetOrigin, data.targetOrigin, deployedOrigin]);
 
   const samples = useMemo(() => {
     // 旧地址用当前实际生效的地址，新地址用目标地址。
+    const target = deployment?.targetOrigin || data.targetOrigin;
     const fromOrigin =
-      deployedOrigin || data.targetOrigin || "https://blog.example.com";
-    const toOrigin = data.targetOrigin || deployedOrigin || "https://blog.example.com";
+      deployedOrigin || target || "https://blog.example.com";
+    const toOrigin = target || deployedOrigin || "https://blog.example.com";
     const rest = (p: string) => {
       const clean =
         legacyBase && p.startsWith(legacyBase)
@@ -122,7 +138,7 @@ export function BlogDeploymentSettings({
       fromUrl: fromOrigin + s.from,
       toUrl: toOrigin + s.to,
     }));
-  }, [data.targetOrigin, deployedOrigin, basePath, legacyBase]);
+  }, [deployment?.targetOrigin, data.targetOrigin, deployedOrigin, basePath, legacyBase]);
 
   const field = (
     label: string,
@@ -131,6 +147,7 @@ export function BlogDeploymentSettings({
     hint: string,
     placeholder = "",
     readOnly = false,
+    envVar?: string,
   ) => (
     <label className="flex flex-col gap-1.5">
       <span className="text-sm font-medium">{label}</span>
@@ -141,7 +158,16 @@ export function BlogDeploymentSettings({
         readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
       />
-      <small className="text-xs text-default-500">{hint}</small>
+      <small className="text-xs text-default-500">
+        {envVar ? (
+          <>
+            由环境变量 <code className="rounded bg-default-100 px-1 py-0.5">{envVar}</code>{" "}
+            接管，改它要改容器的 environment 段并重建。{hint}
+          </>
+        ) : (
+          hint
+        )}
+      </small>
     </label>
   );
 
@@ -154,6 +180,13 @@ export function BlogDeploymentSettings({
             <span>
               这里保存的是<strong>待部署目标</strong>：不会创建 DNS、不会改服务器配置，
               也不会让服务端立刻改用新域名。真正生效以后，以「当前实际生效地址」为准。
+              {owned && (
+                <>
+                  <br />
+                  标着「由环境变量接管」的字段由容器的 environment 段决定，
+                  在这里改不会生效 —— 那是有意为之，避免「改了没反应」。
+                </>
+              )}
             </span>
           </div>
 
@@ -161,16 +194,20 @@ export function BlogDeploymentSettings({
             "目标公开站点地址",
             data.targetOrigin,
             (v) => patch({ targetOrigin: v.trim() }),
-            "这是你希望使用的公开站点地址；保存不会自动创建 DNS 或部署服务。",
+            owned?.targetOrigin
+              ? "留空则使用环境变量 BLOG_PUBLIC_URL 的值；填了就以这里为准。"
+              : "这是你希望使用的公开站点地址；保存不会自动创建 DNS 或部署服务。",
             "https://blog.example.com",
           )}
 
           {field(
             "公开前端基础路径",
-            data.publicBasePath,
+            effectiveBasePath,
             (v) => patch({ publicBasePath: v.trim() }),
             `公开域名下博客挂载的路径，例如 / 或 /blog。当前生效：${basePath}`,
             "/blog",
+            owned?.publicBasePath,
+            owned?.publicBasePath ? "BLOG_PUBLIC_BASE_PATH" : undefined,
           )}
 
           {field(
@@ -204,23 +241,36 @@ export function BlogDeploymentSettings({
             <label className="flex items-center gap-2 text-sm">
               <BlogCheckbox
                 type="checkbox"
-                checked={!!data.legacyRedirectEnabled}
+                checked={effectiveLegacyEnabled}
+                disabled={owned?.legacyRedirectEnabled}
                 onChange={(e) => patch({ legacyRedirectEnabled: e.target.checked })}
               />
               旧地址永久跳转到对应新地址（301）
             </label>
             <small className="text-xs text-default-500">
-              只在目标站点部署并验证后再开启。只迁移公开路径，工作区路径不迁移；
-              与目标同域时服务端不会跳转（避免死循环），这种情况请在网关上配 301。
+              {owned?.legacyRedirectEnabled ? (
+                <>
+                  由环境变量{" "}
+                  <code className="rounded bg-default-100 px-1 py-0.5">BLOG_LEGACY_REDIRECT</code>{" "}
+                  接管，改它要改容器的 environment 段并重建。
+                </>
+              ) : (
+                <>
+                  只在目标站点部署并验证后再开启。只迁移公开路径，工作区路径不迁移；
+                  与目标同域时服务端不会跳转（避免死循环），这种情况请在网关上配 301。
+                </>
+              )}
             </small>
           </div>
 
           {field(
             "旧公开路径前缀",
-            data.legacyBasePath,
+            effectiveLegacyBase,
             (v) => patch({ legacyBasePath: v.trim() }),
             "旧地址的前缀，例如 /blog；留空表示不做路径迁移。",
             "/blog",
+            owned?.legacyBasePath,
+            owned?.legacyBasePath ? "BLOG_LEGACY_BASE_PATH" : undefined,
           )}
 
           {targetAligned && (

@@ -13,6 +13,7 @@ import { BlogSubscribeSettings } from "./BlogSubscribeSettings";
 import { BlogFooterSettingsPanel } from "./BlogFooterSettings";
 import { BlogDeploymentSettings } from "./BlogDeploymentSettings";
 import { resolveSeoFields, BLOG_FIXED_PAGES, toPublicPath } from "@shared/lib/blogSeo";
+import type { BlogDeployment } from "@shared/lib/blogDeployment";
 import { BlogSiteCheckPanel } from "./BlogSiteCheckPanel";
 
 type BlogFontOption = {
@@ -53,6 +54,7 @@ export function BlogSiteSettingsPanel({
     [revision, setRevision] = useState(""),
     [deployed, setDeployed] = useState(""),
     [backend, setBackend] = useState(""),
+    [deployment, setDeployment] = useState<BlogDeployment | null>(null),
     [tab, setTab] = useState("basic"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -103,6 +105,7 @@ export function BlogSiteSettingsPanel({
       setRevision(r.revision);
       setDeployed(r.deployedOrigin);
       setBackend(r.backendOrigin ?? "");
+      setDeployment(r.deployment ?? null);
       setError("");
     } catch (e: any) {
       setError(e.message);
@@ -388,6 +391,7 @@ export function BlogSiteSettingsPanel({
           patch={patch}
           deployedOrigin={deployed}
           backendOrigin={backend}
+          deployment={deployment}
           onOpenCheck={() => setTab("checks")}
         />
       ) : tab === "tracking" ? (

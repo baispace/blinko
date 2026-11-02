@@ -21,6 +21,7 @@ const ROUTER = join(ROOT, 'server/routerTrpc/blog.ts');
 const SCHEMA = join(ROOT, 'shared/lib/blogSiteSettings.ts');
 const SERVER_INDEX = join(ROOT, 'server/index.ts');
 const PUBLIC_BLOG = join(ROOT, 'server/lib/publicBlog.ts');
+const RESOLVER = join(ROOT, 'shared/lib/blogDeployment.ts');
 
 const panel = readFileSync(PANEL, 'utf8');
 const deployment = readFileSync(DEPLOYMENT, 'utf8');
@@ -29,6 +30,7 @@ const router = readFileSync(ROUTER, 'utf8');
 const schema = readFileSync(SCHEMA, 'utf8');
 const serverIndex = readFileSync(SERVER_INDEX, 'utf8');
 const publicBlog = readFileSync(PUBLIC_BLOG, 'utf8');
+const resolver = readFileSync(RESOLVER, 'utf8');
 
 /**
  * 导航里承诺了「域名与部署」，站点设置面板就必须真的有这个分区。
@@ -118,14 +120,11 @@ test('the server still reads the deployment fields the panel writes', () => {
   expect(schema).toContain('legacyBasePath: basePath.default("")');
   expect(schema).toContain('legacyRedirectEnabled: z.boolean().default(false)');
 
-  // 服务端把这两个字段读出来决定对外路径与旧地址跳转。
-  expect(serverIndex).toContain(
-    "publicBasePath: normalizeBasePath(data.publicBasePath) || '/blog'",
-  );
-  expect(serverIndex).toContain("targetOrigin: data.targetOrigin || ''");
-  expect(serverIndex).toContain('legacyEnabled: !!data.legacyRedirectEnabled');
-  expect(serverIndex).toContain(
-    "legacyBasePath: normalizeBasePath(data.legacyBasePath) || ''",
-  );
-  expect(publicBlog).toContain('targetOrigin: settings.data.targetOrigin');
+  // 服务端不再各自读一遍原始字段，而是统一走 resolveBlogDeployment ——
+  // 否则 canonical、站点地图、301 各自算一遍，漏改一处地址就一半带前缀一半不带。
+  expect(serverIndex).toContain('resolveBlogDeployment(data)');
+  expect(resolver).toContain('settings?.publicBasePath');
+  expect(resolver).toContain('settings?.legacyBasePath');
+  expect(resolver).toContain('settings?.legacyRedirectEnabled');
+  expect(resolver).toContain('settings?.targetOrigin');
 });

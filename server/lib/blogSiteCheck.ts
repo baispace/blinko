@@ -3,6 +3,7 @@ import { safeFetch, type SafeFetchResult } from "./safeFetch";
 import { publicPublicationWhere } from "./publication";
 import { readBlogSiteSettings } from "./blogSiteSettings";
 import { readTrackingStates } from "./blogTrackingState";
+import { resolveBlogDeployment } from "../../shared/lib/blogDeployment";
 
 /**
  * 站点检查。
@@ -639,8 +640,10 @@ export async function runSiteChecks(
   }
 
   // ---- 旧地址永久跳转 ---------------------------------------------------
-  const legacyBase = settings?.legacyBasePath || "";
-  if (!settings?.legacyRedirectEnabled) {
+  // 环境变量优先于后台设置 —— 检查要反映真正生效的那一套。
+  const deployment = resolveBlogDeployment(settings);
+  const legacyBase = deployment.legacyBasePath;
+  if (!deployment.legacyRedirectEnabled) {
     push({
       id: "redirect",
       name: "旧链接永久跳转",

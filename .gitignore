@@ -52,6 +52,10 @@ server/public
 /[a-z][0-9]*.yml
 /[a-z]*.yml
 !/docker-compose*.yml
+# 生产编排文件：里面是 NEXTAUTH_SECRET / POSTGRES_PASSWORD 等真实密钥，
+# 而本仓库是公开的 —— 只放服务器上，绝不入库。
+# 要版本化的是 docker-compose.server.example.yml（只含占位符）。
+docker-compose.server.yml
 # local design/visual reference (not for the open-source repo)
 .shots/
 .workbuddy/

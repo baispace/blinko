@@ -1,0 +1,82 @@
+# 生产编排模板 —— 服务器上真正跑的那份是 docker-compose.server.yml（**不入库**）。
+#
+# 为什么不入库：这份文件里有 NEXTAUTH_SECRET 和 POSTGRES_PASSWORD，
+# 而本仓库是公开的。密钥只放服务器上：
+#   /www/wwwroot/blinko/docker-compose.server.yml
+#
+# 用法（服务器上）：
+#   1. cp docker-compose.server.example.yml docker-compose.server.yml
+#   2. 把 ${VAR} 换成真实值，或者在同目录放一个 .env 提供它们
+#      （.env 已被 .gitignore 忽略）
+#   3. docker compose -f docker-compose.server.yml up -d
+#
+# 服务名与容器的对应关系（2026-11-02 实测）：
+#   服务 blinko → 容器 blinko   → 镜像 ghcr.io/baispace/blinko:prod → 127.0.0.1:1111
+#   服务 db     → 容器 blinko-db → 镜像 postgres:14-alpine           → 仅容器网络内可达
+#
+# 数据库的数据在 bind mount 里（/www/wwwroot/blinko/pgdata），
+# 所以重建容器不会丢数据；但重建数据库容器仍要多等十几秒，
+# 改环境变量时用 `up -d --no-deps blinko` 只重建 web 容器。
+
+services:
+  blinko:
+    container_name: blinko
+    image: ghcr.io/baispace/blinko:prod
+    restart: always
+    environment:
+      NODE_ENV: production
+      # nginx 反代在前面，采信 X-Forwarded-Proto
+      TRUST_PROXY: "1"
+      DISABLE_SECURE_COOKIE: "false"
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      # 工作区地址。必须与服务器证书覆盖的域名一致 ——
+      # 证书只签 studio.baispace.cn 时，写成别的域名会 TLS 握手失败，
+      # 第三方登录的回调也会打不通。
+      NEXTAUTH_URL: https://studio.baispace.cn
+      NEXT_PUBLIC_BASE_URL: https://studio.baispace.cn
+      # 公开博客挂到独立域名根路径。改这两个值需要重建容器（restart 不够）。
+      # BLOG_LEGACY_BASE_PATH / BLOG_LEGACY_REDIRECT 验收通过后再放开。
+      BLOG_PUBLIC_URL: https://blog.baispace.cn
+      BLOG_PUBLIC_BASE_PATH: /
+    ports:
+      - "127.0.0.1:1111:1111"
+    volumes:
+      - /www/wwwroot/blinko/data:/app/.blinko
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1111/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    container_name: blinko-db
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      # 用户名与库名来自 DATABASE_URL：postgresql://blinko:<密码>@db:5432/blinko
+      POSTGRES_USER: blinko
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: blinko
+    volumes:
+      - /www/wwwroot/blinko/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blinko -d blinko"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

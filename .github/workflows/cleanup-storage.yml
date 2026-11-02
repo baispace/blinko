@@ -1,0 +1,72 @@
+name: Cleanup Storage
+
+# GitHub 侧的存储有两个池子，都在同一个账户下：
+#
+#   1. Actions 构建缓存（actions/cache）：每仓库上限 10 GB。
+#      超了不会报错，而是静默淘汰最旧的缓存 —— 表现为「缓存命中率忽高忽低」，
+#      每次构建都要重新装依赖，越堆越慢。
+#   2. Actions artifacts（构建产物）：与 Packages 共享套餐配额，
+#      GitHub Free 只有 500 MB。超了之后新的产物上传会被直接拒绝。
+#
+# 这两个池子都不是服务器磁盘，和「服务器存储」是两回事 ——
+# 服务器磁盘满了才需要动 docker image，这里不需要。
+#
+# 本工作流按天清理，保证两个池子都有界。手动触发：Actions → Cleanup Storage → Run workflow。
+
+on:
+  schedule:
+    # 每天 UTC 03:17（北京时间 11:17），避开整点
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  cleanup:
+    name: 清理缓存与构建产物
+    runs-on: ubuntu-latest
+    steps:
+      - name: 清理过期构建缓存
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          # 保留最近 2 天：够覆盖昨天的构建，又不至于把 10 GB 撑满
+          KEEP_DAYS: 2
+        run: |
+          cutoff=$(date -u -d "$KEEP_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "删除 $cutoff 之前访问过的缓存"
+          gh api --paginate "/repos/$REPO/actions/caches?per_page=100" \
+            --jq ".actions_caches[] | select(.last_accessed_at < \"$cutoff\") | .id" \
+            | while read -r id; do
+                gh api -X DELETE "/repos/$REPO/actions/caches/$id" >/dev/null 2>&1 || true
+              done
+
+      - name: 清理过期构建产物
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          # 产物随时可以按提交号重建，留 3 天足够
+          KEEP_DAYS: 3
+        run: |
+          cutoff=$(date -u -d "$KEEP_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "删除 $cutoff 之前产生的 artifact"
+          gh api --paginate "/repos/$REPO/actions/artifacts?per_page=100" \
+            --jq ".artifacts[] | select(.created_at < \"$cutoff\") | .id" \
+            | while read -r id; do
+                gh api -X DELETE "/repos/$REPO/actions/artifacts/$id" >/dev/null 2>&1 || true
+              done
+
+      - name: 输出当前用量
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          caches=$(gh api "/repos/$REPO/actions/caches?per_page=100" --jq '.total_count')
+          arts=$(gh api "/repos/$REPO/actions/artifacts?per_page=100" --jq '.total_count')
+          bytes=$(gh api "/repos/$REPO/actions/artifacts?per_page=100" --jq '[.artifacts[].size_in_bytes] | add // 0')
+          {
+            echo "构建缓存: $caches 条（上限 10 GB / 仓库）"
+            echo "构建产物: $arts 个 / $((bytes / 1048576)) MB（Free 套餐 500 MB，与 Packages 共享）"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

@@ -139,7 +139,10 @@ jobs:
           name: Jomio-macOS-${{ steps.tgt.outputs.value }}-${{ env.SHA_SHORT }}
           path: ${{ runner.temp }}/Jomio-*.app.tar.gz
           if-no-files-found: error
-          retention-days: 14
+          # 产物随时能按提交号重建，保留期太长会吃满 artifacts 配额
+          # （与 Packages 共享，GitHub Free 只有 500 MB）。
+          # 正式发布走 release-mac.yml 的 Release 资产，不受这里影响。
+          retention-days: 3
 
       - name: 输出安装说明
         run: |

@@ -58,6 +58,44 @@ export function publicBasename(): string {
 }
 
 /**
+ * 判断当前请求该不该渲染公开博客。
+ *
+ * 公开域名把博客挂在根路径时（基础路径 = "/"），整个 origin 都属于公开站。
+ * 这时**不能再用路径前缀判断** —— "/" 的下一层前缀是 "//"，任何路径都匹配不上，
+ * 结果是首页正常、专题页和文章页全部落回工作区界面。
+ * 根路径挂载改用「当前 origin 是不是公开站点地址」判断。
+ *
+ * 同域部署（公开博客与工作区共用一个域名）的基础路径不是 "/"，仍按路径判断，
+ * 所以公开站与工作区在同一个域名下也不会互相串台。
+ */
+export function isPublicBlogRequest(input: {
+  /** 浏览器地址栏里的路径（公开域名下是去掉前缀后的公开路径） */
+  pathname: string;
+  /** 浏览器地址栏里的 origin */
+  origin: string;
+  /** 服务端下发的公开基础路径 */
+  basePath: string;
+  /** 服务端下发的公开站点地址 */
+  publicOrigin?: string;
+  /** 部署方式：proxy（同源反代）/ separate（前后端分开） */
+  deploymentMode?: string;
+  /** 构建期就是公开站专用产物 */
+  publicOnlyBuild?: boolean;
+}) {
+  const { pathname, origin, basePath } = input;
+  if (input.publicOnlyBuild) return true;
+  const publicOrigin = (input.publicOrigin || "").trim().replace(/\/+$/, "");
+  const originMatches = publicOrigin.length > 0 && origin === publicOrigin;
+  // separate 模式下公开前端独立部署，只有公开站点地址本身才算公开站。
+  const separate =
+    input.deploymentMode === "separate" && publicOrigin.length > 0;
+  if (separate) return originMatches;
+  // 根路径挂载：整个 origin 都是公开站。
+  if (basePath === "/") return originMatches;
+  return pathname === basePath || pathname.startsWith(basePath + "/");
+}
+
+/**
  * 把应用内部路径换成路由路径（相对 basename）。
  *
  * "/blog/topics" → "/topics"，"/blog" → "/"。

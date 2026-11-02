@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom/client";
 import "./styles/globals.css";
 import { silenceKnownDevNoise } from "./lib/devConsole";
+import { isPublicBlogRequest } from "./lib/blogPublicBase";
 
 silenceKnownDevNoise();
 
@@ -26,17 +27,19 @@ void (async () => {
     typeof runtime?.basePath === "string" && runtime.basePath.startsWith("/")
       ? runtime.basePath.replace(/\/+$/, "") || "/"
       : "/blog";
-  const separate =
-    runtime?.deploymentMode === "separate" &&
-    typeof runtime?.publicOrigin === "string" &&
-    runtime.publicOrigin.length > 0;
   const publicOnlyBuild = import.meta.env.VITE_BLOG_PUBLIC_ONLY === "true";
-  const publicBlog = publicOnlyBuild
-    ? true
-    : separate
-      ? window.location.origin === runtime?.publicOrigin
-      : window.location.pathname === basePath ||
-        window.location.pathname.startsWith(basePath + "/");
+  /**
+   * 公开站还是工作区，由「公开站判定」说了算，不在这里手写前缀比较 ——
+   * 根路径挂载时前缀比较会失效，判定规则集中在一个函数里。
+   */
+  const publicBlog = isPublicBlogRequest({
+    pathname: window.location.pathname,
+    origin: window.location.origin,
+    basePath,
+    publicOrigin: runtime?.publicOrigin,
+    deploymentMode: runtime?.deploymentMode,
+    publicOnlyBuild,
+  });
   const { default: App } = publicBlog
     ? await import("./PublicBlogApp")
     : await import("./App");

@@ -11,6 +11,7 @@ import { blogFontStack } from "@shared/lib/blogFont";
 import { BlogTrackingSettings } from "./BlogTrackingSettings";
 import { BlogSubscribeSettings } from "./BlogSubscribeSettings";
 import { BlogFooterSettingsPanel } from "./BlogFooterSettings";
+import { BlogDeploymentSettings } from "./BlogDeploymentSettings";
 import { resolveSeoFields, BLOG_FIXED_PAGES, toPublicPath } from "@shared/lib/blogSeo";
 import { BlogSiteCheckPanel } from "./BlogSiteCheckPanel";
 
@@ -27,6 +28,7 @@ const tabs = [
   ["seo", "SEO"],
   ["subscribe", "订阅设置"],
   ["footer", "页脚与备案"],
+  ["deployment", "域名与部署"],
   ["tracking", "统计接入"],
   ["checks", "站点检查"],
 ] as const;
@@ -36,6 +38,7 @@ const TAB_HINT: Record<string, string> = {
   seo: "公开页面的默认标题模板、描述、分享图与搜索引擎收录开关。文章自动继承，也可在底层单独覆盖。",
   subscribe: "订阅页要用的渠道与文案：微信公众号、RSS、站点介绍与订阅说明。",
   footer: "页脚要挂的备案号、版权署名，以及带生效区间的推广位。",
+  deployment: "公开站对外的域名、路径、API 与旧地址跳转。保存的是待部署目标，不会改服务器。",
   tracking: "接入统计代码，用来了解访客从哪来、看了多久。",
   checks: "上线前自查：域名解析、页面可达与缓存是否正常。",
 };
@@ -49,6 +52,7 @@ export function BlogSiteSettingsPanel({
     [saved, setSaved] = useState<BlogSiteSettings>(defaults),
     [revision, setRevision] = useState(""),
     [deployed, setDeployed] = useState(""),
+    [backend, setBackend] = useState(""),
     [tab, setTab] = useState("basic"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -98,6 +102,7 @@ export function BlogSiteSettingsPanel({
       setSaved(r.data);
       setRevision(r.revision);
       setDeployed(r.deployedOrigin);
+      setBackend(r.backendOrigin ?? "");
       setError("");
     } catch (e: any) {
       setError(e.message);
@@ -376,6 +381,14 @@ export function BlogSiteSettingsPanel({
           patch={(p) =>
             patch({ footer: { ...defaults.footer, ...data.footer, ...p } })
           }
+        />
+      ) : tab === "deployment" ? (
+        <BlogDeploymentSettings
+          data={data}
+          patch={patch}
+          deployedOrigin={deployed}
+          backendOrigin={backend}
+          onOpenCheck={() => setTab("checks")}
         />
       ) : tab === "tracking" ? (
         <BlogTrackingSettings data={data} patch={patch} />

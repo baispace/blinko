@@ -5,7 +5,7 @@
 
 /* Shared keyboard feedback; individual components can provide a stronger ring. */
 :where(button, a, input, textarea, select, [role="button"]):focus-visible {
-  outline:2px solid color-mix(in srgb,var(--primary,#2f6feb) 65%,transparent);
+  outline:2px solid color-mix(in srgb,var(--primary,#5F40FD) 65%,transparent);
   outline-offset:2px;
 }
 /* Document titles are an inline writing surface. Keep the caret as their
@@ -57,7 +57,7 @@ html {
 }
 
 ::selection {
-  background-color: color-mix(in srgb, var(--primary, #2f6feb) 25%, transparent);
+  background-color: color-mix(in srgb, var(--primary, #5F40FD) 25%, transparent);
 }
 
 ::marker {
@@ -285,7 +285,10 @@ body {
        改成前景色低透明度，量级对齐飞书文档（亮 ~rgba(0,0,0,.08)）。 */
     --divider: rgb(0 0 0 / 0.08);
 
-    --primary: #2f6feb;
+    /* 默认主色就是品牌紫（brandGeometry 的 BRAND_COLOR）。
+       以前这里是一支和品牌无关的旧蓝，于是登录页会出现「紫 J 标记 + 蓝按钮」。
+       改色请同时改 brandGeometry.ts，两边的值由测试钉住。 */
+    --primary: #5F40FD;
     --primary-foreground: hsl(210 40% 98%);
 
     --secondary: hsl(253, 53%, 59%);
@@ -346,7 +349,9 @@ body {
     /* 暗色分割线要比亮色稍重一点才看得见，但仍远浅于 --hover(#292929)。 */
     --divider: rgb(255 255 255 / 0.13);
 
-    --primary: #4d8bff;
+    /* 暗色下主色提亮到品牌浅紫（BRAND_COLOR_DARK），前景换成近黑，
+       和 BrandMark 的暗色档保持一致。 */
+    --primary: #CABEFC;
     --primary-foreground: hsl(0, 0%, 0%);
 
     --secondary: hsl(253, 53%, 59%);

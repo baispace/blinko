@@ -60,6 +60,25 @@ export const BRAND_NAME = {
 } as const;
 
 /**
+ * The brand colours.
+ *
+ * `BRAND_COLOR` is the product purple: it paints the favicon, the app icon,
+ * the manifest theme colour and — as the default `--primary` — every button,
+ * selection and focus ring in the UI. Those used to be an unrelated blue, so
+ * a deployment could show a purple mark next to a blue login button.
+ *
+ * `BRAND_COLOR_DARK` is the step used on dark surfaces: the product purple is
+ * too dark to read on near-black, so dark mode steps up to a light lavender
+ * and pairs it with a near-black foreground.
+ */
+export const BRAND_COLOR = '#5F40FD';
+export const BRAND_COLOR_DARK = '#CABEFC';
+/** Gradient start of the dark variants, one step below the dark primary. */
+export const BRAND_COLOR_SOFT = '#A791FE';
+/** Near-black used on printed material and on the dark app icon plate. */
+export const BRAND_COLOR_INK = '#101229';
+
+/**
  * Wordmark of the running deployment.
  *
  * The Chinese name belongs to the default brand only: a deployment that

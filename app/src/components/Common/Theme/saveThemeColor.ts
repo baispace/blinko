@@ -3,6 +3,7 @@ import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { syncHeroAccent } from '@/lib/themeAccent';
+import { BRAND_COLOR, BRAND_COLOR_DARK } from '@/components/Common/Brand/brandGeometry';
 export async function saveThemeColor(background: string, foreground: string) {
   try {
     await Promise.all([api.config.update.mutate({key:'themeColor',value:background}),api.config.update.mutate({key:'themeForegroundColor',value:foreground})]);
@@ -10,7 +11,7 @@ export async function saveThemeColor(background: string, foreground: string) {
     if (blinko.config.value) blinko.config.value = {...blinko.config.value,themeColor:background,themeForegroundColor:foreground};
     for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) {
       const dark=element.classList.contains('dark');
-      element.style.setProperty('--primary',background||(dark?'#4d8bff':'#2f6feb'));
+      element.style.setProperty('--primary',background||(dark?BRAND_COLOR_DARK:BRAND_COLOR));
       element.style.setProperty('--primary-foreground',foreground||(dark?'#000000':'#ffffff'));
       if(background) element.style.setProperty('--tag',background); else element.style.removeProperty('--tag');
       syncHeroAccent(element);

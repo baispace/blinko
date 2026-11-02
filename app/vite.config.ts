@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { BRAND_COLOR, BRAND_NAME } from './src/components/Common/Brand/brandGeometry'
 
 const host = process.env.TAURI_DEV_HOST || '0.0.0.0';
 const EXPRESS_PORT = 1111;
@@ -55,8 +56,9 @@ export default defineConfig({
         registerType: 'autoUpdate',
         includeAssets: ['icons/Square*.png'],
         manifest: {
-          name: 'Jomio',
-          short_name: 'Jomio',
+          name: BRAND_NAME.en,
+          short_name: BRAND_NAME.en,
+          description: BRAND_NAME.tagline,
           icons: [
             {
               src: '/icons/Square30x30Logo.png',
@@ -105,7 +107,10 @@ export default defineConfig({
               purpose: 'any maskable'
             }
           ],
-          theme_color: '#FFFFFF',
+          // 这个 manifest 和 app/public/manifest.json 会被同时注册成两个
+          // <link rel="manifest">，浏览器取先解析到的那个。主题色必须和品牌
+          // 一致，否则装成 PWA 后启动画面和任务切换卡片会退回白色。
+          theme_color: BRAND_COLOR,
           background_color: '#FFFFFF',
           start_url: '/',
           display: 'standalone',

@@ -1,9 +1,13 @@
 import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import {
   BRAND_ASSET_VERSION,
+  BRAND_COLOR,
+  BRAND_COLOR_DARK,
+  BRAND_COLOR_INK,
+  BRAND_COLOR_SOFT,
   BRAND_MARK_VIEWBOX,
   BRAND_NAME,
   BRAND_PATH_BODY,
@@ -22,9 +26,11 @@ const ICONS_DIR = join(ROOT, 'app/public/icons');
 const TAURI_DIR = join(ROOT, 'app/src-tauri');
 const DESKTOP_ICON_DIR = join(TAURI_DIR, 'icons/jomio');
 const WORKFLOWS_DIR = join(ROOT, '.github/workflows');
+const APP_SRC = join(ROOT, 'app/src');
+const GLOBALS_CSS = join(APP_SRC, 'styles/globals.css');
 
 /** 品牌紫：站点 favicon / app-icon / manifest theme_color 用的是同一个值。 */
-const BRAND_PURPLE = '#5F40FD';
+const BRAND_PURPLE = BRAND_COLOR;
 
 function readJson(path: string) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -282,4 +288,155 @@ test('the old Ink desktop identity is gone', () => {
     expect(workflow).not.toContain('Ink-macOS');
     expect(workflow).not.toContain('Build & Publish Ink');
   }
+});
+
+/* ------------------------------------------------------------------ *
+ * 主色与品牌色
+ *
+ * 站点 UI 的默认主色以前是一支和品牌无关的旧蓝，于是登录页会出现
+ * 「紫 J 标记 + 蓝色登录按钮」。这一组断言把两条线钉在一起：
+ * 改品牌色要一起改，改 UI 主色必须回到品牌色。
+ * ------------------------------------------------------------------ */
+
+/** 递归列出目录下的所有文件。 */
+function sourceFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...sourceFiles(path));
+    else out.push(path);
+  }
+  return out;
+}
+
+/** 仓库里不该出现的构建产物 / 依赖 / 本地临时目录。 */
+const SKIP_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'build', 'target', 'coverage',
+  '.workbuddy', '.turbo', '.next', '.output', 'public/build',
+]);
+
+/** 相对亮度（WCAG 2.1）。 */
+function relativeLuminance(hex: string): number {
+  const value = hex.replace('#', '');
+  const channels = [0, 2, 4].map((index) => parseInt(value.slice(index, index + 2), 16) / 255)
+    .map((channel) => (channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+/** 对比度（WCAG 2.1）。 */
+function contrastRatio(a: string, b: string): number {
+  const [light, dark] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/**
+ * 默认主色就是品牌紫。
+ *
+ * --primary 决定了按钮、选中项、焦点环和 HeroUI 的主色，
+ * 所以它必须和标记、favicon、manifest 用同一个紫色。
+ */
+test('the default UI primary colour is the brand purple', () => {
+  const css = readFileSync(GLOBALS_CSS, 'utf8');
+  expect(css).toContain(`--primary: ${BRAND_COLOR};`);
+  expect(css).toContain(`--primary: ${BRAND_COLOR_DARK};`);
+  // 焦点环与选中态的兜底色不能留旧蓝
+  expect(css).toContain(`var(--primary,#${BRAND_COLOR.slice(1)})`);
+  expect(css).toContain(`var(--primary, ${BRAND_COLOR})`);
+});
+
+/**
+ * 旧的 Ink 蓝在产品代码里彻底清掉。
+ *
+ * 这支蓝和品牌无关，却曾经是 --primary 的默认值 —— 改掉默认值还不够，
+ * 任何一处写死的副本都会让界面重新跑偏，所以整仓库扫一遍。
+ */
+test('the legacy Ink blue is gone from the product sources', () => {
+  const legacy = ['#2f6feb', '#4d8bff'];
+  const offenders: string[] = [];
+  for (const root of ['app', 'server', 'shared']) {
+    for (const file of sourceFiles(join(ROOT, root))) {
+      if (!/\.(ts|tsx|js|jsx|css|scss|html|json|svg)$/i.test(file)) continue;
+      if (file.split('/').some((segment) => SKIP_DIRS.has(segment))) continue;
+      const source = readFileSync(file, 'utf8').toLowerCase();
+      if (legacy.some((color) => source.includes(color))) {
+        offenders.push(file.slice(ROOT.length + 1));
+      }
+    }
+  }
+  expect(offenders).toEqual([]);
+});
+
+/**
+ * 运行时的兜底色要读常量，而不是再抄一遍十六进制。
+ *
+ * 内联样式会盖过样式表，所以这几处才是实际生效的值。
+ */
+test('the runtime fallbacks read the brand colour from the shared source', () => {
+  const user = readFileSync(join(APP_SRC, 'store/user.ts'), 'utf8');
+  expect(user).toContain('BRAND_COLOR_DARK');
+  expect(user).toContain('BRAND_COLOR');
+
+  const saveThemeColor = readFileSync(join(APP_SRC, 'components/Common/Theme/saveThemeColor.ts'), 'utf8');
+  expect(saveThemeColor).toContain('BRAND_COLOR_DARK');
+  expect(saveThemeColor).toContain('BRAND_COLOR');
+
+  const themeColor = readFileSync(join(APP_SRC, 'components/Common/Theme/ThemeColor.tsx'), 'utf8');
+  expect(themeColor).toContain('BRAND_COLOR');
+});
+
+/**
+ * Tailwind 的任意值只能是字面量，没法引用 JS 常量，
+ * 所以品牌标记的色调由测试钉在 brandGeometry 上。
+ */
+test('the brand mark tones are the brand colours', () => {
+  const mark = readFileSync(join(APP_SRC, 'components/Common/Brand/BrandMark.tsx'), 'utf8');
+  expect(mark).toContain(`text-[${BRAND_COLOR}] dark:text-[${BRAND_COLOR_DARK}]`);
+  expect(mark).toContain(`text-[${BRAND_COLOR_SOFT}]`);
+  expect(mark).toContain(`text-[${BRAND_COLOR_INK}]`);
+
+  const loading = readFileSync(join(APP_SRC, 'components/Common/Brand/BrandLoading.tsx'), 'utf8');
+  expect(loading).toContain(`text-[${BRAND_COLOR}] dark:text-[${BRAND_COLOR_DARK}]`);
+});
+
+/** 浏览器外壳（PWA 图标、磁贴）也是同一个紫色。 */
+test('the browser chrome is painted in the brand purple', () => {
+  expect(manifest.theme_color).toBe(BRAND_COLOR);
+  expect(html).toContain(`<meta name="msapplication-TileColor" content="${BRAND_COLOR}" />`);
+});
+
+/**
+ * PWA 插件生成的 manifest 也要是品牌紫。
+ *
+ * index.html 同时注册了 app/public/manifest.json 和插件生成的
+ * manifest.webmanifest —— 两个 <link rel="manifest">，浏览器取先解析到的那个，
+ * 但任何一个被读到都不该是白色。
+ */
+test('the generated PWA manifest reads the brand colour from the shared source', () => {
+  const viteConfig = readFileSync(join(ROOT, 'app/vite.config.ts'), 'utf8');
+  expect(viteConfig).toContain('theme_color: BRAND_COLOR');
+  expect(viteConfig).toContain('name: BRAND_NAME.en');
+  // 主题色只能来自 brandGeometry，不许再写死成十六进制
+  expect(viteConfig).not.toMatch(/theme_color:\s*['"]#/);
+});
+
+/**
+ * 主色得撑得住按钮上的文字。
+ *
+ * 亮色：品牌紫配近白前景；暗色：浅紫配近黑前景。
+ * 两边都要过 WCAG AA 的 4.5:1。
+ */
+test('the brand primary colour keeps its text readable', () => {
+  // hsl(210 40% 98%) ≈ #f8fafc
+  expect(contrastRatio(BRAND_COLOR, '#f8fafc')).toBeGreaterThanOrEqual(4.5);
+  expect(contrastRatio(BRAND_COLOR_DARK, '#000000')).toBeGreaterThanOrEqual(4.5);
+});
+
+/**
+ * 登录按钮必须跟着 --primary 走。
+ *
+ * 一旦有人给它写死颜色，登录页就会退回「紫 J 标记 + 另一支色按钮」。
+ */
+test('the sign-in button follows the primary colour', () => {
+  const signin = readFileSync(join(APP_SRC, 'pages/signin.tsx'), 'utf8');
+  expect(signin).toContain('color="primary"');
 });

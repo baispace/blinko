@@ -18,7 +18,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { signIn, TokenData, navigate } from '@/components/Auth/auth-client';
 import { DialogStore } from './module/Dialog';
 import { ShowTwoFactorModal } from '@/components/Common/TwoFactorModal';
-import { BRAND_ASSET_VERSION, BRAND_NAME } from '@/components/Common/Brand/brandGeometry';
+import { BRAND_ASSET_VERSION, BRAND_COLOR, BRAND_COLOR_DARK, BRAND_NAME } from '@/components/Common/Brand/brandGeometry';
 import { ToastPlugin } from './module/Toast/Toast';
 import { StorageState } from './standard/StorageState';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
@@ -341,12 +341,12 @@ export class UserStore implements Store {
         lightElement.style.setProperty('--tag', config.themeColor)
       }
     } else {
-      // No custom theme colour configured — fall back to the brand blue defined
+      // No custom theme colour configured — fall back to the brand purple defined
       // in globals.css. These inline writes are what actually win over the
       // stylesheet, so they must stay in sync with it.
       if (darkElement) {
         //@ts-ignore
-        darkElement.style.setProperty('--primary', '#4d8bff')
+        darkElement.style.setProperty('--primary', BRAND_COLOR_DARK)
         //@ts-ignore
         darkElement.style.setProperty('--primary-foreground', '#000000')
         //@ts-ignore
@@ -354,7 +354,7 @@ export class UserStore implements Store {
       }
       if (lightElement) {
         //@ts-ignore
-        lightElement.style.setProperty('--primary', '#2f6feb')
+        lightElement.style.setProperty('--primary', BRAND_COLOR)
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', 'hsl(210 40% 98%)')
         //@ts-ignore
@@ -497,7 +497,7 @@ export class UserStore implements Store {
       const config = this.blinko.config.value;
       for (const element of document.querySelectorAll<HTMLElement>('.dark,.light')) {
         const dark = resolvedTheme === 'dark';
-        element.style.setProperty('--primary',config?.themeColor || (dark?'#4d8bff':'#2f6feb'));
+        element.style.setProperty('--primary',config?.themeColor || (dark?BRAND_COLOR_DARK:BRAND_COLOR));
         element.style.setProperty('--primary-foreground',config?.themeForegroundColor || (dark?'#000000':'#ffffff'));
         if (config?.themeColor) element.style.setProperty('--tag',config.themeColor); else element.style.removeProperty('--tag');
         syncHeroAccent(element);

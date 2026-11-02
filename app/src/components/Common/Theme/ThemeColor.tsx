@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BRAND_COLOR } from '@/components/Common/Brand/brandGeometry';
 const colors = [
-  { zh:'默认蓝', en:'Default', background:'', foreground:'' },
+  { zh:'默认紫', en:'Default', background:'', foreground:'' },
   { zh:'海蓝', en:'Blue', background:'#2563eb', foreground:'#ffffff' },
   { zh:'靛紫', en:'Indigo', background:'#7c3aed', foreground:'#ffffff' },
   { zh:'玫瑰', en:'Rose', background:'#be123c', foreground:'#ffffff' },
@@ -19,9 +20,9 @@ export const ThemeColor = ({ onChange, value = '', compact = false }: { compact?
       const previous=selected; setSelected(color.background); setSaving(true);
       try { await onChange?.(color.background,color.foreground); } catch { setSelected(previous); } finally { setSaving(false); }
     }} className={`flex flex-col items-center gap-1.5 rounded-lg border ${compact?'p-0.5':'px-2 py-2'} text-[11px] transition-colors focus-visible:outline-primary ${selected===color.background?'border-primary bg-primary/5 text-primary':'border-default-200 text-default-500 hover:bg-default-50'} disabled:cursor-wait`}>
-      <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs" style={{background:color.background||'#2f6feb',color:color.foreground||'#fff'}}>{selected===color.background?'✓':''}</span>{!compact && <span>{i18n.language.startsWith('zh')?color.zh:color.en}</span>}
+      <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs" style={{background:color.background||BRAND_COLOR,color:color.foreground||'#fff'}}>{selected===color.background?'✓':''}</span>{!compact && <span>{i18n.language.startsWith('zh')?color.zh:color.en}</span>}
     </button>)}</div>
     {!colors.some(color => color.background===selected) && <p className="text-xs text-default-400">{i18n.language.startsWith('zh')?'当前保留自定义颜色':'Current custom color'} · {selected}</p>}
-    {!compact && <div className="flex items-center gap-2 text-xs text-default-400"><span className="h-2 w-2 rounded-full" style={{background:selected||'#2f6feb'}} />{i18n.language.startsWith('zh')?'用于按钮、选中项与标签，切换后立即生效。':'Applies to buttons, selection and tags.'}</div>}
+    {!compact && <div className="flex items-center gap-2 text-xs text-default-400"><span className="h-2 w-2 rounded-full" style={{background:selected||BRAND_COLOR}} />{i18n.language.startsWith('zh')?'用于按钮、选中项与标签，切换后立即生效。':'Applies to buttons, selection and tags.'}</div>}
   </div>;
 };

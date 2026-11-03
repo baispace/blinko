@@ -100,6 +100,7 @@ import mcpRouter from './routerExpress/mcp';
 import { getGlobalConfig } from './routerTrpc/config';
 import { buildStaticCdnBase } from '@shared/lib/pathConstant';
 import { resolveStaticPublicDir } from './lib/cdnStaticDir';
+import { devSelfDestructingServiceWorker } from './lib/devServiceWorker';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -620,6 +621,11 @@ async function bootstrap() {
     app.use(cdnStaticRewrite(publicPath));
     app.use(cdnManifestRewrite(publicPath));
     app.use(servePrecompressed(publicPath));
+    // 开发环境必须抢在 express.static 之前拦下 /sw.js：
+    // 否则它会掉进 SPA 兜底返回 HTML，浏览器就永远换不掉旧 Service Worker，
+    // 而旧 SW 会把所有导航请求用预缓存里的旧 index.html 应答 —— 页面被冻在旧界面。
+    // 就算本地存在 server/public 拷贝，也不能让生产 SW 预缓存整个应用壳。
+    app.use(devSelfDestructingServiceWorker());
     app.use(express.static(publicPath, staticOptions));
     app.use(cdnSpaFallbackRewrite(publicPath));
 

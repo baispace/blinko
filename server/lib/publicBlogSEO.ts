@@ -310,9 +310,9 @@ export async function resolveBlogSEO(
     })),
     runtime: {
       basePath,
-      apiOrigin: settings?.apiOrigin ?? "",
+      apiOrigin: settings?.domainRouting ? "" : settings?.apiOrigin ?? "",
       publicOrigin: origin,
-      deploymentMode: settings?.deploymentMode ?? "proxy",
+      deploymentMode: settings?.domainRouting ? "proxy" : settings?.deploymentMode ?? "proxy",
     },
     font: await resolveBlogFont(db, settings?.fontFamily),
   };

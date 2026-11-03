@@ -39,7 +39,7 @@ const TAB_HINT: Record<string, string> = {
   seo: "公开页面的默认标题模板、描述、分享图与搜索引擎收录开关。文章自动继承，也可在底层单独覆盖。",
   subscribe: "订阅页要用的渠道与文案：微信公众号、RSS、站点介绍与订阅说明。",
   footer: "页脚要挂的备案号、版权署名，以及带生效区间的推广位。",
-  deployment: "公开站对外的域名、路径、API 与旧地址跳转。填了就是线上生效的，保存后 30 秒内生效，不用重启容器。",
+  deployment: "配置博客独立域名。应用自动处理公开路由，网关只需整站转发。",
   tracking: "接入统计代码，用来了解访客从哪来、看了多久。",
   checks: "上线前自查：域名解析、页面可达与缓存是否正常。",
 };
@@ -142,6 +142,15 @@ export function BlogSiteSettingsPanel({
   };
 
   const save = async () => {
+    if (data.domainRouting && data.targetOrigin) {
+      try {
+        const host = new URL(data.targetOrigin).host;
+        if (host === window.location.host || (backend && host === new URL(backend).host)) {
+          setError("博客域名必须与当前后台域名不同，避免覆盖后台入口。");
+          return;
+        }
+      } catch { setError("请输入完整的博客地址，例如 https://blog.baispace.cn"); return; }
+    }
     setBusy(true);
     setError("");
     try {

@@ -65,6 +65,12 @@ export async function saveBlogSiteSettings(
   revision: string,
 ) {
   const data = blogSiteSettingsSchema.parse(input);
+  if (data.domainRouting && data.targetOrigin) {
+    const workspace = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL;
+    if (workspace && new URL(workspace).host === new URL(data.targetOrigin).host)
+      throw new TRPCError({code: "BAD_REQUEST", message: "博客域名不能与后台域名相同"});
+  }
+
   if ((data.gaEnabled && !data.gaId) || (data.baiduEnabled && !data.baiduId))
     throw new TRPCError({
       code: "BAD_REQUEST",

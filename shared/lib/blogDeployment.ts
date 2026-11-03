@@ -42,6 +42,7 @@ export type BlogDeploymentEnv = Partial<Record<string, string | undefined>>;
 /** 后台站点设置里与部署相关的四个字段。 */
 export type BlogDeploymentSettings = {
   targetOrigin?: string | null;
+  domainRouting?: boolean;
   publicBasePath?: string | null;
   legacyBasePath?: string | null;
   legacyRedirectEnabled?: boolean | null;
@@ -139,7 +140,7 @@ export function resolveBlogDeployment(
       : null;
 
   return {
-    publicBasePath: storedBasePath || envBasePath || "/blog",
+    publicBasePath: settings?.domainRouting && (storedOrigin || envOrigin) ? "/" : storedBasePath || envBasePath || "/blog",
     targetOrigin: storedOrigin || envOrigin,
     legacyBasePath: storedLegacyBasePath || envLegacyBasePath,
     legacyRedirectEnabled:

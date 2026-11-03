@@ -20,6 +20,7 @@ const blogSEOByRequest = new WeakMap<object, BlogSEO>();
  */
 type PublicRuntime = {
   loadedAt: number;
+  domainRouting: boolean;
   basePath: string;
   legacyEnabled: boolean;
   legacyBasePath: string;
@@ -33,6 +34,7 @@ async function publicRuntime(): Promise<PublicRuntime> {
     return publicRuntimeCache;
   let value: PublicRuntime = {
     loadedAt: Date.now(),
+    domainRouting: false,
     basePath: '/blog',
     legacyEnabled: false,
     legacyBasePath: '',
@@ -49,6 +51,7 @@ async function publicRuntime(): Promise<PublicRuntime> {
         const deployment = resolveBlogDeployment(data);
         value = {
           loadedAt: Date.now(),
+          domainRouting: data.domainRouting,
           basePath: deployment.publicBasePath,
           legacyEnabled: deployment.legacyRedirectEnabled,
           legacyBasePath: deployment.legacyBasePath,
@@ -100,6 +103,7 @@ import mcpRouter from './routerExpress/mcp';
 import { getGlobalConfig } from './routerTrpc/config';
 import { buildStaticCdnBase } from '@shared/lib/pathConstant';
 import { resolveStaticPublicDir } from './lib/cdnStaticDir';
+import { blogDomainRequest } from './lib/blogDomainRouting';
 import { devSelfDestructingServiceWorker } from './lib/devServiceWorker';
 
 // Vite integration
@@ -544,6 +548,18 @@ async function bootstrap() {
         }
       }
     };
+
+    // 域名分流在 SEO、静态资源、认证和 API 之前完成。只信任真实 Host，
+    // 不使用访客可伪造的 X-Forwarded-Host 来选择公开/管理入口。
+    app.use(async (req, res, next) => {
+      const runtime = await publicRuntime();
+      const route = blogDomainRequest({ host: req.get('host') || '', url: req.url,
+        method: req.method, enabled: runtime.domainRouting, origin: runtime.targetOrigin });
+      if (route.kind === 'deny') return res.status(404).set('X-Robots-Tag', 'noindex').send('Not found');
+      if (route.kind === 'redirect') return res.redirect(301, route.url);
+      if (route.kind === 'rewrite') req.url = route.url;
+      next();
+    });
 
     // 旧公开地址的永久跳转：只在目标域名和当前域名不同的时候生效。
     // 同域改路径会和服务端自己的路由互相兜底成死循环，这类迁移交给网关处理。

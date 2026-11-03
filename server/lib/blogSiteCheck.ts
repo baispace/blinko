@@ -1,3 +1,4 @@
+import { toPublicPath } from "../../shared/lib/blogSeo";
 import type { PrismaClient } from "@prisma/client";
 import { safeFetch, type SafeFetchResult } from "./safeFetch";
 import { publicPublicationWhere } from "./publication";
@@ -121,6 +122,7 @@ export async function runSiteChecks(
   const push = (item: SiteCheckItem) => items.push(item);
 
   const stored = await readBlogSiteSettings(db, accountId);
+  const publicPath = (path: string) => toPublicPath(path, resolveBlogDeployment(stored.data).publicBasePath);
   const settings = stored.configured ? stored.data : null;
 
   // ---- DNS 与 HTTPS ------------------------------------------------------
@@ -163,14 +165,14 @@ export async function runSiteChecks(
   }
 
   // ---- 首页是否返回预期公开内容 -----------------------------------------
-  const home = await fetchText(target + "/blog");
+  const home = await fetchText(target + publicPath("/blog"));
   if (!home.ok) {
     push({
       id: "home",
       name: "首页公开内容",
       state: "fail",
       evidence: resultSummary(home),
-      suggestion: "确认网关已把公开域名映射到 /blog，且服务已启动。",
+      suggestion: "确认博客域名已保存，整站转发保留 Host，且服务已启动。",
     });
   } else {
     const meta = readHtmlMeta(home.body);
@@ -182,7 +184,7 @@ export async function runSiteChecks(
         name: "首页公开内容",
         state: "fail",
         evidence: "首页返回的是工作区 / 登录页内容，不是公开博客。",
-        suggestion: "网关只应映射公开博客路径，不要把工作区根路径暴露到公开域名。",
+        suggestion: "确认已启用博客域名分流，且代理转发保留真实公开 Host。",
       });
     } else if (!hasSeo) {
       push({
@@ -218,7 +220,7 @@ export async function runSiteChecks(
       suggestion: "发布一篇文章后重新运行检查。",
     });
   } else {
-    const res = await fetchText(joinUrl(target, "/blog/" + article.publishId));
+    const res = await fetchText(joinUrl(target, publicPath("/blog/" + article.publishId)));
     if (!res.ok) {
       push({
         id: "article",
@@ -236,7 +238,7 @@ export async function runSiteChecks(
           name: "文章直访与刷新",
           state: "fail",
           evidence: "文章地址返回了首页内容（canonical 指向首页）。",
-          suggestion: "SPA fallback 把所有路径都兜到了首页，需要为 /blog/:id 单独配置。",
+          suggestion: "检查应用是否收到文章路径，代理不应把所有路径重写到首页。",
         });
       } else if (!meta.canonical) {
         push({
@@ -271,14 +273,14 @@ export async function runSiteChecks(
       suggestion: "公开一个专题后重新运行检查。",
     });
   } else {
-    const res = await fetchText(joinUrl(target, "/blog/t/" + topic.slug));
+    const res = await fetchText(joinUrl(target, publicPath("/blog/t/" + topic.slug)));
     if (!res.ok) {
       push({
         id: "topic",
         name: "专题直访与刷新",
         state: "fail",
         evidence: `专题地址返回 ${resultSummary(res)}`,
-        suggestion: "确认 /blog/t/:slug 在网关规则里被放行。",
+        suggestion: "确认专题直访路径正常，网关只需整站转发。",
       });
     } else {
       const meta = readHtmlMeta(res.body);
@@ -288,7 +290,7 @@ export async function runSiteChecks(
           name: "专题直访与刷新",
           state: "fail",
           evidence: "专题地址返回了其它页面内容（canonical 不匹配）。",
-          suggestion: "确认网关没有把 /blog/t/* 兜底到首页。",
+          suggestion: "确认网关没有把专题路径改写到首页。",
         });
       } else {
         push({
@@ -302,7 +304,7 @@ export async function runSiteChecks(
   }
 
   // ---- 不存在页面与撤回内容 ---------------------------------------------
-  const missing = await fetchText(joinUrl(target, "/blog/__no_such_note__"));
+  const missing = await fetchText(joinUrl(target, publicPath("/blog/__no_such_note__")));
   if (missing.status === 404 || missing.status === 410) {
     push({
       id: "missing",
@@ -342,7 +344,7 @@ export async function runSiteChecks(
       suggestion: "撤回一篇文章后重新运行检查。",
     });
   } else {
-    const res = await fetchText(joinUrl(target, "/blog/" + withdrawn.publishId));
+    const res = await fetchText(joinUrl(target, publicPath("/blog/" + withdrawn.publishId)));
     if (res.status === 404 || res.status === 410) {
       push({
         id: "withdrawn",
@@ -579,14 +581,14 @@ export async function runSiteChecks(
     });
   }
 
-  const rss = await fetchText(joinUrl(target, "/blog/feed.xml"));
+  const rss = await fetchText(joinUrl(target, publicPath("/blog/feed.xml")));
   if (!rss.ok) {
     push({
       id: "rss",
       name: "RSS 订阅源",
       state: "fail",
       evidence: `feed.xml 返回 ${resultSummary(rss)}`,
-      suggestion: "确认 /blog/feed.xml 可访问。",
+      suggestion: "确认公开域名的 RSS 订阅地址可访问。",
     });
   } else if (!rss.body.includes("<rss")) {
     push({
@@ -622,12 +624,12 @@ export async function runSiteChecks(
       evidence: "robots.txt 没有声明 Sitemap 地址。",
       suggestion: "在 robots.txt 中加上 Sitemap 行。",
     });
-  } else if (!robots.body.includes("Allow: /blog")) {
+  } else if (!robots.body.includes("Allow: " + publicPath("/blog"))) {
     push({
       id: "robots",
       name: "robots.txt",
       state: "warn",
-      evidence: "robots.txt 没有放行 /blog 路径。",
+      evidence: "robots.txt 没有放行公开博客路径。",
       suggestion: "放行公开博客路径，否则搜索引擎无法抓取。",
     });
   } else {

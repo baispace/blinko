@@ -187,6 +187,8 @@ export const blogSiteSettingsSchema = z.object({
   excludeOwner: z.boolean().default(true),
   /** 目标公开站点地址：用户希望使用的域名。保存它不代表域名已经上线。 */
   targetOrigin: url.default(""),
+  /** 应用按公开域名分流，公开路径固定为根路径。旧配置保持原行为，保存域名时启用。 */
+  domainRouting: z.boolean().default(false),
   /** 前后端分开部署时公开前端访问的 API 基础地址。 */
   apiOrigin: url.default(""),
   deploymentMode: z.enum(["proxy", "separate"]).default("proxy"),

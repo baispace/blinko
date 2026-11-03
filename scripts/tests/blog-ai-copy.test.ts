@@ -3,7 +3,10 @@ import { PrismaClient } from "@prisma/client";
 import {
   COPY_LIMITS,
   cleanCopyText,
+  copyInstructions,
+  copyInstructionsFor,
   copySourceText,
+  groupInstructions,
   parseBlogCopy,
 } from "../../server/lib/blogAiCopy";
 import { publishSnapshot, publicationStatus } from "../../server/lib/publication";
@@ -70,6 +73,54 @@ describe("AI 文案解析", () => {
   test("正文取草稿，草稿为空才退回已发布版本", () => {
     expect(copySourceText("# 标题\n草稿正文", "已发布正文")).toContain("草稿正文");
     expect(copySourceText("", "已发布正文")).toContain("已发布正文");
+  });
+
+  /*
+   * 概要要是完整的一段话。
+   *
+   * 提示词已经要求模型写 200 字以内的完整内容，但模型不听话时，
+   * 兜底不能硬切 —— 硬切出来的「……并且可以」是断头句，
+   * 读者在卡片和列表里看到的是半句话。
+   */
+  test("超长的摘要在句子边界断开，不切在半句上", () => {
+    const copy = parseBlogCopy(
+      JSON.stringify({
+        title: "标题",
+        // 210 字，超过 200 的上限 —— 才会真的触发截断。
+        summary: "完整的一句话。".repeat(30),
+      }),
+    );
+    expect([...copy.summary].length).toBeLessThanOrEqual(COPY_LIMITS.summary);
+    expect(copy.summary.endsWith("…")).toBe(true);
+    // 省略号前面必须是一个完整的句子，不能停在词中间。
+    expect(copy.summary).toMatch(/。…$/);
+  });
+
+  test("摘要在没有句号时退到逗号，实在断不了才硬切", () => {
+    const copy = parseBlogCopy(
+      JSON.stringify({
+        title: "标题",
+        // 248 字，全是逗号没有句号 —— 退到逗号断开。
+        summary: "背景介绍，这里展开讲了很多细节，后面还有更多细节没有写完，".repeat(8),
+      }),
+    );
+    expect([...copy.summary].length).toBeLessThanOrEqual(COPY_LIMITS.summary);
+    expect(copy.summary.endsWith("…")).toBe(true);
+    expect(copy.summary).not.toMatch(/，…$/);
+  });
+
+  test("提示词要求概要 200 字以内且是完整内容", () => {
+    for (const prompt of [
+      copyInstructions,
+      copyInstructionsFor("summary"),
+      groupInstructions({
+        publicTags: [],
+        topics: [],
+      } as never),
+    ]) {
+      expect(prompt).toContain("200 字以内");
+      expect(prompt).toContain("完整的话");
+    }
   });
 });
 

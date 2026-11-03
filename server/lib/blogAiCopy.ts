@@ -4,6 +4,7 @@ import { Agent } from "@mastra/core";
 import { z } from "zod";
 import { stripThinkText } from "./aiText";
 import { publicText } from "./publicBlog";
+import { clipAtSentence } from "./publicText";
 import { contentVersion } from "./publication";
 import { readDraftBody } from "./blogPublishCheck";
 import { normalizePublicTags, PUBLIC_TAG_LIMIT } from "./blogPublicTags";
@@ -68,7 +69,7 @@ export const copyInstructions = `你是一位中文技术博客的编辑。根�
 
 规则：
 1. title —— 正文标题，12–24 字，一句话说清文章讲什么。不要「浅谈」「随笔」「的一些思考」这类空词，不要以标点结尾。
-2. summary —— 文章摘要，80–160 字。写清楚这篇文章讲了什么、结论是什么，不要空话套话，不要复述标题。
+2. summary —— 文章摘要，200 字以内。写清楚这篇文章讲了什么、结论是什么，不要空话套话，不要复述标题。必须是一段完整的话：句子写完再收尾，不要停在半句上。
 3. coverTitle —— 封面主标题，推荐 4–6 字，允许 2–8 字（含 AI 等英文），短而有力度，不要出现换行符。
 4. coverSubtitle —— 封面副标题，8–20 字，补充主标题；确实想不出可以给空字符串。
 5. coverTitle 与 coverSubtitle 必须讲同一件事，不能各说各话。
@@ -102,7 +103,7 @@ ${
   "summary": "文章摘要"
 }
 规则：
-1. 摘要 80–160 字，写清楚这篇文章讲了什么、结论是什么，不要空话套话，不要复述标题。
+1. 摘要 200 字以内，写清楚这篇文章讲了什么、结论是什么，不要空话套话，不要复述标题。必须是一段完整的话：句子写完再收尾，不要停在半句上。
 2. 全部使用与文章相同的语言。
 3. 严格只输出 summary 这一个字段。`;
   if (kind === "cover")
@@ -121,7 +122,7 @@ ${
 }
 
 /** 清掉模型爱加的引号、markdown 强调、句末标点和多余空白。 */
-export function cleanCopyText(input: string, limit: number) {
+function cleanCopyPlain(input: string) {
   const flat = String(input ?? "")
     .replace(/```[a-z]*|```/gi, "")
     .replace(/[*_`#]+/g, "")
@@ -129,8 +130,22 @@ export function cleanCopyText(input: string, limit: number) {
     .replace(/\s+/g, " ")
     .trim();
   const trimmed = flat.replace(/[，。、；：,.;:\s]+$/u, "").trim();
-  const value = trimmed || flat;
-  return [...value].slice(0, limit).join("");
+  return trimmed || flat;
+}
+
+/** 标题、封面文案：按字符数硬切 —— 这些本来就短，没有句子边界可言。 */
+export function cleanCopyText(input: string, limit: number) {
+  return [...cleanCopyPlain(input)].slice(0, limit).join("");
+}
+
+/**
+ * 摘要专用：超长时在句子边界断开。
+ *
+ * 硬切会切在半句话上，读者在卡片和列表里看到的是「……并且可以」这种断头句。
+ * 提示词已经要求模型写完整的 200 字以内，这一层只是模型不听话时的兜底。
+ */
+export function cleanSummaryText(input: string, limit: number) {
+  return clipAtSentence(cleanCopyPlain(input), limit);
 }
 
 /**
@@ -193,7 +208,7 @@ export function parseBlogCopy(raw: string, kind: CopyKind = "all"): BlogCopy {
   const pick = (value: unknown) => (typeof value === "string" ? value : "");
   const copy: BlogCopy = {
     title: cleanCopyText(pick(data.title), COPY_LIMITS.title),
-    summary: cleanCopyText(pick(data.summary), COPY_LIMITS.summary),
+    summary: cleanSummaryText(pick(data.summary), COPY_LIMITS.summary),
     coverTitle: cleanCopyText(
       pick(data.coverTitle ?? data.cover_title),
       COPY_LIMITS.coverTitle,
@@ -374,7 +389,7 @@ export function groupInstructions(context: CopyGroupContext) {
 
 规则：
 1. title —— 公开标题，12–24 字，一句话说清文章讲什么。不要「浅谈」「随笔」这类空词，不要以标点结尾。
-2. summary —— 文章概要，80–200 字。写清楚这篇文章讲了什么、结论是什么，不要复述标题，不要空话套话。
+2. summary —— 文章概要，200 字以内。写清楚这篇文章讲了什么、结论是什么，不要复述标题，不要空话套话。必须是一段完整的话：句子写完再收尾，不要停在半句上。
 3. coverTitle —— 封面短标题，推荐 4–6 字，允许 2–8 字（含 AI 等英文），短而有力度，不要换行。
 4. coverSubtitle —— 封面副标题，8–20 字，补充主标题；想不出就给空字符串。
 5. coverTitle 与 coverSubtitle 必须讲同一件事。
@@ -442,7 +457,7 @@ export function parseBlogCopyGroup(
     };
   const data = parsed.data;
   const title = cleanCopyText(data.title ?? "", COPY_LIMITS.title);
-  const summary = cleanCopyText(data.summary ?? "", COPY_LIMITS.summary);
+  const summary = cleanSummaryText(data.summary ?? "", COPY_LIMITS.summary);
   const coverTitle = cleanCopyText(data.coverTitle ?? "", COPY_LIMITS.coverTitle);
   const coverSubtitle = cleanCopyText(
     data.coverSubtitle ?? "",

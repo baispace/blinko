@@ -25,24 +25,18 @@ export function publicText(content: string) {
 }
 
 /**
- * 公开摘要：优先用作者写的摘要，没写就从正文里取开头像样的一段。
+ * 在句子边界断开，不切在半句话上。
  *
- * 直接截正文前 N 个字不行 —— 正文通常以标题开头，截出来是
- * 「标题 + 半句话」，读者在卡片、首页横幅、RSS 里看到的就是一堆碎片。
- * 这里先把开头的标题行剥掉，再在句子边界断开。
+ * 先找句号、叹号、问号、分号；找不到就退到逗号、顿号、冒号；
+ * 再不行才硬切并补一个省略号 —— 宁可短一点，也不要半句。
  */
-export function publicExcerpt(
-  content: string,
-  summary?: string | null,
-  limit = 200,
-) {
-  const own = summary?.trim();
-  if (own) return own;
-  const text = publicText(firstProseBlock(content));
-  if (!text) return "";
-  if (text.length <= limit) return text;
-  const head = text.slice(0, limit);
-  // 在最近的句子边界断开，别切在半句话上。
+export function clipAtSentence(text: string, limit: number): string {
+  const value = String(text ?? "").trim();
+  if (!value) return "";
+  const chars = [...value];
+  if (chars.length <= limit) return value;
+  // 留一个位置给省略号 —— 截出来的长度不能超过上限。
+  const head = chars.slice(0, limit - 1).join("");
   const stop = Math.max(
     head.lastIndexOf("。"),
     head.lastIndexOf("！"),
@@ -50,7 +44,38 @@ export function publicExcerpt(
     head.lastIndexOf("；"),
   );
   if (stop > limit * 0.3) return head.slice(0, stop + 1) + "…";
-  return head.replace(/[\s、，,：:].*$/, "") + "…";
+  const soft = Math.max(
+    head.lastIndexOf("，"),
+    head.lastIndexOf("、"),
+    head.lastIndexOf(","),
+    head.lastIndexOf("："),
+    head.lastIndexOf(":"),
+    head.lastIndexOf(" "),
+  );
+  if (soft > limit * 0.3) return head.slice(0, soft) + "…";
+  return head + "…";
+}
+
+/**
+ * 公开摘要：优先用作者写的摘要，没写就从正文里取开头像样的一段。
+ *
+ * 直接截正文前 N 个字不行 —— 正文通常以标题开头，截出来是
+ * 「标题 + 半句话」，读者在卡片、首页横幅、RSS 里看到的就是一堆碎片。
+ * 这里先把开头的标题行剥掉，再在句子边界断开。
+ *
+ * 作者自己写的摘要同样要守长度上限：概要可以有两千字，
+ * 原样塞进列表行会把整张表撑开，操作列被推到屏幕外。
+ */
+export function publicExcerpt(
+  content: string,
+  summary?: string | null,
+  limit = 200,
+) {
+  const own = summary?.trim();
+  if (own) return clipAtSentence(own, limit);
+  const text = publicText(firstProseBlock(content));
+  if (!text) return "";
+  return clipAtSentence(text, limit);
 }
 
 /**

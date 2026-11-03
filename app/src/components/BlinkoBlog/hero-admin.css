@@ -35,8 +35,8 @@
 /* Input 的 wrapper 自带 solid 边框，Select 的 trigger 却是 border-style:none —— 补上，二者才一样。 */
 .blog-ui-field [data-slot=input-wrapper],.blog-ui-field [data-slot=trigger] { border-width:1px; border-style:solid; min-height:36px; background:var(--ink-surface); border-color:var(--ink-line); border-radius:8px; }
 .blog-ui-field [data-slot=input-wrapper][data-focus=true],.blog-ui-field [data-slot=trigger][data-focus=true] { border-color:var(--ink-accent); }
-.ink-manage .blog-ui-field [data-slot=input],.ink-promo .blog-ui-field [data-slot=input] { padding:0; border:0; border-radius:0; background:transparent; color:var(--ink-text); box-shadow:none; outline:none; font-size:13px; }
-.ink-manage .blog-ui-field textarea[data-slot=input],.ink-promo .blog-ui-field textarea[data-slot=input] { line-height:1.7; min-height:0; }
+.blog-hero-surface .blog-ui-field [data-slot=input],.ink-manage .blog-ui-field [data-slot=input],.ink-promo .blog-ui-field [data-slot=input] { padding:0; border:0; border-radius:0; background:transparent; color:var(--ink-text); box-shadow:none; outline:none; font-size:13px; }
+.blog-hero-surface .blog-ui-field textarea[data-slot=input],.ink-manage .blog-ui-field textarea[data-slot=input],.ink-promo .blog-ui-field textarea[data-slot=input] { line-height:1.7; min-height:0; }
 .ink-manage .ink-mg-toggle-track,.ink-promo .ink-mg-toggle-track { display:none!important; }
 .ink-manage .ink-mg-toggle,.ink-promo .ink-mg-toggle { width:auto; min-width:36px; }
 .ink-promo .ink-ps-head h2 { font-size:22px; font-weight:600; }
@@ -71,3 +71,9 @@
   .ink-cl-search { flex:1 1 100%; }
   .ink-blog.ink-manage :is(.ink-studio-title,.ink-ad-title) {font-size:22px;}
 }
+
+/* Keep subscription forms compact without stretching the shorter channel. */
+.blog-subscribe-settings button { flex-shrink:0; }
+.blog-subscribe-settings [data-slot=input-wrapper] { border-color:hsl(var(--heroui-default-200)); }
+.blog-subscribe-settings [data-slot=input-wrapper][data-focus=true] { border-color:hsl(var(--heroui-primary)); }
+.blog-site-settings small { line-height:1.6; }

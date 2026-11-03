@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "@/lib/axios";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 import { Icon } from "@/components/Common/Iconify/icons";
@@ -11,17 +11,55 @@ const MAX_DIRECTIONS = 8;
 export function BlogSubscribeSettings({
   subscribe,
   patch,
+  onUploading,
 }: {
   subscribe: BlogSubscribeSettings;
   patch: (p: Partial<BlogSubscribeSettings>) => void;
+  onUploading?: (busy: boolean) => void;
 }) {
   const data = subscribe;
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState("");
+  const [previewError, setPreviewError] = useState(false);
+
+  useEffect(() => {
+    onUploading?.(busy);
+    return () => onUploading?.(false);
+  }, [busy, onUploading]);
+
+  // Unsaved uploads are private. Read with the existing authenticated client,
+  // render a short-lived blob URL, and never persist credentials in site settings.
+  useEffect(() => {
+    let active = true;
+    let objectUrl = "";
+    const controller = new AbortController();
+    setPreview("");
+    setPreviewError(false);
+    const path = data.wechatQrUrl;
+    if (!path) return;
+    if (!/^\/api\/(?:file|s3file)\//.test(path)) {
+      setPreview(path);
+      return;
+    }
+    void axios.get(getBlinkoEndpoint(path), { responseType: "blob", signal: controller.signal })
+      .then(({ data: blob }) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setPreview(objectUrl);
+      })
+      .catch(() => { if (active) setPreviewError(true); });
+    return () => {
+      active = false;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [data.wechatQrUrl]);
 
   const upload = async (f: File | undefined) => {
-    if (!f) return;
+    if (!f || busy) return;
+    if (file.current) file.current.value = "";
     if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(f.type) || f.size > 5 * 1024 * 1024) {
       setError("二维码请选择 5MB 以内的常见图片格式");
       return;
@@ -32,10 +70,11 @@ export function BlogSubscribeSettings({
       const form = new FormData();
       form.append("file", f);
       const res = await axios.post(getBlinkoEndpoint("/api/file/upload"), form);
-      if (!res.data.filePath) throw new Error("上传失败");
-      patch({ wechatQrUrl: res.data.filePath });
+      const path = res.data?.filePath || res.data?.path;
+      if (typeof path !== "string" || !path) throw new Error("上传未返回图片地址，请重试。");
+      patch({ wechatQrUrl: path });
     } catch (e: any) {
-      setError(e.message);
+      setError(e.response?.data?.detail || e.response?.data?.error || e.message || "上传失败，请重试。");
     } finally {
       setBusy(false);
       if (file.current) file.current.value = "";
@@ -49,12 +88,13 @@ export function BlogSubscribeSettings({
     patch({ directions });
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <Card className="border border-default-200 bg-surface">
+    <div className="blog-subscribe-settings grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-4 p-5">
           <h3 className="text-base font-semibold text-foreground">微信公众号</h3>
           <label className="flex items-center gap-2 text-sm">
             <BlogCheckbox
+              aria-label="开放微信公众号订阅"
               type="checkbox"
               checked={data.wechatEnabled}
               onChange={(e) => patch({ wechatEnabled: e.target.checked })}
@@ -70,19 +110,19 @@ export function BlogSubscribeSettings({
               value={data.wechatName}
               onChange={(e) => patch({ wechatName: e.target.value })}
             />
-            <small className="text-xs text-default-400">读者扫二维码关注后，看到的就是这个名字。</small>
+            <small className="text-xs text-default-500">读者扫二维码关注后，看到的就是这个名字。</small>
           </label>
           <div className="flex flex-col gap-1.5">
             <span className="text-sm">公众号二维码</span>
             {data.wechatQrUrl ? (
               <div className="flex items-center gap-3">
-                <img
-                  src={data.wechatQrUrl}
-                  alt="公众号二维码预览"
-                  className="h-[88px] w-[88px] rounded-[10px] border border-default-200 bg-white object-contain p-1.5"
-                />
+                <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-default-200 bg-white p-2">
+                  {preview && !previewError ? <img src={preview} alt="公众号二维码预览"
+                    className="h-full w-full object-contain" onError={() => setPreviewError(true)} /> :
+                    <span className="px-1 text-center text-xs text-default-500" role="status">{previewError ? "图片无法加载，请重新上传" : "正在加载图片…"}</span>}
+                </div>
                 <div className="flex flex-col gap-2">
-                  <Button size="sm" isDisabled={busy} onPress={() => file.current?.click()}>
+                  <Button type="button" size="sm" variant="flat" isLoading={busy} isDisabled={busy} onPress={() => file.current?.click()}>
                     {busy ? "上传中…" : "更换二维码"}
                   </Button>
                   <Button size="sm" variant="light" isDisabled={busy} onPress={() => patch({ wechatQrUrl: "" })}>
@@ -91,7 +131,7 @@ export function BlogSubscribeSettings({
                 </div>
               </div>
             ) : (
-              <Button size="sm" isDisabled={busy} onPress={() => file.current?.click()}>
+              <Button type="button" size="sm" variant="flat" isLoading={busy} isDisabled={busy} onPress={() => file.current?.click()}>
                 {busy ? "上传中…" : "上传二维码"}
               </Button>
             )}
@@ -102,8 +142,8 @@ export function BlogSubscribeSettings({
               className="hidden"
               onChange={(e) => void upload(e.target.files?.[0])}
             />
-            <small className="text-xs text-default-400">
-              开关、名称与二维码三者齐了，公开页才会显示这个渠道；否则显示「暂未开放」，不给出点了没反应的按钮。
+            <small className="text-xs text-default-500">
+              支持 PNG、JPG、WebP、GIF、AVIF，最大 5MB。保存后公开展示；请先填写公众号名称并开启订阅。
             </small>
           </div>
           {error && (
@@ -114,12 +154,13 @@ export function BlogSubscribeSettings({
         </CardBody>
       </Card>
 
-      <Card className="border border-default-200 bg-surface">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-4 p-5">
           <h3 className="text-base font-semibold text-foreground">RSS 订阅</h3>
           <label className="flex items-center gap-2 text-sm">
             <BlogCheckbox
               type="checkbox"
+              aria-label="在订阅页展示 RSS 渠道"
               checked={data.rssEnabled}
               onChange={(e) => patch({ rssEnabled: e.target.checked })}
             />
@@ -134,11 +175,16 @@ export function BlogSubscribeSettings({
               value={data.rssUrl}
               onChange={(e) => patch({ rssUrl: e.target.value })}
             />
-            <small className="text-xs text-default-400">
+            <small className="text-xs text-default-500">
               留空时，订阅地址由公开站点地址与真实订阅路由自动生成，换域名不用回来改。只有想指向站外的源时才填 http(s) 地址。
             </small>
           </label>
 
+        </CardBody>
+      </Card>
+
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
+        <CardBody className="gap-4 p-5">
           <h3 className="text-base font-semibold text-foreground">关于这里</h3>
           <label className="flex flex-col gap-1.5">
             <span className="text-sm">主标题</span>
@@ -177,27 +223,27 @@ export function BlogSubscribeSettings({
             </div>
             <DirectionInput
               disabled={data.directions.length >= MAX_DIRECTIONS}
-              onAdd={(value) => setDirections([...data.directions, value])}
+              onAdd={(value) => setDirections(Array.from(new Set([...data.directions, value])))}
             />
-            <small className="text-xs text-default-400">
+            <small className="text-xs text-default-500">
               与已发布专题同名时，公开页会自动变成可跳转的入口；对不上就当普通标签展示。
             </small>
           </div>
         </CardBody>
       </Card>
 
-      <Card className="border border-default-200 bg-surface lg:col-span-2">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
         <CardBody className="gap-4 p-5">
           <h3 className="text-base font-semibold text-foreground">订阅说明</h3>
           <p className="text-sm text-default-500">
-            订阅前你可能想知道的三件事。写实际状况，不要承诺定时更新、全量同步或即时推送 ——
-            这些站点都没实现。删空则整块不显示。
+            告诉读者更新频率、渠道差异和取消订阅的方式。最多 6 条；删除全部说明后，公开页不展示此区域。
           </p>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {data.notes.map((n, i) => (
-            <div key={i} className="flex flex-col gap-2">
+            <div key={i} className="flex flex-col gap-3 rounded-xl border border-default-200 p-4">
               <div className="flex items-center gap-2">
                 <BlogInput
-                  className="w-[140px] shrink-0"
+                  className="min-w-0 flex-1"
                   maxLength={20}
                   placeholder="短标签"
                   value={n.label}
@@ -213,7 +259,7 @@ export function BlogSubscribeSettings({
                   isIconOnly
                   size="sm"
                   variant="light"
-                  aria-label="删除这条说明"
+                  aria-label={`删除第 ${i + 1} 条说明`}
                   onPress={() => setNotes(data.notes.filter((_, k) => k !== i))}
                 >
                   <Icon icon="tabler:x" width={14} />
@@ -235,7 +281,10 @@ export function BlogSubscribeSettings({
               />
             </div>
           ))}
+          </div>
           <Button
+            type="button"
+            className="self-start"
             size="sm"
             variant="flat"
             isDisabled={data.notes.length >= 6}

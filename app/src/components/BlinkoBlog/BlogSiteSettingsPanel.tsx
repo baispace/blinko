@@ -57,6 +57,7 @@ export function BlogSiteSettingsPanel({
     [deployment, setDeployment] = useState<BlogDeployment | null>(null),
     [tab, setTab] = useState("basic"),
     [busy, setBusy] = useState(false),
+    [uploading, setUploading] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [fonts, setFonts] = useState<BlogFontOption[]>([]);
@@ -193,7 +194,7 @@ export function BlogSiteSettingsPanel({
   });
 
   return (
-    <section className="space-y-5">
+    <section className="blog-site-settings space-y-5">
       <BlogTabs
         label="站点设置分区"
         value={tab}
@@ -384,6 +385,7 @@ export function BlogSiteSettingsPanel({
       ) : tab === "subscribe" ? (
         <BlogSubscribeSettings
           subscribe={data.subscribe}
+          onUploading={setUploading}
           patch={(p) => patch({ subscribe: { ...data.subscribe, ...p } })}
         />
       ) : tab === "footer" ? (
@@ -408,14 +410,14 @@ export function BlogSiteSettingsPanel({
         <BlogSiteCheckPanel target={data.targetOrigin} effective={deployed} />
       )}
 
-      <div className="flex items-center justify-between rounded-xl border border-default-200 bg-surface px-5 py-3">
+      <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-default-200 bg-content1 px-5 py-3">
         <span className="text-sm text-default-500">
           {dirty ? "有未保存修改" : "设置已同步"}
         </span>
         <Button
           size="sm"
           color="primary"
-          isDisabled={!revision || !dirty || busy}
+          isDisabled={!revision || !dirty || busy || uploading}
           onPress={() => void save()}
         >
           {busy ? "保存中…" : "保存站点设置"}

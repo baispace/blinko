@@ -39,7 +39,7 @@ export async function readBlogSiteSettings(
  * 也不是头像，走不了现成的公开资源判定。所以单独把这条路径列出来，
  * 由文件鉴权在判定「这份附件算公开」时一并比对。
  *
- * 只认本站的 /api/file 路径：外部地址由浏览器自己取，不需要鉴权豁免。
+ * 只认本站的 /api/file 与 /api/s3file 路径：外部地址由浏览器自己取，不需要鉴权豁免。
  */
 export async function publicSubscribeQrPaths(
   db: Prisma.TransactionClient | PrismaClient,
@@ -54,7 +54,7 @@ export async function publicSubscribeQrPaths(
   for (const row of rows) {
     const parsed = blogSiteSettingsSchema.safeParse(row.config ?? {});
     const qr = parsed.success ? parsed.data.subscribe.wechatQrUrl : "";
-    if (qr && qr.startsWith("/api/file/")) paths.push(qr);
+    if (qr && /^\/api\/(?:file|s3file)\//.test(qr)) paths.push(qr);
   }
   return paths;
 }

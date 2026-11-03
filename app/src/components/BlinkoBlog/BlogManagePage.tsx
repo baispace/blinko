@@ -834,7 +834,7 @@ export function BlogManagePage() {
   };
 
   return (
-    <div className="flex h-[100dvh] bg-background text-foreground">
+    <div className="blog-hero-surface flex h-[100dvh] bg-background text-foreground">
       {/* Sidebar */}
       {!narrow && (
         <BlogStudioNav

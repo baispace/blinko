@@ -363,19 +363,16 @@ function WechatCard({
             </span>
           </p>
 
-          {copy.state !== "idle" && (
-            <p
-              className={
-                "ink-sub-feedback " +
-                (copy.state === "ok" ? "is-ok" : "is-fail")
-              }
-              role="status"
-            >
-              {copy.state === "ok"
-                ? "公众号名称已复制。"
-                : "复制失败，请手动长按选中名称复制。"}
-            </p>
-          )}
+          <p
+            className={"ink-sub-feedback " + (copy.state === "ok" ? "is-ok" : copy.state === "fail" ? "is-fail" : "")}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {copy.state === "idle" ? "" : copy.state === "ok"
+              ? "公众号名称已复制。"
+              : "复制失败，请手动长按选中名称复制。"}
+          </p>
         </>
       )}
     </article>
@@ -453,19 +450,16 @@ function RssCard({
             如何使用 RSS？
           </button>
 
-          {copy.state !== "idle" && (
-            <p
-              className={
-                "ink-sub-feedback " +
-                (copy.state === "ok" ? "is-ok" : "is-fail")
-              }
-              role="status"
-            >
-              {copy.state === "ok"
-                ? "订阅地址已复制。"
-                : "复制失败，请手动选中地址复制。"}
-            </p>
-          )}
+          <p
+            className={"ink-sub-feedback " + (copy.state === "ok" ? "is-ok" : copy.state === "fail" ? "is-fail" : "")}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {copy.state === "idle" ? "" : copy.state === "ok"
+              ? "订阅地址已复制。"
+              : "复制失败，请手动选中地址复制。"}
+          </p>
         </>
       )}
     </article>

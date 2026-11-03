@@ -307,7 +307,11 @@
   color: var(--ink-accent);
 }
 
+/* Reserve two lines even while idle: copy feedback must not grow either
+   equal-height card or move actions positioned with margin-top:auto. */
 .ink-blog .ink-sub-feedback {
+  min-block-size: 3.4em;
+  line-height: 1.7;
   margin: 0;
   font-size: 12.5px;
   font-weight: 600;

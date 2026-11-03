@@ -397,7 +397,13 @@ export function BlogContentList({
                             <Icon icon="tabler:file-text" width={18} className="text-default-400" />
                           )}
                         </span>
-                        <div className="min-w-0 flex-1 max-w-[140px] sm:max-w-none">
+                        {/*
+                          标题栏要有宽度上限。
+                          表格是自动列宽的，摘要越长这一列越宽 ——
+                          操作列（发布、AI、更多）就被推到屏幕外，作者得横着拖才能点。
+                          上限 340px，摘要最多两行，操作列始终在视野里。
+                        */}
+                        <div className="min-w-0 flex-1 max-w-[140px] sm:max-w-[340px]">
                           <a
                             href={`/blog-manage/content/${post.id}`}
                             className="text-sm font-medium text-foreground hover:text-primary bg-transparent border-0 p-0 cursor-pointer text-left truncate block w-full"
@@ -405,7 +411,7 @@ export function BlogContentList({
                           >
                             {post.title}
                           </a>
-                          <span className="text-xs text-default-500 truncate block">
+                          <span className="text-xs text-default-500 line-clamp-2">
                             {post.excerpt}
                           </span>
                           {/*

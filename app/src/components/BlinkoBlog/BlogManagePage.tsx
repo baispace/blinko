@@ -1,3 +1,4 @@
+import { BlogMomentsPanel } from "./BlogMomentsPanel";
 import { BlogRecommendationReport } from "./BlogRecommendationReport";
 import { managerBlogVisitUrl } from "@shared/lib/blogManagerVisit";
 import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
@@ -918,6 +919,7 @@ export function BlogManagePage() {
               </p>
             ) : (
               <>
+                {section === "moments" && <BlogMomentsPanel />}
                 {section === "posts" && (
                   <BlogContentList
                     posts={posts}

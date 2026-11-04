@@ -88,27 +88,36 @@ function StatHelp({
   label: string;
   text?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{left:number;top:number}|null>(null);
+  const root = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!position) return;
+    const close = () => setPosition(null);
+    const outside = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) close(); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [position]);
   if (!text) return null;
-  return (
-    <>
-      <button
-        type="button"
-        className="ink-stats-help-btn"
-        aria-expanded={open}
-        aria-controls={id}
-        aria-label={`${label}的口径说明`}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <Icon icon="tabler:help-circle" width={13} />
-      </button>
-      {open && (
-        <p className="ink-stats-help-text" id={id}>
-          {text}
-        </p>
-      )}
-    </>
-  );
+  return <span ref={root} className="ink-stats-help">
+    <button type="button" className="ink-stats-help-btn" aria-expanded={!!position}
+      aria-controls={position ? id : undefined} aria-label={`${label}的口径说明`}
+      onClick={event => {
+        if (position) {setPosition(null);return;}
+        const rect = event.currentTarget.getBoundingClientRect();
+        const width = Math.min(288, window.innerWidth - 32);
+        setPosition({left:Math.max(16,Math.min(rect.left,window.innerWidth-width-16)),top:Math.max(16,Math.min(rect.bottom+8,window.innerHeight-180))});
+      }}><Icon icon="tabler:help-circle" width={13}/></button>
+    {position && <span role="note" id={id} className="ink-stats-help-text" style={{position:'fixed',left:position.left,top:position.top}}>{text}</span>}
+  </span>;
 }
 
 /** 累计指标卡（内容积累）：图标 + 数字 + 说明 + 口径问号。 */
@@ -129,7 +138,6 @@ function StatCard({
   desc: string;
   tip?: string;
 }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="ink-stats-card">
       <div className="ink-stats-card-head">
@@ -142,26 +150,10 @@ function StatCard({
         </p>
         <span className="ink-stats-label">
           {label}
-          {tip && (
-            <button
-              type="button"
-              className="ink-stats-help-btn"
-              aria-expanded={open}
-              aria-controls={id}
-              aria-label={`${label}的口径说明`}
-              onClick={() => setOpen((v) => !v)}
-            >
-              <Icon icon="tabler:help-circle" width={13} />
-            </button>
-          )}
+          {tip && <StatHelp id={id} label={label} text={tip} />}
         </span>
       </div>
       <small className="ink-stats-desc">{desc}</small>
-      {open && tip && (
-        <p className="ink-stats-help-text" id={id}>
-          {tip}
-        </p>
-      )}
     </div>
   );
 }
@@ -182,7 +174,6 @@ function StatMetric({
   desc: string;
   tip?: string;
 }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="ink-stats-metric">
       <p className="ink-stats-figure">
@@ -191,25 +182,9 @@ function StatMetric({
       </p>
       <span className="ink-stats-label">
         {label}
-        {tip && (
-          <button
-            type="button"
-            className="ink-stats-help-btn"
-            aria-expanded={open}
-            aria-controls={id}
-            aria-label={`${label}的口径说明`}
-            onClick={() => setOpen((v) => !v)}
-          >
-            <Icon icon="tabler:help-circle" width={13} />
-          </button>
-        )}
+        {tip && <StatHelp id={id} label={label} text={tip} />}
       </span>
       <small className="ink-stats-desc">{desc}</small>
-      {open && tip && (
-        <p className="ink-stats-help-text" id={id}>
-          {tip}
-        </p>
-      )}
     </div>
   );
 }

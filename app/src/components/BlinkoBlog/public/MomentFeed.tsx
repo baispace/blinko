@@ -1,3 +1,5 @@
+import { PhotoProvider, PhotoView } from 'react-photo-view';
+import 'react-photo-view/dist/react-photo-view.css';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api } from "@/lib/publicBlogClient";
 import { blogDeviceId } from "@/lib/blogDevice";
@@ -118,12 +120,26 @@ function MomentItem({
   onHint: (text: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [images, setImages] = useState<{src:string;alt:string}[]>([]);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   // 是否真的超出了折叠高度：量渲染后的高度，不用字符数猜。
   // 正文是 markdown（有段落、有图），字符数判断不了「看起来长不长」。
   const [overflowing, setOverflowing] = useState(false);
+
+  // Read the sanitized Markdown output so HTML and Markdown images share URL handling.
+  useLayoutEffect(() => {
+    const found = Array.from(bodyRef.current?.querySelectorAll('img') ?? [])
+      .map(img => ({src:img.getAttribute('src') || '',alt:img.alt || '动态配图'}))
+      .filter(img => !!img.src);
+    bodyRef.current?.querySelectorAll('p').forEach(p => {
+      if (p.querySelector('img') && !p.textContent?.trim()) p.setAttribute('data-media-only', 'true');
+      else p.removeAttribute('data-media-only');
+    });
+    setImages(found);
+  }, [moment.content]);
 
   // 点到菜单外面就收起。
   useEffect(() => {
@@ -243,6 +259,16 @@ function MomentItem({
           <Icon icon={expanded ? "tabler:chevron-up" : "tabler:chevron-down"} width={14} />
         </button>
       )}
+
+      {images.length > 0 && <PhotoProvider>
+        <div className="ink-moment-gallery" data-single={images.length === 1} data-columns={[2,4].includes(images.length) ? 2 : 3}>
+          {images.map((image,index) => <PhotoView key={`${image.src}-${index}`} src={image.src}>
+            <button type="button" className="ink-moment-photo" aria-label={`查看第 ${index+1} 张图片，共 ${images.length} 张`}>
+              <img src={image.src} alt={image.alt} loading="lazy" onError={event => {event.currentTarget.style.opacity='0';event.currentTarget.parentElement?.setAttribute('data-broken','true');}} />
+            </button>
+          </PhotoView>)}
+        </div>
+      </PhotoProvider>}
 
       {moment.tags.length > 0 && (
         <div className="ink-moment-tags">

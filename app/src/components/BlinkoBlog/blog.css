@@ -536,10 +536,24 @@
     transform 0.2s ease;
   user-select: none;
 }
+.ink-scroll-meter-badge { padding:0; border:0; cursor:pointer; }
+.ink-scroll-meter-badge:disabled { pointer-events:none; }
+.ink-scroll-meter-arrow { display:none; align-items:center; justify-content:center; }
+.ink-scroll-meter-badge:hover .ink-scroll-meter-number,
+.ink-scroll-meter-badge:focus-visible .ink-scroll-meter-number { display:none; }
+.ink-scroll-meter-badge:hover .ink-scroll-meter-arrow,
+.ink-scroll-meter-badge:focus-visible .ink-scroll-meter-arrow { display:flex; }
+.ink-scroll-meter-badge:focus-visible { outline:2px solid var(--ink-accent); outline-offset:3px; }
 .ink-scroll-meter[data-show="true"] .ink-scroll-meter-badge {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
+
+.ink-scroll-meter[data-complete="true"] { width:100px; }
+.ink-scroll-meter[data-complete="true"] .ink-scroll-meter-badge { width:90px; border-radius:999px; font-size:13px; letter-spacing:0; white-space:nowrap; }
+.ink-scroll-meter[data-complete="true"] .ink-scroll-meter-badge:hover .ink-scroll-meter-number,
+.ink-scroll-meter[data-complete="true"] .ink-scroll-meter-badge:focus-visible .ink-scroll-meter-number { display:inline; }
+.ink-scroll-meter[data-complete="true"] .ink-scroll-meter-arrow { display:none; }
 
 /*
  * 暗黑模式：药丸本身是深色，纯黑圆点会和它糊在一起，

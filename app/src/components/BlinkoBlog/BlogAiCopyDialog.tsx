@@ -4,7 +4,7 @@ import { api } from '@/lib/trpc';
 import { RootStore } from '@/store';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
-import { BlogCheckbox } from './BlogUI';
+import './hero-admin.css';
 import { validShortCoverTitle } from '@shared/lib/blogPublishSettings';
 
 type Settings = Awaited<ReturnType<typeof api.blog.publishSettings.query>>;
@@ -271,7 +271,7 @@ export function BlogAiCopyDialog({
   return (
     <Modal
       isOpen
-      classNames={{ wrapper: 'z-[10001]', backdrop: 'z-[10000]' }}
+      classNames={{ wrapper: 'blog-cover-modal-wrapper z-[10001]', backdrop: 'blog-cover-modal-backdrop z-[10000]' }}
       onOpenChange={(open) => {
         if (!open && !busy) onClose();
       }}
@@ -285,11 +285,11 @@ export function BlogAiCopyDialog({
     >
       <ModalContent
         aria-label="AI 优化文案"
-        className="blog-hero-surface flex min-h-0 flex-col overflow-hidden bg-background"
+        className="blog-hero-surface blog-cover-dialog blog-copy-dialog flex min-h-0 flex-col overflow-hidden bg-background"
         style={{
           width: 'min(720px, calc(100vw - 32px))',
           maxHeight: 'calc(100dvh - 48px)',
-          borderRadius: 16,
+          borderRadius: 28,
           fontFamily:
             '-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif',
         }}
@@ -303,6 +303,7 @@ export function BlogAiCopyDialog({
           </div>
           <Button
             isIconOnly
+            className="blog-dialog-close"
             variant="light"
             onPress={onClose}
             isDisabled={!!busy}
@@ -312,7 +313,7 @@ export function BlogAiCopyDialog({
           </Button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
+        <div className="blog-cover-dialog-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
           {busy === 'load' && (
             <p className="text-sm text-default-500" role="status">
               正在读取已有建议…
@@ -362,11 +363,11 @@ export function BlogAiCopyDialog({
                 return (
                   <label
                     key={item.key}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-default-200 p-4 text-sm"
+                    className="blog-copy-candidate"
                   >
-                    <BlogCheckbox
+                    <input
                       type="checkbox"
-                      className="mt-0.5 shrink-0"
+                      className="blog-copy-choice"
                       disabled={!!busy || !usableField || isBlocked}
                       checked={picked.includes(item.key)}
                       onChange={(event) =>

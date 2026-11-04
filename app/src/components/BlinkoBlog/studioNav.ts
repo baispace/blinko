@@ -8,6 +8,7 @@
 /** 后台的全部分区。深链 ?section=xxx 用的是同一批键。 */
 export type StudioSection =
   | "settings"
+  | "moments"
   | "posts"
   | "topics"
   | "covers"
@@ -21,6 +22,7 @@ export type StudioSection =
 /** 深链用的分区键：/blog-manage?section=topics 可以直接落到对应分区。 */
 export const STUDIO_SECTION_KEYS: StudioSection[] = [
   "posts",
+  "moments",
   "topics",
   "covers",
   "friends",
@@ -54,6 +56,7 @@ export const STUDIO_NAV: StudioNavGroup[] = [
   {
     title: "内容",
     items: [
+      {key:"moments",label:"动态",icon:"tabler:messages",hint:"管理公开闪念，编辑原闪念或撤回动态"},
       {
         key: "posts",
         label: "文章",
@@ -138,6 +141,7 @@ export const STUDIO_SECTION_META: Record<
   StudioSection,
   { title: string; desc: string }
 > = {
+  moments: {title:"动态",desc:"管理已公开的闪念"},
   posts: { title: "文章", desc: "管理已发布的文章与公开版本" },
   topics: { title: "专题", desc: "组织文章的阅读脉络" },
   covers: { title: "封面资源", desc: "维护公开封面与生成结果" },

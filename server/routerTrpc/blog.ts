@@ -1996,6 +1996,19 @@ export const blogRouter = router({
    * 动态没有独立的数据表，也就没有「新建动态」这种操作 ——
    * 公开一条闪念就是公开它自己，撤回也只改一个开关，内容一个字不动。
    */
+  managedMoments: authProcedure
+    .input(z.object({ cursor: z.number().int().positive().optional() }))
+    .query(async ({ctx, input}) => {
+      const rows = await prisma.notes.findMany({
+        where: {accountId:Number(ctx.id), isMoment:true, momentPublishedAt:{not:null}, isRecycle:false},
+        orderBy:[{momentPublishedAt:'desc'},{id:'desc'}],
+        ...(input.cursor ? {cursor:{id:input.cursor},skip:1} : {}),
+        take:31,
+        select:{id:true,content:true,momentPublishedAt:true,attachments:{select:{id:true,path:true,type:true}}},
+      });
+      return {items:rows.slice(0,30), nextCursor:rows.length>30 ? rows[29].id : null};
+    }),
+
   momentPublish: authProcedure
     .input(
       z.object({

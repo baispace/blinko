@@ -136,13 +136,23 @@ function ScrollMeter({ rootRef }: { rootRef: RefObject<HTMLDivElement> }) {
       cancelAnimationFrame(frame);
     };
   }, [rootRef]);
+  if (!shown) return null;
   return (
     <span
       className="ink-scroll-meter"
-      data-show={shown ? "true" : "false"}
-      aria-hidden="true"
+      data-show="true"
+      data-complete={percent >= 100 ? "true" : "false"}
     >
-      <i className="ink-scroll-meter-badge">{percent}</i>
+      <button
+        type="button"
+        className="ink-scroll-meter-badge"
+        aria-label="返回顶部"
+        title="返回顶部"
+        onClick={() => rootRef.current?.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'})}
+      >
+        <span className="ink-scroll-meter-number" aria-hidden="true">{percent >= 100 ? "返回顶部" : percent}</span>
+        <span className="ink-scroll-meter-arrow" aria-hidden="true"><Icon icon="tabler:arrow-up" width={20}/></span>
+      </button>
     </span>
   );
 }

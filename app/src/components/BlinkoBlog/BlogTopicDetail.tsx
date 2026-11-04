@@ -222,7 +222,7 @@ export function BlogTopicDetail() {
   }, [topic?.id]);
 
   const patch = (p: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...p }));
-  const save = async () => {
+  const save = async (openCover = false) => {
     setBusy(true);
     setError("");
     try {
@@ -242,7 +242,7 @@ export function BlogTopicDetail() {
       RootStore.Get(ToastPlugin).success("专题已保存");
       initial.current = JSON.stringify(draft);
       if (isNew && saved?.id)
-        navigate(`/blog-manage/topic/${saved.id}`, { replace: true });
+        navigate(`/blog-manage/topic/${saved.id}${openCover ? "?cover=1" : ""}`, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "保存失败");
     } finally {
@@ -250,7 +250,18 @@ export function BlogTopicDetail() {
     }
   };
 
-  const generateCover = () => setGeneratingCover(true);
+  useEffect(() => {
+    if (topic && new URLSearchParams(location.search).get('cover') === '1') {
+      setGeneratingCover(true);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [topic?.id, location.search, location.pathname, navigate]);
+
+  const generateCover = async () => {
+    if (!draft.name.trim() || working) return;
+    if (!topic) await save(true);
+    else setGeneratingCover(true);
+  };
   const chaptersSaved = async () => {
     await load();
     if (topic) {
@@ -377,7 +388,7 @@ export function BlogTopicDetail() {
   );
 
   const pageHeader = (
-    <div className="mb-6 min-w-0">
+    <div className="blog-topic-heading mb-6 min-w-0">
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-default-500">
         <button
           type="button"
@@ -464,7 +475,7 @@ export function BlogTopicDetail() {
     </div>
   );
 
-  const shellClass = "blog-hero-surface flex h-dvh min-h-0 flex-col overflow-y-auto overscroll-contain bg-background text-foreground";
+  const shellClass = "blog-topic-page blog-hero-surface flex h-dvh min-h-0 flex-col overflow-y-auto overscroll-contain bg-background text-foreground";
 
   if (missing)
     return (
@@ -498,7 +509,7 @@ export function BlogTopicDetail() {
     <div className={shellClass}>
       {topBar}
 
-      <div className="mx-auto w-full max-w-5xl shrink-0 px-4 py-6 lg:px-8">
+      <div className="blog-topic-form mx-auto w-full max-w-5xl shrink-0 px-4 py-6 lg:px-8">
         {pageHeader}
 
         {error && (
@@ -507,9 +518,9 @@ export function BlogTopicDetail() {
           </div>
         )}
 
-        <div className="flex flex-col gap-5">
+        <div className="blog-topic-layout flex flex-col gap-5">
           {/* ---------- 基本信息 ---------- */}
-          <Card className="rounded-xl border border-default-200 shadow-none">
+          <Card className="blog-topic-card">
             <details open className="group">
               <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 select-none">
                 <div className="min-w-0">
@@ -641,7 +652,7 @@ export function BlogTopicDetail() {
           </Card>
 
           {/* ---------- 封面与展示 ---------- */}
-          <Card className="rounded-xl border border-default-200 shadow-none">
+          <Card className="blog-topic-card">
             <CardHeader className="flex flex-col items-start gap-1 pb-1">
               <h2 className="flex items-center gap-2 text-base font-semibold">
                 <Icon icon="tabler:photo" width={17} />
@@ -670,7 +681,7 @@ export function BlogTopicDetail() {
                   <Button
                     size="sm"
                     color="primary"
-                    isDisabled={!topic || working || !draft.name.trim()}
+                    isDisabled={working || !draft.name.trim()}
                     startContent={<Icon icon="tabler:sparkles" width={15} />}
                     onPress={() => void generateCover()}
                   >
@@ -686,7 +697,7 @@ export function BlogTopicDetail() {
                   </Button>
                   {!topic && (
                     <small className="text-xs text-default-500">
-                      先保存专题，再根据名称和简介生成封面。
+                      点击后先保存专题，再打开封面助手。
                     </small>
                   )}
                   {draft.coverAttachmentId !== null && (
@@ -820,7 +831,7 @@ export function BlogTopicDetail() {
           </Card>
 
           {/* ---------- 底部操作 ---------- */}
-          <div className="flex items-center justify-between rounded-xl border border-default-200 bg-surface px-5 py-3.5">
+          <div className="blog-topic-savebar flex items-center justify-between rounded-xl border border-default-200 bg-surface px-5 py-3.5">
             <span className="text-sm text-default-500">
               {dirty ? "有未保存修改。" : "专题设置保存后立即生效。"}
             </span>
@@ -868,7 +879,7 @@ export function BlogTopicDetail() {
           </section>
         </div>
       </div>
-      {generatingCover && topic && <BlogCoverGeneratorDialog target={{type:'topic',id:topic.id,title:draft.name,description:draft.desc}} initial={{coverTitle:draft.coverTitle || ''}} onClose={() => setGeneratingCover(false)} onApply={result => { if (!result.id) return; setGeneratedCovers(previous=>[{id:result.id!,path:result.path,name:'AI 封面'},...previous]); patch({coverAttachmentId:result.id,coverTitle:result.coverMode === 'full' ? '' : result.coverTitle}); }} />}
+      {generatingCover && topic && <BlogCoverGeneratorDialog target={{type:'topic',id:topic.id,title:draft.name,description:draft.desc}} initial={{coverTitle:draft.coverTitle || Array.from(draft.name.trim()).slice(0,8).join('')}} onClose={() => setGeneratingCover(false)} onApply={result => { if (!result.id) return; setGeneratedCovers(previous=>[{id:result.id!,path:result.path,name:'AI 封面'},...previous]); patch({coverAttachmentId:result.id,coverTitle:result.coverMode === 'full' ? '' : result.coverTitle}); }} />}
     </div>
   );
 }

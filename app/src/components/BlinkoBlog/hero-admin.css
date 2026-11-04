@@ -77,3 +77,87 @@
 .blog-subscribe-settings [data-slot=input-wrapper] { border-color:hsl(var(--heroui-default-200)); }
 .blog-subscribe-settings [data-slot=input-wrapper][data-focus=true] { border-color:hsl(var(--heroui-primary)); }
 .blog-site-settings small { line-height:1.6; }
+
+/* Keep portalled cover dialogs independent of the page layout and form resets. */
+.blog-cover-modal-wrapper { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+.blog-cover-modal-backdrop { position:fixed; inset:0; background:rgb(20 24 32 / .28); }
+.blog-cover-dialog { margin:0; background:hsl(var(--heroui-content1)); color:hsl(var(--heroui-foreground)); box-shadow:0 2px 4px rgb(0 0 0 / .04),0 12px 40px rgb(0 0 0 / .10); border:1px solid hsl(var(--heroui-default-200) / .45); font-size:14px; line-height:1.5; }
+.blog-cover-dialog > header,.blog-cover-dialog > footer { padding:20px 24px; }
+.blog-cover-dialog > header h2 { margin:0; font-size:18px; line-height:1.5; }
+.blog-cover-dialog-body { padding:20px 24px; scrollbar-width:thin; scrollbar-color:hsl(var(--heroui-default-200)) transparent; }
+.blog-cover-dialog .blog-ui-field input { height:auto; min-height:0; font-size:14px; }
+.blog-cover-dialog > footer > p { flex:1; max-width:290px; line-height:1.6; }
+.blog-cover-dialog > footer > div { flex-shrink:0; }
+@media(max-width:640px) {
+ .blog-cover-modal-wrapper { padding:16px; }
+ .blog-cover-dialog > footer > p { max-width:none; }
+ .blog-cover-dialog > footer > div { justify-content:flex-end; flex-wrap:wrap; }
+}
+
+/* Candidate rows use one light separator instead of nested card outlines. */
+.blog-copy-candidate { display:flex; align-items:flex-start; gap:12px; padding:16px 0; border:0; border-bottom:1px solid hsl(var(--heroui-default-200) / .65); border-radius:0; cursor:pointer; font-size:14px; }
+.blog-copy-candidate:last-of-type { border-bottom:0; }
+.blog-copy-choice[type=checkbox] { appearance:auto!important; position:static!important; width:16px!important; height:16px!important; min-width:16px!important; min-height:16px!important; margin:2px 0 0!important; padding:0!important; flex:none; accent-color:hsl(var(--heroui-primary)); box-shadow:none!important; }
+.blog-copy-choice:focus-visible { outline:2px solid hsl(var(--heroui-primary)); outline-offset:3px; }
+.blog-copy-candidate:has(input:disabled) { cursor:default; }
+.blog-cover-dialog > header,.blog-cover-dialog > footer { border-color:hsl(var(--heroui-default-200) / .45); }
+.blog-cover-dialog .blog-ui-field [data-slot=input-wrapper] { border-color:hsl(var(--heroui-default-200) / .45); border-width:1px; border-radius:14px; background:hsl(var(--heroui-content1)); box-shadow:0 1px 2px rgb(0 0 0 / .05); }
+
+/* Rounded floating surfaces, matching the supplied card reference. */
+.blog-cover-dialog .blog-dialog-close { width:30px; height:30px; min-width:30px; padding:0; border:0; border-radius:50%; background:hsl(var(--heroui-default-100)); color:hsl(var(--heroui-default-500)); }
+.blog-cover-dialog .blog-dialog-close:hover { background:hsl(var(--heroui-default-200)); }
+.blog-cover-dialog > footer button { border-radius:999px; }
+.blog-cover-dialog .blog-ui-field [data-slot=input-wrapper]:focus-within { border-color:hsl(var(--heroui-primary) / .65); box-shadow:0 0 0 2px hsl(var(--heroui-primary) / .12); }
+.blog-cover-dialog .blog-ui-field [data-slot=input-wrapper][data-invalid=true] { border-color:hsl(var(--heroui-danger)); }
+@media(max-width:640px) {
+ .blog-cover-dialog > header,.blog-cover-dialog > footer,.blog-cover-dialog-body { padding:16px 18px; }
+}
+
+/* Topic forms share the soft card surfaces used by the publishing dialogs. */
+.blog-topic-form .blog-topic-card { overflow:hidden; border:1px solid hsl(var(--heroui-default-200) / .45); border-radius:24px; background:hsl(var(--heroui-content1)); box-shadow:0 2px 4px rgb(0 0 0 / .035),0 6px 20px rgb(0 0 0 / .025); }
+.blog-topic-form .blog-topic-card > [data-slot=header],.blog-topic-form .blog-topic-card summary { padding:20px 24px; }
+.blog-topic-form .blog-topic-card [data-slot=body] { padding:8px 24px 24px; }
+.blog-topic-form .blog-ui-field [data-slot=input-wrapper],.blog-topic-form .blog-ui-field [data-slot=trigger] { border:1px solid hsl(var(--heroui-default-200) / .5); border-radius:14px; box-shadow:0 1px 2px rgb(0 0 0 / .05); background:hsl(var(--heroui-content1)); }
+.blog-topic-form .blog-ui-field [data-slot=input-wrapper]:focus-within,.blog-topic-form .blog-ui-field [data-slot=trigger][data-focus=true] { border-color:hsl(var(--heroui-primary) / .65); box-shadow:0 0 0 2px hsl(var(--heroui-primary) / .12); }
+.blog-topic-form fieldset label { border-radius:18px; }
+.blog-topic-form input[type=radio] { width:16px; height:16px; min-width:16px; flex-shrink:0; accent-color:hsl(var(--heroui-primary)); }
+@media(max-width:640px) {
+ .blog-topic-form .blog-topic-card summary,.blog-topic-form .blog-topic-card > [data-slot=header] { padding:16px 18px; }
+ .blog-topic-form .blog-topic-card [data-slot=body] { padding:8px 18px 18px; }
+}
+
+/* A neutral canvas makes the white topic cards read as separate surfaces. */
+.blog-topic-page { background:hsl(var(--heroui-default-50)); }
+.blog-topic-page > header { background:hsl(var(--heroui-content1)); border-color:hsl(var(--heroui-default-200) / .5); }
+.blog-topic-page .blog-topic-form { max-width:1040px; padding-top:28px; padding-bottom:40px; }
+.blog-topic-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:24px; margin-bottom:24px; }
+.blog-topic-heading > nav { grid-column:1 / -1; margin-bottom:16px; }
+.blog-topic-heading > div:first-of-type { grid-column:1; }
+.blog-topic-heading > p { grid-column:1; }
+.blog-topic-heading > div:last-child { grid-column:2; grid-row:2 / 4; margin-top:0; align-self:center; flex-wrap:wrap; justify-content:flex-end; }
+.blog-topic-heading button { border-radius:999px; }
+.blog-topic-form .blog-topic-card { border-color:hsl(var(--heroui-default-200) / .35); border-radius:28px; box-shadow:0 2px 3px rgb(0 0 0 / .035),0 8px 24px rgb(0 0 0 / .025); }
+.blog-topic-form .blog-topic-card summary { padding:24px 28px 20px; }
+.blog-topic-form .blog-topic-card > [data-slot=header] { padding:24px 28px 16px; }
+.blog-topic-form .blog-topic-card [data-slot=body] { padding:0 28px 28px; }
+.blog-topic-form .blog-ui-field [data-slot=input-wrapper],.blog-topic-form .blog-ui-field [data-slot=trigger] { min-height:40px; border-color:hsl(var(--heroui-default-200) / .35); border-radius:16px; box-shadow:0 2px 3px rgb(0 0 0 / .055); }
+.blog-topic-form fieldset label { padding:16px; border-color:hsl(var(--heroui-default-200) / .55); background:hsl(var(--heroui-content1)); }
+.blog-topic-form fieldset label:has(input:checked) { border-color:hsl(var(--heroui-primary) / .45); background:hsl(var(--heroui-primary) / .045); box-shadow:0 0 0 1px hsl(var(--heroui-primary) / .08); }
+@media(max-width:640px) {
+ .blog-topic-page .blog-topic-form { padding-top:20px; }
+ .blog-topic-heading { grid-template-columns:minmax(0,1fr); gap:4px; }
+ .blog-topic-heading > div:last-child { grid-column:1; grid-row:auto; justify-content:flex-start; margin-top:12px; }
+ .blog-topic-form .blog-topic-card summary,.blog-topic-form .blog-topic-card > [data-slot=header] { padding:20px 18px 16px; }
+ .blog-topic-form .blog-topic-card [data-slot=body] { padding:0 18px 20px; }
+}
+
+/* Keep topic setup compact; actions stay within reach while arranging chapters. */
+.blog-topic-page .blog-topic-form { max-width:1200px; }
+.blog-topic-layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:start; gap:20px; }
+.blog-topic-layout > .blog-topic-card { min-width:0; }
+.blog-topic-layout > .blog-topic-savebar,.blog-topic-layout > #chapters { grid-column:1 / -1; }
+.blog-topic-savebar { position:sticky; bottom:12px; z-index:20; background:hsl(var(--heroui-content1)); box-shadow:0 4px 20px rgb(0 0 0 / .08); border-color:hsl(var(--heroui-default-200) / .45); border-radius:20px; }
+.blog-topic-form .blog-topic-card summary,.blog-topic-form .blog-topic-card > [data-slot=header] { padding:18px 20px 14px; }
+.blog-topic-form .blog-topic-card [data-slot=body] { padding:0 20px 20px; gap:16px; }
+.blog-topic-layout > #chapters { padding-bottom:20px; }
+@media(max-width:900px) { .blog-topic-layout { grid-template-columns:minmax(0,1fr); } }

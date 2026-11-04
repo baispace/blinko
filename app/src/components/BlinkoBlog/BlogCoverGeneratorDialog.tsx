@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Modal, ModalContent } from '@heroui/react';
+import { Button, Modal, ModalContent, Switch } from '@heroui/react';
 import { api } from '@/lib/trpc';
 import { blogImageUrl } from '@/lib/blogImage';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -9,7 +9,7 @@ import {
   CoverSceneSwitch,
   type CoverPreviewSceneKey,
 } from './BlogCoverPreview';
-import { BlogInput, BlogTextarea, BlogCheckbox } from './BlogUI';
+import { BlogInput, BlogTextarea } from './BlogUI';
 import {
   shortCoverTitleLength,
   validShortCoverTitle,
@@ -215,7 +215,7 @@ export function BlogCoverGeneratorDialog({
   return (
     <Modal
       isOpen
-      classNames={{wrapper:'z-[10001]',backdrop:'z-[10000]'}}
+      classNames={{wrapper:'blog-cover-modal-wrapper z-[10001]',backdrop:'blog-cover-modal-backdrop z-[10000]'}}
       onOpenChange={(open) => { if (!open && !busy) onClose(); }}
       hideCloseButton
       disableAnimation
@@ -225,7 +225,7 @@ export function BlogCoverGeneratorDialog({
       placement="center"
       size="xl"
     >
-      <ModalContent aria-label="封面助手" className="blog-hero-surface flex min-h-0 flex-col overflow-hidden bg-background" style={{width:'min(640px, calc(100vw - 32px))',maxHeight:'calc(100dvh - 48px)',borderRadius:16,fontFamily:'-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif'}}>
+      <ModalContent aria-label="封面助手" className="blog-hero-surface blog-cover-dialog flex min-h-0 flex-col overflow-hidden bg-background" style={{width:'min(640px, calc(100vw - 32px))',maxHeight:'calc(100dvh - 48px)',borderRadius:28,fontFamily:'-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif'}}>
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-default-200 px-5 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">封面助手</h2>
@@ -239,6 +239,7 @@ export function BlogCoverGeneratorDialog({
           </div>
           <Button
             isIconOnly
+            className="blog-dialog-close"
             variant="light"
             onPress={onClose}
             isDisabled={!!busy}
@@ -248,7 +249,7 @@ export function BlogCoverGeneratorDialog({
           </Button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
+        <div className="blog-cover-dialog-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
           {busy === 'load' && <p className="text-sm text-default-500" role="status">正在读取生图设置…</p>}
           {busy === 'copy' && <p className="text-sm text-default-500" role="status">正在想文案…</p>}
           {busy === 'image' && (
@@ -460,15 +461,15 @@ export function BlogCoverGeneratorDialog({
                     onChange={(event) => setPreviewSubtitle(event.target.value)}
                   />
                 </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <BlogCheckbox
-                    type="checkbox"
-                    checked={overlay}
-                    disabled={!!busy || target?.type === 'note'}
-                    onChange={(event) => setOverlay(event.target.checked)}
-                  />
+                <Switch
+                  size="sm"
+                  isSelected={overlay}
+                  isDisabled={!!busy || target?.type === 'note'}
+                  onValueChange={setOverlay}
+                  classNames={{label: 'text-sm'}}
+                >
                   在图片上显示标题
-                </label>
+                </Switch>
                 <p className="text-xs text-default-500">
                   短标题横贯画面，淡化后置于居中图标后方；图案保持完整，极小缩略图隐藏文字。
                 </p>
@@ -501,7 +502,7 @@ export function BlogCoverGeneratorDialog({
               ? target?.type === 'note' ? '先生成候选配图，点击应用后才会修改笔记封面。' : target?.type === 'topic' ? '先生成候选封面，保存专题资料后生效。' : '生成的只是草稿底图，保存后才会进入发布设置。'
               : step === 'result'
                 ? '先看看效果，满意再应用。'
-                : '预览的是待发布效果；应用后仍需在发布设置里保存。'}
+                : target?.type === 'topic' ? '预览的是专题封面效果；应用后请保存专题资料。' : '预览的是待发布效果；应用后仍需在发布设置里保存。'}
           </p>
           <div className="flex gap-2">
             {step === 'input' && (

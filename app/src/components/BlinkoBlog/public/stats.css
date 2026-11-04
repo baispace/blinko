@@ -209,15 +209,15 @@
   outline-offset: 2px;
 }
 
-/* 展开的口径说明：贴在指标下面，一眼能读完，不跳到页面底部找。 */
+/* Floating explanations never change the metric grid height. */
+.ink-blog .ink-stats-help { display:inline-flex; vertical-align:middle; }
 .ink-blog .ink-stats-help-text {
-  margin: 5px 0 0;
-  padding: 9px 11px;
-  border-radius: 10px;
-  background: var(--ink-bg);
-  font-size: 11.5px;
-  line-height: 1.7;
-  color: var(--ink-muted);
+  z-index:100; display:block; box-sizing:border-box; width:min(288px, calc(100vw - 32px));
+  max-height:160px; overflow-y:auto; margin:0; padding:12px 14px;
+  border:1px solid var(--ink-line); border-radius:14px;
+  background:var(--ink-surface); box-shadow:0 4px 20px rgb(0 0 0 / .12);
+  font-size:12px; font-weight:400; line-height:1.7; color:var(--ink-text);
+  white-space:normal; text-align:left;
 }
 
 /* 数字行高度固定：骨架切到真实数值时不会顶动下面的标签。 */

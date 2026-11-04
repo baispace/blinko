@@ -24,7 +24,7 @@ export function blogDomainRequest(input: {host: string; url: string; method: str
   if (path === '/blog' || path.startsWith('/blog/')) {
     return {kind: 'redirect', url: input.origin + (raw.slice(5) || '/') + search};
   }
-  if (/^\/(?:assets|fonts|font-assets|icons|locales)\//.test(path) ||
+  if (/^\/(?:assets|brand|fonts|font-assets|icons|locales)\//.test(path) ||
       /^\/(?:robots\.txt|sitemap\.xml|favicon\.ico|manifest\.json|manifest\.webmanifest|site\.webmanifest|browserconfig\.xml)$/.test(path)) return {kind: 'pass'};
   return {kind: 'rewrite', url: (raw === '/' ? '/blog' : '/blog' + raw) + search};
 }

@@ -23,6 +23,8 @@ export function BlogSubscribeSettings({
   const [error, setError] = useState("");
   const [preview, setPreview] = useState("");
   const [previewError, setPreviewError] = useState(false);
+  const [customIntro, setCustomIntro] = useState(() => !!subscribe.intro);
+  useEffect(() => { if (subscribe.intro) setCustomIntro(true); }, [subscribe.intro]);
 
   useEffect(() => {
     onUploading?.(busy);
@@ -88,9 +90,9 @@ export function BlogSubscribeSettings({
     patch({ directions });
 
   return (
-    <div className="blog-subscribe-settings grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+    <div className="blog-subscribe-settings grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
-        <CardBody className="gap-4 p-5">
+        <CardBody className="gap-3 p-4">
           <h3 className="text-base font-semibold text-foreground">微信公众号</h3>
           <label className="flex items-center gap-2 text-sm">
             <BlogCheckbox
@@ -155,7 +157,7 @@ export function BlogSubscribeSettings({
       </Card>
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
-        <CardBody className="gap-4 p-5">
+        <CardBody className="gap-3 p-4">
           <h3 className="text-base font-semibold text-foreground">RSS 订阅</h3>
           <label className="flex items-center gap-2 text-sm">
             <BlogCheckbox
@@ -166,6 +168,8 @@ export function BlogSubscribeSettings({
             />
             <span>在订阅页展示 RSS 渠道</span>
           </label>
+          <p className="text-sm text-default-500">订阅地址根据博客域名自动生成，换域名后无需手动修改。</p>
+          <details open={!!data.rssUrl}><summary className="cursor-pointer text-sm text-default-600">使用其他订阅源</summary>
           <label className="flex flex-col gap-1.5">
             <span className="text-sm">自定义订阅源（可选）</span>
             <BlogInput
@@ -179,34 +183,18 @@ export function BlogSubscribeSettings({
               留空时，订阅地址由公开站点地址与真实订阅路由自动生成，换域名不用回来改。只有想指向站外的源时才填 http(s) 地址。
             </small>
           </label>
+          </details>
 
         </CardBody>
       </Card>
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
-        <CardBody className="gap-4 p-5">
+        <CardBody className="gap-3 p-4">
           <h3 className="text-base font-semibold text-foreground">关于这里</h3>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm">主标题</span>
-            <BlogInput
-              className="w-full"
-              maxLength={80}
-              placeholder="留空则不显示主标题"
-              value={data.introTitle}
-              onChange={(e) => patch({ introTitle: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm">站点介绍</span>
-            <BlogTextarea
-              className="w-full"
-              minRows={3}
-              maxLength={600}
-              placeholder="留空则回落到「公开作者」里的站点说明"
-              value={data.intro}
-              onChange={(e) => patch({ intro: e.target.value })}
-            />
-          </label>
+          <p className="text-sm text-default-500">默认复用「公开作者」中的空间说明；未填写时使用站点标语。</p>
+          <label className="flex items-center gap-2 text-sm"><BlogCheckbox aria-label="为订阅页单独编写介绍" checked={customIntro} onChange={e => { setCustomIntro(e.target.checked); if (!e.target.checked) patch({intro:""}); }}/>为订阅页单独编写介绍</label>
+          {customIntro && <label className="flex flex-col gap-1.5"><span className="text-sm">订阅页介绍</span><BlogTextarea minRows={3} maxLength={600} value={data.intro} onChange={e => patch({intro:e.target.value})} aria-label="订阅页介绍"/></label>}
+          <details open={!!data.introTitle}><summary className="cursor-pointer text-sm text-default-600">自定义此区域标题</summary><BlogInput className="mt-3" value={data.introTitle} maxLength={80} placeholder="留空使用默认标题" onChange={e=>patch({introTitle:e.target.value})}/></details>
           <div className="flex flex-col gap-1.5">
             <span className="text-sm">内容方向</span>
             <div className="flex flex-wrap gap-2">
@@ -233,7 +221,7 @@ export function BlogSubscribeSettings({
       </Card>
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
-        <CardBody className="gap-4 p-5">
+        <CardBody className="gap-3 p-4">
           <h3 className="text-base font-semibold text-foreground">订阅说明</h3>
           <p className="text-sm text-default-500">
             告诉读者更新频率、渠道差异和取消订阅的方式。最多 6 条；删除全部说明后，公开页不展示此区域。

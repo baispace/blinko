@@ -289,7 +289,7 @@ export const handleMomentPublish = async () => {
     if (blinko.curSelectedNote?.id === note.id)
       blinko.curSelectedNote = { ...note, isMoment: published }
     blinko.forceQuery++
-    toast.success(published ? '已公开为动态' : '已撤回动态')
+    toast.success(published ? '已公开为动态，后续编辑会同步到公开页面' : '已撤回动态')
   } catch (e: any) {
     toast.error(e?.message || '操作失败，请重试')
   }

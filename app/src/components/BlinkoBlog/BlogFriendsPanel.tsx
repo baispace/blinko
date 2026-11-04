@@ -18,6 +18,7 @@ const STATUS_FILTERS = [
   { key: "pending", label: "待审核" },
   { key: "approved", label: "已通过" },
   { key: "rejected", label: "已拒绝" },
+  { key: "failed", label: "通知异常" },
   { key: "all", label: "全部" },
 ] as const;
 
@@ -36,7 +37,8 @@ const STATUS_COLOR: Record<string, "default" | "success" | "danger" | "warning">
   rejected: "danger",
 };
 
-export function BlogFriendsPanel() {
+export function BlogFriendsPanel({queue}:{queue?:string|null}) {
+  useEffect(()=>{if(queue==="failed") setFilter("failed");},[queue]);
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [links, setLinks] = useState<FriendLink[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -64,6 +66,7 @@ export function BlogFriendsPanel() {
         approved: all.filter((l) => l.status === "approved").length,
         rejected: all.filter((l) => l.status === "rejected").length,
         all: all.length,
+        failed: all.filter(link=>link.status!=="pending" && ["failed","not_configured"].includes(link.emailStatus)).length,
       });
     } catch (e: any) {
       setError(e?.message || "友链数据加载失败，请重试。");
@@ -77,7 +80,7 @@ export function BlogFriendsPanel() {
   }, [load]);
 
   const visible = useMemo(
-    () => (filter === "all" ? links : links.filter((l) => l.status === filter)),
+    () => (filter === "all" ? links : links.filter((l) => filter==="failed" ? l.status!=="pending" && ["failed","not_configured"].includes(l.emailStatus) : l.status === filter)),
     [links, filter],
   );
 
@@ -93,6 +96,7 @@ export function BlogFriendsPanel() {
     } catch (e: any) {
       toastError(e);
     } finally {
+      window.dispatchEvent(new Event("jomio:blog-work-updated"));
       setBusyId(null);
     }
   };

@@ -285,19 +285,19 @@ export function BlogAiCopyDialog({
     >
       <ModalContent
         aria-label="AI 优化文案"
-        className="bg-background"
+        className="blog-hero-surface flex min-h-0 flex-col overflow-hidden bg-background"
         style={{
-          width: 'min(640px, calc(100vw - 32px))',
+          width: 'min(720px, calc(100vw - 32px))',
           maxHeight: 'calc(100dvh - 48px)',
           borderRadius: 16,
           fontFamily:
             '-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif',
         }}
       >
-        <header className="flex items-center justify-between border-b border-default-200 px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-default-200 px-5 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">AI 优化文案</h2>
-            <small className="text-sm text-default-500">
+            <small className="mt-1 block text-xs leading-relaxed text-default-500">
               按正文给一版标题、概述与封面文案，逐项挑选后写入草稿
             </small>
           </div>
@@ -312,7 +312,7 @@ export function BlogAiCopyDialog({
           </Button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4" aria-busy={!!busy}>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
           {busy === 'load' && (
             <p className="text-sm text-default-500" role="status">
               正在读取已有建议…
@@ -362,11 +362,11 @@ export function BlogAiCopyDialog({
                 return (
                   <label
                     key={item.key}
-                    className="flex items-start gap-2.5 rounded-lg border border-default-200 p-3 text-sm"
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-default-200 p-4 text-sm"
                   >
                     <BlogCheckbox
                       type="checkbox"
-                      className="mt-0.5"
+                      className="mt-0.5 shrink-0"
                       disabled={!!busy || !usableField || isBlocked}
                       checked={picked.includes(item.key)}
                       onChange={(event) =>
@@ -378,7 +378,7 @@ export function BlogAiCopyDialog({
                       }
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-2">
+                      <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <b className="text-xs">{item.label}</b>
                         <small className="text-xs text-default-400">{item.hint}</small>
                         {outdated && (
@@ -399,7 +399,7 @@ export function BlogAiCopyDialog({
                             </small>
                           )}
                       </span>
-                      <span className="mt-1 block whitespace-pre-wrap break-words text-sm text-foreground">
+                      <span className="mt-2 block whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
                         {hasValue(draft, item.key)
                           ? valueOf(draft, item.key)
                           : '未生成'}
@@ -427,11 +427,11 @@ export function BlogAiCopyDialog({
           )}
         </div>
 
-        <footer className="flex items-center justify-between gap-2 border-t border-default-200 px-5 py-4">
+        <footer className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t sm:flex-row sm:items-center border-default-200 px-5 py-4">
           <p className="text-xs text-default-500">
             改动先存在草稿里，点「更新发布」才会对外生效。
           </p>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 justify-end gap-2">
             <Button
               variant="flat"
               isDisabled={!!busy}

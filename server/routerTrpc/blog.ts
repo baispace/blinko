@@ -1,3 +1,4 @@
+import { blogWorkQueue } from "../lib/blogWorkQueue";
 import { assetCoverOptions, generateAssetCover } from '../lib/assetCoverGeneration';
 import { analyticsAudience, analyticsTopics } from "../lib/blogAudienceAnalytics";
 import { generateTopicCover } from '../lib/blogTopicCover';
@@ -279,6 +280,12 @@ function rateKey(ctx: { ip?: string }) {
 
 const assetCoverTarget = z.object({type:z.enum(['note','topic']),id:z.number().int().positive(),title:z.string().trim().max(500).optional(),description:z.string().max(30000).optional()});
 export const blogRouter = router({
+  distributionReport: authProcedure.query(async ({ctx}) => {
+    const accountId=Number(ctx.id);
+    const [metrics,feed]=await Promise.all([blogEngagement(prisma,accountId,7),recommendationFeed(prisma,{accountId,page:1})]);
+    return {checkedAt:new Date().toISOString(),metrics,strategy:feed.strategy,samples:feed.posts.slice(0,5).map(post=>({id:post.id,title:post.title,reasons:feed.reasons[post.publishId]??[]}))};
+  }),
+  workQueue: authProcedure.query(({ctx}) => blogWorkQueue(prisma, Number(ctx.id))),
   assetCoverOptions: authProcedure.input(z.object({target:assetCoverTarget})).query(({input,ctx})=>assetCoverOptions(prisma,Number(ctx.id),input.target)),
   generateAssetCover: authProcedure.input(z.object({target:assetCoverTarget,sourceVersion:z.string().datetime(),modelId:z.number().int().positive(),direction:z.string().trim().max(300).optional()})).mutation(({input,ctx})=>generateAssetCover(prisma,Number(ctx.id),input)),
   topicSEO: authProcedure.input(z.object({id:z.number().int().positive()})).query(({ctx,input})=>readTopicSeo(prisma,Number(ctx.id),input.id)),

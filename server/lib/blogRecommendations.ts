@@ -1,3 +1,4 @@
+import { recommendationReasons } from "../../shared/lib/blogRecommendationReason";
 import { lockBlogVisitor } from "./blogVisitor";
 import { isDeviceId } from "./blogStats";
 import { PrismaClient } from "@prisma/client";
@@ -384,26 +385,6 @@ export async function recommendationFeed(
     db,
     pinnedRows.map((p) => p.id),
   );
-  /**
-   * banner 池：推荐页顶部已经展示过的文章，列表里不再重复出现一次。
-   *
-   * 只在没有专题筛选时排除 —— banner 只在「全部文章」视图下展示，
-   * 筛选态根本没有 banner，剔了就是白白少文章。
-   */
-  const bannerIds = input.topicSlug
-    ? new Set<number>()
-    : new Set(
-        (
-          await db.notes.findMany({
-            where: {
-              ...publicPublicationWhere,
-              accountId,
-              publication: { isBanner: true },
-            },
-            select: { id: true },
-          })
-        ).map((n) => n.id),
-      );
   const pinnedIds = new Set(pinnedRows.map((p) => p.id));
   const posts = rows.map((row) => publicCard(row, counts.get(row.id) || 0));
   const normal = posts
@@ -431,12 +412,11 @@ export async function recommendationFeed(
         ),
       };
     })
-    // 普通候选里不留置顶与 banner 的文章：同一篇不在两处重复出现。
+    // 普通候选排除单独插入的置顶；Banner 去重交给展示层，防止内容不足时空列表。
     // 专题视图没有置顶块，置顶文章照常留在候选里参与排序。
     .filter(
       (item) =>
-        (topicMode || !pinnedIds.has(item.post.id)) &&
-        !bannerIds.has(item.post.id),
+        (topicMode || !pinnedIds.has(item.post.id)),
     )
     // 按分数 → 再按 id 兜底，保证顺序稳定。
     .sort((a, b) => b.score - a.score || b.post.id - a.post.id)
@@ -469,5 +449,6 @@ export async function recommendationFeed(
     personalized: personal.some((e) => e.kind !== "impression"),
     // 对外报当前口径，便于排查「为什么这篇排前面」。
     strategy: config.mode,
+    reasons: Object.fromEntries(merged.slice((page-1)*BLOG_PAGE_SIZE,page*BLOG_PAGE_SIZE).map(post=>[post.publishId,recommendationReasons(post,{mode:config.mode,featuredFirst:config.featuredFirst,topicMode,topics,terms,seen,publishId:post.publishId,weights:config})])),
   };
 }

@@ -1,6 +1,8 @@
+import { BlogRecommendationReport } from "./BlogRecommendationReport";
+import { managerBlogVisitUrl } from "@shared/lib/blogManagerVisit";
 import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
-import { BlogStudioBrand } from "./BlogStudioBrand";
-import { Slider, Button, Chip, Card, CardBody, CardHeader, Divider } from "@heroui/react";
+import "./blog-management.css";
+import { Drawer, DrawerContent, Slider, Button, Chip, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { markBlogManager } from "@/lib/blogDevice";
 import { BlogSiteSettingsPanel } from "./BlogSiteSettingsPanel";
@@ -12,7 +14,7 @@ import {
   type StudioSection,
 } from "./studioNav";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/trpc";
 import { AuthorCardView } from "./public/AuthorCard";
 
@@ -131,6 +133,7 @@ function ProfileEditor({
     [profile],
   );
   const [draft, setDraft] = useState(base);
+  const [savedDraft, setSavedDraft] = useState(base);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const file = useRef<HTMLInputElement>(null);
@@ -145,10 +148,10 @@ function ProfileEditor({
       .then((r) => setSiteTagline(r.data.tagline ?? ""))
       .catch(() => setSiteTagline(""));
   }, []);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(base);
-  useLeaveGuard(dirty);
-  useEffect(() => onDirty(dirty), [dirty, onDirty]);
-  useEffect(() => setDraft(base), [base]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(savedDraft);
+  useLeaveGuard(dirty || busy);
+  useEffect(() => { onDirty(dirty || busy); return () => onDirty(false); }, [dirty, busy, onDirty]);
+  useEffect(() => { setDraft(base); setSavedDraft(base); }, [base]);
   const patch = (p: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...p }));
   const upload = async (files: FileList | null) => {
     const f = files?.[0];
@@ -184,8 +187,11 @@ function ProfileEditor({
           .filter((f) => Number.isInteger(f.noteId) && f.noteId > 0)
           .map((f) => ({ noteId: f.noteId as number, reason: f.reason })),
       });
-      await reload();
+      setSavedDraft(draft);
       RootStore.Get(ToastPlugin).success("公开资料已保存");
+      try { await reload(); } catch {
+        setError("公开资料已保存，但刷新失败。请重新打开此页面获取最新资料，无需重复保存。");
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -193,8 +199,8 @@ function ProfileEditor({
     }
   };
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-      <div className="flex flex-col gap-6">
+    <fieldset disabled={busy} className="m-0 grid min-w-0 grid-cols-1 gap-4 border-0 p-0 lg:grid-cols-[1fr_320px] items-start">
+      <div className="flex flex-col gap-3 p-4">
         {error && (
           <div className="rounded-lg bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">
             {error}
@@ -221,7 +227,7 @@ function ProfileEditor({
         </Card>
 
         <Card>
-          <CardBody className="flex flex-col gap-4">
+          <CardBody className="flex flex-col gap-3 p-4">
             <label className="flex flex-col gap-1.5">
               <span className="text-sm text-default-500">作者署名</span>
               <BlogInput
@@ -245,7 +251,7 @@ function ProfileEditor({
                 onChange={(e) => patch({ bio: e.target.value })}
               />
             </label>
-            <label className="flex flex-col gap-1.5">
+            <details><summary className="cursor-pointer text-sm text-default-500">使用图片链接作为头像</summary>            <label className="flex flex-col gap-1.5">
               <span className="text-sm text-default-500">头像地址</span>
               <BlogInput
                 value={draft.avatarUrl}
@@ -253,6 +259,7 @@ function ProfileEditor({
                 placeholder="公开图片网址，或上传图片"
               />
             </label>
+            </details>
             <input
               ref={file}
               type="file"
@@ -382,22 +389,28 @@ function ProfileEditor({
           tagline={siteTagline}
         />
       </aside>
-    </div>
+    </fieldset>
   );
 }
 
 function DistributionEditor({
   value,
   reload,
+  onDirty,
 }: {
   value: Distribution;
   reload: () => Promise<void>;
+  onDirty: (dirty:boolean) => void;
 }) {
   const [draft, setDraft] = useState(value);
+  const [saved,setSaved] = useState(value);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => setDraft(value), [value]);
-  const patch = (p: Partial<Distribution>) => setDraft((d) => ({ ...d, ...p }));
+  useEffect(() => {setDraft(value);setSaved(value);}, [value]);
+  const dirty=JSON.stringify(draft)!==JSON.stringify(saved);
+  useLeaveGuard(dirty||busy);
+  useEffect(()=>{onDirty(dirty||busy);return()=>onDirty(false);},[dirty,busy,onDirty]);
+  const patch = (p: Partial<Distribution>) => { if (!busy) setDraft((d) => ({ ...d, ...p })); };
   const save = async () => {
     setBusy(true);
     setError("");
@@ -413,8 +426,9 @@ function DistributionEditor({
         hotHalfLife: draft.hotHalfLife,
         featuredFirst: draft.featuredFirst,
       });
-      await reload();
+      setSaved(draft);
       RootStore.Get(ToastPlugin).success("分发策略已保存");
+      try {await reload();} catch {setError("分发策略已保存，但刷新失败。请重新载入页面核对。");}
     } catch (e: any) {
       setError(e.message || "保存失败，请重试");
     } finally {
@@ -429,7 +443,8 @@ function DistributionEditor({
     ["searchWeight", "搜索命中", "与站内搜索词的相关度"],
   ];
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
+      <BlogRecommendationReport version={JSON.stringify(saved)} disableNavigation={dirty||busy} />
       <div>
         <h2 className="text-xl font-semibold">流量分发口径</h2>
         {/*
@@ -554,7 +569,7 @@ function DistributionEditor({
       <div className="flex justify-end">
         <Button
           color="primary"
-          isDisabled={busy}
+          isDisabled={busy || !dirty}
           isLoading={busy}
           onPress={() => void save()}
         >
@@ -567,7 +582,9 @@ function DistributionEditor({
 
 export function BlogManagePage() {
   useEffect(() => { markBlogManager(); }, []);
-  const [section, setSection] = useState<Section>("posts");
+  const [section, setSection] = useState<Section>(() => {
+    try { const last = sessionStorage.getItem("blog-management-section"); return STUDIO_SECTION_KEYS.includes(last as Section) ? last as Section : "posts"; } catch { return "posts"; }
+  });
   const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -575,14 +592,34 @@ export function BlogManagePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [coverKeyword, setCoverKeyword] = useState("");
+  const [publicUrl, setPublicUrl] = useState("/blog");
+  const [work, setWork] = useState<Awaited<ReturnType<typeof api.blog.workQueue.query>> | null>(null);
+  const [workError, setWorkError] = useState(false);
+  useEffect(() => {
+    let active = true, pending = false;
+    const refresh = async () => {
+      if (pending || document.hidden) return;
+      pending = true;
+      try { const next = await api.blog.workQueue.query(); if (active) {setWork(next);setWorkError(false);} }
+      catch { if(active) setWorkError(true); }
+      finally {pending=false;}
+    };
+    void refresh();
+    const timer = window.setInterval(refresh,60000);
+    window.addEventListener("focus",refresh);
+    document.addEventListener("visibilitychange",refresh);
+    window.addEventListener("jomio:blog-work-updated",refresh);
+    return () => {active=false;clearInterval(timer);window.removeEventListener("focus",refresh);document.removeEventListener("visibilitychange",refresh);window.removeEventListener("jomio:blog-work-updated",refresh);};
+  }, [section]);
+
+  useEffect(() => {
+    let active = true;
+    void api.blog.siteSettings.query().then(({deployment}) => {
+      if (active && deployment?.targetOrigin) setPublicUrl(deployment.targetOrigin + (deployment.publicBasePath === "/" ? "/" : deployment.publicBasePath));
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
   const [dirty, setDirty] = useState(false);
-  const [sideCollapsed, setSideCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem("ink-blog-studio-collapsed") === "1";
-    } catch {
-      return false;
-    }
-  });
   const [sideOpen, setSideOpen] = useState(false);
   const [narrow, setNarrow] = useState(
     () =>
@@ -597,7 +634,8 @@ export function BlogManagePage() {
   }, []);
   const requestId = useRef(0);
   const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const deepSection = params.get("section");
   useEffect(() => {
     if (!deepSection) return;
@@ -649,30 +687,22 @@ export function BlogManagePage() {
         (!keyword || post.title.toLowerCase().includes(keyword)),
     );
   }, [posts, coverKeyword]);
-  const change = async (key: Section) => {
-    if (dirty && !await confirmBlogAction("公开资料有未保存修改，确定切换？")) return;
+  const change = async (key: Section, queue?: string) => {
+    if (dirty && !await confirmBlogAction("有未保存修改，确定切换？")) return;
     setDirty(false);
     setSection(key);
+    setParams(previous => { const next = new URLSearchParams(previous); next.set("section", key); if(queue) next.set("queue",queue); else next.delete("queue"); return next; }, {replace:true});
+    try { sessionStorage.setItem("blog-management-section", key); } catch {}
+    setSideOpen(false);
   };
-  const toggleSide = () => {
-    if (narrow) {
-      setSideOpen((v) => !v);
-      return;
-    }
-    setSideCollapsed((v) => {
-      try {
-        localStorage.setItem("ink-blog-studio-collapsed", v ? "0" : "1");
-      } catch {}
-      return !v;
-    });
-  };
-  const selectSection = (key: Section) => {
-    change(key);
-    if (narrow) setSideOpen(false);
-  };
+  const selectSection = (key: Section) => { void change(key); };
   const backToWorkspace = async () => {
-    if (!dirty || await confirmBlogAction("有未保存修改，确定返回？"))
-      navigate(-1);
+    if (dirty && !await confirmBlogAction("有未保存修改，确定返回？")) return;
+    const from = (location.state as {from?: string} | null)?.from;
+    let saved = "";
+    try { saved = sessionStorage.getItem("blog-management-return") || ""; } catch {}
+    const target = from || saved;
+    navigate(target.startsWith("/") && !target.startsWith("//") && !target.startsWith("/blog-manage") ? target : "/");
   };
   const moveTopic = async (id: number, delta: number) => {
     const current = topics.find((t) => t.id === id);
@@ -834,71 +864,23 @@ export function BlogManagePage() {
   };
 
   return (
-    <div className="blog-hero-surface flex h-[100dvh] bg-background text-foreground">
-      {/* Sidebar */}
-      {!narrow && (
-        <BlogStudioNav
-          section={section}
-          onSelect={selectSection}
-          collapsed={sideCollapsed}
-          postCount={posts.length}
-          topicCount={topics.length}
-          onBack={backToWorkspace}
-        />
-      )}
-
-      {/* Mobile drawer */}
-      {narrow && sideOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/35"
-            onClick={() => setSideOpen(false)}
-          />
-          <div className="fixed top-0 left-0 bottom-0 z-50 w-[264px] bg-background shadow-xl">
-            <BlogStudioNav
-              section={section}
-              onSelect={selectSection}
-              collapsed={false}
-              postCount={posts.length}
-              topicCount={topics.length}
-              onBack={backToWorkspace}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-background border-b border-default-200 shrink-0">
-          <Button
-            variant="light"
-            isIconOnly
-            size="sm"
-            className="rounded-lg"
-            onPress={toggleSide}
-            aria-label={narrow ? "打开导航菜单" : sideCollapsed ? "展开侧边栏" : "收起侧边栏"}
-          >
-            <Icon icon="tabler:menu-2" width={18} />
-          </Button>
-          <BlogStudioBrand className="text-base" />
-          <span className="flex-1" />
-          <a
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-default-500 hover:bg-hover hover:text-foreground transition-colors"
-            href="/blog"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="查看公开站"
-            title="查看公开站"
-          >
-            <Icon icon="tabler:external-link" width={18} />
-          </a>
-        </header>
-
+    <div className="blog-hero-surface blog-management">
+      <header className="blog-management-header">
+        <Button variant="light" size="sm" onPress={backToWorkspace} startContent={<Icon icon="tabler:arrow-left" width={17}/>}>返回工作区</Button>
+        <span className="blog-management-title">博客管理</span>
+        <a href={managerBlogVisitUrl(publicUrl)} target="_blank" rel="noopener noreferrer" className="blog-management-public">查看公开站 <Icon icon="tabler:external-link" width={16}/></a>
+      </header>
+      <div className="blog-management-body">
+      {!narrow && <BlogStudioNav section={section} onSelect={selectSection} postCount={posts.length} topicCount={topics.length} work={work}/>}
+      <Drawer isOpen={narrow && sideOpen} onOpenChange={setSideOpen} placement="left" size="xs">
+        <DrawerContent aria-label="博客管理导航"><BlogStudioNav section={section} onSelect={selectSection} postCount={posts.length} topicCount={topics.length} work={work}/></DrawerContent>
+      </Drawer>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {narrow && <div className="blog-management-mobile"><Button size="sm" variant="flat" onPress={()=>setSideOpen(true)} startContent={<Icon icon="tabler:menu-2" width={16}/>} aria-label="打开博客管理导航">{STUDIO_SECTION_META[section].title}</Button></div>}
         {/* Page content */}
-        <main className="flex-1 min-h-0 overflow-y-auto p-6 lg:p-8">
-          <div className="w-full max-w-[1080px] mx-auto">
-            <header className="mb-6">
+        <main className="blog-management-main">
+          <div className="blog-management-content">
+            <header className="mb-4">
               <h1 className="text-2xl font-semibold tracking-tight">
                 {STUDIO_SECTION_META[section].title}
               </h1>
@@ -907,6 +889,15 @@ export function BlogManagePage() {
               </p>
             </header>
 
+            {workError && <p className="mb-4 text-xs text-warning" role="status">待处理数量暂未更新，可进入读者反馈或友链管理查看。</p>}
+            {work && (work.feedback + work.friends + work.feedbackMail + work.friendMail > 0) && <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-default-200 bg-content1 p-3" aria-label="博客待处理事项">
+              <span className="mr-1 text-sm font-medium">待处理</span>
+              {work.feedback>0 && <Button size="sm" variant="flat" onPress={()=>selectSection("feedback")}>读者反馈 {work.feedback}</Button>}
+              {work.friends>0 && <Button size="sm" variant="flat" onPress={()=>selectSection("friends")}>友链申请与报告 {work.friends}</Button>}
+              {work.feedbackMail>0 && <Button size="sm" color="warning" variant="flat" onPress={()=>void change("feedback","failed")}>回复通知异常 {work.feedbackMail}</Button>}
+              {work.friendMail>0 && <Button size="sm" color="warning" variant="flat" onPress={()=>void change("friends","failed")}>友链通知异常 {work.friendMail}</Button>}
+              {(work.feedbackMail+work.friendMail)>0 && <Button size="sm" variant="light" onPress={()=>selectSection("mail")}>检查邮件服务</Button>}
+            </div>}
             {error && (
               <div className="flex items-center gap-3 rounded-lg bg-danger-50 border border-danger-200 px-4 py-3 mb-4">
                 <span className="text-sm text-danger-700">{error}</span>
@@ -1026,11 +1017,11 @@ export function BlogManagePage() {
                 )}
 
                 {section === "distribution" && distribution && (
-                  <DistributionEditor value={distribution} reload={reload} />
+                  <DistributionEditor value={distribution} reload={reload} onDirty={setDirty} />
                 )}
 
-                {section === "friends" && <BlogFriendsPanel />}
-                {section === "feedback" && <BlogFeedbackPanel />}
+                {section === "friends" && <BlogFriendsPanel queue={params.get("queue")} />}
+                {section === "feedback" && <BlogFeedbackPanel queue={params.get("queue")} onDirty={setDirty} />}
                 {section === "mail" && <BlogMailSettingsPanel onDirty={setDirty} />}
                 {section === "settings" && <BlogSiteSettingsPanel onDirty={setDirty} />}
                 {section === "profile" && profile && (
@@ -1047,6 +1038,7 @@ export function BlogManagePage() {
             )}
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

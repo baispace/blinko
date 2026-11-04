@@ -74,11 +74,8 @@ describe("侧边栏渲染", () => {
     React.createElement(BlogStudioNav, {
       section: "posts" as StudioSection,
       onSelect: () => {},
-      collapsed: false,
       postCount: 3,
       topicCount: 2,
-      onToggleTheme: () => {},
-      onBack: () => {},
     }),
   );
 
@@ -91,9 +88,11 @@ describe("侧边栏渲染", () => {
     }
   });
 
-  test("侧边栏底部保留返回入口", () => {
+  test("返回入口统一位于独立界面顶栏", () => {
     // 主题切换不在侧栏：侧栏底部只留一个「返回工作区」。
-    expect(html).toContain("返回工作区");
+    expect(html).not.toContain("返回工作区");
+    expect(managePage).toContain("返回工作区");
+    expect(managePage).toContain("blog-management-header");
   });
 });
 

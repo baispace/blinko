@@ -175,7 +175,7 @@ export function BlogStatsPanel() {
   const pageCount = data?.articles.pageCount ?? 1;
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       <BlogTabs
         label="数据分析维度"
         value={tab}
@@ -255,11 +255,12 @@ export function BlogStatsPanel() {
 
       <div
         id="stats-tab-panel"
+        className="flex flex-col gap-5"
         role="tabpanel"
         aria-labelledby={"stats-tab-" + tab}
       >
         {tab === "core" && (
-          <div className="space-y-5">
+          <div className="flex flex-col gap-5">
             {/* ---------- 顶部指标 ---------- */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard
@@ -419,7 +420,7 @@ export function BlogStatsPanel() {
         )}
 
         {tab === "content" && (
-          <div className="space-y-5">
+          <div className="flex flex-col gap-5">
             {/* ---------- 文章表现 ---------- */}
             <Card className="rounded-xl border border-default-200 shadow-none">
               <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-1">

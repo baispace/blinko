@@ -1,3 +1,4 @@
+import { withoutStatisticsPreference } from "@shared/lib/blogManagerVisit";
 /**
  * 博客统计用的浏览器端匿名设备 ID。
  *
@@ -83,6 +84,7 @@ export function blogDeviceId(): string | null {
 }
 /** Serialize first identity creation between same-origin tabs where Web Locks exists. */
 export async function initializeBlogDevice(): Promise<void> {
+  consumeBlogStatisticsPreference();
   if (!blogStatsEnabled()) return;
   try {
     if (typeof navigator !== "undefined" && navigator.locks) {
@@ -111,4 +113,18 @@ export function blogStatsEnabled(): boolean {
     return false;
   if (excludeOwner && isBlogManagerBrowser()) return false;
   return true;
+}
+
+export function blogStatisticsOptedOut(): boolean {
+  try { return localStorage.getItem(OPT_OUT_KEY) === "off"; } catch { return false; }
+}
+export function setBlogStatisticsOptOut(off: boolean): boolean {
+  try { if(off) localStorage.setItem(OPT_OUT_KEY,"off"); else localStorage.removeItem(OPT_OUT_KEY); return true; }
+  catch { return false; }
+}
+export function consumeBlogStatisticsPreference(): void {
+  try {
+    const clean = withoutStatisticsPreference(location.href);
+    if (clean !== null && setBlogStatisticsOptOut(true)) history.replaceState(history.state,"",clean);
+  } catch { /* A blocked storage/history must not stop public reading. */ }
 }

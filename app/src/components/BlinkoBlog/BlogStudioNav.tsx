@@ -1,89 +1,24 @@
-import { Button } from "@heroui/react";
+import { useState } from "react";
 import { Icon } from "@/components/Common/Iconify/icons";
+import { BlogInput } from "./BlogUI";
 import { STUDIO_NAV, type StudioSection } from "./studioNav";
+import "../BlinkoSettings/settings.css";
 
-type Props = {
-  section: StudioSection;
-  onSelect: (key: StudioSection) => void;
-  collapsed: boolean;
-  postCount: number;
-  topicCount: number;
-  onBack: () => void;
-};
-
-export function BlogStudioNav({
-  section,
-  onSelect,
-  collapsed,
-  postCount,
-  topicCount,
-  onBack,
-}: Props) {
-  return (
-    <aside
-      className={`flex flex-col h-full overflow-y-auto border-r border-default-200 bg-background py-3 px-2
-        transition-all duration-200 ${collapsed ? "w-[76px] items-center" : "w-[240px]"}`}
-      aria-label="博客管理导航"
-    >
-      <nav className="flex flex-col gap-3 flex-1 w-full">
-        {STUDIO_NAV.map((group) => (
-          <div key={group.title} className="flex flex-col gap-0.5">
-            {!collapsed && (
-              <p className="px-3 pb-1 text-[11.5px] font-medium tracking-[0.04em] uppercase text-default-600">
-                {group.title}
-              </p>
-            )}
-            {group.items.map((item) => {
-              const isActive = section === item.key;
-              return (
-                <Button
-                  key={item.key}
-                  type="button"
-                  variant="light"
-                  className={`justify-start gap-3 rounded-xl h-10 px-3 text-sm font-medium
-                    ${isActive
-                      ? "bg-default-100 text-foreground"
-                      : "text-default-500 hover:bg-hover"
-                    }
-                    ${collapsed ? "w-10 px-0 justify-center mx-auto" : "w-full"}
-                  `}
-                  aria-current={isActive ? "page" : undefined}
-                  title={collapsed ? item.label : item.hint}
-                  onPress={() => onSelect(item.key)}
-                >
-                  <Icon icon={item.icon} width={18} className="shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="truncate flex-1 text-left">{item.label}</span>
-                      {item.key === "posts" && (
-                        <span className="text-xs text-default-400 shrink-0">{postCount}</span>
-                      )}
-                      {item.key === "topics" && (
-                        <span className="text-xs text-default-400 shrink-0">{topicCount}</span>
-                      )}
-                    </>
-                  )}
-                </Button>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-
-      <div className="mt-2 pt-2 border-t border-default-200 w-full">
-        <Button
-          type="button"
-          variant="light"
-          className={`justify-start gap-3 rounded-xl h-10 px-3 text-sm font-medium text-default-500 hover:bg-hover
-            ${collapsed ? "w-10 px-0 justify-center mx-auto" : "w-full"}
-          `}
-          onPress={onBack}
-          title="返回工作区"
-        >
-          <Icon icon="tabler:arrow-left" width={18} className="shrink-0" />
-          {!collapsed && <span className="truncate">返回工作区</span>}
-        </Button>
-      </div>
-    </aside>
-  );
+type Props = { section: StudioSection; onSelect: (key: StudioSection) => void; postCount: number; topicCount: number; work?: {feedback:number;friends:number;feedbackMail:number;friendMail:number} | null; };
+export function BlogStudioNav({section,onSelect,postCount,topicCount,work}: Props) {
+ const [keyword,setKeyword]=useState("");
+ const query=keyword.trim().toLowerCase();
+ const groups=STUDIO_NAV.map(group=>({...group,items:group.items.filter(item=>!query||[item.label,item.hint,group.title].join(" ").toLowerCase().includes(query))})).filter(group=>group.items.length);
+ return <aside className="settings-sidebar blog-management-sidebar" aria-label="博客管理导航">
+  <div className="settings-sidebar-heading">博客管理</div>
+  <div className="blog-management-search"><BlogInput aria-label="搜索博客管理功能" placeholder="搜索功能…" value={keyword} onChange={e=>setKeyword(e.target.value)} startContent={<Icon icon="tabler:search" width={16}/>}/></div>
+  <nav className="settings-navigation" aria-label="博客管理分区">
+   {groups.map(group=><div key={group.title} className="settings-nav-group"><div className="settings-group-label">{group.title}</div>
+    {group.items.map(item=><button key={item.key} type="button" className="settings-nav-item" aria-current={section===item.key?'page':undefined} onClick={()=>{onSelect(item.key);setKeyword("");}} title={item.hint}>
+     <Icon icon={item.icon} width={18}/><span className="flex-1">{item.label}</span>{item.key==='posts'&&<span className="blog-management-count">{postCount}</span>}{item.key==='topics'&&<span className="blog-management-count">{topicCount}</span>}{(item.key==='feedback'||item.key==='friends') && work && ((item.key==='feedback'?work.feedback+work.feedbackMail:work.friends+work.friendMail)>0) && <span className="rounded-md bg-warning-50 px-1.5 text-xs font-medium text-warning" aria-label="待处理或通知异常">{item.key==='feedback'?work.feedback+work.feedbackMail:work.friends+work.friendMail}</span>}
+    </button>)}
+   </div>)}
+   {!groups.length&&<p className="px-3 py-5 text-sm text-default-500" role="status">没有匹配的功能</p>}
+  </nav>
+ </aside>;
 }

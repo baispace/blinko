@@ -12,7 +12,7 @@ import { BlogTrackingSettings } from "./BlogTrackingSettings";
 import { BlogSubscribeSettings } from "./BlogSubscribeSettings";
 import { BlogFooterSettingsPanel } from "./BlogFooterSettings";
 import { BlogDeploymentSettings } from "./BlogDeploymentSettings";
-import { resolveSeoFields, BLOG_FIXED_PAGES, toPublicPath } from "@shared/lib/blogSeo";
+import { resolveSeoFields, toPublicPath } from "@shared/lib/blogSeo";
 import type { BlogDeployment } from "@shared/lib/blogDeployment";
 import { BlogSiteCheckPanel } from "./BlogSiteCheckPanel";
 
@@ -25,23 +25,17 @@ type BlogFontOption = {
 
 const defaults = blogSiteSettingsSchema.parse({});
 const tabs = [
-  ["basic", "站点信息"],
-  ["seo", "SEO"],
-  ["subscribe", "订阅设置"],
-  ["footer", "页脚与备案"],
-  ["deployment", "域名与部署"],
-  ["tracking", "统计接入"],
-  ["checks", "站点检查"],
+  ["basic", "基础与展示"],
+  ["subscribe", "订阅渠道"],
+  ["seo", "搜索与统计"],
+  ["deployment", "域名与发布"],
 ] as const;
 
 const TAB_HINT: Record<string, string> = {
-  basic: "公开博客的站点标识：品牌名、标语与站点图标只对外展示，不影响工作区。",
-  seo: "公开页面的默认标题模板、描述、分享图与搜索引擎收录开关。文章自动继承，也可在底层单独覆盖。",
-  subscribe: "订阅页要用的渠道与文案：微信公众号、RSS、站点介绍与订阅说明。",
-  footer: "页脚要挂的备案号、版权署名，以及带生效区间的推广位。",
-  deployment: "配置博客独立域名。应用自动处理公开路由，网关只需整站转发。",
-  tracking: "接入统计代码，用来了解访客从哪来、看了多久。",
-  checks: "上线前自查：域名解析、页面可达与缓存是否正常。",
+  basic: "管理公开站点的品牌、字体、页脚与备案信息。作者署名与简介在「公开作者」中维护。",
+  seo: "公开内容自动生成搜索与分享信息；统计服务仅在公开站点加载。",
+  subscribe: "设置微信公众号、RSS 与订阅说明。读者回复通知的发信配置在「邮件服务」中维护。",
+  deployment: "设置公开博客域名，并检查上线后的访问与资源状态。",
 };
 
 export function BlogSiteSettingsPanel({
@@ -57,6 +51,8 @@ export function BlogSiteSettingsPanel({
     [deployment, setDeployment] = useState<BlogDeployment | null>(null),
     [tab, setTab] = useState("basic"),
     [busy, setBusy] = useState(false),
+    [checkOpen, setCheckOpen] = useState(false),
+    [formVersion, setFormVersion] = useState(0),
     [uploading, setUploading] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
@@ -99,8 +95,10 @@ export function BlogSiteSettingsPanel({
       !await confirmBlogAction("有未保存修改，确定重新载入？")
     )
       return;
+    setBusy(true);
     try {
       const r = await api.blog.siteSettings.query();
+      setFormVersion(version => version + 1);
       setData(r.data);
       setSaved(r.data);
       setRevision(r.revision);
@@ -108,8 +106,11 @@ export function BlogSiteSettingsPanel({
       setBackend(r.backendOrigin ?? "");
       setDeployment(r.deployment ?? null);
       setError("");
+      setMessage("");
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -119,11 +120,12 @@ export function BlogSiteSettingsPanel({
 
   const dirty = JSON.stringify(data) !== JSON.stringify(saved);
   useEffect(() => {
-    onDirty?.(dirty);
+    onDirty?.(dirty || busy || uploading);
     return () => onDirty?.(false);
-  }, [dirty, onDirty]);
+  }, [dirty, busy, uploading, onDirty]);
 
   const patch = (p: Partial<BlogSiteSettings>) => {
+    if (busy) return;
     setData((d) => ({ ...d, ...p }));
     setMessage("");
   };
@@ -137,7 +139,7 @@ export function BlogSiteSettingsPanel({
    */
   const publicPreviewUrl = (internalPath: string) => {
     const origin = (deployed || window.location.origin).replace(/\/+$/, "");
-    const basePath = saved.publicBasePath || "/blog";
+    const basePath = deployment?.publicBasePath ?? saved.publicBasePath ?? "/blog";
     return origin + toPublicPath(internalPath, basePath);
   };
 
@@ -158,7 +160,12 @@ export function BlogSiteSettingsPanel({
       setData(r.data);
       setSaved(r.data);
       setRevision(r.revision);
-      setMessage("设置已保存。域名与接口配置仍需部署后验证。");
+      const domainChanged = ["targetOrigin", "domainRouting", "publicBasePath", "apiOrigin", "deploymentMode"].some(key => data[key as keyof BlogSiteSettings] !== saved[key as keyof BlogSiteSettings]);
+      setMessage(domainChanged ? "博客域名设置已保存，请完成部署并运行站点检查。" : "设置已保存。");
+      // Refresh resolved links without replacing the successfully saved draft.
+      void api.blog.siteSettings.query().then(next => {
+        setDeployed(next.deployedOrigin); setDeployment(next.deployment ?? null); setBackend(next.backendOrigin ?? "");
+      }).catch(() => {});
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -203,7 +210,7 @@ export function BlogSiteSettingsPanel({
   });
 
   return (
-    <section className="blog-site-settings space-y-5">
+    <section className="blog-site-settings flex min-w-0 flex-col gap-4">
       <BlogTabs
         label="站点设置分区"
         value={tab}
@@ -216,7 +223,7 @@ export function BlogSiteSettingsPanel({
         <Button
           size="sm"
           variant="flat"
-          isDisabled={busy}
+          isDisabled={busy || uploading}
           onPress={() => void load()}
         >
           重新载入
@@ -234,10 +241,13 @@ export function BlogSiteSettingsPanel({
         </p>
       )}
 
+      <fieldset disabled={busy || !revision} className="m-0 min-w-0 border-0 p-0">
       {tab === "seo" ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="flex flex-col gap-5"><div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
           <Card className="rounded-xl border border-default-200 shadow-none">
-            <CardBody className="space-y-4">
+            <CardBody className="flex flex-col gap-3 p-4">
+              <p className="text-sm text-default-500">默认使用文章标题、摘要和封面生成搜索与分享信息。</p>
+              <details><summary className="cursor-pointer text-sm text-default-600">自定义站点默认规则</summary><div className="mt-4 flex flex-col gap-4">
               {field(
                 "titleTemplate",
                 "标题模板",
@@ -249,6 +259,7 @@ export function BlogSiteSettingsPanel({
                 "默认分享图地址",
                 "支持复用资源上传后得到的 HTTPS 地址",
               )}
+              </div></details>
               {toggle("allowIndex", "允许搜索引擎收录公开内容")}
               <p className="text-xs text-default-500">
                 私有笔记与撤回文章不会因启用收录而公开；关闭收录也不是访问控制，
@@ -257,26 +268,13 @@ export function BlogSiteSettingsPanel({
             </CardBody>
           </Card>
           <Card className="rounded-xl border border-default-200 shadow-none">
-            <CardBody className="space-y-3">
+            <CardBody className="flex flex-col gap-3 p-4">
               <div>
                 <h3 className="text-sm font-semibold">搜索预览</h3>
                 <small className="text-xs text-default-500">示例标题 · 站点默认规则</small>
               </div>
               <h3 className="text-lg font-semibold leading-snug">{sitePreview.title}</h3>
               <p className="text-sm text-default-600">{sitePreview.description || data.tagline}</p>
-              <div>
-                <h3 className="text-sm font-semibold">固定页面</h3>
-                <p className="text-xs text-default-500">
-                  首页、专题索引与关于页等固定页面使用站点默认规则，无需单独设置。
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-default-600">
-                  {BLOG_FIXED_PAGES.map((p) => (
-                    <li key={p.key}>
-                      {p.label} · <span className="text-default-400">{p.path}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
               <div>
                 <h3 className="text-sm font-semibold">站点地图与 RSS</h3>
                 <a
@@ -301,19 +299,23 @@ export function BlogSiteSettingsPanel({
             </CardBody>
           </Card>
         </div>
+        <div className="border-t border-default-200 pt-5">
+          <h3 className="mb-4 text-base font-semibold">统计接入</h3>
+          <BlogTrackingSettings data={data} patch={patch} />
+        </div></div>
       ) : tab === "basic" ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <Card className="rounded-xl border border-default-200 shadow-none">
-            <CardBody className="space-y-4">
+            <CardBody className="grid grid-cols-1 gap-x-5 gap-y-4 p-4 md:grid-cols-2">
               {field(
                 "siteName",
                 "站点品牌名",
-                "显示在页脚、搜索结果、RSS 与分享卡片里。留空则继承工作区的站点名称。",
+                "用于导航、页脚与搜索分享；留空沿用工作区名称。",
               )}
               {field(
                 "tagline",
                 "站点标语",
-                "这个站点的一句话介绍：显示在页脚、关于页、动态页、友链页与搜索结果描述里。全站只有这一处标语。",
+                "全站共用的一句话介绍，展示于页脚、关于页等位置。",
               )}
               {field(
                 "iconUrl",
@@ -335,9 +337,7 @@ export function BlogSiteSettingsPanel({
                   ))}
                 </BlogSelect>
                 <small className="text-xs text-default-500">
-                  公开博客正文的字体。字体来自应用内的字体库，
-                  公开页会连同字体文件一起加载，访客第一次打开就是设定的那款。
-                  没选时用系统字体，不额外加载任何东西。
+                  来自应用字体库；留空使用系统字体。
                 </small>
                 <p
                   className="mt-1 text-base text-default-700"
@@ -347,22 +347,19 @@ export function BlogSiteSettingsPanel({
                 >
                   {data.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
                 </p>
-                <small className="text-xs text-default-500">
-                  预览用系统字体栈兜底，与公开页一致。
-                </small>
+
               </label>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 md:col-span-2">
                 {toggle("showPublicStats", "在关于页公开展示站点数据")}
                 <small className="text-xs text-default-500">
-                  展示累计阅读、读者回应、公开文章数与持续分享天数。关闭后关于页不再出现这块内容，
-                  数据本身不会被删除。统计口径只包含当前公开可访问的文章。
+                  展示公开内容的阅读、回应与积累数据；关闭后保留统计记录。
                 </small>
               </div>
-              <label className="flex flex-col gap-1.5">
+              <label className="flex flex-col gap-1.5 md:col-span-2">
                 <span className="text-sm font-medium">友情链接申请说明</span>
                 <BlogTextarea
                   className="w-full"
-                  minRows={4}
+                  minRows={3}
                   value={data.friendApplyNote}
                   placeholder="留空则公开页使用默认说明。"
                   onChange={(e) => patch({ friendApplyNote: e.target.value })}
@@ -373,52 +370,41 @@ export function BlogSiteSettingsPanel({
               </label>
             </CardBody>
           </Card>
-          <Card className="rounded-xl border border-default-200 shadow-none">
-            <CardBody className="space-y-3">
-              <h3 className="text-sm font-semibold">访客看到的站点标识</h3>
-              {data.iconUrl && (
-                <img
-                  src={data.iconUrl}
-                  className="h-12 w-12 rounded-lg"
-                  alt="站点图标"
-                />
-              )}
-              <h2 className="text-lg font-bold">{data.siteName || "Jomio"}</h2>
-              <p className="text-sm text-default-600">{data.tagline}</p>
-              <small className="text-xs text-default-500">
-                作者署名、头像、简介与其他站点地址请在「公开作者」中设置。
-              </small>
-            </CardBody>
-          </Card>
-        </div>
+        <details className="rounded-xl border border-default-200 bg-content1 p-4">
+          <summary className="cursor-pointer text-base font-semibold">页脚与备案</summary>
+          <div className="mt-4"><BlogFooterSettingsPanel
+            footer={data.footer ?? defaults.footer}
+            patch={(p) => patch({ footer: { ...defaults.footer, ...data.footer, ...p } })}
+          /></div>
+        </details></div>
       ) : tab === "subscribe" ? (
         <BlogSubscribeSettings
+          key={formVersion}
           subscribe={data.subscribe}
           onUploading={setUploading}
           patch={(p) => patch({ subscribe: { ...data.subscribe, ...p } })}
         />
-      ) : tab === "footer" ? (
-        <BlogFooterSettingsPanel
-          footer={data.footer ?? defaults.footer}
-          patch={(p) =>
-            patch({ footer: { ...defaults.footer, ...data.footer, ...p } })
-          }
-        />
-      ) : tab === "deployment" ? (
-        <BlogDeploymentSettings
-          data={data}
-          patch={patch}
-          deployedOrigin={deployed}
-          backendOrigin={backend}
-          deployment={deployment}
-          onOpenCheck={() => setTab("checks")}
-        />
-      ) : tab === "tracking" ? (
-        <BlogTrackingSettings data={data} patch={patch} />
       ) : (
-        <BlogSiteCheckPanel target={data.targetOrigin} effective={deployed} />
+        <div className="flex flex-col gap-5">
+          <BlogDeploymentSettings
+            data={data}
+            patch={patch}
+            deployedOrigin={deployed}
+            backendOrigin={backend}
+            deployment={deployment}
+            onOpenCheck={() => setCheckOpen(true)}
+          />
+          <details open={checkOpen} onToggle={(event) => setCheckOpen(event.currentTarget.open)} className="rounded-xl border border-default-200 bg-content1 p-5">
+            <summary className="cursor-pointer text-base font-semibold">上线检查</summary>
+            <div className="mt-5">
+              {dirty && <p className="mb-4 text-sm text-warning">有未保存的设置。请先保存，再检查实际生效的站点。</p>}
+              <BlogSiteCheckPanel target={saved.targetOrigin} effective={deployed} />
+            </div>
+          </details>
+        </div>
       )}
 
+      </fieldset>
       <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-default-200 bg-content1 px-5 py-3">
         <span className="text-sm text-default-500">
           {dirty ? "有未保存修改" : "设置已同步"}

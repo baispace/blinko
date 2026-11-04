@@ -1,0 +1,26 @@
+.blog-management {display:flex; flex-direction:column; height:100dvh; min-height:0; overflow:hidden; background:hsl(var(--heroui-background)); color:hsl(var(--heroui-foreground)); font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px;}
+.blog-management-header {height:60px; flex-shrink:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:0 22px; border-bottom:1px solid hsl(var(--heroui-default-200)/.65);}
+.blog-management-header > button {justify-self:start;}
+.blog-management-title {font-size:16px; font-weight:600;}
+.blog-management-public {justify-self:end; display:inline-flex; align-items:center; gap:7px; font-size:13px; color:hsl(var(--heroui-default-600)); border-radius:8px; padding:8px;}
+.blog-management-public:hover {background:hsl(var(--heroui-default-100));}
+.blog-management-public:focus-visible,.blog-management-sidebar button:focus-visible {outline:2px solid hsl(var(--heroui-primary)); outline-offset:2px;}
+.blog-management-body {display:flex; flex:1; min-height:0; overflow:hidden;}
+.blog-management-sidebar.settings-sidebar {height:100%; min-height:0; width:228px; padding:24px 12px 16px;}
+.blog-management-search {margin:0 4px 18px;}
+.blog-management-count {font-size:12px; color:hsl(var(--heroui-default-400));}
+.blog-management-main {flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:24px clamp(20px,3vw,40px) 32px;}
+.blog-management-content {width:100%; max-width:1120px; margin:0 auto;}
+.blog-management-content > header h1 {font-size:23px; font-weight:650; letter-spacing:-.025em;}
+.blog-management-content > header p {font-size:13px; line-height:1.7; margin-top:4px;}
+.blog-management-mobile {padding:12px 16px 0;}
+@media(max-width:960px) {.blog-management-header{padding:0 10px;height:56px;gap:4px;} .blog-management-main{padding:22px 16px 32px;} .blog-management-public{font-size:12px;gap:4px;} .blog-management-sidebar.settings-sidebar{width:100%;padding-top:48px;} }
+/* The settings page uses a select on phones; the blog drawer keeps its full nav. */
+.blog-management-sidebar .settings-navigation {display:block;}
+.blog-management-sidebar .settings-nav-item svg {flex-shrink:0;}
+
+/* The shared tabs already sit inside a spaced layout; avoid doubling the gap. */
+.blog-management .blog-ui-tabs {margin-bottom:0;}
+.blog-management .blog-ui-tabs [data-slot=tab] {height:38px;}
+.blog-management .blog-site-settings small {line-height:1.5;}
+.blog-management .blog-site-settings summary {line-height:1.5;}

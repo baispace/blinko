@@ -74,7 +74,7 @@ export function BlogStatsBreakdowns({
   if (view === "content") {
     const topics = data as Topics;
     return (
-      <Card className="border border-default-200 bg-surface">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardHeader className="flex flex-col items-start gap-1 px-5 pb-0 pt-4">
           <h2 className="text-base font-semibold text-foreground">专题表现</h2>
           <p className="text-sm text-default-500">
@@ -133,7 +133,7 @@ export function BlogStatsBreakdowns({
         <Value title="人均阅读次数" value={a.viewsPerVisitor?.toFixed(1) ?? "—"} hint="有效文章阅读次数 ÷ 独立访客" />
       </div>
 
-      <Card className="border border-default-200 bg-surface">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-5">
           <h2 className="text-base font-semibold text-foreground">访问深度</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -158,7 +158,7 @@ export function BlogStatsBreakdowns({
         </CardBody>
       </Card>
 
-      <Card className="border border-default-200 bg-surface">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardHeader className="flex flex-col items-start gap-1 px-5 pb-0 pt-4">
           <h2 className="text-base font-semibold text-foreground">最近活跃访客</h2>
           <p className="text-sm text-default-500">
@@ -204,7 +204,7 @@ export function BlogStatsBreakdowns({
         </CardBody>
       </Card>
 
-      <Card className="border border-default-200 bg-surface">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-5">
           <h2 className="text-base font-semibold text-foreground">访客如何识别</h2>
           <p className="text-sm text-default-500">

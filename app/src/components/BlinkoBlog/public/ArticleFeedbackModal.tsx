@@ -123,7 +123,7 @@ export function ArticleFeedbackModal({
         wantReply: draft.wantReply,
         // 没勾订阅就不提交邮箱
         email: draft.wantReply ? draft.email : "",
-        allowPublic: draft.allowPublic,
+        allowPublic: false,
         idempotencyKey: idempotencyKey.current,
       });
       // 提交成功：清掉这篇的草稿
@@ -317,18 +317,7 @@ export function ArticleFeedbackModal({
                 </div>
               )}
 
-              <label className="ink-ai-checkbox">
-                <input
-                  type="checkbox"
-                  checked={draft.allowPublic}
-                  disabled={submitting}
-                  onChange={(e) => update({ allowPublic: e.target.checked })}
-                />
-                <span>
-                  允许审核后匿名公开这条反馈
-                  <small>默认仅作者可见；未经允许不会公开。</small>
-                </span>
-              </label>
+
 
               {submitError && (
                 <p className="ink-ai-error" role="alert">

@@ -463,16 +463,18 @@ export async function runSiteChecks(
   const coverPath = published?.publication?.coverAttachment?.path;
   if (coverPath)
     assetTargets.push({ label: "文章封面", url: joinUrl(target, coverPath) });
-  assetTargets.push({ label: "站点图标", url: joinUrl(target, "/icons/Square310x310Logo.png") });
+  assetTargets.push({ label: "站点图标", url: settings?.iconUrl || joinUrl(target, "/icons/Square310x310Logo.png") });
+  assetTargets.push({ label: "品牌标识", url: joinUrl(target, "/brand/mark.svg") });
   const assetResults: string[] = [];
   let assetFail = 0;
-  for (const asset of assetTargets.slice(0, 4)) {
+  for (const asset of assetTargets.slice(0, 5)) {
     const url = /^https?:/i.test(asset.url) ? asset.url : joinUrl(target, asset.url);
     const res = await fetchText(url, { method: "GET", timeoutMs: 6000 });
-    if (res.ok) assetResults.push(`${asset.label} ${res.status}`);
+    const mediaType = res.headers.get("content-type") || "";
+    if (res.ok && /^image\//i.test(mediaType)) assetResults.push(`${asset.label} ${res.status}`);
     else {
       assetFail += 1;
-      assetResults.push(`${asset.label} ${resultSummary(res)}`);
+      assetResults.push(`${asset.label} ${resultSummary(res)}${res.ok ? "，返回的不是图片" : ""}`);
     }
   }
   if (!assetResults.length) {
@@ -693,6 +695,10 @@ export async function runSiteChecks(
       });
     }
   }
+
+  push({id:"owner-statistics",name:"本机访问排除统计",state:"manual",
+    evidence: settings?.excludeOwner === false ? "当前未启用排除管理者访问。" : "启用了排除管理者访问；服务端无法读取目标域名下的浏览器偏好。",
+    suggestion:"从后台「查看公开站」进入，确认页脚显示本浏览器访问已排除统计。换浏览器或清除存储后需重新设置。"});
 
   // ---- 统计脚本与路由上报 ----------------------------------------------
   const states = await readTrackingStates(db, accountId);

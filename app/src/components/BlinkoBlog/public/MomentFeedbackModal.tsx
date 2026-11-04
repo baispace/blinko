@@ -120,7 +120,7 @@ export function MomentFeedbackModal({
         nickname: draft.nickname.trim(),
         wantReply: draft.wantReply,
         email: draft.wantReply ? draft.email.trim() : "",
-        allowPublic: draft.allowPublic,
+        allowPublic: false,
         idempotencyKey: idempotencyKey.current,
       });
       drafts.delete(momentId);
@@ -300,14 +300,7 @@ export function MomentFeedbackModal({
               </div>
 
               <div className="ink-moments-field">
-                <label className="ink-moments-check">
-                  <input
-                    type="checkbox"
-                    checked={draft.allowPublic}
-                    onChange={(e) => update({ allowPublic: e.target.checked })}
-                  />
-                  允许审核后匿名公开这条反馈
-                </label>
+
                 <small className="ink-moments-hint">
                   默认仅作者可见；未经允许不会公开。
                 </small>

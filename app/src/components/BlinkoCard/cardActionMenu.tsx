@@ -332,7 +332,7 @@ export const CardActionMenu = observer(({
           >
             <div className="flex items-start gap-2">
               <Icon icon={blinkoItem.isMoment ? 'tabler:eye-off' : 'tabler:bolt'} width="20" height="20" />
-              <div>{blinkoItem.isMoment ? '撤回动态' : '发布为动态'}</div>
+              <div>{blinkoItem.isMoment ? '撤回动态' : '发布为动态'}<small className="block text-xs text-default-500">公开后，编辑会同步到动态页</small></div>
             </div>
           </DropdownItem>
         ) : null}

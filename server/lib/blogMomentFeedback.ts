@@ -93,7 +93,7 @@ export async function submitMomentFeedback(
     wantReply: input.wantReply,
     // 没勾订阅就不存邮箱：取消勾选后不提交此前填写的地址。
     email: input.wantReply ? input.email.trim() : "",
-    allowPublic: input.allowPublic,
+    allowPublic: false,
     idempotencyKey: input.idempotencyKey,
   };
   try {

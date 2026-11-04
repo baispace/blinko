@@ -1,3 +1,4 @@
+import { articlesBelowBanner } from "@shared/lib/blogFeedLayout";
 import { blogDeviceId, blogStatsEnabled } from "@/lib/blogDevice";
 import { blogRoute } from "@/lib/blogPublicBase";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -332,9 +333,7 @@ export default function BlogHome() {
   const bannerList = showBanner ? site.banner.slice(0, 3) : [];
   const active = Math.min(heroIndex, Math.max(0, bannerList.length - 1));
   const lead = bannerList[active];
-  // banner 池里的文章不重复出现在下方列表里 —— 整池都过滤，不只当前这一条。
-  const bannerIds = new Set(bannerList.map((p) => p.id));
-  const rest = posts.filter((p) => !bannerIds.has(p.id));
+  const rest = articlesBelowBanner(posts, bannerList);
   const step = (delta: number) =>
     setHeroIndex(
       (active + delta + bannerList.length) % Math.max(1, bannerList.length),
@@ -638,19 +637,6 @@ export default function BlogHome() {
               {hot ? "这段时间还没有文章被读过。" : "还没有公开文章。"}
             </p>
           )}
-          {/* 列表空态分两种，样子也不一样：
-              · 有内容但都在上面头条里了 → 这是「内容在别处」，不是「没内容」，
-                摆个虚线空框反而像出了错，一行灰字说明白就够；
-              · 真的没内容（没公开文章）→ 沿用虚线空框，跟热门榜、归档视图一致。
-              专题筛选的空态由顶部横幅的「这个专题暂无公开文章」负责，不重复。 */}
-          {!busy &&
-            rest.length === 0 &&
-            (posts.length > 0 || !!lead) &&
-            !(hot || all) && (
-              <p className="ink-empty-note" role="status">
-                公开的文章都放在上面的头条里了。
-              </p>
-            )}
           {!busy &&
             rest.length === 0 &&
             posts.length === 0 &&

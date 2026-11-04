@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { api } from "@/lib/trpc";
 import { Button, Card, CardBody, Chip } from "@heroui/react";
+import { confirmBlogAction } from "./confirmBlogAction";
 import { BlogCheckbox, BlogInput } from "./BlogUI";
 import type { BlogMailSettingsView } from "@shared/lib/blogMailSettings";
+
+import { testSavedMailSettings } from "./mailSettingsFlow";
 
 type MailSource = "settings" | "env" | "none";
 
@@ -59,7 +62,9 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
   const [testing, setTesting] = useState(false);
 
   const load = useCallback(async () => {
+    setBusy(true);
     setError("");
+    setMessage("");
     try {
       const r = await api.blog.mailSettings.query();
       const next = toDraft(r.data);
@@ -70,6 +75,8 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
       setSaved(next);
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setBusy(false);
     }
   }, []);
 
@@ -79,23 +86,25 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   useEffect(() => {
-    onDirty?.(dirty);
+    onDirty?.(dirty || busy || testing);
     return () => onDirty?.(false);
-  }, [dirty, onDirty]);
+  }, [dirty, busy, testing, onDirty]);
 
   const patch = (p: Partial<Draft>) => {
+    if (busy || testing) return;
     setDraft((d) => ({ ...d, ...p }));
     setMessage("");
+    setTestResult(null);
   };
 
   const save = async () => {
     if (!draft.host.trim() || !draft.from.trim()) {
       setError("请填写 SMTP 服务器地址与发件人地址。");
-      return;
+      return false;
     }
     if (!Number.isInteger(draft.port) || draft.port < 1 || draft.port > 65535) {
       setError("端口请填 1 到 65535 之间的整数。");
-      return;
+      return false;
     }
     setBusy(true);
     setError("");
@@ -118,10 +127,11 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
       setDraft(next);
       setSaved(next);
       setMessage("邮件服务设置已保存。");
-      const status = await api.blog.mailSettings.query();
-      setSource(status.source);
+      setSource("settings");
+      return true;
     } catch (e: any) {
       setError(e.message);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -136,8 +146,12 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
     setTesting(true);
     setTestResult(null);
     try {
-      const r = await api.blog.testMail.mutate({ to });
-      setTestResult({ status: r.status, message: r.message });
+      const outcome = await testSavedMailSettings({ dirty, save, send: () => api.blog.testMail.mutate({ to }) });
+      if (outcome.skipped) {
+        setTestResult({status:"failed",message:"配置未保存，未发送测试邮件。请修正表单后重试。"});
+        return;
+      }
+      setTestResult({ status: outcome.result.status, message: outcome.result.message });
     } catch (e: any) {
       setTestResult({ status: "failed", message: e.message });
     } finally {
@@ -146,9 +160,9 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
   };
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <Card className="border border-default-200 bg-surface">
-        <CardBody className="gap-4 p-5">
+    <fieldset disabled={busy || testing || !revision} className="m-0 grid min-w-0 grid-cols-1 gap-4 border-0 p-0 lg:grid-cols-2">
+      <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
+        <CardBody className="gap-3 p-4">
           <div>
             <h3 className="text-base font-semibold text-foreground">SMTP 配置</h3>
             <p className="mt-1 text-sm text-default-500">
@@ -187,7 +201,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
                 min={1}
                 max={65535}
                 value={String(draft.port)}
-                onChange={(e) => patch({ port: Number(e.target.value) })}
+                onChange={(e) => {const port = Number(e.target.value); patch({ port, secure:port===465?true:port===587?false:draft.secure });}}
               />
               <small className="text-xs text-default-400">465 走直接 TLS，587 走 STARTTLS。</small>
             </label>
@@ -202,7 +216,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
                 直接 TLS（{draft.secure ? "已开启" : "已关闭"}）
               </span>
               <small className="text-xs text-default-400">
-                关闭后先明文连接，服务器支持时自动升级 STARTTLS —— 账号密码不会裸奔。
+                465 使用直接 TLS；587 连接后尝试 STARTTLS。其他端口请按服务商要求设置。
               </small>
             </label>
           </div>
@@ -262,13 +276,13 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
           <div className="flex items-center justify-between border-t border-default-200 pt-4">
             <span className="text-sm text-default-500">{dirty ? "有未保存修改" : "设置已同步"}</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="flat" isDisabled={busy} onPress={() => void load()}>
+              <Button size="sm" variant="flat" isDisabled={busy || testing} onPress={async () => { if (!dirty || await confirmBlogAction("有未保存修改，确定重新载入？")) { setTestResult(null); await load(); } }}>
                 重新载入
               </Button>
               <Button
                 size="sm"
                 color="primary"
-                isDisabled={!revision || !dirty || busy}
+                isDisabled={!revision || !dirty || busy || testing}
                 onPress={() => void save()}
               >
                 {busy ? "保存中…" : "保存邮件服务设置"}
@@ -278,8 +292,8 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
         </CardBody>
       </Card>
 
-      <Card className="h-fit border border-default-200 bg-surface">
-        <CardBody className="gap-4 p-5">
+      <Card className="h-fit rounded-xl border border-default-200 bg-content1 shadow-none">
+        <CardBody className="gap-3 p-4">
           <div>
             <h3 className="text-base font-semibold text-foreground">当前状态</h3>
             <p className="mt-1 text-sm text-default-500">
@@ -304,7 +318,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
           <div>
             <h3 className="text-base font-semibold text-foreground">发送测试邮件</h3>
             <p className="mt-1 text-sm text-default-500">
-              发一封真实的信到指定地址，确认握手、认证、投递都通。
+              有修改时先保存配置，再发送测试邮件。发送成功后请到收件箱确认是否收到。
             </p>
           </div>
           <label className="flex flex-col gap-1.5">
@@ -317,8 +331,8 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
               onChange={(e) => setTestTo(e.target.value)}
             />
           </label>
-          <Button size="sm" isDisabled={testing} onPress={() => void sendTest()}>
-            {testing ? "发送中…" : "发送测试邮件"}
+          <Button size="sm" isDisabled={busy || testing || !revision || !testTo.trim()} onPress={() => void sendTest()}>
+            {testing ? "处理中…" : dirty ? "保存并发送测试邮件" : "发送测试邮件"}
           </Button>
           {testResult ? (
             <div
@@ -335,6 +349,6 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
           ) : null}
         </CardBody>
       </Card>
-    </div>
+    </fieldset>
   );
 }

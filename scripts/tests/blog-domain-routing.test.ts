@@ -14,7 +14,7 @@ test('old public prefix redirects once with its query',()=>{
  expect(route('/blog/t/a?page=2')).toEqual({kind:'redirect',url:'https://blog.baispace.cn/t/a?page=2'});
 });
 test('static and root SEO endpoints bypass page rewriting',()=>{
- for(const path of ['/robots.txt','/sitemap.xml','/assets/app.js','/font-assets/main.woff2','/api/file/qr.png']) expect(route(path)).toEqual({kind:'pass'});
+ for(const path of ['/robots.txt','/sitemap.xml','/assets/app.js','/brand/mark.svg','/font-assets/main.woff2','/api/file/qr.png']) expect(route(path)).toEqual({kind:'pass'});
 });
 test('public batched calls and tracking/feedback remain functional',()=>{
  for(const path of ['/api/trpc/blog.publicIndex,blog.publicTopics?batch=1','/api/trpc/blog.trackView','/api/trpc/blog.recommendationEvent','/api/trpc/blog.publicArticleFeedback']) expect(route(path,'POST')).toEqual({kind:'pass'});

@@ -90,11 +90,9 @@ export async function publicSubscribe(
 
   const links = profile ? sanitizeLinks(profile.links) : [];
   const contactLink = links.find((l) => CONTACT_LABEL_RE.test(l.label));
-  const contact = profile?.homepage
-    ? { label: "联系我", href: profile.homepage }
-    : contactLink
-      ? { label: contactLink.label || "联系我", href: contactLink.url }
-      : null;
+  const contact = contactLink
+    ? { label: contactLink.label || "联系我", href: contactLink.url }
+    : null;
 
   const notes = sub.notes
     .map((n) => ({ label: n.label.trim(), text: n.text.trim() }))

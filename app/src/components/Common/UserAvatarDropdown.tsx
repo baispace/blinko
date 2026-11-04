@@ -12,7 +12,7 @@ import { RootStore } from '@/store';
 import { BaseStore } from '@/store/baseStore';
 import { UserStore } from '@/store/user';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from '../Auth/auth-client';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { ShowSettingsDialog } from '../BlinkoSettings/SettingsDialog';
@@ -28,6 +28,7 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
   const { t, i18n } = useTranslation();
   const accountLabel = i18n.language.startsWith('zh') ? '账户与设置' : 'Account & settings';
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [appearance, setAppearance] = useState(false);
   const close = () => { setOpen(false); onItemClick?.(); };
@@ -70,7 +71,10 @@ export const UserAvatarDropdown = observer(({ onItemClick, collapsed = false }: 
             close(); RootStore.Get(DialogStore).setData({isOpen:true,size:'md',title:'桌面书签',content:<DesktopBookmarks/>});
           }}><Icon icon="solar:pin-linear" width={18}/><span>桌面书签</span></button>}
           <button type="button" className={rowClass} onClick={() => {
-            close(); navigate('/blog-manage');
+            close();
+            const from = location.pathname + location.search + location.hash;
+            try { sessionStorage.setItem('blog-management-return', from); } catch {}
+            navigate('/blog-manage', {state:{from}});
           }}><Icon icon="tabler:file-text" width={18}/><span>{zh ? '博客管理' : 'Blog'}</span></button>
           <div className="my-1 border-t border-default-100" />
           <button type="button" className={`${rowClass} !text-danger`} onClick={async () => {

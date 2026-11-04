@@ -23,6 +23,7 @@ const FILTERS = [
   { key: "pending", label: "待处理" },
   { key: "replied", label: "已回复" },
   { key: "archived", label: "已归档" },
+  { key: "failed", label: "通知异常" },
   { key: "all", label: "全部" },
 ] as const;
 
@@ -105,7 +106,8 @@ const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "danger">
   archived: "default",
 };
 
-export function BlogFeedbackPanel() {
+export function BlogFeedbackPanel({queue,onDirty}:{queue?:string|null;onDirty?:(dirty:boolean)=>void}) {
+  useEffect(()=>{if(queue==="failed") setFilter("failed");},[queue]);
   const [filter, setFilter] = useState<Filter>("pending");
   const [source, setSource] = useState<Source>("all");
   const [rows, setRows] = useState<FeedbackRow[]>([]);
@@ -115,6 +117,10 @@ export function BlogFeedbackPanel() {
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState<Record<RowKey, string>>({});
   const [busyId, setBusyId] = useState<RowKey | null>(null);
+  const dirty=Object.values(drafts).some(text=>!!text.trim()) || busyId!==null;
+  useEffect(()=>{onDirty?.(dirty);return()=>onDirty?.(false);},[dirty,onDirty]);
+  useEffect(()=>{if(!dirty)return;const guard=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,6 +145,7 @@ export function BlogFeedbackPanel() {
         replied: all.filter((r) => r.status === "replied").length,
         archived: all.filter((r) => r.status === "archived").length,
         all: all.length,
+        failed: all.filter(r=>r.status!=="archived" && r.replies.some(reply=>["failed","not_configured"].includes(reply.mailStatus))).length,
       });
     } catch (e: any) {
       setError(e?.message || "反馈数据加载失败，请重试。");
@@ -155,7 +162,7 @@ export function BlogFeedbackPanel() {
     () =>
       rows.filter(
         (r) =>
-          (filter === "all" || r.status === filter) &&
+          (filter === "all" || (filter === "failed" ? r.status!=="archived" && r.replies.some(reply=>["failed","not_configured"].includes(reply.mailStatus)) : r.status === filter)) &&
           (source === "all" || r.source === source),
       ),
     [rows, filter, source],
@@ -173,6 +180,7 @@ export function BlogFeedbackPanel() {
     } catch (e) {
       toastError(e);
     } finally {
+      window.dispatchEvent(new Event("jomio:blog-work-updated"));
       setBusyId(null);
     }
   };
@@ -357,7 +365,7 @@ export function BlogFeedbackPanel() {
                     订阅回复通知：
                     {row.wantReply ? (row.email ? "是" : "是（未留邮箱）") : "否"}
                   </span>
-                  <span>允许匿名公开：{row.allowPublic ? "是" : "否"}</span>
+                  <span>私密反馈 · 仅作者可见</span>
                   {row.email && <code className="rounded bg-default-100 px-1">{row.email}</code>}
                 </div>
 

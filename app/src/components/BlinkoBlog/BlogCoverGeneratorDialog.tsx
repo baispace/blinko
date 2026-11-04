@@ -225,11 +225,11 @@ export function BlogCoverGeneratorDialog({
       placement="center"
       size="xl"
     >
-      <ModalContent aria-label="封面助手" className="bg-background" style={{width:'min(640px, calc(100vw - 32px))',maxHeight:'calc(100dvh - 48px)',borderRadius:16,fontFamily:'-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif'}}>
-        <header className="flex items-center justify-between border-b border-default-200 px-5 py-4">
+      <ModalContent aria-label="封面助手" className="blog-hero-surface flex min-h-0 flex-col overflow-hidden bg-background" style={{width:'min(640px, calc(100vw - 32px))',maxHeight:'calc(100dvh - 48px)',borderRadius:16,fontFamily:'-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif'}}>
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-default-200 px-5 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">封面助手</h2>
-            <small className="text-sm text-default-500">
+            <small className="mt-1 block text-xs leading-relaxed text-default-500">
               {step === 'input'
                 ? '先说清楚想要什么，再出图'
                 : step === 'result'
@@ -248,7 +248,7 @@ export function BlogCoverGeneratorDialog({
           </Button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4" aria-busy={!!busy}>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
           {busy === 'load' && <p className="text-sm text-default-500" role="status">正在读取生图设置…</p>}
           {busy === 'copy' && <p className="text-sm text-default-500" role="status">正在想文案…</p>}
           {busy === 'image' && (
@@ -495,7 +495,7 @@ export function BlogCoverGeneratorDialog({
           )}
         </div>
 
-        <footer className="flex items-center justify-between border-t border-default-200 px-5 py-4">
+        <footer className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t sm:flex-row sm:items-center border-default-200 px-5 py-4">
           <p className="text-xs text-default-500">
             {step === 'input'
               ? target?.type === 'note' ? '先生成候选配图，点击应用后才会修改笔记封面。' : target?.type === 'topic' ? '先生成候选封面，保存专题资料后生效。' : '生成的只是草稿底图，保存后才会进入发布设置。'

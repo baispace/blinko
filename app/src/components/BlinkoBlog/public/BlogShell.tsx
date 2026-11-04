@@ -1,7 +1,9 @@
+import { BlogStatisticsControl } from "./BlogStatisticsControl";
 import { publicBrandName } from "@shared/lib/publicBrand";
 import { BlogTracking } from "./BlogTracking";
 import {
   blogInternalPath,
+  publicAsset,
   blogRoute,
   blogRoutePath,
 } from "@/lib/blogPublicBase";
@@ -664,8 +666,9 @@ function Footer() {
         <div>
           <h4>订阅与更新</h4>
           <Link to={blogRoute("/blog/subscribe")}>订阅更新</Link>
-          <Link to={blogRoute("/blog/moments")}>动态订阅</Link>
+          <a href={publicAsset("/blog/moments/feed.xml")}>动态 RSS 订阅</a>
           <p>微信公众号与 RSS，两种方式随你挑。</p>
+          <BlogStatisticsControl />
         </div>
       </div>
       <div className="ink-footer-bottom ink-wrap">
@@ -1321,7 +1324,6 @@ export function BlogShell() {
    * 品牌卡上的标：只用后台配的站点图标，没有就退回首字母色块。
    * 刻意不取作者头像 —— 顶栏是站点标识，不该摆一张人像。
    */
-  const siteLogo = data.publicSettings?.iconUrl || "";
 
   /** 「随便看看」：随机跳一篇公开文章。 */
   const randomArticle = async () => {
@@ -1498,23 +1500,8 @@ export function BlogShell() {
                 to={blogRoute("/blog")}
                 aria-label="返回博客主页"
               >
-                {siteLogo ? (
-                  <img src={siteLogo} alt="" />
-                ) : (
-                  <img src="/brand/app-icon.svg" alt="Jomio · 拾成" />
-                )}
-                <Icon
-                  icon="tabler:home"
-                  width={20}
-                  className="ink-brand-home"
-                />
+                <span className="ink-brand-wordmark">{publicBrandName(data.siteName).split("·")[0].trim() || "Jomio"}</span>
               </Link>
-              {/*
-                站名文字不再在这里出现 —— 圆形标识已经是「回首页」的入口，
-                名字再摆一遍只是重复。站点名称本身仍然保留：
-                SEO（og:site_name、标题）、页脚署名、分享图都用它，
-                在后台「站点设置 › 站点信息」里维护。
-              */}
             </div>
             {sitesOpen && (
               <div className="ink-sites-panel" role="dialog" aria-label="站点与应用">

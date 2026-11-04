@@ -356,7 +356,7 @@ export function BlogTopicDetail() {
   /* ---------- 共用布局片段 ---------- */
 
   const topBar = (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default-200 bg-background px-4">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-default-200 bg-background px-4">
       <BlogStudioBrand className="text-sm" />
       <span className="flex-1" />
       <Button
@@ -464,7 +464,7 @@ export function BlogTopicDetail() {
     </div>
   );
 
-  const shellClass = "flex min-h-screen flex-col bg-background text-foreground";
+  const shellClass = "blog-hero-surface flex h-dvh min-h-0 flex-col overflow-y-auto overscroll-contain bg-background text-foreground";
 
   if (missing)
     return (
@@ -498,7 +498,7 @@ export function BlogTopicDetail() {
     <div className={shellClass}>
       {topBar}
 
-      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-5xl shrink-0 px-4 py-6 lg:px-8">
         {pageHeader}
 
         {error && (
@@ -507,10 +507,10 @@ export function BlogTopicDetail() {
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="flex flex-col gap-5">
           {/* ---------- 基本信息 ---------- */}
           <Card className="rounded-xl border border-default-200 shadow-none">
-            <details open>
+            <details open className="group">
               <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 select-none">
                 <div className="min-w-0">
                   <strong className="text-sm font-semibold">基本信息</strong>
@@ -518,7 +518,7 @@ export function BlogTopicDetail() {
                     {draft.name || "填写专题名称、简介和链接"}
                   </span>
                 </div>
-                <small className="shrink-0 text-xs text-default-400">收起</small>
+                <small className="shrink-0 text-xs text-default-400"><span className="group-open:hidden">展开</span><span className="hidden group-open:inline">收起</span></small>
               </summary>
               <CardBody className="grid grid-cols-1 gap-5 pt-0 md:grid-cols-2">
                 <label className="flex flex-col gap-1.5">

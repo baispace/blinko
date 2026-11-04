@@ -283,3 +283,31 @@
 
 .ink-blog .ink-nav-empty { padding: 12px 16px; align-self: center; color: var(--ink-muted); font-size: 12px; }
 .ink-blog .ink-nav-empty:last-child { text-align: right; }
+
+/* Homepage-only rhythm and feedback; other public views keep their styling. */
+.ink-blog .ink-home-page .ink-chips { gap:10px; padding-bottom:8px; margin-bottom:0; }
+.ink-blog .ink-home-page .ink-home-grid { column-gap:28px; row-gap:16px; margin-top:8px; }
+.ink-blog .ink-home-page .ink-home-list > .ink-section-head { margin-bottom:14px; }
+.ink-blog .ink-home-page .ink-home-list .ink-card-grid { gap:22px; }
+.ink-blog .ink-home-page .ink-post-card { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); box-shadow:0 2px 6px rgb(0 0 0 / .025); transition:transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease; }
+.ink-blog .ink-home-page .ink-home-list .ink-post-card-body { padding:20px; }
+.ink-blog .ink-home-page .ink-post-card h3 { line-height:1.55; }
+.ink-blog .ink-home-page .ink-post-card p { line-height:1.8; }
+.ink-blog .ink-home-page .ink-post-cover { overflow:hidden; }
+.ink-blog .ink-home-page .ink-aside { gap:24px; }
+.ink-blog .ink-home-page :is(.ink-chip,.ink-sub-tabs button,.ink-view-toggle) { transition:color 180ms ease,background-color 180ms ease,border-color 180ms ease; }
+.ink-blog .ink-home-page .ink-post-card:focus-visible { outline:2px solid var(--ink-accent); outline-offset:4px; }
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ .ink-blog .ink-home-page .ink-post-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgb(0 0 0 / .065); border-color:color-mix(in srgb,var(--ink-accent) 20%,var(--ink-line)); }
+ .ink-blog .ink-home-page .ink-post-row:hover { transform:translateY(-1px); }
+ .ink-blog .ink-home-page .ink-post-row { transition:transform 200ms ease,background-color 200ms ease; }
+}
+@media(max-width:760px) {
+ .ink-blog .ink-home-page .ink-home-grid { column-gap:20px; row-gap:14px; }
+ .ink-blog .ink-home-page .ink-home-list .ink-card-grid { gap:16px; }
+ .ink-blog .ink-home-page .ink-home-list .ink-post-card-body { padding:16px; }
+ .ink-blog .ink-home-page .ink-chips { margin-bottom:0; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .ink-blog .ink-home-page :is(.ink-post-card,.ink-post-row,.ink-chip,.ink-sub-tabs button,.ink-view-toggle) { transition:none; transform:none; }
+}

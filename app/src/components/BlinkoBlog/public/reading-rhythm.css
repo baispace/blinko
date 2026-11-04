@@ -1,0 +1,29 @@
+/* Shared reading rhythm, deliberately scoped away from management and About. */
+.ink-blog .ink-moments-toolbar { margin-bottom:8px; }
+.ink-blog .ink-moment { padding-top:24px; padding-bottom:24px; border-color:color-mix(in srgb,var(--ink-line) 65%,transparent); }
+.ink-blog .ink-moment-body { line-height:1.85; }
+.ink-blog .ink-moment-gallery { margin-top:14px; margin-bottom:16px; }
+.ink-blog .ink-moment-actions { margin-top:14px; }
+.ink-blog .ink-topic-page .ink-topic-intro { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); box-shadow:0 2px 8px rgb(0 0 0 / .025); margin-bottom:32px; }
+.ink-blog .ink-topic-page .ink-topic-section { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); }
+.ink-blog .ink-topic-page .ink-post-card,.ink-blog .ink-topic-card { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); box-shadow:0 2px 6px rgb(0 0 0 / .025); }
+.ink-blog .ink-topic-page .ink-post-row { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); }
+.ink-blog .ink-article-page .ink-panel { border-color:color-mix(in srgb,var(--ink-line) 55%,transparent); box-shadow:0 2px 8px rgb(0 0 0 / .025); }
+.ink-blog .ink-article-page .ink-summary { line-height:1.85; margin-bottom:28px; }
+.ink-blog .ink-article-page .ink-prev-next { gap:20px; margin-top:32px; }
+.ink-blog .ink-article-page .ink-related { margin-top:32px; }
+.ink-blog :is(.ink-moments,.ink-topic-page,.ink-article-page,.ink-doc-layout) :is(a,button,summary) { transition:color 180ms ease,background-color 180ms ease,border-color 180ms ease,box-shadow 200ms ease; }
+.ink-blog :is(.ink-topic-card,.ink-topic-page .ink-post-card,.ink-moment-photo) { transition:transform 220ms ease,box-shadow 220ms ease,border-color 180ms ease; }
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ .ink-blog :is(.ink-topic-card,.ink-topic-page .ink-post-card):hover { transform:translateY(-3px); box-shadow:0 8px 24px rgb(0 0 0 / .065); }
+ .ink-blog .ink-moment-photo:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgb(0 0 0 / .08); }
+}
+@media(max-width:760px) {
+ .ink-blog .ink-moment { padding-top:18px; padding-bottom:18px; }
+ .ink-blog .ink-topic-page .ink-topic-intro { margin-bottom:24px; }
+ .ink-blog .ink-article-page .ink-prev-next { gap:12px; margin-top:24px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .ink-blog :is(.ink-moments,.ink-topic-page,.ink-article-page,.ink-doc-layout) :is(a,button,summary),
+ .ink-blog .ink-topic-card { transition:none; transform:none; }
+}

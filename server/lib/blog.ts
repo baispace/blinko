@@ -1127,6 +1127,10 @@ export async function isPublicBlogAsset(
           note: { select: { isPublished: true, isRecycle: true } },
         },
       },
+      topicCovers: {
+        where: { isPublished: true },
+        select: { accountId: true },
+      },
       // 派生分享图：它也是公开版本的一部分（og:image 要能匿名取到）。
       publicationShareCovers: {
         select: {
@@ -1148,6 +1152,9 @@ export async function isPublicBlogAsset(
   const candidates = images.filter((image) =>
     /^image\/(?:png|jpeg|webp|gif|avif)$/.test(image.type),
   );
+  // Only the selected cover of a public topic is anonymous-readable.
+  if (candidates.some(image => image.topicCovers?.some(topic => topic.accountId === image.accountId)))
+    return true;
   if (
     candidates.some((image) =>
       image.publicationCovers.some(

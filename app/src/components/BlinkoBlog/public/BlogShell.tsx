@@ -41,6 +41,7 @@ import { CoverCanvas } from "../CoverCanvas";
 import "../blog.css";
 import "./typography.css";
 import "./home-refinements.css";
+import "./reading-rhythm.css";
 
 type Index = Awaited<ReturnType<typeof api.blog.publicIndex.query>>;
 export type Post = Index["posts"][number];

@@ -169,7 +169,7 @@ export default function BlogTopicDetail() {
     data.unassigned.posts[0] ??
     null;
   return (
-    <main className="ink-wrap">
+    <main className="ink-wrap ink-topic-page">
       <section className="ink-topic-intro">
         <div>
           <Link to={blogRoute("/blog/topics")} className="ink-topic-back">

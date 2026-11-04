@@ -353,7 +353,7 @@ export default function BlogHome() {
   const heroVisible =
     !hot && !all && (loading || !!lead || (!!filter && !posts.length));
   return (
-    <main className="ink-wrap">
+    <main className="ink-wrap ink-home-page">
       {/* 首页唯一的 h1：与 SEO title / 服务端 fallback 的 h1 保持一致。
           头条 banner 把标题烤进了封面，画面上不再叠标题，所以这里用
           视觉隐藏的站点标题做页面主标题，兼顾 SEO 语义和无障碍。 */}

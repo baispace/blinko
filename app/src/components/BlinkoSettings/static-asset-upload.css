@@ -1,0 +1,7 @@
+/* Isolate native selection controls from the global form resets. */
+.static-asset-upload-dialog { width:min(720px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); border-radius:24px; box-shadow:0 12px 48px rgb(0 0 0 / .16); }
+.static-asset-upload-dialog input[type=checkbox] { appearance:auto!important; position:static!important; width:16px!important; height:16px!important; min-width:16px!important; min-height:16px!important; padding:0!important; margin:0!important; flex:none; accent-color:hsl(var(--heroui-primary)); box-shadow:none!important; }
+.static-asset-upload-dialog input[type=checkbox]:focus-visible { outline:2px solid hsl(var(--heroui-primary)); outline-offset:3px; }
+.static-upload-select-all { display:inline-flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; }
+.static-asset-upload-dialog label:has(input:disabled) { cursor:default; }
+.static-asset-upload-dialog [data-slot=label] { overflow-wrap:anywhere; }

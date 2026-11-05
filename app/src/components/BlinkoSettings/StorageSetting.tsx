@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Button, Checkbox, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, ModalHeader, ModalBody, ModalFooter, Progress, useDisclosure } from "@heroui/react";
+import { Button, DropdownItem, DropdownMenu, DropdownTrigger, Dropdown, Input, Switch, ModalHeader, ModalBody, ModalFooter, Progress, useDisclosure } from "@heroui/react";
 import { StaticAssetUploadDialog } from './StaticAssetUploadDialog';
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
@@ -432,9 +432,10 @@ export const StorageSetting = observer(() => {
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <Checkbox isSelected={allSelected} onValueChange={toggleAll} size="sm">
-                  {allSelected ? t('deselect-all') : t('select-all')}
-                </Checkbox>
+                <label className="static-upload-select-all">
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} disabled={store.uploading} />
+                  <span>{allSelected ? t('deselect-all') : t('select-all')}</span>
+                </label>
                 <span className="text-xs text-default-400">
                   {t('upload-cdn-selected', { n: selected.length, total: fileList.length })}
                 </span>
@@ -449,10 +450,11 @@ export const StorageSetting = observer(() => {
                     )}
                     {group.files.map(f => (
                       <label key={f.path} className="flex items-center gap-2 px-3 py-2 hover:bg-default-50 cursor-pointer">
-                        <Checkbox
-                          isSelected={selected.includes(f.path)}
-                          onValueChange={() => toggleFile(f.path)}
-                          size="sm"
+                        <input type="checkbox"
+                          checked={selected.includes(f.path)}
+                          onChange={() => toggleFile(f.path)}
+                          disabled={store.uploading}
+                          aria-label={f.path}
                         />
                         <span className="flex-1 text-sm truncate" title={f.path}>{f.path}</span>
                         <span className="text-xs text-default-400 shrink-0">{formatSize(f.size)}</span>

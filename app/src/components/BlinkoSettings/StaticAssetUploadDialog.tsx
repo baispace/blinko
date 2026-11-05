@@ -1,3 +1,4 @@
+import './static-asset-upload.css';
 import type { ReactNode } from 'react';
 import { Modal, ModalContent } from '@heroui/react';
 
@@ -5,9 +6,9 @@ import { Modal, ModalContent } from '@heroui/react';
 export function StaticAssetUploadDialog({ isOpen, onClose, uploading, children }: {
   isOpen: boolean; onClose: () => void; uploading: boolean; children: ReactNode;
 }) {
-  return <Modal isOpen={isOpen} onClose={onClose} size="2xl" disableAnimation
+  return <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside" placement="center" disableAnimation
     isDismissable={!uploading} isKeyboardDismissDisabled={uploading} hideCloseButton={uploading}
     classNames={{ wrapper: '!z-[10080]', backdrop: '!z-[10079]', base: 'border border-default-200 bg-background' }}>
-    <ModalContent>{children}</ModalContent>
+    <ModalContent className="static-asset-upload-dialog">{children}</ModalContent>
   </Modal>;
 }

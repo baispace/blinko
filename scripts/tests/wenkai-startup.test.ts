@@ -51,3 +51,14 @@ test('startup CSS has no import waterfall and all referenced font files exist', 
   expect(urls).toHaveLength(194);
   for (const match of urls) expect(existsSync(resolve(base, match[1]!))).toBe(true);
 });
+
+test('CDN HTML rewriting never duplicates the saved font origin', () => {
+  const rewritten = script.replace(/(["'(`])\.{0,2}\/(assets|fonts|font-assets|icons|locales)\//g, '$1https://static001.baispace.cn/$2/');
+  const links: any[] = [];
+  runInNewContext(rewritten, {
+    URL, setTimeout: () => 0, clearTimeout() {}, location: {href:'https://ink.baispace.cn/'}, window:{},
+    localStorage:{getItem:(key:string)=>key==='ink:font-name'?'LXGW WenKai':key==='ink:font-css'?'https://static001.baispace.cn/font-assets/lxgw-wenkai/1.7.0/style-v2.css':null},
+    document:{documentElement:{style:{setProperty(){}}},head:{appendChild:(node:any)=>links.push(node)},createElement:()=>({setAttribute(){},remove(){}}),fonts:{load:async()=>[]}},
+  });
+  expect(links.find(link=>link.rel==='stylesheet').href).toBe('https://static001.baispace.cn/font-assets/lxgw-wenkai/1.7.0/startup-v2.css');
+});

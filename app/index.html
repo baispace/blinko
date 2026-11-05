@@ -149,9 +149,10 @@
           var localCss = '/font-assets/lxgw-wenkai/1.7.0/startup-v2.css';
           var savedCss = localStorage.getItem('ink:font-css') || localCss;
           // Only transform our bundled stylesheet; preserve custom font URLs.
-          var cssUrl = new URL(savedCss.replace(/\/font-assets\/lxgw-wenkai\/1\.7\.0\/(?:style(?:-v2)?|startup-v1)\.css$/, localCss), location.href);
+          var cssUrl = new URL(savedCss, location.href);
+          var bundled = /\/font-assets\/lxgw-wenkai\/1\.7\.0\/(?:style(?:-v2)?|startup-v[12])\.css$/.test(cssUrl.pathname);
+          if (bundled) cssUrl.pathname = cssUrl.pathname.replace(/[^/]+$/, 'startup-v2.css');
           if (!/^https?:$/.test(cssUrl.protocol)) return;
-          var bundled = cssUrl.pathname.endsWith(localCss);
           if (bundled) {
             [117, 118, 119].forEach(function (part) {
               var preload = document.createElement('link');

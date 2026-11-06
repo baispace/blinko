@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 import { helper } from '@/lib/helper';
 import { getNoteTagPaths } from './noteContent';
-import { NoteTime, PinButton, ShareButton } from './cardHeader';
+import { NoteTime, PinButton, PublishedBadge, ShareButton } from './cardHeader';
 import { CardActionMenu } from './cardActionMenu';
 import { useIsIOS } from '@/lib/hooks';
 import { api } from '@/lib/trpc';
@@ -68,6 +68,11 @@ const ShareMetaIcons = ({ blinkoItem, iconSize = '16' }: { blinkoItem: Note; ico
   const { t } = useTranslation();
   return (
     <>
+      {blinkoItem.isPublished && (
+        <span className="mr-2 inline-flex shrink-0 items-center">
+          <PublishedBadge blinkoItem={blinkoItem} />
+        </span>
+      )}
       {blinkoItem.isShare && (
         <Tooltip content={t('shared')} delay={1000}>
           <Icon icon="prime:eye" width={iconSize} height={iconSize} className="mr-2 shrink-0" />

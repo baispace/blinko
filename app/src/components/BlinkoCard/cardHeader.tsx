@@ -54,6 +54,30 @@ export const PinButton = observer(({ blinkoItem, blinko, iconSize = '15' }: { bl
   );
 });
 
+/** 已发布到博客的标识。与后台内容管理「已发布」同一 success 绿色调。
+    卡片里给「图标 + 已发布」小徽章；行式等紧凑场景用 iconOnly 只留 globe 图标。 */
+export const PublishedBadge = ({ blinkoItem, iconOnly = false }: { blinkoItem: Note; iconOnly?: boolean }) => {
+  if (!blinkoItem.isPublished) return null;
+  const label = '已发布到博客';
+  if (iconOnly) {
+    return (
+      <Tooltip content={label} delay={500}>
+        <span className="inline-flex shrink-0 items-center text-success" aria-label={label}>
+          <Icon icon="tabler:world" width={13} height={13} />
+        </span>
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip content={label} delay={500}>
+      <span className="inline-flex shrink-0 select-none items-center gap-1 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-success">
+        <Icon icon="tabler:world" width={11} height={11} />
+        已发布
+      </span>
+    </Tooltip>
+  );
+};
+
 /** Shared timestamp display; click opens the edit-time dialog. */
 export const NoteTime = ({ blinkoItem, blinko, isExpanded, compact = false }: { blinkoItem: Note; blinko: BlinkoStore; isExpanded?: boolean; compact?: boolean }) => {
   const { t } = useTranslation();
@@ -136,6 +160,8 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
             </div>
           </Tooltip>
         )}
+
+        {!isShareMode && <PublishedBadge blinkoItem={blinkoItem} />}
 
         {isShareMode && account && (
           <UserAvatar account={account} blinkoItem={blinkoItem} />

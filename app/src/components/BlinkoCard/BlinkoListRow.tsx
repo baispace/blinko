@@ -13,7 +13,7 @@ import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { LeftCickMenu } from '../BlinkoRightClickMenu';
 import { CardActionMenu } from './cardActionMenu';
-import { ShareButton } from './cardHeader';
+import { PublishedBadge, ShareButton } from './cardHeader';
 import { useIsIOS } from '@/lib/hooks';
 import { notePreviewText } from '@/lib/notePreviewText';
 
@@ -259,6 +259,7 @@ export const BlinkoListRow = observer(({ blinkoItem }: BlinkoListRowProps) => {
       {/* 时间在窄屏收起，操作菜单始终可达但不挤压正文。 */}
       <div className="flex shrink-0 items-center gap-1.5">
         {blinkoItem.isTop && <span title={t('top')} className="text-warning"><Icon icon="solar:pin-bold" width={13} /></span>}
+        <PublishedBadge blinkoItem={blinkoItem} iconOnly />
         <span className="hidden whitespace-nowrap text-[11px] tabular-nums text-default-400 sm:inline">
           {formattedTime}
         </span>

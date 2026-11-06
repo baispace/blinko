@@ -1,5 +1,6 @@
 import { publicBrandName } from "../../shared/lib/publicBrand";
 import { readBlogSiteSettings } from "./blogSiteSettings";
+import type { BlogSiteSettings } from "../../shared/lib/blogSiteSettings";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { publicBlogOwner, sanitizeLinks } from "./blog";
 import { publicPublicationDTO, publicPublicationWhere } from "./publication";
@@ -568,10 +569,49 @@ export async function publicIndex(
    * published=false 表示「这不是作者本人」，前端据此隐藏作者卡片、
    * 关于页按未公开处理，SEO 也不写 author 标签。
    */
+  return {
+    ...publicSiteShell({ profile, settings, siteName }),
+    topics,
+    ...feed,
+    // banner 池：推荐页顶部那几篇（只有勾了 banner 的文章才在里面）。
+    banner,
+    // 置顶池：标了「推荐置顶」的文章，推荐流里排在普通结果之前。
+    featured: featured,
+    // 最近更新（侧栏用，纯时间序）
+    recent: recent.posts,
+    // 年份归档：哪些年份有公开文章，各有几篇。
+    years,
+    // 分页信息：URL 用 ?page=N；页码越界时收敛回最后一页
+    page,
+    pageSize,
+    pageCount,
+    hasPrev: page > 1,
+    hasNext: page < pageCount,
+  };
+}
+
+/**
+ * 公开站的壳层信息：作者资料、站点名、公开设置。
+ *
+ * 首页与其它页面都要用这几样，抽出来只写一份 —— 改字段时不会漏掉一处。
+ */
+export function publicSiteShell(input: {
+  profile: {
+    displayName?: string | null;
+    bio?: string | null;
+    signature?: string | null;
+    avatarUrl?: string | null;
+    homepage?: string | null;
+    links?: unknown;
+  } | null;
+  settings: { configured: boolean; data: BlogSiteSettings };
+  siteName: string;
+}) {
+  const { profile, settings, siteName } = input;
   const resolvedSiteName = resolveSiteBrandName(settings, siteName);
   return {
     profile: {
-      displayName: profile?.displayName.trim() || resolvedSiteName,
+      displayName: profile?.displayName?.trim() || resolvedSiteName,
       tagline: settings.data.tagline,
       bio: profile?.bio ?? "",
       signature: profile?.signature ?? "",
@@ -580,7 +620,6 @@ export async function publicIndex(
       links: profile ? sanitizeLinks(profile.links) : [],
       published: !!profile,
     },
-    topics,
     siteName: resolvedSiteName,
     publicSettings: {
       siteName: settings.data.siteName,
@@ -598,21 +637,56 @@ export async function publicIndex(
       // 页脚信息（备案、版权、推广位）——都是本来就要公开给访客看的内容。
       footer: settings.data.footer,
     },
-    ...feed,
-    // banner 池：推荐页顶部那几篇（只有勾了 banner 的文章才在里面）。
-    banner,
-    // 置顶池：标了「推荐置顶」的文章，推荐流里排在普通结果之前。
-    featured: featured,
-    // 最近更新（侧栏用，纯时间序）
-    recent: recent.posts,
-    // 年份归档：哪些年份有公开文章，各有几篇。
-    years,
-    // 分页信息：URL 用 ?page=N；页码越界时收敛回最后一页
-    page,
-    pageSize,
-    pageCount,
-    hasPrev: page > 1,
-    hasNext: page < pageCount,
+  };
+}
+
+/**
+ * 公开站的「站点级事实」：只查壳层与 SEO 真正要用的东西。
+ *
+ * 为什么不用 publicIndex：首页要的列表、banner、精选、最近更新、年份归档，
+ * 都是首页自己的东西。文章页、专题页、关于页并不渲染它们，
+ * 却要为它们付一整轮查询 + 序列化 + 传输的代价 ——
+ * 实测线上文章页内嵌的首页数据包有 15KB，真正用得上的不到 1KB。
+ *
+ * 返回的形状与 publicIndex 一致（posts 只保留标题与 publishId，
+ * 供爬虫兜底链接用），这样调用方不用写两套取值逻辑。
+ */
+export async function publicSiteFacts(
+  db: PrismaClient,
+  input: { accountId?: number } = {},
+) {
+  const owner = await publicBlogOwner(db, input.accountId);
+  const [profile, topics, siteName, settings, picks] = await Promise.all([
+    db.blogProfile.findFirst({
+      where: { accountId: owner, isPublished: true },
+    }),
+    publicTopics(db, owner),
+    publicSiteName(db),
+    readBlogSiteSettings(db, owner),
+    // 只取 3 篇：搜索框空着时那栏「推荐阅读」要用，
+    // 也是非首页爬虫兜底链接的来源。首页自己的列表不在这里。
+    db.notes.findMany({
+      where: { ...publicPublicationWhere, accountId: owner },
+      select: publicPostSelect,
+      orderBy: [{ publication: { updatedAt: "desc" } }, { id: "desc" }],
+      take: 3,
+    }),
+  ]);
+  return {
+    ...publicSiteShell({ profile, settings, siteName }),
+    topics,
+    posts: picks.map((row) => publicCard(row, 0)),
+    total: 0,
+    nextCursor: null,
+    banner: [],
+    featured: [],
+    recent: [],
+    years: [],
+    page: 1,
+    pageSize: BLOG_PAGE_SIZE,
+    pageCount: 1,
+    hasPrev: false,
+    hasNext: false,
   };
 }
 export async function publicTopic(

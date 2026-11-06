@@ -13,6 +13,7 @@ import superjson from "superjson";
 import type { PrismaClient } from "@prisma/client";
 import {
   publicIndex,
+  publicSiteFacts,
   publicArticle,
   publicTopic,
   publicTopics,
@@ -274,11 +275,21 @@ export async function resolveBlogSEO(
   /** 分页页码（来自 ?page=N），只对列表页有意义 */
   page: number = 1,
 ): Promise<BlogSEO> {
-  const site = await publicIndex(db, { accountId, page });
+  const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
+  /*
+   * 首页要整份列表数据（文章列表、banner、精选、最近更新、年份归档、分页）；
+   * 其它页面只渲染壳层与自己的内容 —— 为不渲染的东西付一整轮查询、
+   * 一份十几 KB 的数据包和一次传输，不值。
+   *
+   * 实测线上文章页内嵌的首页数据包有 15KB，其中真正用得上的不到 1KB。
+   */
+  const isHome = canonicalPath === "/blog";
+  const site = isHome
+    ? await publicIndex(db, { accountId, page })
+    : await publicSiteFacts(db, { accountId });
   const { owner, settings, siteName, rules } = await siteSeoRules(db, accountId);
   const name = site.siteName || "Jomio · 拾成";
   const tagline = publicText(site.profile.tagline);
-  const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
   // 公开站基础路径：应用内部固定在 /blog，公开域名可以把它映射到别的位置。
   // 后台「域名与部署」里填的优先，环境变量只在后台留空时兜底。
   const deployment = resolveBlogDeployment(settings);
@@ -686,9 +697,19 @@ function renderBlogFont(font: NonNullable<BlogSEO["font"]>) {
     `<style data-ink-blog-font>:root{${BLOG_FONT_VARIABLE}:${font.stack}}</style>`
   );
 }
-export function injectBlogSEO(html: string, seo: BlogSEO) {
-  const origin = new URL(seo.canonical).origin;
-  const clean = html
+/**
+ * 清理后的模板缓存。
+ *
+ * 清理动作（去掉产品级的 title / 图标 / manifest / 首屏占位）与请求无关 ——
+ * 同一份构建产物每次都一样，没必要每个请求都重跑一遍正则。
+ * 键是模板原文，值是清理后的结果；模板只有一两份，缓存不会长大。
+ */
+const preparedTemplates = new Map<string, string>();
+
+function prepareBlogTemplate(html: string) {
+  const cached = preparedTemplates.get(html);
+  if (cached !== undefined) return cached;
+  const prepared = html
     .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "")
     .replace(
       /<meta\b(?=[^>]*(?:name|property)\s*=\s*["'](?:description|robots|author|og:[^"']+|twitter:[^"']+|article:[^"']+)["'])[^>]*>/gi,
@@ -705,7 +726,15 @@ export function injectBlogSEO(html: string, seo: BlogSEO) {
       /<meta\b(?=[^>]*name=["'](?:application-name|apple-mobile-web-app-title|msapplication-config|msapplication-TileColor)["'])[^>]*>/gi,
       "",
     )
-    .replace(/<div\b[^>]*id=["']app-boot["'][\s\S]*?<\/div>/gi, "");
+    .replace(/<div\b[^>]*id=["']app-boot["'][\s\S]*?<\/div>/gi, "")
+    .replace(/<html\b[^>]*>/i, '<html lang="zh-CN">');
+  if (preparedTemplates.size >= 8) preparedTemplates.clear();
+  preparedTemplates.set(html, prepared);
+  return prepared;
+}
+
+export function injectBlogSEO(html: string, seo: BlogSEO) {
+  const origin = new URL(seo.canonical).origin;
   const fallback = `<main data-ink-public-fallback><h1>${escapeXML(seo.title)}</h1><p>${escapeXML(seo.text)}</p><nav><a href="/blog">首页</a> <a href="/blog/topics">专题</a> ${seo.links.map((l) => `<a href="${escapeXML(l.url)}">${escapeXML(l.title)}</a>`).join(" ")}</nav></main>`;
   const runtime = `<script>window.__INK_BLOG_RUNTIME__=${JSON.stringify(seo.runtime || {}).replace(/</g, "\\u003c")}</script>`;
   const startup = `<script>document.documentElement.classList.add('ink-blog-js')</script><style>
@@ -715,8 +744,8 @@ html.ink-blog-js,html.ink-blog-js body{background:#f7f7fc;margin:0}.ink-blog-js 
     : "";
   const skeleton =
     '<div data-ink-blog-skeleton aria-hidden="true"><div class="ink-skeleton-nav"></div><div class="ink-skeleton-hero"></div><div class="ink-skeleton-grid"><div class="ink-skeleton-card"></div><div class="ink-skeleton-card"></div></div></div>';
-  return clean
-    .replace(/<html\b[^>]*>/i, '<html lang="zh-CN">')
+  // 模板清理已经缓存过了，这里只剩两处与请求相关的插入。
+  return prepareBlogTemplate(html)
     .replace(
       "</head>",
       () => startup + runtime + renderBlogHead(seo, origin) + bootstrap + "</head>",

@@ -376,10 +376,10 @@ const PROFILE = {
 
 写博客对我来说是一个整理思路的过程 —— 很多想法在脑子里是模糊的，只有落到纸上、并且要让别人读得懂，才会暴露出逻辑上的窟窿。`,
   avatarUrl: '/api/file/20261016-40997.webp',
-  homepage: 'https://ink.baispace.cn',
+  homepage: 'https://blog.baispace.cn',
   links: [
-    { label: 'Ink 博客', url: 'https://ink.baispace.cn/blog' },
-    { label: 'RSS 订阅', url: 'https://ink.baispace.cn/blog/feed.xml' },
+    { label: '博客', url: 'https://blog.baispace.cn' },
+    { label: 'RSS 订阅', url: 'https://blog.baispace.cn/feed.xml' },
     { label: 'GitHub', url: 'https://github.com/baispace' },
   ],
   isPublished: true,

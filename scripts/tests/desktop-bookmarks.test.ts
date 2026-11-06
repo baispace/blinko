@@ -1,9 +1,9 @@
 import { expect,test } from 'bun:test';
 import { bookmarkTitle, decodeDesktopBookmarks, desktopBookmarkKey } from '../../app/src/lib/desktopBookmarkData';
 test('desktop bookmarks are isolated by account and server, with normalized endpoints',()=>{
-  expect(desktopBookmarkKey('"https://ink.baispace.cn/"','1')).toBe(desktopBookmarkKey('https://ink.baispace.cn','1'));
-  expect(desktopBookmarkKey('https://ink.baispace.cn','1')).not.toBe(desktopBookmarkKey('https://ink.baispace.cn','2'));
-  expect(desktopBookmarkKey('https://ink.baispace.cn','1')).not.toBe(desktopBookmarkKey('https://other.example','1'));
+  expect(desktopBookmarkKey('"https://studio.baispace.cn/"','1')).toBe(desktopBookmarkKey('https://studio.baispace.cn','1'));
+  expect(desktopBookmarkKey('https://studio.baispace.cn','1')).not.toBe(desktopBookmarkKey('https://studio.baispace.cn','2'));
+  expect(desktopBookmarkKey('https://studio.baispace.cn','1')).not.toBe(desktopBookmarkKey('https://other.example','1'));
 });
 test('corrupt, duplicate and invalid bookmarks do not break the account menu',()=>{
   expect(decodeDesktopBookmarks('broken')).toEqual([]);

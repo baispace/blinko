@@ -222,7 +222,7 @@ jobs:
           includeUpdaterJson: true
           # 前端构建命令不在这里配：tauri-action 没有 beforeBuildCommand 这个输入项，
           # 它只认 tauri 配置文件里的。tauri.macos.conf.json 已经写了
-          # VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa，
+          # VITE_DESKTOP_ENDPOINT=https://studio.baispace.cn bun run build:no-pwa，
           # 由 tauri-cli 在 macOS 打包时自动合并生效。
 
       # 「写了配置」不等于「进了产物」。这里直接读打包出来的 .app，

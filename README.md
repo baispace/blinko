@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ink.baispace.cn">Live Demo</a> ·
+  <a href="https://studio.baispace.cn">Live Demo</a> ·
   <a href="./docs/使用手册.md">User & Integration Guide</a> ·
   <a href="#-quick-start">Quick Start</a> ·
   <a href="#-architecture">Architecture</a> ·

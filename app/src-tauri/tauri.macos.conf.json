@@ -2,9 +2,8 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Jomio",
   "identifier": "cn.baispace.jomio",
-  "version": "0.1.0-local",
   "build": {
-    "beforeBuildCommand": "VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn bun run build:no-pwa"
+    "beforeBuildCommand": "VITE_DESKTOP_ENDPOINT=https://studio.baispace.cn bun run build:no-pwa"
   },
   "bundle": {
     "targets": [

@@ -105,7 +105,7 @@ jobs:
 
       # 只出 .app，不打 DMG：省掉压缩与挂载步骤，下载后直接拖进「应用程序」。
       # 不覆盖 beforeBuildCommand —— tauri.macos.conf.json 里那条会构建前端并把
-      # VITE_DESKTOP_ENDPOINT=https://ink.baispace.cn 打进产物，与本地
+      # VITE_DESKTOP_ENDPOINT=https://studio.baispace.cn 打进产物，与本地
       # `bun run tauri:mac:build` 行为保持一致。
       - name: 构建 .app
         run: |

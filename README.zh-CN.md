@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ink.baispace.cn">在线 Demo</a> ·
+  <a href="https://studio.baispace.cn">在线 Demo</a> ·
   <a href="./docs/使用手册.md">使用与接入手册</a> ·
   <a href="#-快速开始">快速开始</a> ·
   <a href="#-架构与项目结构">架构</a> ·

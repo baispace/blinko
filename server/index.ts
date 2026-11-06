@@ -66,6 +66,49 @@ async function publicRuntime(): Promise<PublicRuntime> {
   publicRuntimeCache = value;
   return value;
 }
+
+/**
+ * 公开页的缓存策略。
+ *
+ * 公开 HTML 对所有访客是同一份，边缘缓存几十秒没有隐私风险，
+ * 也不会让读者看到别人的东西 —— 公开博客本来就不带登录态。
+ * 浏览器仍然每次回源校验（max-age=0），只有 CDN / nginx 这类共享缓存会命中。
+ */
+const BLOG_PUBLIC_HTML_CACHE =
+  'public, max-age=0, s-maxage=60, stale-while-revalidate=300';
+
+/**
+ * 公开页的 SEO 结果缓存。
+ *
+ * 每条公开路径的元信息只跟内容有关，跟访客无关；发一篇文章、改一次站点设置，
+ * 都不会让其它路径的元信息变。缓存十几秒，重复请求就不用再查库、
+ * 再序列化一份数据包、再改写一遍 HTML。
+ *
+ * 代价是发完文章最多十几秒后才对所有人生效 ——
+ * 与「后台设置 30 秒内生效」的口径一致，不会让人以为没保存。
+ */
+const BLOG_SEO_CACHE_TTL = 15000;
+const BLOG_SEO_CACHE_MAX = 300;
+const blogSeoCache = new Map<string, { seo: BlogSEO; expires: number }>();
+
+async function cachedBlogSEO(
+  pathname: string,
+  origin: string,
+  page: number,
+): Promise<BlogSEO> {
+  const key = `${pathname}|${page}|${origin}`;
+  const now = Date.now();
+  const hit = blogSeoCache.get(key);
+  if (hit && hit.expires > now) return hit.seo;
+  const seo = await resolveBlogSEO(prisma, pathname, origin, undefined, page);
+  if (blogSeoCache.size >= BLOG_SEO_CACHE_MAX) {
+    // 顺手清掉过期的，省得每条路径都单独判断。
+    for (const [k, v] of blogSeoCache) if (v.expires <= now) blogSeoCache.delete(k);
+    if (blogSeoCache.size >= BLOG_SEO_CACHE_MAX) blogSeoCache.clear();
+  }
+  blogSeoCache.set(key, { seo, expires: now + BLOG_SEO_CACHE_TTL });
+  return seo;
+}
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -452,7 +495,7 @@ const cdnSpaFallbackRewrite = (fallbackPublicPath: string) => {
       console.log(`[staticCdn] SPA fallback rewrote ${replaced} asset refs for ${urlPath} -> ${result.base}`);
       res.set({
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': blogSEOByRequest.has(req) ? 'no-store' : 'no-cache, must-revalidate',
+        'Cache-Control': blogSEOByRequest.has(req) ? BLOG_PUBLIC_HTML_CACHE : 'no-cache, must-revalidate',
       });
       const seo = blogSEOByRequest.get(req);
       res.send(seo ? injectBlogSEO(result.html, seo) : result.html);
@@ -601,7 +644,14 @@ async function bootstrap() {
         // 公开域名独立时，整站都是公开内容，才按公开基础路径放行。
         const isPublicOrigin = new URL(origin).host === req.get('host');
         const robotsBasePath = isPublicOrigin ? runtime.basePath : '/blog';
-        res.setHeader('Cache-Control','no-store');
+        /*
+         * 公开 HTML 对所有访客是同一份，允许边缘缓存一小会儿；
+         * XML（站点地图 / RSS / robots）跟着发布走，变了就该立刻看到，保持不缓存。
+         *
+         * 之前这里一律 no-store，等于每个访客每次访问都让 Node 现算一遍首屏 ——
+         * 文章页那次计算里有一次整份首页数据查询和一份十几 KB 的内嵌数据包。
+         */
+        res.setHeader('Cache-Control', xmlRoute ? 'no-store' : BLOG_PUBLIC_HTML_CACHE);
         if (xmlRoute) {
           if (pathname === '/robots.txt') return res.type('text/plain').send(blogRobots(origin, robotsBasePath));
           const payload = pathname === '/blog/feed.xml' ? await publicRSS(prisma,origin,undefined,runtime.basePath)
@@ -623,7 +673,7 @@ async function bootstrap() {
         }
         // 列表页的分页页码走 ?page=N，canonical / rel=prev,next 靠它
         const page = Number(req.query.page) || 1;
-        const seo = await resolveBlogSEO(prisma,pathname,origin,undefined,page);
+        const seo = await cachedBlogSEO(pathname, origin, page);
         if (req.query.feed === 'recommended' || req.query.topic) seo.robots='noindex, follow';
         blogSEOByRequest.set(req,seo);
         res.status(seo.status).set('X-Robots-Tag',seo.robots);

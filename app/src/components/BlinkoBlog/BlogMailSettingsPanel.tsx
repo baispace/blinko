@@ -3,7 +3,7 @@ import { Icon } from "@/components/Common/Iconify/icons";
 import { api } from "@/lib/trpc";
 import { Button, Card, CardBody, Chip } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
-import { BlogCheckbox, BlogInput } from "./BlogUI";
+import { BlogInput, BlogToggle } from "./BlogUI";
 import type { BlogMailSettingsView } from "@shared/lib/blogMailSettings";
 
 import { testSavedMailSettings } from "./mailSettingsFlow";
@@ -164,7 +164,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-4">
           <div>
-            <h3 className="text-base font-semibold text-foreground">SMTP 配置</h3>
+            <h3 className="text-sm font-semibold text-foreground">SMTP 配置</h3>
             <p className="mt-1 text-sm text-default-500">
               友链申请通知与读者回复通知都走这里。没配置时这两件事都做不了，公开页会如实写「尚未配置邮件服务」。
             </p>
@@ -205,20 +205,17 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
               />
               <small className="text-xs text-default-400">465 走直接 TLS，587 走 STARTTLS。</small>
             </label>
-            <label className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5">
               <span className="text-sm">加密方式</span>
-              <span className="flex items-center gap-2 text-sm">
-                <BlogCheckbox
-                  type="checkbox"
-                  checked={draft.secure}
-                  onChange={(e) => patch({ secure: e.target.checked })}
-                />
-                直接 TLS（{draft.secure ? "已开启" : "已关闭"}）
-              </span>
+              <BlogToggle
+                label="直接 TLS"
+                checked={draft.secure}
+                onChange={(v) => patch({ secure: v })}
+              />
               <small className="text-xs text-default-400">
                 465 使用直接 TLS；587 连接后尝试 STARTTLS。其他端口请按服务商要求设置。
               </small>
-            </label>
+            </div>
           </div>
 
           <label className="flex flex-col gap-1.5">
@@ -295,7 +292,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
       <Card className="h-fit rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-4">
           <div>
-            <h3 className="text-base font-semibold text-foreground">当前状态</h3>
+            <h3 className="text-sm font-semibold text-foreground">当前状态</h3>
             <p className="mt-1 text-sm text-default-500">
               生效来源：<strong>{source === "none" ? "未配置" : SOURCE_LABEL[source]}</strong>
             </p>
@@ -316,7 +313,7 @@ export function BlogMailSettingsPanel({ onDirty }: { onDirty?: (dirty: boolean) 
           )}
 
           <div>
-            <h3 className="text-base font-semibold text-foreground">发送测试邮件</h3>
+            <h3 className="text-sm font-semibold text-foreground">发送测试邮件</h3>
             <p className="mt-1 text-sm text-default-500">
               有修改时先保存配置，再发送测试邮件。发送成功后请到收件箱确认是否收到。
             </p>

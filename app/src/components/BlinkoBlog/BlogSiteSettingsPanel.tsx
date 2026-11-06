@@ -1,4 +1,4 @@
-import { BlogInput, BlogCheckbox, BlogTabs, BlogTextarea, BlogSelect } from "./BlogUI";
+import { BlogInput, BlogToggle, BlogDisclosure, BlogTabs, BlogTextarea, BlogSelect } from "./BlogUI";
 import { Button, Card, CardBody } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { useEffect, useState } from "react";
@@ -186,14 +186,11 @@ export function BlogSiteSettingsPanel({
   );
 
   const toggle = (key: keyof BlogSiteSettings, label: string) => (
-    <label className="flex items-center gap-2 text-sm">
-      <BlogCheckbox
-        type="checkbox"
-        checked={!!data[key]}
-        onChange={(e) => patch({ [key]: e.target.checked })}
-      />
-      {label}
-    </label>
+    <BlogToggle
+      label={label}
+      checked={!!data[key]}
+      onChange={(v) => patch({ [key]: v })}
+    />
   );
 
   const sitePreview = resolveSeoFields({
@@ -247,7 +244,7 @@ export function BlogSiteSettingsPanel({
           <Card className="rounded-xl border border-default-200 shadow-none">
             <CardBody className="flex flex-col gap-3 p-4">
               <p className="text-sm text-default-500">默认使用文章标题、摘要和封面生成搜索与分享信息。</p>
-              <details><summary className="cursor-pointer text-sm text-default-600">自定义站点默认规则</summary><div className="mt-4 flex flex-col gap-4">
+              <BlogDisclosure title="自定义站点默认规则"><div className="flex flex-col gap-4">
               {field(
                 "titleTemplate",
                 "标题模板",
@@ -259,7 +256,7 @@ export function BlogSiteSettingsPanel({
                 "默认分享图地址",
                 "支持复用资源上传后得到的 HTTPS 地址",
               )}
-              </div></details>
+              </div></BlogDisclosure>
               {toggle("allowIndex", "允许搜索引擎收录公开内容")}
               <p className="text-xs text-default-500">
                 私有笔记与撤回文章不会因启用收录而公开；关闭收录也不是访问控制，
@@ -370,13 +367,16 @@ export function BlogSiteSettingsPanel({
               </label>
             </CardBody>
           </Card>
-        <details className="rounded-xl border border-default-200 bg-content1 p-4">
-          <summary className="cursor-pointer text-base font-semibold">页脚与备案</summary>
-          <div className="mt-4"><BlogFooterSettingsPanel
-            footer={data.footer ?? defaults.footer}
-            patch={(p) => patch({ footer: { ...defaults.footer, ...data.footer, ...p } })}
-          /></div>
-        </details></div>
+        <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
+          <CardBody className="p-4">
+            <BlogDisclosure title="页脚与备案" titleClass="font-semibold text-foreground">
+              <BlogFooterSettingsPanel
+                footer={data.footer ?? defaults.footer}
+                patch={(p) => patch({ footer: { ...defaults.footer, ...data.footer, ...p } })}
+              />
+            </BlogDisclosure>
+          </CardBody>
+        </Card></div>
       ) : tab === "subscribe" ? (
         <BlogSubscribeSettings
           key={formVersion}
@@ -394,13 +394,14 @@ export function BlogSiteSettingsPanel({
             deployment={deployment}
             onOpenCheck={() => setCheckOpen(true)}
           />
-          <details open={checkOpen} onToggle={(event) => setCheckOpen(event.currentTarget.open)} className="rounded-xl border border-default-200 bg-content1 p-5">
-            <summary className="cursor-pointer text-base font-semibold">上线检查</summary>
-            <div className="mt-5">
-              {dirty && <p className="mb-4 text-sm text-warning">有未保存的设置。请先保存，再检查实际生效的站点。</p>}
-              <BlogSiteCheckPanel target={saved.targetOrigin} effective={deployed} />
-            </div>
-          </details>
+          <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
+            <CardBody className="p-4">
+              <BlogDisclosure title="上线检查" titleClass="font-semibold text-foreground" open={checkOpen} onOpenChange={setCheckOpen}>
+                {dirty && <p className="mb-4 text-sm text-warning">有未保存的设置。请先保存，再检查实际生效的站点。</p>}
+                <BlogSiteCheckPanel target={saved.targetOrigin} effective={deployed} />
+              </BlogDisclosure>
+            </CardBody>
+          </Card>
         </div>
       )}
 

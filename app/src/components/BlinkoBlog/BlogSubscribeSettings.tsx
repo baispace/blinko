@@ -3,7 +3,7 @@ import axios from "@/lib/axios";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { Button, Card, CardBody, Chip } from "@heroui/react";
-import { BlogCheckbox, BlogInput, BlogTextarea } from "./BlogUI";
+import { BlogDisclosure, BlogInput, BlogTextarea, BlogToggle } from "./BlogUI";
 import type { BlogSubscribeSettings } from "@shared/lib/blogSiteSettings";
 
 const MAX_DIRECTIONS = 8;
@@ -93,16 +93,12 @@ export function BlogSubscribeSettings({
     <div className="blog-subscribe-settings grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-4">
-          <h3 className="text-base font-semibold text-foreground">微信公众号</h3>
-          <label className="flex items-center gap-2 text-sm">
-            <BlogCheckbox
-              aria-label="开放微信公众号订阅"
-              type="checkbox"
-              checked={data.wechatEnabled}
-              onChange={(e) => patch({ wechatEnabled: e.target.checked })}
-            />
-            <span>开放微信公众号订阅</span>
-          </label>
+          <h3 className="text-sm font-semibold text-foreground">微信公众号</h3>
+          <BlogToggle
+            label="开放微信公众号订阅"
+            checked={data.wechatEnabled}
+            onChange={(v) => patch({ wechatEnabled: v })}
+          />
           <label className="flex flex-col gap-1.5">
             <span className="text-sm">公众号名称</span>
             <BlogInput
@@ -158,18 +154,14 @@ export function BlogSubscribeSettings({
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none">
         <CardBody className="gap-3 p-4">
-          <h3 className="text-base font-semibold text-foreground">RSS 订阅</h3>
-          <label className="flex items-center gap-2 text-sm">
-            <BlogCheckbox
-              type="checkbox"
-              aria-label="在订阅页展示 RSS 渠道"
-              checked={data.rssEnabled}
-              onChange={(e) => patch({ rssEnabled: e.target.checked })}
-            />
-            <span>在订阅页展示 RSS 渠道</span>
-          </label>
+          <h3 className="text-sm font-semibold text-foreground">RSS 订阅</h3>
+          <BlogToggle
+            label="在订阅页展示 RSS 渠道"
+            checked={data.rssEnabled}
+            onChange={(v) => patch({ rssEnabled: v })}
+          />
           <p className="text-sm text-default-500">订阅地址根据博客域名自动生成，换域名后无需手动修改。</p>
-          <details open={!!data.rssUrl}><summary className="cursor-pointer text-sm text-default-600">使用其他订阅源</summary>
+          <BlogDisclosure title="使用其他订阅源" defaultOpen={!!data.rssUrl}>
           <label className="flex flex-col gap-1.5">
             <span className="text-sm">自定义订阅源（可选）</span>
             <BlogInput
@@ -183,18 +175,18 @@ export function BlogSubscribeSettings({
               留空时，订阅地址由公开站点地址与真实订阅路由自动生成，换域名不用回来改。只有想指向站外的源时才填 http(s) 地址。
             </small>
           </label>
-          </details>
+          </BlogDisclosure>
 
         </CardBody>
       </Card>
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
         <CardBody className="gap-3 p-4">
-          <h3 className="text-base font-semibold text-foreground">关于这里</h3>
+          <h3 className="text-sm font-semibold text-foreground">关于这里</h3>
           <p className="text-sm text-default-500">默认复用「公开作者」中的空间说明；未填写时使用站点标语。</p>
-          <label className="flex items-center gap-2 text-sm"><BlogCheckbox aria-label="为订阅页单独编写介绍" checked={customIntro} onChange={e => { setCustomIntro(e.target.checked); if (!e.target.checked) patch({intro:""}); }}/>为订阅页单独编写介绍</label>
+          <BlogToggle label="为订阅页单独编写介绍" checked={customIntro} onChange={v => { setCustomIntro(v); if (!v) patch({intro:""}); }}/>
           {customIntro && <label className="flex flex-col gap-1.5"><span className="text-sm">订阅页介绍</span><BlogTextarea minRows={3} maxLength={600} value={data.intro} onChange={e => patch({intro:e.target.value})} aria-label="订阅页介绍"/></label>}
-          <details open={!!data.introTitle}><summary className="cursor-pointer text-sm text-default-600">自定义此区域标题</summary><BlogInput className="mt-3" value={data.introTitle} maxLength={80} placeholder="留空使用默认标题" onChange={e=>patch({introTitle:e.target.value})}/></details>
+          <BlogDisclosure title="自定义此区域标题" defaultOpen={!!data.introTitle}><BlogInput value={data.introTitle} maxLength={80} placeholder="留空使用默认标题" onChange={e=>patch({introTitle:e.target.value})}/></BlogDisclosure>
           <div className="flex flex-col gap-1.5">
             <span className="text-sm">内容方向</span>
             <div className="flex flex-wrap gap-2">
@@ -222,7 +214,7 @@ export function BlogSubscribeSettings({
 
       <Card className="rounded-xl border border-default-200 bg-content1 shadow-none lg:col-span-2">
         <CardBody className="gap-3 p-4">
-          <h3 className="text-base font-semibold text-foreground">订阅说明</h3>
+          <h3 className="text-sm font-semibold text-foreground">订阅说明</h3>
           <p className="text-sm text-default-500">
             告诉读者更新频率、渠道差异和取消订阅的方式。最多 6 条；删除全部说明后，公开页不展示此区域。
           </p>

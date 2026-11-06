@@ -1,7 +1,7 @@
 import { BlogMomentsPanel } from "./BlogMomentsPanel";
 import { BlogRecommendationReport } from "./BlogRecommendationReport";
 import { managerBlogVisitUrl } from "@shared/lib/blogManagerVisit";
-import { BlogCheckbox, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
+import { BlogToggle, BlogDisclosure, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
 import "./blog-management.css";
 import { Drawer, DrawerContent, Slider, Button, Chip, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
@@ -216,14 +216,13 @@ function ProfileEditor({
             <p className="text-sm text-default-500">
               与登录账号资料独立。只有明确开启公开并保存的内容才对外展示。
             </p>
-            <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
-              <BlogCheckbox
-                type="checkbox"
+            <div className="mt-3">
+              <BlogToggle
+                label="公开作者资料（保存后生效）"
                 checked={draft.isPublished}
-                onChange={(e) => patch({ isPublished: e.target.checked })}
+                onChange={(v) => patch({ isPublished: v })}
               />
-              公开作者资料（保存后生效）
-            </label>
+            </div>
           </CardBody>
         </Card>
 
@@ -252,15 +251,16 @@ function ProfileEditor({
                 onChange={(e) => patch({ bio: e.target.value })}
               />
             </label>
-            <details><summary className="cursor-pointer text-sm text-default-500">使用图片链接作为头像</summary>            <label className="flex flex-col gap-1.5">
-              <span className="text-sm text-default-500">头像地址</span>
-              <BlogInput
-                value={draft.avatarUrl}
-                onChange={(e) => patch({ avatarUrl: e.target.value })}
-                placeholder="公开图片网址，或上传图片"
-              />
-            </label>
-            </details>
+            <BlogDisclosure title="使用图片链接作为头像">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-default-500">头像地址</span>
+                <BlogInput
+                  value={draft.avatarUrl}
+                  onChange={(e) => patch({ avatarUrl: e.target.value })}
+                  placeholder="公开图片网址，或上传图片"
+                />
+              </label>
+            </BlogDisclosure>
             <input
               ref={file}
               type="file"
@@ -556,14 +556,11 @@ function DistributionEditor({
           <p className="text-sm text-default-500">
             半衰期越短，旧文章掉得越快。默认新品 14 天、热度 60 天。
           </p>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <BlogCheckbox
-              type="checkbox"
-              checked={draft.featuredFirst}
-              onChange={(e) => patch({ featuredFirst: e.target.checked })}
-            />
-            手动精选的文章强制排在推荐列表最前
-          </label>
+          <BlogToggle
+            label="手动精选的文章强制排在推荐列表最前"
+            checked={draft.featuredFirst}
+            onChange={(v) => patch({ featuredFirst: v })}
+          />
         </CardBody>
       </Card>
 

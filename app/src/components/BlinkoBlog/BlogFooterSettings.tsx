@@ -1,4 +1,4 @@
-import { BlogInput, BlogCheckbox, BlogTextarea } from "./BlogUI";
+import { BlogInput, BlogToggle, BlogTextarea } from "./BlogUI";
 import { Card, CardBody, CardHeader } from "@heroui/react";
 import {
   blogSiteSettingsSchema,
@@ -49,7 +49,7 @@ export function BlogFooterSettingsPanel({
       {/* 备案信息 */}
       <Card className="rounded-xl border border-default-200 shadow-none">
         <CardHeader className="pb-1">
-          <h3 className="text-base font-semibold">备案信息</h3>
+          <h3 className="text-sm font-semibold">备案信息</h3>
         </CardHeader>
         <CardBody className="space-y-4 pt-0">
           <p className="text-xs text-default-500">
@@ -84,7 +84,7 @@ export function BlogFooterSettingsPanel({
       {/* 版权署名 */}
       <Card className="rounded-xl border border-default-200 shadow-none">
         <CardHeader className="pb-1">
-          <h3 className="text-base font-semibold">版权署名</h3>
+          <h3 className="text-sm font-semibold">版权署名</h3>
         </CardHeader>
         <CardBody className="space-y-4 pt-0">
           <label className="flex flex-col gap-1.5">
@@ -132,17 +132,14 @@ export function BlogFooterSettingsPanel({
       {/* 推广位 */}
       <Card className="rounded-xl border border-default-200 shadow-none lg:col-span-2">
         <CardHeader className="pb-1">
-          <h3 className="text-base font-semibold">推广位</h3>
+          <h3 className="text-sm font-semibold">推广位</h3>
         </CardHeader>
         <CardBody className="space-y-4 pt-0">
-          <label className="flex items-center gap-2 text-sm">
-            <BlogCheckbox
-              type="checkbox"
-              checked={promoData.enabled}
-              onChange={(e) => setPromo({ enabled: e.target.checked })}
-            />
-            在页脚展示推广信息
-          </label>
+          <BlogToggle
+            label="在页脚展示推广信息"
+            checked={promoData.enabled}
+            onChange={(v) => setPromo({ enabled: v })}
+          />
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">名称</span>
             <BlogInput
@@ -213,7 +210,7 @@ export function BlogFooterSettingsPanel({
       {/* 预览 */}
       <Card className="rounded-xl border border-default-200 shadow-none lg:col-span-2">
         <CardHeader className="pb-1">
-          <h3 className="text-base font-semibold">访客看到的页脚</h3>
+          <h3 className="text-sm font-semibold">访客看到的页脚</h3>
         </CardHeader>
         <CardBody className="space-y-3 pt-0">
           <div className="rounded-lg border border-default-200 bg-default-50 p-4 text-sm">

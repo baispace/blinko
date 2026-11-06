@@ -1,4 +1,4 @@
-import { BlogCheckbox, BlogInput } from "./BlogUI";
+import { BlogDisclosure, BlogInput, BlogToggle } from "./BlogUI";
 import { Button, Card, CardBody } from "@heroui/react";
 import type { BlogSiteSettings } from "@shared/lib/blogSiteSettings";
 import type { BlogDeployment } from "@shared/lib/blogDeployment";
@@ -22,8 +22,8 @@ export function BlogDeploymentSettings({data,patch,deployedOrigin,backendOrigin,
   }
 }`;
  return <div className="space-y-5">
-  <Card className="border border-default-200 shadow-none"><CardBody className="gap-4 p-5">
-   <h3 className="text-base font-semibold">博客域名</h3>
+  <Card className="rounded-xl border border-default-200 shadow-none"><CardBody className="gap-3 p-4">
+   <h3 className="text-sm font-semibold">博客域名</h3>
    <p className="text-sm text-default-500">公开博客从这个域名的首页打开。创作后台和博客管理继续使用原域名。</p>
    <label className="flex flex-col gap-2"><span className="text-sm">公开博客地址</span>
     <BlogInput aria-label="公开博客地址" placeholder="https://blog.baispace.cn" value={data.targetOrigin} onChange={e=>patch({targetOrigin:e.target.value.trim(),domainRouting:!!e.target.value.trim(),publicBasePath:e.target.value.trim()?"/":"/blog",apiOrigin:"",deploymentMode:"proxy"})}/>
@@ -33,16 +33,22 @@ export function BlogDeploymentSettings({data,patch,deployedOrigin,backendOrigin,
    <div className="rounded-lg bg-default-50 p-3 text-sm">已保存的公开地址：{deployedOrigin || "尚未设置独立域名"}</div>
    {!data.domainRouting && origin && <Button size="sm" variant="flat" onPress={()=>patch({domainRouting:true,publicBasePath:"/",apiOrigin:"",deploymentMode:"proxy"})}>使用此域名作为博客首页</Button>}
   </CardBody></Card>
-  <Card className="border border-default-200 shadow-none"><CardBody className="gap-3 p-5">
-   <h3 className="text-base font-semibold">部署只需三步</h3>
+  <Card className="rounded-xl border border-default-200 shadow-none"><CardBody className="gap-3 p-4">
+   <h3 className="text-sm font-semibold">部署只需三步</h3>
    <ol className="list-decimal space-y-2 pl-5 text-sm text-default-600"><li>将博客域名解析到服务器并绑定 HTTPS 证书。</li><li>整站反向代理到现有应用，保留 Host；不添加 /blog，不配置路径重写。</li><li>保存博客域名后，运行站点检查确认页面、图片、RSS 和 SEO 地址正常。</li></ol>
-   <details><summary className="cursor-pointer text-sm text-primary">查看 Nginx 配置示例</summary><pre className="mt-3 overflow-x-auto rounded-lg bg-default-50 p-4 text-xs">{template}</pre><p className="mt-2 text-xs text-default-500">替换证书路径和上游地址。后端设置 TRUST_PROXY=1；原有后台域名配置保持原样。</p></details>
+   <BlogDisclosure title="查看 Nginx 配置示例" titleClass="text-primary"><pre className="overflow-x-auto rounded-lg bg-default-50 p-4 text-xs">{template}</pre><p className="mt-2 text-xs text-default-500">替换证书路径和上游地址。后端设置 TRUST_PROXY=1；原有后台域名配置保持原样。</p></BlogDisclosure>
    <Button className="self-start" size="sm" color="primary" onPress={onOpenCheck}>运行站点检查</Button>
    <p className="text-xs text-default-500">检查使用已保存的配置。保存域名不等于域名已经部署成功。</p>
   </CardBody></Card>
-  <details className="rounded-xl border border-default-200 p-5"><summary className="cursor-pointer text-sm">旧公开链接迁移</summary>
-   <label className="mt-4 flex items-center gap-2 text-sm"><BlogCheckbox aria-label="旧博客链接跳转" checked={data.legacyRedirectEnabled} onChange={e=>patch({legacyRedirectEnabled:e.target.checked,legacyBasePath:"/blog"})}/>将原域名的 /blog 链接永久跳转到新博客</label>
-   <p className="mt-2 text-xs text-default-500">新域名验证通过后再开启。仅迁移公开博客链接，后台入口保持不变。</p>
-  </details>
+  <Card className="rounded-xl border border-default-200 shadow-none"><CardBody className="p-4">
+   <BlogDisclosure title="旧公开链接迁移">
+    <BlogToggle
+     label="将原域名的 /blog 链接永久跳转到新博客"
+     hint="新域名验证通过后再开启。仅迁移公开博客链接，后台入口保持不变。"
+     checked={data.legacyRedirectEnabled}
+     onChange={v=>patch({legacyRedirectEnabled:v,legacyBasePath:"/blog"})}
+    />
+   </BlogDisclosure>
+  </CardBody></Card>
  </div>;
 }

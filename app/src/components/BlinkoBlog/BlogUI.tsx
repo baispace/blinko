@@ -1,5 +1,5 @@
 import { Children, forwardRef, isValidElement, type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes, type TextareaHTMLAttributes, type SelectHTMLAttributes, type HTMLAttributes } from 'react';
-import { Button, Input, Textarea, Select, SelectItem, Checkbox, Switch, Tabs, Tab, Chip } from '@heroui/react';
+import { Button, Input, Textarea, Select, SelectItem, Checkbox, Switch, Tabs, Tab, Chip, Accordion, AccordionItem } from '@heroui/react';
 import type { ButtonProps, InputProps, TextAreaProps, SelectProps, CheckboxProps, SwitchProps } from '@heroui/react';
 import { readBlogTheme } from '@/lib/blogTheme';
 import './hero-admin.css';
@@ -87,4 +87,42 @@ export function BlogChipGroup({value,onChange,label,items,className=''}:{value:s
 }
 export function BlogTabs({value,onChange,label,items}:{value:string;onChange:(key:string)=>void;label:string;items:{key:string;label:string;count?:number;description?:string}[]}){
  return <Tabs aria-label={label} selectedKey={value} onSelectionChange={key=>onChange(String(key))} color="primary" variant="underlined" size="sm" className="blog-ui-tabs" classNames={{base:'w-full',tabList:'gap-5 p-0 border-b border-divider w-full',tab:'w-auto h-11 px-1',cursor:'h-0.5 rounded-full',panel:'p-0'}}>{items.map(item=><Tab key={item.key} title={<span className="blog-ui-tab-title"><span className="blog-ui-tab-label">{item.label}{item.count!==undefined&&<span className="blog-ui-tab-count">{item.count}</span>}</span>{item.description&&<span className="blog-ui-tab-desc">{item.description}</span>}</span>}/>)}</Tabs>;
+}
+
+/**
+ * 设置项开关：左侧标签（可带一行说明），右侧 HeroUI Switch。
+ * 与「统计接入」页的「排除管理者访问」同一版式，全站设置统一用它，
+ * 不再各写一套 BlogCheckbox / 原生 checkbox。
+ */
+export function BlogToggle({label,hint,checked,onChange,disabled}:{label:ReactNode;hint?:ReactNode;checked:boolean;onChange:(v:boolean)=>void;disabled?:boolean}){
+ return <div className="flex items-center justify-between gap-4">
+  <div className="min-w-0">
+   <span className="text-sm">{label}</span>
+   {hint&&<p className="text-xs text-default-500">{hint}</p>}
+  </div>
+  <Switch size="sm" color="primary" isSelected={checked} isDisabled={disabled} onValueChange={onChange} aria-label={typeof label==='string'?label:'设置开关'}/>
+ </div>;
+}
+
+/** 折叠面板统一的价值样式，和「统计接入」页保持一致。 */
+export const blogAccordionItemClasses={
+ base:'px-0',
+ trigger:'py-1.5 px-0',
+ title:'text-sm text-default-600',
+ content:'pt-1 pb-2 px-0',
+ indicator:'text-default-400 text-small',
+};
+
+/**
+ * 单项折叠面板：替代原生 <details>/<summary>。
+ * 原生 details 自带浏览器小三角、排版不受主题控制，这里统一换成 HeroUI Accordion。
+ */
+export function BlogDisclosure({title,children,defaultOpen=false,open,onOpenChange,titleClass}:{title:ReactNode;children:ReactNode;defaultOpen?:boolean;open?:boolean;onOpenChange?:(open:boolean)=>void;titleClass?:string}){
+ return <Accordion selectionMode="single" className="px-0"
+  defaultExpandedKeys={defaultOpen?new Set(['disclosure']):undefined}
+  expandedKeys={open===undefined?undefined:(open?new Set(['disclosure']):new Set())}
+  onExpandedChange={onOpenChange?(keys)=>onOpenChange(keys instanceof Set&&keys.has('disclosure')):undefined}
+  itemClasses={{...blogAccordionItemClasses,...(titleClass?{title:`text-sm ${titleClass}`}:{})}}>
+  <AccordionItem key="disclosure" aria-label={typeof title==='string'?title:'展开更多'} title={title}>{children}</AccordionItem>
+ </Accordion>;
 }

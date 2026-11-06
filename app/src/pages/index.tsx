@@ -1,3 +1,4 @@
+import { AggregationList } from '@/components/NoteAggregation';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
 import Masonry from 'react-masonry-css';
@@ -36,6 +37,7 @@ const Home = observer(() => {
   blinko.useQuery();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const [aggregationActive, setAggregationActive] = useState(false);
 
   // 视图设置按页面作用域读取（闪念 / 笔记各自独立记忆）
   const pageScope = getPageViewScope(searchParams);
@@ -187,7 +189,8 @@ const Home = observer(() => {
             <ActiveListFilters />
           </StickyListFilters>}
 
-          <div data-list-filter-results>
+          {!isTodoView && !hasListFilters && !blinko.noteListFilterConfig.startDate && !blinko.noteListFilterConfig.endDate && !blinko.noteListFilterConfig.isShare && !blinko.searchText && noteListSortBy !== 'manual' && ['notes','blinko'].includes(pageScope) && <AggregationList refreshKey={blinko.updateTicker} key={`${pageScope}:${noteListStyle}:${noteListSortBy}`} type={pageScope==='notes'?1:0} style={noteListStyle} sort={noteListSortBy} columns={Number(getPageViewSetting(blinko,pageScope,'largeDeviceCardColumns')??2)} onActive={setAggregationActive}/>}
+          <div data-list-filter-results style={{display:aggregationActive && !isTodoView && !hasListFilters && !blinko.noteListFilterConfig.startDate && !blinko.noteListFilterConfig.endDate && !blinko.noteListFilterConfig.isShare && !blinko.searchText && noteListSortBy!=='manual' && ['notes','blinko'].includes(pageScope)?'none':undefined}}>
           {!isTodoView && currentListState.isLoading && !currentListState.value?.length ? (
             <div className="flex min-h-48 items-center justify-center text-default-400" role="status" aria-label={t('loading')}>
               <Icon icon="eos-icons:three-dots-loading" width={38} height={38} />

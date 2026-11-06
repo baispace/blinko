@@ -93,7 +93,7 @@ export const TagListPanel = observer(({ hideHeader = false }: { hideHeader?: boo
   useEffect(() => { }, [blinko.noteListFilterConfig.tagId])
   return (
     <>
-      {!hideHeader && <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>}
+      {!hideHeader && <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}<button type="button" className="ml-3 text-primary" onClick={()=>navigate(`/aggregation?type=${searchParams.get('path')==='notes'?1:0}`)}>聚合规则</button></div>}
       <TreeView
         className="mb-4"
         data={flattenTree({

@@ -1,3 +1,4 @@
+import { readAggregationRules, saveAggregationRules, getAggregationPage, aggregationSettingsSchema, aggregationPageSchema } from '../lib/noteAggregation';
 import { publicationStatus, publishSnapshot, publicPublicationWhere, publicPublicationDTO, readPublicPublication } from '../lib/publication';
 import {readTodoStatuses,getTodoStatus} from '@shared/lib/todoStatus';
 
@@ -69,6 +70,9 @@ const scheduleEmbedding = (noteId: number, run: () => void) => {
 };
 
 export const noteRouter = router({
+  aggregationRules: authProcedure.input(z.object({type:z.number().int().min(0).max(1)})).query(({ctx,input})=>readAggregationRules(Number(ctx.id),input.type)),
+  saveAggregationRules: authProcedure.input(aggregationSettingsSchema).mutation(({ctx,input})=>saveAggregationRules(Number(ctx.id),input)),
+  aggregationPage: authProcedure.input(aggregationPageSchema).query(({ctx,input})=>getAggregationPage(Number(ctx.id),input)),
   todoPage: authProcedure.input(todoPageInput).query(({ input, ctx }) => getTodoPage(input, Number(ctx.id))),
   list: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list', summary: 'Query notes list', protect: true, tags: ['Note'] } })

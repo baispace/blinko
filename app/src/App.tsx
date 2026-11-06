@@ -1,3 +1,4 @@
+import { AggregationPage } from '@/components/NoteAggregation';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from "react-router-dom";
@@ -310,6 +311,7 @@ function AppRoutes() {
             <Route path="/blog-manage/topic/:topicId" element={<ProtectedRoute><BlogTopicDetail /></ProtectedRoute>} />
             <Route path="/blog-manage/topic/:topicId/arrange" element={<ProtectedRoute><BlogTopicArrange /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
+            <Route path="/aggregation" element={<ProtectedRoute><AggregationPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/plugin" element={<ProtectedRoute><PluginPage /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />

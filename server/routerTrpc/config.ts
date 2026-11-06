@@ -13,7 +13,7 @@ import { reinitializeOAuthStrategies } from '../routerExpress/auth/config';
 
 export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context, useAdmin?: boolean }) => {
   const userId = Number(ctx?.id ?? 0);
-  const configs = await prisma.config.findMany({ where: { key: { not: 'siteInfo' } } });
+  const configs = await prisma.config.findMany({ where: { key: { not: 'siteInfo' }, NOT: { key: { startsWith: 'noteAggregation:' } } } });
   const isSuperAdmin = useAdmin ? true : ctx?.role === 'superadmin';
 
   const globalConfig = configs.reduce((acc, item) => {

@@ -105,10 +105,10 @@ function dto(note: SettingsNote, noteCover: CoverImage | null = null) {
     topics: note.blogTopics,
     // 草稿态公开标签：AI 建议面板据此显示「当前」的值。
     draftPublicTags: readDraftPublicTags(note.metadata),
-    // 展示方式：默认就是精选（置顶 + banner）。
-    // 从没发布过的文章还没有发布记录，这时按「默认精选」给面板 —— 作者不用先点一次。
-    // 已经发过的文章按它自己的记录走：作者手动改回「默认展示」就别再动它。
-    displayMode: p ? (p.isBanner ? 'featured' as const : p.isFeatured ? 'pinned' as const : 'default' as const) : 'featured' as const,
+    // 展示方式：默认就是「默认展示」（按列表规则排序，不置顶、不进 banner）。
+    // 从没发布过的文章还没有发布记录，这时按「默认展示」给面板；想要精选 / 置顶由作者主动选。
+    // 已经发过的文章按它自己的记录走：作者手动改过就别再动它。
+    displayMode: p ? (p.isBanner ? 'featured' as const : p.isFeatured ? 'pinned' as const : 'default' as const) : 'default' as const,
     displayOrder: (p?.isBanner ? p.bannerOrder : p?.featuredOrder) ?? 0,
   };
 }

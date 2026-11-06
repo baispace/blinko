@@ -648,9 +648,9 @@ export function ContentQuickPanel({
             <div className="grid grid-cols-1 gap-2" role="group" aria-label="首页展示">
               {(
                 [
-                  ['featured', '首页精选', '默认 · 加入 Banner，同时置顶'],
+                  ['featured', '首页精选', '加入 Banner，同时置顶'],
                   ['pinned', '列表置顶', '优先出现在推荐列表'],
-                  ['default', '默认展示', '按列表规则排序'],
+                  ['default', '默认展示', '默认 · 按列表规则排序'],
                 ] as const
               ).map(([value, label, hint]) => (
                 <button

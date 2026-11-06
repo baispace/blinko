@@ -472,10 +472,10 @@ export async function publishSnapshot(
           sourceUpdatedAt: note.updatedAt,
           // 这一版发布时的原笔记指纹，作为下一次来源比对的基线。
           sourceContentVersion: sourceVersion,
-          // 新发布的文章默认进精选：同时置顶并加入 banner。
-          // 作者随时可以在面板的「首页展示」里改回默认展示。
-          isFeatured: true,
-          isBanner: true,
+          // 新发布的文章默认「默认展示」：不置顶、不进 banner，按列表规则排序。
+          // 作者随时可以在面板的「首页展示」里改成精选 / 置顶。
+          isFeatured: false,
+          isBanner: false,
           createdAt: now,
           updatedAt: now,
         },

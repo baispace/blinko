@@ -51,15 +51,15 @@ suite('unified settings persist atomically while keeping the public snapshot iso
     const state = await readPublishSettings(db, owner, noteId);
     expect(state.config.mode).toBe('full');
   });
-  test('没发布过的文章默认就是精选，直接发布也进精选', async () => {
+  test('没发布过的文章默认就是默认展示，直接发布也不置顶不进 banner', async () => {
     const fresh = await db.notes.create({ data: { accountId: owner, type: 1, content: '新文章还没发布过。', metadata: { title: '新文章' } } });
-    // 面板里默认选中「首页精选」（置顶 + banner），作者不用先点一次。
-    expect((await readPublishSettings(db, owner, fresh.id)).displayMode).toBe('featured');
-    // 绕开面板直接发布也一样进精选。
+    // 面板里默认选中「默认展示」（按列表规则排序），精选 / 置顶由作者主动选。
+    expect((await readPublishSettings(db, owner, fresh.id)).displayMode).toBe('default');
+    // 绕开面板直接发布也一样是默认展示。
     await publishSnapshot(db, owner, { id: fresh.id });
     const row = await db.notePublication.findUniqueOrThrow({ where: { noteId: fresh.id } });
-    expect(row.isFeatured).toBe(true);
-    expect(row.isBanner).toBe(true);
+    expect(row.isFeatured).toBe(false);
+    expect(row.isBanner).toBe(false);
   });
   test('save draft copy, cover and unified display settings without republishing', async () => {
     const state = await readPublishSettings(db, owner, noteId);

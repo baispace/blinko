@@ -44,6 +44,16 @@ const isHomeSubHeaderScope = (location: ReturnType<typeof useLocation>, searchPa
 /** AI 对话页：顶栏右侧只留通知，其余全局入口在这里都是噪音或无效控件。 */
 const isAiPage = (location: ReturnType<typeof useLocation>): boolean => location.pathname === '/ai';
 
+/** 聚合只在笔记 / 闪念首页生效，规则管理入口也只在这两个 scope 的顶栏出现。
+    type 与列表渲染保持一致：notes→1，blinko（含默认）→0。 */
+const aggregationTypeForScope = (location: ReturnType<typeof useLocation>, searchParams: URLSearchParams): number | null => {
+  if (location.pathname !== '/') return null;
+  const p = searchParams.get('path');
+  if (p === 'notes') return 1;
+  if (p == null || p === 'blinko') return 0;
+  return null;
+};
+
 export const getFixedHeaderBackground = () => {
   if (document?.documentElement?.classList?.contains('dark')) {
     return '#00000080';
@@ -199,6 +209,20 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                   连组件一起去掉会让聊天页的全局搜索快捷键一起失效。 */}
               <div className="flex items-center gap-0.5 md:gap-1 shrink-0 [&_button[data-slot='base']]:!h-8 [&_button[data-slot='base']]:!min-h-8 [&_button[data-slot='base']]:!w-8 [&_button[data-slot='base']]:!p-0">
                 <BarSearchInput isPc={isPc} hideButton={isAiPage(location)} />
+                {aggregationTypeForScope(location, searchParams) !== null && (
+                  <Tooltip content="管理聚合规则" delay={400}>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      className="text-default-500 hover:text-foreground rounded-lg"
+                      aria-label="管理聚合规则"
+                      onPress={() => navigate(`/aggregation?type=${aggregationTypeForScope(location, searchParams)}`)}
+                    >
+                      <Icon icon="tabler:stack-2" width="22" height="22" />
+                    </Button>
+                  </Tooltip>
+                )}
                 {/* 待办页也挂页面设置浮层：待办工作区自己管筛选/排序/分组/视图，
                     但页宽这类页面级设置对它同样生效（尤其是看板要靠宽度决定列数），
                     之前连浮层一起排除掉，等于把入口也一起砍了。
@@ -218,7 +242,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
                       title={t('daily-review')}
                       aria-current={location.pathname === '/review' ? 'page' : undefined}
                     >
-                      <Icon className="cursor-pointer text-default-600" icon="tabler:clock" width="20" height="20" />
+                      <Icon className="cursor-pointer text-default-600" icon="tabler:bulb" width="20" height="20" />
                     </Button>
                   </Badge>
                   </Tooltip>

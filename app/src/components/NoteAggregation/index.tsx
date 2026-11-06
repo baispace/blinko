@@ -157,7 +157,7 @@ export function AggregationList({
             ? `${data?.groupName || "聚合结果"} · ${data?.noteCount || 0} 篇`
             : `已开启聚合 · ${data?.noteCount ?? 0} 篇笔记，展示 ${data?.total ?? 0} 项`}
         </span>
-        <Link to={`/aggregation?type=${type}`}>管理规则</Link>
+        {group && <Link to={`/aggregation?type=${type}`}>管理规则</Link>}
       </div>
       {group && (
         <>

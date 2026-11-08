@@ -20,6 +20,13 @@ import { CoverCanvas } from "@/components/BlinkoBlog/CoverCanvas";
 // React 18 只认小写 DOM 属性（fetchPriority 是 React 19 的写法），
 // 直接输出 fetchpriority，给浏览器做首屏图片的预加载提示。
 const heroImagePriority = { fetchpriority: "high" } as const;
+function HomeSkeleton({banner=false,grid=true}:{banner?:boolean;grid?:boolean}) {
+  return <div className={banner?'ink-home-skeleton-banner':grid?'ink-card-grid':'ink-post-list'} role="status" aria-label="正在加载文章">
+    <span className="sr-only">正在加载文章…</span>
+    {banner ? <div className="ink-home-shimmer ink-home-skeleton-cover" aria-hidden="true"/> : Array.from({length:4},(_,index)=><div className="ink-home-skeleton-card" key={index} aria-hidden="true"><div className="ink-home-shimmer ink-home-skeleton-cover"/><div className="ink-home-skeleton-copy"><div className="ink-home-shimmer ink-home-skeleton-title"/><div className="ink-home-shimmer ink-home-skeleton-line"/><div className="ink-home-shimmer ink-home-skeleton-meta"/></div></div>)}
+  </div>;
+}
+
 export default function BlogHome() {
   const site = useBlogSite();
   useBlogTitle("思考与实践");
@@ -353,7 +360,7 @@ export default function BlogHome() {
   const heroVisible =
     !hot && !all && (loading || !!lead || (!!filter && !posts.length));
   return (
-    <main className="ink-wrap ink-home-page">
+    <main className="ink-wrap ink-home-page" data-home-ready={!loading}>
       {/* 首页唯一的 h1：与 SEO title / 服务端 fallback 的 h1 保持一致。
           头条 banner 把标题烤进了封面，画面上不再叠标题，所以这里用
           视觉隐藏的站点标题做页面主标题，兼顾 SEO 语义和无障碍。 */}
@@ -416,9 +423,7 @@ export default function BlogHome() {
         {heroVisible && (
           <div className="ink-home-hero">
             {loading ? (
-              <p className="ink-empty" role="status">
-                正在加载公开文章…
-              </p>
+              <HomeSkeleton banner />
             ) : lead ? (
               <div className="ink-lead-hero" key={lead.id}>
                 {lead.coverUrl ? (
@@ -593,7 +598,7 @@ export default function BlogHome() {
               />
             </button>
           </div>
-          {all && groups.length > 0 ? (
+          {loading ? <HomeSkeleton grid={grid}/> : all && groups.length > 0 ? (
             /* 归档：按年份分组，每年一叠。 */
             <div className="ink-archive">
               {groups.map((group) => (
@@ -627,17 +632,13 @@ export default function BlogHome() {
               </div>
             </>
           ) : null}
-          {busy && !posts.length && (
-            <p className="ink-empty" role="status">
-              正在加载…
-            </p>
-          )}
-          {!busy && !posts.length && (hot || all) && (
+
+          {!loading && !posts.length && (hot || all) && (
             <p className="ink-empty" role="status">
               {hot ? "这段时间还没有文章被读过。" : "还没有公开文章。"}
             </p>
           )}
-          {!busy &&
+          {!loading &&
             rest.length === 0 &&
             posts.length === 0 &&
             !lead &&

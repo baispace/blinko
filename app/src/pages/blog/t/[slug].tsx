@@ -1,8 +1,14 @@
 import "@/components/BlinkoBlog/public/topic-pages.css";
+import superjson from "superjson";
 import "@/components/BlinkoBlog/public/doc-layout.css";
 import { useEffect, useRef, useState } from "react";
 import { blogRoute } from "@/lib/blogPublicBase";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { api } from "@/lib/publicBlogClient";
 import { DocTopicOverview } from "@/components/BlinkoBlog/public/DocTopicOverview";
 import { DocTopicSkeleton } from "@/components/BlinkoBlog/public/DocTopicSkeleton";
@@ -26,18 +32,51 @@ export default function BlogTopicDetail() {
    * 概述是可选的一站，不该挡在正文前面。
    */
   const wantsOverview = params.get("view") === "overview";
-  const [data, setData] = useState<Data>(null),
+  const [initial] = useState(() => {
+    try {
+      const payload = JSON.parse(
+        document.getElementById("ink-blog-bootstrap")?.textContent || "null",
+      );
+      if (
+        payload?.path !== "/blog/t/" + encodeURIComponent(slug) ||
+        payload.topicPage !== urlPage ||
+        !payload.directory
+      )
+        return null;
+      return {
+        slug,
+        page: urlPage,
+        directory: superjson.deserialize<DocDirectory>(payload.directory),
+        data: superjson.deserialize<Data>(payload.topicData),
+      };
+    } catch {
+      return null;
+    }
+  });
+  const [data, setData] = useState<Data>(initial?.data ?? null),
     // 专题目录（轻量）：顺带告诉我们这个专题是专题模式还是文档模式。
-    [directory, setDirectory] = useState<DocDirectory | null>(null),
-    [busy, setBusy] = useState(true),
+    [directory, setDirectory] = useState<DocDirectory | null>(
+      initial?.directory ?? null,
+    ),
+    [busy, setBusy] = useState(!initial),
     [error, setError] = useState(false),
     [request, setRequest] = useState(0);
+  const directoryBootstrapUsed = useRef(false);
+  const listBootstrapUsed = useRef(false);
   const seq = useRef(0);
   const listSeq = useRef(0);
   const listRef = useRef<HTMLElement>(null);
   useBlogTitle(directory?.topic.name || "专题");
   // 先读目录：它只含章节与标题，不带正文，读起来很快。
   useEffect(() => {
+    if (
+      !directoryBootstrapUsed.current &&
+      initial?.slug === slug &&
+      request === 0
+    ) {
+      directoryBootstrapUsed.current = true;
+      return;
+    }
     const id = ++seq.current;
     setDirectory(null);
     setBusy(true);
@@ -45,7 +84,10 @@ export default function BlogTopicDetail() {
     api.blog.publicTopicDoc
       .query({ slug })
       .then((r) => {
-        if (id === seq.current) setDirectory(r);
+        if (id === seq.current) {
+          setDirectory(r);
+          if (!r) setBusy(false);
+        }
       })
       .catch(() => {
         // 目录都读不到就直接报错，不能让页面永远停在「正在加载」。
@@ -66,6 +108,16 @@ export default function BlogTopicDetail() {
       setData(null);
       setBusy(false);
       setError(false);
+      return;
+    }
+    if (
+      !listBootstrapUsed.current &&
+      initial?.slug === slug &&
+      initial.page === urlPage &&
+      request === 0 &&
+      directory === initial.directory
+    ) {
+      listBootstrapUsed.current = true;
       return;
     }
     const id = ++listSeq.current;
@@ -116,7 +168,8 @@ export default function BlogTopicDetail() {
    * 真正的「第一篇」由服务端按章节与文章编排顺序算好，前台不按发布时间重排。
    */
   const docMode = directory?.topic.displayMode === "doc";
-  const docTarget = docMode && !wantsOverview ? directory?.defaultPublishId : null;
+  const docTarget =
+    docMode && !wantsOverview ? directory?.defaultPublishId : null;
   useEffect(() => {
     if (!docTarget) return;
     /**
@@ -132,7 +185,11 @@ export default function BlogTopicDetail() {
   if (directory?.topic.displayMode === "doc") {
     // 正在解析默认文章：先摆一份同尺寸的骨架，不闪专题概述。
     if (docTarget) return <DocTopicSkeleton />;
-    return <DocTopicOverview directory={directory} />;
+    return (
+      <div data-topic-ready="true">
+        <DocTopicOverview directory={directory} />
+      </div>
+    );
   }
   if (busy && !data)
     return (
@@ -149,7 +206,7 @@ export default function BlogTopicDetail() {
     );
   if (!data)
     return (
-      <main className="ink-wrap ink-empty">
+      <main className="ink-wrap ink-empty" data-topic-ready="true">
         <h1>专题暂未公开</h1>
         <p>可能已停用，或还没有公开文章。</p>
         <Link to={blogRoute("/blog/topics")}>查看其他专题</Link>
@@ -169,7 +226,7 @@ export default function BlogTopicDetail() {
     data.unassigned.posts[0] ??
     null;
   return (
-    <main className="ink-wrap ink-topic-page">
+    <main className="ink-wrap ink-topic-page" data-topic-ready="true">
       <section className="ink-topic-intro">
         <div>
           <Link to={blogRoute("/blog/topics")} className="ink-topic-back">

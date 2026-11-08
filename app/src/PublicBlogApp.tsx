@@ -26,12 +26,14 @@ export default function PublicBlogApp() {
           <Route path="/" element={<BlogShell />}>
             <Route index element={<BlogHome />} />
             <Route path="topics" element={<Topics />} />
+            <Route path="topic/:slug" element={<Topic />} />
             <Route path="t/:slug" element={<Topic />} />
             <Route path="about" element={<About />} />
             <Route path="friends" element={<Friends />} />
             <Route path="moments" element={<Moments />} />
             <Route path="subscribe" element={<Subscribe />} />
             <Route path="stats" element={<Stats />} />
+            <Route path="article/:id" element={<Article />} />
             <Route path=":id" element={<Article />} />
           </Route>
         </Routes>

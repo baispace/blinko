@@ -1,3 +1,4 @@
+import { internalContentPath, publicContentPath } from '../../shared/lib/blogRoutes';
 /** Host-based public entry. Private hosts retain their existing routing. */
 export function blogDomainRequest(input: {host: string; url: string; method: string; enabled: boolean; origin: string}):
   {kind: 'pass' | 'deny'} | {kind: 'rewrite' | 'redirect'; url: string} {
@@ -26,5 +27,7 @@ export function blogDomainRequest(input: {host: string; url: string; method: str
   }
   if (/^\/(?:assets|brand|fonts|font-assets|icons|locales)\//.test(path) ||
       /^\/(?:robots\.txt|sitemap\.xml|favicon\.ico|manifest\.json|manifest\.webmanifest|site\.webmanifest|browserconfig\.xml)$/.test(path)) return {kind: 'pass'};
-  return {kind: 'rewrite', url: (raw === '/' ? '/blog' : '/blog' + raw) + search};
+  const canonical = publicContentPath(raw);
+  if (canonical !== raw) return {kind:'redirect',url:input.origin+canonical+search};
+  return {kind: 'rewrite', url: (raw === '/' ? '/blog' : '/blog' + internalContentPath(raw)) + search};
 }

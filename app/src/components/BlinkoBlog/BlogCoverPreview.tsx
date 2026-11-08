@@ -23,10 +23,10 @@ export const COVER_PREVIEW_SCENES: {
   label: string;
   note: string;
 }[] = [
-  { key: "banner", label: "首页 Banner", note: "桌面首页横幅 2.9:1，图标砖居中，背景大字横贯画面，底部留给推荐栏与轮播点" },
-  { key: "double", label: "瀑布流卡片", note: "首页卡片网格大图 2.8:1，图标砖居中，背景大字压在砖后" },
-  { key: "single", label: "列表行", note: "列表与相关推荐缩略图 180×96，方砖等比缩小，背景大字同步收窄" },
-  { key: "share", label: "分享图", note: "社交分享卡片 1200×630，与页面用的是同一套排版规则" },
+  { key: "banner", label: "首页 Banner", note: "首页横幅 2.9:1，检查上下裁切及标题是否完整" },
+  { key: "double", label: "瀑布流卡片", note: "卡片封面 2.8:1，检查主体与文字的可读性" },
+  { key: "single", label: "列表行", note: "列表缩略图 180×96，检查缩小后的辨识度" },
+  { key: "share", label: "分享图", note: "分享卡片 1200×630，检查完整构图与裁切" },
 ];
 
 export function CoverSceneSwitch({

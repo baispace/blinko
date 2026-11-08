@@ -1,3 +1,4 @@
+import { publicContentPath, internalContentPath } from '@shared/lib/blogRoutes';
 /**
  * 公开站的基础路径、路由前缀与资源地址。
  *
@@ -106,7 +107,7 @@ export function blogRoute(path: string): string {
     ? raw.slice("/blog".length)
     : raw;
   if (!rest) return "/";
-  return rest.startsWith("/") ? rest : "/" + rest;
+  return publicContentPath(rest.startsWith("/") ? rest : "/" + rest);
 }
 
 /**
@@ -132,7 +133,7 @@ export function blogRoutePath(pathname: string): string {
  * 公开地址只是它的一层外壳。
  */
 export function blogInternalPath(pathname: string): string {
-  const rest = blogRoutePath(pathname);
+  const rest = internalContentPath(blogRoutePath(pathname));
   return rest === "/" ? "/blog" : "/blog" + rest;
 }
 

@@ -1,5 +1,6 @@
 import { test, expect } from "bun:test";
-import sharp from "sharp";
+import { createRequire } from "node:module";
+const sharp = createRequire(import.meta.dir + "/../../server/index.js")("sharp");
 import { generateTopicCover } from "../../server/lib/blogTopicCover";
 
 const model = {
@@ -67,7 +68,7 @@ test("专题封面复用生图与上传，生成候选不直接更改专题", as
       generate: async (_model, prompt) => {
         expect(prompt).toContain("产品思考");
         expect(prompt).toContain("公开文章标题");
-        expect(prompt).toContain("No text");
+        expect(prompt).toContain("finished landscape editorial blog cover");
         return raw;
       },
       upload: async (args: any) => {

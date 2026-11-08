@@ -1,3 +1,4 @@
+import { internalContentPath } from '../../shared/lib/blogRoutes';
 import { publicBrandName } from "../../shared/lib/publicBrand";
 import { readBlogSiteSettings, readTopicSeo, readPageSeo } from "./blogSiteSettings";
 import { readArticleSeo } from "../../shared/lib/blogSiteSettings";
@@ -65,7 +66,16 @@ function absoluteImage(value: string | null | undefined, origin: string) {
   return absoluteSeoImage(value, origin);
 }
 export type BlogSEO = {
-  bootstrap?: { path: string; site: Awaited<ReturnType<typeof publicIndex>> };
+  bootstrap?: {
+    path: string;
+    site: Awaited<ReturnType<typeof publicIndex>>;
+    /**
+     * 文章页顺带内嵌这篇正文：resolveBlogSEO 为了 og 标签本来就要把它查出来，
+     * 丢掉等于让前端首屏再发一次几百毫秒的 publicArticle 请求现等。
+     * 只在无专题上下文时填（带了 ?topic= 的版式口径不一样，不能复用）。
+     */
+    article?: Awaited<ReturnType<typeof publicArticle>> | null;
+  };
   status: number;
   title: string;
   description: string;
@@ -275,7 +285,8 @@ export async function resolveBlogSEO(
   /** 分页页码（来自 ?page=N），只对列表页有意义 */
   page: number = 1,
 ): Promise<BlogSEO> {
-  const canonicalPath = pathname.replace(/\/$/, "") || "/blog";
+  const normalizedPath = pathname.replace(/^\/blog(?=\/|$)/, "");
+  const canonicalPath = "/blog" + internalContentPath(normalizedPath.replace(/\/$/, ""));
   /*
    * 首页要整份列表数据（文章列表、banner、精选、最近更新、年份归档、分页）；
    * 其它页面只渲染壳层与自己的内容 —— 为不渲染的东西付一整轮查询、
@@ -564,6 +575,9 @@ export async function resolveBlogSEO(
     const article = await publicArticle(db, { accountId, publishId: id });
     if (!article) missing();
     else {
+      // 无专题上下文时把正文塞进首屏包：前端拿到 HTML 就能直接渲染，
+      // 不必再等一次 publicArticle 往返。带 ?topic= 的口径不同，前端自行不复用。
+      if (seo.bootstrap) seo.bootstrap.article = article;
       let override: SeoOverrideInput = {};
       if (owner) {
         const note = await db.notes.findFirst({
@@ -740,7 +754,7 @@ export function injectBlogSEO(html: string, seo: BlogSEO) {
   const startup = `<script>document.documentElement.classList.add('ink-blog-js')</script><style>
 html.ink-blog-js,html.ink-blog-js body{background:#f7f7fc;margin:0}.ink-blog-js [data-ink-public-fallback]{display:none}[data-ink-blog-skeleton]{display:none}.ink-blog-js [data-ink-blog-skeleton]{display:block;max-width:1280px;margin:0 auto;padding:24px 32px;box-sizing:border-box}.ink-skeleton-nav{height:42px;width:210px;background:#fff;border-radius:28px;margin:0 auto 38px}.ink-skeleton-hero{height:300px;border-radius:20px;background:linear-gradient(110deg,#edeafb,#e3ddfb,#edeafb);margin-bottom:28px}.ink-skeleton-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.ink-skeleton-card{height:240px;border-radius:18px;background:#fff}@media(max-width:640px){[data-ink-blog-skeleton]{padding:20px 16px!important}.ink-skeleton-hero{height:220px}.ink-skeleton-grid{grid-template-columns:1fr}}</style>`;
   const bootstrap = seo.bootstrap
-    ? `<script id="ink-blog-bootstrap" type="application/json">${JSON.stringify({ path: seo.bootstrap.path, data: superjson.serialize(seo.bootstrap.site) }).replace(/</g, "\\u003c")}</script>`
+    ? `<script id="ink-blog-bootstrap" type="application/json">${JSON.stringify({ path: seo.bootstrap.path, data: superjson.serialize(seo.bootstrap.site), article: seo.bootstrap.article ? superjson.serialize(seo.bootstrap.article) : null }).replace(/</g, "\\u003c")}</script>`
     : "";
   const skeleton =
     '<div data-ink-blog-skeleton aria-hidden="true"><div class="ink-skeleton-nav"></div><div class="ink-skeleton-hero"></div><div class="ink-skeleton-grid"><div class="ink-skeleton-card"></div><div class="ink-skeleton-card"></div></div></div>';

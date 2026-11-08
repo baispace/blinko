@@ -75,6 +75,7 @@ export function BlogCoverAssistant({
         ...(result.id ? { attachmentId: result.id } : { path: result.path }),
         config: {
           mode: result.coverMode,
+          artwork: result.coverArtwork,
           templateVersion: settings.config.templateVersion,
           title: result.coverTitle,
           subtitle: result.coverSubtitle,

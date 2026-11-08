@@ -323,12 +323,14 @@ function AppRoutes() {
             <Route path="/blog" element={<BlogShell />}>
               <Route index element={<BlogHomePage />} />
               <Route path="topics" element={<BlogTopicsPage />} />
-              <Route path="t/:slug" element={<BlogTopicPage />} />
+              <Route path="topic/:slug" element={<BlogTopicPage />} />
+            <Route path="t/:slug" element={<BlogTopicPage />} />
               <Route path="about" element={<BlogAboutPage />} />
               <Route path="moments" element={<BlogMomentsPage />} />
               <Route path="subscribe" element={<BlogSubscribePage />} />
               <Route path="stats" element={<BlogStatsPage />} />
-              <Route path=":id" element={<PublishedNotePage />} />
+              <Route path="article/:id" element={<PublishedNotePage />} />
+            <Route path=":id" element={<PublishedNotePage />} />
               <Route path="*" element={<div className="ink-wrap ink-empty">页面不存在</div>} />
             </Route>
             <Route path="/ai-share/:id" element={<AiSharePage />} />

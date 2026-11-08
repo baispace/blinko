@@ -1,4 +1,3 @@
-import { prepareGeneratedCover } from "./coverIllustration";
 import { coverGenerationJobs as generating } from './coverGenerationLock';
 import { readDraftBody } from "./blogPublishCheck";
 import { TRPCError } from "@trpc/server";
@@ -70,13 +69,7 @@ export function imageProtocol(
   return null;
 }
 
-/**
- * 生图提示词的长度上限。
- *
- * MiniMax 的生图接口按 1500 字符截断 —— 超了不是报错，是悄悄丢掉尾部。
- * 尾部恰好是「无文字 / 无地面 / 不要低饱和粉紫摄影棚」这些硬约束，
- * 丢了就等于白写。所以提示词按预算拼装，不是拼完再祈祷它够短。
- */
+/** Keep the complete cover brief within the provider prompt limit. */
 export const COVER_PROMPT_LIMIT = 1500;
 
 /** Same visual contract for every model. Keep the complete brief below MiniMax's limit. */
@@ -87,69 +80,13 @@ export function coverPrompt(
   direction?: string,
 ) {
   const cleanTitle = publicText(title).replace(/\s+/g, " ").slice(0, 80);
-  const cleanContent = publicText(content).replace(/\s+/g, " ");
-  const plan = coverArtPlan(cleanTitle, cleanContent, style);
-  const extra = publicText(direction || "").replace(/\s+/g, " ").slice(0, 100);
-
-  /*
-   * 提示词按优先级分块，超预算时从最不重要的块开始让位：
-   *   1. 风格契约（构图、画法、配色、主体、材质、画幅）—— 永远完整；
-   *   2. 主题参考（标题）—— 永远完整，主题词库主要靠它命中；
-   *   3. 内容参考（正文摘要）—— 先让位，标题的权重本就是正文的五倍；
-   *   4. 作者的画面要求 —— 最后让位，按剩余字符截短。
-   * 硬约束尾巴任何情况下都不动。
-   *
-   * 构图规则写在契约的最前面，并在硬约束尾部重申：即便服务商
-   * 对中间描述降权，仍能保住「一枚图形、居中、留白、无字」这四个后处理前提。
-   */
-  const contract = `${plan.composition}
-${plan.treatment}
-ONE rounded-square app icon tile with one simple raised symbol only.
-Accent color: ${plan.palette}; use a saturated solid color with subtle bevel highlights.
-Subject: ${plan.subject}.
-Treat the subject as one unified symbol, not a collection of objects.`;
-
-  // 硬约束尾巴：任何情况下都不能被截断。
-  const tail = `No text, letters, numbers, logos, labels, UI, frames, badges, or typography. Keep exactly one glyph: no extra objects, no supporting pieces, no scene, no background elements, no floor or tabletop. ${plan.compositionReminder} 禁止：低饱和粉紫摄影棚。`;
-
-  const titleLine = `主题参考：${cleanTitle}`;
-  const contentLine = `内容参考：${cleanContent.slice(0, 48)}`;
-  const detailLabel = "Optional detail: ";
-  const budget = COVER_PROMPT_LIMIT - tail.length - 1;
-
-  // 依次尝试：带正文 → 不带正文 → 只留风格契约。主题命中主要靠标题，
-  // 而「Subject」那一行已经把主题写进提示词了，所以最后一步也还能用。
-  const variants = [
-    [`[${COVER_ART_VERSION}]`, titleLine, contentLine, contract].join("\n"),
-    [`[${COVER_ART_VERSION}]`, titleLine, contract].join("\n"),
-    [`[${COVER_ART_VERSION}]`, contract].join("\n"),
-  ];
-  const fits = (value: string) => value.length <= budget;
-  let fixed = variants.find(fits) ?? variants[variants.length - 1];
-  let detail = "";
-
-  if (extra) {
-    /*
-     * 作者的画面要求优先吃掉剩余预算：整段放得下就整段放。
-     *
-     * 放不下时先让内容参考让位 —— 它只是给模型一点上下文，主题词
-     * 已经写进 Subject 那一行了；最后才按剩余字符截短，
-     * 半截句子（「一只铅」）对模型没有意义。
-     */
-    const whole = variants.find(
-      (value) =>
-        fits(value) &&
-        budget - value.length - detailLabel.length - 1 >= extra.length,
-    );
-    if (whole) {
-      fixed = whole;
-      detail = `\n${detailLabel}${extra}`;
-    } else {
-      const room = budget - fixed.length - detailLabel.length - 1;
-      detail = room > 0 ? `\n${detailLabel}${extra.slice(0, room)}` : "";
-    }
-  }
-  return `${fixed}${detail}\n${tail}`;
+  const cleanContent = publicText(content).replace(/\s+/g, " ").slice(0, 160);
+  const extra = publicText(direction || "").replace(/\s+/g, " ").slice(0, 300);
+  return `Create ONE finished landscape editorial blog cover, including background, illustration and typography in one coherent image. This is the final cover, not an icon asset or a mockup.
+主题：${cleanTitle}
+内容参考：${cleanContent}
+Use a clean modern editorial composition, expressive illustration, harmonious colors and generous breathing room. Compose for a wide 16:9 canvas. Keep the main subject and all text within the central 70% safe area so banner and card crops remain readable. Render a concise, accurate Chinese headline based on the theme; use only a few words, with clear readable typography integrated into the composition. No watermarks, logos, interface chrome, external frame or separate app icon tile. Do not leave a transparent background.
+作者要求（文字内容优先采用这里的指定）：${extra || "根据主题自行完成整张封面。"}`.slice(0, COVER_PROMPT_LIMIT);
 }
 
 // Keep existing callers on the same design contract; no model-specific scene replacement.
@@ -210,8 +147,8 @@ export function imageRequest(
       ? {
           model: model.modelKey,
           prompt: prompt.slice(0, 1500),
-          // Generate a square icon asset; the application composes wide covers.
-          aspect_ratio: "1:1",
+          // Ask the model for the complete landscape cover.
+          aspect_ratio: "16:9",
           n: Math.max(1, Math.min(9, options?.n ?? 1)),
           response_format: "url",
           // 提示词里带「绝对不要画字」这类硬约束，优化器改写会把约束丢掉。
@@ -229,9 +166,9 @@ export function imageRequest(
           ...(/^dall-e-2$/.test(model.modelKey)
             ? { size: "1024x1024", response_format: "b64_json" }
             : /^dall-e-3$/.test(model.modelKey)
-              ? { size: "1024x1024", response_format: "b64_json" }
+              ? { size: "1792x1024", response_format: "b64_json" }
               : /^gpt-image/.test(model.modelKey)
-                ? { size: "1024x1024" }
+                ? { size: "1536x1024" }
                 : { size: "1024x1024", response_format: "b64_json" }),
         };
   return {
@@ -604,7 +541,7 @@ export async function generateBlogCover(
     );
     const artPlan = coverArtPlan(publicText(context.title), publicText(context.content), input.style);
     const fetcher = await fetchWithProxy();
-    // Generate once: the model draws an isolated icon; the application controls placement.
+    // Generate the complete composition once; preserve its pixels and typography.
     const generateOnce = async (): Promise<Buffer[]> => {
       const single = dependencies?.generate;
       if (single) return [await single(model, prompt, fetcher)];
@@ -619,9 +556,10 @@ export async function generateBlogCover(
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
-    // Keep the isolated illustration transparent and uncropped.
+    // Only normalize size and encoding; do not split or rebuild the generated image.
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
-    const {image, generationMode} = await prepareGeneratedCover(raw, artPlan);
+    const image = await normalizeCoverBase(raw);
+    const generationMode = "ai" as const;
     const dimensions = await sharp(image).metadata();
     const result = await upload({
       buffer: image,
@@ -639,7 +577,7 @@ export async function generateBlogCover(
           sourceRevision: input.revision,
           width: dimensions.width,
           height: dimensions.height,
-          assetKind: "isolated-app-tile",
+          assetKind: "complete-cover",
           generationMode,
           composition: null,
           compositionAttempts: 1,
@@ -668,7 +606,7 @@ export async function generateBlogCover(
       id: uploaded[0].id,
       path: uploaded[0].path,
       revision: input.revision,
-      artwork: "tile" as const,
+      artwork: "image" as const,
       generationMode,
       coverPalette: artPlan.overlayPalette,
       /** 本次一起出图的候选底图：作者挑一张，别的留在附件里。 */
@@ -741,6 +679,8 @@ export async function applyCoverToDraft(
     ...normalizeCoverTextConfig(input.config),
     focus: input.config?.focus ?? null,
   });
+  const kind = (image.metadata as any)?.blogAICover?.assetKind ?? (image.metadata as any)?.aiCover?.assetKind;
+  if (kind === "complete-cover") { config.mode = "full"; config.artwork = "image"; }
   // 换底图 = 之前的裁切位置对不上，重置回居中。
   if (config.focus) config.focus.sourceId = image.id;
   await db.notes.update({
@@ -805,6 +745,8 @@ export async function exportCoverImage(
   const config = normalizeCoverTextConfig(
     input.config ?? readDraftCoverConfig(note.metadata) ?? {},
   );
+  const kind = (attachment.metadata as any)?.blogAICover?.assetKind ?? (attachment.metadata as any)?.aiCover?.assetKind;
+  if (kind === "complete-cover") { config.mode = "full"; config.artwork = "image"; }
   const original = await FileService.getFileBuffer(attachment.path);
   const cropped = await cropCoverToRatio(original, {
     width: input.width,

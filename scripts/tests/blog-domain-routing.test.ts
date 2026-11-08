@@ -3,7 +3,7 @@ import {blogDomainRequest} from '../../server/lib/blogDomainRouting';
 import {resolveBlogDeployment} from '../../shared/lib/blogDeployment';
 const route=(url:string,method='GET',host='blog.baispace.cn',enabled=true)=>blogDomainRequest({host,url,method,enabled,origin:'https://blog.baispace.cn'});
 test('domain root and nested public URLs use existing SEO routes with query intact',()=>{
- for(const [url,internal] of [['/','/blog'],['/abc?page=2','/blog/abc?page=2'],['/t/topic?article=abc','/blog/t/topic?article=abc'],['/feed.xml','/blog/feed.xml'],['/sitemap-pages.xml','/blog/sitemap-pages.xml']]) expect(route(url)).toEqual({kind:'rewrite',url:internal});
+ for(const [url,internal] of [['/','/blog'],['/abc?page=2','/blog/abc?page=2'],['/topic/topic?article=abc','/blog/t/topic?article=abc'],['/feed.xml','/blog/feed.xml'],['/sitemap-pages.xml','/blog/sitemap-pages.xml']]) expect(route(url)).toEqual({kind:'rewrite',url:internal});
 });
 test('workspace domain and existing deployments remain untouched',()=>{
  expect(route('/settings','GET','studio.baispace.cn')).toEqual({kind:'pass'});
@@ -27,3 +27,5 @@ test('domain mode fixes root mount even when old stored settings say /blog',()=>
  expect(resolveBlogDeployment({domainRouting:true,targetOrigin:'https://blog.baispace.cn',publicBasePath:'/blog'},{}).publicBasePath).toBe('/');
  expect(resolveBlogDeployment({publicBasePath:'/blog'},{}).publicBasePath).toBe('/blog');
 });
+
+test("legacy content routes redirect to explicit routes",()=>{expect(route("/t/topic?article=abc")).toEqual({kind:"redirect",url:"https://blog.baispace.cn/topic/topic?article=abc"});expect(route("/85q7i78w")).toEqual({kind:"redirect",url:"https://blog.baispace.cn/article/85q7i78w"});});

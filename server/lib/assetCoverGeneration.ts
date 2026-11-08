@@ -1,8 +1,8 @@
-import { prepareGeneratedCover } from "./coverIllustration";
 import { coverGenerationJobs as pending } from "./coverGenerationLock";
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
 import {
+  normalizeCoverBase,
   coverPromptForModel,
   generateImageBytes,
   imageProtocol,
@@ -162,8 +162,8 @@ export async function generateAssetCover(
       });
 
     const artPlan = coverArtPlan(context.title, context.content);
-    const {image:icon, generationMode} = await prepareGeneratedCover(raw, artPlan);
-    const buffer = icon;
+    const buffer = await normalizeCoverBase(raw);
+    const generationMode = "ai" as const;
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
     const image = await upload({
       buffer,
@@ -177,6 +177,7 @@ export async function generateAssetCover(
           modelId: model.id,
           artVersion: COVER_ART_VERSION,
           generationMode,
+          assetKind: "complete-cover",
           composition: null,
           compositionAttempts: 1,
         },
@@ -188,7 +189,7 @@ export async function generateAssetCover(
     return {
       id: attachment.id,
       path: attachment.path,
-      artwork: "tile" as const,
+      artwork: "image" as const,
       coverPalette: artPlan.overlayPalette,
       generationMode,
       candidates: [{ id: attachment.id, path: attachment.path }],

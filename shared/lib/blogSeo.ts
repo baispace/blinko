@@ -1,3 +1,4 @@
+import { publicContentPath } from './blogRoutes';
 /**
  * 公开 SEO 的唯一解析规则。
  *
@@ -264,7 +265,7 @@ export function toPublicPath(internalPath: string, basePath: string) {
       : path.startsWith("/blog/")
         ? path.slice("/blog".length)
         : path;
-  return joinBasePath(basePath, rest || "/");
+  return joinBasePath(basePath, publicContentPath(rest || "/"));
 }
 
 /**

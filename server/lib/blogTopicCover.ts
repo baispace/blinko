@@ -1,8 +1,8 @@
-import { prepareGeneratedCover, illustrationBase } from "./coverIllustration";
 import { coverGenerationJobs as pending } from './coverGenerationLock';
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
 import {
+  normalizeCoverBase,
   coverPrompt,
   generateImageBytes,
   imageProtocol,
@@ -78,8 +78,8 @@ export async function generateTopicCover(
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
-    const {image:icon,generationMode} = await prepareGeneratedCover(raw,coverArtPlan(input.name,context));
-    const buffer = await illustrationBase(icon,"violet");
+    const buffer = await normalizeCoverBase(raw);
+    const generationMode = "ai" as const;
     // Recheck after a slow model call; a deleted or transferred topic cannot be applied.
     const current = await db.blogTopic.findFirst({
       where: { id: input.topicId, accountId },
@@ -102,6 +102,7 @@ export async function generateTopicCover(
           modelId: model.id,
           artVersion: COVER_ART_VERSION,
           generationMode,
+          assetKind: "complete-cover",
           artPlan: coverArtPlan(input.name, context),
           prompt,
           width: 1600,

@@ -311,3 +311,27 @@
 @media(prefers-reduced-motion:reduce) {
  .ink-blog .ink-home-page :is(.ink-post-card,.ink-post-row,.ink-chip,.ink-sub-tabs button,.ink-view-toggle) { transition:none; transform:none; }
 }
+
+/* Homepage loading placeholders and image reveal. */
+.ink-blog .ink-home-page .ink-home-skeleton-banner { aspect-ratio:2.9/1; overflow:hidden; border-radius:18px; }
+.ink-blog .ink-home-page .ink-home-skeleton-card { overflow:hidden; border:1px solid var(--ink-line); border-radius:14px; background:var(--ink-surface); }
+.ink-blog .ink-home-page .ink-home-shimmer { position:relative; overflow:hidden; background:var(--ink-tint); border-radius:6px; }
+.ink-blog .ink-home-page .ink-home-shimmer::after { content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--ink-surface) 70%,transparent),transparent); animation:ink-home-shimmer 1.5s ease-in-out infinite; }
+.ink-blog .ink-home-page .ink-home-skeleton-cover { aspect-ratio:2.8/1; width:100%; }
+.ink-blog .ink-home-page .ink-home-skeleton-banner > div { height:100%; }
+.ink-blog .ink-home-page .ink-home-skeleton-copy { display:grid; gap:12px; padding:20px; }
+.ink-blog .ink-home-page .ink-home-skeleton-title { width:80%; height:24px; }
+.ink-blog .ink-home-page .ink-home-skeleton-line { width:95%; height:16px; }
+.ink-blog .ink-home-page .ink-home-skeleton-meta { width:42%; height:12px; }
+.ink-blog .ink-home-page .ink-cover[data-image-loaded="true"] .ink-cover-base { animation:ink-home-image-reveal 480ms ease-out both; }
+@keyframes ink-home-shimmer { to {transform:translateX(100%);} }
+@keyframes ink-home-image-reveal { from {filter:blur(12px);opacity:.45;} to {filter:blur(0);opacity:1;} }
+@media(prefers-reduced-motion:reduce) {
+ .ink-blog .ink-home-page .ink-home-shimmer::after {animation:none;}
+ .ink-blog .ink-home-page .ink-cover[data-image-loaded="true"] .ink-cover-base {animation:none;filter:none;}
+}
+
+.ink-blog .ink-home-page .ink-post-list > .ink-home-skeleton-card {display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:16px;}
+.ink-blog .ink-home-page .ink-post-list > .ink-home-skeleton-card .ink-home-skeleton-cover {aspect-ratio:1.6;}
+.ink-blog .ink-home-page .ink-post-list > .ink-home-skeleton-card .ink-home-skeleton-copy {padding:4px 0;}
+@media(max-width:760px){.ink-blog .ink-home-page .ink-post-list > .ink-home-skeleton-card {grid-template-columns:96px minmax(0,1fr);}}

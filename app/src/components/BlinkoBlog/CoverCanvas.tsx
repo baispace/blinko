@@ -70,6 +70,7 @@ export function CoverCanvas({
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [broken, setBroken] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  useLayoutEffect(() => { setLoaded(false); setBroken(false); }, [src]);
 
   // 首帧就量一次：useLayoutEffect 在绘制前跑，文字不会出现「先空后闪」。
   useLayoutEffect(() => {
@@ -153,6 +154,7 @@ export function CoverCanvas({
       className={"ink-cover" + (className ? " " + className : "")}
       data-placement={placement}
       data-text={withText ? "on" : "off"}
+      data-image-loaded={loaded ? "true" : "false"}
       data-broken={broken ? "1" : undefined}
       data-fit={isolated || containBanner ? "contain" : "cover"}
       data-artwork={isolated ? "icon" : "image"}

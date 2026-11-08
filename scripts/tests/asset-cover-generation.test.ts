@@ -12,11 +12,11 @@ test('candidate upload stays private and does not apply or publish content',asyn
 test('all entry points honor the shared account generation guard',async()=>{const {coverGenerationJobs}=await import('../../server/lib/coverGenerationLock');const {db}=fixture();coverGenerationJobs.add(7);try{await expect(generateAssetCover(db,7,{target,sourceVersion:new Date(0).toISOString(),modelId:4})).rejects.toMatchObject({code:'TOO_MANY_REQUESTS'});}finally{coverGenerationJobs.delete(7);}});
 test('source changed while generating never uploads or applies candidate',async()=>{const {db,row}=fixture();const buffer=await sharp({create:{width:8,height:8,channels:3,background:'#7455ef'}}).png().toBuffer();let uploads=0;await expect(generateAssetCover(db,7,{target,sourceVersion:new Date(0).toISOString(),modelId:4},{generate:async()=>{row.updatedAt=new Date(2);return buffer;},fetcher:fetch,upload:async()=>{uploads++;return {} as any;}})).rejects.toMatchObject({code:'CONFLICT'});expect(uploads).toBe(0);});
 
-test('invalid model tiles produce a labelled standard option instead of uploading the broken image',async()=>{
+test('complete covers retain AI output without substituting a standard icon',async()=>{
  const white=await sharp({create:{width:200,height:200,channels:3,background:'#fff'}}).png().toBuffer();
  for(const type of ['note','topic'] as const){
   const {db}=fixture();let uploads=0;
-  const result=await generateAssetCover(db,7,{target:{type,id:8},sourceVersion:new Date(0).toISOString(),modelId:4},{generate:async()=>white,fetcher:fetch,upload:async(args:any)=>{uploads++;expect(args.metadata.aiCover.generationMode).toBe('standard');expect(args.buffer.equals(white)).toBe(false);return {filePath:'/private-cover.webp'} as any;}});
-  expect(result.generationMode).toBe('standard');expect(uploads).toBe(1);
+  const result=await generateAssetCover(db,7,{target:{type,id:8},sourceVersion:new Date(0).toISOString(),modelId:4},{generate:async()=>white,fetcher:fetch,upload:async(args:any)=>{uploads++;expect(args.metadata.aiCover.generationMode).toBe('ai');expect(args.buffer.equals(white)).toBe(false);return {filePath:'/private-cover.webp'} as any;}});
+  expect(result.artwork).toBe("image");expect(result.generationMode).toBe('ai');expect(uploads).toBe(1);
  }
 });

@@ -72,9 +72,10 @@ function dto(note: SettingsNote, noteCover: CoverImage | null = null) {
   const blogCover = note.attachments.find(image => image.id === p?.draftCoverAttachmentId) ?? null;
   const cover = blogCover ?? noteCover ?? null;
   const config = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig) ?? { ...emptyCoverConfig(), mode: cover ? 'full' as const : 'overlay' as const };
-  const kind = (cover?.metadata as any)?.blogAICover?.assetKind;
+  const kind = (cover?.metadata as any)?.blogAICover?.assetKind ?? (cover?.metadata as any)?.aiCover?.assetKind;
   if (kind === "isolated-illustration") config.artwork = "icon";
   if (kind === "isolated-app-tile") config.artwork = "tile";
+  if (kind === "complete-cover") { config.artwork = "image"; config.mode = "full"; }
   const metadata = (note.metadata || {}) as Record<string, unknown>;
   return {
     token: settingsToken(note), reviewToken: publicationReviewToken(note), publicCoverConfig: readPublicCoverConfig(p?.coverConfig), revision: p?.revision ?? 0,
@@ -153,13 +154,16 @@ export async function savePublishSettings(db: PrismaClient, accountId: number, i
     }
     if (input.coverTitle !== current.config.title && input.coverTitle && !validShortCoverTitle(input.coverTitle)) throw new TRPCError({ code: 'BAD_REQUEST', message: '封面短标题请填写 2–8 字（推荐 4–6 字）。' });
     let imageId = input.coverAttachmentId;
+    let completeCover = false;
     if (input.coverPath || imageId) {
       const image = await tx.attachments.findFirst({ where: { accountId, ...(input.coverPath ? { path: input.coverPath } : { id: imageId! }), OR: [{ noteId: null }, { noteId: note.id }] } });
       if (!image || !/^image\/(png|jpeg|webp|gif|avif)$/.test(image.type) || Number(image.size) > 10 * 1024 * 1024) throw new TRPCError({ code: 'BAD_REQUEST', message: '请选择本人上传且未关联其他笔记的图片，最大 10MB。' });
+      completeCover = ((image.metadata as any)?.blogAICover?.assetKind ?? (image.metadata as any)?.aiCover?.assetKind) === "complete-cover";
       await tx.attachments.update({ where: { id: image.id }, data: { noteId: note.id } }); imageId = image.id;
     }
-    if (imageId && input.coverMode === 'overlay' && !input.coverTitle) throw new TRPCError({ code: 'BAD_REQUEST', message: '底图模式需要填写封面短标题。' });
+    if (!completeCover && imageId && input.coverMode === 'overlay' && !input.coverTitle) throw new TRPCError({ code: 'BAD_REQUEST', message: '底图模式需要填写封面短标题。' });
     const config = normalizeCoverConfig({ ...current.config, title: input.coverTitle, subtitle: input.coverSubtitle, mode: input.coverMode, artwork: input.coverArtwork ?? current.config.artwork, palette: input.coverPalette ?? current.config.palette, focus: imageId !== note.publication?.draftCoverAttachmentId ? null : current.config.focus });
+    if (completeCover) { config.mode = "full"; config.artwork = "image"; }
     const metadata = { ...writeDraftCoverConfig(note.metadata, config), title: input.title, summary: input.summary,
       // Empty overrides make search/share metadata inherit the public article.
       blogSeo: { title: '', description: '', image: '', imageAlt: '' },

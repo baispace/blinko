@@ -14,11 +14,11 @@ import {
   shortCoverTitleLength,
   validShortCoverTitle,
 } from '@shared/lib/blogPublishSettings';
-import { COVER_TEMPLATE_VERSION } from '@shared/lib/blogCoverText';
+import { COVER_TEMPLATE_VERSION, normalizeCoverTextConfig } from '@shared/lib/blogCoverText';
 
 type Options = Pick<Awaited<ReturnType<typeof api.blog.coverGenerationOptions.query>>, 'suggestedTitle'|'artPlan'|'modelTitle'|'modelKey'|'models'|'revision'|'prompt'> & {sourceVersion?:string};
 type Copy = Awaited<ReturnType<typeof api.blog.generateCopyGroup.mutate>>;
-type Base = { id: number | null; path: string; palette?: string; artwork?: "icon" | "tile" | "image" };
+type Base = { coverTitle?: string; coverSubtitle?: string; id: number | null; path: string; palette?: string; artwork?: "icon" | "tile" | "image" };
 
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '操作失败，请重试。';
@@ -81,6 +81,8 @@ export function BlogCoverGeneratorDialog({
   const [previewSubtitle, setPreviewSubtitle] = useState(initial?.coverSubtitle ?? '');
   const [overlay, setOverlay] = useState(target?.type !== 'note' && initial?.coverMode !== 'full');
   const [scene, setScene] = useState<CoverPreviewSceneKey>('double');
+  const [showOriginal, setShowOriginal] = useState(false);
+  const completeCover = (picked?.artwork ?? initial?.text?.artwork) === 'image' && !overlay;
   const alive = useRef(true);
   const loadRequest = useRef(0);
 
@@ -142,7 +144,7 @@ export function BlogCoverGeneratorDialog({
 
   const generate = async () => {
     if (target?.type !== 'note' && !validShortCoverTitle(title)) {
-      setError('封面大字要 2–8 字（推荐 4–6 字），它会作为淡化大字横贯画面，图标居中覆盖。');
+      setError('封面标题要 2–8 字（推荐 4–6 字），会随整张图片一起生成。');
       return;
     }
     setBusy('image');
@@ -154,26 +156,25 @@ export function BlogCoverGeneratorDialog({
       setOptions(config);
       const model = config.models.find((item) => item.available);
       if (!model) throw new Error('尚未配置可用生图模型，可上传图片，或到 AI 设置中配置。');
-      const result = target ? await api.blog.generateAssetCover.mutate({target,sourceVersion:('sourceVersion' in config ? config.sourceVersion : '') || '',modelId:model.id,direction:direction.trim() || undefined}) : await api.blog.generateCover.mutate({
+      const result = target ? await api.blog.generateAssetCover.mutate({target,sourceVersion:('sourceVersion' in config ? config.sourceVersion : '') || '',modelId:model.id,direction:[title.trim() && `封面标题：${title.trim()}`, subtitle.trim() && `封面副标题：${subtitle.trim()}`, direction.trim()].filter(Boolean).join("；").slice(0,300) || undefined}) : await api.blog.generateCover.mutate({
         noteId,
         modelId: model.id,
         style,
-        direction: direction.trim() || undefined,
+        direction: [title.trim() && `封面标题：${title.trim()}`, subtitle.trim() && `封面副标题：${subtitle.trim()}`, direction.trim()].filter(Boolean).join("；").slice(0,300) || undefined,
         revision: config.revision,
       });
       if (!alive.current) return;
-      const list: Base[] = (result.candidates ?? []).map((item) => ({ id: item.id, path: item.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" : "image" }));
+      const list: Base[] = (result.candidates ?? []).map((item) => ({ coverTitle: title, coverSubtitle: subtitle, id: item.id, path: item.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" | "image" : "image" }));
       if (!list.length) throw new Error('模型没有返回图片，请重试。');
-      setPicks(list);
-      setPicked({ id: result.id, path: result.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" : "image" });
+      setPicks(previous => [...list, ...previous.filter(item => !list.some(next => next.path === item.path))].slice(0, 6));
+      setShowOriginal(false);
+      setPicked({ coverTitle: title, coverSubtitle: subtitle, id: result.id, path: result.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" | "image" : "image" });
       setPreviewTitle(title);
       setPreviewSubtitle(subtitle);
-      setOverlay(target?.type !== 'note');
+      setOverlay(false);
       setStep('result');
       setNotice(
-        result.generationMode === 'standard'
-          ? '模型图案未符合封面要求，已提供同主题的标准图标封面；可直接使用，也可再次尝试 AI。'
-          : list.length > 1
+        list.length > 1
           ? `出了 ${list.length} 张，选一张用；也可以先看看各场景的效果。`
           : '封面已生成，可以先看看各场景的效果。',
       );
@@ -191,7 +192,7 @@ export function BlogCoverGeneratorDialog({
       path: picked.path,
       coverTitle: previewTitle,
       coverSubtitle: previewSubtitle,
-      coverMode: target?.type !== 'note' && overlay ? 'overlay' : 'full',
+      coverMode: completeCover ? 'full' : target?.type !== 'note' && overlay ? 'overlay' : 'full',
       coverArtwork: picked.artwork ?? initial?.text?.artwork,
       coverPalette: picked.palette ?? initial?.text?.palette,
     });
@@ -199,7 +200,7 @@ export function BlogCoverGeneratorDialog({
   };
 
   const invalidTitle = !!title.trim() && !validShortCoverTitle(title);
-  const textConfig = target?.type !== 'note' && previewTitle.trim()
+  const textConfig = completeCover ? normalizeCoverTextConfig({ mode: 'full', artwork: 'image', title: '', subtitle: '' }) : target?.type !== 'note' && previewTitle.trim()
     ? {
         mode: (overlay ? 'overlay' : 'full') as 'overlay' | 'full',
         templateVersion: initial?.text?.templateVersion || COVER_TEMPLATE_VERSION,
@@ -253,7 +254,7 @@ export function BlogCoverGeneratorDialog({
           {busy === 'load' && <p className="text-sm text-default-500" role="status">正在读取生图设置…</p>}
           {busy === 'copy' && <p className="text-sm text-default-500" role="status">正在想文案…</p>}
           {busy === 'image' && (
-            <p className="text-sm text-default-500" role="status">正在生成封面配图，稍等片刻…</p>
+            <p className="text-sm text-default-500" role="status">正在生成完整封面，稍等片刻…</p>
           )}
           {!!notice && (
             <div className="mb-3 rounded-lg bg-primary-50 px-3 py-2 text-sm text-primary" role="status">
@@ -271,22 +272,22 @@ export function BlogCoverGeneratorDialog({
               {target?.type === 'note' && <p className="text-sm text-default-500">根据笔记内容生成配图，应用到笔记顶部；标题由文档本身展示。生成后仍可调整裁切位置，不会发布到博客。</p>}
               <section className="flex flex-col gap-1">
                 <h3 className="text-sm font-medium text-foreground">{target?.type === 'note' ? '笔记封面' : target?.type === 'topic' ? '专题封面' : '文章封面'}</h3>
-                <p className="text-xs leading-6 text-default-500">主题色背景和文字由系统绘制，AI 只生成一枚无字的浅立体图标砖，避免中文错字和排版漂移。</p>
+                <p className="text-xs leading-6 text-default-500">AI 一次生成完整封面，统一完成背景、插画与标题排版；生成后直接预览和应用。</p>
                 <details className="mt-2 text-xs text-default-500">
                   <summary className="cursor-pointer">查看视觉基准</summary>
                   <img src="/cover-reference/approved-layout.png" alt="视觉基准：主题色背景、大字与中央图形组成的封面" className="mt-2 w-full rounded-lg" />
-                  <p className="mt-2">此图用于对照最终版式；生图模型只负责中央图形，其余由系统稳定组合。</p>
+                  <p className="mt-2">此图仅作风格参考，最终构图与文字由 AI 一体化生成。</p>
                 </details>
               </section>
 
               {options?.artPlan && (
                 <div className="rounded-xl bg-default-50 px-3 py-2.5 text-xs leading-6 text-default-600">
-                  <p>画面方案：{options.artPlan.label} · 独立图案，系统组合背景与文字</p>
+                  <p>画面方案：{options.artPlan.label} · 完整封面，一体化生成</p>
                   <p>模型：{options.modelKey || options.modelTitle || '未配置生图模型'} · 每次生成一张</p>
                   {options.modelKey && options.modelKey.trim().toLowerCase() !== 'image-01' && (
                     <p>未找到可用的 image-01，暂用已配置模型；可到 AI 设置中添加。</p>
                   )}
-                  <p>每次生成一张图案，自动分离专用色底并检查图标完整性。图案不合格时提供并标注标准图标封面，不自动重复调用 AI。</p>{!options.models.some(model => model.available) && <p className="text-warning-600">当前没有可用的生图模型。点击下方「配置生图模型」，配置完成后返回此窗口即可刷新。</p>}
+                  <p>每次生成一张完整封面。文字已包含在图片中，修改文案后需重新生成。</p>{!options.models.some(model => model.available) && <p className="text-warning-600">当前没有可用的生图模型。点击下方「配置生图模型」，配置完成后返回此窗口即可刷新。</p>}
                 </div>
               )}
 
@@ -311,7 +312,7 @@ export function BlogCoverGeneratorDialog({
                   />
                   {invalidTitle && (
                     <small className="text-xs text-danger">
-                      封面大字要 2–8 字（推荐 4–6 字）：它会排在画面左侧，超过 8 字请精简。
+                      封面标题要 2–8 字（推荐 4–6 字），文字会融入生成的图片。
                     </small>
                   )}
                 </label>
@@ -385,13 +386,17 @@ export function BlogCoverGeneratorDialog({
 
           {step === 'result' && (
             <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-default-500">完整封面已生成，可切换场景检查裁切，满意后直接应用。</p>
+                <button type="button" className="shrink-0 text-sm text-primary" aria-pressed={showOriginal} onClick={() => setShowOriginal(value => !value)}>{showOriginal ? '返回场景预览' : '查看完整原图'}</button>
+              </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 {target?.type === 'note' ? <span className="text-sm text-default-500">笔记顶部 · 2.35:1 · 应用后可调整裁切</span> : <CoverSceneSwitch value={scene} onChange={setScene} disabled={!!busy} />}
                 <small className="text-xs text-default-400">
                   {target?.type === 'note' ? '应用配图，不叠加封面文字' : COVER_PREVIEW_SCENES.find((item) => item.key === scene)?.note}
                 </small>
               </div>
-              {picked ? (
+              {picked && showOriginal ? <img src={blogImageUrl(picked.path)} alt="完整封面原图" className="w-full rounded-xl" /> : picked ? (
                 target?.type === 'note' ? <img src={blogImageUrl(picked.path)} alt="笔记封面预览" className="w-full aspect-[2.35/1] object-cover rounded-lg" /> : <CoverScenePreview
                   scene={scene}
                   src={blogImageUrl(picked.path)}
@@ -402,8 +407,8 @@ export function BlogCoverGeneratorDialog({
                 <p className="py-8 text-center text-sm text-default-500">尚未生成</p>
               )}
               {picks.length > 1 && (
-                <div className="flex flex-col gap-2" role="group" aria-label="候选底图">
-                  <p className="text-sm text-default-500">出了 {picks.length} 张，选一张用：</p>
+                <div className="flex flex-col gap-2" role="group" aria-label="候选封面">
+                  <p className="text-sm text-default-500">本次窗口保留最近 {picks.length} 张，点击切换比较：</p>
                   <div className="flex gap-2 overflow-x-auto">
                     {picks.map((item) => (
                       <button
@@ -414,11 +419,11 @@ export function BlogCoverGeneratorDialog({
                         }`}
                         aria-pressed={picked?.id === item.id}
                         disabled={!!busy}
-                        onClick={() => setPicked(item)}
+                        onClick={() => { setPicked(item); setPreviewTitle(item.coverTitle ?? title); setPreviewSubtitle(item.coverSubtitle ?? subtitle); setOverlay(false); }}
                       >
                         <img
                           src={blogImageUrl(item.path)}
-                          alt="候选底图"
+                          alt="候选封面"
                           loading="lazy"
                           className="h-16 w-28 object-cover"
                         />
@@ -432,7 +437,8 @@ export function BlogCoverGeneratorDialog({
 
           {step === 'preview' && (
             <div className="flex flex-col gap-5" role="region" aria-label="封面预览">
-              <div className="flex flex-col gap-3" style={target?.type === 'note' ? {display:'none'} : undefined}>
+              {completeCover && <p className="text-sm text-default-500">文字已融入整张封面。可检查不同场景的裁切效果；修改文案请重新生成。</p>}
+              <div className="flex flex-col gap-3" style={target?.type === 'note' || completeCover ? {display:'none'} : undefined}>
                 <label className="flex flex-col gap-1.5">
                   <span className="flex items-center gap-2 text-sm">
                     封面大字
@@ -442,7 +448,7 @@ export function BlogCoverGeneratorDialog({
                     className="w-full"
                     maxLength={24}
                     value={previewTitle}
-                    disabled={!!busy}
+                    disabled={!!busy || picked?.artwork === "image"}
                     placeholder="例如：三段式改造"
                     onChange={(event) => setPreviewTitle(event.target.value)}
                   />
@@ -456,7 +462,7 @@ export function BlogCoverGeneratorDialog({
                     className="w-full"
                     maxLength={40}
                     value={previewSubtitle}
-                    disabled={!!busy}
+                    disabled={!!busy || picked?.artwork === "image"}
                     placeholder="例如：一次上线，三段召回"
                     onChange={(event) => setPreviewSubtitle(event.target.value)}
                   />
@@ -464,14 +470,14 @@ export function BlogCoverGeneratorDialog({
                 <Switch
                   size="sm"
                   isSelected={overlay}
-                  isDisabled={!!busy || target?.type === 'note'}
+                  isDisabled={!!busy || target?.type === 'note' || picked?.artwork === "image"}
                   onValueChange={setOverlay}
                   classNames={{label: 'text-sm'}}
                 >
                   在图片上显示标题
                 </Switch>
                 <p className="text-xs text-default-500">
-                  短标题横贯画面，淡化后置于居中图标后方；图案保持完整，极小缩略图隐藏文字。
+                  新封面的文字已融入图片，不再额外叠加标题。修改文字请返回后重新生成。
                 </p>
               </div>
               <div className="flex min-w-0 flex-col gap-4">
@@ -489,7 +495,7 @@ export function BlogCoverGeneratorDialog({
                     config={textConfig}
                   />
                 ) : (
-                  <p className="py-8 text-center text-sm text-default-500">还没有底图</p>
+                  <p className="py-8 text-center text-sm text-default-500">还没有封面</p>
                 )}
               </div>
             </div>
@@ -499,7 +505,7 @@ export function BlogCoverGeneratorDialog({
         <footer className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t sm:flex-row sm:items-center border-default-200 px-5 py-4">
           <p className="text-xs text-default-500">
             {step === 'input'
-              ? target?.type === 'note' ? '先生成候选配图，点击应用后才会修改笔记封面。' : target?.type === 'topic' ? '先生成候选封面，保存专题资料后生效。' : '生成的只是草稿底图，保存后才会进入发布设置。'
+              ? target?.type === 'note' ? '先生成候选配图，点击应用后才会修改笔记封面。' : target?.type === 'topic' ? '先生成候选封面，保存专题资料后生效。' : '生成完整候选封面，应用后保存发布设置才会生效。'
               : step === 'result'
                 ? '先看看效果，满意再应用。'
                 : target?.type === 'topic' ? '预览的是专题封面效果；应用后请保存专题资料。' : '预览的是待发布效果；应用后仍需在发布设置里保存。'}
@@ -535,8 +541,8 @@ export function BlogCoverGeneratorDialog({
                 <Button variant="flat" isDisabled={!!busy} onPress={() => void generate()} startContent={<Icon icon="tabler:refresh" width={15} />}>
                   重新生成
                 </Button>
-                <Button color="primary" isDisabled={!!busy} onPress={() => setStep('preview')} startContent={<Icon icon="tabler:eye" width={15} />}>
-                  预览各场景
+                <Button color="primary" isDisabled={!!busy} onPress={apply} startContent={<Icon icon="tabler:check" width={15} />}>
+                  应用到封面
                 </Button>
               </>
             )}

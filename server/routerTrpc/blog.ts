@@ -18,6 +18,18 @@ import {
 import { readCoverState, saveDraftCoverText } from "../lib/blogCoverConfig";
 import { readAiCopyState } from "../lib/blogAiCandidates";
 import { resolveBlogSEO, publicOrigin } from "../lib/publicBlogSEO";
+import { cache } from "@shared/lib/cache";
+
+/**
+ * 公开读接口的内存缓存 TTL。
+ *
+ * publicSEO / publicIndex / publicArticle 是公开站 SPA 导航与复访的热路径，
+ * 每次现算要拉整篇正文、前后篇、相关推荐和首页整页数据，线上实测单次几百
+ * 毫秒。SSR 的 HTML 已有 30s 运行时缓存与 60s 边缘缓存，tRPC 这层却一直是
+ * 裸查库 —— 读者在站内点来点去等于每步都重算一遍。用短 TTL + 过期先回旧值、
+ * 后台刷新，把重复访问压到毫秒级；冷启动那一次仍不可避免。
+ */
+const PUBLIC_READ_CACHE_TTL = 30_000;
 import {
   previewArticleSeo,
   previewTopicSeo,
@@ -1364,7 +1376,13 @@ export const blogRouter = router({
       // path 里可能带 ?page=N —— 分页页的 canonical / rel=prev,next 靠它。
       const [path, query] = input.path.split("?");
       const page = Number(new URLSearchParams(query ?? "").get("page")) || 1;
-      const seo = await resolveBlogSEO(prisma, path, origin, undefined, page);
+      const seo = {
+        ...(await cache.wrap(
+          `blogPublicSEO:${path}:${origin}:${page}`,
+          () => resolveBlogSEO(prisma, path, origin, undefined, page),
+          { ttl: PUBLIC_READ_CACHE_TTL, alowStale: true },
+        )),
+      };
       const query2 = new URLSearchParams(query ?? "");
       if (
         query2.has("topic") ||
@@ -1386,7 +1404,13 @@ export const blogRouter = router({
         })
         .optional(),
     )
-    .query(({ input }) => publicIndex(prisma, input ?? {})),
+    .query(({ input }) =>
+      cache.wrap(
+        `blogPublicIndex:${input?.accountId ?? ""}:${input?.page ?? 1}`,
+        () => publicIndex(prisma, input ?? {}),
+        { ttl: PUBLIC_READ_CACHE_TTL, alowStale: true },
+      ),
+    ),
 
   publicPosts: publicProcedure
     .input(
@@ -1469,7 +1493,13 @@ export const blogRouter = router({
         topicSlug: z.string().max(80).optional(),
       }),
     )
-    .query(({ input }) => publicArticle(prisma, input)),
+    .query(({ input }) =>
+      cache.wrap(
+        `blogPublicArticle:${input.accountId ?? ""}:${input.publishId}:${input.topicSlug ?? ""}`,
+        () => publicArticle(prisma, input),
+        { ttl: PUBLIC_READ_CACHE_TTL, alowStale: true },
+      ),
+    ),
 
   /**
    * 公开埋点：记一次文章阅读。

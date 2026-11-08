@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "@/components/BlinkoBlog/public/doc-layout.css";
-import { blogRoute } from "@/lib/blogPublicBase";
+import { blogRoute, blogInternalPath } from "@/lib/blogPublicBase";
+import superjson from "superjson";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/publicBlogClient";
 import { blogDeviceId, blogStatsEnabled } from "@/lib/blogDevice";
@@ -22,13 +23,37 @@ import {
   articleURL,
 } from "@/components/BlinkoBlog/public/BlogShell";
 type Article = Awaited<ReturnType<typeof api.blog.publicArticle.query>>;
+/**
+ * 服务端首屏包里若已内嵌这篇正文，就直接拿来当初始状态，
+ * 省掉首屏那次 publicArticle 往返（否则页面会先空一下再刷出来）。
+ *
+ * 只在「无 ?topic= 上下文」且 publishId 对得上时复用：带专题的口径不同
+ * （topicMode/上下篇会不一样），那种情况仍走网络重新拉。
+ */
+function bootstrapArticleFor(id: string, topic?: string): Article | null {
+  if (topic) return null;
+  try {
+    const payload = JSON.parse(
+      document.getElementById("ink-blog-bootstrap")?.textContent || "null",
+    );
+    if (payload?.path !== blogInternalPath(window.location.pathname)) return null;
+    if (!payload.article) return null;
+    const article = superjson.deserialize<Article>(payload.article);
+    return article?.publishId === id ? article : null;
+  } catch {
+    return null;
+  }
+}
 export default function PublishedNotePage() {
   const { id = "" } = useParams(),
     [params] = useSearchParams(),
     topic = params.get("topic") || undefined;
   const site = useBlogSite();
-  const [article, setArticle] = useState<Article>(null),
-    [loading, setLoading] = useState(true),
+  // 首屏包里的正文（若有）：既做初始 state，也用一个 ref 标记「首次拉取可跳过」。
+  const [bootstrap] = useState(() => bootstrapArticleFor(id, topic));
+  const usedBootstrap = useRef(!!bootstrap);
+  const [article, setArticle] = useState<Article>(bootstrap),
+    [loading, setLoading] = useState(!bootstrap),
     [error, setError] = useState(false),
     [request, setRequest] = useState(0),
     // 文档模式：当前专题的目录（只含标题与地址，不带正文）。
@@ -58,6 +83,12 @@ export default function PublishedNotePage() {
   );
   useBlogTitle(article?.title || "公开文章");
   useEffect(() => {
+    // 首屏包已带这篇正文：跳过这一次拉取，state 已经初始化好了。
+    // 之后的 id/topic 变化或手动刷新（request）照常走网络。
+    if (usedBootstrap.current) {
+      usedBootstrap.current = false;
+      return;
+    }
     let current = true;
     setArticle(null);
     setLoading(true);

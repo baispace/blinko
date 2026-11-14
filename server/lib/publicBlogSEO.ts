@@ -752,12 +752,22 @@ export function injectBlogSEO(html: string, seo: BlogSEO) {
   const fallback = `<main data-ink-public-fallback><h1>${escapeXML(seo.title)}</h1><p>${escapeXML(seo.text)}</p><nav><a href="/blog">首页</a> <a href="/blog/topics">专题</a> ${seo.links.map((l) => `<a href="${escapeXML(l.url)}">${escapeXML(l.title)}</a>`).join(" ")}</nav></main>`;
   const runtime = `<script>window.__INK_BLOG_RUNTIME__=${JSON.stringify(seo.runtime || {}).replace(/</g, "\\u003c")}</script>`;
   const startup = `<script>document.documentElement.classList.add('ink-blog-js')</script><style>
-html.ink-blog-js,html.ink-blog-js body{background:#f7f7fc;margin:0}.ink-blog-js [data-ink-public-fallback]{display:none}[data-ink-blog-skeleton]{display:none}.ink-blog-js [data-ink-blog-skeleton]{display:block;max-width:1280px;margin:0 auto;padding:24px 32px;box-sizing:border-box}.ink-skeleton-nav{height:42px;width:210px;background:#fff;border-radius:28px;margin:0 auto 38px}.ink-skeleton-hero{height:300px;border-radius:20px;background:linear-gradient(110deg,#edeafb,#e3ddfb,#edeafb);margin-bottom:28px}.ink-skeleton-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.ink-skeleton-card{height:240px;border-radius:18px;background:#fff}@media(max-width:640px){[data-ink-blog-skeleton]{padding:20px 16px!important}.ink-skeleton-hero{height:220px}.ink-skeleton-grid{grid-template-columns:1fr}}</style>`;
+html.ink-blog-js,html.ink-blog-js body{background:#f7f7fc;margin:0}
+.ink-blog-js [data-ink-public-fallback]{display:none}
+[data-ink-blog-skeleton]{display:none}
+.ink-blog-js [data-ink-blog-skeleton]{display:block}
+${BLOG_SKELETON_CSS}</style>`;
   const bootstrap = seo.bootstrap
     ? `<script id="ink-blog-bootstrap" type="application/json">${JSON.stringify({ path: seo.bootstrap.path, data: superjson.serialize(seo.bootstrap.site), article: seo.bootstrap.article ? superjson.serialize(seo.bootstrap.article) : null }).replace(/</g, "\\u003c")}</script>`
     : "";
-  const skeleton =
-    '<div data-ink-blog-skeleton aria-hidden="true"><div class="ink-skeleton-nav"></div><div class="ink-skeleton-hero"></div><div class="ink-skeleton-grid"><div class="ink-skeleton-card"></div><div class="ink-skeleton-card"></div></div></div>';
+  /*
+   * 服务端首屏：按页面类型给一套骨架。
+   *
+   * 骨架用的是**真实页面同一套类名**（ink-home-grid / ink-aside /
+   * ink-reading / ink-topic-page …），尺寸由站点自己的 CSS 决定 ——
+   * 前端接管时只是把内容换进同一批盒子里，版面不重排，读者看不到跳变。
+   */
+  const skeleton = blogSkeleton(blogPageKind(seo.bootstrap?.path || ""));
   // 模板清理已经缓存过了，这里只剩两处与请求相关的插入。
   return prepareBlogTemplate(html)
     .replace(
@@ -850,4 +860,59 @@ export async function publicRSS(
   const site = await publicIndex(db, { accountId });
   const feed = await publicPosts(db, { accountId, limit: 40 });
   return blogRSS({ ...site, ...feed }, origin, basePath);
+}
+
+/**
+ * 骨架的通用样式。
+ *
+ * 只管「呼吸感」与盒子的基本形状；栅格与尺寸一律用站点自己的类名，
+ * 免得骨架与真实页面各写一套尺寸，接管时整屏跳一下。
+ */
+const BLOG_SKELETON_CSS = `
+[data-ink-blog-skeleton] *{box-sizing:border-box}
+.ink-skeleton-shimmer{background:var(--ink-tint,#f1eeff);border-radius:8px;position:relative;overflow:hidden}
+.ink-skeleton-shimmer::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);animation:ink-skeleton-shimmer 1.5s ease-in-out infinite}
+@keyframes ink-skeleton-shimmer{to{transform:translateX(100%)}}
+.ink-skeleton-chip{width:84px;height:32px;border-radius:999px}
+.ink-skeleton-hero{width:100%;aspect-ratio:2.9/1;border-radius:18px}
+.ink-skeleton-card-cover{width:100%;aspect-ratio:2.8/1;border-radius:0}
+.ink-skeleton-card-copy{display:grid;gap:10px;padding:18px}
+.ink-skeleton-line{height:14px;border-radius:7px}
+.ink-skeleton-line.is-short{width:62%}
+.ink-skeleton-panel{height:92px;border-radius:14px}
+.ink-skeleton-panel-tall{height:160px}
+@media(prefers-reduced-motion:reduce){.ink-skeleton-shimmer::after{animation:none}}
+`;
+
+/** 服务端输出哪种骨架：按公开路径判断。 */
+export function blogPageKind(path: string): "home" | "article" | "topic" {
+  const clean = path.split("?")[0].replace(/\/+$/, "");
+  if (/^\/article\//.test(clean) || /^\/[a-z0-9]{8,64}$/.test(clean)) return "article";
+  if (/^\/topic\//.test(clean) || /^\/t\//.test(clean)) return "topic";
+  return "home";
+}
+
+const shimmer = (cls: string, extra = "") =>
+  `<div class="ink-skeleton-shimmer ${cls}"${extra ? " " + extra : ""}></div>`;
+
+/**
+ * 服务端首屏骨架。
+ *
+ * 结构与前端同一页面的「加载中」状态一致：盒子位置、比例、栅格都一样，
+ * 只把文字与图片换成呼吸的灰块。前端接管时内容原位替换，不重排。
+ */
+export function blogSkeleton(kind: "home" | "article" | "topic"): string {
+  if (kind === "article") {
+    return `<div data-ink-blog-skeleton aria-hidden="true"><main class="ink-article-page"><section class="ink-article-hero-full"><div class="ink-article-hero" data-cover="true">${shimmer("ink-skeleton-hero")}</div></section><div class="ink-reading ink-wrap"><article class="ink-panel">${shimmer("ink-skeleton-line")}${shimmer("ink-skeleton-line")}${shimmer("ink-skeleton-line is-short")}${shimmer("ink-skeleton-line")}${shimmer("ink-skeleton-line is-short")}</article><aside class="ink-reading-aside">${shimmer("ink-skeleton-panel-tall")}</aside></div></main></div>`;
+  }
+  if (kind === "topic") {
+    return `<div data-ink-blog-skeleton aria-hidden="true"><main class="ink-wrap ink-topic-page"><section class="ink-topic-intro">${shimmer("ink-skeleton-panel-tall")}</section><section class="ink-topic-directory">${shimmer("ink-skeleton-panel")}${shimmer("ink-skeleton-panel")}${shimmer("ink-skeleton-panel")}</section></main></div>`;
+  }
+  const chips = Array.from({ length: 4 }, () => shimmer("ink-skeleton-chip")).join("");
+  const cards = Array.from(
+    { length: 4 },
+    () =>
+      `<div class="ink-home-skeleton-card">${shimmer("ink-skeleton-card-cover")}<div class="ink-skeleton-card-copy">${shimmer("ink-skeleton-line")}${shimmer("ink-skeleton-line is-short")}${shimmer("ink-skeleton-line")}</div></div>`,
+  ).join("");
+  return `<div data-ink-blog-skeleton aria-hidden="true"><main class="ink-wrap ink-home-page"><nav class="ink-chips">${chips}</nav><div class="ink-home-grid"><div class="ink-home-hero"><div class="ink-home-skeleton-banner">${shimmer("ink-skeleton-hero")}</div></div><div class="ink-home-list"><div class="ink-card-grid">${cards}</div></div><aside class="ink-aside">${shimmer("ink-skeleton-panel-tall")}${shimmer("ink-skeleton-panel")}${shimmer("ink-skeleton-panel-tall")}</aside></div></main></div>`;
 }

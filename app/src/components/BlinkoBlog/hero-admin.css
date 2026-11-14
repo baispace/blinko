@@ -161,3 +161,8 @@
 .blog-topic-form .blog-topic-card [data-slot=body] { padding:0 20px 20px; gap:16px; }
 .blog-topic-layout > #chapters { padding-bottom:20px; }
 @media(max-width:900px) { .blog-topic-layout { grid-template-columns:minmax(0,1fr); } }
+
+.blog-copy-editor { padding: 14px 0; border-bottom: 1px solid hsl(var(--heroui-default-200) / .6); }
+.blog-copy-editor:last-child { border-bottom: 0; }
+.blog-copy-editor textarea { display: block; width: 100%; resize: vertical; min-height: 44px; max-height: 240px; padding: 10px 12px; border: 1px solid hsl(var(--heroui-default-200)); border-radius: 12px; background: hsl(var(--heroui-default-50)); color: hsl(var(--heroui-foreground)); font: inherit; font-size: 14px; line-height: 1.65; }
+.blog-copy-editor textarea:focus { outline: 2px solid hsl(var(--heroui-primary) / .3); border-color: hsl(var(--heroui-primary)); }

@@ -9,6 +9,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { CoverCanvas } from './CoverCanvas';
+import { BlogAiCopyDialog } from './BlogAiCopyDialog';
 import { BlogCoverGeneratorDialog } from './BlogCoverGeneratorDialog';
 import { BlogCheckbox, BlogInput, BlogSelect, BlogTextarea } from './BlogUI';
 import { confirmBlogAction } from './confirmBlogAction';
@@ -19,7 +20,6 @@ import {
 } from '@shared/lib/blogPublishSettings';
 
 type Settings = Awaited<ReturnType<typeof api.blog.publishSettings.query>>;
-type Copy = Awaited<ReturnType<typeof api.blog.generateCopyGroup.mutate>>;
 type Base = { id: number | null; path: string } | null;
 type Form = {
   title: string;
@@ -33,12 +33,6 @@ type Form = {
   displayOrder: number;
   topics: { topicId: number; sectionId: number | null }[];
 };
-
-const copyFields = [
-  ['title', '公开标题'],
-  ['summary', '文章概要'],
-  ['coverTitle', '封面短标题'],
-] as const;
 
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '操作失败，请重试。';
@@ -59,19 +53,17 @@ export function ContentQuickPanel({
   const [base, setBase] = useState<Base>(null);
   /** 作者点了「移除草稿封面」：存下去，下次别把笔记封面又自动复用回来。 */
   const [coverDetached, setCoverDetached] = useState(false);
-  const [busy, setBusy] = useState<null | 'load' | 'copy' | 'upload' | 'save'>(
+  const [busy, setBusy] = useState<null | 'load' | 'upload' | 'save'>(
     'load',
   );
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [copy, setCopy] = useState<Copy | null>(null);
-  const [copyPicked, setCopyPicked] = useState<string[]>([]);
-  const [aiVersion, setAiVersion] = useState<string>();
+  const [copyOpen, setCopyOpen] = useState(false);
   const [sourceChoice, setSourceChoice] = useState<'keep' | 'adopt'>();
   const [coverAssistant, setCoverAssistant] = useState<
     'generate' | 'preview' | null
   >(null);
-  const [expanded, setExpanded] = useState<'' | 'copy' | 'topics' | 'diff'>('');
+  const [expanded, setExpanded] = useState<'' | 'topics' | 'diff'>('');
   const file = useRef<HTMLInputElement>(null);
   const alive = useRef(true);
 
@@ -105,8 +97,7 @@ export function ContentQuickPanel({
       setForm(value);
       setBase(image);
       setCoverDetached(false);
-      setCopy(null);
-      setCopyPicked([]);
+      setCopyOpen(false);
       setSourceChoice(undefined);
     } catch (error) {
       if (alive.current) setError(errorText(error));
@@ -131,33 +122,6 @@ export function ContentQuickPanel({
     const text = errorText(error);
     setError(text);
     RootStore.Get(ToastPlugin).error(text === '操作失败，请重试。' ? fallback : text);
-  };
-
-  const suggest = async () => {
-    if (!noteId) return;
-    setBusy('copy');
-    setError('');
-    setNotice('');
-    try {
-      const result = await api.blog.generateCopyGroup.mutate({ noteId });
-      if (!alive.current) return;
-      setCopy(result);
-      setCopyPicked(
-        copyFields
-          .filter(
-            ([key]) =>
-              !!result[key]?.trim() &&
-              (key !== 'coverTitle' || validShortCoverTitle(result[key])),
-          )
-          .map(([key]) => key),
-      );
-      setExpanded('copy');
-      if (result.issues.length) setNotice(result.issues.join(' '));
-    } catch (error) {
-      if (alive.current) notify(error, 'AI 建议生成失败，请重试。');
-    } finally {
-      if (alive.current) setBusy(null);
-    }
   };
 
   const upload = async (image: File) => {
@@ -199,7 +163,6 @@ export function ContentQuickPanel({
         sourceChoice,
         noteId,
         token: data.token,
-        expectedContentVersion: aiVersion,
         coverAttachmentId: base?.id ?? null,
         ...(base && !base.id ? { coverPath: base.path } : {}),
         coverDetached,
@@ -410,71 +373,11 @@ export function ContentQuickPanel({
             variant="flat"
             isDisabled={!!busy}
             startContent={<Icon icon="tabler:sparkles" width={15} />}
-            onPress={() => void suggest()}
+            onPress={() => setCopyOpen(true)}
           >
-            {busy === 'copy' ? '正在想…' : 'AI 优化文案'}
+            AI 优化文案
           </Button>
-          {copy && (
-            <div className="space-y-2 rounded-lg border border-default-200 bg-default-50 p-3">
-              <p className="text-xs text-default-500">选择要采用的建议，未选字段保留当前内容。</p>
-              {copyFields.map(([key, label]) => (
-                <label key={key} className="flex items-start gap-2 text-sm">
-                  <BlogCheckbox
-                    type="checkbox"
-                    disabled={
-                      !!busy ||
-                      !copy[key]?.trim() ||
-                      (key === 'coverTitle' && !validShortCoverTitle(copy[key]))
-                    }
-                    checked={copyPicked.includes(key)}
-                    onChange={(event) =>
-                      setCopyPicked((previous) =>
-                        event.target.checked
-                          ? [...previous, key]
-                          : previous.filter((field) => field !== key),
-                      )
-                    }
-                  />
-                  <span className="min-w-0">
-                    <b className="block text-xs">{label}</b>
-                    <span className="block truncate text-xs text-default-500">
-                      {copy[key] || '未生成'}
-                    </span>
-                  </span>
-                </label>
-              ))}
-              <div className="flex items-center gap-2 pt-1">
-                <Button
-                  size="sm"
-                  variant="light"
-                  isDisabled={!!busy}
-                  onPress={() => setCopy(null)}
-                >
-                  暂不采用
-                </Button>
-                <Button
-                  size="sm"
-                  color="primary"
-                  isDisabled={!!busy || !copyPicked.length}
-                  onPress={() => {
-                    patch(
-                      Object.fromEntries(
-                        copyPicked.map((key) => [
-                          key,
-                          copy[key as keyof typeof copy],
-                        ]),
-                      ),
-                    );
-                    setAiVersion(copy.contentVersion);
-                    setCopy(null);
-                    setNotice('建议已填入，保存后写入草稿。');
-                  }}
-                >
-                  采用选中建议
-                </Button>
-              </div>
-            </div>
-          )}
+
         </section>
 
         {/* ---------- ② 封面生成 ---------- */}
@@ -556,7 +459,15 @@ export function ContentQuickPanel({
                     setCoverDetached(false);
                     const kind = (image.metadata as any)?.blogAICover?.assetKind;
                     const generated = kind === 'isolated-illustration' || kind === 'isolated-app-tile';
-                    patch({ coverMode: generated ? 'overlay' : 'full', coverArtwork: kind === 'isolated-app-tile' ? 'tile' : generated ? 'icon' : 'image' });
+                    /*
+                     * 无字底图（AI 新生成的那张）：图里没有文字，标题由系统叠上去，
+                     * 所以默认走「叠字」版式；旧封面自带文字，仍按整图显示。
+                     */
+                    const textless = kind === 'illustration';
+                    patch({
+                      coverMode: generated || textless ? 'overlay' : 'full',
+                      coverArtwork: kind === 'isolated-app-tile' ? 'tile' : generated ? 'icon' : 'image',
+                    });
                   }
                 }}
               >
@@ -938,6 +849,19 @@ export function ContentQuickPanel({
           onClose={() => setCoverAssistant(null)}
         />
       )}
+      {copyOpen && <BlogAiCopyDialog noteId={noteId} onClose={() => setCopyOpen(false)} onApplied={async () => {
+        const next = await api.blog.publishSettings.query({ noteId });
+        const changes: Partial<Form> = {};
+        if (next.title !== data.title) changes.title = next.title;
+        if (next.summary !== data.summary) changes.summary = next.summary;
+        if (next.config.title !== data.config.title) changes.coverTitle = next.config.title;
+        if (next.config.subtitle !== data.config.subtitle) changes.coverSubtitle = next.config.subtitle;
+        patch(changes);
+        setData(next);
+        await onChanged?.();
+        setNotice('AI 文案已写入草稿。');
+      }} />}
+
     </aside>
   );
 }

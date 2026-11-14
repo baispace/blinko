@@ -4,7 +4,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from 'next-themes';
 import { Inspector, InspectParams } from 'react-dev-inspector';
-import { HeroUIProvider } from '@heroui/react';
+import { HeroUIProvider, Modal, ModalContent } from '@heroui/react';
 import './styles/github-markdown.css';
 import 'react-photo-view/dist/react-photo-view.css';
 import '@/lib/i18n';
@@ -177,7 +177,7 @@ const getWindowType = () => {
   return 'main';
 };
 
-function AppRoutes() {
+function AppRoutes({ routeLocation }: { routeLocation?: string } = {}) {
   const navigate = useNavigate();
   const windowType = getWindowType();
   useEffect(() => {
@@ -258,7 +258,7 @@ function AppRoutes() {
     case 'quicktool':
       return (
         <Suspense fallback={<LoadingPage />}>
-          <Routes>
+          <Routes location={routeLocation}>
             <Route path="/quicktool" element={<QuickToolPage />} />
             <Route path="*" element={<Navigate to="/quicktool" replace />} />
           </Routes>
@@ -266,7 +266,7 @@ function AppRoutes() {
       );
 
     case 'desktop-note':
-      return <Suspense fallback={<LoadingPage />}><Routes>
+      return <Suspense fallback={<LoadingPage />}><Routes location={routeLocation}>
         <Route path="/desktop-note" element={<ProtectedRoute><DesktopNotePage /></ProtectedRoute>} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="*" element={<Navigate to="/desktop-note" replace />} />
@@ -275,7 +275,7 @@ function AppRoutes() {
     case 'quicknote':
       return (
         <Suspense fallback={<LoadingPage />}>
-          <Routes>
+          <Routes location={routeLocation}>
             <Route path="/quicknote" element={<QuickNotePage />} />
             <Route path="*" element={<Navigate to="/quicknote" replace />} />
           </Routes>
@@ -285,7 +285,7 @@ function AppRoutes() {
     case 'quickai':
       return (
         <Suspense fallback={<LoadingPage />}>
-          <Routes>
+          <Routes location={routeLocation}>
             <Route path="/quickai" element={<QuickAIPage />} />
             <Route path="*" element={<Navigate to="/quickai" replace />} />
           </Routes>
@@ -295,7 +295,7 @@ function AppRoutes() {
     default: // main window
       return (
         <Suspense fallback={<LoadingPage />}>
-          <Routes>
+          <Routes location={routeLocation}>
             <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
@@ -348,7 +348,8 @@ function AppRoutes() {
 // Public readers do not mount workspace menus, editors, selection overlays or
 // account-setting providers. Guest access stays independent of login state.
 function AppExperience() {
-  const { pathname } = useLocation();
+  const managementLocation = useLocation();
+  const { pathname } = managementLocation;
   const publicBlog = pathname === '/blog' || pathname.startsWith('/blog/');
   // 博客管理是「内容管理的单独页面」：左下角入口点进来后不再套应用外壳，
   // 侧边栏与顶栏都退场，只留管理页本身 —— 免得像后台功能寄居在笔记应用里。
@@ -357,6 +358,14 @@ function AppExperience() {
   const standaloneManage = pathname.startsWith('/blog-manage');
   useEffect(() => { if (!publicBlog) RootStore.Get(PluginManagerStore).initInstalledPlugins(); }, [publicBlog]);
   if (publicBlog) return <AppRoutes />;
+  const from = (managementLocation.state as {from?: string} | null)?.from || '/';
+  if (pathname === '/blog-manage' && from?.startsWith('/') && !from.startsWith('//') && !from.startsWith('/blog-manage')) {
+    return <><AppProvider /><CommonLayout><div className="app-content"><AppRoutes routeLocation={from}/></div></CommonLayout>
+      <Modal isOpen hideCloseButton isDismissable={false} isKeyboardDismissDisabled size="5xl" classNames={{base:'blog-management-dialog',wrapper:'blog-management-dialog-wrapper'}}>
+        <ModalContent aria-label="博客管理"><AppRoutes /></ModalContent>
+      </Modal>
+    </>;
+  }
   if (standaloneManage) return <><AppProvider /><div className="app-content"><AppRoutes /></div></>;
   return <><AppProvider /><CommonLayout><div className="app-content"><AppRoutes /><BlinkoMultiSelectPop /></div></CommonLayout><BlinkoMusicPlayer /></>;
 }

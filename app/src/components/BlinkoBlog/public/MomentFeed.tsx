@@ -5,6 +5,10 @@ import { api } from "@/lib/publicBlogClient";
 import { blogDeviceId } from "@/lib/blogDevice";
 import { blogRoute } from "@/lib/blogPublicBase";
 import { Icon } from "@/components/Common/Iconify/icons";
+import {
+  PageEmpty,
+  PageError,
+} from "@/components/BlinkoBlog/public/PageState";
 import { PublicArticleBody } from "@/components/BlinkoBlog/PublicArticleBody";
 import { MomentFeedbackModal } from "./MomentFeedbackModal";
 import { type MomentFilter } from "@shared/lib/blogMoments";
@@ -447,16 +451,11 @@ export function MomentFeed({
 
   if (error && !items.length)
     return (
-      <div className="ink-moments-error" role="alert">
-        <span>{error}</span>
-        <button type="button" onClick={() => void load(true)}>
-          重试
-        </button>
-      </div>
+      <PageError message={error} onRetry={() => void load(true)} />
     );
 
   if (!items.length)
-    return <p className="ink-moments-empty">{emptyText(filter, month)}</p>;
+    return <PageEmpty title={emptyText(filter, month)} />;
 
   return (
     <>
@@ -493,12 +492,10 @@ export function MomentFeed({
       )}
 
       {error && (
-        <div className="ink-moments-error" role="alert">
-          <span>{error}</span>
-          <button type="button" onClick={() => void load(false, cursor ?? undefined)}>
-            重试
-          </button>
-        </div>
+        <PageError
+          message={error}
+          onRetry={() => void load(false, cursor ?? undefined)}
+        />
       )}
 
       {feedbackFor !== null && (

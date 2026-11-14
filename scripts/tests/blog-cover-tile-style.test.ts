@@ -274,8 +274,9 @@ describe("新版式合成：导出与页面一致", () => {
   });
 
   test("背景大字的透明度与页面共用同一个常量", () => {
-    expect(COVER_BACKDROP_ALPHA).toBeGreaterThan(0.1);
-    expect(COVER_BACKDROP_ALPHA).toBeLessThan(0.35);
+    // 大字是封面的识别点：太淡认不出写的是什么，太抢会压过图标砖。
+    expect(COVER_BACKDROP_ALPHA).toBeGreaterThan(0.3);
+    expect(COVER_BACKDROP_ALPHA).toBeLessThan(0.55);
   });
 });
 

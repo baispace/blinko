@@ -22,6 +22,7 @@ import {
   useBlogTitle,
   articleURL,
 } from "@/components/BlinkoBlog/public/BlogShell";
+import { PageEmpty, PageError } from "@/components/BlinkoBlog/public/PageState";
 type Article = Awaited<ReturnType<typeof api.blog.publicArticle.query>>;
 /**
  * 服务端首屏包里若已内嵌这篇正文，就直接拿来当初始状态，
@@ -208,7 +209,7 @@ export default function PublishedNotePage() {
   };
   const toc = (
     <nav aria-label="文章目录">
-      {headings.map((h, i) => (
+      {headings.map((h) => (
         <a
           key={h.id}
           href={"#" + h.id}
@@ -216,7 +217,6 @@ export default function PublishedNotePage() {
           aria-current={active === h.id ? "true" : undefined}
           style={{ paddingLeft: h.level === 3 ? 16 : 0 }}
         >
-          <span>{String(i + 1).padStart(2, "0")}</span>
           {h.text}
         </a>
       ))}
@@ -224,28 +224,31 @@ export default function PublishedNotePage() {
   );
   if (loading)
     return (
-      <main className="ink-wrap ink-empty" role="status">
-        正在加载公开文章…
+      <main className="ink-wrap ink-article-loading" role="status" aria-label="正在加载文章" aria-busy="true">
+        <div className="ink-article-loading-head"><div /><div /><div /></div>
+        <div className="ink-article-loading-layout">
+          <div className="ink-article-loading-body">{Array.from({length: 10}, (_, index) => <div key={index} />)}</div>
+          <aside aria-hidden="true"><div /><div /><div /></aside>
+        </div>
       </main>
     );
   if (error)
     return (
-      <main className="ink-wrap ink-empty" role="alert">
-        <h1>暂时无法加载文章</h1>
-        <button
-          className="ink-primary-button"
-          onClick={() => setRequest((n) => n + 1)}
-        >
-          重试
-        </button>
+      <main className="ink-wrap">
+        <PageError
+          message="暂时无法加载文章。"
+          onRetry={() => setRequest((n) => n + 1)}
+        />
       </main>
     );
   if (!article)
     return (
-      <main className="ink-wrap ink-empty">
-        <h1>文章未公开或已撤回</h1>
-        <p>该链接当前无法访问。</p>
-        <Link to={blogRoute("/blog")}>回到首页 →</Link>
+      <main className="ink-wrap">
+        <PageEmpty
+          title="文章未公开或已撤回"
+          hint="该链接当前无法访问。"
+          action={<Link to={blogRoute("/blog")}>回到首页 →</Link>}
+        />
       </main>
     );
   const context = article.primaryTopic?.slug;

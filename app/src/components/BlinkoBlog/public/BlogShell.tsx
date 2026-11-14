@@ -17,12 +17,15 @@ import superjson from "superjson";
 import { BlogMetadata } from "./BlogMetadata";
 import { AuthorCardView } from "./AuthorCard";
 import { copyrightYears, promoVisible } from "@shared/lib/blogFooter";
+import { coverArtPlan } from "@shared/lib/blogCoverArt";
+import { coverBackdropCss, coverTextEmWidth } from "@shared/lib/blogCoverText";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type RefObject,
@@ -308,6 +311,35 @@ export function PostCard({
 }) {
   const element = useRef<HTMLElement>(null);
   const entryKey = entry ?? "recommend";
+  /*
+   * 没有封面的文章也要给一条同样规格的视觉带。
+   *
+   * 卡片有图时是「视觉带 + 标题 + 摘要」，没图时只有文字 ——
+   * 同一屏里两种卡片并排，高度与节奏都不齐。这里补一条同尺寸的渐变带，
+   * 上面压着和封面一样的淡色大字（专题名，没有专题就用标题前几个字）。
+   */
+  const placeholder = useMemo(() => {
+    const plan = coverArtPlan(post.title, post.excerpt ?? "");
+    const word = (post.topics?.[0]?.name || post.title || "").trim().slice(0, 6);
+    /*
+     * 字号与真封面的大字同一套规则：整行字撑到画面宽度的 88%，
+     * 字数越多字越小 —— 这样「打撒」两个字和「详情推荐」四个字
+     * 在卡片里占的分量一样，一屏看下来是同一种排版。
+     */
+    const em = coverTextEmWidth(word) || 1;
+    /*
+     * 两条上限，与真封面的大字同一套：
+     *   · 宽度上限 —— 整行字最多撑到画面宽度的 88%；
+     *   · 高度上限 —— 字高不超过画面高度的 64%（2.8:1 的带子里约 22.8cqw），
+     *     否则两三个字的标题会被切掉上下半截。
+     */
+    const size = Math.min(88 / em, 22.8);
+    return {
+      palette: plan.overlayPalette,
+      word,
+      fontSize: `${size.toFixed(2)}cqw`,
+    };
+  }, [post.title, post.excerpt, post.topics]);
   const report = (kind: "impression" | "click") => {
     const deviceId = blogStatsEnabled() ? blogDeviceId() : null;
     if (!deviceId) return;
@@ -381,12 +413,30 @@ export function PostCard({
             </span>
           )}
         </span>
-      ) : null}
+      ) : (
+        // 没有封面也给一条同样规格的视觉带：卡片视图与列表视图都算首屏，
+        // 两种卡片并排时高度与节奏才一致。
+        <span className="ink-post-cover-box">
+          <span
+            className="ink-post-cover-empty"
+            style={{
+              background: coverBackdropCss(placeholder.palette),
+              ["--ink-cover-empty-size" as string]: placeholder.fontSize,
+            }}
+            aria-hidden="true"
+          >
+            <span>{placeholder.word}</span>
+          </span>
+        </span>
+      )}
       <div className={grid ? "ink-post-card-body" : "ink-post-copy"}>
         <h3>
           <Link to={articleURL(post, topic)}>{post.title}</Link>
         </h3>
-        <p>{post.excerpt}</p>
+        {/* 摘要与标题一字不差时（短笔记常见），重复一遍只会显得像出了错。 */}
+        {post.excerpt && post.excerpt.trim() !== post.title.trim() && (
+          <p>{post.excerpt}</p>
+        )}
         <PostMeta post={post} featured={showFeatured && !post.coverUrl} />
       </div>
       {!grid && (
@@ -1405,7 +1455,19 @@ export function BlogShell() {
       if (request === seq.current) setLoading(false);
     }
   }, [location.pathname, location.search]);
+  const previousStatsRoute = useRef({ pathname: location.pathname, search: location.search });
   useEffect(() => {
+    const previous = previousStatsRoute.current;
+    previousStatsRoute.current = { pathname: location.pathname, search: location.search };
+    const currentSearch = new URLSearchParams(location.search);
+    const previousSearch = new URLSearchParams(previous.search);
+    currentSearch.delete("range");
+    previousSearch.delete("range");
+    const onlyStatsRangeChanged = blogInternalPath(location.pathname) === "/blog/stats"
+      && previous.pathname === location.pathname
+      && previous.search !== location.search
+      && currentSearch.toString() === previousSearch.toString();
+    if (onlyStatsRangeChanged) return;
     if (
       !bootstrapped.current ||
       initialKey.current !== location.pathname + location.search

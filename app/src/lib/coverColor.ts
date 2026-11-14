@@ -84,7 +84,7 @@ export function darkenForWhiteText(rgb: RGB, minContrast = 4.5): RGB {
 
 /** 从像素里找主色。返回 null 表示没有可用像素（全透明 / 空图）。 */
 function dominantColor(pixels: Uint8ClampedArray): RGB | null {
-  // 量化到 4bit/通道（16 级），同一色块会落进同一个桶。
+  // Group similar gradient colors and favor chromatic regions over neutral icon tiles.
   const buckets = new Map<number, { count: number; r: number; g: number; b: number }>();
   for (let i = 0; i < pixels.length; i += 4) {
     const a = pixels[i + 3];
@@ -92,7 +92,7 @@ function dominantColor(pixels: Uint8ClampedArray): RGB | null {
     const r = pixels[i],
       g = pixels[i + 1],
       b = pixels[i + 2];
-    const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    const key = ((r >> 5) << 6) | ((g >> 5) << 3) | (b >> 5);
     const bucket = buckets.get(key);
     if (bucket) {
       bucket.count += 1;
@@ -105,8 +105,16 @@ function dominantColor(pixels: Uint8ClampedArray): RGB | null {
   }
   if (!buckets.size) return null;
   let best: { count: number; r: number; g: number; b: number } | null = null;
+  let bestScore = -1;
   for (const bucket of buckets.values()) {
-    if (!best || bucket.count > best.count) best = bucket;
+    const maximum = Math.max(bucket.r, bucket.g, bucket.b) / bucket.count;
+    const minimum = Math.min(bucket.r, bucket.g, bucket.b) / bucket.count;
+    const saturation = maximum > 0 ? (maximum - minimum) / maximum : 0;
+    const score = bucket.count * (0.08 + saturation * saturation);
+    if (score > bestScore) {
+      best = bucket;
+      bestScore = score;
+    }
   }
   if (!best) return null;
   return {
@@ -118,9 +126,15 @@ function dominantColor(pixels: Uint8ClampedArray): RGB | null {
 
 /** Keep both primary and secondary white text readable in either theme. */
 export function paletteFromColor(color: RGB): CoverPalette {
-  const light = darkenForWhiteText(color, 7.1);
+  const neutral = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
+  const softened = {
+    r: color.r * 0.8 + neutral * 0.2,
+    g: color.g * 0.8 + neutral * 0.2,
+    b: color.b * 0.8 + neutral * 0.2,
+  };
+  const light = darkenForWhiteText(softened, 7.1);
   const dark = scale(light, 0.55);
-  return { base: toHex(color), light: toHex(light), lightDeep: toHex(scale(light, 0.8)), dark: toHex(dark), darkDeep: toHex(scale(dark, 0.78)) };
+  return { base: toHex(color), light: toHex(light), lightDeep: toHex(scale(light, 0.92)), dark: toHex(dark), darkDeep: toHex(scale(dark, 0.9)) };
 }
 
 /** Random-looking per article, stable across refreshes and server/client rendering. */

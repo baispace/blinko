@@ -1,9 +1,29 @@
 import path from "node:path";
 import superjson from "superjson";
 
+/**
+ * 公开博客的独立服务（前后端分离部署）。
+ *
+ * 它只做三件事：
+ *   1. 托管公开前端的静态产物（dist/blog）；
+ *   2. 把 /api 反向代理到后端（用户的后台服务）；
+ *   3. 首页 / 文章 / 专题在服务端渲染首屏，并把数据一起内嵌进 HTML ——
+ *      前端接管时直接用这份数据，不再发一次同样的请求。
+ *
+ * 环境变量：
+ *   BLOG_PORT        监听端口（默认 4175）
+ *   BLOG_HOST        监听地址（默认 127.0.0.1，前面放反向代理）
+ *   BLOG_API_ORIGIN  后端地址（默认 http://127.0.0.1:1111）
+ *   BLOG_LOG         访问日志：off | access | all（默认 access）
+ *   BLOG_HTML_CACHE  首屏 HTML 的 CDN 缓存秒数（默认 60，0 表示不缓存）
+ */
+
 const root = path.resolve(import.meta.dir, "../dist/blog");
 const apiOrigin = process.env.BLOG_API_ORIGIN || "http://127.0.0.1:1111";
 const port = Number(process.env.BLOG_PORT || 4175);
+const host = process.env.BLOG_HOST || "127.0.0.1";
+const logMode = process.env.BLOG_LOG || "access";
+const htmlCacheSeconds = Number(process.env.BLOG_HTML_CACHE ?? 60);
 const { renderArticle, renderHome, renderTopic } =
   await import("../dist/blog-server/blog-article.server.js");
 const escape = (value: string) =>
@@ -22,14 +42,47 @@ async function query(name: string, input: unknown) {
   const body = await response.json();
   return superjson.deserialize<any>(body.result.data);
 }
-Bun.serve({
+/** 访问日志：一眼看出「慢在哪、重复请求了多少次、缓存命中没命中」。 */
+function logAccess(request: Request, url: URL, status: number, started: number, note?: string) {
+  if (logMode === "off") return;
+  const ms = Math.round(performance.now() - started);
+  const line = `${new Date().toISOString()} ${request.method} ${url.pathname}${url.search} ${status} ${ms}ms${note ? " " + note : ""}`;
+  if (logMode === "all" || status >= 400 || ms >= 300) console.log(line);
+  else console.log(line);
+}
+
+const server = Bun.serve({
   port,
-  hostname: "127.0.0.1",
+  hostname: host,
+  idleTimeout: 60,
   async fetch(request) {
+    const started = performance.now();
     const url = new URL(request.url);
+    // 健康检查：给反向代理与编排系统探活用，不进访问日志。
+    if (url.pathname === "/healthz") {
+      return new Response("ok", {
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+      });
+    }
     if (url.pathname.startsWith("/api/")) {
       const upstream = new URL(url.pathname + url.search, apiOrigin);
-      return fetch(new Request(upstream, request));
+      // 转发时补上原始 Host 与协议：后端要靠它判断公开域名与来源。
+      const headers = new Headers(request.headers);
+      headers.set("X-Forwarded-Host", request.headers.get("host") || host);
+      headers.set("X-Forwarded-Proto", url.protocol.replace(":", ""));
+      headers.set("X-Forwarded-For", request.headers.get("x-forwarded-for") || "");
+      try {
+        const response = await fetch(new Request(upstream, { ...request, headers }));
+        logAccess(request, url, response.status, started, "api");
+        return response;
+      } catch (error) {
+        console.error("[blog-api]", error);
+        logAccess(request, url, 502, started, "api-failed");
+        return new Response("接口暂时不可用，请稍后重试。", {
+          status: 502,
+          headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+        });
+      }
     }
     let decodedPath: string;
     try {
@@ -45,14 +98,19 @@ Bun.serve({
       const immutable = /^\/assets\/[^/]+-[\w-]+\.[a-z0-9]+$/.test(
         url.pathname,
       );
-      return new Response(request.method === "HEAD" ? null : file, {
+      // 字体与带 hash 的资源一样是内容寻址的：改了内容文件名就变，可以长缓存。
+      const hashed =
+        immutable || url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/font-assets/");
+      const response = new Response(request.method === "HEAD" ? null : file, {
         headers: {
           "Content-Type": file.type,
-          "Cache-Control": immutable
+          "Cache-Control": hashed
             ? "public, max-age=31536000, immutable"
             : "public, max-age=3600",
         },
       });
+      logAccess(request, url, response.status, started, `static ${file.size}B`);
+      return response;
     }
     if (/\.[a-z0-9]+$/i.test(url.pathname))
       return new Response("Not found", { status: 404 });
@@ -219,12 +277,36 @@ Bun.serve({
         });
       }
     }
+    /*
+     * 首屏 HTML 的缓存策略。
+     *
+     * 页面里带的是公开内容，短时间内对所有访客是一样的 ——
+     * 交给 CDN 缓存几十秒，能挡掉一整波重复请求；
+     * 浏览器端仍然每次都问一次（max-age=0），内容更新立刻可见。
+     */
+    const cacheControl =
+      htmlCacheSeconds > 0
+        ? `public, max-age=0, s-maxage=${htmlCacheSeconds}, stale-while-revalidate=300`
+        : "no-store";
+    logAccess(request, url, 200, started, `html ${html.length}B`);
     return new Response(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-store",
+        "Cache-Control": cacheControl,
       },
     });
   },
 });
-console.log(`Blog rendering server: http://127.0.0.1:${port}`);
+
+/** 收到停止信号就优雅退出：先停止接新请求，再收尾。 */
+function shutdown(signal: string) {
+  console.log(`[blog-serve] 收到 ${signal}，正在停止…`);
+  server.stop(true);
+  process.exit(0);
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+console.log(
+  `Blog rendering server: http://${host}:${port}  →  API ${apiOrigin}  日志 ${logMode}  HTML 缓存 ${htmlCacheSeconds}s`,
+);

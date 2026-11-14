@@ -1775,6 +1775,50 @@
   display: block;
   flex-shrink: 0;
 }
+
+/*
+ * 无封面文章的视觉带。
+ *
+ * 有封面时，卡片是「一条视觉带 + 标题 + 摘要」；没封面时只剩文字，
+ * 同一屏里两种卡片并排，高度和节奏都不齐。这条带子补上同样的位置与比例，
+ * 底色用文章主题色（和封面同一套渐变），上面压一行淡色大字。
+ *
+ * 字号跟着容器宽度走（容器查询），不用在 JS 里量尺寸 ——
+ * 这样它在瀑布流、列表、窄屏下都是同一套比例。
+ */
+.ink-post-cover-empty {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 2.8 / 1;
+  overflow: hidden;
+  container-type: inline-size;
+}
+/* 列表行里的缩略图位更方，字号上限跟着带宽走。 */
+.ink-post-row .ink-post-cover-box {
+  width: 180px;
+}
+.ink-post-row .ink-post-cover-empty {
+  aspect-ratio: 15 / 8;
+  border-radius: 10px;
+}
+.ink-post-cover-empty > span {
+  font-family:
+    "Ink Cover Sans",
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Noto Sans SC",
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 42%);
+  font-size: var(--ink-cover-empty-size, 22cqw);
+}
 /*
  * 「置顶」角标：深色玻璃 + 白字。
  * 封面是 AI 生成的紫系图，用主题紫做底会糊进画面；
@@ -3025,10 +3069,10 @@
   border: 0;
   box-shadow: none;
 }
-.ink-blog.has-cover-tint .ink-header .ink-desktop-nav a, .ink-blog.has-cover-tint .ink-header .ink-icon-btn {
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav > .ink-nav-item > a, .ink-blog.has-cover-tint .ink-header .ink-icon-btn {
   color: #fff;
 }
-.ink-blog.has-cover-tint .ink-header .ink-desktop-nav a:hover {
+.ink-blog.has-cover-tint .ink-header .ink-desktop-nav > .ink-nav-item > a:hover {
   background: rgb(255 255 255 / 12%);
   color: #fff;
 }
@@ -3681,3 +3725,26 @@
   .ink-blog .ink-header .ink-brand-logo {height:34px;}
   .ink-blog .ink-brand-wordmark {font-size:21px; max-width:112px;}
 }
+
+.ink-blog.has-cover-tint .ink-header .ink-nav-drop a { color: var(--ink-text); }
+.ink-blog.has-cover-tint .ink-header .ink-nav-drop a:hover { color: var(--ink-accent); background: var(--ink-tint); }
+.ink-nav-drop::before { content: ""; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
+.ink-article-loading { padding-top: 40px; padding-bottom: 64px; }
+.ink-article-loading-head { max-width: 800px; margin-bottom: 48px; }
+.ink-article-loading-head div, .ink-article-loading-body div, .ink-article-loading aside div { position: relative; overflow: hidden; background: var(--ink-tint); border-radius: 8px; height: 16px; margin-bottom: 18px; }
+.ink-article-loading-head div:first-child { height: 40px; width: 85%; }
+.ink-article-loading-head div:nth-child(2) { width: 60%; height: 28px; }
+.ink-article-loading-head div:last-child { width: 32%; }
+.ink-article-loading-layout { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 48px; }
+.ink-article-loading-body div:nth-child(4n) { width: 70%; margin-bottom: 36px; }
+.ink-article-loading aside div:first-child { height: 120px; }
+.ink-article-loading-head div::after, .ink-article-loading-body div::after, .ink-article-loading aside div::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent, rgb(255 255 255 / 35%), transparent); transform: translateX(-100%); animation: ink-article-shimmer 1.5s ease-in-out infinite; }
+@keyframes ink-article-shimmer { to { transform: translateX(100%); } }
+@media (max-width: 768px) { .ink-article-loading-layout { grid-template-columns: 1fr; } .ink-article-loading aside { display: none; } }
+@media (prefers-reduced-motion: reduce) { .ink-article-loading div::after { animation: none; } }
+
+/* A rounded reading surface flows out of the article color band. */
+.ink-blog .ink-article-hero-full::after { height: 24px; background: var(--ink-bg); border-radius: 24px 24px 0 0; }
+.ink-article-page > .ink-reading { margin-top: 12px; }
+.ink-article-page > .ink-reading > article > .ink-summary { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--ink-line); border-radius: 0; box-shadow: none; background: transparent; }
+@media(max-width:760px) { .ink-blog .ink-article-hero-full::after { height: 18px; border-radius: 18px 18px 0 0; } }

@@ -1,3 +1,7 @@
+import path from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { resolveStaticPublicDir } from "./cdnStaticDir";
+import { renderCoverLine } from "./coverTextRaster";
 import { coverGenerationJobs as generating } from './coverGenerationLock';
 import { readDraftBody } from "./blogPublishCheck";
 import { TRPCError } from "@trpc/server";
@@ -24,9 +28,40 @@ import {
 } from "./blogCoverConfig";
 import { composeCoverImage } from "./blogCoverComposition";
 
-import { coverArtPlan, preferCoverModels, COVER_ART_VERSION } from "../../shared/lib/blogCoverArt";
+import {
+  coverArtPlan,
+  preferCoverModels,
+  COVER_ART_VERSION,
+  COVER_ILLUSTRATION_COMPOSITION,
+  COVER_ILLUSTRATION_COMPOSITION_REMINDER,
+  COVER_ILLUSTRATION_TEXT_RULE,
+  COVER_ILLUSTRATION_TREATMENT,
+} from "../../shared/lib/blogCoverArt";
 
 export type CoverStyle = "ink";
+
+/**
+ * 封面产物的两种形态。
+ *
+ *   icon-tile    —— 博客文章封面：模型只出一枚图标砖，渐变背景、大字、
+ *                   方砖位置全由程序排（shared/lib/blogCoverText.ts）。
+ *                   与站内参考封面 approved-layout.png 一致。
+ *   illustration —— 独立配图（笔记配图、专题封面）：要的是一张能自己看的图，
+ *                   以整幅图片的形式出现，没有文字层可叠。
+ *
+ * 两种形态都不让模型写字：生图模型写不对中文，烤进图里的字永远是乱的。
+ */
+export type CoverArtifact = "icon-tile" | "illustration";
+
+/**
+ * 入口与产物的对应关系只在这里定一次。
+ *
+ * 之前三条生图入口各写各的提示词与后处理，同一个「封面」在站内能有三种长相；
+ * 现在入口只负责说清自己要什么产物，形态与提示词由这张表统一决定。
+ */
+export function coverArtifactFor(entry: "article" | "asset"): CoverArtifact {
+  return "illustration";
+}
 type ConfiguredModel = {
   id: number;
   title: string;
@@ -45,6 +80,9 @@ function isMiniMaxTextModel(model: ConfiguredModel) {
 }
 
 /** Provider-specific capabilities remain in the adapter, not the visual brief. */
+export function isMiniMaxH3(model: { modelKey: string }) {
+  return /^MiniMax-H3-Image(?:-Highspeed)?$/i.test(model.modelKey.trim());
+}
 export function isMiniMaxLiveModel(model: { modelKey: string }) {
   return /^image-01-live$/i.test(model.modelKey.trim());
 }
@@ -72,40 +110,110 @@ export function imageProtocol(
 /** Keep the complete cover brief within the provider prompt limit. */
 export const COVER_PROMPT_LIMIT = 1500;
 
-/** Same visual contract for every model. Keep the complete brief below MiniMax's limit. */
 export function coverPrompt(
   title: string,
   content: string,
   style: CoverStyle = "ink",
   direction?: string,
 ) {
-  const cleanTitle = publicText(title).replace(/\s+/g, " ").slice(0, 80);
-  const cleanContent = publicText(content).replace(/\s+/g, " ").slice(0, 160);
-  const extra = publicText(direction || "").replace(/\s+/g, " ").slice(0, 300);
-  return `Create ONE finished landscape editorial blog cover, including background, illustration and typography in one coherent image. This is the final cover, not an icon asset or a mockup.
-主题：${cleanTitle}
-内容参考：${cleanContent}
-Use a clean modern editorial composition, expressive illustration, harmonious colors and generous breathing room. Compose for a wide 16:9 canvas. Keep the main subject and all text within the central 70% safe area so banner and card crops remain readable. Render a concise, accurate Chinese headline based on the theme; use only a few words, with clear readable typography integrated into the composition. No watermarks, logos, interface chrome, external frame or separate app icon tile. Do not leave a transparent background.
-作者要求（文字内容优先采用这里的指定）：${extra || "根据主题自行完成整张封面。"}`.slice(0, COVER_PROMPT_LIMIT);
+  const theme = publicText(title).replace(/\s+/g, " ").slice(0, 80);
+  const context = publicText(content).replace(/\s+/g, " ").slice(0, 120);
+  const plan = coverArtPlan(theme, context, style);
+  const detail = publicText(direction || "").replace(/图片必须准确显示标题「[^」]*」/g, "").replace(/不添加任何文字/g, "").slice(0, 200);
+  const subject = /复盘|总结/.test(theme) ? "白色复盘清单、一支铅笔和一张半透明图表卡片"
+    : /工作流|效率|任务/.test(theme) ? "白色任务清单、蓝色勾选方块和少量彩色状态圆点"
+    : /AI|工具/.test(theme) ? "三张相互靠近的圆角工具卡片，分别带有对话气泡、代码括号和星芒符号"
+    : "白色圆角产品界面、蓝色功能卡片和一个鼠标指针";
+  return [
+    "Professional SaaS product blog cover, wide horizontal layout.",
+    `Theme: ${theme}. A LARGE close-up 3D cluster in the CENTER-RIGHT, with its left edge at 45 percent of canvas width: ${subject}.`,
+    "Fill 75 percent of image height and 50 percent of canvas width. Keep the cluster close to the headline zone, never at the far-right corner. Front view with slight perspective. One cohesive large cluster, not distant tiny objects. Keep important details vertically centered.",
+    `The LEFT 38 percent is a clean medium-to-deep color gradient reserved for a headline. Palette: ${plan.palette}, white and one accent color.`,
+    "Matte frosted materials, shallow extruded thickness, rounded corners and soft ambient shadows. Premium modern software launch graphic. Flat seamless background, no floor, no horizon.",
+    "No text, words, letters, numbers, typography, logos or watermarks anywhere. No people, flowers, plants, desk props or scattered decorations.",
+    `Additional visual direction: ${detail}`,
+  ].join("\n").slice(0, COVER_PROMPT_LIMIT);
 }
 
 // Keep existing callers on the same design contract; no model-specific scene replacement.
+
+
+/**
+ * 插画底图提示词：只出画，不出字。
+ *
+ * 笔记配图与专题封面要的是一张能独立看的图，所以走这一条；
+ * 博客封面走上面的图标砖提示词（程序负责背景与大字）。
+ *
+ * 标题一律由系统排版 —— 生图模型写不对中文，烤进图里的字永远是乱的，
+ * 作者还改不掉。构图同样有硬要求：一个主体、留白、别堆东西。
+ */
+export function coverIllustrationPrompt(
+  title: string,
+  content: string,
+  direction?: string,
+) {
+  const cleanTitle = publicText(title).replace(/\s+/g, " ").slice(0, 80);
+  const cleanContent = publicText(content).replace(/\s+/g, " ").slice(0, 160);
+  const extra = publicText(direction || "").replace(/\s+/g, " ").slice(0, 300);
+  const plan = coverArtPlan(cleanTitle, cleanContent);
+  const prompt = [
+    COVER_ILLUSTRATION_COMPOSITION,
+    /*
+     * 主题与参考只给模型「懂画面」，所以明确写了「不要写进画面」——
+     * 中文主题摆在提示词里，模型很容易顺手把它当成标题画上去。
+     */
+    `Subject theme (understand it only — NEVER draw these characters in the picture): ${cleanTitle}`,
+    `Scene reference (read it only — do not render any of it as text): ${cleanContent}`,
+    COVER_ILLUSTRATION_TREATMENT,
+    `主体：${plan.subject}`,
+    `配色：${plan.palette}`,
+    COVER_ILLUSTRATION_TEXT_RULE,
+    `作者补充要求（只描述画面，不要指定要出现在图上的文字）：${extra || "无额外要求，按上面的构图完成这一张底图。"}`,
+    COVER_ILLUSTRATION_COMPOSITION_REMINDER,
+  ].join("\n");
+  return prompt.slice(0, COVER_PROMPT_LIMIT);
+}
+
 export function coverPromptForModel(
   _model: { modelKey: string } | null | undefined,
   title: string,
   content: string,
   style: CoverStyle = "ink",
   direction?: string,
+  recentPrompts: string[] = [],
 ) {
+  if (_model && isMiniMaxH3(_model)) {
+    const plan = coverArtPlan(publicText(title), publicText(content), style);
+    const iconFamilies = [
+      {match: /推荐|搜索|召回|排序/, icons: ["三个相连的节点组成的推荐路径符号", "叠放卡片与一颗星组成的精选符号", "靶心与短箭头组成的匹配符号", "小巧指南针符号"]},
+      {match: /阅读|读书|书籍|笔记/, icons: ["一本微微展开的书", "书页与书签组成的符号", "笔尖与一张便笺组成的符号", "叠放的两本书"]},
+      {match: /复盘|总结|分析|数据|指标/, icons: ["圆环图与一小段上升曲线", "带有勾选标记的复盘清单", "三个高低不同的圆角柱形", "循环箭头围绕一颗小圆点"]},
+      {match: /AI|智能|模型|工具/i, icons: ["简洁友好的机器人头像", "对话气泡中的一颗星芒", "三个连接节点组成的智能网络", "一枚精致的芯片"]},
+      {match: /工作流|效率|任务|流程/, icons: ["三个相连的流程方块", "圆形进度环中的勾选符号", "闪电与短箭头组成的效率符号", "带有两个勾选标记的清单"]},
+      {match: /产品|需求|设计|方案/, icons: ["两块相互扣合的拼图", "一枚简洁的立体灯泡", "叠放的原型界面卡片", "由三个模块构成的产品立方体"]},
+      {match: /技术|代码|开发|架构|编程/, icons: ["立体代码括号", "相连的三个架构模块", "终端窗口中的提示符", "一枚精致齿轮"]},
+    ];
+    const family = iconFamilies.find(item => item.match.test(publicText(title)))
+      ?? iconFamilies.find(item => item.match.test(publicText(content)));
+    const candidates = family?.icons ?? [plan.subject];
+    const usage = (value: string) => recentPrompts.reduce((count, prompt, index) => count + (prompt.includes(value) ? 1 + (recentPrompts.length - index) / recentPrompts.length : 0), 0);
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+    const symbol = shuffled.sort((a, b) => usage(a) - usage(b))[0];
+    const colors = [plan.palette, "柔和靛蓝与浅蓝", "青绿色与薄荷色", "暖橙色与杏色", "蓝紫色与淡紫", "石墨灰与银灰"];
+    const palette = [...colors].sort(() => Math.random() - 0.5).sort((a, b) => usage(a) - usage(b))[0];
+
+    return `参考图片的固定版式设计横向博客封面。主题为${publicText(title).slice(0,80)}。${direction || "不添加任何文字"}。背景为${palette}同色系轻渐变，左右亮度接近，禁止大幅明暗渐变。中央一枚完整的圆角正方形应用图标，图标外框宽度占16:9原图约20%至22%，高度约36%至39%。裁切为宽幅卡片后，图标约占可见封面高度55%至60%，上下留白均衡。不要缩成小徽章。图标内部主题符号宽高占面板约65%至75%，内边距紧凑，不要用大面积空白包裹小符号。内部用一个与主题有关的清晰符号，本次选定的中央符号为${symbol}。作者明确指定图标时优先采用作者要求。参考图只提供版式与材质，禁止照搬参考图的放大镜。每次只画一个清晰的主题符号，允许简单浮雕、少量双色和相关物件组合，不增加外围装饰。图标材质为细腻缎面搪瓷，轻微厚度、窄薄倒角、柔和短阴影，表面平整，只保留微弱曲面反射，不要鼓包或厚重玩具感。图标与背景同色系，颜色略深或略浅，亮度差适中，避免近黑色面板。内部符号清晰。若要求标题，字体严格参考最后一张参考图的大字排版：超粗黑体、粗壮笔画、字面宽大饱满、字距紧凑，无衬线。全部文字横贯一行，占画面宽度约75%至80%，字高占16:9原图高度约25%至27%，裁成宽幅卡片后约占可见高度40%至43%，上下留白均衡。文字位于中央图标后方，允许中间部分自然遮挡，禁止为了躲开图标把字分散到两侧。文字为同色系浅色，约40%白色透明度，平面填色，没有描边、阴影或立体厚度。最后一张参考图只参考字体大小、字重与排列，不照搬其颜色、JPEG文字和文件格式符号。参考图中的主题文字和放大镜应替换为本次要求。若要求无字则移除所有文字。所有元素沿垂直中线居中，四周留白。只包含背景、中央图标和指定文字。不要额外文字、英文、水印、摄影、人物、花鸟或零散装饰。`;
+  }
   return coverPrompt(title, content, style, direction);
 }
 
 export function imageRequest(
   model: ConfiguredModel,
   prompt: string,
-  options?: { n?: number; style?: MinimaxStyle },
+  options?: { n?: number; style?: MinimaxStyle; referenceImages?: string[] },
 ) {
   const protocol = imageProtocol(model);
+  const h3 = /^MiniMax-H3-Image(?:-Highspeed)?$/i.test(model.modelKey.trim());
   if (isMiniMaxTextModel(model))
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -131,7 +239,7 @@ export function imageRequest(
   ).replace(/\/+$/, "");
   const endpoint = new URL(
     base +
-      (protocol === "minimax" ? "/image_generation" : "/images/generations"),
+      (h3 && options?.referenceImages?.length ? "/images/edits" : protocol === "minimax" && !h3 ? "/image_generation" : "/images/generations"),
   );
   if (
     !/^https?:$/.test(endpoint.protocol) ||
@@ -142,12 +250,19 @@ export function imageRequest(
       code: "BAD_REQUEST",
       message: "模型服务地址无效，请检查服务商配置。",
     });
-  const body =
-    protocol === "minimax"
+  const body = h3 ? {
+    model: model.modelKey,
+    prompt,
+    aspect_ratio: "16:9",
+    area: "1K",
+    n: 1,
+    response_format: "url",
+    ...(!options?.referenceImages?.length ? {disable_prompt_enhanced: true} : {images: options.referenceImages.map(image_url => ({image_url}))}),
+  } : protocol === "minimax"
       ? {
           model: model.modelKey,
           prompt: prompt.slice(0, 1500),
-          // Ask the model for the complete landscape cover.
+          // Request a landscape composition for the complete cover.
           aspect_ratio: "16:9",
           n: Math.max(1, Math.min(9, options?.n ?? 1)),
           response_format: "url",
@@ -243,7 +358,7 @@ export async function generateImageBuffers(
   model: ConfiguredModel,
   prompt: string,
   fetcher: typeof fetch = fetch,
-  options?: { n?: number; style?: MinimaxStyle },
+  options?: { n?: number; style?: MinimaxStyle; referenceImages?: string[] },
 ) {
   const request = imageRequest(model, prompt, options);
   let response: Response;
@@ -252,7 +367,7 @@ export async function generateImageBuffers(
       method: "POST",
       headers: request.headers,
       body: JSON.stringify(request.body),
-      signal: AbortSignal.timeout(180000),
+      signal: AbortSignal.timeout(/^MiniMax-H3-Image/i.test(model.modelKey) ? 600000 : 180000),
       redirect: "error",
     });
   } catch {
@@ -349,7 +464,7 @@ export async function generateImageBytes(
   model: ConfiguredModel,
   prompt: string,
   fetcher: typeof fetch = fetch,
-  options?: { n?: number; style?: MinimaxStyle },
+  options?: { n?: number; style?: MinimaxStyle; referenceImages?: string[] },
 ) {
   const buffers = await generateImageBuffers(model, prompt, fetcher, options);
   return buffers[0];
@@ -370,6 +485,28 @@ export async function normalizeCoverBase(buffer: Buffer): Promise<Buffer> {
     })
     .webp({ quality: 92 })
     .toBuffer();
+}
+
+/** Final image contains both artwork and deterministic typography. */
+export async function finishGeneratedCover(raw: Buffer, direction?: string) {
+  const base = await normalizeCoverBase(raw);
+  const title = direction?.match(/图片必须准确显示标题「([^」]+)」/)?.[1]?.trim();
+  if (!title) return base;
+  const characters = Array.from(title);
+  const split = Math.ceil(characters.length / 2);
+  const lines = characters.length > 3
+    ? [characters.slice(0, split).join(""), characters.slice(split).join("")]
+    : [title];
+  const size = Math.min(170, Math.floor(480 / Math.max(...lines.map(line => Array.from(line).length))));
+  const rendered = await Promise.all(lines.map(text => renderCoverLine({text, size, color: "#ffffff", weight: "black", tracking: -0.02})));
+  const height = rendered.reduce((sum, line) => sum + line.height, 0);
+  let top = Math.round((900 - height) / 2);
+  const overlays = rendered.map(line => {
+    const overlay = {input: line.buffer, left: 220, top};
+    top += line.height;
+    return overlay;
+  });
+  return sharp(base).composite(overlays).webp({quality: 92}).toBuffer();
 }
 
 /**
@@ -474,12 +611,52 @@ export async function coverGenerationOptions(
   };
 }
 
+export async function recentCoverPrompts(db: PrismaClient, accountId: number) {
+  const images = await db.attachments.findMany({where: {accountId, OR: [
+    {metadata: {path: ["blogAICover", "assetKind"], equals: "complete-cover"}},
+    {metadata: {path: ["aiCover", "assetKind"], equals: "complete-cover"}},
+  ]}, orderBy: {id: "desc"}, take: 200, select: {metadata: true}});
+  return images.map(image => {
+    const metadata = image.metadata as any;
+    return metadata?.blogAICover?.prompt ?? metadata?.aiCover?.prompt ?? "";
+  }).filter((prompt): prompt is string => typeof prompt === "string" && !!prompt);
+}
+
+export async function coverReferenceImages(db: PrismaClient, accountId: number, model: {modelKey:string}, attachmentId?: number) {
+  if (!isMiniMaxH3(model)) return undefined;
+  const typographyPaths = [
+    path.join(resolveStaticPublicDir() || "", "cover-reference/centered-typography.webp"),
+    path.resolve(import.meta.dir, "../../app/public/cover-reference/centered-typography.webp"),
+    path.resolve(process.cwd(), "../app/public/cover-reference/centered-typography.webp"),
+  ];
+  const typographyPath = typographyPaths.find(file => existsSync(file));
+  const typography = typographyPath ? ["data:image/webp;base64," + readFileSync(typographyPath).toString("base64")] : [];
+
+  if (!attachmentId) {
+    const candidates = [
+      path.join(resolveStaticPublicDir() || "", "cover-reference/centered-cover.webp"),
+      path.resolve(import.meta.dir, "../../app/public/cover-reference/centered-cover.webp"),
+      path.resolve(process.cwd(), "../app/public/cover-reference/centered-cover.webp"),
+    ];
+    const reference = candidates.find(file => existsSync(file));
+    return reference ? ["data:image/webp;base64," + readFileSync(reference).toString("base64"), ...typography] : typography.length ? typography : undefined;
+  }
+  const image = await db.attachments.findFirst({where: {id: attachmentId, accountId}});
+  if (!image || !/^image\/(png|jpeg|webp|avif)$/.test(image.type)) {
+    throw new TRPCError({code: "BAD_REQUEST", message: "参考封面不存在或无权访问。"});
+  }
+  const bytes = await FileService.getFileBuffer(image.path);
+  const normalized = await sharp(bytes).rotate().resize({width:1600,height:1600,fit:"inside",withoutEnlargement:true}).webp({quality:85}).toBuffer();
+  return ["data:image/webp;base64," + normalized.toString("base64"), ...typography];
+}
+
 export async function generateBlogCover(
   db: PrismaClient,
   accountId: number,
   input: {
     noteId: number;
     modelId: number;
+    referenceAttachmentId?: number;
     /** 作者写的「想要什么画面」；留空就按模型默认模板生成。 */
     direction?: string;
     style: CoverStyle;
@@ -532,14 +709,14 @@ export async function generateBlogCover(
         message: "文章不存在，请先发布正文。",
       });
     const context = coverContext(source, source.publication);
-    const prompt = coverPromptForModel(
-      model,
-      context.title,
-      context.content,
-      input.style,
-      input.direction,
-    );
+    /*
+     * 形态决定提示词，也决定后处理 ——
+     * 一个入口只有一条路：图标砖走抠图 + 完整性检查，插画走整幅归一化。
+     */
+    const history = isMiniMaxH3(model) ? await recentCoverPrompts(db, accountId) : [];
+    const prompt = coverPromptForModel(model, context.title, context.content, input.style, input.direction, history);
     const artPlan = coverArtPlan(publicText(context.title), publicText(context.content), input.style);
+    const referenceImages = await coverReferenceImages(db, accountId, model, input.referenceAttachmentId);
     const fetcher = await fetchWithProxy();
     // Generate the complete composition once; preserve its pixels and typography.
     const generateOnce = async (): Promise<Buffer[]> => {
@@ -548,6 +725,7 @@ export async function generateBlogCover(
       const many = dependencies?.generateMany || generateImageBuffers;
       return many(model, prompt, fetcher, {
         n: 1,
+        referenceImages,
       });
     };
     const raw = (await generateOnce())[0];
@@ -556,14 +734,14 @@ export async function generateBlogCover(
         code: "BAD_REQUEST",
         message: "模型没有返回图片，请调整描述或检查模型是否支持生图。",
       });
-    // Only normalize size and encoding; do not split or rebuild the generated image.
+    // Save the finished editorial cover as one image.
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
-    const image = await normalizeCoverBase(raw);
+    const image = isMiniMaxH3(model) ? await normalizeCoverBase(raw) : await finishGeneratedCover(raw, input.direction);
     const generationMode = "ai" as const;
     const dimensions = await sharp(image).metadata();
     const result = await upload({
       buffer: image,
-      originalName: `ink-cover-base-${input.noteId}-${crypto.randomUUID()}.webp`,
+      originalName: `ink-cover-icon-${input.noteId}-${crypto.randomUUID()}.webp`,
       type: "image/webp",
       accountId,
       metadata: {
@@ -606,6 +784,7 @@ export async function generateBlogCover(
       id: uploaded[0].id,
       path: uploaded[0].path,
       revision: input.revision,
+      /* 形态决定前端怎么摆：图标砖压标题中间，插画整幅铺满。 */
       artwork: "image" as const,
       generationMode,
       coverPalette: artPlan.overlayPalette,

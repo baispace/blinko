@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Icon } from "@/components/Common/Iconify/icons";
-import { BlogInput } from "./BlogUI";
 import { STUDIO_NAV, type StudioSection } from "./studioNav";
 import "../BlinkoSettings/settings.css";
 
@@ -11,7 +10,7 @@ export function BlogStudioNav({section,onSelect,postCount,topicCount,work}: Prop
  const groups=STUDIO_NAV.map(group=>({...group,items:group.items.filter(item=>!query||[item.label,item.hint,group.title].join(" ").toLowerCase().includes(query))})).filter(group=>group.items.length);
  return <aside className="settings-sidebar blog-management-sidebar" aria-label="博客管理导航">
   <div className="settings-sidebar-heading">博客管理</div>
-  <div className="blog-management-search"><BlogInput aria-label="搜索博客管理功能" placeholder="搜索功能…" value={keyword} onChange={e=>setKeyword(e.target.value)} startContent={<Icon icon="tabler:search" width={16}/>}/></div>
+  <div className="settings-search"><Icon icon="tabler:search" width={16}/><input type="search" aria-label="搜索博客管理功能" placeholder="搜索功能…" value={keyword} onChange={e=>setKeyword(e.target.value)}/></div>
   <nav className="settings-navigation" aria-label="博客管理分区">
    {groups.map(group=><div key={group.title} className="settings-nav-group"><div className="settings-group-label">{group.title}</div>
     {group.items.map(item=><button key={item.key} type="button" className="settings-nav-item" aria-current={section===item.key?'page':undefined} onClick={()=>{onSelect(item.key);setKeyword("");}} title={item.hint}>

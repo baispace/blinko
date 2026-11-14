@@ -646,6 +646,7 @@
 }
 
 .ink-friends-modal-footer {
+  padding: 16px 24px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -867,3 +868,17 @@
     flex: 1 1 100%;
   }
 }
+
+.ink-friends-feedback-types { display: flex; flex-wrap: wrap; gap: 8px; }
+.ink-friends-feedback-types button { padding: 8px 14px; min-height: 36px; border: 1px solid var(--ink-line, #e5e7eb); border-radius: 10px; background: transparent; color: var(--ink-text); font: inherit; font-size: 13px; cursor: pointer; }
+.ink-friends-feedback-types button[aria-pressed="true"] { background: var(--ink-accent); color: white; border-color: var(--ink-accent); }
+.ink-friends-feedback-types button:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+.ink-friends-modal .ink-friends-submit:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 520px) { .ink-friends-modal-footer { align-items: stretch; } .ink-friends-modal-actions { justify-content: flex-end; width: 100%; } }
+
+/* Compact informational dialog, with room below the final paragraph. */
+.ink-friends-note-modal .ink-friends-modal-head { align-items: center; padding: 20px 24px 8px; }
+.ink-friends-note-modal .ink-friends-modal-title { margin: 0; }
+.ink-friends-note-modal .ink-friends-modal-body { padding: 8px 24px 24px; gap: 12px; overflow-y: auto; }
+.ink-friends-note-modal .ink-friends-modal-body p { margin: 0; font-size: 14px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
+.ink-friends-note-modal .ink-friends-modal-head .blog-ui-button { flex: 0 0 32px; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; border-radius: 50%; }

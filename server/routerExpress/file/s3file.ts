@@ -208,7 +208,12 @@ router.get(/.*/, async (req: Request, res: Response) => {
 
     if (publicBlogAsset) {
       const body = await FileService.getFileBuffer('/api/s3file/' + fullPath);
-      res.set({ 'Content-Type': mime.lookup(fullPath) || 'application/octet-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      /*
+       * 公开素材用 no-cache：浏览器留着这份字节，但每次用之前先问服务器 ——
+       * 命中 304 就不重传（封面在一屏里出现多次时省掉多次下载），
+       * 素材被撤回时也能立刻失效。
+       */
+      res.set({ 'Content-Type': mime.lookup(fullPath) || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
       return res.send(body);
     }
     if (isImage(fullPath) && needThumbnail) {

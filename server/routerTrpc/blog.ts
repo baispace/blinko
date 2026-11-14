@@ -1,7 +1,6 @@
 import { blogWorkQueue } from "../lib/blogWorkQueue";
 import { assetCoverOptions, generateAssetCover } from '../lib/assetCoverGeneration';
 import { analyticsAudience, analyticsTopics } from "../lib/blogAudienceAnalytics";
-import { generateTopicCover } from '../lib/blogTopicCover';
 import { readPublishSettings, savePublishSettings, savePublishSettingsSchema } from "../lib/blogPublishSettings";
 import { blogSiteSettingsSchema, articleSeoSchema, readArticleSeo } from "../../shared/lib/blogSiteSettings";
 import { readBlogSiteSettings, saveBlogSiteSettings, readTopicSeo, saveTopicSeo } from "../lib/blogSiteSettings";
@@ -299,7 +298,7 @@ export const blogRouter = router({
   }),
   workQueue: authProcedure.query(({ctx}) => blogWorkQueue(prisma, Number(ctx.id))),
   assetCoverOptions: authProcedure.input(z.object({target:assetCoverTarget})).query(({input,ctx})=>assetCoverOptions(prisma,Number(ctx.id),input.target)),
-  generateAssetCover: authProcedure.input(z.object({target:assetCoverTarget,sourceVersion:z.string().datetime(),modelId:z.number().int().positive(),direction:z.string().trim().max(300).optional()})).mutation(({input,ctx})=>generateAssetCover(prisma,Number(ctx.id),input)),
+  generateAssetCover: authProcedure.input(z.object({target:assetCoverTarget,sourceVersion:z.string().datetime(),modelId:z.number().int().positive(),referenceAttachmentId:z.number().int().positive().optional(),direction:z.string().trim().max(300).optional()})).mutation(({input,ctx})=>generateAssetCover(prisma,Number(ctx.id),input)),
   topicSEO: authProcedure.input(z.object({id:z.number().int().positive()})).query(({ctx,input})=>readTopicSeo(prisma,Number(ctx.id),input.id)),
   saveTopicSEO: authProcedure.input(z.object({id:z.number().int().positive(),data:articleSeoSchema,revision:z.string()})).mutation(({ctx,input})=>saveTopicSeo(prisma,Number(ctx.id),input.id,input.data,input.revision)),
   engagement: authProcedure.input(z.object({days:z.union([z.literal(1),z.literal(7),z.literal(30)])})).query(({ctx,input})=>blogEngagement(prisma,Number(ctx.id),input.days)),
@@ -609,6 +608,7 @@ export const blogRouter = router({
       z.object({
         noteId: z.number().int().positive(),
         modelId: z.number().int().positive(),
+        referenceAttachmentId: z.number().int().positive().optional(),
         /** 作者写的「想要什么画面」；留空按模型默认模板生成。 */
         direction: z.string().trim().max(300).optional(),
         style: z.literal("ink").default("ink"),
@@ -774,7 +774,6 @@ export const blogRouter = router({
       }),
     )
     .mutation(({ input, ctx }) => saveBlogTopic(prisma, Number(ctx.id), input)),
-  generateTopicCover: authProcedure.input(z.object({ topicId: z.number().int().positive(), name: z.string().trim().min(1).max(60), desc: z.string().max(500) })).mutation(({ input, ctx }) => generateTopicCover(prisma, Number(ctx.id), input)),
   attachCover: authProcedure
     .input(
       z.object({

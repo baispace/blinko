@@ -91,6 +91,7 @@ export function BlogCoverAssistant({
       savingRef.current = false;
       if (!alive.current) return;
       setError(errorText(error));
+      throw error;
     }
   };
 
@@ -153,7 +154,7 @@ export function BlogCoverAssistant({
               templateVersion: settings.config.templateVersion,
             },
           }}
-          onApply={(result) => void apply(result)}
+          onApply={apply}
           onClose={handleClose}
         />
       )}

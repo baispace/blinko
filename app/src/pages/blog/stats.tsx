@@ -4,6 +4,7 @@ import { api } from "@/lib/publicBlogClient";
 import { blogRoute } from "@/lib/blogPublicBase";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { useBlogTitle } from "@/components/BlinkoBlog/public/BlogShell";
+import { PageError } from "@/components/BlinkoBlog/public/PageState";
 import {
   STATS_RANGES,
   STATS_RANGE_LABEL,
@@ -106,17 +107,25 @@ function StatHelp({
       window.removeEventListener('scroll', close, true);
     };
   }, [position]);
+  const show = () => {
+    const rect = root.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(288, window.innerWidth - 32);
+    setPosition({left: Math.max(16, Math.min(rect.left, window.innerWidth - width - 16)), top: Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - 180))});
+  };
   if (!text) return null;
-  return <span ref={root} className="ink-stats-help">
+  return <span ref={root} className="ink-stats-help" onMouseEnter={show}
+    onMouseLeave={() => setPosition(null)} onFocus={show}
+    onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setPosition(null); }}>
     <button type="button" className="ink-stats-help-btn" aria-expanded={!!position}
-      aria-controls={position ? id : undefined} aria-label={`${label}的口径说明`}
+      aria-describedby={position ? id : undefined} aria-label={`${label}的口径说明`}
       onClick={event => {
         if (position) {setPosition(null);return;}
         const rect = event.currentTarget.getBoundingClientRect();
         const width = Math.min(288, window.innerWidth - 32);
         setPosition({left:Math.max(16,Math.min(rect.left,window.innerWidth-width-16)),top:Math.max(16,Math.min(rect.bottom+8,window.innerHeight-180))});
       }}><Icon icon="tabler:help-circle" width={13}/></button>
-    {position && <span role="note" id={id} className="ink-stats-help-text" style={{position:'fixed',left:position.left,top:position.top}}>{text}</span>}
+    {position && <span role="tooltip" id={id} className="ink-stats-help-text" style={{position:'fixed',left:position.left,top:position.top}}>{text}</span>}
   </span>;
 }
 
@@ -234,10 +243,11 @@ export default function BlogStatsPage() {
 
   /** 切周期：写进 URL，前进后退能走回去。 */
   const applyRange = (next: StatsRange) => {
+    if (next === range) return;
     const search = new URLSearchParams(params);
     if (next === "7d") search.delete("range");
     else search.set("range", next);
-    setParams(search, { replace: false });
+    setParams(search, { replace: false, preventScrollReset: true });
   };
 
   const timeZone = data?.timezone ?? "Asia/Shanghai";
@@ -286,12 +296,11 @@ export default function BlogStatsPage() {
               这里公开文章更新、阅读与互动的汇总数据。统计口径与更新时间一并展示，方便了解这个站点的近况。
             </p>
           </section>
-          <p className="ink-stats-error" role="status">
-            数据暂时取不到，请稍后再试。
-            <button type="button" onClick={() => load(range)}>
-              重新加载
-            </button>
-          </p>
+          <PageError
+            message="数据暂时取不到，请稍后再试。"
+            onRetry={() => load(range)}
+            retryLabel="重新加载"
+          />
         </div>
       </main>
     );
@@ -333,12 +342,11 @@ export default function BlogStatsPage() {
 
         {/* 刷新失败但手上还有上一次的结果：说明白，别让人把旧数字当成新的 */}
         {status === "failed" && data && (
-          <p className="ink-stats-error" role="status">
-            数据更新失败，下面显示的是上一次加载的结果。
-            <button type="button" onClick={() => load(range)}>
-              重新加载
-            </button>
-          </p>
+          <PageError
+            message="数据更新失败，下面显示的是上一次加载的结果。"
+            onRetry={() => load(range)}
+            retryLabel="重新加载"
+          />
         )}
 
         {/* 2. 内容积累（累计，不随周期变化） */}
@@ -400,9 +408,6 @@ export default function BlogStatsPage() {
               </>
             )}
           </div>
-          <p className="ink-stats-note">
-            持续记录表示从最早一篇公开文章首次发布到今天的时间，不表示连续每天更新。
-          </p>
         </section>
 
         {/* 3. 阅读与回应（随周期切换） */}

@@ -71,11 +71,19 @@ function dto(note: SettingsNote, noteCover: CoverImage | null = null) {
   // 博客自己配过封面就用自己的；没有就复用笔记那张。
   const blogCover = note.attachments.find(image => image.id === p?.draftCoverAttachmentId) ?? null;
   const cover = blogCover ?? noteCover ?? null;
-  const config = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig) ?? { ...emptyCoverConfig(), mode: cover ? 'full' as const : 'overlay' as const };
+  const explicit = readDraftCoverConfig(note.metadata) ?? readPublicCoverConfig(p?.coverConfig);
+  const config = explicit ?? { ...emptyCoverConfig(), mode: cover ? 'full' as const : 'overlay' as const };
   const kind = (cover?.metadata as any)?.blogAICover?.assetKind ?? (cover?.metadata as any)?.aiCover?.assetKind;
   if (kind === "isolated-illustration") config.artwork = "icon";
   if (kind === "isolated-app-tile") config.artwork = "tile";
   if (kind === "complete-cover") { config.artwork = "image"; config.mode = "full"; }
+  /*
+   * 图标砖与无字底图：图里没有文字，标题与背景都由系统排。
+   * 作者还没手动调过版式时，默认就走叠字版式 ——
+   * 否则一枚透明底的图标会直接铺在页面上，什么也看不出来。
+   */
+  if (kind === "illustration") { config.artwork = "image"; if (!explicit) config.mode = "overlay"; }
+  if ((kind === "isolated-app-tile" || kind === "isolated-illustration") && !explicit) config.mode = "overlay";
   const metadata = (note.metadata || {}) as Record<string, unknown>;
   return {
     token: settingsToken(note), reviewToken: publicationReviewToken(note), publicCoverConfig: readPublicCoverConfig(p?.coverConfig), revision: p?.revision ?? 0,

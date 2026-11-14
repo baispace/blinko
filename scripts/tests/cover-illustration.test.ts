@@ -83,3 +83,32 @@ test('quality fallback is explicit and never hides an invalid image payload',asy
  await expect(prepareCoverIllustration(result.image,{kind:'tile'})).resolves.toBeInstanceOf(Buffer);
  await expect(prepareGeneratedCover(Buffer.from('not an image'),{theme:'ai',overlayPalette:'violet'})).rejects.toThrow();
 });
+
+/*
+ * 真实出图验收里模型画过蜜桃色底（r−g 只有 45、蓝通道比绿通道低 20），
+ * 砖面还是暖奶油色（饱和度 20–65）—— 两者色相很近。
+ *
+ * 抠图规则要是「色相接近 + 饱和度按底色的比例」，砖才不会被啃掉；
+ * 门槛定低了会把砖面一起抠光。这里盯住的是：浅底色也能把砖完整抠出来。
+ */
+test('a pale peach matte is keyed out and the cream tile survives intact',async()=>{
+ const raw=await sharp(Buffer.from('<svg width="300" height="300"><defs><linearGradient id="p" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fad5c6"/><stop offset="1" stop-color="#f7bfae"/></linearGradient></defs><rect width="300" height="300" fill="url(#p)"/><rect x="50" y="50" width="200" height="200" rx="30" fill="#ffecd8"/><circle cx="150" cy="150" r="38" fill="#f68a3d"/></svg>')).png().toBuffer();
+ const out=await prepareCoverIllustration(raw,{kind:'tile',background:'chroma'});
+ const {data,info}=await sharp(out).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+ const face=(Math.floor(info.height/2)*info.width+Math.floor(info.width*.25))*4;
+ expect(data[face+3]).toBe(255);
+ expect(data[face]).toBeGreaterThan(240);
+ // 抠出来的是一枚方砖，不是整幅画面。
+ expect(info.width).toBeLessThan(300*.92);
+ expect([...data.subarray(0,4)]).toEqual([0,0,0,0]);
+});
+
+/*
+ * 照片式砖（手机壁纸一类）：色相几十档，纯色符号只有一两档。
+ * 照片砖要挡下来，回落到程序画的标准图标砖。
+ */
+test('a photo-like tile is rejected instead of reaching the cover',async()=>{
+ const swatches=[...Array(24)].map((_,i)=>`<rect x="${8+i*12}" y="8" width="12" height="284" fill="hsl(${(i*15)%360} 70% 55%)"/>`).join('');
+ const raw=await sharp(Buffer.from(`<svg width="300" height="300"><rect width="300" height="300" fill="#ff00ff"/><rect x="40" y="40" width="220" height="220" rx="30" fill="#ffffff"/>${swatches}</svg>`)).png().toBuffer();
+ await expect(prepareCoverIllustration(raw,{kind:'tile',background:'chroma'})).rejects.toThrow('完整性检查');
+});

@@ -38,6 +38,7 @@ const Home = observer(() => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [aggregationActive, setAggregationActive] = useState(false);
+  const [aggregationRefresh, setAggregationRefresh] = useState(0);
 
   // 视图设置按页面作用域读取（闪念 / 笔记各自独立记忆）
   const pageScope = getPageViewScope(searchParams);
@@ -127,6 +128,8 @@ const Home = observer(() => {
     searchParams.get('hasTodo')
   );
 
+  const aggregationEligible = !isTodoView && !hasListFilters && !blinko.noteListFilterConfig.startDate && !blinko.noteListFilterConfig.endDate && !blinko.noteListFilterConfig.isShare && !blinko.searchText && noteListSortBy !== 'manual' && ['notes','blinko'].includes(pageScope);
+
   const clearListFilters = () => {
     const next = new URLSearchParams(searchParams);
     ['tagId', 'contentType', 'searchText', 'withoutTag', 'withFile', 'withLink', 'hasTodo'].forEach(key => next.delete(key));
@@ -172,10 +175,11 @@ const Home = observer(() => {
         fixMobileTopBar
         onRefresh={async () => {
           await currentListState.resetAndCall({});
+          setAggregationRefresh((value) => value + 1);
 
         }}
         onBottom={() => {
-          void blinko.onBottom();
+          if (!(aggregationActive && aggregationEligible)) void blinko.onBottom();
         }}
         className="mt-0 h-full min-h-0 w-full flex-1 scroll-area"
       >
@@ -189,8 +193,8 @@ const Home = observer(() => {
             <ActiveListFilters />
           </StickyListFilters>}
 
-          {!isTodoView && !hasListFilters && !blinko.noteListFilterConfig.startDate && !blinko.noteListFilterConfig.endDate && !blinko.noteListFilterConfig.isShare && !blinko.searchText && noteListSortBy !== 'manual' && ['notes','blinko'].includes(pageScope) && <AggregationList refreshKey={blinko.updateTicker} key={`${pageScope}:${noteListStyle}:${noteListSortBy}`} type={pageScope==='notes'?1:0} style={noteListStyle} sort={noteListSortBy} columns={Number(getPageViewSetting(blinko,pageScope,'largeDeviceCardColumns')??2)} onActive={setAggregationActive}/>}
-          <div data-list-filter-results style={{display:aggregationActive && !isTodoView && !hasListFilters && !blinko.noteListFilterConfig.startDate && !blinko.noteListFilterConfig.endDate && !blinko.noteListFilterConfig.isShare && !blinko.searchText && noteListSortBy!=='manual' && ['notes','blinko'].includes(pageScope)?'none':undefined}}>
+          {aggregationEligible && <AggregationList refreshKey={aggregationRefresh} key={`${pageScope}:${noteListStyle}:${noteListSortBy}`} type={pageScope==='notes'?1:0} style={noteListStyle} sort={noteListSortBy} spacing={cardSpacing} columns={Number(getPageViewSetting(blinko,pageScope,'largeDeviceCardColumns')??2)} onActive={setAggregationActive}/>}
+          <div data-list-filter-results style={{display:aggregationActive && aggregationEligible?'none':undefined}}>
           {!isTodoView && currentListState.isLoading && !currentListState.value?.length ? (
             <div className="flex min-h-48 items-center justify-center text-default-400" role="status" aria-label={t('loading')}>
               <Icon icon="eos-icons:three-dots-loading" width={38} height={38} />

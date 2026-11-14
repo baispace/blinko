@@ -8,6 +8,11 @@ import {
   useBlogSite,
   useBlogTitle,
 } from "@/components/BlinkoBlog/public/BlogShell";
+import {
+  PageEmpty,
+  PageError,
+  PageLoading,
+} from "@/components/BlinkoBlog/public/PageState";
 import { AboutStats } from "@/components/BlinkoBlog/public/AboutStats";
 import { AboutMoments } from "@/components/BlinkoBlog/public/AboutMoments";
 import { topicIcon, topicTint } from "@/lib/blogTopicIcon";
@@ -50,7 +55,7 @@ type AboutPayload = {
 };
 
 export default function BlogAbout() {
-  const { profile, loading, error, publicSettings } = useBlogSite();
+  const { profile, loading, error, reload, publicSettings } = useBlogSite();
   useBlogTitle("关于作者");
 
   const [about, setAbout] = useState<AboutPayload | null>(null);
@@ -120,23 +125,33 @@ export default function BlogAbout() {
     return (
       <main className="ink-about">
         <div className="ink-about-inner">
-          <p className="ink-empty" role="status">
-            正在加载公开资料…
-          </p>
+          <PageLoading label="正在加载公开资料…" />
         </div>
       </main>
     );
 
   // 作者资料没公开时整页不可用：署名回退的是站点名，不是作者本人，
   // 这页讲的是「作者」，拿站点名顶替没有意义。
+  //
+  // 取不到资料与「作者没公开」是两件事：前者要能重试，后者重试也没用。
   if (!profile?.published)
     return (
       <main className="ink-about">
         <div className="ink-about-inner">
-          <div className="ink-empty">
-            <p>{error ? "暂时无法加载资料。" : "作者尚未公开个人资料。"}</p>
-            <Link to={blogRoute("/blog")}>阅读公开文章 →</Link>
-          </div>
+          {error ? (
+            <PageError
+              message="暂时无法加载作者资料。"
+              onRetry={() => void reload()}
+            />
+          ) : (
+            <PageEmpty
+              title="作者尚未公开个人资料。"
+              hint="可以先读公开文章，等资料公开后再回来。"
+              action={
+                <Link to={blogRoute("/blog")}>阅读公开文章 →</Link>
+              }
+            />
+          )}
         </div>
       </main>
     );

@@ -7,17 +7,19 @@ export function renderArticle(article: {
   summary?: string;
 }) {
   return renderToStaticMarkup(
-    <main className="ink-blog" data-ink-reading-shell>
-      <article
-        style={{ maxWidth: 800, margin: "40px auto", padding: "0 24px" }}
-      >
-        <nav>
-          <a href="/">首页</a> · <a href="/topics">专题</a>
-        </nav>
-        <h1>{article.title}</h1>
-        {article.summary && <p>{article.summary}</p>}
-        <PublicArticleBody content={article.content} />
-      </article>
+    <main className="ink-article-page" data-ink-reading-shell>
+      <section className="ink-article-hero-full">
+        <div className="ink-article-hero" data-cover="false">
+          <h1>{article.title}</h1>
+          {article.summary && <p>{article.summary}</p>}
+        </div>
+      </section>
+      <div className="ink-reading ink-wrap">
+        <article className="ink-panel">
+          <PublicArticleBody content={article.content} />
+        </article>
+        <aside className="ink-reading-aside" />
+      </div>
     </main>,
   );
 }
@@ -28,43 +30,59 @@ export function renderHome(site: {
   posts: HomePost[];
   topics: { slug: string; name: string }[];
 }) {
+  /*
+   * 结构必须与前端首页一致（ink-home-page / ink-home-grid / ink-aside …）：
+   * 服务端先渲染这一段，前端接管时整块换掉 —— 两版结构不一样，
+   * 读者就会看到一次跳变（标题换位、卡片重排）。
+   * 所以这里只输出「首屏骨架」：结构、类名、比例都按前端的同一套来，
+   * 交互（轮播、筛选）在前端接上。
+   */
   return renderToStaticMarkup(
-    <main className="ink-blog" data-ink-reading-shell>
-      <div className="ink-wrap ink-home-page" style={{ padding: "32px 0" }}>
-        <header>
-          <h1>{site.siteName}</h1>
-          <nav>
-            <a href="/">首页</a> · <a href="/topics">专题</a> ·{" "}
-            <a href="/moments">动态</a>
-          </nav>
-        </header>
-        <nav className="ink-chips">
-          {site.topics.map((topic) => (
-            <a
-              className="ink-chip"
-              key={topic.slug}
-              href={"/topic/" + encodeURIComponent(topic.slug)}
-            >
-              {topic.name}
-            </a>
-          ))}
-        </nav>
-        <section className="ink-card-grid" aria-label="公开文章">
-          {site.posts.map((post) => (
-            <a
-              key={post.publishId}
-              className="ink-post-card"
-              href={"/article/" + post.publishId}
-            >
-              <div className="ink-post-card-body">
-                <h2>{post.title}</h2>
-                {post.excerpt && <p>{post.excerpt}</p>}
-                <span>阅读文章 →</span>
-              </div>
-            </a>
-          ))}
-        </section>
-        {!site.posts.length && <p>还没有公开文章。</p>}
+    <main className="ink-wrap ink-home-page" data-ink-reading-shell>
+      <nav className="ink-chips" aria-label="文章视图与专题筛选">
+        {site.topics.map((topic) => (
+          <a
+            className="ink-chip"
+            key={topic.slug}
+            href={"/topic/" + encodeURIComponent(topic.slug)}
+          >
+            {topic.name}
+          </a>
+        ))}
+      </nav>
+      <div className="ink-home-grid">
+        <div className="ink-home-hero">
+          {site.posts[0] ? (
+            <div className="ink-lead-hero">
+              <a
+                className="ink-lead-hero-hit"
+                href={"/article/" + site.posts[0].publishId}
+                aria-label={site.posts[0].title}
+              />
+              <span className="ink-lead-hero-meta">
+                <span className="ink-lead-hero-meta-label">全站推荐</span>
+              </span>
+            </div>
+          ) : null}
+        </div>
+        <div className="ink-home-list">
+          <div className="ink-card-grid" aria-label="公开文章">
+            {site.posts.map((post) => (
+              <a
+                key={post.publishId}
+                className="ink-post-card ink-panel"
+                href={"/article/" + post.publishId}
+              >
+                <div className="ink-post-card-body">
+                  <h2>{post.title}</h2>
+                  {post.excerpt && <p>{post.excerpt}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+          {!site.posts.length && <p className="ink-empty">还没有公开文章。</p>}
+        </div>
+        <aside className="ink-aside" />
       </div>
     </main>,
   );
@@ -96,27 +114,21 @@ export function renderTopic(directory: {
     </li>
   );
   return renderToStaticMarkup(
-    <main className="ink-blog" data-ink-reading-shell>
-      <div className="ink-wrap ink-topic-page" style={{ padding: "32px 0" }}>
-        <nav>
-          <a href="/">首页</a> · <a href="/topics">全部专题</a>
-        </nav>
-        <header>
-          <h1>{directory.topic.name}</h1>
-          <p>{directory.topic.desc}</p>
-          <p>{directory.total} 篇文章</p>
-        </header>
-        <section aria-label="文章目录">
-          <h2>文章目录</h2>
-          {directory.sections.map((section) => (
-            <section key={section.id}>
-              {section.showTitle && <h3>{section.name}</h3>}
-              <ul>{section.posts.map(link)}</ul>
-            </section>
-          ))}
-          <ul>{directory.unassigned.posts.map(link)}</ul>
-        </section>
-      </div>
+    <main className="ink-wrap ink-topic-page" data-topic-ready="true" data-ink-reading-shell>
+      <section className="ink-topic-intro">
+        <h1>{directory.topic.name}</h1>
+        <p>{directory.topic.desc}</p>
+        <p>{directory.total} 篇文章</p>
+      </section>
+      <section className="ink-topic-directory" aria-label="文章目录">
+        {directory.sections.map((section) => (
+          <section key={section.id}>
+            {section.showTitle && <h3>{section.name}</h3>}
+            <ul>{section.posts.map(link)}</ul>
+          </section>
+        ))}
+        <ul>{directory.unassigned.posts.map(link)}</ul>
+      </section>
     </main>,
   );
 }

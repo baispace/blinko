@@ -498,6 +498,7 @@ export default function BlogFriends() {
 
       <Modal
         isOpen={noteOpen}
+        scrollBehavior="inside"
         onOpenChange={(open) => {
           if (!open) setNoteOpen(false);
         }}
@@ -506,7 +507,7 @@ export default function BlogFriends() {
         backdrop="blur"
         hideCloseButton
         classNames={{
-          base: `ink-friends-modal ink-friends-surface ${theme === "dark" ? "ink-friends-dark" : ""}`,
+          base: `ink-friends-modal ink-friends-note-modal ink-friends-surface ${theme === "dark" ? "ink-friends-dark" : ""}`,
         }}
       >
         <ModalContent aria-label="申请说明">

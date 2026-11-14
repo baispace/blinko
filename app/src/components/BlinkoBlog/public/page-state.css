@@ -1,0 +1,67 @@
+/*
+ * 公开页统一的三态样式。
+ *
+ * 加载 / 空 / 错误三种状态的高度、留白、字号一致 ——
+ * 页面切换时不会因为状态不同而跳动。
+ */
+
+.ink-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.ink-state-title {
+  display: block;
+  color: var(--ink-text);
+  font-size: 15px;
+}
+.ink-state-hint {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.ink-state-action {
+  display: block;
+  margin-top: 4px;
+}
+/* 加载中：与其它页面的骨架同一种浅灰呼吸感，不抢注意力。 */
+.ink-state-loading {
+  color: var(--ink-muted);
+}
+/* 空状态：没有错误，只是暂时没有内容 —— 不用红色。 */
+.ink-state-empty .ink-state-title {
+  color: var(--ink-text);
+}
+.ink-state-error .ink-state-title {
+  color: var(--ink-warn, #d9482f);
+}
+/* 重试按钮：与站内其它小按钮同一套外观。 */
+.ink-state-retry {
+  margin-top: 4px;
+  padding: 7px 18px;
+  border: 1px solid var(--ink-line, #d9dce8);
+  border-radius: 999px;
+  background: var(--ink-surface, #fff);
+  color: var(--ink-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.ink-state-retry:hover {
+  border-color: var(--ink-accent, #7055f8);
+  background: var(--ink-tint, #f1eeff);
+}
+.ink-state-retry:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

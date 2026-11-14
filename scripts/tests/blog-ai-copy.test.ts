@@ -86,8 +86,8 @@ describe("AI 文案解析", () => {
     const copy = parseBlogCopy(
       JSON.stringify({
         title: "标题",
-        // 210 字，超过 200 的上限 —— 才会真的触发截断。
-        summary: "完整的一句话。".repeat(30),
+        // 构造超过摘要上限的完整句子。
+        summary: "完整的一句话。".repeat(COPY_LIMITS.summary),
       }),
     );
     expect([...copy.summary].length).toBeLessThanOrEqual(COPY_LIMITS.summary);
@@ -100,8 +100,8 @@ describe("AI 文案解析", () => {
     const copy = parseBlogCopy(
       JSON.stringify({
         title: "标题",
-        // 248 字，全是逗号没有句号 —— 退到逗号断开。
-        summary: "背景介绍，这里展开讲了很多细节，后面还有更多细节没有写完，".repeat(8),
+        // 超过摘要上限，只有逗号时退到逗号断开。
+        summary: "背景介绍，这里展开讲了很多细节，后面还有更多细节没有写完，".repeat(COPY_LIMITS.summary),
       }),
     );
     expect([...copy.summary].length).toBeLessThanOrEqual(COPY_LIMITS.summary);
@@ -109,7 +109,7 @@ describe("AI 文案解析", () => {
     expect(copy.summary).not.toMatch(/，…$/);
   });
 
-  test("提示词要求概要 200 字以内且是完整内容", () => {
+  test("提示词要求概要长度且保留完整句子", () => {
     for (const prompt of [
       copyInstructions,
       copyInstructionsFor("summary"),
@@ -118,7 +118,8 @@ describe("AI 文案解析", () => {
         topics: [],
       } as never),
     ]) {
-      expect(prompt).toContain("200 字以内");
+      expect(prompt).toContain("150–250 字");
+      expect(prompt).toContain("最多 300 字");
       expect(prompt).toContain("完整的话");
     }
   });

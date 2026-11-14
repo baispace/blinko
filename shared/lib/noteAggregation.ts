@@ -1,6 +1,9 @@
 import { z } from "zod";
 import dayjs from "./dayjs";
 
+const calendarDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => dayjs(value).isValid() && dayjs(value).format('YYYY-MM-DD') === value, '请填写有效日期');
+
 export const aggregationRuleSchema = z
   .object({
     id: z.string().min(1),
@@ -21,20 +24,16 @@ export const aggregationRuleSchema = z
       "eachMonth",
       "range",
     ]),
-    rangeStart: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(),
-    rangeEnd: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(),
+    rangeStart: z.string().optional(),
+    rangeEnd: z.string().optional(),
   })
   .refine(
     (rule) =>
       rule.period !== "range" ||
       (!!rule.rangeStart &&
         !!rule.rangeEnd &&
+        calendarDateSchema.safeParse(rule.rangeStart).success &&
+        calendarDateSchema.safeParse(rule.rangeEnd).success &&
         rule.rangeStart <= rule.rangeEnd),
     "请填写有效的起止日期",
   );
@@ -125,11 +124,12 @@ export function aggregateNotes<T extends AggregatableNote>(
           bucket = date.format("YYYY-MM");
           break;
       }
+      const displayDate = dayjs(note.createdAt).tz(timeZone);
       const slice =
         style === "byDay"
-          ? date.format("YYYY-MM-DD")
+          ? displayDate.format("YYYY-MM-DD")
           : style === "byWeek"
-            ? weekStart(date).format("YYYY-MM-DD")
+            ? weekStart(displayDate).format("YYYY-MM-DD")
             : "";
       const key = `${rule.id}:${bucket}:${slice}`;
       const group = candidates.get(key) ?? { rule, notes: [] };

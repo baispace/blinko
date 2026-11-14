@@ -16,7 +16,7 @@ type FieldKey = 'title' | 'summary' | 'coverTitle' | 'coverSubtitle' | 'publicTa
 const FIELD_META: { key: FieldKey; label: string; hint: string }[] = [
   { key: 'title', label: '公开标题', hint: '列表与公开页显示的标题' },
   { key: 'summary', label: '文章概要', hint: '卡片与搜索结果里的摘要' },
-  { key: 'coverTitle', label: '封面短标题', hint: '2–8 字（推荐 4–6 字），排在画面左侧' },
+  { key: 'coverTitle', label: '封面短标题', hint: '2–8 字，建议 4–6 字' },
   { key: 'coverSubtitle', label: '封面小字', hint: '可留空' },
   { key: 'publicTags', label: '公开标签', hint: '与笔记的私有标签分开' },
 ];
@@ -88,8 +88,9 @@ function draftFromGroup(group: CopyGroup): Draft {
   };
 }
 
-/** 封面短标题不是 2–8 字（推荐 4–6 字）就不能用：它会排在画面左侧，超过 8 字请精简。 */
+/** 校验可写入的文案。 */
 function usable(draft: Draft, key: FieldKey) {
+  if (key === 'coverSubtitle' || key === 'publicTags') return true;
   if (!hasValue(draft, key)) return false;
   if (key === 'coverTitle') return validShortCoverTitle(draft.coverTitle);
   return true;
@@ -108,7 +109,9 @@ export function BlogAiCopyDialog({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [picked, setPicked] = useState<FieldKey[]>([]);
+  const [picked, setPicked] = useState<FieldKey[]>(['title', 'summary', 'publicTags']);
+  const [tagsInput, setTagsInput] = useState('');
+  const [step, setStep] = useState<'setup' | 'review'>('setup');
   const [settings, setSettings] = useState<Settings | null>(null);
   const [currentVersion, setCurrentVersion] = useState('');
   const alive = useRef(true);
@@ -143,7 +146,7 @@ export function BlogAiCopyDialog({
     settingsRef.current?.hasPublication === false;
 
   const selectAll = (next: Draft) =>
-    FIELD_META.filter((item) => usable(next, item.key) && !blocked(item.key)).map(
+    FIELD_META.filter((item) => hasValue(next, item.key) && usable(next, item.key) && !blocked(item.key)).map(
       (item) => item.key,
     );
 
@@ -156,9 +159,10 @@ export function BlogAiCopyDialog({
       if (!alive.current) return;
       const next = draftFromGroup(group);
       setDraft(next);
-      setPicked(selectAll(next));
+      setTagsInput(next.publicTags.join('、'));
+      setStep('review');
       setCurrentVersion(group.contentVersion);
-      setNotice('已生成一版建议，逐项挑选后写入草稿。');
+      setNotice('建议已生成，可以直接修改后采用。');
     } catch (error) {
       if (alive.current) setError(errorText(error));
     } finally {
@@ -181,10 +185,9 @@ export function BlogAiCopyDialog({
         // 有候选就直接展示：不重新烧一次模型，作者想换再点「重新生成」。
         const next = draftFromCandidates(state.candidates);
         setDraft(next);
+        setTagsInput(next.publicTags.join('、'));
         setPicked(selectAll(next));
-        setNotice('这是上一次生成的建议，可以直接采用，也可以重新生成。');
-      } else {
-        await generate();
+        setNotice('已找到上次生成的建议，可继续编辑，也可重新生成。');
       }
     } catch (error) {
       if (alive.current) setError(errorText(error));
@@ -208,6 +211,15 @@ export function BlogAiCopyDialog({
 
   const apply = async () => {
     if (!draft || !settings) return;
+    if (picked.includes('publicTags') && (draft.publicTags.length > 8 || draft.publicTags.some((tag) => tag.length > 20))) {
+      setError('公开标签最多 8 个，每个标签最多 20 字，请精简后再写入。');
+      return;
+    }
+    const invalid = picked.find((key) => !usable(draft, key));
+    if (invalid) {
+      setError(`请完善${FIELD_META.find((item) => item.key === invalid)?.label}后再写入。`);
+      return;
+    }
     const stale = staleFields(draft);
     if (stale.length) {
       setError('正文在生成之后被改过了，请重新生成建议再采用。');
@@ -298,7 +310,7 @@ export function BlogAiCopyDialog({
           <div>
             <h2 className="text-lg font-semibold text-foreground">AI 优化文案</h2>
             <small className="mt-1 block text-xs leading-relaxed text-default-500">
-              按正文给一版标题、概述与封面文案，逐项挑选后写入草稿
+              {step === 'setup' ? '选择需要优化的内容，AI 将根据文章正文生成建议' : '编辑并确认建议，选中的内容将写入草稿'}
             </small>
           </div>
           <Button
@@ -341,89 +353,55 @@ export function BlogAiCopyDialog({
             </div>
           )}
 
-          {draft && (
-            <div className="flex flex-col gap-2.5">
-              <p className="text-xs text-default-500">
-                勾选要采用的建议，没勾的保持现在的内容。
-              </p>
-              {FIELD_META.map((item) => {
-                const usableField = usable(draft, item.key);
-                const isBlocked = blocked(item.key);
-                const current =
-                  item.key === 'publicTags'
-                    ? (settings?.draftPublicTags ?? []).join('、')
-                    : item.key === 'title'
-                      ? (settings?.title ?? '')
-                      : item.key === 'summary'
-                        ? (settings?.summary ?? '')
-                        : item.key === 'coverTitle'
-                          ? (settings?.config.title ?? '')
-                          : (settings?.config.subtitle ?? '');
-                const outdated = stale.includes(item.key);
+          {step === 'setup' && (
+            <div className="blog-copy-setup">
+              <h3 className="text-sm font-semibold">本次优化哪些内容</h3>
+              <p className="mt-1 mb-3 text-xs text-default-500">建议先完善标题、摘要与公开标签，封面文案可按需选择。</p>
+              {FIELD_META.map((item) => (
+                <label key={item.key} className="blog-copy-candidate">
+                  <input type="checkbox" className="blog-copy-choice"
+                    checked={picked.includes(item.key)} disabled={!!busy || blocked(item.key)}
+                    onChange={(event) => setPicked((previous) => event.target.checked
+                      ? [...previous, item.key] : previous.filter((key) => key !== item.key))} />
+                  <span><b className="text-sm">{item.label}</b>
+                    <small className="mt-1 block text-xs text-default-500">{blocked(item.key) ? '建立发布草稿后可用' : item.hint}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          {step === 'review' && draft && (
+            <div className="flex flex-col gap-3">
+              {FIELD_META.filter((item) => picked.includes(item.key)).map((item) => {
+                const current = item.key === 'publicTags'
+                  ? (settings?.draftPublicTags ?? []).join('、')
+                  : item.key === 'title' ? settings?.title
+                  : item.key === 'summary' ? settings?.summary
+                  : item.key === 'coverTitle' ? settings?.config.title : settings?.config.subtitle;
                 return (
-                  <label
-                    key={item.key}
-                    className="blog-copy-candidate"
-                  >
-                    <input
-                      type="checkbox"
-                      className="blog-copy-choice"
-                      disabled={!!busy || !usableField || isBlocked}
-                      checked={picked.includes(item.key)}
-                      onChange={(event) =>
-                        setPicked((previous) =>
-                          event.target.checked
-                            ? [...previous, item.key]
-                            : previous.filter((field) => field !== item.key),
-                        )
-                      }
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <b className="text-xs">{item.label}</b>
-                        <small className="text-xs text-default-400">{item.hint}</small>
-                        {outdated && (
-                          <small className="text-xs text-warning-600">
-                            正文已改，建议重新生成
-                          </small>
-                        )}
-                        {isBlocked && (
-                          <small className="text-xs text-default-400">
-                            先发布正文才能写封面文案
-                          </small>
-                        )}
-                        {item.key === 'coverTitle' &&
-                          draft.coverTitle.trim() &&
-                          !validShortCoverTitle(draft.coverTitle) && (
-                            <small className="text-xs text-danger">
-                              要 2–8 字（推荐 4–6 字），超过 8 字请精简
-                            </small>
-                          )}
-                      </span>
-                      <span className="mt-2 block whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
-                        {hasValue(draft, item.key)
-                          ? valueOf(draft, item.key)
-                          : '未生成'}
-                      </span>
-                      {current.trim() && (
-                        <span className="mt-1 block truncate text-xs text-default-400">
-                          当前：{current}
-                        </span>
-                      )}
-                    </span>
-                  </label>
+                  <section key={item.key} className="blog-copy-editor">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <label htmlFor={`copy-${item.key}`} className="text-sm font-semibold">{item.label}</label>
+                      <span className="text-xs text-default-400">{item.hint}</span>
+                    </div>
+                    <textarea id={`copy-${item.key}`} disabled={!!busy}
+                      rows={item.key === 'summary' ? 4 : 2}
+                      maxLength={item.key === 'title' ? 200 : item.key === 'summary' ? 2000 : item.key === 'coverTitle' ? 8 : item.key === 'coverSubtitle' ? 40 : 174}
+                      value={item.key === 'publicTags' ? tagsInput : valueOf(draft, item.key)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        if (item.key === 'publicTags') setTagsInput(value);
+                        setDraft((previous) => previous ? { ...previous, [item.key]: item.key === 'publicTags'
+                          ? value.split(/[、,，\n]/).map((tag) => tag.trim()).filter(Boolean) : value } : previous);
+                      }} />
+                    {item.key === 'publicTags' && <p className="mt-1 text-xs text-default-500">用顿号或逗号分隔，最多 8 个标签，每个 20 字以内</p>}
+                    {item.key === 'coverTitle' && !validShortCoverTitle(draft.coverTitle) && <p className="mt-1 text-xs text-danger">请使用 2–8 字的短标题</p>}
+                    {!!current?.trim() && <details className="mt-2 text-xs text-default-500"><summary className="cursor-pointer">查看当前文案</summary><p className="mt-2 whitespace-pre-wrap leading-relaxed">{current}</p></details>}
+                  </section>
                 );
               })}
-              {!!draft.issues.length && (
-                <div className="rounded-lg bg-warning-50 px-3 py-2 text-xs text-warning">
-                  {draft.issues.join(' ')}
-                </div>
-              )}
-              {draft.generatedAt && (
-                <p className="text-xs text-default-400">
-                  生成于 {new Date(draft.generatedAt).toLocaleString('zh-CN')}
-                </p>
-              )}
+              {!!stale.length && <p className="text-xs text-warning-600">正文已更新，请重新生成后采用。</p>}
+              {!!draft.issues.length && <p className="text-xs text-warning-600">{draft.issues.join(' ')}</p>}
             </div>
           )}
         </div>
@@ -433,21 +411,18 @@ export function BlogAiCopyDialog({
             改动先存在草稿里，点「更新发布」才会对外生效。
           </p>
           <div className="flex shrink-0 justify-end gap-2">
-            <Button
-              variant="flat"
-              isDisabled={!!busy}
-              onPress={() => void generate()}
-              startContent={<Icon icon="tabler:refresh" width={15} />}
-            >
-              {busy === 'generate' ? '正在生成…' : '重新生成'}
+            {step === 'setup' && draft && <Button variant="flat" isDisabled={!!busy || !picked.length} onPress={() => setStep('review')}>编辑已有建议</Button>}
+            {step === 'review' && <Button variant="light" isDisabled={!!busy} onPress={() => { setStep('setup'); setNotice(''); }}>调整优化项</Button>}
+            <Button variant="flat" isDisabled={!!busy || !picked.length}
+              isLoading={busy === 'generate'} onPress={() => void generate()}
+              startContent={busy !== 'generate' ? <Icon icon="tabler:sparkles" width={15} /> : undefined}>
+              {step === 'setup' ? (draft ? '重新生成建议' : '生成建议') : '重新生成'}
             </Button>
-            <Button
-              color="primary"
-              isDisabled={!!busy || !draft || !picked.length}
-              onPress={() => void apply()}
-            >
-              {busy === 'apply' ? '正在写入…' : '写入草稿'}
-            </Button>
+            {step === 'review' && <Button color="primary"
+              isLoading={busy === 'apply'} isDisabled={!!busy || !draft || !picked.length || !!stale.length}
+              onPress={() => void apply()}>
+              写入草稿（{picked.length} 项）
+            </Button>}
           </div>
         </footer>
       </ModalContent>

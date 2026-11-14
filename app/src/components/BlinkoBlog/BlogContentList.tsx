@@ -1,7 +1,8 @@
+import { CoverCanvas } from "./CoverCanvas";
 import { BlogChip, BlogInput, BlogSelect, BlogTabs } from "./BlogUI";
 import { confirmBlogAction } from "./confirmBlogAction";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   Button,
   Checkbox,
@@ -70,6 +71,7 @@ export function BlogContentList({
   onReload: () => Promise<void>;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const [busy, setBusy] = useState(false);
   /** 正在发布的那一行：只有它在转圈，其余行照常可点。 */
@@ -86,10 +88,11 @@ export function BlogContentList({
       if (value === null || value === "") next.delete(key);
       else next.set(key, value);
     }
-    setParams(next, { replace: true });
+    setParams(next, { replace: true, preventScrollReset: true, state: location.state });
   };
 
   const status = (params.get("status") ?? "all") as ContentStatus | "all";
+  const coverFilter = params.get("cover") || "all";
   const topicFilter = params.get("topic") ?? "all";
   const sort = params.get("sort") ?? "updated";
   const page = Math.max(1, Number(params.get("page") ?? "1") || 1);
@@ -155,6 +158,8 @@ export function BlogContentList({
   const filtered = useMemo(() => {
     const keywordLower = keyword.trim().toLowerCase();
     const list = posts.filter((post) => {
+      if (coverFilter === "missing" && (post.publication?.draftCoverAttachmentId || post.publication?.coverAttachmentId)) return false;
+      if (coverFilter === "changed" && !post.changes.includes("cover")) return false;
       if (status !== "all" && statusOf(post) !== status) return false;
       if (topicFilter !== "all" && !post.topicIds.includes(Number(topicFilter)))
         return false;
@@ -175,7 +180,7 @@ export function BlogContentList({
         );
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  }, [posts, status, topicFilter, keyword, sort, statusOf]);
+  }, [posts, status, topicFilter, keyword, sort, statusOf, coverFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
@@ -305,6 +310,9 @@ export function BlogContentList({
             ))}
           </BlogSelect>
         )}
+        <BlogSelect aria-label="封面状态" value={coverFilter} onChange={event => update({cover:event.target.value === "all" ? null : event.target.value,page:null})} className="w-[150px]">
+          <option value="all">全部封面状态</option><option value="missing">无封面</option><option value="changed">封面待发布</option>
+        </BlogSelect>
         <BlogSelect
           aria-label="排序方式"
           value={sort}
@@ -390,13 +398,9 @@ export function BlogContentList({
                   >
                     <TableCell>
                       <div className="flex items-start gap-3 min-w-0">
-                        <span className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center shrink-0 overflow-hidden">
-                          {cover ? (
-                            <img src={blogImageUrl(cover.path)} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <Icon icon="tabler:file-text" width={18} className="text-default-400" />
-                          )}
-                        </span>
+                        <button type="button" className="blog-article-cover-thumb" onClick={() => setCoverTarget(post.id)} aria-label={`管理「${post.title}」的封面`} title="查看或更换封面">
+                          {cover ? <CoverCanvas src={blogImageUrl(cover.path)} config={post.publicCoverConfig} focus={post.publicCoverConfig?.focus} placement="single" loading="lazy" /> : <span><Icon icon="tabler:photo" width={20}/><small>设置封面</small></span>}
+                        </button>
                         {/*
                           标题栏要有宽度上限。
                           表格是自动列宽的，摘要越长这一列越宽 ——

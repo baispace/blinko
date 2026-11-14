@@ -62,13 +62,46 @@
 }
 .aggregation-masonry {
   display: flex;
-  margin-left: -16px;
+  margin-left: calc(-1 * var(--aggregation-gap, 16px));
   width: auto;
 }
 .aggregation-column {
-  padding-left: 16px;
+  padding-left: var(--aggregation-gap, 16px);
   background-clip: padding-box;
 }
 .aggregation-column > * {
-  margin-bottom: 16px;
+  margin-bottom: var(--aggregation-gap, 16px);
 }
+
+.aggregation-card { transition: border-color .2s, box-shadow .2s, transform .2s; }
+.aggregation-card:hover { border-color: hsl(var(--heroui-primary) / .4); box-shadow: 0 5px 18px hsl(var(--heroui-primary) / .07); transform: translateY(-2px); }
+.aggregation-card:focus-visible { outline: 2px solid hsl(var(--heroui-primary)); outline-offset: 3px; }
+.aggregation-count { font-size: 12px; font-weight: 500; white-space: nowrap; color: hsl(var(--heroui-primary)); }
+.aggregation-previews { list-style: none; padding: 0; margin: 12px 0; }
+.aggregation-previews li { font-size: 13px; line-height: 1.6; padding: 6px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-bottom: 1px solid hsl(var(--heroui-default-200) / .5); }
+.aggregation-empty { display: grid; justify-items: center; gap: 12px; padding: 48px 20px; color: hsl(var(--heroui-default-500)); text-align: center; }
+.aggregation-empty h2 { font-size: 16px; color: hsl(var(--heroui-foreground)); }
+.aggregation-empty p { font-size: 13px; max-width: 360px; line-height: 1.8; }
+.aggregation-savebar { position: sticky; bottom: -24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 0; background: hsl(var(--heroui-background)); border-top: 1px solid hsl(var(--heroui-default-200)); z-index: 2; }
+.aggregation-preview { padding: 20px; border-radius: 16px; background: hsl(var(--heroui-primary) / .05); margin: 16px 0; font-size: 13px; line-height: 1.8; }
+.aggregation-preview h2 { font-weight: 600; }
+.aggregation-preview small { color: hsl(var(--heroui-default-500)); }
+@media (prefers-reduced-motion: reduce) { .aggregation-card { transition: none; } .aggregation-card:hover { transform: none; } }
+@media (max-width: 640px) { .aggregation-page { padding: 16px; } .aggregation-toolbar { flex-wrap: wrap; } .aggregation-rule { padding: 16px; } }
+.aggregation-rule-summary { display: flex; align-items: center; gap: 16px; padding: 22px 0; border-bottom: 1px solid hsl(var(--heroui-default-200) / .7); }
+.aggregation-priority { font-size: 12px; color: hsl(var(--heroui-default-400)); align-self: flex-start; padding-top: 4px; }
+.aggregation-rule-name { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; text-align: left; }
+.aggregation-rule-summary p { font-size: 13px; color: hsl(var(--heroui-default-500)); margin: 6px 0; overflow-wrap: anywhere; }
+.aggregation-rule-summary small { font-size: 12px; color: hsl(var(--heroui-default-400)); }
+.aggregation-rule-actions { display: flex; align-items: center; gap: 4px; }
+.aggregation-modal-wrapper { z-index: 10001; }
+.aggregation-modal-backdrop { z-index: 10000; }
+.aggregation-rule-dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 40px); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; background: hsl(var(--heroui-background)); }
+.aggregation-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; flex-shrink: 0; }
+.aggregation-dialog-header h2 { font-size: 20px; font-weight: 600; }
+.aggregation-dialog-header p { font-size: 13px; color: hsl(var(--heroui-default-500)); margin-top: 6px; }
+.aggregation-dialog-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 24px 24px; }
+.aggregation-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.aggregation-tag-picker { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0 0; max-height: 144px; overflow-y: auto; }
+.aggregation-dialog-footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid hsl(var(--heroui-default-200) / .6); }
+@media(max-width: 640px) { .aggregation-rule-summary { flex-wrap: wrap; gap: 12px; } .aggregation-rule-actions { width: 100%; justify-content: flex-end; } .aggregation-editor-grid { grid-template-columns: 1fr; gap: 12px; } .aggregation-dialog-header { padding: 20px; } .aggregation-dialog-body { padding: 0 20px 20px; } .aggregation-dialog-footer { padding: 14px 16px; } }

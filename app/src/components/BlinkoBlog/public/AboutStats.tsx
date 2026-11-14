@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Modal, ModalContent } from "@heroui/react";
 import { api } from "@/lib/publicBlogClient";
-import { readBlogTheme } from "@/lib/blogTheme";
 import { Icon } from "@/components/Common/Iconify/icons";
-import { BlogButton } from "@/components/BlinkoBlog/BlogUI";
 import "./about-stats.css";
 
 /**
@@ -52,8 +49,6 @@ function formatDate(iso: string) {
 export function AboutStats({ enabled }: { enabled: boolean }) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
-  const [noteOpen, setNoteOpen] = useState(false);
-  const theme = readBlogTheme();
 
   useEffect(() => {
     if (!enabled) return;
@@ -86,6 +81,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
     return [
       {
         key: "views",
+        help: "公开文章详情页的有效阅读次数。同一浏览器 30 分钟内重复打开同一篇只记一次，刷新不会重复计入。 它不是曝光量，也不是独立读者人数。",
         primary: true,
         value: formatCount(stats.views),
         exact: `${formatExact(stats.views)} 次`,
@@ -95,6 +91,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
       },
       {
         key: "reactions",
+        help: "公开文章收到的「有启发 / 很实用 / 有共鸣」回应总数。同一访客对同一篇最多保留一种回应， 切换类型不增加总数，撤销则减少。私密反馈与作者回复不计入。",
         primary: true,
         value: formatCount(stats.reactions),
         exact: `${formatExact(stats.reactions)} 次`,
@@ -104,6 +101,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
       },
       {
         key: "articles",
+        help: "当前已发布、公开可访问的文章数量。系统没有可靠的「原创」标记， 所以这里只叫公开文章 —— 撤回、删除或转为私有的文章会退出统计。",
         primary: false,
         value: formatCount(stats.articles),
         exact: `${formatExact(stats.articles)} 篇`,
@@ -113,6 +111,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
       },
       {
         key: "days",
+        help: "从最早一篇公开文章首次发布到今天的自然日数，不表示连续每天更新，更新发布不会重置。",
         primary: false,
         value: formatExact(stats.days),
         exact: `${formatExact(stats.days)} 天`,
@@ -131,15 +130,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
     <section className="ink-about-section" id="stats">
       <div className="ink-about-titlebar">
         <h2 className="ink-about-title">记录被看见，分享有回响。</h2>
-        <button
-          type="button"
-          className="ink-about-stats-note"
-          onClick={() => setNoteOpen(true)}
-          aria-haspopup="dialog"
-        >
-          <Icon icon="tabler:info-circle" width={15} />
-          统计说明
-        </button>
+
       </div>
 
       <div className="ink-about-stats-grid" aria-busy={state === "loading"}>
@@ -173,7 +164,7 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
                 </b>
                 <span className="ink-about-stat-unit">{m.unit}</span>
               </p>
-              <span className="ink-about-stat-label">{m.label}</span>
+              <span className="ink-about-stat-label">{m.label}<span className="ink-about-metric-help"><button type="button" aria-label={`${m.label}统计说明`} aria-describedby={`metric-${m.key}`}><Icon icon="tabler:help-circle" width={15} /></button><span role="tooltip" id={`metric-${m.key}`}><strong>{m.label} {m.exact}</strong>{m.help}</span></span></span>
               <small className="ink-about-stat-desc">{m.desc}</small>
             </div>
           ))
@@ -183,110 +174,6 @@ export function AboutStats({ enabled }: { enabled: boolean }) {
         )}
       </div>
 
-      <Modal
-        isOpen={noteOpen}
-        onOpenChange={(next) => setNoteOpen(next)}
-        placement="center"
-        size="md"
-        scrollBehavior="inside"
-        backdrop="blur"
-        isDismissable
-        hideCloseButton
-        classNames={{
-          base: `ink-stats-modal ink-stats-surface ${
-            theme === "dark" ? "ink-stats-dark" : ""
-          }`,
-        }}
-      >
-        <ModalContent aria-label="统计说明">
-          <header className="ink-stats-modal-head">
-            <div>
-              <h2 className="ink-stats-modal-title">这些数字是怎么来的</h2>
-              <p className="ink-stats-modal-lead">
-                全部统计公开可访问的内容，口径与站内统计一致。
-              </p>
-            </div>
-            <BlogButton
-              type="button"
-              className="ink-stats-modal-close"
-              onClick={() => setNoteOpen(false)}
-              aria-label="关闭"
-            >
-              <Icon icon="tabler:x" width={18} />
-            </BlogButton>
-          </header>
-
-          {stats && (
-            <div className="ink-stats-modal-exact">
-              <span>当前准确值</span>
-              <b>
-                累计阅读 {formatExact(stats.views)} 次 · 读者回应{" "}
-                {formatExact(stats.reactions)} 次 · 公开文章{" "}
-                {formatExact(stats.articles)} 篇 · 持续分享{" "}
-                {formatExact(stats.days)} 天
-              </b>
-            </div>
-          )}
-
-          <dl className="ink-stats-modal-list">
-            <div>
-              <dt>累计阅读</dt>
-              <dd>
-                公开文章详情页的有效阅读次数。同一浏览器 {stats?.dedupeWindowMinutes ?? 30}{" "}
-                分钟内重复打开同一篇只记一次，刷新不会重复计入。
-                它不是曝光量，也不是独立读者人数。
-              </dd>
-            </div>
-            <div>
-              <dt>读者回应</dt>
-              <dd>
-                公开文章收到的「有启发 / 很实用 / 有共鸣」回应总数。同一访客对同一篇最多保留一种回应，
-                切换类型不增加总数，撤销则减少。私密反馈与作者回复不计入。
-              </dd>
-            </div>
-            <div>
-              <dt>公开文章</dt>
-              <dd>
-                当前已发布、公开可访问的文章数量。系统没有可靠的「原创」标记，
-                所以这里只叫公开文章 —— 撤回、删除或转为私有的文章会退出统计。
-              </dd>
-            </div>
-            <div>
-              <dt>持续分享</dt>
-              <dd>
-                从最早一篇公开文章的首次发布时间到今天的自然日数
-                {stats?.firstPublishedAt
-                  ? `（自 ${formatDate(stats.firstPublishedAt)} 起）`
-                  : ""}
-                。它不表示连续每天更新，更新发布也不会重置这段时长。
-              </dd>
-            </div>
-            <div>
-              <dt>身份识别的限制</dt>
-              <dd>
-                去重依据是浏览器生成的匿名设备标识（localStorage 与第一方 Cookie），
-                服务端拿不到 IP、浏览器指纹或姓名。跨浏览器、跨设备或清理了站点数据之后，
-                同一个读者会被算成不同的访客 —— 这些数字反映的是浏览器的访问行为，
-                不等于真实自然人的人数。
-              </dd>
-            </div>
-          </dl>
-
-          <footer className="ink-stats-modal-foot">
-            <span>
-              更新于 {stats ? formatDate(stats.updatedAt) : "—"} · 口径版本{" "}
-              {stats?.version ?? "—"}
-            </span>
-            <BlogButton
-              type="button"
-              className="ink-stats-modal-done"
-              onClick={() => setNoteOpen(false)}
-            >
-              知道了
-            </BlogButton>
-          </footer>
-        </ModalContent>
-      </Modal>
     </section>
   );
 }

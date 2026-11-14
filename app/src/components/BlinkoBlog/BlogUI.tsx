@@ -1,3 +1,4 @@
+import { Icon } from "@/components/Common/Iconify/icons";
 import { Children, forwardRef, isValidElement, type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes, type TextareaHTMLAttributes, type SelectHTMLAttributes, type HTMLAttributes } from 'react';
 import { Button, Input, Textarea, Select, SelectItem, Checkbox, Switch, Tabs, Tab, Chip, Accordion, AccordionItem } from '@heroui/react';
 import type { ButtonProps, InputProps, TextAreaProps, SelectProps, CheckboxProps, SwitchProps } from '@heroui/react';
@@ -85,8 +86,8 @@ export function BlogChipGroup({value,onChange,label,items,className=''}:{value:s
   })}
  </div>;
 }
-export function BlogTabs({value,onChange,label,items}:{value:string;onChange:(key:string)=>void;label:string;items:{key:string;label:string;count?:number;description?:string}[]}){
- return <Tabs aria-label={label} selectedKey={value} onSelectionChange={key=>onChange(String(key))} color="primary" variant="underlined" size="sm" className="blog-ui-tabs" classNames={{base:'w-full',tabList:'gap-5 p-0 border-b border-divider w-full',tab:'w-auto h-11 px-1',cursor:'h-0.5 rounded-full',panel:'p-0'}}>{items.map(item=><Tab key={item.key} title={<span className="blog-ui-tab-title"><span className="blog-ui-tab-label">{item.label}{item.count!==undefined&&<span className="blog-ui-tab-count">{item.count}</span>}</span>{item.description&&<span className="blog-ui-tab-desc">{item.description}</span>}</span>}/>)}</Tabs>;
+export function BlogTabs({value,onChange,label,items}:{value:string;onChange:(key:string)=>void;label:string;items:{key:string;label:string;count?:number;description?:string;icon?:string}[]}){
+ return <Tabs aria-label={label} selectedKey={value} onSelectionChange={key=>onChange(String(key))} color="primary" variant="underlined" size="sm" className="blog-ui-tabs" classNames={{base:'w-full',tabList:'gap-5 p-0 border-b border-divider w-full',tab:'w-auto h-11 px-1',cursor:'h-0.5 rounded-full',panel:'p-0'}}>{items.map(item=><Tab key={item.key} title={<span className="blog-ui-tab-title"><span className="blog-ui-tab-label">{item.icon && <Icon icon={item.icon} width={16}/>} {item.label}{item.count!==undefined&&<span className="blog-ui-tab-count">{item.count}</span>}</span>{item.description&&<span className="blog-ui-tab-desc">{item.description}</span>}</span>}/>)}</Tabs>;
 }
 
 /**

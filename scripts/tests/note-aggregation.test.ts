@@ -69,3 +69,18 @@ test('custom ranges are inclusive and disabling grouping restores all notes',()=
  expect(aggregateNotes(notes,[selected],'Asia/Shanghai',now).map(item=>item.kind)).toEqual(['group','note']);
  expect(aggregateNotes(notes,[{...selected,enabled:false}],'Asia/Shanghai',now).map(item=>item.kind)).toEqual(['note','note','note']);
 });
+
+test('timeline grouping uses creation dates even when a rule matches update dates', () => {
+  const notes = [
+    { ...note(1, '2026-11-05T01:00:00Z'), updatedAt: '2026-11-06T01:00:00Z' },
+    { ...note(2, '2026-11-05T02:00:00Z'), updatedAt: '2026-11-06T02:00:00Z' },
+    { ...note(3, '2026-11-04T01:00:00Z'), updatedAt: '2026-11-06T03:00:00Z' },
+  ];
+  const items = aggregateNotes(notes, [{ ...rule, period: 'today', dateField: 'updatedAt' }], 'Asia/Shanghai', now, 'byDay');
+  expect(items.map((item) => item.kind)).toEqual(['group', 'note']);
+});
+
+test('calendar ranges reject impossible dates', () => {
+  expect(aggregationRuleSchema.safeParse({ ...rule, period: 'range', rangeStart: '2026-02-30', rangeEnd: '2026-03-01' }).success).toBe(false);
+  expect(aggregationRuleSchema.safeParse({ ...rule, period: 'range', rangeStart: '2026-02-28', rangeEnd: '2026-03-01' }).success).toBe(true);
+});

@@ -1,0 +1,38 @@
+# 公开博客的独立进程（前后端分离）。
+#
+# 安装：
+#   cp deploy/blog-serve.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now blog-serve
+#
+# 依赖：先构建前端与服务端渲染产物
+#   cd app && bun run build:blog && bun run build:blog:server
+
+[Unit]
+Description=Blinko public blog (separated frontend + SSR)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/srv/blinko/app
+Environment=BLOG_HOST=127.0.0.1
+Environment=BLOG_PORT=4175
+# 主应用地址：博客进程把 /api 转发到这里。
+Environment=BLOG_API_ORIGIN=http://127.0.0.1:1111
+# 访问日志：off | access | all
+Environment=BLOG_LOG=access
+# 首屏 HTML 的 CDN 缓存秒数（0 = 不缓存）
+Environment=BLOG_HTML_CACHE=60
+ExecStart=/usr/bin/bun blog-serve.ts
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/srv/blinko
+
+[Install]
+WantedBy=multi-user.target

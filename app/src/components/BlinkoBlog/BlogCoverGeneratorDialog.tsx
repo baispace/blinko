@@ -1,37 +1,46 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button, Modal, ModalContent, Switch } from '@heroui/react';
-import { api } from '@/lib/trpc';
-import { blogImageUrl } from '@/lib/blogImage';
-import { Icon } from '@/components/Common/Iconify/icons';
+import { useEffect, useRef, useState } from "react";
+import { Modal, ModalContent } from "@heroui/react";
+import { api } from "@/lib/trpc";
+import { blogImageUrl } from "@/lib/blogImage";
+import { Icon } from "@/components/Common/Iconify/icons";
 import {
-  COVER_PREVIEW_SCENES,
   CoverScenePreview,
   CoverSceneSwitch,
   type CoverPreviewSceneKey,
-} from './BlogCoverPreview';
-import { BlogInput, BlogTextarea } from './BlogUI';
-import {
-  shortCoverTitleLength,
-  validShortCoverTitle,
-} from '@shared/lib/blogPublishSettings';
-import { COVER_TEMPLATE_VERSION, normalizeCoverTextConfig } from '@shared/lib/blogCoverText';
-
-type Options = Pick<Awaited<ReturnType<typeof api.blog.coverGenerationOptions.query>>, 'suggestedTitle'|'artPlan'|'modelTitle'|'modelKey'|'models'|'revision'|'prompt'> & {sourceVersion?:string};
-type Copy = Awaited<ReturnType<typeof api.blog.generateCopyGroup.mutate>>;
-type Base = { coverTitle?: string; coverSubtitle?: string; id: number | null; path: string; palette?: string; artwork?: "icon" | "tile" | "image" };
+} from "./BlogCoverPreview";
+import { BlogInput, BlogTextarea, BlogSelect, BlogButton } from "./BlogUI";
+import { normalizeCoverTextConfig } from "@shared/lib/blogCoverText";
+type Options = Pick<
+  Awaited<ReturnType<typeof api.blog.coverGenerationOptions.query>>,
+  | "suggestedTitle"
+  | "artPlan"
+  | "modelTitle"
+  | "modelKey"
+  | "models"
+  | "revision"
+  | "prompt"
+> & { sourceVersion?: string };
+type Base = {
+  coverTitle?: string;
+  coverSubtitle?: string;
+  id: number | null;
+  path: string;
+  palette?: string;
+  artwork?: "icon" | "tile" | "image";
+};
 
 const errorText = (error: unknown) =>
-  error instanceof Error ? error.message : '操作失败，请重试。';
+  error instanceof Error ? error.message : "操作失败，请重试。";
 
 export type CoverGeneratorInitial = {
   base?: Base | null;
   coverTitle?: string;
   coverSubtitle?: string;
-  coverMode?: 'full' | 'overlay';
+  coverMode?: "full" | "overlay";
   /** 文章标题：卡片预览里那一行「文章标题」要显示真的那份。 */
   articleTitle?: string;
   text?: {
-    align?: 'left' | 'center' | 'right';
+    align?: "left" | "center" | "right";
     palette?: string;
     sizeScale?: number;
     templateVersion?: string;
@@ -44,7 +53,7 @@ export type CoverGeneratorResult = {
   path: string;
   coverTitle: string;
   coverSubtitle: string;
-  coverMode: 'full' | 'overlay';
+  coverMode: "full" | "overlay";
   coverPalette?: string;
   coverArtwork?: "icon" | "tile" | "image";
 };
@@ -52,531 +61,366 @@ export type CoverGeneratorResult = {
 export function BlogCoverGeneratorDialog({
   noteId = 0,
   target,
-  mode = 'generate',
   initial,
   onApply,
   onClose,
 }: {
   noteId?: number;
-  target?: {type: 'note' | 'topic'; id:number; title?:string; description?:string};
-  mode?: 'generate' | 'preview';
+  target?: {
+    type: "note" | "topic";
+    id: number;
+    title?: string;
+    description?: string;
+  };
+  mode?: "generate" | "preview";
   initial?: CoverGeneratorInitial;
-  onApply?: (result: CoverGeneratorResult) => void;
+  onApply?: (result: CoverGeneratorResult) => void | Promise<void>;
   onClose: () => void;
 }) {
-  const [step, setStep] = useState<'input' | 'result' | 'preview'>(
-    mode === 'preview' && initial?.base ? 'preview' : 'input',
-  );
-  const [busy, setBusy] = useState<null | 'load' | 'copy' | 'image'>(null);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const style = 'ink' as const;
-  const [title, setTitle] = useState(initial?.coverTitle ?? '');
-  const [subtitle, setSubtitle] = useState(initial?.coverSubtitle ?? '');
-  const [direction, setDirection] = useState('');
   const [options, setOptions] = useState<Options | null>(null);
-  const [picks, setPicks] = useState<Base[]>([]);
-  const [picked, setPicked] = useState<Base | null>(initial?.base ?? null);
-  const [previewTitle, setPreviewTitle] = useState(initial?.coverTitle ?? '');
-  const [previewSubtitle, setPreviewSubtitle] = useState(initial?.coverSubtitle ?? '');
-  const [overlay, setOverlay] = useState(target?.type !== 'note' && initial?.coverMode !== 'full');
-  const [scene, setScene] = useState<CoverPreviewSceneKey>('double');
-  const [showOriginal, setShowOriginal] = useState(false);
-  const completeCover = (picked?.artwork ?? initial?.text?.artwork) === 'image' && !overlay;
+  const [modelId, setModelId] = useState("");
+  const [headline, setHeadline] = useState(initial?.coverTitle || "");
+  const [direction, setDirection] = useState("");
+  const [selected, setSelected] = useState<Base | null>(initial?.base || null);
+  const [candidates, setCandidates] = useState<Base[]>([]);
+  const [busy, setBusy] = useState<"load" | "generate" | "apply" | null>(null);
+  const [error, setError] = useState("");
+  const [scene, setScene] = useState<CoverPreviewSceneKey>("double");
+  const [original, setOriginal] = useState(true);
+  const [useReference, setUseReference] = useState(false);
   const alive = useRef(true);
-  const loadRequest = useRef(0);
+  const generating = useRef(false);
 
+  const load = async () => {
+    setBusy("load");
+    setError("");
+    try {
+      const result = target
+        ? await api.blog.assetCoverOptions.query({
+            target: { type: target.type, id: target.id },
+          })
+        : await api.blog.coverGenerationOptions.query({ noteId, style: "ink" });
+      if (!alive.current) return;
+      setOptions(result);
+      setModelId((previous) =>
+        result.models.some(
+          (model) => String(model.id) === previous && model.available,
+        )
+          ? previous
+          : String(result.models.find((model) => model.available)?.id || ""),
+      );
+    } catch (error) {
+      if (alive.current) setError(errorText(error));
+    } finally {
+      if (alive.current) setBusy(null);
+    }
+  };
   useEffect(() => {
     alive.current = true;
-    return () => { alive.current = false; };
-  }, []);
-
-  const load = async (nextStyle: 'ink') => {
-    const request = ++loadRequest.current;
-    setOptions(null);
-    setBusy('load');
-    setError('');
-    try {
-      const config = target ? await api.blog.assetCoverOptions.query({target:{type:target.type,id:target.id}}) : await api.blog.coverGenerationOptions.query({ noteId, style: nextStyle });
-      if (!alive.current || request !== loadRequest.current) return;
-      setOptions(config);
-    } catch (error) {
-      if (alive.current && request === loadRequest.current) setError(errorText(error));
-    } finally {
-      if (alive.current && request === loadRequest.current) setBusy(null);
-    }
-  };
-
-  useEffect(() => {
-    // Existing-cover previews are local: no model or publication is required.
-    if (step === 'input') void load(style);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [style, noteId, target?.type, target?.id, step]);
-
-  // Re-read configuration after returning from the settings tab; never generate on focus.
-  useEffect(() => {
-    const refresh = () => { if (step === 'input' && !busy) void load(style); };
-    window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
-  }, [step, busy, style, noteId, target?.type, target?.id]);
-
-  const suggest = async () => {
-    setBusy('copy');
-    setError('');
-    setNotice('');
-    try {
-      const copy: Copy = await api.blog.generateCopyGroup.mutate({ noteId });
-      if (!alive.current) return;
-      if (copy.coverTitle?.trim() && validShortCoverTitle(copy.coverTitle))
-        setTitle(copy.coverTitle.trim());
-      if (copy.summary?.trim()) setSubtitle(copy.summary.trim().slice(0, 20));
-      setNotice(
-        copy.coverTitle?.trim() && !validShortCoverTitle(copy.coverTitle)
-          ? 'AI 给的短标题不是 2–8 字（推荐 4–6 字），已保留你原来的写法。'
-          : '已填入 AI 建议的封面文案，可以直接改。',
-      );
-    } catch (error) {
-      if (alive.current) setError(errorText(error));
-    } finally {
-      if (alive.current) setBusy(null);
-    }
-  };
+    void load();
+    return () => {
+      alive.current = false;
+    };
+  }, [noteId, target?.type, target?.id]);
 
   const generate = async () => {
-    if (target?.type !== 'note' && !validShortCoverTitle(title)) {
-      setError('封面标题要 2–8 字（推荐 4–6 字），会随整张图片一起生成。');
-      return;
-    }
-    setBusy('image');
-    setError('');
-    setNotice('');
+    if (!options || !modelId || generating.current) return;
+    generating.current = true;
+    setBusy("generate");
+    setError("");
+    const requestedTitle = headline.trim();
+    const brief = [
+      requestedTitle
+        ? `图片必须准确显示标题「${requestedTitle}」`
+        : "不添加任何文字",
+      direction.trim(),
+    ]
+      .filter(Boolean)
+      .join("。")
+      .slice(0, 300);
     try {
-      const config = options ?? (target ? await api.blog.assetCoverOptions.query({target:{type:target.type,id:target.id}}) : await api.blog.coverGenerationOptions.query({ noteId, style }));
+      const result = target
+        ? await api.blog.generateAssetCover.mutate({
+            target,
+            modelId: Number(modelId),
+            referenceAttachmentId: useReference ? selected?.id || undefined : undefined,
+            sourceVersion: options.sourceVersion || "",
+            direction: brief,
+          })
+        : await api.blog.generateCover.mutate({
+            noteId,
+            modelId: Number(modelId),
+            referenceAttachmentId: useReference ? selected?.id || undefined : undefined,
+            revision: options.revision,
+            style: "ink",
+            direction: brief,
+          });
       if (!alive.current) return;
-      setOptions(config);
-      const model = config.models.find((item) => item.available);
-      if (!model) throw new Error('尚未配置可用生图模型，可上传图片，或到 AI 设置中配置。');
-      const result = target ? await api.blog.generateAssetCover.mutate({target,sourceVersion:('sourceVersion' in config ? config.sourceVersion : '') || '',modelId:model.id,direction:[title.trim() && `封面标题：${title.trim()}`, subtitle.trim() && `封面副标题：${subtitle.trim()}`, direction.trim()].filter(Boolean).join("；").slice(0,300) || undefined}) : await api.blog.generateCover.mutate({
-        noteId,
-        modelId: model.id,
-        style,
-        direction: [title.trim() && `封面标题：${title.trim()}`, subtitle.trim() && `封面副标题：${subtitle.trim()}`, direction.trim()].filter(Boolean).join("；").slice(0,300) || undefined,
-        revision: config.revision,
-      });
-      if (!alive.current) return;
-      const list: Base[] = (result.candidates ?? []).map((item) => ({ coverTitle: title, coverSubtitle: subtitle, id: item.id, path: item.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" | "image" : "image" }));
-      if (!list.length) throw new Error('模型没有返回图片，请重试。');
-      setPicks(previous => [...list, ...previous.filter(item => !list.some(next => next.path === item.path))].slice(0, 6));
-      setShowOriginal(false);
-      setPicked({ coverTitle: title, coverSubtitle: subtitle, id: result.id, path: result.path, palette: result.coverPalette, artwork: "artwork" in result ? result.artwork as "icon" | "tile" | "image" : "image" });
-      setPreviewTitle(title);
-      setPreviewSubtitle(subtitle);
-      setOverlay(false);
-      setStep('result');
-      setNotice(
-        list.length > 1
-          ? `出了 ${list.length} 张，选一张用；也可以先看看各场景的效果。`
-          : '封面已生成，可以先看看各场景的效果。',
+      const candidate: Base = {
+        id: result.id,
+        path: result.path,
+        artwork: "image",
+        coverTitle: requestedTitle,
+        coverSubtitle: "",
+      };
+      setCandidates((previous) =>
+        [
+          candidate,
+          ...previous.filter((item) => item.path !== candidate.path),
+        ].slice(0, 6),
       );
+      setSelected(candidate);
+      setOriginal(true);
+    } catch (error) {
+      if (alive.current) setError(errorText(error));
+    } finally {
+      generating.current = false;
+      if (alive.current) setBusy(null);
+    }
+  };
+  const apply = async () => {
+    if (!selected || busy) return;
+    setBusy("apply");
+    setError("");
+    const fresh = candidates.some((item) => item.path === selected.path);
+    try {
+      await onApply?.({
+        id: selected.id,
+        path: selected.path,
+        coverTitle: fresh
+          ? selected.coverTitle || ""
+          : initial?.coverTitle || "",
+        coverSubtitle: fresh ? "" : initial?.coverSubtitle || "",
+        coverMode: fresh ? "full" : initial?.coverMode || "full",
+        coverArtwork: fresh
+          ? "image"
+          : initial?.text?.artwork || selected.artwork || "image",
+        coverPalette: fresh ? undefined : initial?.text?.palette,
+      });
+      onClose();
     } catch (error) {
       if (alive.current) setError(errorText(error));
     } finally {
       if (alive.current) setBusy(null);
     }
   };
-
-  const apply = () => {
-    if (!picked) return;
-    onApply?.({
-      id: picked.id,
-      path: picked.path,
-      coverTitle: previewTitle,
-      coverSubtitle: previewSubtitle,
-      coverMode: completeCover ? 'full' : target?.type !== 'note' && overlay ? 'overlay' : 'full',
-      coverArtwork: picked.artwork ?? initial?.text?.artwork,
-      coverPalette: picked.palette ?? initial?.text?.palette,
-    });
-    onClose();
-  };
-
-  const invalidTitle = !!title.trim() && !validShortCoverTitle(title);
-  const textConfig = completeCover ? normalizeCoverTextConfig({ mode: 'full', artwork: 'image', title: '', subtitle: '' }) : target?.type !== 'note' && previewTitle.trim()
-    ? {
-        mode: (overlay ? 'overlay' : 'full') as 'overlay' | 'full',
-        templateVersion: initial?.text?.templateVersion || COVER_TEMPLATE_VERSION,
-        artwork: picked?.artwork ?? initial?.text?.artwork,
-        title: previewTitle,
-        subtitle: target ? '' : previewSubtitle,
-        align: 'left' as const,
-        sizeScale: initial?.text?.sizeScale || 1,
-        palette: picked?.palette || initial?.text?.palette || 'violet',
-      }
-    : null;
+  const fresh = candidates.some((item) => item.path === selected?.path);
+  const config = normalizeCoverTextConfig(
+    fresh
+      ? { mode: "full", artwork: "image" }
+      : {
+          ...initial?.text,
+          mode: initial?.coverMode || "full",
+          title: initial?.coverTitle || "",
+          subtitle: initial?.coverSubtitle || "",
+        },
+  );
 
   return (
     <Modal
       isOpen
-      classNames={{wrapper:'blog-cover-modal-wrapper z-[10001]',backdrop:'blog-cover-modal-backdrop z-[10000]'}}
-      onOpenChange={(open) => { if (!open && !busy) onClose(); }}
-      hideCloseButton
-      disableAnimation
-      isDismissable={!busy}
-      isKeyboardDismissDisabled={!!busy}
+      size="5xl"
       scrollBehavior="inside"
-      placement="center"
-      size="xl"
+      hideCloseButton
+      isDismissable={!busy}
+      onOpenChange={(open) => {
+        if (!open && !busy) onClose();
+      }}
+      classNames={{
+        wrapper: "blog-cover-modal-wrapper z-[10001]",
+        backdrop: "blog-cover-modal-backdrop z-[10000]",
+      }}
     >
-      <ModalContent aria-label="封面助手" className="blog-hero-surface blog-cover-dialog flex min-h-0 flex-col overflow-hidden bg-background" style={{width:'min(640px, calc(100vw - 32px))',maxHeight:'calc(100dvh - 48px)',borderRadius:28,fontFamily:'-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif'}}>
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-default-200 px-5 py-4">
+      <ModalContent className="blog-cover-dialog">
+        <header className="flex items-center justify-between gap-4 px-6 py-5">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">封面助手</h2>
-            <small className="mt-1 block text-xs leading-relaxed text-default-500">
-              {step === 'input'
-                ? '先说清楚想要什么，再出图'
-                : step === 'result'
-                  ? '选一张，然后看它在各个位置上的样子'
-                  : '这是封面在公开站上的真实效果'}
-            </small>
+            <h2 className="text-xl font-semibold">设计封面</h2>
+            <p className="mt-1 text-sm text-default-500">
+              居中图标 · 背景大字 · 轻渐变底色
+            </p>
           </div>
-          <Button
-            isIconOnly
-            className="blog-dialog-close"
-            variant="light"
-            onPress={onClose}
-            isDisabled={!!busy}
-            aria-label="关闭封面助手"
-          >
-            <Icon icon="tabler:x" width={18} />
-          </Button>
+          <BlogButton aria-label="关闭" disabled={!!busy} onClick={onClose}>
+            <Icon icon="tabler:x" width={20} />
+          </BlogButton>
         </header>
-
-        <div className="blog-cover-dialog-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-busy={!!busy}>
-          {busy === 'load' && <p className="text-sm text-default-500" role="status">正在读取生图设置…</p>}
-          {busy === 'copy' && <p className="text-sm text-default-500" role="status">正在想文案…</p>}
-          {busy === 'image' && (
-            <p className="text-sm text-default-500" role="status">正在生成完整封面，稍等片刻…</p>
-          )}
-          {!!notice && (
-            <div className="mb-3 rounded-lg bg-primary-50 px-3 py-2 text-sm text-primary" role="status">
-              {notice}
-            </div>
-          )}
-          {!!error && (
-            <div className="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger" role="alert">
-              {error}
-            </div>
-          )}
-
-          {step === 'input' && (
-            <div className="flex flex-col gap-5">
-              {target?.type === 'note' && <p className="text-sm text-default-500">根据笔记内容生成配图，应用到笔记顶部；标题由文档本身展示。生成后仍可调整裁切位置，不会发布到博客。</p>}
-              <section className="flex flex-col gap-1">
-                <h3 className="text-sm font-medium text-foreground">{target?.type === 'note' ? '笔记封面' : target?.type === 'topic' ? '专题封面' : '文章封面'}</h3>
-                <p className="text-xs leading-6 text-default-500">AI 一次生成完整封面，统一完成背景、插画与标题排版；生成后直接预览和应用。</p>
-                <details className="mt-2 text-xs text-default-500">
-                  <summary className="cursor-pointer">查看视觉基准</summary>
-                  <img src="/cover-reference/approved-layout.png" alt="视觉基准：主题色背景、大字与中央图形组成的封面" className="mt-2 w-full rounded-lg" />
-                  <p className="mt-2">此图仅作风格参考，最终构图与文字由 AI 一体化生成。</p>
-                </details>
-              </section>
-
-              {options?.artPlan && (
-                <div className="rounded-xl bg-default-50 px-3 py-2.5 text-xs leading-6 text-default-600">
-                  <p>画面方案：{options.artPlan.label} · 完整封面，一体化生成</p>
-                  <p>模型：{options.modelKey || options.modelTitle || '未配置生图模型'} · 每次生成一张</p>
-                  {options.modelKey && options.modelKey.trim().toLowerCase() !== 'image-01' && (
-                    <p>未找到可用的 image-01，暂用已配置模型；可到 AI 设置中添加。</p>
-                  )}
-                  <p>每次生成一张完整封面。文字已包含在图片中，修改文案后需重新生成。</p>{!options.models.some(model => model.available) && <p className="text-warning-600">当前没有可用的生图模型。点击下方「配置生图模型」，配置完成后返回此窗口即可刷新。</p>}
-                </div>
-              )}
-
-              <section className="flex flex-col gap-3" style={target?.type === 'note' ? {display:'none'} : undefined}>
-                <h3 className="text-sm font-medium text-foreground">封面文字</h3>
-                <label className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-2 text-sm">
-                    封面大字
-                    <small className="text-xs text-default-400">2–8 字（推荐 4–6 字）</small>
-                    <small className={`text-xs ${invalidTitle ? 'text-danger' : 'text-default-400'}`}>
-                      {shortCoverTitleLength(title)}/8
-                    </small>
-                  </span>
-                  <BlogInput
-                    className="w-full"
-                    maxLength={24}
-                    value={title}
-                    disabled={!!busy}
-                    aria-invalid={invalidTitle}
-                    placeholder="例如：三段式改造"
-                    onChange={(event) => setTitle(event.target.value)}
-                  />
-                  {invalidTitle && (
-                    <small className="text-xs text-danger">
-                      封面标题要 2–8 字（推荐 4–6 字），文字会融入生成的图片。
-                    </small>
-                  )}
-                </label>
-                <label className="flex flex-col gap-1.5" style={target || mode !== 'preview' || picked?.artwork === 'icon' || picked?.artwork === 'tile' || initial?.text?.artwork === 'icon' || initial?.text?.artwork === 'tile' ? {display:'none'} : undefined}>
-                  <span className="flex items-center gap-2 text-sm">
-                    封面小字
-                    <small className="text-xs text-default-400">可留空</small>
-                  </span>
-                  <BlogInput
-                    className="w-full"
-                    maxLength={40}
-                    value={subtitle}
-                    disabled={!!busy}
-                    placeholder="例如：一次上线，三段召回"
-                    onChange={(event) => setSubtitle(event.target.value)}
-                  />
-                </label>
-                <Button
-                  size="sm"
-                  variant="flat"
-                  style={target || mode !== 'preview' || picked?.artwork === 'icon' || picked?.artwork === 'tile' || initial?.text?.artwork === 'icon' || initial?.text?.artwork === 'tile' ? {display:'none'} : undefined}
-                  isDisabled={!!busy || !!target}
-                  onPress={() => void suggest()}
-                  startContent={<Icon icon="tabler:sparkles" width={15} />}
-                  className="self-start"
+        <div className="grid min-h-0 gap-6 overflow-y-auto px-6 pb-6 md:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="flex flex-col gap-5">
+            <label className="flex flex-col gap-2 text-sm">
+              封面标题{" "}
+              <span className="text-xs text-default-500">
+                选填，留空生成无字封面
+              </span>
+              <BlogInput
+                value={headline}
+                maxLength={40}
+                disabled={!!busy}
+                onChange={(event) => setHeadline(event.target.value)}
+                placeholder="例如：详情推荐，建议 4–6 字"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm">
+              画面要求
+              <BlogTextarea
+                value={direction}
+                maxLength={200}
+                rows={5}
+                disabled={!!busy}
+                onChange={(event) => setDirection(event.target.value)}
+                placeholder="例如：青绿色，中央用推荐路径图标，也可留空按主题变化"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm">
+              生图模型
+              <BlogSelect
+                value={modelId}
+                disabled={!!busy}
+                onChange={(event) => setModelId(event.target.value)}
+              >
+                <option value="">选择模型</option>
+                {options?.models.map((model) => (
+                  <option
+                    key={model.id}
+                    value={model.id}
+                    disabled={!model.available}
+                  >
+                    {model.title || model.id}
+                    {!model.available ? "（不可用）" : ""}
+                  </option>
+                ))}
+              </BlogSelect>
+            </label>
+            {selected?.id && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={useReference} disabled={!!busy} onChange={event => setUseReference(event.target.checked)}/>参考当前封面风格（H3）</label>}
+            <BlogButton
+              disabled={!!busy || !modelId}
+              onClick={() => void generate()}
+            >
+              {busy === "generate"
+                ? "正在生成…"
+                : candidates.length
+                  ? "再生成一张"
+                  : "生成封面"}
+            </BlogButton>
+            {!modelId && !busy && (
+              <div className="text-sm">
+                <a
+                  href="/settings?section=ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {busy === 'copy' ? '正在想…' : '让 AI 想文案'}
-                </Button>
-              </section>
-
-              <section className="flex flex-col gap-3">
-                <h3 className="text-sm font-medium text-foreground">想画什么</h3>
-                <label className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-2 text-sm">
-                    画面描述
-                    <small className="text-xs text-default-400">可留空，留空则按当前内容自动判断</small>
-                  </span>
-                  <BlogTextarea
-                    className="w-full"
-                    rows={3}
-                    maxLength={200}
-                    value={direction}
-                    disabled={!!busy}
-                    placeholder="例如：用漏斗和三道横线组成一枚简洁图形"
-                    onChange={(event) => setDirection(event.target.value)}
-                  />
-                </label>
-                {!!options?.prompt && (
-                  <details className="group rounded-lg border border-default-200 p-3">
-                    <summary className="flex cursor-pointer items-center gap-2 text-sm text-default-600">
-                      <Icon
-                        icon="tabler:chevron-right"
-                        width={14}
-                        className="transition-transform group-open:rotate-90"
-                      />
-                      查看基础提示词
-                    </summary>
-                    <pre className="mt-2 overflow-x-auto rounded bg-default-50 p-3 text-xs text-default-600">
-                      {options.prompt}
-                    </pre>
-                    {direction.trim() && (
-                      <p className="mt-2 text-xs text-default-500">
-                        你的画面要求会一起发给模型：{direction.trim()}
-                      </p>
-                    )}
-                  </details>
-                )}
-              </section>
+                  配置生图模型 ↗
+                </a>
+                <button
+                  type="button"
+                  className="ml-3 text-primary"
+                  onClick={() => void load()}
+                >
+                  刷新配置
+                </button>
+              </div>
+            )}
+            {headline.trim() && (
+              <p className="text-xs leading-6 text-default-500">
+                H3 直接生成图片内标题，Image-01 自动排字。应用前请检查文字。
+              </p>
+            )}
+            {error && (
+              <p role="alert" className="text-sm text-danger">
+                {error}
+              </p>
+            )}
+          </div>
+          <section
+            className="flex min-w-0 flex-col gap-4"
+            aria-label="封面预览"
+            aria-busy={busy === "generate"}
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <BlogButton
+                onClick={() => setOriginal(true)}
+                aria-pressed={original}
+              >
+                完整原图
+              </BlogButton>
+              <BlogButton
+                onClick={() => setOriginal(false)}
+                aria-pressed={!original}
+              >
+                场景预览
+              </BlogButton>
             </div>
-          )}
-
-          {step === 'result' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-default-500">完整封面已生成，可切换场景检查裁切，满意后直接应用。</p>
-                <button type="button" className="shrink-0 text-sm text-primary" aria-pressed={showOriginal} onClick={() => setShowOriginal(value => !value)}>{showOriginal ? '返回场景预览' : '查看完整原图'}</button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                {target?.type === 'note' ? <span className="text-sm text-default-500">笔记顶部 · 2.35:1 · 应用后可调整裁切</span> : <CoverSceneSwitch value={scene} onChange={setScene} disabled={!!busy} />}
-                <small className="text-xs text-default-400">
-                  {target?.type === 'note' ? '应用配图，不叠加封面文字' : COVER_PREVIEW_SCENES.find((item) => item.key === scene)?.note}
-                </small>
-              </div>
-              {picked && showOriginal ? <img src={blogImageUrl(picked.path)} alt="完整封面原图" className="w-full rounded-xl" /> : picked ? (
-                target?.type === 'note' ? <img src={blogImageUrl(picked.path)} alt="笔记封面预览" className="w-full aspect-[2.35/1] object-cover rounded-lg" /> : <CoverScenePreview
-                  scene={scene}
-                  src={blogImageUrl(picked.path)}
-                  title={options?.suggestedTitle ?? initial?.articleTitle}
-                  config={textConfig}
+            {!original && (
+              <CoverSceneSwitch value={scene} onChange={setScene} />
+            )}
+            {selected ? (
+              original ? (
+                <img
+                  src={blogImageUrl(selected.path)}
+                  alt="完整封面"
+                  className="w-full rounded-xl"
                 />
               ) : (
-                <p className="py-8 text-center text-sm text-default-500">尚未生成</p>
-              )}
-              {picks.length > 1 && (
-                <div className="flex flex-col gap-2" role="group" aria-label="候选封面">
-                  <p className="text-sm text-default-500">本次窗口保留最近 {picks.length} 张，点击切换比较：</p>
-                  <div className="flex gap-2 overflow-x-auto">
-                    {picks.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                          picked?.id === item.id ? 'border-primary' : 'border-default-200 hover:border-default-300'
-                        }`}
-                        aria-pressed={picked?.id === item.id}
-                        disabled={!!busy}
-                        onClick={() => { setPicked(item); setPreviewTitle(item.coverTitle ?? title); setPreviewSubtitle(item.coverSubtitle ?? subtitle); setOverlay(false); }}
-                      >
-                        <img
-                          src={blogImageUrl(item.path)}
-                          alt="候选封面"
-                          loading="lazy"
-                          className="h-16 w-28 object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 'preview' && (
-            <div className="flex flex-col gap-5" role="region" aria-label="封面预览">
-              {completeCover && <p className="text-sm text-default-500">文字已融入整张封面。可检查不同场景的裁切效果；修改文案请重新生成。</p>}
-              <div className="flex flex-col gap-3" style={target?.type === 'note' || completeCover ? {display:'none'} : undefined}>
-                <label className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-2 text-sm">
-                    封面大字
-                    <small className="text-xs text-default-400">2–8 字（推荐 4–6 字）</small>
-                  </span>
-                  <BlogInput
-                    className="w-full"
-                    maxLength={24}
-                    value={previewTitle}
-                    disabled={!!busy || picked?.artwork === "image"}
-                    placeholder="例如：三段式改造"
-                    onChange={(event) => setPreviewTitle(event.target.value)}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5" style={target || mode !== 'preview' || picked?.artwork === 'icon' || picked?.artwork === 'tile' || initial?.text?.artwork === 'icon' || initial?.text?.artwork === 'tile' ? {display:'none'} : undefined}>
-                  <span className="flex items-center gap-2 text-sm">
-                    封面小字
-                    <small className="text-xs text-default-400">可留空</small>
-                  </span>
-                  <BlogInput
-                    className="w-full"
-                    maxLength={40}
-                    value={previewSubtitle}
-                    disabled={!!busy || picked?.artwork === "image"}
-                    placeholder="例如：一次上线，三段召回"
-                    onChange={(event) => setPreviewSubtitle(event.target.value)}
-                  />
-                </label>
-                <Switch
-                  size="sm"
-                  isSelected={overlay}
-                  isDisabled={!!busy || target?.type === 'note' || picked?.artwork === "image"}
-                  onValueChange={setOverlay}
-                  classNames={{label: 'text-sm'}}
-                >
-                  在图片上显示标题
-                </Switch>
-                <p className="text-xs text-default-500">
-                  新封面的文字已融入图片，不再额外叠加标题。修改文字请返回后重新生成。
-                </p>
+                <CoverScenePreview
+                  src={blogImageUrl(selected.path)}
+                  scene={scene}
+                  config={config}
+                  title={
+                    initial?.articleTitle ||
+                    target?.title ||
+                    options?.suggestedTitle
+                  }
+                />
+              )
+            ) : (
+              <div className="flex aspect-video items-center justify-center rounded-xl bg-default-100 text-sm text-default-500">
+                {busy === "generate"
+                  ? "正在生成封面…"
+                  : "生成的封面会显示在这里"}
               </div>
-              <div className="flex min-w-0 flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  {target?.type === 'note' ? <span className="text-sm text-default-500">笔记顶部 · 2.35:1 · 应用后可调整裁切</span> : <CoverSceneSwitch value={scene} onChange={setScene} disabled={!!busy} />}
-                  <small className="text-xs text-default-400">
-                    {target?.type === 'note' ? '应用配图，不叠加封面文字' : COVER_PREVIEW_SCENES.find((item) => item.key === scene)?.note}
-                  </small>
-                </div>
-                {picked ? (
-                  target?.type === 'note' ? <img src={blogImageUrl(picked.path)} alt="笔记封面预览" className="w-full aspect-[2.35/1] object-cover rounded-lg" /> : <CoverScenePreview
-                    scene={scene}
-                    src={blogImageUrl(picked.path)}
-                    title={options?.suggestedTitle ?? initial?.articleTitle}
-                    config={textConfig}
-                  />
-                ) : (
-                  <p className="py-8 text-center text-sm text-default-500">还没有封面</p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <footer className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t sm:flex-row sm:items-center border-default-200 px-5 py-4">
-          <p className="text-xs text-default-500">
-            {step === 'input'
-              ? target?.type === 'note' ? '先生成候选配图，点击应用后才会修改笔记封面。' : target?.type === 'topic' ? '先生成候选封面，保存专题资料后生效。' : '生成完整候选封面，应用后保存发布设置才会生效。'
-              : step === 'result'
-                ? '先看看效果，满意再应用。'
-                : target?.type === 'topic' ? '预览的是专题封面效果；应用后请保存专题资料。' : '预览的是待发布效果；应用后仍需在发布设置里保存。'}
-          </p>
-          <div className="flex gap-2">
-            {step === 'input' && (
-              <>
-                <Button variant="flat" isDisabled={!!busy} onPress={onClose}>
-                  取消
-                </Button>
-                {options && !options.models.some(model => model.available) ? (
-                  <a href="/settings?section=ai" target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground"
-                    aria-label="配置生图模型（在新标签页打开）">
-                    <Icon icon="tabler:settings" width={16} />配置生图模型
-                  </a>
-                ) : (
-                  <button type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!!busy || (!!options && target?.type !== 'note' && !validShortCoverTitle(title))}
-                    onClick={() => { if (!options) void load(style); else void generate(); }}>
-                    <Icon icon="tabler:sparkles" width={15} />
-                    {busy === 'image' ? '正在生成…' : busy === 'load' ? '读取配置中…' : !options ? '重试读取配置' : '生成封面'}
+            )}
+            {busy === "generate" && selected && (
+              <p role="status" className="text-sm text-default-500">
+                正在生成新候选，当前封面仍可查看…
+              </p>
+            )}
+            {candidates.length > 0 && (
+              <div
+                className="flex gap-3 overflow-x-auto"
+                aria-label="本次候选封面"
+              >
+                {candidates.map((candidate) => (
+                  <button
+                    type="button"
+                    key={candidate.path}
+                    aria-label={`选择封面${candidate.coverTitle ? ` ${candidate.coverTitle}` : ""}`}
+                    aria-pressed={candidate.path === selected?.path}
+                    onClick={() => setSelected(candidate)}
+                    className={`shrink-0 overflow-hidden rounded-lg border-2 ${selected?.path === candidate.path ? "border-primary" : "border-transparent"}`}
+                  >
+                    <img
+                      src={blogImageUrl(candidate.path)}
+                      alt="候选封面"
+                      className="h-16 w-28 object-cover"
+                    />
                   </button>
-                )}
-              </>
+                ))}
+              </div>
             )}
-            {step === 'result' && (
-              <>
-                <Button variant="flat" isDisabled={!!busy} onPress={() => setStep('input')} startContent={<Icon icon="tabler:arrow-left" width={15} />}>
-                  改一下条件
-                </Button>
-                <Button variant="flat" isDisabled={!!busy} onPress={() => void generate()} startContent={<Icon icon="tabler:refresh" width={15} />}>
-                  重新生成
-                </Button>
-                <Button color="primary" isDisabled={!!busy} onPress={apply} startContent={<Icon icon="tabler:check" width={15} />}>
-                  应用到封面
-                </Button>
-              </>
-            )}
-            {step === 'preview' && (
-              <>
-                {/*
-                  直接从「已有封面」进来的预览：这一步没有刚生成的候选，
-                  「返回」没有上一站可回 —— 换成「重新生成封面」，一条路走到底。
-                */}
-                {mode === 'preview' && !picks.length ? (
-                  <Button
-                    variant="flat"
-                    isDisabled={!!busy}
-                    onPress={() => setStep('input')}
-                    startContent={<Icon icon="tabler:refresh" width={15} />}
-                  >
-                    重新生成封面
-                  </Button>
-                ) : (
-                  <Button
-                    variant="flat"
-                    isDisabled={!!busy}
-                    onPress={() => setStep(picks.length || mode === 'generate' ? 'result' : 'input')}
-                    startContent={<Icon icon="tabler:arrow-left" width={15} />}
-                  >
-                    返回
-                  </Button>
-                )}
-                <Button color="primary" isDisabled={!!busy || !picked} onPress={apply}>
-                  应用到封面
-                </Button>
-              </>
-            )}
-          </div>
+          </section>
+        </div>
+        <footer className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+          <p className="text-xs text-default-500">
+            {target?.type === "note"
+              ? "应用后更新笔记封面"
+              : target?.type === "topic"
+                ? "应用后请保存专题资料"
+                : "应用到草稿，更新发布后对外生效"}
+          </p>
+          <BlogButton
+            disabled={!!busy || !selected}
+            onClick={() => void apply()}
+          >
+            {busy === "apply" ? "正在应用…" : "应用选中封面"}
+          </BlogButton>
         </footer>
       </ModalContent>
     </Modal>

@@ -18,6 +18,7 @@ import {
   PostCard,
   useBlogTitle,
 } from "@/components/BlinkoBlog/public/BlogShell";
+import { PageEmpty, PageError, PageLoading } from "@/components/BlinkoBlog/public/PageState";
 type Data = Awaited<ReturnType<typeof api.blog.publicTopic.query>>;
 export default function BlogTopicDetail() {
   const { slug = "" } = useParams();
@@ -193,23 +194,27 @@ export default function BlogTopicDetail() {
   }
   if (busy && !data)
     return (
-      <main className="ink-wrap ink-empty" role="status">
-        正在加载专题…
+      <main className="ink-wrap">
+        <PageLoading label="正在加载专题…" />
       </main>
     );
   if (error && !data)
     return (
-      <main className="ink-wrap ink-empty" role="alert">
-        专题加载失败。
-        <button onClick={() => setRequest((n) => n + 1)}>重试</button>
+      <main className="ink-wrap">
+        <PageError
+          message="专题加载失败。"
+          onRetry={() => setRequest((n) => n + 1)}
+        />
       </main>
     );
   if (!data)
     return (
-      <main className="ink-wrap ink-empty" data-topic-ready="true">
-        <h1>专题暂未公开</h1>
-        <p>可能已停用，或还没有公开文章。</p>
-        <Link to={blogRoute("/blog/topics")}>查看其他专题</Link>
+      <main className="ink-wrap" data-topic-ready="true">
+        <PageEmpty
+          title="专题暂未公开"
+          hint="可能已停用，或还没有公开文章。"
+          action={<Link to={blogRoute("/blog/topics")}>查看其他专题</Link>}
+        />
       </main>
     );
   // 专题封面由服务端按同一套规则算好，和专题列表页保持一致；
@@ -233,7 +238,7 @@ export default function BlogTopicDetail() {
             全部专题
           </Link>
           <h1>{data.topic.name}</h1>
-          <p>{data.topic.desc}</p>
+          {data.topic.desc?.trim() && data.topic.desc.trim() !== data.topic.name.trim() && <p>{data.topic.desc}</p>}
           <p>
             {data.total} 篇文章 ·{" "}
             {data.sections.filter((section) => section.showTitle).length} 个章节

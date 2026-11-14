@@ -35,7 +35,7 @@ export const COVER_ART_TREATMENT =
  * 生图结果要能被后处理稳定抠出，因此只允许一枚居中图形和透明/纯白背景。
  */
 export const COVER_ART_COMPOSITION =
-  "Layout rule: FRONT-FACING square app icon, no scene. Create exactly one isolated app-icon symbol on a rounded-square tile, centered and fully visible, occupying about 68% of the canvas. Leave at least 14% empty margin on every side. Use a perfectly flat solid magenta (#FF00FF) background for removal, no gradients or shadows outside the tile. Never white background.";
+  "Layout rule: FRONT-FACING square app icon, no scene. Create exactly one isolated app-icon symbol on a rounded-square tile, centered, fully visible, ~68% of the canvas, >=14% empty margin on every side. Use a perfectly flat solid magenta (#FF00FF) background for removal: no white, no gray, no gradient, no vignette, no shadow. Never white background.";
 
 /**
  * 收尾时的构图重申。
@@ -141,7 +141,33 @@ export function coverArtPlan(
 
 /** Standard model first, then configured order; no claim of universal quality ranking. */
 export function preferCoverModels<T extends { modelKey: string }>(models: T[]): T[] {
-  return [...models].sort((a, b) =>
-    Number(/^image-01$/i.test(b.modelKey.trim())) - Number(/^image-01$/i.test(a.modelKey.trim())),
-  );
+  const priority = (key: string) => /^MiniMax-H3-Image$/i.test(key.trim()) ? 3
+    : /^MiniMax-H3-Image-Highspeed$/i.test(key.trim()) ? 2
+    : /^image-01$/i.test(key.trim()) ? 1 : 0;
+  return [...models].sort((a, b) => priority(b.modelKey) - priority(a.modelKey));
 }
+
+/*
+ * ---------------------------------------------------------------------------
+ * 插画底图的契约（笔记配图、专题封面用）
+ *
+ * 图标砖那一套只适合「砖 + 大字」的版式：独立成图的地方要的是
+ * 一张完整的无字插画 —— 单一主体、干净留白、没有任何文字。
+ * ---------------------------------------------------------------------------
+ */
+
+/** 构图契约：单一主体放右侧，左三分之一留给标题。 */
+export const COVER_ILLUSTRATION_COMPOSITION =
+  "Layout rule: ONE hero subject only, placed in the right half of the frame and occupying about 45% of it, fully visible and not cropped. Keep the left third calm, flat and empty so a headline can sit on it. No floating icons, sticky notes, cards, stickers, buttons, arrows, checklists or scattered fragments. Background stays flat and simple.";
+
+/** 风格契约：扁平编辑插画，克制配色，大面积留白。 */
+export const COVER_ILLUSTRATION_TREATMENT =
+  "Flat editorial vector illustration, calm palette of two or three colors, soft shading, clean silhouette, generous negative space, tidy composition, no clutter.";
+
+/** 收尾时的构图重申。 */
+export const COVER_ILLUSTRATION_COMPOSITION_REMINDER =
+  "Layout rule again: exactly one hero subject on the right, calm empty space on the left, and nothing else in the frame.";
+
+/** 无字硬约束：图里一个字都不能有。 */
+export const COVER_ILLUSTRATION_TEXT_RULE =
+  "Text rule: the picture contains NO text of any kind. No Chinese characters, no letters, no numbers, no punctuation, no watermark, no logo, no UI mockup, no fake glyphs. (NO TEXT, NO TYPOGRAPHY, NO LETTERING, NO LOGO, NO WATERMARK)";

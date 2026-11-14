@@ -4,6 +4,7 @@ import { publicAsset } from "@/lib/blogPublicBase";
 import { api } from "@/lib/publicBlogClient";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { useBlogSite, useBlogTitle } from "@/components/BlinkoBlog/public/BlogShell";
+import { PageError } from "@/components/BlinkoBlog/public/PageState";
 import { MomentFeed } from "@/components/BlinkoBlog/public/MomentFeed";
 import {
   MOMENT_FILTERS,
@@ -27,6 +28,9 @@ export default function BlogMoments() {
   useBlogTitle("动态");
   const [params, setParams] = useSearchParams();
   const [months, setMonths] = useState<{ key: string; count: number }[]>([]);
+  // 月份列表取不到时要说出来：静默吞掉的话，筛选栏会莫名少掉一截，
+  // 读者只会以为「这个月没有动态」。
+  const [monthsError, setMonthsError] = useState("");
 
   const filterParam = params.get("filter");
   const filter: MomentFilter = isMomentFilter(filterParam) ? filterParam : "all";
@@ -42,12 +46,22 @@ export default function BlogMoments() {
         setMonths(res.months);
       })
       .catch(() => {
-        if (alive) setMonths([]);
+        if (!alive) return;
+        setMonths([]);
+        setMonthsError("月份筛选暂时取不到。");
       });
     return () => {
       alive = false;
     };
   }, []);
+
+  const loadMonths = () => {
+    setMonthsError("");
+    void api.blog.publicMomentMonths
+      .query()
+      .then((res) => setMonths(res.months))
+      .catch(() => setMonthsError("月份筛选暂时取不到。"));
+  };
 
   const applyParams = (nextFilter: MomentFilter, nextMonth: string) => {
     const next = new URLSearchParams(params);
@@ -128,6 +142,10 @@ export default function BlogMoments() {
             ))}
           </select>
         </div>
+
+        {monthsError && (
+          <PageError message={monthsError} onRetry={loadMonths} />
+        )}
 
         <MomentFeed filter={filter} month={month} />
 

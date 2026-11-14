@@ -1,3 +1,4 @@
+import { readPublicCoverConfig } from "./blogCoverConfig";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { randomBytes } from "node:crypto";
@@ -815,6 +816,7 @@ export async function listPublishedForManage(
           // 首次发布时间：列表的「最近发布 / 发布时间」排序与展示要用。
           createdAt: true,
           coverAttachmentId: true,
+          coverConfig: true,
           draftCoverAttachmentId: true,
           // 首页精选位：列表行要显示勾选状态。
           isFeatured: true,
@@ -849,6 +851,7 @@ export async function listPublishedForManage(
     const changes = publicationChanges(note);
     return {
       ...rest,
+      publicCoverConfig: readPublicCoverConfig(note.publication?.coverConfig),
       topicIds: blogTopics.map((t) => t.topic.id),
       topics: blogTopics.map((t) => ({
         ...t.topic,

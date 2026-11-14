@@ -1,4 +1,3 @@
-import { BlogMomentsPanel } from "./BlogMomentsPanel";
 import { BlogRecommendationReport } from "./BlogRecommendationReport";
 import { managerBlogVisitUrl } from "@shared/lib/blogManagerVisit";
 import { BlogToggle, BlogDisclosure, BlogInput, BlogTextarea, BlogButton, BlogChip, BlogTabs } from "./BlogUI";
@@ -10,11 +9,12 @@ import { BlogSiteSettingsPanel } from "./BlogSiteSettingsPanel";
 import { BlogContentList } from "./BlogContentList";
 import { RowMenu } from "./RowMenu";
 import {
+  STUDIO_NAV,
   STUDIO_SECTION_KEYS,
   STUDIO_SECTION_META,
   type StudioSection,
 } from "./studioNav";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/trpc";
 import { AuthorCardView } from "./public/AuthorCard";
@@ -583,13 +583,29 @@ export function BlogManagePage() {
   const [section, setSection] = useState<Section>(() => {
     try { const last = sessionStorage.getItem("blog-management-section"); return STUDIO_SECTION_KEYS.includes(last as Section) ? last as Section : "posts"; } catch { return "posts"; }
   });
+  const [visitedSections, setVisitedSections] = useState(() => new Set<Section>([section]));
+  const mainScroll = useRef<HTMLElement>(null);
+  const initialScrollPositions = useMemo(() => {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem("blog-management-scroll") || "{}");
+      return Object.fromEntries(Object.entries(stored).filter(([key, value]) =>
+        STUDIO_SECTION_KEYS.includes(key as Section) && typeof value === "number" && Number.isFinite(value) && value >= 0));
+    } catch { return {}; }
+  }, []);
+  const scrollPositions = useRef<Partial<Record<Section, number>>>(initialScrollPositions);
+  useEffect(() => () => {
+    try { sessionStorage.setItem("blog-management-scroll", JSON.stringify(scrollPositions.current)); } catch {}
+  }, []);
+  useLayoutEffect(() => {
+    setVisitedSections(previous => previous.has(section) ? previous : new Set([...previous, section]));
+    if (mainScroll.current) mainScroll.current.scrollTop = scrollPositions.current[section] || 0;
+  }, [section]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [distribution, setDistribution] = useState<Distribution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [coverKeyword, setCoverKeyword] = useState("");
   const [publicUrl, setPublicUrl] = useState("/blog");
   const [work, setWork] = useState<Awaited<ReturnType<typeof api.blog.workQueue.query>> | null>(null);
   const [workError, setWorkError] = useState(false);
@@ -636,10 +652,39 @@ export function BlogManagePage() {
   const [params, setParams] = useSearchParams();
   const deepSection = params.get("section");
   useEffect(() => {
-    if (!deepSection) return;
-    if (!STUDIO_SECTION_KEYS.includes(deepSection as Section)) return;
-    setSection(deepSection as Section);
+    if (deepSection === "moments") {
+      let active = true;
+      void (async () => {
+        if (dirty && !await confirmBlogAction("有未保存修改，确定返回闪念？")) {
+          if (active) setParams(previous => { const restored = new URLSearchParams(previous); restored.set("section", section); return restored; }, { replace: true, state: location.state });
+          return;
+        }
+        if (active) navigate("/?path=blinko", { replace: true });
+      })();
+      return () => { active = false; };
+    }
+    const next = deepSection === "covers" ? "posts" : deepSection || "posts";
+    if (deepSection === "covers") setParams(previous => { const p = new URLSearchParams(previous); p.set("section", "posts"); return p; }, {replace:true, state:location.state});
+    if (!STUDIO_SECTION_KEYS.includes(next as Section) || next === section) return;
+    let active = true;
+    const followLocation = async () => {
+      if (dirty && !await confirmBlogAction("有未保存修改，确定切换？")) {
+        if (active) setParams(previous => {
+          const restored = new URLSearchParams(previous);
+          restored.set("section", section);
+          return restored;
+        }, {replace: true, preventScrollReset: true, state:location.state});
+        return;
+      }
+      if (active) {
+        setDirty(false);
+        setSection(next as Section);
+      }
+    };
+    void followLocation();
+    return () => { active = false; };
   }, [deepSection]);
+
   const load = useCallback(async () => {
     const seq = ++requestId.current;
     try {
@@ -677,19 +722,11 @@ export function BlogManagePage() {
   };
   const openArticle = (post: Post) => navigate(`/blog-manage/content/${post.id}`);
 
-  const coverRows = useMemo(() => {
-    const keyword = coverKeyword.trim().toLowerCase();
-    return posts.filter(
-      (post) =>
-        post.publication &&
-        (!keyword || post.title.toLowerCase().includes(keyword)),
-    );
-  }, [posts, coverKeyword]);
   const change = async (key: Section, queue?: string) => {
     if (dirty && !await confirmBlogAction("有未保存修改，确定切换？")) return;
     setDirty(false);
     setSection(key);
-    setParams(previous => { const next = new URLSearchParams(previous); next.set("section", key); if(queue) next.set("queue",queue); else next.delete("queue"); return next; }, {replace:true});
+    setParams(previous => { const next = new URLSearchParams(previous); next.set("section", key); if(queue) next.set("queue",queue); else next.delete("queue"); return next; }, {replace:false, preventScrollReset:true, state:location.state});
     try { sessionStorage.setItem("blog-management-section", key); } catch {}
     setSideOpen(false);
   };
@@ -862,11 +899,11 @@ export function BlogManagePage() {
   };
 
   return (
-    <div className="blog-hero-surface blog-management">
+    <div className="blog-management-backdrop"><div className="blog-hero-surface blog-management">
       <header className="blog-management-header">
         <Button variant="light" size="sm" onPress={backToWorkspace} startContent={<Icon icon="tabler:arrow-left" width={17}/>}>返回工作区</Button>
         <span className="blog-management-title">博客管理</span>
-        <a href={managerBlogVisitUrl(publicUrl)} target="_blank" rel="noopener noreferrer" className="blog-management-public">查看公开站 <Icon icon="tabler:external-link" width={16}/></a>
+        <div className="blog-management-header-actions"><a href={managerBlogVisitUrl(publicUrl)} target="_blank" rel="noopener noreferrer" className="blog-management-public">查看公开站 <Icon icon="tabler:external-link" width={16}/></a><Button isIconOnly variant="light" size="sm" aria-label="关闭博客管理" onPress={backToWorkspace}><Icon icon="tabler:x" width={20}/></Button></div>
       </header>
       <div className="blog-management-body">
       {!narrow && <BlogStudioNav section={section} onSelect={selectSection} postCount={posts.length} topicCount={topics.length} work={work}/>}
@@ -876,9 +913,9 @@ export function BlogManagePage() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {narrow && <div className="blog-management-mobile"><Button size="sm" variant="flat" onPress={()=>setSideOpen(true)} startContent={<Icon icon="tabler:menu-2" width={16}/>} aria-label="打开博客管理导航">{STUDIO_SECTION_META[section].title}</Button></div>}
         {/* Page content */}
-        <main className="blog-management-main">
-          <div className="blog-management-content">
-            <header className="mb-4">
+        <main className="blog-management-main" ref={mainScroll} onScroll={event => {scrollPositions.current[section] = event.currentTarget.scrollTop;}}>
+          <div className="blog-management-content" data-section={section}>
+            <header className="mb-4"><p className="blog-management-breadcrumb">{STUDIO_NAV.find(group => group.items.some(item => item.key === section))?.title}</p>
               <h1 className="text-2xl font-semibold tracking-tight">
                 {STUDIO_SECTION_META[section].title}
               </h1>
@@ -888,7 +925,7 @@ export function BlogManagePage() {
             </header>
 
             {workError && <p className="mb-4 text-xs text-warning" role="status">待处理数量暂未更新，可进入读者反馈或友链管理查看。</p>}
-            {work && (work.feedback + work.friends + work.feedbackMail + work.friendMail > 0) && <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-default-200 bg-content1 p-3" aria-label="博客待处理事项">
+            {section === "posts" && work && (work.feedback + work.friends + work.feedbackMail + work.friendMail > 0) && <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-default-200 bg-content1 p-3" aria-label="博客待处理事项">
               <span className="mr-1 text-sm font-medium">待处理</span>
               {work.feedback>0 && <Button size="sm" variant="flat" onPress={()=>selectSection("feedback")}>读者反馈 {work.feedback}</Button>}
               {work.friends>0 && <Button size="sm" variant="flat" onPress={()=>selectSection("friends")}>友链申请与报告 {work.friends}</Button>}
@@ -916,73 +953,15 @@ export function BlogManagePage() {
               </p>
             ) : (
               <>
-                {section === "moments" && <BlogMomentsPanel />}
-                {section === "posts" && (
+                {visitedSections.has("posts") && <div hidden={section !== "posts"}>{(
                   <BlogContentList
                     posts={posts}
                     topics={topics}
                     onReload={reload}
                   />
-                )}
+                )}</div>}
 
-                {section === "covers" && (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                      <BlogInput
-                        aria-label="搜索封面所属文章"
-                        placeholder="搜索封面所属文章…"
-                        value={coverKeyword}
-                        onChange={(e) => setCoverKeyword(e.target.value)}
-                        startContent={<Icon icon="tabler:search" width={15} />}
-                        className="max-w-xs"
-                      />
-                      <span className="text-sm text-default-500">
-                        共 {coverRows.length} 张公开封面
-                      </span>
-                    </div>
-                    {coverRows.length ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {coverRows.map((p) => {
-                          const image = p.attachments.find(
-                            (a) => a.id === p.publication?.coverAttachmentId,
-                          );
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className="flex flex-col rounded-xl border border-default-200 bg-content1 overflow-hidden hover:border-primary transition-colors text-left"
-                              onClick={() => openArticle(p)}
-                            >
-                              <span className="w-full aspect-[2.8/1] bg-default-100 flex items-center justify-center overflow-hidden">
-                                {image ? (
-                                  <img
-                                    src={imageUrl(image.path)}
-                                    alt="公开封面"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <Icon icon="tabler:photo" width={26} className="text-default-400" />
-                                )}
-                              </span>
-                              <span className="px-3 pt-2 text-sm font-medium truncate">{p.title}</span>
-                              <span className="px-3 pb-3 pt-1 text-xs text-default-500">
-                                {image ? "已有公开封面" : "尚未设置封面"}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-16 text-default-400">
-                        <Icon icon="tabler:photo" width={28} />
-                        <h2 className="text-base font-medium mt-3 text-default-600">没有匹配的封面</h2>
-                        <p className="text-sm mt-1">换个关键词，或先在内容管理里给文章设置封面。</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {section === "topics" && (
+                {visitedSections.has("topics") && <div hidden={section !== "topics"}>{(
                   <div className="flex flex-col gap-4">
                     {/*
                       页头已经写了「专题」，这里不再重复一遍标题 ——
@@ -1013,13 +992,13 @@ export function BlogManagePage() {
                       </div>
                     )}
                   </div>
-                )}
+                )}</div>}
 
                 {section === "distribution" && distribution && (
                   <DistributionEditor value={distribution} reload={reload} onDirty={setDirty} />
                 )}
 
-                {section === "friends" && <BlogFriendsPanel queue={params.get("queue")} />}
+                {visitedSections.has("friends") && <div hidden={section !== "friends"}>{<BlogFriendsPanel queue={params.get("queue")} />}</div>}
                 {section === "feedback" && <BlogFeedbackPanel queue={params.get("queue")} onDirty={setDirty} />}
                 {section === "mail" && <BlogMailSettingsPanel onDirty={setDirty} />}
                 {section === "settings" && <BlogSiteSettingsPanel onDirty={setDirty} />}
@@ -1032,13 +1011,13 @@ export function BlogManagePage() {
                     onDirty={setDirty}
                   />
                 )}
-                {section === "stats" && <BlogStatsPanel />}
+                {visitedSections.has("stats") && <div hidden={section !== "stats"}>{<BlogStatsPanel />}</div>}
               </>
             )}
           </div>
         </main>
       </div>
       </div>
-    </div>
+    </div></div>
   );
 }

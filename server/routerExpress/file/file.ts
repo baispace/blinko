@@ -205,7 +205,14 @@ router.get(/.*/, async (req, res) => {
         clearTimeout(processingTimeout);
         res.set({
           "Content-Type": mime.lookup(filePath) || "image/jpeg",
-          "Cache-Control": isPublicAsset ? "no-store" : "public, max-age=31536000",
+          /*
+           * 公开素材（封面、分享图、正文配图）用 no-cache 而不是 no-store：
+           * 浏览器仍然把图片存下来，但每次用之前问一次服务器 ——
+           * 命中就是 304（不重传字节），撤回也能立刻生效。
+           * no-store 的话每次访问都重下一遍图：同一张封面在一屏里
+           * 出现几次就下载几次（实测 2–3 次）。
+           */
+          "Cache-Control": isPublicAsset ? "no-cache" : "public, max-age=31536000",
           "Content-Disposition": `inline; filename="${safeFilename}"`
         });
         return res.send(thumbnail);
@@ -236,7 +243,7 @@ router.get(/.*/, async (req, res) => {
     res.set({
       "Content-Type": contentType,
       "ETag": etag,
-      "Cache-Control": isPublicAsset ? "no-store" : "public, max-age=3600"
+      "Cache-Control": isPublicAsset ? "no-cache" : "public, max-age=3600"
     });
 
     if (isDownload) {

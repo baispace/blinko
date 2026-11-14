@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { PrismaClient } from "@prisma/client";
 import { createRequire } from "node:module";
 import {
+  coverIllustrationPrompt,
   coverPrompt,
   coverPromptForModel,
   imageProtocol,
@@ -33,26 +34,75 @@ const model: any = {
   },
 };
 describe("image adapter and crop", () => {
-  test("complete cover prompt includes typography, context and crop safe area", () => {
-    const prompt = coverPrompt("<b>指标</b>", "<h2>公开正文</h2>", "ink", "封面标题：业务增长");
-    expect(prompt).toContain("finished landscape editorial blog cover");
+  test("prompt uses article topic and site style; input is bounded and plain text", () => {
+    const prompt = coverPrompt(
+      "<b>指标</b>",
+      "<h2>公开正文</h2>\n" + "资料".repeat(1000),
+    );
     expect(prompt).toContain("指标");
-    expect(prompt).toContain("公开正文");
-    expect(prompt).toContain("封面标题：业务增长");
-    expect(prompt).toContain("central 70%");
+    expect(prompt).toContain("cobalt blue");
     expect(prompt).not.toContain("<h2>");
-    expect(prompt).not.toContain("solid magenta");
-    expect(prompt).not.toContain("No text");
+    expect(prompt.length).toBeLessThan(1500);
+    expect(prompt).toContain("No text");
+    expect(prompt).toContain("saturated solid color");
+    expect(prompt).toContain("禁止：低饱和");
+    /*
+     * 第四版契约：模型只出一枚正视图的图标砖（无字、居中、留白充足），
+     * 背景用洋红色专色，方便后处理稳定抠出。
+     * 背景、大字、方块、位置都由程序排 —— 模型画得越少，波动越小。
+     */
+    expect(prompt).toContain("Digital app-icon graphic");
+    expect(prompt).toContain("ONE rounded-square app icon tile");
+    expect(prompt).toContain("exactly one isolated app-icon symbol");
+    expect(prompt).toContain("solid magenta (#FF00FF) background");
+    expect(prompt).toContain("exactly one glyph");
   });
-  test("provider briefs keep author text and remain within the prompt budget", () => {
-    const direction = "封面标题：整体设计；" + "细节".repeat(100);
-    const prompt = coverPrompt("标".repeat(80), "内容".repeat(1000), "ink", direction);
-    expect(prompt.length).toBeLessThanOrEqual(1500);
-    expect(prompt).toContain(direction);
-    expect(coverPromptForModel({modelKey:"image-01"}, "主题", "正文")).toBe(coverPrompt("主题", "正文"));
-    const native = imageRequest({...model,modelKey:"image-01",provider:{...model.provider,provider:"minimax"}}, prompt);
-    expect(native.body).toMatchObject({ aspect_ratio: "16:9", n: 1 });
-    expect(imageRequest(model,prompt).body).toMatchObject({ size: "1536x1024", n: 1 });
+  test("all model briefs retain wordless and crop constraints within provider limit", () => {
+    for (const style of ["ink"] as const) {
+      const args = ["标题".repeat(100), "正文".repeat(1000), style, "细节".repeat(200)] as const;
+      const standard = coverPromptForModel({modelKey:"image-01"}, ...args);
+      const live = coverPromptForModel({modelKey:"image-01-live"}, ...args);
+      expect(live).toBe(standard);
+      expect(standard.length).toBeLessThanOrEqual(1500);
+      const request = imageRequest({...model, modelKey:"image-01-live", provider:{...model.provider, provider:"minimax"}}, standard);
+      expect(request.body.prompt).toBe(standard);
+      expect(request.body).not.toHaveProperty("style");
+      expect(request.body).not.toHaveProperty("subject_reference");
+      expect(request.body.n).toBe(1);
+      expect(standard).toContain("ONE rounded-square app icon tile");
+      expect(standard).toContain("solid magenta (#FF00FF)");
+      expect(standard).toContain("exactly one glyph");
+      expect(standard).toContain("no supporting pieces");
+      expect(standard).toContain("No text");
+      expect(standard).toContain("no background elements");
+    }
+  });
+  test("长标题 + 长正文 + 画面要求也不会超出服务商上限", () => {
+    // MiniMax 侧按 1500 字符截断，超了就悄悄丢掉尾部的硬约束。
+    const worst = coverPrompt(
+      "标".repeat(80),
+      "内".repeat(80),
+      "ink",
+      "细".repeat(100),
+    );
+    expect(worst.length).toBeLessThanOrEqual(1500);
+    expect(worst).toContain("禁止：低饱和粉紫摄影棚。");
+    expect(worst).toContain("No text, letters, numbers, logos");
+    // 空间不够时先牺牲作者的画面要求，风格契约不能丢。
+    expect(worst).toContain("Digital app-icon graphic");
+  });
+  test("画面要求优先吃掉剩余预算，硬约束永远完整", () => {
+    const roomy = coverPrompt("短标题", "短正文", "ink", "一只铅笔和三个卡片");
+    expect(roomy).toContain("Optional detail: 一只铅笔和三个卡片");
+    // 标题与正文都很长时，画面要求被截短，但尾巴一字不少。
+    const tight = coverPrompt(
+      "标".repeat(80),
+      "内".repeat(80),
+      "ink",
+      "细节".repeat(100),
+    );
+    expect(tight.length).toBeLessThanOrEqual(1500);
+    expect(tight.endsWith("禁止：低饱和粉紫摄影棚。")).toBe(true);
   });
   test("protocols reuse configured endpoints and distinguish text-only models", () => {
     expect(
@@ -132,7 +182,7 @@ describe("image adapter and crop", () => {
     };
     const fetcher: any = async (url: any, init: any) => {
       if (String(url).includes("image_generation")) {
-        expect(JSON.parse(init.body).aspect_ratio).toBe("16:9");
+        expect(JSON.parse(init.body).aspect_ratio).toBe("1:1");
         return Response.json({
           data: { image_urls: ["https://8.8.8.8/generated.png"] },
           base_resp: { status_code: 0 },
@@ -399,5 +449,22 @@ suite("AI cover draft lifecycle", () => {
         { generate: async () => png, upload },
       ),
     ).rejects.toThrow("公开文章已更新");
+  });
+});
+
+describe("插画底图提示词（笔记配图 / 专题封面）", () => {
+  test("只出画、不出字，并给出单一主体与留白构图", () => {
+    const prompt = coverIllustrationPrompt("<b>指标</b>", "<h2>公开正文</h2>");
+    expect(prompt).toContain("Layout rule:");
+    expect(prompt).toContain("ONE hero subject only");
+    expect(prompt).toContain("NO TEXT");
+    expect(prompt).toContain("指标");
+    expect(prompt).toContain("公开正文");
+    expect(prompt).not.toContain("<h2>");
+    expect(prompt.length).toBeLessThanOrEqual(1500);
+  });
+  test("作者的画面要求照原样带进提示词", () => {
+    const prompt = coverIllustrationPrompt("阅读笔记", "正文", "一只铅笔");
+    expect(prompt).toContain("一只铅笔");
   });
 });

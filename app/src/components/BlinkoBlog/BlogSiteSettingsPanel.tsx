@@ -212,7 +212,7 @@ export function BlogSiteSettingsPanel({
         label="站点设置分区"
         value={tab}
         onChange={key => setTab(key as typeof tab)}
-        items={tabs.map(([id, label]) => ({ key: id, label }))}
+        items={tabs.map(([id, label]) => ({ key: id, label, icon: ({basic:"tabler:settings", subscribe:"tabler:at", seo:"tabler:search", deployment:"tabler:world"} as Record<string,string>)[id] }))}
       />
 
       <div className="flex items-start justify-between gap-4">

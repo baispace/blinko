@@ -109,3 +109,11 @@
 .ink-blog .ink-topic-start {
   color: #fff;
 }
+
+/* Let the topic introduction share the page surface. */
+.ink-blog .ink-topic-page .ink-topic-intro { padding: 20px 0 28px; margin: 6px 0 24px; gap: 32px; background: transparent; border: 0; border-bottom: 1px solid var(--ink-line); border-radius: 0; box-shadow: none; }
+.ink-blog .ink-topic-page .ink-topic-intro h1 { font-size: clamp(28px, 3vw, 36px); margin: 12px 0 10px; }
+.ink-blog .ink-topic-page .ink-topic-intro p { margin: 6px 0; max-width: 46em; }
+.ink-blog .ink-topic-page .ink-topic-intro > img { width: clamp(180px, 19vw, 240px); border-radius: 14px; }
+.ink-blog .ink-topic-page .ink-topic-start { margin-top: 12px; padding: 8px 14px; font-size: 13px; }
+@media(max-width:760px) { .ink-blog .ink-topic-page .ink-topic-intro { display: grid; grid-template-columns: minmax(0,1fr) 96px; align-items: center; gap: 16px; padding: 16px 0 24px; } .ink-blog .ink-topic-page .ink-topic-intro > img { width: 96px; } .ink-blog .ink-topic-page .ink-topic-intro h1 { font-size: 26px; } }

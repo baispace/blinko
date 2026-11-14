@@ -10,6 +10,9 @@ describe("article discovery",()=>{
     expect(articlesBelowBanner(rows.slice(0,2),rows.slice(0,2))).toHaveLength(2);
     expect(articlesBelowBanner(rows.slice(0,5),rows.slice(0,3))).toHaveLength(5);
     expect(articlesBelowBanner([],rows)).toEqual([]);
+    // 当前这条头条不能在下面再出现一次（同一张封面在首屏出现两遍）。
+    expect(articlesBelowBanner(rows.slice(0,3),rows.slice(0,3),rows[0].id).map(p=>p.id)).toEqual([1,2]);
+    expect(articlesBelowBanner(rows.slice(0,5),rows.slice(0,3),rows[0].id).map(p=>p.id)).toEqual([3,4]);
   });
   test("ample candidates remove all displayed banners without losing order",()=>{
     expect(articlesBelowBanner(rows,rows.slice(0,3)).map(p=>p.id)).toEqual([3,4,5,6,7]);

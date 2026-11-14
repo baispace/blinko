@@ -16,6 +16,7 @@ import {
   useBlogTitle,
   type Post,
 } from "@/components/BlinkoBlog/public/BlogShell";
+import { PageEmpty, PageError } from "@/components/BlinkoBlog/public/PageState";
 import { CoverCanvas } from "@/components/BlinkoBlog/CoverCanvas";
 // React 18 只认小写 DOM 属性（fetchPriority 是 React 19 的写法），
 // 直接输出 fetchpriority，给浏览器做首屏图片的预加载提示。
@@ -340,7 +341,8 @@ export default function BlogHome() {
   const bannerList = showBanner ? site.banner.slice(0, 3) : [];
   const active = Math.min(heroIndex, Math.max(0, bannerList.length - 1));
   const lead = bannerList[active];
-  const rest = articlesBelowBanner(posts, bannerList);
+  // 当前这条头条不能再在下面的列表里出现一次。
+  const rest = articlesBelowBanner(posts, bannerList, lead?.id);
   const step = (delta: number) =>
     setHeroIndex(
       (active + delta + bannerList.length) % Math.max(1, bannerList.length),
@@ -517,9 +519,7 @@ export default function BlogHome() {
         )}
         <div className="ink-home-list" ref={listRef}>
           {error && (
-            <p role="alert" className="ink-error">
-              {error}
-            </p>
+            <PageError message={error} onRetry={() => void site.reload()} />
           )}
           {/* 次级筛选：当前视图内部再切一层的维度 —— 排序方式 / 时间窗 / 年份。
               三处统一成同一套下划线文字 tab，跟上方的大药丸主导航拉开层级：
@@ -634,9 +634,9 @@ export default function BlogHome() {
           ) : null}
 
           {!loading && !posts.length && (hot || all) && (
-            <p className="ink-empty" role="status">
-              {hot ? "这段时间还没有文章被读过。" : "还没有公开文章。"}
-            </p>
+            <PageEmpty
+              title={hot ? "这段时间还没有文章被读过。" : "还没有公开文章。"}
+            />
           )}
           {!loading &&
             rest.length === 0 &&
@@ -644,9 +644,7 @@ export default function BlogHome() {
             !lead &&
             !(hot || all) &&
             !(filter && !posts.length) && (
-              <p className="ink-empty" role="status">
-                还没有公开文章。
-              </p>
+              <PageEmpty title="还没有公开文章。" />
             )}
           {/* 分页走独立 URL：?page=N 每一页都能分享、能被收录 */}
           <Pagination page={page} pageCount={pageCount} onChange={goToPage} />

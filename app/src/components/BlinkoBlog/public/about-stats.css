@@ -326,3 +326,11 @@
     font-size: 18px;
   }
 }
+
+.ink-about-stat-label { display:flex; align-items:center; gap:6px; }
+.ink-about-metric-help { position:relative; display:inline-flex; }
+.ink-about-metric-help button { display:inline-flex; padding:3px; border:0; background:transparent; color:var(--ink-muted); cursor:help; }
+.ink-about-metric-help [role="tooltip"] { position:absolute; z-index:30; bottom:calc(100% + 8px); left:-20px; width:min(260px,65vw); padding:12px 14px; border:1px solid var(--ink-line); border-radius:12px; background:var(--ink-surface); color:var(--ink-text); box-shadow:var(--ink-shadow); font-size:12px; font-weight:400; line-height:1.7; visibility:hidden; }
+.ink-about-metric-help:hover [role="tooltip"], .ink-about-metric-help:focus-within [role="tooltip"] { visibility:visible; }
+.ink-about-metric-help strong { display:block; margin-bottom:4px; }
+.ink-about-stat:last-child .ink-about-metric-help [role="tooltip"] { left:auto; right:0; }

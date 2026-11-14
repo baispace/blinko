@@ -2,8 +2,15 @@ import { coverGenerationJobs as pending } from "./coverGenerationLock";
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@prisma/client";
 import {
-  normalizeCoverBase,
+  coverArtifactFor,
+  isMiniMaxH3,
+  coverReferenceImages,
+  recentCoverPrompts,
   coverPromptForModel,
+  normalizeCoverBase,
+  coverIllustrationPrompt,
+  coverPrompt,
+  finishGeneratedCover,
   generateImageBytes,
   imageProtocol,
 } from "./blogCoverGeneration";
@@ -59,11 +66,24 @@ async function loadSource(
   }
   const topic = await db.blogTopic.findFirst({
     where: { id: target.id, accountId },
+    include: {
+      // 专题封面按「专题简介 + 成员文章标题」取景，和从前那条单独的专题生图路径一致。
+      notes: {
+        where: { note: { isPublished: true, isRecycle: false } },
+        take: 8,
+        orderBy: { sortOrder: "asc" },
+        select: { note: { select: { publication: { select: { title: true } } } } },
+      },
+    },
   });
   if (!topic) throw notFound();
+  const members = (topic.notes ?? [])
+    .map((entry: any) => entry?.note?.publication?.title || "")
+    .filter(Boolean);
+  const desc = target.description ?? topic.desc ?? "";
   return {
     title: target.title || topic.name,
-    content: target.description ?? topic.desc,
+    content: [desc, ...members].filter(Boolean).join("、"),
     version: topic.updatedAt.toISOString(),
   };
 }
@@ -91,7 +111,7 @@ export async function assetCoverOptions(
     modelTitle: preferred?.title || "",
     modelKey: preferred?.modelKey || "",
     artPlan: coverArtPlan(context.title, context.content),
-    prompt: coverPromptForModel(preferred, context.title, context.content),
+    prompt: coverIllustrationPrompt(context.title, context.content),
     models: models
       .filter((model) => (model.capabilities as Record<string,unknown> | null)?.imageGeneration)
       .map((model) => ({
@@ -111,6 +131,7 @@ export async function generateAssetCover(
     target: AssetCoverTarget;
     sourceVersion: string;
     modelId: number;
+    referenceAttachmentId?: number;
     direction?: string;
   },
   dependencies?: {
@@ -136,17 +157,20 @@ export async function generateAssetCover(
     if (!model || !imageProtocol(model) || !model.provider.apiKey?.trim())
       throw new TRPCError({ code: "BAD_REQUEST", message: "请配置可用的生图模型。" });
 
-    const prompt = coverPromptForModel(
-      model,
-      context.title,
-      context.content,
-      "ink",
-      input.direction,
-    );
+    /*
+     * 笔记配图与专题封面都是「独立成图」的产物：整幅出现，没有文字层可叠。
+     * 文章封面走的是另一条（图标砖），由 coverArtifactFor 统一决定。
+     */
+    const artifact = coverArtifactFor("asset");
+    const history = isMiniMaxH3(model) ? await recentCoverPrompts(db, accountId) : [];
+    const prompt = input.target.type === "topic"
+      ? coverPromptForModel(model, context.title, context.content, "ink", input.direction, history)
+      : coverIllustrationPrompt(context.title, context.content, input.direction);
     const generate = dependencies?.generate || generateImageBytes;
     const fetcher = dependencies?.fetcher || (await fetchWithProxy());
     /* 只出一张独立素材；位置由程序按规则摆，不让模型排版。 */
-    const raw = await generate(model, prompt, fetcher);
+    const referenceImages = await coverReferenceImages(db, accountId, model, input.referenceAttachmentId);
+    const raw = await generate(model, prompt, fetcher, {referenceImages});
     if (!raw)
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -162,8 +186,9 @@ export async function generateAssetCover(
       });
 
     const artPlan = coverArtPlan(context.title, context.content);
-    const buffer = await normalizeCoverBase(raw);
+    const buffer = input.target.type === "topic" && !isMiniMaxH3(model) ? await finishGeneratedCover(raw, input.direction) : await normalizeCoverBase(raw);
     const generationMode = "ai" as const;
+    const artifactKind = input.target.type === "topic" ? "complete-cover" : "illustration";
     const upload = dependencies?.upload || ((args) => FileService.uploadFile(args));
     const image = await upload({
       buffer,
@@ -174,10 +199,11 @@ export async function generateAssetCover(
         aiCover: {
           target: { type: input.target.type, id: input.target.id },
           sourceVersion: context.version,
+          prompt,
           modelId: model.id,
           artVersion: COVER_ART_VERSION,
           generationMode,
-          assetKind: "complete-cover",
+          assetKind: artifactKind,
           composition: null,
           compositionAttempts: 1,
         },

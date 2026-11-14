@@ -7,20 +7,17 @@
  * 静态实例由 scripts/build-cover-font.py 从可变字体切出来，
  * 页面与服务端共用，导出图和页面永远一致。
  */
-@font-face {
-  font-family: "Ink Cover Sans";
-  src: url("/fonts/cover/NotoSansSC-Black.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Ink Cover Sans";
-  src: url("/fonts/cover/NotoSansSC-Medium.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
+/*
+ * 封面文字层的字库：按 unicode-range 分片。
+ *
+ * 完整的一份中文字库 10 MB 出头，封面大字只要几个字，
+ * 浏览器却要整份拉下来 —— 首屏最重的一项就是它。
+ * 分片之后浏览器只下载「含有用到的字」的那几片（每片约 150 KB）。
+ *
+ * 样式由 scripts/build-cover-font.py 生成（分片文件与这份 CSS 一起产出）。
+ * 服务端导出的分享图仍用完整 TTF：它不受带宽限制，且要保证任何字都画得出来。
+ */
+@import url("/fonts/cover/cover-sans.css");
 
 /*
  * 封面三层：底图层（图片）、文字层（真文字）、状态层（页面自己的角标/控件）。

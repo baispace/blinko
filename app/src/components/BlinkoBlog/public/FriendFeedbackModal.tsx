@@ -3,7 +3,6 @@ import { Modal, ModalContent } from "@heroui/react";
 import { Icon } from "@/components/Common/Iconify/icons";
 import {
   BlogButton,
-  BlogChipGroup,
   BlogSelect,
   BlogTextarea,
 } from "@/components/BlinkoBlog/BlogUI";
@@ -66,7 +65,7 @@ export function FriendFeedbackModal({
   );
 
   const submit = async () => {
-    if (submitting) return;
+    if (submitting || (!options.length && !message.trim())) return;
     setSubmitting(true);
     setError("");
     try {
@@ -164,24 +163,21 @@ export function FriendFeedbackModal({
                   </BlogSelect>
                 ) : (
                   <span className="ink-friends-help">
-                    当前还没有可反馈的友链，先申请通过后再回来反馈。
+                    暂无可选站点，请在补充说明中填写站点地址和问题。
                   </span>
                 )}
               </div>
 
               <div className="ink-friends-field-row">
                 <span className="ink-friends-label">问题类型</span>
-                <BlogChipGroup
-                  label="问题类型"
-                  value={type}
-                  onChange={(key) => setType(key as FriendFeedbackType)}
-                  items={[
-                    { key: "unreachable", label: FRIEND_TYPE_LABEL.unreachable },
-                    { key: "changed", label: FRIEND_TYPE_LABEL.changed },
-                    { key: "content", label: FRIEND_TYPE_LABEL.content },
-                    { key: "other", label: FRIEND_TYPE_LABEL.other },
-                  ]}
-                />
+                <div className="ink-friends-feedback-types" role="group" aria-label="问题类型">
+                  {(["unreachable", "changed", "content", "other"] as FriendFeedbackType[]).map(key => (
+                    <button key={key} type="button" aria-pressed={type === key}
+                      disabled={submitting} onClick={() => setType(key)}>
+                      {FRIEND_TYPE_LABEL[key]}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="ink-friends-field-row">
@@ -226,7 +222,7 @@ export function FriendFeedbackModal({
                   type="button"
                   className="ink-friends-submit"
                   onClick={() => void submit()}
-                  disabled={submitting}
+                  disabled={submitting || (!options.length && !message.trim())}
                 >
                   {submitting ? "提交中…" : "提交反馈"}
                 </BlogButton>

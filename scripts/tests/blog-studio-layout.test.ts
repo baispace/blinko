@@ -69,6 +69,13 @@ describe("博客后台的侧边栏导航模型", () => {
   });
 });
 
+test("动态发布在原内容完成，博客管理不再保留重复入口", () => {
+  expect(STUDIO_SECTION_KEYS).not.toContain("moments");
+  expect(STUDIO_NAV.flatMap((group) => group.items.map((item) => item.key))).not.toContain("moments");
+  expect(managePage).not.toContain("BlogMomentsPanel");
+  expect(managePage).toContain('navigate("/?path=blinko"');
+});
+
 describe("侧边栏渲染", () => {
   const html = renderToStaticMarkup(
     React.createElement(BlogStudioNav, {

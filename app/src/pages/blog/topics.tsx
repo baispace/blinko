@@ -7,9 +7,14 @@ import {
   useBlogTitle,
 } from "@/components/BlinkoBlog/public/BlogShell";
 import { Icon } from "@/components/Common/Iconify/icons";
+import {
+  PageEmpty,
+  PageError,
+  PageLoading,
+} from "@/components/BlinkoBlog/public/PageState";
 
 export default function BlogTopics() {
-  const { topics, loading, error } = useBlogSite();
+  const { topics, loading, error, reload } = useBlogSite();
   useBlogTitle("专题");
   const [search, setSearch] = useState("");
   const keyword = search.trim().toLowerCase();
@@ -46,13 +51,19 @@ export default function BlogTopics() {
         </div>
       </header>
       {loading ? (
-        <p className="ink-empty" role="status">
-          正在加载专题…
-        </p>
-      ) : !error && !shown.length ? (
-        <p className="ink-empty">
-          {keyword ? "没有匹配的专题。" : "公开专题正在整理中。"}
-        </p>
+        <PageLoading label="正在加载专题…" />
+      ) : error ? (
+        <PageError
+          message={error || "专题加载失败，请稍后重试。"}
+          onRetry={() => void reload()}
+        />
+      ) : !shown.length ? (
+        <PageEmpty
+          title={keyword ? "没有匹配的专题。" : "公开专题正在整理中。"}
+          hint={
+            keyword ? "换个关键词试试。" : "专题整理好后会出现在这里。"
+          }
+        />
       ) : (
         <div className="ink-topic-grid">
           {shown.map((t, i) => (

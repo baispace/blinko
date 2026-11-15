@@ -103,7 +103,7 @@ export default observer(function ProviderCard({ provider }: { provider: AiProvid
         >
           {text('获取模型列表', 'Fetch model list')}
         </Button>
-        <Button size="sm" variant="flat" startContent={<Icon icon="tabler:plus" width={15} />} onPress={() => handleAddModelWithCapability('inference')}}>{text('添加模型','Add model')}</Button>
+        <Button size="sm" variant="flat" startContent={<Icon icon="tabler:plus" width={15} />} onPress={() => handleAddModelWithCapability('inference')}>{text('添加模型','Add model')}</Button>
         <Dropdown>
           <DropdownTrigger>
             <Button size="sm" variant="light" isIconOnly aria-label={text('服务商操作', 'Provider actions')}>

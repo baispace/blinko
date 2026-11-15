@@ -59,7 +59,18 @@ export default observer(function AiSetting({ section = 'models' }: { section?: '
       {section === 'models' && <>
       <CollapsibleCard icon="hugeicons:ai-magic" title={t('settings-ai-providers')}>
         <div className="space-y-4">
-          <p className="text-xs text-default-500">{text('选择服务商 → 刷新模型 → 按能力添加','Choose provider → refresh models → add by capability')}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-default-500">{text('连接服务商后添加模型，再选择默认模型。','Connect a provider, add models, then choose defaults.')}</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="flat" onPress={() => RootStore.Get(DialogStore).setData({ isOpen: true, size: '2xl', title: text('连接服务商', 'Connect provider'), content: <ProviderDialogContent /> })}>{text('连接服务商','Connect provider')}</Button>
+              <Button size="sm" color="primary" startContent={<Icon icon="tabler:plus" width={16} />} onPress={() => RootStore.Get(DialogStore).setData({ isOpen: true, size: '2xl', title: text('添加模型','Add model'), content: aiStore.aiProviders.value?.length ? <ModelDialogContent /> : <QuickModelSetup /> })}>{text('添加模型','Add model')}</Button>
+            </div>
+          </div>
+          {aiStore.aiProviders.value?.length === 0 && <div className="rounded-xl bg-default-50 px-6 py-8 text-center">
+            <Icon icon="tabler:sparkles" width={28} className="mx-auto mb-3 text-primary" />
+            <h4 className="text-sm font-semibold">{text('添加第一个模型','Add your first model')}</h4>
+            <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-default-500">{text('点击“添加模型”，填写服务商密钥和模型 ID，即可一次完成连接与添加。也可以先单独连接服务商。','Add a model with a provider key and model ID in one step, or connect a provider first.')}</p>
+          </div>}
 
           {aiStore.aiProviders.value?.map(provider => (
             <ProviderCard key={provider.id} provider={provider as any} />

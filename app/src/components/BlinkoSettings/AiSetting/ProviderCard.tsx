@@ -101,8 +101,9 @@ export default observer(function ProviderCard({ provider }: { provider: AiProvid
           startContent={<Icon icon="famicons:sync" width="16" height="16" />}
           onPress={handleRefreshModels}
         >
-          {text('刷新模型', 'Refresh models')}
+          {text('获取模型列表', 'Fetch model list')}
         </Button>
+        <Button size="sm" variant="flat" startContent={<Icon icon="tabler:plus" width={15} />} onPress={() => handleAddModelWithCapability('inference')}}>{text('添加模型','Add model')}</Button>
         <Dropdown>
           <DropdownTrigger>
             <Button size="sm" variant="light" isIconOnly aria-label={text('服务商操作', 'Provider actions')}>

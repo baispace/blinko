@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+# HeroUI 主题类名源，由 scripts/prepare-tailwind-sources.mjs 生成
+.tailwind-src
 
 # Editor directories and files
 .vscode/*

@@ -1,7 +1,11 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
-/* Dependencies are excluded from automatic detection; HeroUI lives in app/node_modules. */
-@source "../../node_modules/@heroui/theme/dist";
+/* Dependencies are excluded from automatic detection; HeroUI lives in app/node_modules.
+   The path points at a copy prepared by scripts/prepare-tailwind-sources.mjs, not at
+   node_modules directly: the dependency layout differs between the local isolated
+   install and CI's hoisted one, and a path that resolves in only one of them makes
+   Tailwind silently skip every HeroUI state rule (floating labels, focus rings). */
+@source "../../.tailwind-src/heroui";
 
 /* Shared keyboard feedback; individual components can provide a stronger ring. */
 :where(button, a, input, textarea, select, [role="button"]):focus-visible {

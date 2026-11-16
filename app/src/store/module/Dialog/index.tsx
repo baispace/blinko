@@ -4,6 +4,7 @@ import { ModalSlots, SlotsToClasses } from "@heroui/react";
 import { Store } from "@/store/standard/base";
 import { RootStore } from "@/store/root";
 import { makeAutoObservable } from "mobx";
+import { resolvePresentation } from "./presentation";
 
 export class DialogStore implements Store {
   sid = "DialogStore";
@@ -48,13 +49,12 @@ export class DialogStore implements Store {
       return;
     }
     if (!this.isOpen) {
-      // Reset before opening, never during the closing animation.
-      Object.assign(this, { preventClose: false, animated:false, hideCloseButton:false, noPadding: false,
-        transparent: false, className: "", classNames: undefined,
-        placement: "auto", theme: "default", title: "", content: "",
-        size: "md", isDismissable: true, onlyContent: false });
+      // 关闭状态下还要清掉内容与标题，避免重开时闪现上一次的残影
+      Object.assign(this, { title: "", content: "" });
     }
-    this.showOnlyContentCloseButton = false
+    // 未显式指定的表现层字段一律回到默认值（嵌套弹窗继承外层标志的根因）；
+    // 调用点显式传了的以调用点为准
+    Object.assign(this, resolvePresentation(v));
     Object.assign(this, v);
   }
 

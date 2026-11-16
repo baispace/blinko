@@ -228,8 +228,10 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
       {/* Steps Indicator */}
       <StepsIndicator currentStep={currentStep} totalSteps={2} />
 
-      {/* Content */}
-      <div className="min-h-[400px]">
+      {/* Content
+          高度跟着步骤走：第 1 步是模板网格（较高），第 2 步只有几个输入框。
+          统一撑一个固定高度，会在第 2 步的 API 密钥和底部按钮之间留下一大片空白。 */}
+      <div className={currentStep === 1 ? 'min-h-[380px]' : 'min-h-[200px]'}>
         {currentStep === 1 && renderProviderSelection()}
         {currentStep === 2 && renderConfiguration()}
       </div>

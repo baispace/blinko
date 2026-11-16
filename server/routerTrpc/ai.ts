@@ -462,6 +462,16 @@ export const aiRouter = router({
           throw new Error("audio cannot test")
         }
 
+        // Do not actually generate an image here (slow and billed).
+        // Confirm the provider is configured so image-only models are not treated as a failed chat test.
+        if (capabilities.imageGeneration) {
+          if (provider.apiKey?.trim()) {
+            testResults.imageGeneration = { success: true, message: 'Image generation model configured' };
+          } else {
+            testResults.imageGeneration = { success: false, error: 'API Key is missing' };
+          }
+        }
+
         const overallSuccess = Object.values(testResults).some((result: any) => result.success);
 
         return {
@@ -812,11 +822,57 @@ export const aiRouter = router({
             break;
           }
 
-          case 'minimax': {
-            // Static list - MiniMax models with known capabilities
+          case 'grok':
+          case 'xai': {
+            // xAI 的兼容端点固定在 /v1 下；早期模板存的地址少了这层，拉列表会 404
+            const endpoint =
+              ((provider.baseURL || 'https://api.x.ai/v1').trim().replace(/\/+$/, '')).replace(/\/v1$/, '') + '/v1';
+            const response = await proxiedFetch(`${endpoint}/models`, {
+              headers: { 'Authorization': `Bearer ${provider.apiKey}` }
+            });
+            const data = await response.json() as any;
+            modelList = data.data?.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: inferModelCapabilities(model.id)
+            })) || [];
+            break;
+          }
+
+          case 'grokbot': {
+            // 静态列表 - Grok Bot 是产品形态，没有独立的模型目录接口。
+            // 只列能走 chat/completions 的模型：grok-4.20-multi-agent 系列
+            // 被 xAI 明确拒绝（"Multi Agent requests are not allowed on chat completions"），
+            // 那部分多智能体能力只在 Grok Bot 产品内可用。
+            modelList = [
+              { id: 'grok-build-0.1', name: 'Grok Build 0.1', capabilities: inferModelCapabilities('grok-build-0.1') },
+              { id: 'grok-code-fast-1', name: 'Grok Code Fast 1', capabilities: inferModelCapabilities('grok-code-fast-1') },
+              { id: 'grok-4.20-0309-reasoning', name: 'Grok 4.20 Reasoning', capabilities: inferModelCapabilities('grok-4.20-0309-reasoning') },
+              { id: 'grok-4.20-0309-non-reasoning', name: 'Grok 4.20 Non-Reasoning', capabilities: inferModelCapabilities('grok-4.20-0309-non-reasoning') },
+              { id: 'grok-4.7', name: 'Grok 4.7', capabilities: inferModelCapabilities('grok-4.7') },
+              { id: 'grok-4.6', name: 'Grok 4.6', capabilities: inferModelCapabilities('grok-4.6') },
+              { id: 'grok-4.5', name: 'Grok 4.5', capabilities: inferModelCapabilities('grok-4.5') },
+              { id: 'grok-4.3', name: 'Grok 4.3', capabilities: inferModelCapabilities('grok-4.3') }
+            ];
+            break;
+          }
+
+          case 'minimax':
+          case 'minimax-cn': {
+            // Static list - MiniMax doesn't provide a list models API.
+            // 国内站比国际站多一个 M3.1 Flash，其余模型 ID 两站一致。
+            const cnOnly = provider.provider.toLowerCase() === 'minimax-cn';
             modelList = [
               { id: 'MiniMax-M3', name: 'MiniMax M3', capabilities: inferModelCapabilities('MiniMax-M3') },
-              { id: 'MiniMax-M2.7', name: 'MiniMax M2.7', capabilities: inferModelCapabilities('MiniMax-M2.7') }
+              ...(cnOnly
+                ? [{ id: 'MiniMax-M3.1-Flash', name: 'MiniMax M3.1 Flash', capabilities: inferModelCapabilities('MiniMax-M3.1-Flash') }]
+                : []),
+              { id: 'MiniMax-M2.7', name: 'MiniMax M2.7', capabilities: inferModelCapabilities('MiniMax-M2.7') },
+              { id: 'MiniMax-H3-Image', name: 'MiniMax H3-Image', capabilities: inferModelCapabilities('MiniMax-H3-Image') },
+              { id: 'MiniMax-H3-Image-Highspeed', name: 'MiniMax H3-Image Highspeed', capabilities: inferModelCapabilities('MiniMax-H3-Image-Highspeed') },
+              { id: 'image-01', name: 'MiniMax Image 01', capabilities: inferModelCapabilities('image-01') },
+              { id: 'image-01-live', name: 'MiniMax Image 01 Live', capabilities: inferModelCapabilities('image-01-live') }
             ];
             break;
           }

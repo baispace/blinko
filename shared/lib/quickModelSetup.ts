@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export const QUICK_PROVIDERS=['openai','anthropic','google','ollama','openrouter','deepseek','siliconflow','grok','minimax','custom'] as const;
+export const QUICK_PROVIDERS=['openai','anthropic','google','ollama','openrouter','deepseek','siliconflow','grok','grokbot','minimax','minimax-cn','custom'] as const;
 export const quickModelSetupSchema = z.object({
   providerId: z.number().int().positive().optional(),
   provider: z.object({

@@ -20,7 +20,8 @@ import {
   Together,
   LangChain,
   LlamaIndex,
-  Alibaba
+  Alibaba,
+  Minimax
 } from '@lobehub/icons';
 import { Icon } from '@/components/Common/Iconify/icons';
 
@@ -42,9 +43,12 @@ const PROVIDER_ICONS: Record<string, React.ComponentType<any>> = {
   deepseek: DeepSeek.Color,
   grok: Grok,
   xai: Grok,
+  grokbot: Grok,
   siliconflow: SiliconCloud.Color,
   voyageai: Voyage.Color,
   voyage: Voyage.Color,
+  minimax: Minimax.Color,
+  'minimax-cn': Minimax.Color,
   litellm: OpenRouter,
   custom: OpenAI,
 };
@@ -169,7 +173,7 @@ const MODEL_ICON_MAP: Array<{
   // MiniMax models
   {
     keywords: ['minimax'],
-    icon: OpenAI
+    icon: Minimax.Color
   },
   // LangChain models
   {

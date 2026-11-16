@@ -14,6 +14,7 @@ import { FileService } from "./files";
 import { fetchWithProxy } from "./proxy";
 import { attachBlogCover } from "./blog";
 import { COVER_SOURCE, type CoverFocusValue } from "../../shared/lib/blogCover";
+import { providerDefaultBaseURL } from "@shared/lib/providerDefaults";
 import {
   computeCoverTextLayout,
   normalizeCoverTextConfig,
@@ -96,7 +97,8 @@ export function imageProtocol(
   const provider = model.provider.provider.toLowerCase();
   if (
     model.config?.imageGenerationProtocol === "minimax" ||
-    provider === "minimax"
+    provider === "minimax" ||
+    provider === "minimax-cn"
   )
     return "minimax";
   if (
@@ -231,10 +233,14 @@ export function imageRequest(
       code: "BAD_REQUEST",
       message: "该模型的服务商尚未配置 API Key，请先到模型设置完善配置。",
     });
+  // 国内站与国际站的域名完全不同，兜底地址必须按服务商类型区分，
+  // 否则 baseURL 没配时会打到旧域名 api.minimax.cn 上
+  const minimaxFallbackBase =
+    providerDefaultBaseURL(model.provider.provider) ?? providerDefaultBaseURL('minimax')!;
   const base = (
     model.provider.baseURL?.trim() ||
     (protocol === "minimax"
-      ? "https://api.minimax.cn/v1"
+      ? minimaxFallbackBase
       : "https://api.openai.com/v1")
   ).replace(/\/+$/, "");
   const endpoint = new URL(

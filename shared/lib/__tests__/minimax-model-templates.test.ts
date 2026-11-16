@@ -7,7 +7,7 @@ describe('MiniMax Model Templates', () => {
   );
 
   it('should include MiniMax models in DEFAULT_MODEL_TEMPLATES', () => {
-    expect(minimaxModels.length).toBeGreaterThanOrEqual(2);
+    expect(minimaxModels.length).toBeGreaterThanOrEqual(4);
   });
 
   it('should have MiniMax-M3 model', () => {
@@ -62,12 +62,31 @@ describe('MiniMax Model Templates', () => {
     expect(caps.tools).toBe(true);
   });
 
+  it('should have MiniMax-H3-Image models for image generation', () => {
+    for (const key of ['MiniMax-H3-Image', 'MiniMax-H3-Image-Highspeed']) {
+      const model = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === key);
+      expect(model).toBeDefined();
+      expect(model!.capabilities.imageGeneration).toBe(true);
+      expect(model!.capabilities.inference).toBeFalsy();
+      expect(model!.config?.imageGenerationProtocol).toBe('minimax');
+    }
+  });
+
+  it('should infer image generation for MiniMax-H3-Image', () => {
+    for (const key of ['MiniMax-H3-Image', 'MiniMax-H3-Image-Highspeed']) {
+      const caps = inferModelCapabilities(key);
+      expect(caps.imageGeneration).toBe(true);
+      expect(caps.inference).toBe(false);
+      expect(caps.tools).toBe(false);
+    }
+  });
+
   it('should have all MiniMax models with valid structure', () => {
     for (const model of minimaxModels) {
       expect(model.modelKey).toBeTruthy();
       expect(model.title).toBeTruthy();
       expect(model.capabilities).toBeDefined();
-      expect(typeof model.capabilities.inference).toBe('boolean');
+      expect(model.capabilities.inference === true || model.capabilities.imageGeneration === true).toBe(true);
     }
   });
 

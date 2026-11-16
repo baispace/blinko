@@ -7,7 +7,7 @@ import { RootStore } from '@/store';
 import { AiSettingStore, AiModel, ModelCapabilities, ProviderModel } from '@/store/aiSettingStore';
 import { DialogStore } from '@/store/module/Dialog';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
-import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, DEFAULT_MODEL_TEMPLATES } from './constants';
+import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, findModelTemplate, resolveProviderModelKey } from './constants';
 import { ProviderIcon, ModelIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { api } from '@/lib/trpc';
 
@@ -30,7 +30,18 @@ const formatTestResults = (result: any, t: (key: string) => string): string => {
     details.push(`Audio: ✅ ${message}`);
   }
 
-  return `${t('check-connect-success')} - ${details.join(', ')}`;
+  if (result?.capabilities?.imageGeneration?.success) {
+    const message = result.capabilities.imageGeneration.message || '';
+    details.push(`Image: ✅ ${message}`);
+  }
+
+  if (result?.success === false) {
+    return t('check-connect-error');
+  }
+
+  return details.length
+    ? `${t('check-connect-success')} - ${details.join(', ')}`
+    : t('check-connect-success');
 };
 
 interface ModelDialogContentProps {
@@ -85,14 +96,22 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
     }
   };
 
-  const handleModelSelect = (modelKey: string) => {
+  // 服务商目录里同一模型有两种写法：modelKey（MiniMax-H3-Image）和显示名（MiniMax H3-Image）。
+  // Autocomplete 选中候选后回填的是显示名，这里统一映射回真实 modelKey，
+  // 否则存进库的就是服务商根本不认识的模型 ID，调用时必然失败。
+  const resolveModelKey = (value: string): string => {
+    return resolveProviderModelKey(getProviderModels(), value);
+  };
+
+  const handleModelSelect = (rawModelKey: string) => {
+    const modelKey = resolveModelKey(rawModelKey);
     const providerModels = getProviderModels();
     const providerModel = providerModels.find(m => m.id === modelKey);
-    const defaultTemplate = DEFAULT_MODEL_TEMPLATES.find(t => modelKey.toLowerCase().includes(t.modelKey.toLowerCase()));
+    const defaultTemplate = findModelTemplate(modelKey);
 
     if (providerModel) {
       // Use provider model data, but enhance with template capabilities if available
-      const capabilities = defaultTemplate?.capabilities || aiSettingStore.inferModelCapabilities(modelKey);
+      const capabilities = aiSettingStore.inferModelCapabilities(modelKey);
       const config = defaultTemplate?.config || {};
 
       setEditingModel(prev => ({
@@ -107,7 +126,7 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
       }));
     } else {
       // Fallback for manual input
-      const capabilities = defaultTemplate?.capabilities || aiSettingStore.inferModelCapabilities(modelKey);
+      const capabilities = aiSettingStore.inferModelCapabilities(modelKey);
       const title = defaultTemplate?.title || modelKey;
       const config = defaultTemplate?.config || {};
 
@@ -274,17 +293,19 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
           placeholder="Select or enter model"
           inputValue={editingModel.modelKey || ''}
           onInputChange={(value) => {
-            // Find matching template for the input value
-            const defaultTemplate = DEFAULT_MODEL_TEMPLATES.find(t =>
-              value.toLowerCase().includes(t.modelKey.toLowerCase())
-            );
+            // 输入框里可能是显示名，统一换成真实 modelKey 再去匹配模板，
+            // 否则显示名匹配不到模板，config（如生图协议）会被整块丢掉
+            const modelKey = resolveModelKey(value);
 
-            const capabilities = defaultTemplate?.capabilities || aiSettingStore.inferModelCapabilities(value);
+            // Find matching template for the input value
+            const defaultTemplate = findModelTemplate(modelKey);
+
+            const capabilities = aiSettingStore.inferModelCapabilities(modelKey);
             const config = defaultTemplate?.config || {};
 
             setEditingModel(prev => ({
               ...prev,
-              modelKey: value,
+              modelKey,
               capabilities: capabilities,
               config: config
             }));

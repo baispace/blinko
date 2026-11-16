@@ -1,7 +1,8 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { ModelCapabilities } from '@server/aiServer/types';
 // Re-export from shared module for backward compatibility
-export { DEFAULT_MODEL_TEMPLATES, inferModelCapabilities } from '@shared/lib/modelTemplates';
+export { DEFAULT_MODEL_TEMPLATES, inferModelCapabilities, findModelTemplate, resolveProviderModelKey } from '@shared/lib/modelTemplates';
+import { PROVIDER_DEFAULT_BASE_URL } from '@shared/lib/providerDefaults';
 
 export const CAPABILITY_ICONS = {
   inference: <Icon icon="hugeicons:chat" width="16" height="16" />,
@@ -121,11 +122,22 @@ export const PROVIDER_TEMPLATES = [
     value: 'grok',
     label: 'Grok (X.AI)',
     defaultName: 'Grok',
-    defaultBaseURL: 'https://api.x.ai',
+    // xAI 的 OpenAI 兼容端点固定挂在 /v1 下，早期模板少写了一层会让拉模型列表 404
+    defaultBaseURL: PROVIDER_DEFAULT_BASE_URL.grok,
     website: 'https://x.ai',
     docs: 'https://docs.x.ai',
     icon: 'grok',
     description: 'Grok AI by X.AI'
+  },
+  {
+    value: 'grokbot',
+    label: 'Grok Bot',
+    defaultName: 'Grok Bot',
+    defaultBaseURL: PROVIDER_DEFAULT_BASE_URL.grokbot,
+    website: 'https://docs.x.ai/grok-bot/overview',
+    docs: 'https://docs.x.ai/grok-bot/overview',
+    icon: 'grok',
+    description: 'xAI Grok Bot / Grok Build 的模型 - Grok Bot 是产品形态，调用走 xAI 官方 API'
   },
   {
     value: 'voyageai',
@@ -139,13 +151,23 @@ export const PROVIDER_TEMPLATES = [
   },
   {
     value: 'minimax',
-    label: 'MiniMax',
-    defaultName: 'MiniMax',
-    defaultBaseURL: 'https://api.minimax.io/v1',
+    label: 'MiniMax (国际站)',
+    defaultName: 'MiniMax 国际站',
+    defaultBaseURL: PROVIDER_DEFAULT_BASE_URL.minimax,
+    website: 'https://www.minimax.io',
+    docs: 'https://platform.minimax.io/document/introduction',
+    icon: 'minimax',
+    description: 'MiniMax international site (api.minimax.io) - accounts are not shared with the China site'
+  },
+  {
+    value: 'minimax-cn',
+    label: 'MiniMax (国内站)',
+    defaultName: 'MiniMax 国内站',
+    defaultBaseURL: PROVIDER_DEFAULT_BASE_URL['minimax-cn'],
     website: 'https://www.minimaxi.com',
     docs: 'https://platform.minimaxi.com/document/introduction',
     icon: 'minimax',
-    description: 'MiniMax M3, M2.7 and other MiniMax models'
+    description: 'MiniMax 中国大陆站 (api.minimaxi.com) - 账号与 API Key 与国际站不互通'
   },
   {
     value: 'litellm',

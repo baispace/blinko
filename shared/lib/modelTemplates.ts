@@ -91,7 +91,21 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
 
   // MiniMax Models
   { modelKey: 'MiniMax-M3', title: 'MiniMax M3', capabilities: { inference: true, tools: true } },
+  { modelKey: 'MiniMax-M3.1-Flash', title: 'MiniMax M3.1 Flash', capabilities: { inference: true, tools: true } },
   { modelKey: 'MiniMax-M2.7', title: 'MiniMax M2.7', capabilities: { inference: true, tools: true } },
+  { modelKey: 'MiniMax-H3-Image-Highspeed', title: 'MiniMax H3-Image Highspeed', capabilities: { imageGeneration: true }, config: { imageGenerationProtocol: 'minimax' } },
+  { modelKey: 'MiniMax-H3-Image', title: 'MiniMax H3-Image', capabilities: { imageGeneration: true }, config: { imageGenerationProtocol: 'minimax' } },
+
+  // xAI Grok Models（Grok Bot / Grok Build 使用的模型，以及常用对话模型）
+  // 注意：grok-4.20-multi-agent 系列不走 chat/completions，故不登记为可用模板
+  { modelKey: 'grok-build-0.1', title: 'Grok Build 0.1', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-code-fast-1', title: 'Grok Code Fast 1', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.20-0309-reasoning', title: 'Grok 4.20 Reasoning', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.20-0309-non-reasoning', title: 'Grok 4.20 Non-Reasoning', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.7', title: 'Grok 4.7', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.6', title: 'Grok 4.6', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.5', title: 'Grok 4.5', capabilities: { inference: true, tools: true, image: true } },
+  { modelKey: 'grok-4.3', title: 'Grok 4.3', capabilities: { inference: true, tools: true, image: true } },
 
   // DeepSeek Models
   { modelKey: 'deepseek-chat', title: 'DeepSeek Chat', capabilities: { inference: true, tools: true } },
@@ -173,32 +187,84 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
 ];
 
 // Helper function to infer model capabilities from model name
-export function inferModelCapabilities(modelName: string): ModelCapabilities {
-  const name = modelName.toLowerCase();
-  const template = DEFAULT_MODEL_TEMPLATES.find(t =>
-    name.includes(t.modelKey.toLowerCase()) ||
-    t.modelKey.toLowerCase().includes(name)
-  );
+const IMAGE_GENERATION_NAME = /h3-image|image-01|dall-e|gpt-image|flux|stable-diffusion|imagen|midjourney/i;
 
-  if (template) {
-    return {
-      inference: template.capabilities.inference || false,
-      tools: template.capabilities.tools || false,
-      image: template.capabilities.image || false,
-      imageGeneration: template.capabilities.imageGeneration || false,
-      video: template.capabilities.video || false,
-      audio: template.capabilities.audio || false,
-      embedding: template.capabilities.embedding || false,
-      rerank: template.capabilities.rerank || false
-    };
+export function findModelTemplate(modelName: string): ModelTemplate | undefined {
+  const name = modelName.trim().toLowerCase();
+  if (!name) return undefined;
+
+  const exact = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey.toLowerCase() === name);
+  if (exact) return exact;
+
+  // 服务商目录里的显示名（MiniMax H3-Image）和 modelKey（MiniMax-H3-Image）只差分隔符，
+  // 归一化后再精确匹配一次，避免显示名查不到模板、连带把 config（如生图协议）丢掉
+  const normalized = name.replace(/[\s_]+/g, '-');
+  if (normalized !== name) {
+    const normalizedMatch = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey.toLowerCase() === normalized);
+    if (normalizedMatch) return normalizedMatch;
   }
 
-  // Default: unknown models assumed to have inference capability
+  const partial = DEFAULT_MODEL_TEMPLATES.filter(t => {
+    const key = t.modelKey.toLowerCase();
+    return name.includes(key) || key.includes(name);
+  });
+  if (partial.length > 0) {
+    return [...partial].sort((a, b) => b.modelKey.length - a.modelKey.length)[0];
+  }
+
+  // 归一化后再模糊匹配一次：显示名带厂商前缀时（MiniMax Image 01 → image-01）也能命中
+  if (normalized !== name) {
+    const normalizedPartial = DEFAULT_MODEL_TEMPLATES.filter(t => {
+      const key = t.modelKey.toLowerCase();
+      return normalized.includes(key) || key.includes(normalized);
+    });
+    if (normalizedPartial.length > 0) {
+      return [...normalizedPartial].sort((a, b) => b.modelKey.length - a.modelKey.length)[0];
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * 把服务商目录里可能出现的「显示名」映射回真实 modelKey。
+ * 目录里同一个模型有两种写法：modelKey（MiniMax-H3-Image）和显示名（MiniMax H3-Image）。
+ * 直接把显示名当成 modelKey 存下去，服务商收到的是一个根本不认识的模型 ID。
+ */
+export function resolveProviderModelKey(
+  catalog: { id: string; name?: string }[],
+  value: string
+): string {
+  if (!value) return value;
+  return catalog.find(m => m.id === value || m.name === value)?.id ?? value;
+}
+
+function capabilitiesFromTemplate(template: ModelTemplate): ModelCapabilities {
   return {
-    inference: true,
+    inference: template.capabilities.inference || false,
+    tools: template.capabilities.tools || false,
+    image: template.capabilities.image || false,
+    imageGeneration: template.capabilities.imageGeneration || false,
+    video: template.capabilities.video || false,
+    audio: template.capabilities.audio || false,
+    embedding: template.capabilities.embedding || false,
+    rerank: template.capabilities.rerank || false
+  };
+}
+
+export function inferModelCapabilities(modelName: string): ModelCapabilities {
+  const template = findModelTemplate(modelName);
+  if (template) {
+    return capabilitiesFromTemplate(template);
+  }
+
+  // Unknown image-generation model names should not default to Chat
+  const imageGeneration = IMAGE_GENERATION_NAME.test(modelName);
+  return {
+    inference: !imageGeneration,
     tools: false,
     image: false,
-    imageGeneration: false,
+    imageGeneration,
     video: false,
     audio: false,
     embedding: false,

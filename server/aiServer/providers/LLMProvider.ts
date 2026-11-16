@@ -8,6 +8,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createXai } from '@ai-sdk/xai';
 import { createAzure } from '@ai-sdk/azure';
 import { BaseProvider } from './BaseProvider';
+import { providerDefaultBaseURL } from '@shared/lib/providerDefaults';
 
 interface LLMConfig {
   provider: string;
@@ -15,6 +16,18 @@ interface LLMConfig {
   baseURL?: any;
   modelKey: string;
   apiVersion?: any;
+}
+
+/**
+ * xAI 的 OpenAI 兼容端点固定挂在 /v1 下。
+ * 早期模板写入的是 https://api.x.ai（少一层），直接透传给 SDK 会 404，
+ * 所以这里统一补齐再交给 createXai。
+ */
+function normalizeXaiBaseURL(baseURL?: any): string {
+  const raw = (typeof baseURL === 'string' ? baseURL : '').trim();
+  if (!raw) return providerDefaultBaseURL('grok')!;
+  const trimmed = raw.replace(/\/+$/, '');
+  return /\/v1$/.test(trimmed) ? trimmed : `${trimmed}/v1`;
 }
 
 export class LLMProvider extends BaseProvider {
@@ -62,8 +75,10 @@ export class LLMProvider extends BaseProvider {
 
       case 'grok':
       case 'xai':
+      case 'grokbot':
         return createXai({
           apiKey: config.apiKey,
+          baseURL: normalizeXaiBaseURL(config.baseURL),
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 
@@ -79,7 +94,15 @@ export class LLMProvider extends BaseProvider {
       case 'minimax':
         return createOpenAI({
           apiKey: config.apiKey,
-          baseURL: config.baseURL || 'https://api.minimax.io/v1',
+          baseURL: config.baseURL || providerDefaultBaseURL('minimax'),
+          fetch: this.proxiedFetch
+        }).languageModel(config.modelKey);
+
+      case 'minimax-cn':
+        // 国内站与国际站账号、Key 完全不互通，base URL 也必须分开
+        return createOpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL || providerDefaultBaseURL('minimax-cn'),
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 

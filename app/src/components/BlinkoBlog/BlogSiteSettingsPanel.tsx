@@ -1,7 +1,9 @@
 import { BlogInput, BlogToggle, BlogDisclosure, BlogTabs, BlogTextarea, BlogSelect } from "./BlogUI";
 import { Button, Card, CardBody } from "@heroui/react";
 import { confirmBlogAction } from "./confirmBlogAction";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import axios from "@/lib/axios";
+import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 import { api } from "@/lib/trpc";
 import {
   blogSiteSettingsSchema,
@@ -43,6 +45,7 @@ export function BlogSiteSettingsPanel({
 }: {
   onDirty?: (dirty: boolean) => void;
 }) {
+  const iconFile = useRef<HTMLInputElement>(null);
   const [data, setData] = useState<BlogSiteSettings>(defaults),
     [saved, setSaved] = useState<BlogSiteSettings>(defaults),
     [revision, setRevision] = useState(""),
@@ -128,6 +131,31 @@ export function BlogSiteSettingsPanel({
     if (busy) return;
     setData((d) => ({ ...d, ...p }));
     setMessage("");
+  };
+
+  const uploadSiteIcon = async (file?: File) => {
+    if (!file || uploading) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2 * 1024 * 1024) {
+      setError("站点图标请选择 2MB 以内的 PNG、JPG 或 WebP 图片。");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await axios.post(getBlinkoEndpoint("/api/file/upload"), form);
+      const path = response.data?.filePath || response.data?.path;
+      if (typeof path !== "string" || !path) throw new Error("上传未返回图片地址，请重试。");
+      patch({ iconUrl: path });
+      setMessage("图标已上传，点击“保存设置”后应用到公开站点。");
+    } catch (e: any) {
+      setError(e.response?.data?.detail || e.response?.data?.error || e.message || "图标上传失败，请重试。");
+    } finally {
+      setUploading(false);
+      if (iconFile.current) iconFile.current.value = "";
+    }
   };
 
   /**
@@ -314,11 +342,39 @@ export function BlogSiteSettingsPanel({
                 "站点标语",
                 "全站共用的一句话介绍，展示于页脚、关于页等位置。",
               )}
-              {field(
-                "iconUrl",
-                "站点图标地址",
-                "仅用于对外博客，不修改工作区标识。",
-              )}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">站点图标</span>
+                <div className="flex min-h-12 flex-wrap items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-default-200 bg-default-50">
+                    {data.iconUrl ? (
+                      <img
+                        src={getBlinkoEndpoint(data.iconUrl)}
+                        alt="站点图标预览"
+                        className="h-10 w-10 object-contain"
+                      />
+                    ) : (
+                      <span className="text-lg font-semibold text-default-400">{(data.siteName || "J").slice(0, 1)}</span>
+                    )}
+                  </span>
+                  <input
+                    ref={iconFile}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    aria-label="上传站点图标"
+                    onChange={(event) => void uploadSiteIcon(event.target.files?.[0])}
+                  />
+                  <Button size="sm" variant="flat" isLoading={uploading} onPress={() => iconFile.current?.click()}>
+                    {data.iconUrl ? "替换图标" : "上传图标"}
+                  </Button>
+                  {data.iconUrl && (
+                    <Button size="sm" variant="light" isDisabled={uploading} onPress={() => patch({ iconUrl: "" })}>
+                      移除
+                    </Button>
+                  )}
+                </div>
+                <small className="text-xs text-default-500">PNG / JPG / WebP · ≤ 2MB；用于公开博客顶部、移动端、页脚与 Favicon。</small>
+              </div>
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">前台字体</span>
                 <BlogSelect

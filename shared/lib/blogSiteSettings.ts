@@ -154,7 +154,8 @@ export const blogSiteSettingsSchema = z.object({
     .trim()
     .max(300)
     .default("记录思考与实践，让经验成为有脉络的内容。"),
-  iconUrl: url.default(""),
+  /** 站点图标：后台上传后的站内资源路径，或外部图片地址。 */
+  iconUrl: assetUrl.default(""),
   /**
    * 公开博客前台用的字体：字体注册表（fonts 表）里的字体名。
    *

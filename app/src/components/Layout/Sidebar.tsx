@@ -92,14 +92,14 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           onClick={base.toggleSidebar}
           aria-label={base.isSidebarCollapsed ? t('expand-sidebar') : t('collapse-sidebar')}
           data-testid="sidebar-collapse-btn"
-          className={`absolute top-3 right-1 z-50 w-8 h-8 rounded-lg touch-manipulation
+          className={`z-50 w-8 h-8 rounded-lg touch-manipulation
             bg-background border border-default-300 shadow-sm
             flex items-center justify-center text-default-500
             hover:!text-primary hover:!border-primary
             !transition-all duration-200
-            ${base.isSidebarCollapsed ? 'rotate-180' : ''}`}
+            ${base.isSidebarCollapsed ? 'relative mx-auto mt-1' : 'absolute top-3 right-1'}`}
         >
-          <Icon icon="mdi:chevron-double-right" width="14" height="14" />
+          <Icon icon={base.isSidebarCollapsed ? 'mdi:chevron-double-right' : 'mdi:chevron-double-left'} width="14" height="14" />
         </button>
       )}
 
@@ -118,7 +118,7 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           Desktop shows mark + name; the collapsed rail and the mobile drawer
           keep only the mark, so the compact navigation never squeezes a
           wordmark into a narrow column. */}
-      <div data-testid="sidebar-brand" className={`flex min-h-14 shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2 mt-9' : 'pl-2.5 pr-10'}`}>
+      <div data-testid="sidebar-brand" className={`flex shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'min-h-14 pl-2.5 pr-10'}`}>
         <SiteBrand compact={base.isSidebarCollapsed || !isPc} size={30} />
       </div>
 

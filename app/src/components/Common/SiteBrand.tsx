@@ -22,7 +22,7 @@ export const SiteBrand = observer(({ compact = false, size = 30, framed = false,
   const title = config?.customTitle?.trim() || BRAND_NAME.en;
   const tagline = showTagline ? config?.customTagline?.trim() || '' : '';
   const customIcon = config?.customIcon?.trim();
-  return <span className="flex w-full min-w-0 items-center gap-3" title={[title,tagline].filter(Boolean).join('\n')}>
+  return <span className={`flex min-w-0 items-center gap-3 ${compact ? 'justify-center' : 'w-full'}`} title={[title,tagline].filter(Boolean).join('\n')}>
     {customIcon
       ? <span className={framed
         ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-primary/5'

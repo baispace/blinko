@@ -666,7 +666,7 @@ function Footer() {
       <div className="ink-footer-grid ink-wrap">
         <div>
           <Link to={blogRoute("/blog")} className="ink-brand">
-            <img src="/brand/mark.svg" alt="" width={18} height={28} />{brand}
+            <img src={publicSettings?.iconUrl || "/brand/mark.svg"} alt="" width={22} height={22} />{brand}
           </Link>
           <p>
             {publicSettings?.tagline || "记录思考与实践，让经验成为有脉络的内容。"}
@@ -1573,6 +1573,15 @@ export function BlogShell() {
                 to={blogRoute("/blog")}
                 aria-label="返回博客主页"
               >
+                {data.publicSettings?.iconUrl && (
+                  <img
+                    className="ink-brand-symbol"
+                    src={data.publicSettings.iconUrl}
+                    alt=""
+                    width={30}
+                    height={30}
+                  />
+                )}
                 <span className="ink-brand-wordmark">{publicBrandName(data.siteName).split("·")[0].trim() || "Jomio"}</span>
               </Link>
             </div>

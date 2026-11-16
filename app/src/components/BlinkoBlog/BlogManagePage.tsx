@@ -26,8 +26,6 @@ import { UserStore } from "@/store/user";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
-import { DialogStore } from "@/store/module/Dialog";
-import NoteHistoryModal from "../BlinkoNoteHistory/NoteHistoryModal";
 import { Icon } from "@/components/Common/Iconify/icons";
 import { BlogStatsPanel } from "./BlogStatsPanel";
 import { BlogFriendsPanel } from "./BlogFriendsPanel";

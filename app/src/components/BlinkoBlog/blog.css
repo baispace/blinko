@@ -3715,6 +3715,9 @@
   font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size:24px; line-height:1; font-weight:800; letter-spacing:-.9px;
 }
+.ink-blog .ink-brand-symbol {
+  width:30px; height:30px; flex:0 0 30px; object-fit:contain;
+}
 .ink-blog .ink-header .ink-brand-logo:hover { color:var(--ink-accent); }
 .ink-blog .ink-header .ink-brand-logo:focus-visible { outline:2px solid var(--ink-accent); outline-offset:3px; }
 .ink-blog[data-theme="dark"] .ink-header .ink-header-left {
@@ -3723,6 +3726,8 @@
 @media(max-width:640px) {
   .ink-blog .ink-header .ink-header-left {min-height:40px; padding:1px 13px 1px 8px; gap:6px;}
   .ink-blog .ink-header .ink-brand-logo {height:34px;}
+  .ink-blog .ink-brand-symbol {width:29px; height:29px; flex-basis:29px;}
+  .ink-blog .ink-brand-symbol + .ink-brand-wordmark {display:none;}
   .ink-blog .ink-brand-wordmark {font-size:21px; max-width:112px;}
 }
 

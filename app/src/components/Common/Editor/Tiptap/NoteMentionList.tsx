@@ -53,7 +53,7 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
             state.items.map((item, index) => (
               <button
                 key={item.id}
-                className={`w-full px-3 py-2 text-left flex flex-col gap-0.5 hover:bg-default-100 transition-colors ${
+                className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-default-100 transition-colors ${
                   index === state.selectedIndex ? 'bg-default-100' : ''
                 }`}
                 type="button"
@@ -64,11 +64,14 @@ export const NoteMentionList = observer(({ state }: NoteMentionListProps) => {
                   state.selectCurrent();
                 }}
               >
-                <span className="text-sm text-default-700 font-medium truncate">
-                  {item.title}
-                </span>
-                <span className="text-xs text-default-400 truncate">
-                  {item.content.slice(0, 60).replace(/\n/g, ' ')}
+                <Icon icon="solar:file-bold" width={16} height={16} className="text-primary shrink-0" />
+                <span className="min-w-0 flex flex-col gap-0.5">
+                  <span className="text-sm text-default-700 font-medium truncate">
+                    {item.title}
+                  </span>
+                  <span className="text-xs text-default-400 truncate">
+                    {item.content.slice(0, 60).replace(/\n/g, ' ')}
+                  </span>
                 </span>
               </button>
             ))

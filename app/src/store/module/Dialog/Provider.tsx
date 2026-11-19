@@ -99,7 +99,7 @@ const Dialog = observer(() => {
           )}
           {
             onlyContent && <motion.div
-              className="w-full pointer-events-auto "
+              className="w-full pointer-events-auto overflow-hidden rounded-2xl bg-background shadow-xl"
               {...motionConfig}
             >
               <div className="relative w-full">
@@ -158,7 +158,7 @@ const Dialog = observer(() => {
       >
         {
           onlyContent ?
-            <ModalContent className="max-h-screen overflow-visible relative modal-content" >
+            <ModalContent className="max-h-screen overflow-hidden relative modal-content rounded-2xl shadow-xl" >
 
               {
                 showOnlyContentCloseButton &&

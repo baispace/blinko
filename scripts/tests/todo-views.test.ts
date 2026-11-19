@@ -18,9 +18,9 @@ it('rejects inverted and missing date ranges',()=>{
  expect(todoWorkspaceSchema.safeParse({version:4,activeId:'all',views:[{...base,dueMode:'range',dueTo:'2026-10-18'}]}).success).toBe(true);
 });
 it('preserves all differentiated view conditions and visible fields',()=>{
- const configured={...defaultTodoViews[0]!,priorities:['ui','in'],tagIds:[1,2],tagMatch:'all',dueMode:'none',attachment:'yes',fields:['due','created']};
+ const configured={...defaultTodoViews[0]!,priorities:['ui','in'],tagIds:[1,2],tagMatch:'all',dueMode:'none',attachment:'yes',conditionMatch:'any',fields:['due','created']};
  const restored=readTodoWorkspace({version:4,activeId:'all',views:[configured]}).views[0]!;
- expect(restored.tagIds).toEqual([1,2]);expect(restored.priorities).toEqual(['ui','in']);expect(restored.attachment).toBe('yes');expect(restored.fields).toEqual(['due','created']);
+ expect(restored.tagIds).toEqual([1,2]);expect(restored.priorities).toEqual(['ui','in']);expect(restored.attachment).toBe('yes');expect(restored.conditionMatch).toBe('any');expect(restored.fields).toEqual(['due','created']);
 });
 describe('坏配置不能被静默写回覆盖用户数据',()=>{
  const customId='8933c2bc-adaa-4b7c-8470-0c4941c71d3b';

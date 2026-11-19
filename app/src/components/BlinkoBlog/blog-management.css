@@ -38,9 +38,9 @@
 .blog-management .settings-nav-item[aria-current="page"] .blog-management-count { color:inherit; opacity:.7; }
 .blog-management-main:focus-visible { outline:2px solid hsl(var(--heroui-primary)); outline-offset:-2px; }
 
-.blog-management-dialog { width:calc(100vw - 40px) !important; max-width:1600px !important; height:calc(100dvh - 40px); max-height:calc(100dvh - 40px); padding:0; overflow:hidden; border-radius:16px; }
+.blog-management-dialog { width:calc(100vw - 40px) !important; max-width:1600px !important; height:calc(100dvh - 40px); max-height:calc(100dvh - 40px); padding:0; overflow:hidden !important; border-radius:16px !important; }
 .blog-management-dialog .blog-management-backdrop { padding:0; height:100%; }
-.blog-management-dialog .blog-management-backdrop > .blog-management { border:0; box-shadow:none; }
+.blog-management-dialog .blog-management-backdrop > .blog-management { border:0; box-shadow:none; height:100%; border-radius:inherit; }
 @media(max-width:960px) { .blog-management-dialog { width:100vw !important; max-width:100vw !important; height:100dvh; max-height:100dvh; margin:0; border-radius:0; } }
 
 /* Management controls follow the existing settings workspace. */

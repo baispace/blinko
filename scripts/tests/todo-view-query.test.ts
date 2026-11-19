@@ -39,3 +39,13 @@ it('all six sort fields support both directions and nulls are explicitly last',a
   expect(q.values).toContain(direction==='asc'?1:-1);expect(q.strings.join('?')).toContain('state IN');if(sort!=='priority')expect(q.strings.join('?')).toContain('IS NULL)::int::double precision AS s1');
  }
 });
+
+it('joins independent view conditions with OR when match is any',async()=>{
+ let query:any;const db:any={$queryRaw:async(q:any)=>{query=q;return [];}};
+ await getTodoPage(todoPageInput.parse({withCounts:false,view:{scope:'all',status:'pending',sort:'due',priorities:['ui'],attachment:'yes',conditionMatch:'any'}}),123,db);
+ const sql=query.strings.join('?');
+ expect(sql).toContain(' OR ');
+ expect(sql).toContain('EXISTS (SELECT 1 FROM attachments');
+ expect(sql).toContain('rank IN');
+ expect(sql).toContain('NOT "isArchived"');
+});

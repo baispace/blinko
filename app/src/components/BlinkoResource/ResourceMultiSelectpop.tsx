@@ -7,12 +7,42 @@ import { api } from '@/lib/trpc';
 import { MultiSelectToolbar } from '../Common/MultiSelectToolbar';
 import { ResourceStore } from "@/store/resourceStore";
 import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
+import { openMoveToFolderDialog } from './MoveToFolderDialog';
+import { downloadResourceFile } from './resourceUtils';
+import { toJS } from 'mobx';
 
 export const ResourceMultiSelectPop = observer(() => {
   const { t } = useTranslation();
   const resourceStore = RootStore.Get(ResourceStore);
+  const resources = toJS(resourceStore.blinko.resourceList.value) || [];
+  const selected = resourceStore.getSelectedResources(resources);
 
   const actions = [
+    {
+      icon: "material-symbols:download",
+      text: t('download'),
+      onClick: () => {
+        selected.forEach(item => downloadResourceFile(item));
+      }
+    },
+    {
+      icon: "material-symbols:content-cut",
+      text: t('cut'),
+      onClick: () => resourceStore.cutSelected(resources)
+    },
+    {
+      icon: "material-symbols:drive-file-move-outline",
+      text: t('move-to'),
+      onClick: () => openMoveToFolderDialog(selected)
+    },
+    ...(resourceStore.currentFolder ? [{
+      icon: "material-symbols:drive-file-move-outline",
+      text: t('move-to-parent'),
+      onClick: () => {
+        if (selected.length === 0) return;
+        void resourceStore.moveToParentFolder(selected);
+      }
+    }] : []),
     {
       icon: "mingcute:delete-2-line",
       text: t('delete'),

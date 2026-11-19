@@ -660,6 +660,20 @@ li[data-type="collapsible-list-item"]:hover > ol::before {
   animation: slashmenu-in 0.15s ease-out;
 }
 
+/* 正文里的引入文章卡片（飞书式文档提及） */
+.tiptap-note-link {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 1px;
+  user-select: none;
+  cursor: pointer;
+}
+.tiptap-note-link.is-selected,
+.tiptap-note-link.ProseMirror-selectednode {
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px hsl(var(--heroui-primary) / .45);
+}
+
 .tiptap-bubble button {
   width: 32px;
   height: 32px;

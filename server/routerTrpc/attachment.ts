@@ -39,6 +39,7 @@ export interface AttachmentResult {
   updatedAt: Date | null;
   isFolder: boolean;
   folderName: string | null;
+  perfixPath: string | null;
 }
 
 const mapAttachmentResult = (item: any): AttachmentResult => ({
@@ -54,7 +55,8 @@ const mapAttachmentResult = (item: any): AttachmentResult => ({
   createdAt: item.createdAt ? new Date(item.createdAt) : null,
   updatedAt: item.updatedAt ? new Date(item.updatedAt) : null,
   isFolder: item.is_folder,
-  folderName: item.folder_name
+  folderName: item.folder_name,
+  perfixPath: item.perfixPath ?? item.perfix_path ?? null
 });
 
 export const attachmentsRouter = router({
@@ -117,12 +119,15 @@ export const attachmentsRouter = router({
                 accountId: Number(ctx.id)
               }
             ],
-            AND: {
-              OR: [
-                { name: { contains: searchText, mode: 'insensitive' } },
-                { path: { contains: searchText, mode: 'insensitive' } }
-              ]
-            }
+            AND: [
+              { name: { not: '.folder' } },
+              {
+                OR: [
+                  { name: { contains: searchText, mode: 'insensitive' } },
+                  { path: { contains: searchText, mode: 'insensitive' } }
+                ]
+              }
+            ]
           },
           orderBy: [
             { sortOrder: 'asc' },
@@ -145,7 +150,8 @@ export const attachmentsRouter = router({
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           isFolder: false,
-          folderName: null
+          folderName: null,
+          perfixPath: item.perfixPath ?? null
         }));
       }
 
@@ -170,7 +176,8 @@ export const attachmentsRouter = router({
               NULL as "createdAt",
               NULL as "updatedAt",
               true as is_folder,
-              split_part("perfixPath", ',', array_length(string_to_array(${folderPath}, ','), 1) + 1) as folder_name
+              split_part("perfixPath", ',', array_length(string_to_array(${folderPath}, ','), 1) + 1) as folder_name,
+              ("perfixPath") as perfix_path
             FROM attachments
             WHERE ("noteId" IN (
               SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
@@ -193,7 +200,8 @@ export const attachmentsRouter = router({
               "createdAt",
               "updatedAt",
               false as is_folder,
-              NULL as folder_name
+              NULL as folder_name,
+              "perfixPath" as perfix_path
             FROM attachments
             WHERE ("noteId" IN (
               SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
@@ -229,7 +237,8 @@ export const attachmentsRouter = router({
             NULL as "createdAt",
             NULL as "updatedAt",
             true as is_folder,
-            split_part("perfixPath", ',', 1) as folder_name
+            split_part("perfixPath", ',', 1) as folder_name,
+            split_part("perfixPath", ',', 1) as perfix_path
           FROM attachments
           WHERE ("noteId" IN (
             SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
@@ -252,7 +261,8 @@ export const attachmentsRouter = router({
             "createdAt",
             "updatedAt",
             false as is_folder,
-            NULL as folder_name
+            NULL as folder_name,
+            "perfixPath" as perfix_path
           FROM attachments
           WHERE ("noteId" IN (
             SELECT id FROM notes WHERE "accountId" = ${Number(ctx.id)}
@@ -269,6 +279,34 @@ export const attachmentsRouter = router({
 
       const results = await prisma.$queryRaw<any[]>(rawQuery);
       return results.map(mapAttachmentResult);
+    }),
+
+  listFolders: authProcedure
+    .query(async function ({ ctx }) {
+      const rows = await prisma.attachments.findMany({
+        where: {
+          OR: [
+            { note: { accountId: Number(ctx.id) } },
+            { accountId: Number(ctx.id) }
+          ],
+          AND: [
+            { perfixPath: { not: '' } }
+          ]
+        },
+        select: { perfixPath: true },
+        distinct: ['perfixPath']
+      });
+      const folders = new Set<string>();
+      for (const row of rows) {
+        if (!row.perfixPath) continue;
+        const parts = row.perfixPath.split(',').filter(Boolean);
+        const acc: string[] = [];
+        for (const part of parts) {
+          acc.push(part);
+          folders.add(acc.join('/'));
+        }
+      }
+      return [...folders].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     }),
 
   rename: authProcedure
@@ -374,9 +412,10 @@ export const attachmentsRouter = router({
         const attachments = await tx.attachments.findMany({
           where: {
             id: { in: sourceIds },
-            note: {
-              accountId: Number(ctx.id)
-            }
+            OR: [
+              { note: { accountId: Number(ctx.id) } },
+              { accountId: Number(ctx.id) }
+            ]
           }
         });
 

@@ -1249,5 +1249,20 @@
   "settings-choose-model": "Choose a model",
   "settings-group-common": "Frequently used",
   "settings-more": "More settings",
-  "settings-about-site": "About this workspace"
+  "settings-about-site": "About this workspace",
+  "move-to": "Move to...",
+  "paste-here": "Paste here",
+  "root-folder": "Root",
+  "search-all-resources": "Search all folders",
+  "search-results-for": "Results for \"{{query}}\"",
+  "sort-updated": "Last updated",
+  "sort-name": "Name",
+  "sort-size": "Size",
+  "open-file": "Open",
+  "open-related-note": "Open related note",
+  "drop-to-upload": "Drop to upload to {{folder}}",
+  "items-cut": "{{count}} items cut",
+  "cancel-cut": "Cancel cut",
+  "no-folders": "No folders yet",
+  "introduce-article": "Mention article"
 }

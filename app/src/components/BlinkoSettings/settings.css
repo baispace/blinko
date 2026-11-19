@@ -1,4 +1,4 @@
-.settings-workspace { display:flex; height:100%; min-height:0; width:100%; overflow:hidden; background:hsl(var(--heroui-background)); font-size:14px; }
+.settings-workspace { display:flex; height:100%; min-height:0; width:100%; overflow:hidden; border-radius:16px; background:hsl(var(--heroui-background)); font-size:14px; }
 .settings-sidebar { display:flex; flex-direction:column; width:228px; flex-shrink:0; padding:24px 12px 16px; border-right:1px solid hsl(var(--heroui-default-200) / .65); background:hsl(var(--heroui-default-50) / .65); }
 .settings-sidebar-heading { font-size:18px; font-weight:650; padding:0 12px 16px; }
 .settings-search { display:flex; align-items:center; gap:8px; padding:8px 10px; margin:0 4px 14px; border:1px solid hsl(var(--heroui-default-200)); background:hsl(var(--heroui-background)); border-radius:9px; transition:border-color .15s, box-shadow .15s; }

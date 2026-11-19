@@ -18,6 +18,9 @@ export class ResourceStore implements Store {
   sid = 'resourceStore';
   currentFolder: string | null = null;
   selectedItems: Set<number> = new Set();
+  /** Explicit multi-select mode: checkboxes stay visible, clicks toggle selection. */
+  isSelectMode = false;
+  lastSelectedId: number | null = null;
   contextMenuResource: ResourceType | null = null;
   refreshTicker = 0
   clipboard: { type: 'cut' | 'copy', items: ResourceType[] } | null = null;
@@ -27,6 +30,10 @@ export class ResourceStore implements Store {
   searchText = '';
   /** Client-side type filter. */
   filterType: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other' = 'all';
+  /** Last search text actually sent to the API. */
+  appliedSearch = '';
+  /** Client-side sort for the currently loaded list. */
+  sortMode: 'updated' | 'name' | 'size' = 'updated';
   /** 当前正在上传的文件数（含已完成但尚未 dismiss 的）。 */
   uploading = 0;
   /** 每个上传任务（key=fileName+size）的进度 0~100。 */
@@ -51,15 +58,43 @@ export class ResourceStore implements Store {
 
   constructor() {
     makeAutoObservable(this);
+    try {
+      const view = localStorage.getItem('resourceViewMode');
+      if (view === 'grid' || view === 'list') this.viewMode = view;
+      const sort = localStorage.getItem('resourceSortMode');
+      if (sort === 'updated' || sort === 'name' || sort === 'size') this.sortMode = sort;
+    } catch {}
   }
 
   get blinko() {
     return RootStore.Get(BlinkoStore);
   }
 
-  setViewMode = (mode: 'grid' | 'list') => { this.viewMode = mode; }
+  setViewMode = (mode: 'grid' | 'list') => {
+    this.viewMode = mode;
+    try { localStorage.setItem('resourceViewMode', mode); } catch {}
+  }
   setSearchText = (text: string) => { this.searchText = text; }
   setFilterType = (type: 'all' | 'image' | 'video' | 'audio' | 'doc' | 'other') => { this.filterType = type; }
+  setSortMode = (mode: 'updated' | 'name' | 'size') => {
+    this.sortMode = mode;
+    try { localStorage.setItem('resourceSortMode', mode); } catch {}
+  }
+  get isSearching() {
+    return !!this.appliedSearch;
+  }
+  commitSearch = () => {
+    const next = this.searchText.trim();
+    if (next === this.appliedSearch) return;
+    this.appliedSearch = next;
+    this.loadResources(this.currentFolder || undefined);
+  }
+  clearSearch = () => {
+    this.searchText = '';
+    if (!this.appliedSearch) return;
+    this.appliedSearch = '';
+    this.loadResources(this.currentFolder || undefined);
+  }
 
   /** Upload files straight into the current folder via /api/file/upload. Concurrency limited to UPLOAD_CONCURRENCY. */
   uploadFiles = async (files: File[] | FileList) => {
@@ -159,16 +194,46 @@ export class ResourceStore implements Store {
     this.currentFolder = folder;
   }
 
+  enterSelectMode = () => {
+    this.isSelectMode = true;
+  }
+
+  exitSelectMode = () => {
+    this.isSelectMode = false;
+    this.selectedItems = new Set();
+    this.lastSelectedId = null;
+  }
+
   selectAllFiles = (resources: ResourceType[]) => {
-    this.selectedItems.clear();
+    const next = new Set<number>();
     resources.forEach(resource => {
       if (!resource.isFolder && resource.id) {
-        this.selectedItems.add(resource.id);
+        next.add(resource.id);
       }
     });
+    this.selectedItems = next;
+    this.isSelectMode = true;
   };
 
-  toggleSelect = (id: number) => {
+  getSelectedResources = (resources: ResourceType[]) => {
+    return resources.filter(resource => !resource.isFolder && resource.id && this.selectedItems.has(resource.id));
+  }
+
+  toggleSelect = (id: number, options?: { range?: boolean; orderedIds?: number[] }) => {
+    this.isSelectMode = true;
+    if (options?.range && this.lastSelectedId != null && options.orderedIds?.length) {
+      const a = options.orderedIds.indexOf(this.lastSelectedId);
+      const b = options.orderedIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const start = Math.min(a, b);
+        const end = Math.max(a, b);
+        const next = new Set(this.selectedItems);
+        for (let i = start; i <= end; i++) next.add(options.orderedIds[i]);
+        this.selectedItems = next;
+        this.lastSelectedId = id;
+        return;
+      }
+    }
     const newSet = new Set(this.selectedItems);
     if (newSet.has(id)) {
       newSet.delete(id);
@@ -176,22 +241,29 @@ export class ResourceStore implements Store {
       newSet.add(id);
     }
     this.selectedItems = newSet;
+    this.lastSelectedId = id;
   }
 
   clearSelection = () => {
     this.selectedItems = new Set();
+    this.lastSelectedId = null;
   }
 
   loadResources = (folder?: string) => {
     this.clearSelection();
+    const search = this.appliedSearch || this.searchText.trim() || undefined;
+    this.appliedSearch = search || '';
     this.blinko.resourceList.resetAndCall({
-      folder: folder || undefined,
+      folder: search ? undefined : (folder || undefined),
+      searchText: search,
     });
   }
 
   loadNextPage = () => {
+    const search = this.appliedSearch || undefined;
     this.blinko.resourceList.callNextPage({
-      folder: this.currentFolder || undefined,
+      folder: search ? undefined : (this.currentFolder || undefined),
+      searchText: search,
     });
   }
 
@@ -233,32 +305,58 @@ export class ResourceStore implements Store {
     this.clearSelection();
   };
 
+  navigateToPath = async (folder: string | null, navigate: any) => {
+    this.searchText = '';
+    this.appliedSearch = '';
+    this.setCurrentFolder(folder);
+    this.loadResources(folder || undefined);
+    if (folder) {
+      await navigate(`/resources?folder=${encodeURIComponent(folder)}`);
+    } else {
+      await navigate('/resources');
+    }
+  }
+
   navigateToFolder = async (folderName: string, navigate: any) => {
     const newPath = this.currentFolder
       ? `${this.currentFolder}/${folderName}`
       : folderName;
-
-    this.setCurrentFolder(newPath);
-    this.loadResources(newPath);
-
-    await navigate(`/resources?folder=${encodeURIComponent(newPath)}`);
+    await this.navigateToPath(newPath, navigate);
   }
 
   navigateBack = async (navigate: any) => {
     if (!this.currentFolder) return;
-
     const folders = this.currentFolder.split('/');
     folders.pop();
-    const parentFolder = folders.join('/');
+    await this.navigateToPath(folders.join('/') || null, navigate);
+  }
 
-    this.setCurrentFolder(parentFolder || null);
-    this.loadResources(parentFolder || undefined);
+  pasteIntoCurrentFolder = async () => {
+    if (!this.clipboard || this.clipboard.items.length === 0) return;
+    const items = this.clipboard.items.filter(item => !item.isFolder && item.id);
+    if (items.length === 0) return;
+    const targetFolder = this.currentFolder ? this.currentFolder.split('/').join(',') : '';
+    await RootStore.Get(ToastPlugin).promise(
+      PromiseCall(api.attachments.move.mutate({
+        sourceIds: items.map(item => item.id!),
+        targetFolder
+      }), { autoAlert: false }),
+      {
+        loading: t("operation-in-progress"),
+        success: t("operation-success"),
+        error: t("operation-failed")
+      }
+    );
+    this.clearClipboard();
+    this.refreshTicker++;
+    this.clearSelection();
+  }
 
-    if (parentFolder) {
-      await navigate(`/resources?folder=${encodeURIComponent(parentFolder)}`);
-    } else {
-      await navigate('/resources');
-    }
+  cutSelected = (resources: ResourceType[]) => {
+    const items = this.getSelectedResources(resources);
+    if (items.length === 0) return;
+    this.setCutItems(items);
+    this.clearSelection();
   }
 
   setContextMenuResource = (resource: ResourceType | null) => {

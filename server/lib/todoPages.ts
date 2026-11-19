@@ -36,15 +36,6 @@ export async function getTodoPage(input: z.infer<typeof todoPageInput>, accountI
       OR EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = n.id AND a.path ILIKE ${pattern})
       OR EXISTS (SELECT 1 FROM "tagsToNote" nt JOIN tag t ON t.id = nt."tagId" WHERE nt."noteId" = n.id AND t.name ILIKE ${pattern}))`);
   }
-  if (input.view?.tagIds.length) {
-    const ids = [...new Set(input.view.tagIds)];
-    filters.push(input.view.tagMatch === 'all'
-      ? Prisma.sql`(SELECT count(DISTINCT nt."tagId") FROM "tagsToNote" nt WHERE nt."noteId" = n.id AND nt."tagId" IN (${Prisma.join(ids)})) = ${ids.length}`
-      : Prisma.sql`EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = n.id AND nt."tagId" IN (${Prisma.join(ids)}))`);
-  }
-  if (input.view?.attachment === 'yes') filters.push(Prisma.sql`EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = n.id)`);
-  if (input.view?.attachment === 'no') filters.push(Prisma.sql`NOT EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = n.id)`);
-  if (input.view?.tagId) filters.push(Prisma.sql`EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = n.id AND nt."tagId" = ${input.view.tagId})`);
   if (input.tagId) filters.push(Prisma.sql`EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = n.id AND nt."tagId" = ${input.tagId})`);
   if (input.withoutTag) filters.push(Prisma.sql`NOT EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = n.id)`);
   if (input.withFile) filters.push(Prisma.sql`EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = n.id)`);
@@ -71,21 +62,40 @@ export async function getTodoPage(input: z.infer<typeof todoPageInput>, accountI
     return Prisma.sql`due >= ${start} AND due < ${finish}`;
   };
   const relative:Record<string,Prisma.Sql>={today:period('day',0),tomorrow:period('day',1),yesterday:period('day',-1),week:period('week',0),lastWeek:period('week',-1),nextWeek:period('week',1),month:period('month',0),lastMonth:period('month',-1),nextMonth:period('month',1)};
-  const viewWhere = view ? Prisma.join([
-    view.statusIds.length ? Prisma.sql`state IN (${Prisma.join(view.statusIds)})` : Prisma.sql`TRUE`,
-    view.priorities.length ? Prisma.sql`rank IN (${Prisma.join(view.priorities.map(p=>({ui:0,in:1,un:2,nn:3})[p]))})` : Prisma.sql`TRUE`,
-    relative[view.dueMode] || (view.dueMode === 'overdue' ? Prisma.sql`NOT "isArchived" AND due < (SELECT start FROM bounds)`
-    : view.dueMode === 'none' ? Prisma.sql`due IS NULL`
-    : view.dueMode === 'range' ? Prisma.join([
-      view.dueFrom ? Prisma.sql`due >= (${view.dueFrom}::date::timestamp AT TIME ZONE ${input.timezone})` : Prisma.sql`TRUE`,
-      view.dueTo ? Prisma.sql`due < ((${view.dueTo}::date + interval '1 day') AT TIME ZONE ${input.timezone})` : Prisma.sql`TRUE`
-    ], ' AND ') : Prisma.sql`TRUE`),
-    view.status === 'pending'  ? Prisma.sql`NOT "isArchived"` : view.status === 'done' ? Prisma.sql`"isArchived"` : Prisma.sql`TRUE`,
-    view.scope === 'today' ? Prisma.sql`(planned = to_char(now() AT TIME ZONE ${input.timezone},'YYYY-MM-DD') OR due < (SELECT finish FROM bounds) OR due IS NULL)`
-    : view.scope === 'week' ? Prisma.sql`due >= (date_trunc('week', now() AT TIME ZONE ${input.timezone}) AT TIME ZONE ${input.timezone}) AND due < ((date_trunc('week', now() AT TIME ZONE ${input.timezone}) + interval '7 days') AT TIME ZONE ${input.timezone})`
-    : view.scope === 'important' ? Prisma.sql`rank <= 1`
-    : view.scope === 'done' ? Prisma.sql`"isArchived"` : Prisma.sql`TRUE`
-  ], ' AND ') : Prisma.sql`bucket = ${input.bucket}`;
+  const viewConds: Prisma.Sql[] = [];
+  if (view) {
+    if (view.tagIds.length) {
+      const ids = [...new Set(view.tagIds)];
+      viewConds.push(view.tagMatch === 'all'
+        ? Prisma.sql`(SELECT count(DISTINCT nt."tagId") FROM "tagsToNote" nt WHERE nt."noteId" = classified.id AND nt."tagId" IN (${Prisma.join(ids)})) = ${ids.length}`
+        : Prisma.sql`EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = classified.id AND nt."tagId" IN (${Prisma.join(ids)}))`);
+    }
+    if (view.tagId) viewConds.push(Prisma.sql`EXISTS (SELECT 1 FROM "tagsToNote" nt WHERE nt."noteId" = classified.id AND nt."tagId" = ${view.tagId})`);
+    if (view.attachment === 'yes') viewConds.push(Prisma.sql`EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = classified.id)`);
+    if (view.attachment === 'no') viewConds.push(Prisma.sql`NOT EXISTS (SELECT 1 FROM attachments a WHERE a."noteId" = classified.id)`);
+    if (view.statusIds.length) viewConds.push(Prisma.sql`state IN (${Prisma.join(view.statusIds)})`);
+    if (view.priorities.length) viewConds.push(Prisma.sql`rank IN (${Prisma.join(view.priorities.map(p=>({ui:0,in:1,un:2,nn:3})[p]))})`);
+    if (relative[view.dueMode]) viewConds.push(relative[view.dueMode]!);
+    else if (view.dueMode === 'overdue') viewConds.push(Prisma.sql`NOT "isArchived" AND due < (SELECT start FROM bounds)`);
+    else if (view.dueMode === 'none') viewConds.push(Prisma.sql`due IS NULL`);
+    else if (view.dueMode === 'range') {
+      const bounds: Prisma.Sql[] = [];
+      if (view.dueFrom) bounds.push(Prisma.sql`due >= (${view.dueFrom}::date::timestamp AT TIME ZONE ${input.timezone})`);
+      if (view.dueTo) bounds.push(Prisma.sql`due < ((${view.dueTo}::date + interval '1 day') AT TIME ZONE ${input.timezone})`);
+      if (bounds.length) viewConds.push(bounds.length === 1 ? bounds[0]! : Prisma.sql`(${Prisma.join(bounds, ' AND ')})`);
+    }
+    if (view.status === 'pending') viewConds.push(Prisma.sql`NOT "isArchived"`);
+    else if (view.status === 'done') viewConds.push(Prisma.sql`"isArchived"`);
+    if (view.scope === 'today') viewConds.push(Prisma.sql`(planned = to_char(now() AT TIME ZONE ${input.timezone},'YYYY-MM-DD') OR due < (SELECT finish FROM bounds) OR due IS NULL)`);
+    else if (view.scope === 'week') viewConds.push(Prisma.sql`due >= (date_trunc('week', now() AT TIME ZONE ${input.timezone}) AT TIME ZONE ${input.timezone}) AND due < ((date_trunc('week', now() AT TIME ZONE ${input.timezone}) + interval '7 days') AT TIME ZONE ${input.timezone})`);
+    else if (view.scope === 'important') viewConds.push(Prisma.sql`rank <= 1`);
+    else if (view.scope === 'done') viewConds.push(Prisma.sql`"isArchived"`);
+  }
+  const viewWhere = view
+    ? (viewConds.length
+      ? (view.conditionMatch === 'any' ? Prisma.sql`(${Prisma.join(viewConds, ' OR ')})` : Prisma.join(viewConds, ' AND '))
+      : Prisma.sql`TRUE`)
+    : Prisma.sql`bucket = ${input.bucket}`;
   const cursorScope = view ? createHash('sha256').update(JSON.stringify([view,input.searchText,input.tagId,input.withoutTag,input.withFile,input.withLink,input.hasTodo,input.isShare,input.startDate,input.endDate,input.timezone])).digest('hex') : input.bucket;
   const sortField = view?.sort==='start'?Prisma.sql`started`:view?.sort==='created'?Prisma.sql`"createdAt"`:view?.sort==='updated'?Prisma.sql`"updatedAt"`:view?.sort==='completed'?Prisma.sql`CASE WHEN "isArchived" THEN completed END`:Prisma.sql`due`;
   const factor=view?.direction==='desc'?-1:1;

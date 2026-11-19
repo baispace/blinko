@@ -31,7 +31,6 @@ import { IconButton } from "./Toolbar/IconButton";
 import { TiptapEditorContent } from './Tiptap/TiptapEditorContent';
 import { NoteCoverHeader } from './NoteCover';
 import { DocumentProperties } from './DocumentProperties';
-import { DocumentInsertMenu } from './DocumentInsertMenu';
 import { DocumentImageUploadButton, ToolbarDivider, FormatMenuButton, UploadImageButton } from './Tiptap/ToolbarButtons';
 
 //https://ld246.com/guide/markdown
@@ -405,10 +404,6 @@ const Editor = observer(({ composerVariant, documentToolbar = false, documentSid
                 )}
                 {showTopToolbar && store.noteType !== NoteType.NOTE && <div style={{ paddingLeft: documentSidebarInset }} className="mb-4">
                   <DocumentProperties store={store} content={content} editable={editable} hideType={hideNoteTypeButton} />
-                </div>}
-                {showTopToolbar && editable && <div className="mb-2 flex items-center gap-1" style={{ paddingLeft: documentSidebarInset }}>
-                  <DocumentInsertMenu store={store} openAttachments={open} />
-                  {store.noteType !== NoteType.NOTE && <DocumentImageUploadButton store={store} label="图片" />}
                 </div>}
                 <div className={`flex min-w-0 items-start ${fillHeight && !pageScroll ? 'flex-1 min-h-0' : ''}`}>
                   <div key="document-sidebar" className="shrink-0">{documentSidebar}</div>

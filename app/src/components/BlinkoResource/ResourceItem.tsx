@@ -5,6 +5,7 @@ import filesize  from 'filesize';
 import dayjs from '@/lib/dayjs';
 import { FileIcons } from '@/components/Common/AttachmentRender/FileIcon';
 import { memo, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Draggable, Droppable } from 'react-beautiful-dnd-next';
 import { useTranslation } from 'react-i18next';
 import { type ResourceType } from '@shared/lib/types';
@@ -18,6 +19,7 @@ import { motion } from 'framer-motion';
 import { ImageThumbnailRender } from '../Common/AttachmentRender/imageRender';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { UserStore } from '@/store/user';
+import { formatFolderPath, isImageResource, openResourceFile } from './resourceUtils';
 
 
 // Reusable component for rendering resource preview
@@ -35,7 +37,11 @@ export const ResourceItemPreview = ({
   className?: string;
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const resourceStore = RootStore.Get(ResourceStore);
   const isImage = item.type?.startsWith('image/');
+  const folderPath = formatFolderPath((item as any).perfixPath);
+  const showFolderPath = !!folderPath && folderPath !== (resourceStore.currentFolder || '');
   const isS3File = item.path?.includes('s3file');
 
   const fileNameAndExt = useMemo(() => {
@@ -51,7 +57,7 @@ export const ResourceItemPreview = ({
 
   return (
     <div className={`w-full flex items-center gap-2 p-2 rounded-md cursor-pointer group ${className}`} onClick={onClick}>
-      {isImage ? (
+      {isImage && !resourceStore.isSelectMode ? (
         <PhotoProvider>
           <PhotoView src={getBlinkoEndpoint(`${item.path}?token=${RootStore.Get(UserStore).tokenData.value?.token}`)}>
             <div>
@@ -59,6 +65,10 @@ export const ResourceItemPreview = ({
             </div>
           </PhotoView>
         </PhotoProvider>
+      ) : isImage ? (
+        <div>
+          <ImageThumbnailRender src={item.path} className="!w-[28px] !h-[28px] object-cover rounded" />
+        </div>
       ) : (
         <div className="w-[28px] h-[28px] flex items-center justify-center">
           <FileIcons path={item.path} size={28} />
@@ -82,6 +92,18 @@ export const ResourceItemPreview = ({
           <div className="text-xs text-gray-500 flex items-center gap-2 my-1">
             <span className="rounded-md px-1.5 py-0.5 bg-default-100 text-default-600">{fileNameAndExt.ext}</span>
             {filesize(Number(item.size))} · {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
+            {showFolderPath && (
+              <span
+                className="truncate text-default-400 hover:text-primary"
+                title={folderPath}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void resourceStore.navigateToPath(folderPath, navigate);
+                }}
+              >
+                {folderPath}
+              </span>
+            )}
           </div>
         )}
         {!showExtraInfo && <div className="text-xs text-gray-500">{dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}</div>}
@@ -90,18 +112,21 @@ export const ResourceItemPreview = ({
   );
 };
 
+type SelectHandler = (id: number, options?: { range?: boolean; orderedIds?: number[] }) => void;
+
 interface ResourceItemProps {
   item: ResourceType;
   index: number;
-  onSelect: (id: number) => void;
+  onSelect: SelectHandler;
   isSelected: boolean;
+  isSelectMode?: boolean;
   onFolderClick: (folderName: string) => void;
 }
 
 interface ResourceCardProps {
   item: ResourceType;
   isSelected: boolean;
-  onSelect: (id: number) => void;
+  onSelect: SelectHandler;
   isDragging?: boolean;
   isDraggingOver?: boolean;
   // children?: React.ReactNode;
@@ -174,8 +199,11 @@ const ResourceCard = observer(({ item, isSelected, onSelect, isDragging, isDragg
   return (
     <Card {...cardProps} shadow="none">
       <div className="flex items-center gap-4">
-        <Checkbox isSelected={isSelected} onChange={() => onSelect(item.id!)} className="z-10" />
-        <ResourceItemPreview item={item} />
+        <Checkbox isSelected={isSelected} onValueChange={() => onSelect(item.id!)} className="z-10" onClick={(e) => e.stopPropagation()} />
+        <ResourceItemPreview
+          item={item}
+          onClick={() => { if (!isImageResource(item)) openResourceFile(item); }}
+        />
         <ResourceContextMenu onTrigger={handleContextMenu} />
       </div>
     </Card>
@@ -185,14 +213,21 @@ const ResourceCard = observer(({ item, isSelected, onSelect, isDragging, isDragg
 const ResourceItem = observer(({ item, index, onSelect, isSelected, onFolderClick }: ResourceItemProps) => {
   const { t } = useTranslation();
 
+  const resourceStore = RootStore.Get(ResourceStore);
   const handleClick = useMemo(
     () => (e: React.MouseEvent) => {
       if (item.isFolder) {
         e.preventDefault();
         onFolderClick(item.folderName || '');
+        return;
+      }
+      if (resourceStore.isSelectMode || e.metaKey || e.ctrlKey || e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect(item.id!, { range: e.shiftKey });
       }
     },
-    [item.isFolder, item.folderName, onFolderClick],
+    [item.isFolder, item.folderName, item.id, onFolderClick, onSelect, resourceStore],
   );
 
   const draggableId = useMemo(() => (item.isFolder ? `folder-${item.folderName}` : String(item.id)), [item.isFolder, item.folderName, item.id]);
@@ -242,6 +277,8 @@ const ResourceItem = observer(({ item, index, onSelect, isSelected, onFolderClic
 export const MemoizedResourceItem = memo(ResourceItem, (prevProps, nextProps) => {
   const prevItem = toJS(prevProps.item);
   const nextItem = toJS(nextProps.item);
+
+  if (prevProps.isSelectMode !== nextProps.isSelectMode) return false;
 
   if (prevItem.isFolder && nextItem.isFolder) {
     return prevItem.folderName === nextItem.folderName && prevProps.isSelected === nextProps.isSelected && prevProps.index === nextProps.index;

@@ -13,6 +13,9 @@ import { ToastPlugin } from "@/store/module/Toast/Toast";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { downloadFromLink } from "@/lib/tauriHelper";
 import { getBlinkoEndpoint} from "@/lib/blinkoEndpoint";
+import { useNavigate } from "react-router-dom";
+import { openMoveToFolderDialog } from "./MoveToFolderDialog";
+import { openResourceFile } from "./resourceUtils";
 
 const MenuItem = ({ icon, label, className = '' }: { icon: string; label: string; className?: string }) => (
   <div className={`flex items-center gap-2 ${className} `}>
@@ -27,6 +30,7 @@ interface ResourceContextMenuProps {
 
 export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const resourceStore = RootStore.Get(ResourceStore);
   const resource = resourceStore.contextMenuResource;
 
@@ -200,15 +204,38 @@ export const ResourceContextMenu = observer(({ onTrigger }: ResourceContextMenuP
       <DropdownMenu aria-label="Resource Actions">
         {
           resource?.isFolder ? null : (
+            <DropdownItem key="open" onPress={() => resource && openResourceFile(resource)}>
+              <MenuItem icon="tabler:external-link" label={t('open-file')} />
+            </DropdownItem>
+          )
+        }
+        {
+          resource?.isFolder ? null : (
             <DropdownItem key="download" onPress={handleDownload}>
               <MenuItem icon="material-symbols:download" label={t('download')} />
             </DropdownItem>
           )
         }
+        {
+          !resource?.isFolder && resource?.noteId ? (
+            <DropdownItem key="open-note" onPress={() => navigate(`/detail?id=${resource.noteId}`)}>
+              <MenuItem icon="tabler:notes" label={t('open-related-note')} />
+            </DropdownItem>
+          ) : null
+        }
 
         <DropdownItem key="rename" onPress={handleRename}>
           <MenuItem icon="gg:rename" label={t('rename')} />
         </DropdownItem>
+
+        {!resource?.isFolder ? (
+          <DropdownItem key="moveTo" onPress={() => resource && openMoveToFolderDialog([resource])}>
+            <MenuItem
+              icon="material-symbols:drive-file-move-outline"
+              label={t('move-to')}
+            />
+          </DropdownItem>
+        ) : null}
 
         {resourceStore.currentFolder ? (
           <DropdownItem key="moveToParent" onPress={handleMoveToParent}>

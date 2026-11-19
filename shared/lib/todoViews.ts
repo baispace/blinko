@@ -11,6 +11,7 @@ export const todoConditionShape = {
  dueMode: z.enum(['any','today','tomorrow','yesterday','week','lastWeek','nextWeek','month','lastMonth','nextMonth','overdue','none','range']).default('any'),
  dueFrom: day.optional(), dueTo: day.optional(),
  attachment: z.enum(['any','yes','no']).default('any'),
+ conditionMatch: z.enum(['all','any']).default('all'),
 };
 const validateRange = (v: {dueMode:string;dueFrom?:string;dueTo?:string}, ctx:z.RefinementCtx) => {
  if(v.dueMode==='range' && !v.dueFrom && !v.dueTo) ctx.addIssue({code:z.ZodIssueCode.custom,message:'请设置至少一个截止日期边界',path:['dueFrom']});

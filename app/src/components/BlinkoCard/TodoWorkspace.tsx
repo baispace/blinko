@@ -1,7 +1,7 @@
 import {TodoStatusSettings} from './TodoStatusSettings';
 import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Button, Checkbox, CheckboxGroup, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem } from '@heroui/react';
+import { Button, Checkbox, CheckboxGroup, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Popover, PopoverTrigger, PopoverContent, Select, SelectItem } from '@heroui/react';
 import { readTodoWorkspace, todoViewSchema, todoQuerySchema, defaultTodoViews, type TodoView } from '@shared/lib/todoViews';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -9,7 +9,7 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { api } from '@/lib/trpc';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { TodoGroupedView } from './TodoGroupedView';
-import { TodoViewConditions, todoConditionCount, SCOPE_LABELS } from './TodoViewConditions';
+import { TodoViewConditions, todoConditionCount, SCOPE_LABELS, CLEARED_CONDITIONS, applyConditionPatch } from './TodoViewConditions';
 
 const sorts = {start:'开始时间',due:'截止时间',created:'创建时间',updated:'更新时间',completed:'完成时间',priority:'优先级'};
 const directions = {asc:'升序',desc:'降序'};
@@ -25,7 +25,8 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
  const view=workspace.views.find(v=>v.id===workspace.activeId)!;
  const [statusSettings,setStatusSettings]=useState(false);
  const [panelOpen,setPanelOpen]=useState(false);
- const [panel,setPanel]=useState<'filter'|'settings'|'create'|null>(null);
+ const [panel,setPanel]=useState<'settings'|'create'|null>(null);
+ const [filterOpen,setFilterOpen]=useState(false);
  const [draft,setDraft]=useState<TodoView>(view);
  const [composerOpen,setComposerOpen]=useState(false);
  const [search,setSearch]=useState('');
@@ -81,7 +82,7 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
   const active=latest.views.find(v=>v.id===latest.activeId)!;
   return persist({...latest,views:latest.views.map(v=>v.id===active.id?{...v,...patch}:v)});
  };
- const open=(next:typeof panel)=>{setDraft({...view,id:next==='create'?crypto.randomUUID():view.id,name:next==='create'?'':view.name,statusIds:[...view.statusIds],tagIds:[...view.tagIds],priorities:[...view.priorities],fields:[...view.fields]});setConfirmDelete(false);setFormError('');setPanel(next);setPanelOpen(true);};
+ const open=(next:typeof panel)=>{setDraft({...view,id:next==='create'?crypto.randomUUID():view.id,name:next==='create'?'':view.name,statusIds:[...view.statusIds],tagIds:[...view.tagIds],priorities:[...view.priorities],fields:[...view.fields]});setConfirmDelete(false);setFormError('');setFilterOpen(false);setPanel(next);setPanelOpen(true);};
  // 显式覆盖：只在用户主动点「改用默认视图」时才绕过 broken 守卫写库。
  // 这是唯一一条能主动丢弃原配置的路径，所以做成显式动作而不是让它悄悄发生。
  const resetWorkspace=async()=>{
@@ -108,7 +109,16 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
   </div>
   <div className="flex flex-wrap items-center gap-1.5 py-3">
    <Button size="sm" color="primary" variant="flat" onPress={()=>setComposerOpen(true)} startContent={<Icon icon="tabler:plus" width={16} height={16}/>}>新建任务</Button>
-   <Button size="sm" variant="light" isDisabled={broken} onPress={()=>open('filter')} className="text-default-500" startContent={<Icon icon="tabler:filter" width={16} height={16}/>}>筛选{count>0&&<span className="rounded bg-primary/10 px-1.5 text-xs text-primary">{count}</span>}</Button>
+   <Popover isOpen={filterOpen} onOpenChange={open=>{if(!broken)setFilterOpen(open);}} placement="bottom-start" offset={8} disableAnimation shouldCloseOnScroll={false} shouldCloseOnInteractOutside={el=>!(el instanceof Element) || !el.closest('[role="listbox"], [role="dialog"], [role="grid"], [data-slot="listbox"], [data-slot="popover"], [data-slot="calendar"]')}>
+    <PopoverTrigger>
+     <Button size="sm" variant="light" isDisabled={broken} className="text-default-500" startContent={<Icon icon="tabler:filter" width={16} height={16}/>}>筛选{count>0&&<span className="rounded bg-primary/10 px-1.5 text-xs text-primary">{count}</span>}</Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-[min(540px,calc(100vw-24px))] items-stretch p-0">
+     <div className="p-4">
+      <TodoViewConditions value={view} onChange={patch=>{const next=applyConditionPatch(view,patch);if(!todoViewSchema.safeParse(next).success)return;void update(next);}} tags={(blinko.tagList.value?.falttenTags||[]).map(tag=>({id:tag.id,name:tag.name}))}/>
+     </div>
+    </PopoverContent>
+   </Popover>
    {/* 排序字段与升降序合成一个控件：两件事本来就是一个决定，分成两个下拉反而要点两次 */}
    <Dropdown><DropdownTrigger><Button size="sm" variant="light" isDisabled={saving||broken} className="gap-1.5 px-2 text-default-500" startContent={<Icon icon="tabler:arrows-sort" width={16} height={16}/>} endContent={<Icon icon={view.direction==='asc'?'tabler:arrow-up':'tabler:arrow-down'} width={14} height={14}/>}>排序：{sorts[view.sort]} · {directions[view.direction]}</Button></DropdownTrigger><DropdownMenu aria-label="排序" selectionMode="single" selectedKeys={[view.sort]} onAction={key=>{if(String(key).startsWith('dir-'))return;void update({sort:key as TodoView['sort']});}}>
     <DropdownSection title="排序字段">{Object.entries(sorts).map(([key,title])=><DropdownItem key={key} startContent={<span className="w-4">{view.sort===key&&<Icon icon="tabler:check" width={13} height={13} className="text-primary"/>}</span>}>{title}</DropdownItem>)}</DropdownSection>
@@ -126,17 +136,17 @@ export const TodoWorkspace = observer(({composer}:{composer:React.ReactNode})=>{
    ? <>有 {workspace.dropped.length} 个视图因为字段不合法没能读出来（{workspace.dropped.join('、')}），当前显示的是其余 {workspace.views.length} 个。已暂停保存，避免把这份残缺配置写回去覆盖原数据。修好对应视图后刷新即可恢复。</>
    : <>待办视图配置读不出来，当前显示的是默认视图。已暂停保存，避免覆盖原数据。</>}
   <button type="button" disabled={resetting} onClick={()=>void resetWorkspace()} className="ml-1 font-medium underline underline-offset-2 disabled:opacity-50">{resetting?'重置中…':'改用默认视图（覆盖原配置）'}</button></span></div>}
-  {count>0&&<div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-default-500"><span>已设 {count} 项条件</span>{view.scope!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{SCOPE_LABELS[view.scope]}</span>}{view.status!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{view.status==='pending'?'未完成':'已完成'}</span>}<button type="button" onClick={()=>open('filter')} className="text-primary">查看条件</button></div>}
+  {count>0&&<div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-default-500"><span>已设 {count} 项条件</span>{view.scope!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{SCOPE_LABELS[view.scope]}</span>}{view.status!=='all'&&<span className="rounded bg-default-100 px-2 py-1">{view.status==='pending'?'未完成':'已完成'}</span>}<button type="button" onClick={()=>setFilterOpen(true)} className="text-primary">查看条件</button></div>}
   {error?<Button variant="light" onPress={()=>{setError(false);void feed.resetAndCall({}).catch(()=>setError(true));}}>加载失败，点击重试</Button>:feed.isLoading&&!feed.value?.length?<div role="status" className="py-16 text-center text-sm text-default-400">正在加载任务…</div>:<TodoGroupedView key={`${view.id}-${view.grouping}-${view.layout}`} tasks={feed.value||[]} mode={view.grouping} board={view.layout==='board'} fields={view.fields} preserveOrder/>}
   {!feed.isLoadAll&&!!feed.value?.length&&<div className="mt-3 text-center text-xs text-default-400">已加载 {feed.value.length} 项，分组数量随加载更新。<Button size="sm" variant="light" isLoading={feed.isLoading} onPress={()=>void blinko.onBottom()}>加载更多</Button></div>}
   <Button variant="light" className="mt-1 w-full justify-start text-default-400" onPress={()=>setComposerOpen(true)} startContent={<Icon icon="tabler:plus" width={16} height={16}/>}>新建任务</Button>
   {statusSettings&&<TodoStatusSettings onClose={()=>setStatusSettings(false)}/>}
   <Modal isOpen={composerOpen} onOpenChange={setComposerOpen} size="2xl" scrollBehavior="inside"><ModalContent><ModalHeader>新建任务</ModalHeader><ModalBody className="pb-5">{composer}</ModalBody></ModalContent></Modal>
-  <Modal isOpen={panelOpen} onClose={()=>{if(!saving)setPanelOpen(false);}} isDismissable={!saving} size="2xl" scrollBehavior="inside"><ModalContent><ModalHeader>{panel==='filter'?'筛选任务':panel==='create'?'新建视图':'视图设置'}</ModalHeader><ModalBody className="gap-5">
-   {panel!=='filter'&&<><Input autoFocus label="视图名称" labelPlacement="outside" placeholder="例如：本周重要事项" value={draft.name} maxLength={24} onValueChange={name=>setDraft(v=>({...v,name}))}/><div className="grid grid-cols-2 gap-3"><Select aria-label="视图布局" label="布局" labelPlacement="outside" size="sm" selectedKeys={[draft.layout]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,layout:e.target.value as TodoView['layout']}))}><SelectItem key="list">列表</SelectItem><SelectItem key="board">看板</SelectItem></Select><Select aria-label="视图分组" label="分组" labelPlacement="outside" size="sm" selectedKeys={[draft.grouping]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,grouping:e.target.value as TodoView['grouping']}))}>{Object.entries(groups).map(([key,title])=><SelectItem key={key}>{title}</SelectItem>)}</Select></div><Select aria-label="排序方向" label="顺序" labelPlacement="outside" size="sm" selectedKeys={[draft.direction]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,direction:e.target.value as 'asc'|'desc'}))}><SelectItem key="asc">升序</SelectItem><SelectItem key="desc">降序</SelectItem></Select><Select aria-label="视图排序" label="排序" labelPlacement="outside" size="sm" selectedKeys={[draft.sort]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,sort:e.target.value as TodoView['sort']}))}>{Object.entries(sorts).map(([key,title])=><SelectItem key={key}>{title}</SelectItem>)}</Select><CheckboxGroup label="展示字段" orientation="horizontal" size="sm" value={draft.fields} onValueChange={selected=>setDraft(v=>({...v,fields:selected as TodoView['fields']}))}>{Object.entries(fields).map(([key,title])=><Checkbox value={key} key={key}>{title}</Checkbox>)}</CheckboxGroup><h3 className="border-t border-default-200 pt-4 text-sm font-medium">筛选条件</h3></>}
-   <TodoViewConditions value={draft} onChange={patch=>{setDraft(v=>({...v,...patch,...(patch.scope==='done'?{status:'done' as const}:{}),...(patch.status&&draft.scope==='done'?{scope:'all' as const}:{})}));setFormError('');}} tags={(blinko.tagList.value?.falttenTags||[]).map(tag=>({id:tag.id,name:tag.name}))}/>
+  <Modal isOpen={panelOpen} onClose={()=>{if(!saving)setPanelOpen(false);}} isDismissable={!saving} size="2xl" scrollBehavior="inside"><ModalContent><ModalHeader>{panel==='create'?'新建视图':'视图设置'}</ModalHeader><ModalBody className="gap-5">
+   <Input autoFocus label="视图名称" labelPlacement="outside" placeholder="例如：本周重要事项" value={draft.name} maxLength={24} onValueChange={name=>setDraft(v=>({...v,name}))}/><div className="grid grid-cols-2 gap-3"><Select aria-label="视图布局" label="布局" labelPlacement="outside" size="sm" selectedKeys={[draft.layout]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,layout:e.target.value as TodoView['layout']}))}><SelectItem key="list">列表</SelectItem><SelectItem key="board">看板</SelectItem></Select><Select aria-label="视图分组" label="分组" labelPlacement="outside" size="sm" selectedKeys={[draft.grouping]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,grouping:e.target.value as TodoView['grouping']}))}>{Object.entries(groups).map(([key,title])=><SelectItem key={key}>{title}</SelectItem>)}</Select></div><Select aria-label="排序方向" label="顺序" labelPlacement="outside" size="sm" selectedKeys={[draft.direction]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,direction:e.target.value as 'asc'|'desc'}))}><SelectItem key="asc">升序</SelectItem><SelectItem key="desc">降序</SelectItem></Select><Select aria-label="视图排序" label="排序" labelPlacement="outside" size="sm" selectedKeys={[draft.sort]} disallowEmptySelection onChange={e=>setDraft(v=>({...v,sort:e.target.value as TodoView['sort']}))}>{Object.entries(sorts).map(([key,title])=><SelectItem key={key}>{title}</SelectItem>)}</Select><CheckboxGroup label="展示字段" orientation="horizontal" size="sm" value={draft.fields} onValueChange={selected=>setDraft(v=>({...v,fields:selected as TodoView['fields']}))}>{Object.entries(fields).map(([key,title])=><Checkbox value={key} key={key}>{title}</Checkbox>)}</CheckboxGroup><h3 className="border-t border-default-200 pt-4 text-sm font-medium">筛选条件</h3>
+   <TodoViewConditions heading={false} value={draft} onChange={patch=>{setDraft(v=>applyConditionPatch(v,patch));setFormError('');}} tags={(blinko.tagList.value?.falttenTags||[]).map(tag=>({id:tag.id,name:tag.name}))}/>
    {formError&&<p role="alert" className="text-sm text-danger">{formError}</p>}
    {panel==='settings'&&<div className="flex justify-between border-t border-default-200 pt-4"><Button size="sm" variant="light" isDisabled={saving||workspace.views.length>=20} onPress={async()=>{const id=crypto.randomUUID();if(await persist({...workspace,activeId:id,views:[...workspace.views,{...view,id,name:view.name.slice(0,20)+' 副本'}]}))setPanelOpen(false);}}>复制视图</Button><Button size="sm" color="danger" variant="light" isDisabled={saving||workspace.views.length===1} onPress={async()=>{if(!confirmDelete){setConfirmDelete(true);return;}const views=workspace.views.filter(v=>v.id!==view.id);if(await persist({...workspace,views,activeId:views[0]!.id}))setPanelOpen(false);}}>{confirmDelete?'确认删除视图（保留任务）':'删除视图'}</Button></div>}
-  </ModalBody><ModalFooter><Button variant="light" isDisabled={saving} onPress={()=>setPanelOpen(false)}>取消</Button><Button variant="flat" isDisabled={saving} onPress={()=>setDraft(v=>({...v,scope:'all',status:'all',statusIds:[],priorities:[],tagId:null,tagIds:[],tagMatch:'any',dueMode:'any',dueFrom:undefined,dueTo:undefined,attachment:'any'}))}>清除条件</Button><Button color="primary" isLoading={saving} onPress={()=>void apply()}>{panel==='create'?'创建视图':panel==='filter'?'应用并保存':'保存视图'}</Button></ModalFooter></ModalContent></Modal>
+  </ModalBody><ModalFooter><Button variant="light" isDisabled={saving} onPress={()=>setPanelOpen(false)}>取消</Button><Button variant="flat" isDisabled={saving} onPress={()=>setDraft(v=>({...v,...CLEARED_CONDITIONS,statusIds:[],priorities:[],tagIds:[]}))}>清除条件</Button><Button color="primary" isLoading={saving} onPress={()=>void apply()}>{panel==='create'?'创建视图':'保存视图'}</Button></ModalFooter></ModalContent></Modal>
  </div>;
 });

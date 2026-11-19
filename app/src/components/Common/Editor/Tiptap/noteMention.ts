@@ -5,8 +5,9 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { NoteMentionState, type NoteMentionItem } from './noteMentionState';
 
 /**
- * Note mention extension - trigger with @ to link to other notes.
- * Stores as [[noteId|title]] format (Obsidian-style).
+ * 输入 @ 引用其它文章（对齐飞书文档提及）：
+ * 弹出可搜索列表（标题支持空格），选中后插入 noteLink 行内卡片。
+ * 卡片在 markdown 里仍写成 `[[id|title]]`，不影响引用关系和阅读态渲染。
  */
 export const NoteMentionKey = new PluginKey<any>('noteMention')
 
@@ -30,7 +31,7 @@ export const NoteMention = Extension.create<{
         editor: this.editor,
         pluginKey: NoteMentionKey,
         char: '@',
-        allowSpaces: false,
+        allowSpaces: true,
         items: ({ query }) => {
           // Items are fetched asynchronously via NoteMentionState.searchNotes
           // Return empty here, the state will update items after search
@@ -38,9 +39,12 @@ export const NoteMention = Extension.create<{
         },
         command: ({ editor, range, props }) => {
           const item = props as NoteMentionItem
-          // Insert as [[id|title]] format
-          const text = `[[${item.id}|${item.title}]]`
-          editor.chain().focus().deleteRange(range).insertContent(text).run()
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertNoteLink({ id: item.id, title: item.title })
+            .run()
           noteMention.close()
         },
         render: () => ({

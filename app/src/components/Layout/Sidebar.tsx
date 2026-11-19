@@ -81,26 +81,33 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
   return (
     <div
       style={{ width: isPc ? `${base.sideBarWidth}px` : '100%', fontSize: '14px' }}
-      className={`flex h-full min-h-0 flex-1 flex-col py-2 relative isolate bg-background border-r border-default-200
-        ${!base.isDragging ? 'transition-[width] duration-200' : 'transition-none'}
+      className={`flex h-full min-h-0 flex-1 flex-col py-2 relative isolate z-20 bg-background border-r border-default-200
+        ${!base.isDragging ? 'transition-[width] duration-300 ease-in-out' : 'transition-none'}
         group/sidebar`}
     >
-      {/* Keep the entire hit area inside the sidebar, above the resize handle. */}
+      {/* Pin the control to the right edge in both states so it doesn't jump
+          from the header corner to a stacked slot above the logo. */}
       {isPc && (
-        <button
-          type="button"
-          onClick={base.toggleSidebar}
-          aria-label={base.isSidebarCollapsed ? t('expand-sidebar') : t('collapse-sidebar')}
-          data-testid="sidebar-collapse-btn"
-          className={`z-50 w-8 h-8 rounded-lg touch-manipulation
-            bg-background border border-default-300 shadow-sm
-            flex items-center justify-center text-default-500
-            hover:!text-primary hover:!border-primary
-            !transition-all duration-200
-            ${base.isSidebarCollapsed ? 'relative mx-auto mt-1' : 'absolute top-3 right-1'}`}
-        >
-          <Icon icon={base.isSidebarCollapsed ? 'mdi:chevron-double-right' : 'mdi:chevron-double-left'} width="14" height="14" />
-        </button>
+        <Tooltip content={base.isSidebarCollapsed ? text('展开侧边栏', 'Expand sidebar') : text('收起侧边栏', 'Collapse sidebar')} placement="right" delay={400} closeDelay={0}>
+          <button
+            type="button"
+            onClick={base.toggleSidebar}
+            aria-label={base.isSidebarCollapsed ? text('展开侧边栏', 'Expand sidebar') : text('收起侧边栏', 'Collapse sidebar')}
+            data-testid="sidebar-collapse-btn"
+            className="absolute z-50 top-[22px] -right-3 w-6 h-6 rounded-full touch-manipulation
+              bg-background border border-default-300 shadow-sm
+              flex items-center justify-center text-default-500
+              hover:!text-primary hover:!border-primary hover:shadow
+              !transition-colors duration-200"
+          >
+            <Icon
+              icon="mdi:chevron-double-right"
+              width="14"
+              height="14"
+              className={base.isSidebarCollapsed ? undefined : 'rotate-180'}
+            />
+          </button>
+        </Tooltip>
       )}
 
       {/* resize handle */}
@@ -118,8 +125,17 @@ export const Sidebar = observer(({ onItemClick }: SidebarProps) => {
           Desktop shows mark + name; the collapsed rail and the mobile drawer
           keep only the mark, so the compact navigation never squeezes a
           wordmark into a narrow column. */}
-      <div data-testid="sidebar-brand" className={`flex shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'min-h-14 pl-2.5 pr-10'}`}>
-        <SiteBrand compact={base.isSidebarCollapsed || !isPc} size={30} />
+      <div data-testid="sidebar-brand" className={`flex shrink-0 items-center py-2 ${base.isSidebarCollapsed ? 'justify-center px-2' : 'min-h-14 pl-2.5 pr-4'}`}>
+        <Tooltip content={text('主页','Home')} isDisabled={!base.isSidebarCollapsed} placement="right" delay={350} closeDelay={0}>
+          <Link
+            to={homeUrl}
+            aria-label={text('主页','Home')}
+            onClick={event => switchMode(event, homeUrl)}
+            className={`flex min-w-0 items-center ${base.isSidebarCollapsed ? 'justify-center p-1' : 'w-full'}`}
+          >
+            <SiteBrand compact={base.isSidebarCollapsed || !isPc} size={30} />
+          </Link>
+        </Tooltip>
       </div>
 
       {!base.isSidebarCollapsed && (

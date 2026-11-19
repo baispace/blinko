@@ -1,4 +1,4 @@
-import { Card, Checkbox } from '@heroui/react';
+import { Card } from '@heroui/react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import filesize from 'filesize';
@@ -11,9 +11,11 @@ import { UserStore } from '@/store/user';
 import { ResourceStore } from '@/store/resourceStore';
 import { ResourceContextMenu } from './ResourceContextMenu';
 import { memo, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import { type ResourceType } from '@shared/lib/types';
+import { formatFolderPath, isImageResource, openResourceFile } from './resourceUtils';
 
 /**
  * Gallery-style resource wall (reference: WeChat/cloud-drive file grids):
@@ -21,29 +23,25 @@ import { type ResourceType } from '@shared/lib/types';
  * files as icon tiles — each with name + size · date meta below.
  */
 
-const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'ico', 'avif', 'svg'];
-
-const isImageResource = (item: ResourceType) => {
-  if (item.type?.startsWith('image/')) return true;
-  const ext = item.name?.split('.').pop()?.toLowerCase() ?? '';
-  return IMAGE_EXTS.includes(ext);
-};
-
 const splitName = (name: string) => {
   const dot = name.lastIndexOf('.');
   if (dot === -1) return { name, ext: '' };
   return { name: name.substring(0, dot), ext: name.substring(dot + 1) };
 };
 
-const GridTile = observer(({ item, isSelected, onSelect, onOpen }: {
+const GridTile = observer(({ item, isSelected, onSelect, onOpen, isSelectMode, orderedIds }: {
   item: ResourceType;
   isSelected: boolean;
-  onSelect: (id: number) => void;
+  onSelect: (id: number, options?: { range?: boolean; orderedIds?: number[] }) => void;
   onOpen: () => void;
+  isSelectMode: boolean;
+  orderedIds: number[];
 }) => {
   const resourceStore = RootStore.Get(ResourceStore);
+  const navigate = useNavigate();
   const isImage = !item.isFolder && isImageResource(item);
-
+  const folderPath = formatFolderPath((item as any).perfixPath);
+  const showFolderPath = !!folderPath && folderPath !== (resourceStore.currentFolder || '');
   const handleContextMenu = useCallback(() => {
     resourceStore.setContextMenuResource(toJS(item));
   }, [item, resourceStore]);
@@ -57,10 +55,24 @@ const GridTile = observer(({ item, isSelected, onSelect, onOpen }: {
 
   const displayName = item.isFolder ? item.folderName : splitName(item.name).name;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (item.isFolder) {
+      onOpen();
+      return;
+    }
+    if (isSelectMode || e.metaKey || e.ctrlKey || e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelect(item.id!, { range: e.shiftKey, orderedIds });
+      return;
+    }
+    onOpen();
+  };
+
   return (
     <div
       className="relative group/tile"
-      onClick={onOpen}
+      onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
       <Card
@@ -68,21 +80,11 @@ const GridTile = observer(({ item, isSelected, onSelect, onOpen }: {
         className={`p-3 flex flex-col items-center gap-2 bg-background !transition-all duration-150 cursor-pointer rounded-xl
           hover:bg-hover ${isSelected ? 'ring-2 ring-primary bg-primary/5' : ''}`}
       >
-        {/* selection checkbox, out of the way until hover / selected */}
-        {!item.isFolder && (
-          <div
-            className={`absolute left-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/tile:opacity-100'}`}
-            onClick={(e) => { e.stopPropagation(); onSelect(item.id!); }}
-          >
-            <Checkbox isSelected={isSelected} onChange={() => onSelect(item.id!)} className="z-10" onClick={(e) => e.stopPropagation()} />
-          </div>
-        )}
-
         {/* preview area */}
-        <div className="w-full aspect-square flex items-center justify-center overflow-hidden rounded-lg">
+        <div className="relative w-full aspect-square flex items-center justify-center overflow-hidden rounded-lg">
           {item.isFolder ? (
             <Icon icon="material-symbols:folder" className="w-[64px] h-[64px] text-[#FBC02D]" />
-          ) : isImage ? (
+          ) : isImage && !isSelectMode ? (
             <PhotoProvider>
               <PhotoView src={getBlinkoEndpoint(`${item.path}?token=${RootStore.Get(UserStore).tokenData.value?.token}`)}>
                 <div className="w-full h-full cursor-zoom-in" onClick={(e) => e.stopPropagation()}>
@@ -90,21 +92,60 @@ const GridTile = observer(({ item, isSelected, onSelect, onOpen }: {
                 </div>
               </PhotoView>
             </PhotoProvider>
+          ) : isImage ? (
+            <ImageThumbnailRender src={item.path} className="!mb-0 w-full h-full object-cover rounded-lg" wrapperClassName="h-full" />
           ) : (
             <div className="flex items-center justify-center w-full h-full bg-default-100 rounded-lg">
               <FileIcons path={item.path} size={48} />
             </div>
+          )}
+
+          {!item.isFolder && (
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={isSelected}
+              aria-label="select"
+              className={`absolute left-1.5 top-1.5 z-20 flex items-center justify-center w-8 h-8 rounded-lg shadow-md border pointer-events-auto
+                ${isSelected
+                  ? 'bg-primary border-primary text-primary-foreground'
+                  : 'bg-white/95 border-black/10 text-default-600 hover:bg-white'}
+              `}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect(item.id!);
+              }}
+            >
+              {isSelected ? (
+                <Icon icon="tabler:check" className="w-5 h-5" />
+              ) : (
+                <span className="block w-4 h-4 rounded-[4px] border-2 border-default-400" />
+              )}
+            </button>
           )}
         </div>
 
         {/* name + meta */}
         <div className="w-full flex flex-col items-center gap-0.5 min-w-0">
           <div className="w-full flex items-center justify-center gap-1 min-w-0">
-            <span className="text-sm font-medium truncate text-center">{displayName}</span>
+            <span className="text-sm font-medium truncate text-center" title={(item.isFolder ? item.folderName : item.name) || undefined}>{displayName}</span>
             {item.path?.includes('s3file') && (
               <Icon icon="fluent-color:cloud-16" className="w-3.5 h-3.5 shrink-0" />
             )}
           </div>
+          {showFolderPath && (
+            <div
+              className="text-[11px] text-default-400 truncate w-full text-center hover:text-primary"
+              title={folderPath}
+              onClick={(e) => {
+                e.stopPropagation();
+                void resourceStore.navigateToPath(folderPath, navigate);
+              }}
+            >
+              {folderPath}
+            </div>
+          )}
           <div className="text-xs text-default-400">{meta}</div>
         </div>
       </Card>
@@ -120,6 +161,7 @@ const GridTile = observer(({ item, isSelected, onSelect, onOpen }: {
 const MemoGridTile = memo(GridTile, (prev, next) => {
   const a = toJS(prev.item);
   const b = toJS(next.item);
+  if (prev.isSelectMode !== next.isSelectMode) return false;
   if (a.isFolder && b.isFolder) {
     return a.folderName === b.folderName && prev.isSelected === next.isSelected;
   }
@@ -132,6 +174,8 @@ export const ResourceGrid = observer(({ resources, onFolderClick }: {
   onFolderClick: (folder: string) => void;
 }) => {
   const resourceStore = RootStore.Get(ResourceStore);
+  const isSelectMode = resourceStore.isSelectMode || resourceStore.selectedItems.size > 0;
+  const orderedIds = resources.filter(resource => !resource.isFolder && resource.id).map(resource => resource.id!);
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 py-2">
@@ -141,8 +185,11 @@ export const ResourceGrid = observer(({ resources, onFolderClick }: {
           item={item}
           isSelected={resourceStore.selectedItems.has(item.id!)}
           onSelect={resourceStore.toggleSelect}
+          isSelectMode={isSelectMode}
+          orderedIds={orderedIds}
           onOpen={() => {
             if (item.isFolder) onFolderClick(item.folderName || '');
+            else if (!isImageResource(item)) openResourceFile(item);
           }}
         />
       ))}

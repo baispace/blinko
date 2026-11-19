@@ -1,5 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { preprocessNoteLinks as preprocessNoteLinksShared } from '@shared/lib/noteLink';
 
@@ -13,25 +15,24 @@ export const NoteLink = observer(({ id, title }: { id: number; title: string }) 
 
   const handleClick = () => {
     if (isShareMode) return;
-    // 走 /detail?id= —— 和 BlinkoCard 的 handleClick 一致。detail 页自己会
-    // 按 id 拉 noteDetail 并打开 FullscreenEditor。
-    //
-    // 原先是 navigate(`/?id=${id}`) + `RootStore.Get(BlinkoStore).curSelectedNoteId = id`：
-    //   - BlinkoStore 压根没 import，点一下直接 ReferenceError；
-    //   - BlinkoStore 上也没有 curSelectedNoteId 这个字段，写了没人读；
-    //   - pages/index.tsx 从不读 ?id=，所以点了只是回到闪念列表，等于没跳。
+    // 走 /detail?id= —— 和列表卡片点击同一条路径。详情页直接挂全屏编辑器；
+    // 同时写上打开信号，避免路由切换时其它入口读到空值。
+    RootStore.Get(BlinkoStore).fullscreenEditorNoteId = id;
     navigate(`/detail?id=${id}`);
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-default-100 border border-default-200 cursor-pointer hover:bg-default-200 transition-colors ${
+      className={`inline-flex items-center gap-1.5 max-w-[16rem] px-2 py-0.5 rounded-md bg-default-100 border border-default-200 cursor-pointer hover:bg-default-200 transition-colors align-middle ${
         isShareMode ? 'pointer-events-none opacity-75' : ''
       }`}
+      onMouseDown={(event) => {
+        if (!isShareMode) event.preventDefault()
+      }}
       onClick={handleClick}
     >
-      <Icon icon="solar:file-bold" width={14} height={14} className="text-primary" />
-      <span className="text-sm text-default-700 line-clamp-1">{title}</span>
+      <Icon icon="solar:file-bold" width={14} height={14} className="text-primary shrink-0" />
+      <span className="text-sm text-default-700 truncate">{title}</span>
     </span>
   );
 });

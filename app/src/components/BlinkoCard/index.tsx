@@ -5,6 +5,7 @@ import { Card } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ContextMenuTrigger } from '@/components/Common/ContextMenu';
 import { Note, NoteType } from '@shared/lib/types';
+import { visibleNoteAttachments } from '@shared/lib/noteAttachments';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
@@ -63,7 +64,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const pluginApi = RootStore.Get(PluginApiStore);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const [isFullscreenEditorOpen, setIsFullscreenEditorOpen] = useState(false);
+  const [isFullscreenEditorOpen, setIsFullscreenEditorOpen] = useState(isDetailPage);
 
   // Set isExpand flag to prevent drag when fullscreen editor is open for this note
   blinkoItem.isExpand = blinko.fullscreenEditorNoteId === blinkoItem.id;
@@ -177,7 +178,11 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
       <FullscreenEditor
         blinkoItem={blinkoItem}
         isOpen
-        onClose={() => setIsFullscreenEditorOpen(false)}
+        onClose={() => {
+          // 详情页关闭会先 navigate 再卸载，这里如果立刻把 editor 关掉，
+          // 会在路由切走前闪一帧卡片预览（就是偶发看到的「中间页」）。
+          if (!isDetailPage) setIsFullscreenEditorOpen(false);
+        }}
         isDetailPage={isDetailPage}
       />
     );
@@ -189,7 +194,11 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
       <FullscreenEditor
         blinkoItem={blinkoItem}
         isOpen={isFullscreenEditorOpen}
-        onClose={() => setIsFullscreenEditorOpen(false)}
+        onClose={() => {
+          // 详情页关闭会先 navigate 再卸载，这里如果立刻把 editor 关掉，
+          // 会在路由切走前闪一帧卡片预览（就是偶发看到的「中间页」）。
+          if (!isDetailPage) setIsFullscreenEditorOpen(false);
+        }}
         isDetailPage={isDetailPage}
       />
 
@@ -205,7 +214,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
         // 跟 prototype 一致；博客卡（isBlog）保持原样，仍需边框+封面。
         const isCompactBlinko = (blinkoItem.type === NoteType.BLINKO && !blinkoItem.isBlog)
           || (compactList && !blinkoItem.isBlog);
-        const allAttachments = blinkoItem.attachments ?? [];
+        const allAttachments = visibleNoteAttachments(blinkoItem.attachments);
         const imageAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) === 'image');
         const otherAttachments = allAttachments.filter(a => helper.getFileType(a.type, a.name) !== 'image');
 

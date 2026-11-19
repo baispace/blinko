@@ -1266,5 +1266,20 @@
   "settings-choose-model": "选择模型",
   "settings-group-common": "常用设置",
   "settings-more": "更多设置",
-  "settings-about-site": "关于本站"
+  "settings-about-site": "关于本站",
+  "move-to": "移动到...",
+  "paste-here": "粘贴到此处",
+  "root-folder": "根目录",
+  "search-all-resources": "搜索全部文件夹",
+  "search-results-for": "搜索「{{query}}」的结果",
+  "sort-updated": "最近更新",
+  "sort-name": "名称",
+  "sort-size": "大小",
+  "open-file": "打开",
+  "open-related-note": "打开关联笔记",
+  "drop-to-upload": "松手即可上传到 {{folder}}",
+  "items-cut": "已剪切 {{count}} 个文件",
+  "cancel-cut": "取消剪切",
+  "no-folders": "暂无文件夹",
+  "introduce-article": "引入文章"
 }

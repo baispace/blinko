@@ -1209,5 +1209,20 @@
   "by-week": "按週",
   "list-style-timeline-desc": "時間線模式下不顯示拖拽排序",
   "important-list": "重要",
-  "important-list-subtitle": "帶「重要」旗子的待辦"
+  "important-list-subtitle": "帶「重要」旗子的待辦",
+  "move-to": "移動到...",
+  "paste-here": "貼上到此處",
+  "root-folder": "根目錄",
+  "search-all-resources": "搜尋全部資料夾",
+  "search-results-for": "搜尋「{{query}}」的結果",
+  "sort-updated": "最近更新",
+  "sort-name": "名稱",
+  "sort-size": "大小",
+  "open-file": "開啟",
+  "open-related-note": "開啟關聯筆記",
+  "drop-to-upload": "放開即可上傳到 {{folder}}",
+  "items-cut": "已剪下 {{count}} 個檔案",
+  "cancel-cut": "取消剪下",
+  "no-folders": "尚無資料夾",
+  "introduce-article": "引入文章"
 }

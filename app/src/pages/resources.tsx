@@ -1,7 +1,7 @@
 import { RootStore } from "@/store";
 import { ResourceStore } from "@/store/resourceStore";
 import { observer } from "mobx-react-lite";
-import { useMemo, useCallback, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/Common/ScrollArea";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,6 @@ import { MemoizedResourceItem } from "@/components/BlinkoResource/ResourceItem";
 import { ResourceGrid } from "@/components/BlinkoResource/ResourceGrid";
 import { ResourceMultiSelectPop } from "@/components/BlinkoResource/ResourceMultiSelectpop";
 import { Breadcrumbs, BreadcrumbItem, Button, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
-import { AnimatePresence, motion } from "framer-motion";
 import { LoadingAndEmpty } from "@/components/Common/LoadingAndEmpty";
 import { PhotoProvider } from "react-photo-view";
 import { useNavigate } from "react-router-dom";
@@ -21,9 +20,9 @@ const VIDEO_EXTS = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'];
 const AUDIO_EXTS = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'];
 const DOC_EXTS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', 'csv', 'epub'];
 
-const getExt = (item: { name: string; type?: string }) => (item.name?.split('.').pop() || '').toLowerCase();
+const getExt = (item: { name?: string | null; type?: string | null }) => (item.name?.split('.').pop() || '').toLowerCase();
 
-const matchFilterType = (item: { name: string; type?: string }, filter: string) => {
+const matchFilterType = (item: { name?: string | null; type?: string | null }, filter: string) => {
   if (filter === 'all') return true;
   const ext = getExt(item);
   if (filter === 'image') return item.type?.startsWith('image/') || IMAGE_EXTS.includes(ext);
@@ -56,40 +55,47 @@ const Page = observer(() => {
   }, [resourceStore.blinko.resourceList.value]);
 
   const resources = useMemo(() => {
-    const search = resourceStore.searchText.trim().toLowerCase();
     const filter = resourceStore.filterType;
-    return allResources.filter(item => {
+    const filtered = allResources.filter(item => {
       if (filter === 'other') {
-        // everything that is none of the typed categories
         if (matchFilterType(item, 'image') || matchFilterType(item, 'video') || matchFilterType(item, 'audio') || matchFilterType(item, 'doc')) return false;
       } else if (!matchFilterType(item, filter)) {
         return false;
       }
-      if (search) {
-        const name = (item.isFolder ? item.folderName : item.name)?.toLowerCase() || '';
-        if (!name.includes(search)) return false;
-      }
       return true;
     });
-  }, [allResources, resourceStore.searchText, resourceStore.filterType]);
+
+    const folderFirst = (a: typeof filtered[number], b: typeof filtered[number]) =>
+      Number(!!b.isFolder) - Number(!!a.isFolder);
+    const mode = resourceStore.sortMode;
+    return [...filtered].sort((a, b) => {
+      const ff = folderFirst(a, b);
+      if (ff) return ff;
+      if (mode === 'name') {
+        const an = (a.isFolder ? a.folderName : a.name) || '';
+        const bn = (b.isFolder ? b.folderName : b.name) || '';
+        return an.localeCompare(bn, undefined, { numeric: true, sensitivity: 'base' });
+      }
+      if (mode === 'size') return Number(b.size || 0) - Number(a.size || 0);
+      const at = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const bt = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return bt - at;
+    });
+  }, [allResources, resourceStore.filterType, resourceStore.sortMode]);
 
   const selectedItems = resourceStore.selectedItems;
 
-  const handleMoveSelectedToParent = useCallback(async () => {
-    if (!resourceStore.currentFolder) return;
-    const selectedResources = Array.from(selectedItems)
-      .map(id => allResources.find(r => r.id === id))
-      .filter((item): item is NonNullable<typeof item> => item != null);
-
-    if (selectedResources.length > 0) {
-      await resourceStore.moveToParentFolder(selectedResources);
-    }
-  }, [resourceStore, selectedItems, allResources]);
-
   const folderBreadcrumbs = useMemo(() => {
-    if (!resourceStore.currentFolder) return [];
-    return ['Root', ...resourceStore.currentFolder.split('/')];
-  }, [resourceStore.currentFolder]);
+    return [t('root-folder'), ...(resourceStore.currentFolder ? resourceStore.currentFolder.split('/') : [])];
+  }, [resourceStore.currentFolder, t]);
+
+  const selectableCount = resources.filter(item => !item.isFolder && item.id).length;
+  const allSelected = selectableCount > 0 && selectedItems.size === selectableCount;
+
+  useEffect(() => {
+    const timer = setTimeout(() => resourceStore.commitSearch(), 300);
+    return () => clearTimeout(timer);
+  }, [resourceStore.searchText]);
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
@@ -154,7 +160,7 @@ const Page = observer(() => {
           <div className="pointer-events-none absolute inset-2 z-40 rounded-2xl border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center backdrop-blur-sm transition-all">
             <div className="flex flex-col items-center gap-2 text-primary">
               <Icon icon="tabler:cloud-upload" className="w-12 h-12" />
-              <span className="font-medium">松手即可上传到 {resourceStore.currentFolder || '根目录'}</span>
+              <span className="font-medium">{t('drop-to-upload', { folder: resourceStore.currentFolder || t('root-folder') })}</span>
             </div>
           </div>
         )}
@@ -168,19 +174,19 @@ const Page = observer(() => {
             <div className="flex items-center gap-2 mr-2">
               <span className="text-xl font-bold">{t('resources')}</span>
               <span className="min-w-[20px] h-[20px] px-1 flex items-center justify-center rounded-full bg-default-100 text-xs text-default-500">
-                {allResources.length}
+                {resources.length}
               </span>
             </div>
 
             <Input
               value={resourceStore.searchText}
               onChange={(e) => resourceStore.setSearchText(e.target.value)}
-              placeholder={t('search')}
+              placeholder={t('search-all-resources')}
               size="sm"
               startContent={<Icon icon="mdi:magnify" width={15} height={15} className="text-default-400" />}
-              className="w-full sm:w-[220px]"
+              className="w-full sm:w-[240px]"
               isClearable
-              onClear={() => resourceStore.setSearchText('')}
+              onClear={() => resourceStore.clearSearch()}
             />
 
             <div className="flex items-center gap-1.5 ml-auto">
@@ -225,6 +231,29 @@ const Page = observer(() => {
                 </DropdownMenu>
               </Dropdown>
 
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    className="bg-default-100 !bg-default-100 text-default-600 h-8 min-w-8 px-2"
+                    startContent={<Icon icon="tabler:arrows-sort" width={15} height={15} />}
+                  >
+                    <span className="hidden sm:inline">{t(`sort-${resourceStore.sortMode}`)}</span>
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="sort"
+                  selectedKeys={[resourceStore.sortMode]}
+                  selectionMode="single"
+                  onAction={(key) => resourceStore.setSortMode(key as 'updated' | 'name' | 'size')}
+                >
+                  <DropdownItem key="updated">{t('sort-updated')}</DropdownItem>
+                  <DropdownItem key="name">{t('sort-name')}</DropdownItem>
+                  <DropdownItem key="size">{t('sort-size')}</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+
               <Button
                 size="sm"
                 variant="flat"
@@ -249,77 +278,95 @@ const Page = observer(() => {
             </div>
           </div>
 
-          {/* folder breadcrumb (inside folders) */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AnimatePresence mode="wait">
-                {resourceStore.currentFolder && (
-                  <motion.div
-                    key={resourceStore.currentFolder}
-                    initial={{ y: -10, opacity: 0, height: 0 }}
-                    animate={{ y: 0, opacity: 1, height: "auto" }}
-                    exit={{ y: -10, opacity: 0, height: 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30, duration: 0.15 }}
-                  >
-                    <Breadcrumbs variant="solid" className="ml-[-8px]" size='sm'>
-                      {folderBreadcrumbs.map((folder, index) => (
-                        <BreadcrumbItem
-                          key={folder}
-                          onPress={() => {
-                            if (index === 0) {
-                              resourceStore.navigateBack(navigate);
-                            } else {
-                              const currentPathSegments = resourceStore.currentFolder?.split('/') || [];
-                              const stepsToGoBack = currentPathSegments.length - index;
-                              for (let i = 0; i < stepsToGoBack; i++) {
-                                resourceStore.navigateBack(navigate);
-                              }
-                            }
-                          }}
-                        >
-                          {folder}
-                        </BreadcrumbItem>
-                      ))}
-                    </Breadcrumbs>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
+            <div className="flex items-center gap-2 min-w-0">
+              {resourceStore.isSearching ? (
+                <div className="flex items-center gap-2 text-sm text-default-500 py-1">
+                  <Icon icon="mdi:magnify" width={16} height={16} />
+                  <span className="truncate">{t('search-results-for', { query: resourceStore.appliedSearch })}</span>
+                  <Button size="sm" variant="light" className="h-7 min-w-0 px-2" onPress={() => resourceStore.clearSearch()}>
+                    {t('cancel')}
+                  </Button>
+                </div>
+              ) : (
+                <Breadcrumbs variant="solid" className="ml-[-8px]" size='sm'>
+                  {folderBreadcrumbs.map((folder, index) => (
+                    <BreadcrumbItem
+                      key={`${index}-${folder}`}
+                      isCurrent={index === folderBreadcrumbs.length - 1}
+                      onPress={() => {
+                        if (index === 0) {
+                          void resourceStore.navigateToPath(null, navigate);
+                        } else {
+                          const path = folderBreadcrumbs.slice(1, index + 1).join('/');
+                          void resourceStore.navigateToPath(path, navigate);
+                        }
+                      }}
+                    >
+                      {folder}
+                    </BreadcrumbItem>
+                  ))}
+                </Breadcrumbs>
+              )}
             </div>
 
-            {/* selection actions (kept for list mode drag-sorting workflows) */}
-            {!isGridView && (
-              <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2">
+              {resourceStore.clipboard && resourceStore.clipboard.items.length > 0 && !resourceStore.isSearching && (
+                <>
+                  <span className="text-xs text-default-500">{t('items-cut', { count: resourceStore.clipboard.items.length })}</span>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    className="h-7"
+                    onPress={() => void resourceStore.pasteIntoCurrentFolder()}
+                    startContent={<Icon icon="material-symbols:content-paste" className="w-4 h-4" />}
+                  >
+                    {t('paste-here')}
+                  </Button>
+                  <Button size="sm" variant="light" className="h-7 min-w-0 px-2" onPress={() => resourceStore.clearClipboard()}>
+                    {t('cancel-cut')}
+                  </Button>
+                </>
+              )}
+              {selectableCount > 0 && !resourceStore.isSelectMode && (
                 <Button
                   size="sm"
-                  variant="light"
-                  onPress={() => {
-                    if (selectedItems.size === allResources.length) {
-                      resourceStore.clearSelection();
-                    } else {
-                      resourceStore.selectAllFiles(allResources);
-                    }
-                  }}
-                  startContent={
-                    <Icon
-                      icon={selectedItems.size === allResources.length ? "material-symbols:deselect" : "material-symbols:select-all"}
-                      className="w-5 h-5"
-                    />
-                  }
+                  variant="flat"
+                  onPress={() => resourceStore.enterSelectMode()}
+                  startContent={<Icon icon="mingcute:multiselect-line" className="w-5 h-5" />}
                 >
-                  {selectedItems.size === allResources.length ? t('deselect-all') : t('select-all')}
+                  {t('multiple-select')}
                 </Button>
-
-                {selectedItems.size > 0 && resourceStore.currentFolder && resourceStore.currentFolder !== 'Root' && (
-                  <Button
-                    variant="light"
-                    onPress={handleMoveSelectedToParent}
-                    startContent={<Icon icon="material-symbols:drive-file-move-outline" className="w-5 h-5" />}
-                  >
-                    {t('move-to-parent')}
+              )}
+              {resourceStore.isSelectMode && (
+                <>
+                  {selectableCount > 0 && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onPress={() => {
+                        if (allSelected) {
+                          resourceStore.clearSelection();
+                        } else {
+                          resourceStore.selectAllFiles(resources);
+                        }
+                      }}
+                      startContent={
+                        <Icon
+                          icon={allSelected ? "material-symbols:deselect" : "material-symbols:select-all"}
+                          className="w-5 h-5"
+                        />
+                      }
+                    >
+                      {allSelected ? t('deselect-all') : t('select-all')}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="light" onPress={() => resourceStore.exitSelectMode()}>
+                    {t('cancel')}
                   </Button>
-                )}
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
           <LoadingAndEmpty
@@ -349,7 +396,11 @@ const Page = observer(() => {
                           item={item}
                           index={index}
                           isSelected={selectedItems.has(item.id!)}
-                          onSelect={resourceStore.toggleSelect}
+                          isSelectMode={resourceStore.isSelectMode}
+                          onSelect={(id, options) => resourceStore.toggleSelect(id, {
+                            ...options,
+                            orderedIds: resources.filter(r => !r.isFolder && r.id).map(r => r.id!),
+                          })}
                           onFolderClick={(folder) => resourceStore.navigateToFolder(folder, navigate)}
                         />
                       ))}

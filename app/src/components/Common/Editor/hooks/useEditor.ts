@@ -11,6 +11,7 @@ import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
 import { NoteType, toNoteTypeEnum } from '@shared/lib/types';
+import { visibleNoteAttachments } from '@shared/lib/noteAttachments';
 import { api } from '@/lib/trpc';
 import { useSearchParams } from 'react-router-dom';
 import { Editor } from '@tiptap/core';
@@ -30,6 +31,7 @@ import { TiptapEditorAdapter } from '../Tiptap/adapter';
 import { SlashCommand, SendShortcut, TaskListInputRules, AiPendingIndicator } from '../Tiptap/extensions';
 import { HashtagSuggestion } from '../Tiptap/hashtag';
 import { NoteMention } from '../Tiptap/noteMention';
+import { NoteLinkNode } from '../Tiptap/noteLinkNode';
 import { Callout, CalloutClickOutside } from '../Tiptap/Callout';
 import { MarkdownHardBreak } from '../Tiptap/markdownHardBreak';
 import { MarkdownBlankLine, normalizeBlankLines } from '../Tiptap/markdownBlankLine';
@@ -184,6 +186,8 @@ export const useEditorInit = (
         // 输入 # 弹标签建议 + 正文里 #标签 行内高亮。独立 Suggestion 实例：
         // char 只接受单字符，@ 提及曾因写成 char: ['/', '@'] 被回滚（b06a9a0f）
         HashtagSuggestion.configure({ hashtagMenu: adapter.hashtagMenu }),
+        // 引入文章：编辑态渲染成行内卡片，markdown 仍是 [[id|title]]
+        NoteLinkNode,
         // 输入 @ 引用其它笔记。独立 Suggestion 实例，必须给独立 pluginKey（见 noteMention.ts）。
         // 之前只写了渲染用的 NoteMentionList，扩展本身从没注册进来，输入 @ 不可能有反应。
         NoteMention.configure({ noteMention: adapter.noteMention }),
@@ -373,8 +377,9 @@ export const useEditorFiles = (
   originFiles?: any[],
 ) => {
   useEffect(() => {
-    if (originFiles?.length) {
-      store.files = HandleFileType(originFiles);
+    const files = visibleNoteAttachments(originFiles);
+    if (files.length) {
+      store.files = HandleFileType(files);
     }
   }, [originFiles]);
 };

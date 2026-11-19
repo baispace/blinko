@@ -3,6 +3,7 @@ import { FileIcons } from './FileIcon';
 import { observer } from 'mobx-react-lite';
 import { helper } from '@/lib/helper';
 import { type Attachment } from '@shared/lib/types';
+import { visibleNoteAttachments } from '@shared/lib/noteAttachments';
 import { FileType } from '../Editor/type';
 import { DeleteIcon, DownloadIcon } from './icons';
 import { ImageRender } from './imageRender';
@@ -118,7 +119,7 @@ const FilesAttachmentRender = observer(({
   const [handledFiles, setFiles] = useState<FileType[]>([]);
 
   useEffect(() => {
-    setFiles(HandleFileType(files));
+    setFiles(HandleFileType(visibleNoteAttachments(files)));
   }, [files]);
 
   const handleReorder = (newFiles: FileType[]) => {

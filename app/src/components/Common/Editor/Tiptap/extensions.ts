@@ -279,6 +279,12 @@ export const DEFAULT_SLASH_ITEMS: SlashItem[] = [
       editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
   },
   {
+    title: 'introduce-article',
+    icon: 'solar:file-bold',
+    keywords: 'mention note article 引入文章 引用 链接笔记 @',
+    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).insertContent('@').run(),
+  },
+  {
     title: 'ai-expand',
     icon: 'hugeicons:ai-beautify',
     keywords: 'ai expand 扩写 展开 详细 续写',
